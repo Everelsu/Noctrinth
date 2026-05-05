@@ -13,9 +13,42 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/prod' }}
 
 jobs:
+  skip-if-clean:
+    name: Skip if merge_queue produces no diff
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.check.outputs.skip }}
+    if: ${{ always() }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Merge Queue CI Check Skipper
+        id: merge-queue-ci-skipper
+        uses: ./.github/merge-queue-ci-skipper
+        with:
+          secret: ${{ secrets.GH_ACCESS_TOKEN }}
+
+      - name: Check merge_group synthetic commit
+        id: check
+        run: |
+          # PR mode: never skip
+          if [ "${{ github.event_name }}" != "merge_group" ]; then
+            echo "skip=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          if [ "${{ steps.merge-queue-ci-skipper.outputs.skip-check }}" = "true" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
   build:
     name: Lint and Test
     runs-on: blacksmith-4vcpu-ubuntu-2404
+    needs: [skip-if-clean]
+    if: ${{ needs.skip-if-clean.outputs.skip != 'true' }}
 
     env:
       # Ensure pnpm output is colored in GitHub Actions logs

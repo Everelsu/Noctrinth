@@ -17,6 +17,7 @@ import {
 	BrowsePageLayout,
 	BrowseSidebar,
 	CreationFlowModal,
+	PROJECT_DEP_MARKER_QUERY,
 	defineMessages,
 	injectModrinthClient,
 	injectNotificationManager,
@@ -39,6 +40,8 @@ import type { DisplayLocation, DisplayMode } from '~/plugins/cosmetics.ts'
 
 const { formatMessage } = useVIntl()
 const debug = useDebugLogger('Discover')
+
+const { updateDiscoverFilterContext } = useCdnDownloadContext()
 
 const client = injectModrinthClient()
 const queryClient = useQueryClient()
@@ -401,7 +404,13 @@ function getServerModpackContent(project: Labrinth.Search.v3.ResultSearchProject
 			name: project_name,
 			icon: project_icon ?? undefined,
 			onclick:
-				project_id !== project.project_id ? () => navigateTo(`/project/${project_id}`) : undefined,
+				project_id !== project.project_id
+					? () =>
+							navigateTo({
+								path: `/project/${project_id}`,
+								query: { ...PROJECT_DEP_MARKER_QUERY },
+							})
+					: undefined,
 			showCustomModpackTooltip: project_id === project.project_id,
 		}
 	}
@@ -638,6 +647,15 @@ const searchState = useBrowseSearch({
 	maxResultsOptions: currentMaxResultsOptions,
 	displayMode: resultsDisplayMode,
 })
+
+watch(
+	() =>
+		searchState.isServerType.value
+			? searchState.serverCurrentFilters.value
+			: searchState.currentFilters.value,
+	(filters) => updateDiscoverFilterContext(filters),
+	{ deep: true, immediate: true },
+)
 
 watch(
 	[

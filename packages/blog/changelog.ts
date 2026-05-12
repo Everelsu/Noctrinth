@@ -13,7 +13,7 @@ const VERSIONS: VersionEntry[] = [
 	{
 		date: `2026-05-12T20:06:07+00:00`,
 		product: 'app',
-		version: '0.13.16',
+		version: '0.13.17',
 		body: `## Fixed
 - Fixed the app automatically re-opening after installing a pending update when the user closes the app.
 - Fixed "Open in browser" not working.

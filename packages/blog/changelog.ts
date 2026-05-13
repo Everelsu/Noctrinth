@@ -11,6 +11,19 @@ export type VersionEntry = {
 
 const VERSIONS: VersionEntry[] = [
 	{
+		date: `2026-05-13T05:24:14+00:00`,
+		product: 'web',
+		body: `## Changed
+- Overhauled the 'Moderation' tab on project pages to make the moderation status of your project clearer.
+- Updated the report page to a more modern style.
+- Adjusted the colors of certain status banner buttons to make them more readable.
+- Updated the DMCA registered agent listed on the coypright policy page.
+
+## Fixed
+- Fixed status banners at the top of the page having really long buttons.
+- Fixed status banners at the top of the page having an unusual amount of padding on the bottom when they didn't have an action.`,
+	},
+	{
 		date: `2026-05-12T20:06:07+00:00`,
 		product: 'app',
 		version: '0.13.17',

@@ -20,9 +20,9 @@ const AD_LINK: &str = "https://modrinth.com/wrapper/app-ads-cookie";
 const ADS_USER_AGENT: &str = concat!(
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ",
     "(KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 ",
-    "ModrinthApp/",
+    "Noctrinth/",
     env!("CARGO_PKG_VERSION"),
-    " (Modrinth App)",
+    " (Noctrinth)",
 );
 
 #[cfg(windows)]
@@ -34,14 +34,14 @@ fn ads_user_agent_override_params() -> String {
             "brands": [
                 { "brand": "Chromium", "version": "128" },
                 { "brand": "Google Chrome", "version": "128" },
-                { "brand": "Modrinth App", "version": env!("CARGO_PKG_VERSION") },
+                { "brand": "Noctrinth", "version": env!("CARGO_PKG_VERSION") },
                 { "brand": "Not=A?Brand", "version": "99" },
             ],
             "fullVersion": "128.0.0.0",
             "fullVersionList": [
                 { "brand": "Chromium", "version": "128.0.0.0" },
                 { "brand": "Google Chrome", "version": "128.0.0.0" },
-                { "brand": "Modrinth App", "version": env!("CARGO_PKG_VERSION") },
+                { "brand": "Noctrinth", "version": env!("CARGO_PKG_VERSION") },
                 { "brand": "Not=A?Brand", "version": "99.0.0.0" },
             ],
             "platform": "Windows",
@@ -60,7 +60,7 @@ fn configure_ads_cookie_settings(
     core_webview2: &webview2_com::Microsoft::Web::WebView2::Win32::ICoreWebView2,
 ) {
     use webview2_com::Microsoft::Web::WebView2::Win32::{
-        COREWEBVIEW2_TRACKING_PREVENTION_LEVEL_NONE, ICoreWebView2,
+        COREWEBVIEW2_TRACKING_PREVENTION_LEVEL_NONE,
         ICoreWebView2_13, ICoreWebView2Profile3,
     };
     use windows_core::Interface;

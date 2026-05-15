@@ -1,28 +1,33 @@
 use crate::state::ModrinthCredentials;
 
 #[tracing::instrument]
-pub fn authenticate_begin_flow() -> &'static str {
-    crate::state::get_login_url()
+pub fn build_auth_url(redirect_uri: &str) -> String {
+    crate::state::build_login_url(redirect_uri)
 }
 
 #[tracing::instrument]
-pub async fn authenticate_finish_flow(
+pub async fn exchange_code(
     code: &str,
+    redirect_uri: &str,
 ) -> crate::Result<ModrinthCredentials> {
     let state = crate::State::get().await?;
 
-    let creds = crate::state::finish_login_flow(
+    let creds = crate::state::exchange_code_for_token(
         code,
+        redirect_uri,
         &state.api_semaphore,
         &state.pool,
     )
     .await?;
 
     creds.upsert(&state.pool).await?;
-    state
+    if let Err(e) = state
         .friends_socket
         .connect(&state.pool, &state.api_semaphore, &state.process_manager)
-        .await?;
+        .await
+    {
+        tracing::warn!("Failed to connect to friends socket: {e}");
+    }
 
     Ok(creds)
 }

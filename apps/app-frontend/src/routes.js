@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import * as Pages from '@/pages'
+import * as Dashboard from '@/pages/dashboard'
 import * as Hosting from '@/pages/hosting/manage'
 import * as Instance from '@/pages/instance'
 import * as Library from '@/pages/library'
@@ -82,6 +83,41 @@ export default new createRouter({
 			meta: {
 				useContext: true,
 				breadcrumb: [{ name: '?BrowseTitle' }],
+			},
+		},
+		{
+			path: '/dashboard',
+			name: 'Dashboard',
+			component: Dashboard.Index,
+			redirect: '/dashboard/collections',
+			meta: {
+				breadcrumb: [{ name: 'Dashboard' }],
+			},
+			children: [
+				{
+					path: 'collections',
+					name: 'Collections',
+					component: Dashboard.Collections,
+					meta: {
+						breadcrumb: [{ name: 'Collections' }],
+					},
+				},
+				{
+					path: 'notifications',
+					name: 'Notifications',
+					component: Dashboard.Notifications,
+					meta: {
+						breadcrumb: [{ name: 'Notifications' }],
+					},
+				},
+			],
+		},
+		{
+			path: '/collection/:id',
+			name: 'Collection',
+			component: Dashboard.Collection,
+			meta: {
+				breadcrumb: [{ name: 'Collection' }],
 			},
 		},
 		{

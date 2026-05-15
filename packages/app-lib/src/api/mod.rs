@@ -39,7 +39,7 @@ pub mod prelude {
         settings,
         util::{
             io::{IOError, canonicalize},
-            network::{is_network_metered, tcp_listen_any_loopback},
+            network::{is_network_metered, tcp_listen_any_loopback, tcp_listen_loopback_port},
         },
     };
 }

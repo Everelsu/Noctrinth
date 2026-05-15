@@ -10550,6 +10550,7 @@ dependencies = [
  "tracing-error",
  "tracing-subscriber",
  "url",
+ "urlencoding",
  "uuid 1.18.1",
  "whoami",
  "windows",
@@ -10561,7 +10562,7 @@ dependencies = [
 
 [[package]]
 name = "theseus_gui"
-version = "1.0.0-local"
+version = "0.13.17-local"
 dependencies = [
  "async_zip",
  "chrono",

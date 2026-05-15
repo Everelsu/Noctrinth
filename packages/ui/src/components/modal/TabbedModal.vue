@@ -95,7 +95,7 @@ defineExpose({ show, hide, selectedTab, setTab })
 					<span>{{ formatMessage(tab.name) }}</span>
 					<span
 						v-if="tab.badge"
-						class="rounded-full px-1.5 py-0.5 text-xs font-bold bg-brand-highlight text-brand-green"
+						class="rounded-full px-1.5 py-0.5 text-xs font-bold bg-brand-highlight text-brand"
 					>
 						{{ formatMessage(tab.badge) }}
 					</span>

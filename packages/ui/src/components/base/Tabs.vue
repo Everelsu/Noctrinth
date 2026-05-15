@@ -12,7 +12,7 @@
 			class="flex min-h-6 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-lg border border-solid px-2.5 py-1 text-sm font-medium outline-none transition-all active:scale-[0.97] focus-visible:ring-4 focus-visible:ring-brand-shadow"
 			:class="
 				tab.value === value
-					? 'border-green bg-highlight-green text-green'
+					? 'border-brand bg-brand-highlight text-brand'
 					: 'border-transparent bg-transparent text-primary hover:bg-surface-4'
 			"
 			role="tab"
@@ -25,7 +25,7 @@
 				:is="tab.icon"
 				v-if="tab.icon"
 				class="size-5 shrink-0"
-				:class="tab.value === value ? 'text-green' : 'text-secondary'"
+				:class="tab.value === value ? 'text-brand' : 'text-secondary'"
 			/>
 			<span class="text-nowrap">{{ tab.label }}</span>
 		</button>

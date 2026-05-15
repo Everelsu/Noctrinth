@@ -137,22 +137,24 @@
 								{{ installButtonLabel }}
 							</button>
 						</ButtonStyled>
+						<ButtonStyled
+							v-tooltip="!currentUserId ? 'Sign in to follow' : isFollowing ? 'Following' : 'Follow'"
+							size="large"
+							circular
+							type="transparent"
+						>
+							<button :disabled="!currentUserId || followLoading" @click="toggleFollow">
+								<HeartIcon
+									:class="{ 'text-brand fill-current': isFollowing }"
+									aria-hidden="true"
+								/>
+							</button>
+						</ButtonStyled>
+						<SaveToCollectionButton v-if="currentUserId" :project-id="data.id" />
 						<ButtonStyled size="large" circular type="transparent">
 							<OverflowMenu
 								:tooltip="`More options`"
 								:options="[
-									{
-										id: 'follow',
-										disabled: true,
-										tooltip: 'Coming soon',
-										action: () => {},
-									},
-									{
-										id: 'save',
-										disabled: true,
-										tooltip: 'Coming soon',
-										action: () => {},
-									},
 									{
 										id: 'open-in-browser',
 										link: `https://modrinth.com/${data.project_type}/${data.slug}`,
@@ -172,8 +174,6 @@
 							>
 								<MoreVerticalIcon aria-hidden="true" />
 								<template #open-in-browser> <ExternalIcon /> Open in browser </template>
-								<template #follow> <HeartIcon /> Follow </template>
-								<template #save> <BookmarkIcon /> Save </template>
 								<template #report> <ReportIcon /> Report </template>
 							</OverflowMenu>
 						</ButtonStyled>
@@ -250,7 +250,6 @@
 
 <script setup>
 import {
-	BookmarkIcon,
 	CheckIcon,
 	ClipboardCopyIcon,
 	DownloadIcon,
@@ -294,6 +293,7 @@ import { computed, onUnmounted, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import ContextMenu from '@/components/ui/ContextMenu.vue'
+import SaveToCollectionButton from '@/components/ui/SaveToCollectionButton.vue'
 import InstanceIndicator from '@/components/ui/InstanceIndicator.vue'
 import {
 	get_organization,
@@ -304,6 +304,12 @@ import {
 	get_version_many,
 } from '@/helpers/cache.js'
 import { process_listener } from '@/helpers/events'
+import {
+	followProject,
+	isFollowingProject,
+	unfollowProject,
+} from '@/helpers/modrinth-api'
+import { get as getCreds } from '@/helpers/mr_auth.ts'
 import { get_loader_versions as getLoaderManifest } from '@/helpers/metadata'
 import { get_by_profile_path } from '@/helpers/process'
 import {
@@ -360,6 +366,51 @@ const instanceProjects = ref(null)
 const installed = ref(false)
 const installedVersion = ref(null)
 const isServerProject = ref(false)
+const isFollowing = ref(false)
+const followLoading = ref(false)
+const currentUserId = ref(null)
+
+async function refreshFollowState() {
+	try {
+		const creds = await getCreds()
+		if (!creds || !data.value?.id) {
+			isFollowing.value = false
+			currentUserId.value = null
+			return
+		}
+		currentUserId.value = creds.user_id
+		isFollowing.value = await isFollowingProject(creds.user_id, data.value.id)
+	} catch {
+		isFollowing.value = false
+	}
+}
+
+async function toggleFollow() {
+	if (!data.value?.id || followLoading.value) return
+	followLoading.value = true
+	const wasFollowing = isFollowing.value
+	try {
+		if (wasFollowing) {
+			await unfollowProject(data.value.id)
+			isFollowing.value = false
+			data.value = {
+				...data.value,
+				followers: Math.max(0, (data.value.followers ?? 0) - 1),
+			}
+		} else {
+			await followProject(data.value.id)
+			isFollowing.value = true
+			data.value = {
+				...data.value,
+				followers: (data.value.followers ?? 0) + 1,
+			}
+		}
+	} catch (e) {
+		handleError(e)
+	} finally {
+		followLoading.value = false
+	}
+}
 const projectV3 = shallowRef(null)
 const serverRequiredContent = shallowRef(null)
 const serverRecommendedVersion = shallowRef(null)
@@ -642,6 +693,7 @@ function fetchDeferredServerData(project) {
 }
 
 await fetchProjectData()
+refreshFollowState()
 
 let unlistenProcesses
 process_listener((e) => {
@@ -665,6 +717,7 @@ watch(
 	async () => {
 		if (route.params.id && route.path.startsWith('/project')) {
 			await fetchProjectData()
+			refreshFollowState()
 		}
 	},
 )

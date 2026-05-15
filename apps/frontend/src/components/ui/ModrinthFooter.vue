@@ -29,11 +29,11 @@ const config = useRuntimeConfig()
 const messages = defineMessages({
 	modrinthInformation: {
 		id: 'layout.footer.modrinth-information',
-		defaultMessage: 'Modrinth information',
+		defaultMessage: 'About',
 	},
 	openSource: {
 		id: 'layout.footer.open-source',
-		defaultMessage: 'Modrinth is <github-link>open source</github-link>.',
+		defaultMessage: 'This is <github-link>open source</github-link>.',
 	},
 	legalDisclaimer: {
 		id: 'layout.footer.legal-disclaimer',
@@ -116,17 +116,17 @@ const footerLinks: {
 		links: [
 			{
 				href: '/plus',
-				label: defineMessage({ id: 'layout.footer.products.plus', defaultMessage: 'Modrinth+' }),
+				label: defineMessage({ id: 'layout.footer.products.plus', defaultMessage: 'Plus' }),
 			},
 			{
 				href: '/app',
-				label: defineMessage({ id: 'layout.footer.products.app', defaultMessage: 'Modrinth App' }),
+				label: defineMessage({ id: 'layout.footer.products.app', defaultMessage: 'App' }),
 			},
 			{
 				href: '/hosting',
 				label: defineMessage({
 					id: 'layout.footer.products.servers',
-					defaultMessage: 'Modrinth Hosting',
+					defaultMessage: 'Hosting',
 				}),
 			},
 		],

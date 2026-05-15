@@ -42,7 +42,7 @@
 						:href="`https://modrinth.com/mod/${route.params.id}/version/${route.params.version}`"
 						rel="external"
 					>
-						Modrinth website
+						Open on Modrinth
 						<ExternalIcon />
 					</a>
 				</ButtonStyled>

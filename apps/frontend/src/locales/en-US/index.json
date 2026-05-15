@@ -1,4 +1,4 @@
-{
+﻿{
   "action.cancel": {
     "message": "Cancel"
   },
@@ -1774,7 +1774,7 @@
   },
   "landing.launcher.modrinth-app-label": {
     "message": "Modrinth App"
-  },
+    "message": "App"
   "landing.launcher.prism-launcher-label": {
     "message": "Prism Launcher"
   },
@@ -1965,22 +1965,22 @@
     "message": "Terms of Use"
   },
   "layout.footer.modrinth-information": {
-    "message": "Modrinth information"
+    "message": "About"
   },
   "layout.footer.open-source": {
-    "message": "Modrinth is <github-link>open source</github-link>."
+    "message": "This is <github-link>open source</github-link>."
   },
   "layout.footer.products": {
     "message": "Products"
   },
   "layout.footer.products.app": {
-    "message": "Modrinth App"
+    "message": "App"
   },
   "layout.footer.products.plus": {
-    "message": "Modrinth+"
+    "message": "Plus"
   },
   "layout.footer.products.servers": {
-    "message": "Modrinth Hosting"
+    "message": "Hosting"
   },
   "layout.footer.resources": {
     "message": "Resources"
@@ -2037,7 +2037,7 @@
     "message": "Discover content"
   },
   "layout.nav.get-modrinth-app": {
-    "message": "Get Modrinth App"
+    "message": "Get App"
   },
   "layout.nav.home": {
     "message": "Home"
@@ -2046,10 +2046,10 @@
     "message": "Host a server"
   },
   "layout.nav.modrinth-app": {
-    "message": "Modrinth App"
+    "message": "App"
   },
   "layout.nav.modrinth-home-page": {
-    "message": "Modrinth home page"
+    "message": "Home page"
   },
   "layout.nav.my-servers": {
     "message": "My servers"
@@ -2073,7 +2073,7 @@
     "message": "Search"
   },
   "layout.nav.upgrade-to-modrinth-plus": {
-    "message": "Upgrade to Modrinth+"
+    "message": "Plus features"
   },
   "moderation.moderate": {
     "message": "Moderate"
@@ -2635,10 +2635,10 @@
   },
   "project.download.install-with-app": {
     "message": "Install with Modrinth App"
-  },
+    "message": "Install with App"
   "project.download.no-app": {
     "message": "Don't have Modrinth App?"
-  },
+    "message": "Don't have the App?"
   "project.download.no-versions-available": {
     "message": "No versions available for {gameVersion} and {platform}."
   },
@@ -3925,10 +3925,10 @@
   },
   "settings.display.sidebar.hide-app-promos.description": {
     "message": "Hides the \"Get Modrinth App\" buttons from primary navigation. The Modrinth App page can still be found on the landing page or in the footer."
-  },
+    "message": "Hides the \"Get App\" buttons from primary navigation. The App page can still be found on the landing page or in the footer."
   "settings.display.sidebar.hide-app-promos.title": {
     "message": "Hide Modrinth App promotions"
-  },
+    "message": "Hide App promotions"
   "settings.display.sidebar.left-aligned-content-sidebar.title": {
     "message": "Left-aligned sidebar on content pages"
   },

@@ -19,7 +19,8 @@ use std::{
 use hyper::body::Incoming;
 use hyper_util::rt::{TokioIo, TokioTimer};
 use theseus::ErrorKind;
-use theseus::prelude::tcp_listen_any_loopback;
+use theseus::prelude::{tcp_listen_any_loopback, tcp_listen_loopback_port};
+use tokio::net::TcpListener;
 use tokio::sync::{broadcast, oneshot};
 
 static SERVER_SHUTDOWN: LazyLock<broadcast::Sender<()>> =
@@ -30,6 +31,7 @@ static SERVER_SHUTDOWN: LazyLock<broadcast::Sender<()>> =
 /// by listening on the counterpart channel for `listen_socket_tx`.
 ///
 /// If the server is stopped before receiving an authorization code, `Ok(None)` is returned.
+#[allow(dead_code)]
 pub async fn listen(
     listen_socket_tx: oneshot::Sender<Result<SocketAddr, theseus::Error>>,
 ) -> Result<Option<String>, theseus::Error> {
@@ -58,6 +60,47 @@ pub async fn listen(
         }
     };
 
+    listen_inner(listener).await
+}
+
+/// Same as [`listen`] but binds to a specific port instead of an ephemeral one.
+/// Required for OAuth providers that validate the redirect URI including port number.
+pub async fn listen_on_port(
+    port: u16,
+    listen_socket_tx: oneshot::Sender<Result<SocketAddr, theseus::Error>>,
+) -> Result<Option<String>, theseus::Error> {
+    let listener = match tcp_listen_loopback_port(port).await {
+        Ok(listener) => {
+            listen_socket_tx
+                .send(listener.local_addr().map_err(|e| {
+                    ErrorKind::OtherError(format!(
+                        "Failed to get auth code reply socket address: {e}"
+                    ))
+                    .into()
+                }))
+                .ok();
+
+            listener
+        }
+        Err(e) => {
+            let error_msg = format!(
+                "Failed to bind auth code reply socket on port {port}: {e}"
+            );
+
+            listen_socket_tx
+                .send(Err(ErrorKind::OtherError(error_msg.clone()).into()))
+                .ok();
+
+            return Err(ErrorKind::OtherError(error_msg).into());
+        }
+    };
+
+    listen_inner(listener).await
+}
+
+async fn listen_inner(
+    listener: TcpListener,
+) -> Result<Option<String>, theseus::Error> {
     let mut auth_code = Mutex::new(None);
     let mut shutdown_notification = SERVER_SHUTDOWN.subscribe();
 

@@ -212,10 +212,9 @@ impl FriendsSocket {
                     });
                 }
                 Err(e) => {
-                    tracing::error!(
-                        "Error connecting to friends socket: {e:?}"
-                    );
-
+                    // Do not log here — the reconnect loop in `socket_loop` does
+                    // throttled logging after several consecutive failures, and
+                    // direct callers (e.g. login) wrap their own message.
                     return Err(crate::Error::from(e));
                 }
             }
@@ -231,17 +230,26 @@ impl FriendsSocket {
         tokio::task::spawn(async move {
             let mut last_connection = Utc::now();
             let mut last_ping = Utc::now();
+            // Exponential backoff for reconnect attempts. Resets to 30s on success.
+            // Steps: 30s → 60s → 120s → 300s → 600s → 1800s (cap).
+            let mut backoff_secs: i64 = 30;
+            const MAX_BACKOFF_SECS: i64 = 1800;
+            // Suppress the log after this many consecutive failures so the log
+            // doesn't get spammed when the endpoint is persistently unavailable.
+            let mut consecutive_failures: u32 = 0;
+            const LOG_FAILURE_THRESHOLD: u32 = 2;
 
             loop {
                 let connected = state.friends_socket.is_connected().await;
 
                 if !connected
                     && Utc::now().signed_duration_since(last_connection)
-                        > chrono::Duration::seconds(30)
+                        > chrono::Duration::seconds(backoff_secs)
                 {
                     last_connection = Utc::now();
                     last_ping = Utc::now();
-                    let _ = state
+
+                    let result = state
                         .friends_socket
                         .connect(
                             &state.pool,
@@ -249,6 +257,24 @@ impl FriendsSocket {
                             &state.process_manager,
                         )
                         .await;
+
+                    if result.is_ok()
+                        && state.friends_socket.is_connected().await
+                    {
+                        // Reset backoff after a successful connection.
+                        backoff_secs = 30;
+                        consecutive_failures = 0;
+                    } else {
+                        consecutive_failures =
+                            consecutive_failures.saturating_add(1);
+                        if consecutive_failures == LOG_FAILURE_THRESHOLD {
+                            tracing::warn!(
+                                "Friends socket still unavailable; backing off and suppressing further retry logs."
+                            );
+                        }
+                        backoff_secs =
+                            (backoff_secs * 2).min(MAX_BACKOFF_SECS);
+                    }
                 } else if connected
                     && Utc::now().signed_duration_since(last_ping)
                         > chrono::Duration::seconds(10)

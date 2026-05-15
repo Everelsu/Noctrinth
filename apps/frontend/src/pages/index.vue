@@ -597,7 +597,7 @@ const messages = defineMessages({
 	},
 	modrinthAppLabel: {
 		id: 'landing.launcher.modrinth-app-label',
-		defaultMessage: 'Modrinth App',
+		defaultMessage: 'App',
 	},
 	atlauncherLabel: {
 		id: 'landing.launcher.atlauncher-label',

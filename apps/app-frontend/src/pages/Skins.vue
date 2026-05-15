@@ -450,7 +450,7 @@ await Promise.all([loadCapes(), loadSkins(), loadCurrentUser()])
 				<h1 class="text-3xl font-extrabold m-0">Please sign-in</h1>
 				<p class="text-lg m-0">
 					Please sign into your Minecraft account to use the skin management features of the
-					Modrinth app.
+					Noctrinth App.
 				</p>
 				<ButtonStyled v-show="accountsCard" color="brand" :disabled="accountsCard.loginDisabled">
 					<button :disabled="accountsCard.loginDisabled" @click="login">

@@ -1,10 +1,10 @@
 [package]
 name = "theseus_gui"
 # The actual version is set by the theseus-build workflow on tagging
-version = "1.0.0-local"
+version = "0.13.17-local"
 edition.workspace = true
-description = "The Modrinth App is a desktop application for managing your Minecraft mods"
-repository = "https://github.com/modrinth/code/apps/app/"
+description = "Noctrinth is a desktop application for managing your Minecraft mods"
+repository = "https://github.com/Everelsu/Noctrinth"
 license = "GPL-3.0-only"
 
 [dependencies]

@@ -144,8 +144,6 @@
 				</ContentPageHeader>
 			</div>
 			<div class="normal-page__sidebar">
-				<AdPlaceholder v-if="!auth.user" />
-
 				<div class="card flex-card">
 					<h2>Members</h2>
 					<div class="details-list">

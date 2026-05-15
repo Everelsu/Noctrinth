@@ -1,0 +1,21 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+	<!-- Crescent moon -->
+	<circle cx="152" cy="52" r="23" fill="#4f46e5"/>
+	<circle cx="162" cy="44" r="20" fill="#0c0e1a"/>
+
+	<!-- Letter N — left bar -->
+	<rect x="22" y="30" width="26" height="140" rx="4" fill="url(#ng)"/>
+
+	<!-- Letter N — diagonal -->
+	<polygon points="48,30 74,30 178,170 152,170" fill="url(#ng)"/>
+
+	<!-- Letter N — right bar -->
+	<rect x="152" y="30" width="26" height="140" rx="4" fill="url(#ng)"/>
+
+	<defs>
+		<linearGradient id="ng" x1="22" y1="30" x2="178" y2="170" gradientUnits="userSpaceOnUse">
+			<stop offset="0%" stop-color="#a5b4fc"/>
+			<stop offset="100%" stop-color="#6366f1"/>
+		</linearGradient>
+	</defs>
+</svg>

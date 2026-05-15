@@ -1,4 +1,4 @@
-{
+﻿{
   "action.cancel": {
     "message": "Отмена"
   },
@@ -1617,7 +1617,7 @@
     "message": "Следите за тем, что нравится"
   },
   "landing.feature.launcher.description": {
-    "message": "Наш открытый API позволяет глубже интегрироваться с Modrinth — используйте <link>наше приложение</link> или сторонние лаунчеры наподобие ATLauncher, MultiMC и Prism Launcher."
+    "message": "Наш открытый API позволяет глубже интегрироваться с Это — используйте <link>наше приложение</link> или сторонние лаунчеры наподобие ATLauncher, MultiMC и Prism Launcher."
   },
   "landing.feature.launcher.heading": {
     "message": "Играйте через свой лаунчер"
@@ -1659,7 +1659,7 @@
     "message": "Упрощённое изображение окна Minecraft с логотипом Mojang Studios в зелёном цвете Modrinth."
   },
   "landing.launcher.modrinth-app-label": {
-    "message": "Modrinth App"
+    "message": "Приложение"
   },
   "landing.launcher.prism-launcher-label": {
     "message": "Prism Launcher"
@@ -1845,22 +1845,22 @@
     "message": "Условия использования"
   },
   "layout.footer.modrinth-information": {
-    "message": "Информация о Modrinth"
+    "message": "О нас"
   },
   "layout.footer.open-source": {
-    "message": "Modrinth — <github-link>открытый проект</github-link>."
+    "message": "Это — <github-link>открытый проект</github-link>."
   },
   "layout.footer.products": {
     "message": "Продукты"
   },
   "layout.footer.products.app": {
-    "message": "Modrinth App"
+    "message": "Приложение"
   },
   "layout.footer.products.plus": {
-    "message": "Modrinth+"
+    "message": "Plus"
   },
   "layout.footer.products.servers": {
-    "message": "Modrinth Hosting"
+    "message": "Хостинг"
   },
   "layout.footer.resources": {
     "message": "Ресурсы"
@@ -1917,7 +1917,7 @@
     "message": "Найти проекты"
   },
   "layout.nav.get-modrinth-app": {
-    "message": "Скачать Modrinth App"
+    "message": "Скачать приложение"
   },
   "layout.nav.home": {
     "message": "Главная"
@@ -1926,10 +1926,10 @@
     "message": "Создать сервер"
   },
   "layout.nav.modrinth-app": {
-    "message": "Modrinth App"
+    "message": "Приложение"
   },
   "layout.nav.modrinth-home-page": {
-    "message": "Главная страница Modrinth"
+    "message": "Главная страница"
   },
   "layout.nav.my-servers": {
     "message": "Мои серверы"
@@ -1953,7 +1953,7 @@
     "message": "Поиск"
   },
   "layout.nav.upgrade-to-modrinth-plus": {
-    "message": "Перейти на Modrinth+"
+    "message": "Plus-функции"
   },
   "moderation.moderate": {
     "message": "Модерировать"
@@ -2514,10 +2514,10 @@
     "message": "{title} не поддерживает {gameVersion} для {platform}"
   },
   "project.download.install-with-app": {
-    "message": "Скачать в Modrinth App"
+    "message": "Установить через приложение"
   },
   "project.download.no-app": {
-    "message": "У вас нет Modrinth App?"
+    "message": "Нет приложения?"
   },
   "project.download.no-versions-available": {
     "message": "Нет версий, доступных для {gameVersion} и {platform}."
@@ -3726,10 +3726,10 @@
     "message": "Внешние ссылки в новой вкладке"
   },
   "settings.display.sidebar.hide-app-promos.description": {
-    "message": "Убирает кнопку «Скачать Modrinth App» с поисковых страниц. Ссылку на раздел с Modrinth App всё ещё можно найти на главной странице или в нижней части интерфейса."
+    "message": "Убирает кнопку «Скачать приложение» с поисковых страниц."
   },
   "settings.display.sidebar.hide-app-promos.title": {
-    "message": "Скрывать кнопку скачивания Modrinth App"
+    "message": "Скрывать кнопку скачивания приложения"
   },
   "settings.display.sidebar.left-aligned-content-sidebar.title": {
     "message": "Панель сведений слева"

@@ -50,7 +50,7 @@ pub async fn login<R: Runtime>(
             },
         )?),
     )
-    .title("Sign into Modrinth")
+    .title("Sign in with Microsoft")
     .always_on_top(true)
     .center()
     .build()?;
@@ -63,17 +63,36 @@ pub async fn login<R: Runtime>(
             return Ok(None);
         }
 
-        if window
-            .url()?
+        // Sisu flow redirects to `oauth20_desktop.srf` on success
+        // (or to itself with `error=` on failure). We accept both so the
+        // user gets a meaningful error instead of waiting 10 minutes.
+        let url = window.url()?;
+        if url
             .as_str()
             .starts_with("https://login.live.com/oauth20_desktop.srf")
-            && let Some((_, code)) =
-                window.url()?.query_pairs().find(|x| x.0 == "code")
         {
-            window.close()?;
-            let val = minecraft_auth::finish_login(&code.clone(), flow).await?;
+            let pairs: std::collections::HashMap<_, _> =
+                url.query_pairs().into_owned().collect();
 
-            return Ok(Some(val));
+            if let Some(code) = pairs.get("code") {
+                window.close()?;
+                let val =
+                    minecraft_auth::finish_login(code, flow).await?;
+                return Ok(Some(val));
+            }
+
+            if let Some(err) = pairs.get("error") {
+                let desc = pairs
+                    .get("error_description")
+                    .cloned()
+                    .unwrap_or_default();
+                window.close()?;
+                return Err(theseus::ErrorKind::OtherError(format!(
+                    "Microsoft sign-in failed: {err} ({desc})"
+                ))
+                .as_error()
+                .into());
+            }
         }
 
         tokio::time::sleep(std::time::Duration::from_millis(50)).await;

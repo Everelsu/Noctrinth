@@ -386,7 +386,7 @@ defineOptions({
 
 	// Fade variants
 	&.standard {
-		background: linear-gradient(to bottom, rgba(29, 48, 43, 0.52) 0%, rgba(14, 21, 26, 0.95) 100%);
+		background: linear-gradient(to bottom, rgba(80, 35, 130, 0.45) 0%, rgba(14, 10, 22, 0.95) 100%);
 	}
 
 	&.warning {

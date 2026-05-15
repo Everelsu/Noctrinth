@@ -1,8 +1,8 @@
 {
 	"fill": {
 		"linear-gradient": [
-			"display-p3:0.18127,0.41301,0.28212,1.00000",
-			"display-p3:0.09652,0.20392,0.15411,1.00000"
+			"display-p3:0.05882,0.05490,0.10196,1.00000",
+			"display-p3:0.03922,0.03529,0.07843,1.00000"
 		]
 	},
 	"groups": [
@@ -20,8 +20,8 @@
 						{
 							"value": {
 								"linear-gradient": [
-									"display-p3:0.49491,0.92226,0.57293,1.00000",
-									"display-p3:0.10588,0.85098,0.41569,1.00000"
+									"display-p3:0.64706,0.70588,0.98824,1.00000",
+									"display-p3:0.38824,0.40000,0.94510,1.00000"
 								]
 							}
 						},
@@ -31,8 +31,8 @@
 						}
 					],
 					"glass": true,
-					"image-name": "Modrinth logo.svg",
-					"name": "Modrinth logo",
+					"image-name": "Noctrinth logo.svg",
+					"name": "Noctrinth logo",
 					"opacity-specializations": [
 						{
 							"appearance": "tinted",

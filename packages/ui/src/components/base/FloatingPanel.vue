@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { onClickOutside } from '@vueuse/core'
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 
@@ -271,9 +271,9 @@ defineExpose({
 				<div
 					v-if="isOpen"
 					ref="panelRef"
-					class="fixed z-[9995] w-fit rounded-[14px] border border-surface-5 bg-surface-3 border-solid border-px p-3 shadow-2xl"
+					class="fixed z-[9995] w-fit rounded-[14px] border border-solid border-px p-3"
 					:class="panelClass"
-					:style="[panelStyle, { transformOrigin }]"
+					:style="[panelStyle, { transformOrigin }, { backgroundColor: 'var(--color-raised-bg, var(--surface-3))', borderColor: 'var(--color-divider)', boxShadow: 'var(--shadow-floating, 0 8px 32px rgba(0,0,0,0.35))' }]"
 					role="dialog"
 					tabindex="-1"
 					@keydown="handlePanelKeydown"

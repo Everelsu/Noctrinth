@@ -335,12 +335,12 @@ const toggleFeatures = defineMessages({
 	},
 	hideModrinthAppPromosTitle: {
 		id: 'settings.display.sidebar.hide-app-promos.title',
-		defaultMessage: 'Hide Modrinth App promotions',
+		defaultMessage: 'Hide App promotions',
 	},
 	hideModrinthAppPromosDescription: {
 		id: 'settings.display.sidebar.hide-app-promos.description',
 		defaultMessage:
-			'Hides the "Get Modrinth App" buttons from primary navigation. The Modrinth App page can still be found on the landing page or in the footer.',
+			'Hides the "Get App" buttons from primary navigation. The App page can still be found on the landing page or in the footer.',
 	},
 	rightAlignedFiltersSidebarTitle: {
 		id: 'settings.display.sidebar.right-aligned-filters-sidebar.title',

@@ -458,7 +458,6 @@
 						</div>
 					</div>
 				</div>
-				<AdPlaceholder v-if="!auth.user" />
 			</div>
 		</div>
 	</div>

@@ -887,7 +887,6 @@
 						:project-v3="projectV3"
 						class="card flex-card"
 					/>
-					<AdPlaceholder v-if="!auth.user && tags.approvedStatuses.includes(project.status)" />
 					<ProjectSidebarLinks
 						:project="project"
 						:project-v3="projectV3"
@@ -1356,7 +1355,7 @@ const messages = defineMessages({
 	},
 	dontHaveModrinthApp: {
 		id: 'project.download.no-app',
-		defaultMessage: "Don't have Modrinth App?",
+		defaultMessage: "Don't have the App?",
 	},
 	dontShowAgain: {
 		id: 'project.actions.dont-show-again',
@@ -1422,7 +1421,7 @@ const messages = defineMessages({
 	},
 	installWithModrinthApp: {
 		id: 'project.download.install-with-app',
-		defaultMessage: 'Install with Modrinth App',
+		defaultMessage: 'Install with App',
 	},
 	licenseErrorMessage: {
 		id: 'project.license.error',

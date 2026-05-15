@@ -285,7 +285,7 @@ onUnmounted(() => {
 		<template #duplicate> <ClipboardCopyIcon /> Duplicate instance</template>
 		<template #copy_path> <ClipboardCopyIcon /> Copy path </template>
 		<template #install> <DownloadIcon /> Install </template>
-		<template #open_link> <GlobeIcon /> Open in Modrinth <ExternalIcon /> </template>
+		<template #open_link> <GlobeIcon /> Open in browser <ExternalIcon /> </template>
 		<template #copy_link> <ClipboardCopyIcon /> Copy link </template>
 	</ContextMenu>
 </template>

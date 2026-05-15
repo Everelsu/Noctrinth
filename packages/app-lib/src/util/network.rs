@@ -3,6 +3,10 @@ use std::io;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use tokio::net::TcpListener;
 
+pub async fn tcp_listen_loopback_port(port: u16) -> io::Result<TcpListener> {
+    TcpListener::bind(SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), port)).await
+}
+
 pub async fn tcp_listen_any_loopback() -> io::Result<TcpListener> {
     // IPv4 is tried first for the best compatibility and performance with most systems.
     // IPv6 is also tried in case IPv4 is not available. Resolving "localhost" is avoided

@@ -714,6 +714,11 @@ impl DeviceTokenPair {
     }
 }
 
+// The official Mojang Minecraft Launcher client ID. Pre-whitelisted by Mojang
+// for Xbox Live + Minecraft Services API access, so the Sisu flow below works
+// without needing a custom Azure AD registration or aka.ms/AppRegInfo approval.
+// This is the same ID used by all major third-party launchers (AstralRinth,
+// PrismLauncher, MultiMC, ATLauncher, …).
 const MICROSOFT_CLIENT_ID: &str = "00000000402b5328";
 const AUTH_REPLY_URL: &str = "https://login.live.com/oauth20_desktop.srf";
 const REQUESTED_SCOPE: &str = "service::user.auth.xboxlive.com::MBI_SSL";

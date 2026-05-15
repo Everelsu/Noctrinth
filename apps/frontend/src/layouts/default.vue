@@ -859,11 +859,11 @@ const navMenuMessages = defineMessages({
 	},
 	getModrinthApp: {
 		id: 'layout.nav.get-modrinth-app',
-		defaultMessage: 'Get Modrinth App',
+		defaultMessage: 'Get App',
 	},
 	modrinthApp: {
 		id: 'layout.nav.modrinth-app',
-		defaultMessage: 'Modrinth App',
+		defaultMessage: 'App',
 	},
 })
 
@@ -882,7 +882,7 @@ const messages = defineMessages({
 	},
 	modrinthHomePage: {
 		id: 'layout.nav.modrinth-home-page',
-		defaultMessage: 'Modrinth home page',
+		defaultMessage: 'Home page',
 	},
 	createNew: {
 		id: 'layout.action.create-new',
@@ -950,7 +950,7 @@ const messages = defineMessages({
 	},
 	upgradeToModrinthPlus: {
 		id: 'layout.nav.upgrade-to-modrinth-plus',
-		defaultMessage: 'Upgrade to Modrinth+',
+		defaultMessage: 'Plus features',
 	},
 	projects: {
 		id: 'layout.nav.projects',
@@ -1067,7 +1067,7 @@ const userMenuOptions = computed(() => {
 			id: 'plus',
 			link: '/plus',
 			color: 'purple',
-			shown: !flags.value.hidePlusPromoInUserMenu && !isPermission(user.badges, 1 << 0),
+			shown: false,
 		},
 		{
 			id: 'servers',

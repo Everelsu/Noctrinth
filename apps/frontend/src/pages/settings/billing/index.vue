@@ -30,7 +30,7 @@
 						</span>
 					</template>
 
-					<span v-else>{{ formatMessage(messages.midasUpsell) }}</span>
+					<span v-if="false">{{ formatMessage(messages.midasUpsell) }}</span>
 					<ModrinthPlusIcon class="h-8 w-min" />
 					<div class="flex flex-col gap-2">
 						<span class="font-bold">{{ formatMessage(messages.midasBenefitsTitle) }}</span>
@@ -256,7 +256,7 @@
 							{{ formatMessage(messages.resubscribe) }} <RightArrowIcon />
 						</button>
 					</ButtonStyled>
-					<ButtonStyled v-else color="purple" size="large">
+					<ButtonStyled v-if="false" color="purple" size="large">
 						<button
 							class="ml-auto"
 							@click="

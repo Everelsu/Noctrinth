@@ -54,6 +54,13 @@ pub async fn set_default_user(user: uuid::Uuid) -> crate::Result<()> {
         .as_error()
     })?;
 
+    // Deactivate any Ely.by account: there is exactly one active account
+    // across both providers, so picking a Microsoft account must unselect
+    // any Ely.by account (and vice versa).
+    sqlx::query!("UPDATE ely_users SET active = FALSE")
+        .execute(&state.pool)
+        .await?;
+
     user.active = true;
     user.upsert(&state.pool).await?;
 

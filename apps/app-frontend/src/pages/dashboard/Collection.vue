@@ -5,7 +5,6 @@ import {
 	ExternalIcon,
 	GlobeIcon,
 	HeartIcon,
-	LeftArrowIcon,
 	LinkIcon,
 	LockIcon,
 	TrashIcon,
@@ -39,6 +38,7 @@ import {
 	unfollowProject,
 } from '@/helpers/modrinth-api'
 import { get as getCreds } from '@/helpers/mr_auth.ts'
+import { useBreadcrumbs } from '@/store/breadcrumbs'
 
 dayjs.extend(relativeTime)
 
@@ -46,6 +46,7 @@ const { handleError } = injectNotificationManager()
 const { formatCompactNumber } = useCompactNumber()
 const route = useRoute()
 const router = useRouter()
+const breadcrumbs = useBreadcrumbs()
 
 const loading = ref(true)
 const collection = ref<Collection | null>(null)
@@ -92,10 +93,25 @@ function buildTags(p: any): string[] {
 	return out.slice(0, 5)
 }
 
+/**
+ * Resolves a project's type from either API shape: regular collections use the
+ * v2 cache (`project_type` string) while followed projects come from a v3
+ * endpoint (`project_types` array). Without this, the Followed view had no
+ * type filter because `project_type` was always undefined there.
+ */
+function getProjectType(p: any): string | undefined {
+	if (p.project_type) return p.project_type
+	if (Array.isArray(p.project_types) && p.project_types.length > 0) {
+		return p.project_types[0]
+	}
+	return undefined
+}
+
 const typeFilterOptions = computed<FilterPillOption[]>(() => {
 	const seen = new Set<string>()
 	for (const p of projects.value) {
-		if (p.project_type) seen.add(p.project_type)
+		const t = getProjectType(p)
+		if (t) seen.add(t)
 	}
 	return Array.from(seen).map((t) => ({
 		id: t,
@@ -107,7 +123,10 @@ const showTypeFilter = computed(() => typeFilterOptions.value.length > 1)
 
 const filteredProjects = computed(() => {
 	if (typeFilters.value.length === 0) return projects.value
-	return projects.value.filter((p) => typeFilters.value.includes(p.project_type))
+	return projects.value.filter((p) => {
+		const t = getProjectType(p)
+		return t != null && typeFilters.value.includes(t)
+	})
 })
 
 const editModal = ref<InstanceType<typeof CollectionEditModal>>()
@@ -167,6 +186,9 @@ async function load() {
 			await loadFollowing()
 		} else {
 			await loadCollection(id)
+		}
+		if (collection.value) {
+			breadcrumbs.setName('Collection', collection.value.name)
 		}
 	} catch (e) {
 		handleError(e)
@@ -246,15 +268,6 @@ onMounted(load)
 				{ label: 'Notifications', href: `/dashboard/notifications` },
 			]"
 		/>
-
-		<div class="flex items-center gap-2">
-			<ButtonStyled type="transparent" circular>
-				<button v-tooltip="'Back to collections'" @click="router.push('/dashboard/collections')">
-					<LeftArrowIcon />
-				</button>
-			</ButtonStyled>
-			<span class="text-sm text-secondary">Collections</span>
-		</div>
 
 		<p v-if="loading">Loading...</p>
 

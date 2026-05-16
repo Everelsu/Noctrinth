@@ -60,7 +60,6 @@
 					<ProjectBackgroundGradient :project="data" />
 				</Teleport>
 				<ProjectHeader
-					v-else
 					:project="data"
 					:project-v3="projectV3"
 					:ping="serverPing"

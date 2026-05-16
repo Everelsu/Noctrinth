@@ -104,6 +104,7 @@
 		"utils:default",
 		"ads:default",
 		"friends:default",
-		"worlds:default"
+		"worlds:default",
+		"ely-auth:default"
 	]
 }

@@ -9,8 +9,8 @@ use crate::pack::install_from::{
 };
 use crate::state::{
     CacheBehaviour, CachedEntry, ContentItem, Credentials, Dependency,
-    JavaVersion, LinkedModpackInfo, ProcessMetadata, ProfileFile,
-    ProfileInstallStage, ProjectType, SideType,
+    ElyCredentials, JavaVersion, LinkedModpackInfo, ProcessMetadata,
+    ProfileFile, ProfileInstallStage, ProjectType, SideType,
 };
 
 use crate::event::{ProfilePayloadType, emit::emit_profile};
@@ -763,18 +763,39 @@ pub async fn run(
 ) -> crate::Result<ProcessMetadata> {
     let state = State::get().await?;
 
-    let default_account = Credentials::get_default_credential(&state.pool)
-        .await?
-        .ok_or_else(|| crate::ErrorKind::NoCredentialsError.as_error())?;
+    // Prefer a signed-in Microsoft account.
+    if let Some(default_account) =
+        Credentials::get_default_credential(&state.pool).await?
+    {
+        return run_credentials(
+            path,
+            &default_account,
+            false,
+            quick_play_type,
+        )
+        .await;
+    }
 
-    run_credentials(path, &default_account, quick_play_type).await
+    // Otherwise fall back to an active Ely.by account, launching via the
+    // authlib-injector agent.
+    if let Some(ely) = ElyCredentials::get_active(&state.pool).await? {
+        let credentials = ely.to_minecraft_credentials();
+        return run_credentials(path, &credentials, true, quick_play_type)
+            .await;
+    }
+
+    Err(crate::ErrorKind::NoCredentialsError.as_error())
 }
 
-/// Run Minecraft using a profile, and credentials for authentication
+/// Run Minecraft using a profile, and credentials for authentication.
+///
+/// `elyby` indicates the credentials belong to an Ely.by account, which
+/// requires launching the game with the authlib-injector Java agent.
 #[tracing::instrument(skip(credentials))]
 async fn run_credentials(
     path: &str,
     credentials: &Credentials,
+    elyby: bool,
     quick_play_type: QuickPlayType,
 ) -> crate::Result<ProcessMetadata> {
     let state = State::get().await?;
@@ -925,6 +946,7 @@ async fn run_credentials(
         &memory,
         &resolution,
         credentials,
+        elyby,
         post_exit_hook,
         &profile,
         quick_play_type,

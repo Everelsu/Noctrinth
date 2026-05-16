@@ -493,6 +493,7 @@ pub async fn launch_minecraft(
     memory: &st::MemorySettings,
     resolution: &st::WindowSize,
     credentials: &Credentials,
+    elyby: bool,
     post_exit_hook: Option<String>,
     profile: &Profile,
     mut quick_play_type: QuickPlayType,
@@ -713,6 +714,20 @@ pub async fn launch_minecraft(
     // The java launcher code requires internal JDK code in Java 25+ in order to support JEP 512
     if java_version.parsed_version >= 25 {
         command.arg("--add-opens=jdk.internal/jdk.internal.misc=ALL-UNNAMED");
+    }
+
+    // Ely.by accounts authenticate against Ely.by's servers rather than
+    // Mojang's. The authlib-injector Java agent patches the game so its
+    // auth/session/skin calls are routed accordingly.
+    if elyby {
+        let injector = crate::util::authlib_injector::get_authlib_injector(
+            &state.directories,
+        )
+        .await?;
+        command.arg(format!(
+            "-javaagent:{}=ely.by",
+            injector.to_string_lossy()
+        ));
     }
 
     command

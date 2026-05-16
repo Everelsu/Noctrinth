@@ -117,7 +117,10 @@ export default new createRouter({
 			name: 'Collection',
 			component: Dashboard.Collection,
 			meta: {
-				breadcrumb: [{ name: 'Collection' }],
+				breadcrumb: [
+					{ name: 'Collections', link: '/dashboard/collections' },
+					{ name: '?Collection' },
+				],
 			},
 		},
 		{

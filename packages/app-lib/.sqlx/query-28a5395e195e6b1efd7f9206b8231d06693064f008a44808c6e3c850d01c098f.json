@@ -1,0 +1,44 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT uuid, active, username, access_token, client_token FROM ely_users",
+  "describe": {
+    "columns": [
+      {
+        "name": "uuid",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "active",
+        "ordinal": 1,
+        "type_info": "Integer"
+      },
+      {
+        "name": "username",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "access_token",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "client_token",
+        "ordinal": 4,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "28a5395e195e6b1efd7f9206b8231d06693064f008a44808c6e3c850d01c098f"
+}

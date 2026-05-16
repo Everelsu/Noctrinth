@@ -2,6 +2,7 @@
 import {
 	EditIcon,
 	ExcitedRinthbot,
+	ExternalIcon,
 	LogInIcon,
 	PlusIcon,
 	SpinnerIcon,
@@ -17,6 +18,7 @@ import {
 	SkinPreviewRenderer,
 } from '@modrinth/ui'
 import { arrayBufferToBase64 } from '@modrinth/utils'
+import { openUrl } from '@tauri-apps/plugin-opener'
 import { computedAsync } from '@vueuse/core'
 import type { Ref } from 'vue'
 import { computed, inject, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
@@ -27,6 +29,7 @@ import SelectCapeModal from '@/components/ui/skin/SelectCapeModal.vue'
 import UploadSkinModal from '@/components/ui/skin/UploadSkinModal.vue'
 import { trackEvent } from '@/helpers/analytics'
 import { get_default_user, login as login_flow, users } from '@/helpers/auth'
+import { getElySkinTexture } from '@/helpers/ely_skins'
 import type { RenderResult } from '@/helpers/rendering/batch-skin-renderer.ts'
 import { generateSkinPreviews, skinBlobUrlMap } from '@/helpers/rendering/batch-skin-renderer.ts'
 import { get as getSettings } from '@/helpers/settings.ts'
@@ -57,6 +60,48 @@ const capes = ref<Cape[]>([])
 const accountsCard = inject('accountsCard') as Ref<typeof AccountsCard>
 const currentUser = ref(undefined)
 const currentUserId = ref<string | undefined>(undefined)
+
+type ElySelectedAccount = {
+	profile: {
+		id: string
+		name: string
+	}
+	auth_provider?: string
+}
+
+/**
+ * The currently selected account when it is an Ely.by account. Ely.by skins
+ * are managed on the ely.by website, so the Skins tab shows a read-only
+ * preview rather than the Microsoft skin-management UI.
+ */
+const elyAccount = computed<ElySelectedAccount | undefined>(() => {
+	const selected = accountsCard.value?.selectedAccount as ElySelectedAccount | undefined
+	if (selected && selected.auth_provider === 'ely_by') {
+		return selected
+	}
+	return undefined
+})
+
+const elySkinTexture = computedAsync(async () => {
+	const account = elyAccount.value
+	if (!account) {
+		return ''
+	}
+	try {
+		return await getElySkinTexture(account.profile.name)
+	} catch {
+		return ''
+	}
+}, '')
+
+/**
+ * Opens the Ely.by skin page directly. If the user is not signed in to the
+ * Ely.by website, Ely.by itself redirects to its login page and returns to
+ * the skin page once the user has logged in.
+ */
+function openElySkinPage() {
+	openUrl('https://ely.by/skins/add')
+}
 
 const username = computed(() => currentUser.value?.profile?.name ?? undefined)
 const selectedSkin = ref<Skin | null>(null)
@@ -116,6 +161,12 @@ async function deleteSkin() {
 }
 
 async function loadCapes() {
+	// The Mojang skin/cape API only works for an active Microsoft account.
+	if (!currentUser.value) {
+		capes.value = []
+		defaultCape.value = undefined
+		return
+	}
 	try {
 		capes.value = (await get_available_capes()) ?? []
 		defaultCape.value = capes.value.find((c) => c.is_equipped)
@@ -128,6 +179,12 @@ async function loadCapes() {
 }
 
 async function loadSkins() {
+	// The Mojang skin/cape API only works for an active Microsoft account.
+	if (!currentUser.value) {
+		skins.value = []
+		selectedSkin.value = null
+		return
+	}
 	try {
 		skins.value = (await get_available_skins()) ?? []
 		generateSkinPreviews(skins.value, capes.value)
@@ -292,7 +349,10 @@ async function checkUserChanges() {
 	}
 }
 
-await Promise.all([loadCapes(), loadSkins(), loadCurrentUser()])
+// Resolve the current user first so loadSkins/loadCapes can skip the
+// Mojang API when no Microsoft account is active.
+await loadCurrentUser()
+await Promise.all([loadCapes(), loadSkins()])
 </script>
 
 <template>
@@ -419,6 +479,43 @@ await Promise.all([loadCapes(), loadSkins(), loadCurrentUser()])
 						:tooltip="skin.name"
 						@select="changeSkin(skin)"
 					/>
+				</div>
+			</section>
+		</div>
+	</div>
+
+	<div v-else-if="elyAccount" class="p-4 skin-layout">
+		<div class="preview-panel">
+			<h1 class="m-0 text-2xl font-bold flex items-center gap-2">
+				Skins
+				<span class="text-sm font-bold px-2 bg-brand-highlight text-brand rounded-full">Beta</span>
+			</h1>
+			<div class="preview-container">
+				<SkinPreviewRenderer
+					:texture-src="elySkinTexture || ''"
+					:nametag="elyAccount.profile.name"
+					:initial-rotation="Math.PI / 8"
+				/>
+			</div>
+		</div>
+
+		<div class="skins-container">
+			<section class="flex flex-col gap-4 mt-1">
+				<h2 class="text-lg font-bold m-0 text-primary">Ely.by skin</h2>
+				<div
+					class="bg-bg-raised card-shadow rounded-lg p-5 flex flex-col gap-4 shadow-md max-w-xl"
+				>
+					<p class="text-secondary m-0">
+						Skins for Ely.by accounts are changed on the Ely.by website. The button below
+						opens the skin page directly — if you aren't signed in, Ely.by will ask you to
+						log in first.
+					</p>
+					<ButtonStyled color="brand">
+						<button @click="openElySkinPage">
+							<ExternalIcon />
+							Change skin on Ely.by
+						</button>
+					</ButtonStyled>
 				</div>
 			</section>
 		</div>

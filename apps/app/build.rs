@@ -309,6 +309,21 @@ fn main() {
                     .default_permission(
                         DefaultPermissionRule::AllowAllCommands,
                     ),
+            )
+            .plugin(
+                "ely-auth",
+                InlinedPlugin::new()
+                    .commands(&[
+                        "ely_login",
+                        "ely_logout",
+                        "ely_get_users",
+                        "ely_get_default_user",
+                        "ely_set_default_user",
+                        "ely_get_skin_texture",
+                    ])
+                    .default_permission(
+                        DefaultPermissionRule::AllowAllCommands,
+                    ),
             ),
     )
     .expect("Failed to run tauri-build");

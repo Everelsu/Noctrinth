@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE minecraft_users SET active = FALSE",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "828b30f444afa55ac0b82fadefaebe358ae5140102245f56e05f1519fe9f996f"
+}

@@ -1638,10 +1638,14 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 
 	display: grid;
 	grid-template-columns: 1fr 0px;
-	// transition: grid-template-columns 0.4s ease-in-out;
+	transition: grid-template-columns 0.28s ease-in-out;
 
 	&.sidebar-enabled {
 		grid-template-columns: 1fr 300px;
+	}
+
+	@media (prefers-reduced-motion) {
+		transition: none;
 	}
 }
 

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE ely_users SET active = FALSE",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "ff03af6d3f47357d2660bf025f6bdbdbe253284ee7043edc3c8d8e88388fdd76"
+}

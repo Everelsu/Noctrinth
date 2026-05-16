@@ -231,6 +231,7 @@ fn main() {
 
     builder = builder
         .plugin(api::auth::init())
+        .plugin(api::ely_auth::init())
         .plugin(api::mr_auth::init())
         .plugin(api::import::init())
         .plugin(api::logs::init())

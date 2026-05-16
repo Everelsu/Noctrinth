@@ -1,4 +1,5 @@
 //! Theseus utility functions
+pub mod authlib_injector;
 pub mod fetch;
 pub mod io;
 pub mod jre;

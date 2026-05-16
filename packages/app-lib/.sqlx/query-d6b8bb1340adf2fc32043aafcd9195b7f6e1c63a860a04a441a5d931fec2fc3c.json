@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO ely_users (uuid, active, username, access_token, client_token)\n             VALUES ($1, $2, $3, $4, $5)\n             ON CONFLICT (uuid) DO UPDATE SET\n                 active = $2, username = $3, access_token = $4, client_token = $5",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "d6b8bb1340adf2fc32043aafcd9195b7f6e1c63a860a04a441a5d931fec2fc3c"
+}

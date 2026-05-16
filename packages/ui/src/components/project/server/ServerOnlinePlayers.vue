@@ -29,7 +29,7 @@ defineProps<{
 			:style="{
 				'--_color-inner': statusOnline ? 'var(--color-brand)' : 'var(--color-red)',
 				'--_color-outer': statusOnline
-					? 'var(--color-green-highlight)'
+					? 'var(--color-brand-highlight)'
 					: 'var(--color-red-highlight)',
 			}"
 		/>

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM ely_users WHERE uuid = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "d4d0252f30dc0107b8e6378beda206da875957e14791f503b6f7d573c0066ce1"
+}

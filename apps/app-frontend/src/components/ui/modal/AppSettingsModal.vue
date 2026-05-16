@@ -4,6 +4,7 @@ import {
 	GameIcon,
 	GaugeIcon,
 	LanguagesIcon,
+	NewspaperIcon,
 	PaintbrushIcon,
 	SettingsIcon,
 	ShieldIcon,
@@ -24,6 +25,7 @@ import { platform as getOsPlatform, version as getOsVersion } from '@tauri-apps/
 import { ref, watch } from 'vue'
 
 import AppearanceSettings from '@/components/ui/settings/AppearanceSettings.vue'
+import ChangelogSettings from '@/components/ui/settings/ChangelogSettings.vue'
 import DefaultInstanceSettings from '@/components/ui/settings/DefaultInstanceSettings.vue'
 import FeatureFlagSettings from '@/components/ui/settings/FeatureFlagSettings.vue'
 import JavaSettings from '@/components/ui/settings/JavaSettings.vue'
@@ -94,6 +96,14 @@ const tabs = [
 		}),
 		icon: GaugeIcon,
 		content: ResourceManagementSettings,
+	},
+	{
+		name: defineMessage({
+			id: 'app.settings.tabs.changelog',
+			defaultMessage: 'Changelog',
+		}),
+		icon: NewspaperIcon,
+		content: ChangelogSettings,
 	},
 	{
 		name: commonSettingsMessages.featureFlags,

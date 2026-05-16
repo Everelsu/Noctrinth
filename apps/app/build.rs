@@ -1,6 +1,12 @@
 use tauri_build::{DefaultPermissionRule, InlinedPlugin};
 
 fn main() {
+    // The app version in tauri.conf.json points to app-frontend/package.json.
+    // tauri-build only watches tauri.conf.json itself, so without this the
+    // baked-in version (returned by `getVersion()`) goes stale whenever the
+    // version is bumped. Rebuild the crate when that package.json changes.
+    println!("cargo:rerun-if-changed=../app-frontend/package.json");
+
     // Sadly, there is no better way to do it right now
     // You could try parsing source code here and detecting #[tauri::command]
     // But I think it's not worth it

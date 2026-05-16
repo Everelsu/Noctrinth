@@ -1,7 +1,7 @@
 {
 	"name": "@modrinth/app-frontend",
 	"private": true,
-	"version": "0.1.0",
+	"version": "0.13.17",
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
@@ -16,6 +16,7 @@
 		"@intercom/messenger-js-sdk": "^0.0.14",
 		"@modrinth/api-client": "workspace:^",
 		"@modrinth/assets": "workspace:*",
+		"@modrinth/blog": "workspace:*",
 		"@modrinth/ui": "workspace:*",
 		"@modrinth/utils": "workspace:*",
 		"@sentry/vue": "^8.27.0",

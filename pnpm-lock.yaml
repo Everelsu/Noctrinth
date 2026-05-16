@@ -80,6 +80,9 @@ importers:
       '@modrinth/assets':
         specifier: workspace:*
         version: link:../../packages/assets
+      '@modrinth/blog':
+        specifier: workspace:*
+        version: link:../../packages/blog
       '@modrinth/ui':
         specifier: workspace:*
         version: link:../../packages/ui

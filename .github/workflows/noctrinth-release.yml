@@ -99,7 +99,14 @@ jobs:
 
       - name: Prepare app-lib environment
         shell: bash
-        run: cp packages/app-lib/.env.prod packages/app-lib/.env
+        run: |
+          cp packages/app-lib/.env.prod packages/app-lib/.env
+          # OAuth credentials are not committed to .env.prod — inject them
+          # from repository secrets so the compile-time env!() calls resolve.
+          {
+            echo "MODRINTH_OAUTH_CLIENT_ID=${{ secrets.MODRINTH_OAUTH_CLIENT_ID }}"
+            echo "MODRINTH_OAUTH_CLIENT_SECRET=${{ secrets.MODRINTH_OAUTH_CLIENT_SECRET }}"
+          } >> packages/app-lib/.env
 
       - name: Install dependencies
         run: pnpm install

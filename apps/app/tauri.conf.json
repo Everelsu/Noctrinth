@@ -11,7 +11,7 @@
 		"createUpdaterArtifacts": true,
 		"category": "Game",
 		"copyright": "",
-		"targets": "all",
+		"targets": ["nsis", "app", "dmg", "appimage", "deb"],
 		"externalBin": [],
 		"icon": [
 			"icons/128x128.png",
@@ -78,7 +78,7 @@
 		},
 		"updater": {
 			"endpoints": [
-				"https://github.com/Everelsu/Noctrinth/releases/latest/download/latest.json"
+				"https://raw.githubusercontent.com/Everelsu/Noctrinth/updater/latest.json"
 			],
 			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDcwNzFFM0EzMzNBRTU1MDUKUldRRlZhNHpvK054Y0xWa3pnQVpRZnJUbXZYNWprRkhvTW5JS0xUYmZKK2l3TkdHTWh5eGw1VWUK"
 		}

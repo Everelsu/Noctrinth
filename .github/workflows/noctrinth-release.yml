@@ -40,13 +40,10 @@ jobs:
         include:
           - platform: macos-latest
             args: '--features updater --target universal-apple-darwin'
-            rust-targets: 'aarch64-apple-darwin,x86_64-apple-darwin'
           - platform: ubuntu-22.04
             args: '--features updater'
-            rust-targets: ''
           - platform: windows-latest
             args: '--features updater'
-            rust-targets: ''
 
     runs-on: ${{ matrix.platform }}
 
@@ -89,8 +86,10 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.rust-targets }}
+
+      - name: Add macOS universal targets
+        if: matrix.platform == 'macos-latest'
+        run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
 
       - name: Cache Rust build
         uses: Swatinem/rust-cache@v2
@@ -124,3 +123,55 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
+
+  # Moves the updater manifest off the release page: `latest.json` is committed
+  # to the `updater` branch and, together with the `.sig` signature files, is
+  # removed from the release so only the actual installers remain visible.
+  finalize:
+    name: Publish updater manifest
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Relocate updater manifest and strip signatures
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          # Grab the updater manifest produced by the build jobs.
+          mkdir -p manifest
+          gh release download "$TAG" --pattern latest.json --dir manifest --clobber
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Commit latest.json to the dedicated `updater` branch (orphan branch
+          # holding only the manifest — the Tauri updater endpoint points here).
+          if git ls-remote --exit-code --heads origin updater >/dev/null 2>&1; then
+            git fetch origin updater
+            git checkout updater
+          else
+            git checkout --orphan updater
+            git rm -rf . >/dev/null 2>&1 || true
+          fi
+
+          cp manifest/latest.json latest.json
+          git add latest.json
+          git commit -m "updater: $TAG" || echo "Manifest unchanged"
+          git push origin updater
+
+          # Remove the manifest and signature files from the release page so
+          # only the installers are shown to users.
+          gh release view "$TAG" --json assets --jq '.assets[].name' \
+            | grep -E '(^latest\.json$|\.sig$)' \
+            | while read -r asset; do
+                echo "Removing release asset: $asset"
+                gh release delete-asset "$TAG" "$asset" --yes
+              done

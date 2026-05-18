@@ -120,7 +120,11 @@ jobs:
           VERSION="${TAG#v}"
           echo "Setting crate versions to $VERSION"
           for f in apps/app/Cargo.toml packages/app-lib/Cargo.toml; do
-            sed -i "0,/^version = .*/s//version = \"$VERSION\"/" "$f"
+            # `sed -i` is not portable (GNU vs BSD/macOS), so write to a temp
+            # file and move it back. The `1,/.../` range limits the change to
+            # the first `version =` line — the [package] version.
+            sed "1,/^version = .*/ s/^version = .*/version = \"$VERSION\"/" "$f" > "$f.tmp"
+            mv "$f.tmp" "$f"
           done
 
       - name: Install dependencies

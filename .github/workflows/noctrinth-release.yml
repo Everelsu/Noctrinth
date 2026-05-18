@@ -18,11 +18,13 @@ name: Noctrinth Release
 on:
   push:
     tags:
+      # Noctrinth-specific prefix so release tags never collide with the
+      # upstream Modrinth `v*` tags that arrive with every upstream sync.
       - 'v*'
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag (e.g. v0.1.0)'
+        description: 'Release tag (e.g. v0.13.18)'
         required: true
 
 concurrency:

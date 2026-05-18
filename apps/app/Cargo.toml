@@ -1,7 +1,7 @@
 [package]
 name = "theseus_gui"
 # The actual version is set by the theseus-build workflow on tagging
-version = "0.13.17-local"
+version = "0.13.18-local"
 edition.workspace = true
 description = "Noctrinth is a desktop application for managing your Minecraft mods"
 repository = "https://github.com/Everelsu/Noctrinth"

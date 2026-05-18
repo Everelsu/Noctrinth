@@ -19,6 +19,8 @@ pub mod tags;
 pub mod utils;
 
 pub mod ads;
+#[cfg(windows)]
+mod ads_occlusion_windows;
 pub mod cache;
 pub mod files;
 pub mod friends;

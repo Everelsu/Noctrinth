@@ -1,4 +1,11 @@
-import { posthog } from 'posthog-js'
+/**
+ * Analytics is disabled in Noctrinth.
+ *
+ * Upstream Modrinth ships PostHog analytics pointed at `posthog.modrinth.com`.
+ * For this fork those requests would only hammer Modrinth's servers with no
+ * purpose, so every entry point below is a no-op. The event types are kept so
+ * existing `trackEvent(...)` call sites stay type-checked.
+ */
 
 interface InstanceProperties {
 	loader: string
@@ -43,38 +50,19 @@ type AnalyticsEventMap = {
 
 export type AnalyticsEvent = keyof AnalyticsEventMap
 
-let initialized = false
-
-export const initAnalytics = () => {
-	if (initialized) return
-	posthog.init('phc_9Iqi6lFs9sr5BSqh9RRNRSJ0mATS9PSgirDiX3iOYJ', {
-		persistence: 'localStorage',
-		api_host: 'https://posthog.modrinth.com',
-	})
-	initialized = true
-}
-
-export const debugAnalytics = () => {
-	if (!initialized) return
-	posthog.debug()
-}
-
-export const optOutAnalytics = () => {
-	if (!initialized) return
-	posthog.opt_out_capturing()
-}
-
-export const optInAnalytics = () => {
-	initAnalytics()
-	posthog.opt_in_capturing()
-}
-
 type OptionalArgs<T> = Record<string, never> extends T ? [properties?: T] : [properties: T]
 
+// All analytics entry points are intentionally no-ops — see the file header.
+
+export const initAnalytics = (): void => {}
+
+export const debugAnalytics = (): void => {}
+
+export const optOutAnalytics = (): void => {}
+
+export const optInAnalytics = (): void => {}
+
 export const trackEvent = <E extends AnalyticsEvent>(
-	eventName: E,
-	...args: OptionalArgs<AnalyticsEventMap[E]>
-) => {
-	if (!initialized) return
-	posthog.capture(eventName, args[0])
-}
+	_eventName: E,
+	..._args: OptionalArgs<AnalyticsEventMap[E]>
+): void => {}

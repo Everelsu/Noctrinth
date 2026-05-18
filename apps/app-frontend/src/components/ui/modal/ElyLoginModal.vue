@@ -130,3 +130,13 @@ function formatLoginError(e: unknown): string {
 
 defineExpose({ show, hide })
 </script>
+
+<style scoped>
+/* WebView2 renders its own native password reveal/clear controls for
+   <input type="password">. Hide them so only the custom show/hide button
+   from this modal is shown. */
+:deep(input::-ms-reveal),
+:deep(input::-ms-clear) {
+	display: none;
+}
+</style>

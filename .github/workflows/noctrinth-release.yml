@@ -107,6 +107,20 @@ jobs:
             echo "MODRINTH_OAUTH_CLIENT_SECRET=${{ secrets.MODRINTH_OAUTH_CLIENT_SECRET }}"
           } >> packages/app-lib/.env
 
+      - name: Sync crate versions with the release tag
+        shell: bash
+        env:
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          # The app version lives in app-frontend/package.json; mirror it into
+          # the Rust crates so the user-agent and crate metadata stay in sync.
+          # Only package.json + the git tag need to be bumped by hand.
+          VERSION="${TAG#v}"
+          echo "Setting crate versions to $VERSION"
+          for f in apps/app/Cargo.toml packages/app-lib/Cargo.toml; do
+            sed -i "0,/^version = .*/s//version = \"$VERSION\"/" "$f"
+          done
+
       - name: Install dependencies
         run: pnpm install
 

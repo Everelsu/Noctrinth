@@ -19,6 +19,16 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.13.18',
+		date: '2026-05-18T00:00:00+00:00',
+		body: `## Changed
+- Updated to the latest Modrinth App release(0.13.18) — synced with upstream to bring in its newest features and fixes.
+- Discord Rich Presence now runs on Noctrinth's own Discord application with its own presence artwork, instead of Modrinth's.
+
+## Fixed
+- Fixed Ely.by account sign-in and launching so authenticating and starting the game with an Ely.by account work reliably.`,
+	},
+	{
 		version: '0.13.17',
 		date: '2026-05-17T00:00:00+00:00',
 		body: `## Added

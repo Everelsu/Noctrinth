@@ -684,13 +684,15 @@ const messages = defineMessages({
 
 const client = injectModrinthClient()
 
+const userId = useRouteId('user')
+
 const {
 	data: user,
 	error: userError,
 	suspense: userSuspense,
 } = useQuery({
-	queryKey: computed(() => ['user', route.params.id]),
-	queryFn: () => client.labrinth.users_v2.get(route.params.id),
+	queryKey: computed(() => ['user', userId]),
+	queryFn: () => client.labrinth.users_v2.get(userId),
 })
 
 watch(
@@ -709,9 +711,9 @@ watch(
 )
 
 const { data: projects, suspense: projectsSuspense } = useQuery({
-	queryKey: computed(() => ['user', route.params.id, 'projects']),
+	queryKey: computed(() => ['user', userId, 'projects']),
 	queryFn: async () => {
-		const projects = await client.labrinth.users_v2.getProjects(route.params.id)
+		const projects = await client.labrinth.users_v2.getProjects(userId)
 		for (const project of projects) {
 			project.categories = project.categories.concat(project.loaders)
 			project.project_type = data.$getProjectTypeForUrl(
@@ -725,13 +727,13 @@ const { data: projects, suspense: projectsSuspense } = useQuery({
 })
 
 const { data: organizations, suspense: orgsSuspense } = useQuery({
-	queryKey: computed(() => ['user', route.params.id, 'organizations']),
-	queryFn: () => client.labrinth.users_v2.getOrganizations(route.params.id),
+	queryKey: computed(() => ['user', userId, 'organizations']),
+	queryFn: () => client.labrinth.users_v2.getOrganizations(userId),
 })
 
 const { data: collections, suspense: collectionsSuspense } = useQuery({
-	queryKey: computed(() => ['user', route.params.id, 'collections']),
-	queryFn: () => client.labrinth.users_v2.getCollections(route.params.id),
+	queryKey: computed(() => ['user', userId, 'collections']),
+	queryFn: () => client.labrinth.users_v2.getCollections(userId),
 })
 
 onServerPrefetch(async () => {
@@ -864,7 +866,7 @@ const isAdminViewing = computed(() => isAdmin(auth.value.user))
 
 async function toggleAffiliate(id) {
 	await client.labrinth.users_v2.patch(id, { badges: user.value.badges ^ (1 << 7) })
-	queryClient.invalidateQueries({ queryKey: ['user', route.params.id] })
+	queryClient.invalidateQueries({ queryKey: ['user', userId] })
 }
 
 const navLinks = computed(() => [

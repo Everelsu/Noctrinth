@@ -1638,14 +1638,25 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 
 	display: grid;
 	grid-template-columns: 1fr 0px;
-	transition: grid-template-columns 0.28s ease-in-out;
+	// Мгновенное расширение контента — но только ПОСЛЕ того как сайдбар уехал
+	transition: grid-template-columns 0s 0.28s;
 
 	&.sidebar-enabled {
 		grid-template-columns: 1fr 300px;
+		// При показе — сразу сужаем контент, сайдбар въезжает поверх
+		transition: grid-template-columns 0s;
+
+		.app-sidebar {
+			transform: translateX(0);
+		}
 	}
 
 	@media (prefers-reduced-motion) {
 		transition: none;
+
+		.app-sidebar {
+			transition: none;
+		}
 	}
 }
 
@@ -1660,6 +1671,8 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 	position: relative;
 	height: calc(100vh - var(--top-bar-height));
 	background: var(--brand-gradient-bg);
+	transform: translateX(300px);
+	transition: transform 0.28s ease-in-out;
 
 	--color-button-bg: var(--brand-gradient-button);
 	--color-button-bg-hover: var(--brand-gradient-border);

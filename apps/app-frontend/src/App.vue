@@ -683,17 +683,7 @@ const hasPlus = computed(
 		(credentials.value.user.badges & MIDAS_BITFLAG) === MIDAS_BITFLAG,
 )
 
-<<<<<<< HEAD
 const showAd = computed(() => false)
-const hostingRouteActive = computed(() => route.path.startsWith('/hosting'))
-
-let intercomBooting = false
-let intercomBooted = false
-=======
-const showAd = computed(
-	() => sidebarVisible.value && !hasPlus.value && credentials.value !== undefined,
-)
->>>>>>> upstream/main
 
 async function fetchIntercomToken() {
 	const creds = await getCreds()

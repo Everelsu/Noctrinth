@@ -10566,6 +10566,8 @@ version = "0.13.18-local"
 dependencies = [
  "async_zip",
  "chrono",
+ "core-foundation 0.10.1",
+ "core-graphics",
  "daedalus",
  "dashmap",
  "either",
@@ -10573,6 +10575,7 @@ dependencies = [
  "hyper 1.7.0",
  "hyper-util",
  "native-dialog",
+ "objc2-app-kit",
  "paste",
  "path-util",
  "serde",

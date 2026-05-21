@@ -19,6 +19,12 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.13.20',
+		date: '2026-05-21T00:00:00+00:00',
+		body: `## Changed
+- Synced with upstream Modrinth (0.13.20): content management improvements, new date picker, improved Intercom bubble positioning, macOS window occlusion checks, and various routing fixes.`,
+	},
+	{
 		version: '0.13.19',
 		date: '2026-05-20T00:00:00+00:00',
 		body: `## Fixed

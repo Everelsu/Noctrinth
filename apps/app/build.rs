@@ -147,7 +147,11 @@ fn main() {
             .plugin(
                 "pack",
                 InlinedPlugin::new()
-                    .commands(&["pack_install", "pack_get_profile_from_pack"])
+                    .commands(&[
+                        "pack_install",
+                        "pack_install_curseforge",
+                        "pack_get_profile_from_pack",
+                    ])
                     .default_permission(
                         DefaultPermissionRule::AllowAllCommands,
                     ),
@@ -189,6 +193,7 @@ fn main() {
                         "profile_update_project",
                         "profile_add_project_from_version",
                         "profile_add_project_from_path",
+                        "profile_add_project_from_curseforge",
                         "profile_toggle_disable_project",
                         "profile_remove_project",
                         "profile_update_managed_modrinth_version",

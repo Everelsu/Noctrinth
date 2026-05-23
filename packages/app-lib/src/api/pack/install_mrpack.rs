@@ -33,6 +33,26 @@ pub async fn install_zipped_mrpack(
     location: CreatePackLocation,
     profile_path: String,
 ) -> crate::Result<String> {
+    // A CurseForge modpack zip (manifest.json) imported from a file needs the
+    // CurseForge installer rather than the Modrinth .mrpack pipeline.
+    if let CreatePackLocation::FromFile {
+        path,
+        curseforge_api_key: Some(api_key),
+    } = &location
+    {
+        let bytes = bytes::Bytes::from(io::read(path).await?);
+        if crate::pack::install_curseforge::zip_has_curseforge_manifest(&bytes)
+            .await
+        {
+            return crate::pack::install_curseforge::install_curseforge_pack_from_zip(
+                bytes,
+                api_key,
+                profile_path,
+            )
+            .await;
+        }
+    }
+
     // Get file from description
     let create_pack: CreatePack = match location {
         CreatePackLocation::FromVersionId {
@@ -52,7 +72,7 @@ pub async fn install_zipped_mrpack(
             )
             .await?
         }
-        CreatePackLocation::FromFile { path } => {
+        CreatePackLocation::FromFile { path, .. } => {
             generate_pack_from_file(path, profile_path.clone()).await?
         }
     };

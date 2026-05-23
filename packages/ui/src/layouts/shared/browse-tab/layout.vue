@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Labrinth } from '@modrinth/api-client'
-import { SearchIcon } from '@modrinth/assets'
+import { CurseForgeIcon, ModrinthIcon, SearchIcon } from '@modrinth/assets'
 import { computed, ref, toValue } from 'vue'
 
 import ButtonStyled from '#ui/components/base/ButtonStyled.vue'
@@ -43,6 +43,15 @@ const maxResultsOptions = computed<ComboboxOption<number>[]>(() =>
 		label: String(n),
 	})),
 )
+
+// Catalog toggle is shown only in browse mode (empty query, non-server).
+const showSourceToggle = computed(
+	() => !!ctx.sourceMode && !ctx.query.value && !ctx.isServerType.value,
+)
+
+function setSource(value: 'modrinth' | 'curseforge') {
+	if (ctx.sourceMode) ctx.sourceMode.value = value
+}
 
 const messages = defineMessages({
 	searchPlaceholder: {
@@ -96,6 +105,32 @@ const messages = defineMessages({
 	/>
 
 	<div class="flex flex-wrap items-center gap-2">
+		<div
+			v-if="showSourceToggle"
+			class="source-toggle"
+			role="group"
+			aria-label="Catalog source"
+		>
+			<button
+				type="button"
+				class="source-toggle__btn source-toggle__btn--mr"
+				:class="{ 'is-active': ctx.sourceMode?.value === 'modrinth' }"
+				@click="setSource('modrinth')"
+			>
+				<ModrinthIcon class="source-toggle__icon" />
+				<span class="source-toggle__label">Modrinth</span>
+			</button>
+			<button
+				type="button"
+				class="source-toggle__btn source-toggle__btn--cf"
+				:class="{ 'is-active': ctx.sourceMode?.value === 'curseforge' }"
+				@click="setSource('curseforge')"
+			>
+				<CurseForgeIcon class="source-toggle__icon" />
+				<span class="source-toggle__label">CurseForge</span>
+			</button>
+		</div>
+
 		<Combobox
 			:model-value="ctx.effectiveCurrentSortType.value"
 			:options="sortOptions"
@@ -276,6 +311,13 @@ const messages = defineMessages({
 							: undefined
 					"
 					:layout="ctx.effectiveLayout.value"
+					:sources="
+						ctx.query.value
+							? ((result as { sources?: unknown }).sources as
+									| { modrinth?: { project_id: string; slug: string }; curseforge?: { mod_id: number; slug: string } }
+									| undefined)
+							: undefined
+					"
 					@contextmenu.prevent.stop="(event: MouseEvent) => ctx.onContextMenu?.(event, result)"
 					@mouseenter="ctx.onProjectHover?.(result)"
 					@mouseleave="ctx.onProjectHoverEnd?.()"
@@ -316,3 +358,92 @@ const messages = defineMessages({
 
 	<slot name="after" />
 </template>
+
+<style scoped lang="scss">
+/* Animated catalog-source toggle — the active option expands to reveal its
+   label, the other collapses to just its icon. */
+.source-toggle {
+	display: flex;
+	gap: 4px;
+	width: 15rem;
+	padding: 4px;
+	border-radius: 12px;
+	background: var(--color-button-bg);
+}
+
+.source-toggle__btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	flex-grow: 0;
+	flex-shrink: 1;
+	min-width: 2.75rem;
+	padding: 8px 0;
+	border: none;
+	border-radius: 8px;
+	background: transparent;
+	cursor: pointer;
+	font-weight: 700;
+	font-size: 0.875rem;
+	white-space: nowrap;
+	overflow: hidden;
+	transition:
+		flex-grow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+		background-color 0.2s ease,
+		color 0.2s ease;
+}
+
+.source-toggle__icon {
+	width: 18px;
+	height: 18px;
+	flex-shrink: 0;
+}
+
+.source-toggle__label {
+	max-width: 0;
+	opacity: 0;
+	overflow: hidden;
+	transition:
+		max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+		opacity 0.2s ease;
+}
+
+.source-toggle__btn.is-active {
+	flex-grow: 1;
+}
+
+.source-toggle__btn.is-active .source-toggle__label {
+	max-width: 8rem;
+	opacity: 1;
+}
+
+.source-toggle__btn--mr {
+	color: #1bd96a;
+}
+.source-toggle__btn--mr.is-active {
+	background: #1bd96a;
+	color: #07130c;
+}
+.source-toggle__btn--mr:not(.is-active):hover {
+	background: #1bd96a1a;
+}
+
+.source-toggle__btn--cf {
+	color: #f16436;
+}
+.source-toggle__btn--cf.is-active {
+	background: #f16436;
+	color: #1f0d05;
+}
+.source-toggle__btn--cf:not(.is-active):hover {
+	background: #f164361a;
+}
+
+@media (prefers-reduced-motion) {
+	.source-toggle__btn,
+	.source-toggle__label {
+		transition: none;
+	}
+}
+</style>

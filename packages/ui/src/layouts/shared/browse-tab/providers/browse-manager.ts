@@ -56,6 +56,13 @@ export interface BrowseManagerContext {
 
 	variant: 'app' | 'web'
 
+	/**
+	 * App-only catalog source toggle. When provided, a Modrinth/CurseForge
+	 * picker is shown in browse mode (empty query). Searching with a query
+	 * ignores it and queries both sources.
+	 */
+	sourceMode?: Ref<'modrinth' | 'curseforge'>
+
 	getCardActions?: (
 		result: Labrinth.Search.v2.ResultSearchProject | Labrinth.Search.v3.ResultSearchProject,
 		projectType: string,

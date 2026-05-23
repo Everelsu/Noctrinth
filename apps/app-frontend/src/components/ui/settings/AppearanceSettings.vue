@@ -2,12 +2,14 @@
 import { Combobox, defineMessages, ThemeSelector, Toggle, useVIntl } from '@modrinth/ui'
 import { ref, watch } from 'vue'
 
+import { useSourceAccent } from '@/composables/source-mode'
 import { get, set } from '@/helpers/settings.ts'
 import { getOS } from '@/helpers/utils'
 import { useTheming } from '@/store/state'
 import type { ColorTheme, FeatureFlag } from '@/store/theme.ts'
 
 const themeStore = useTheming()
+const accentBySource = useSourceAccent()
 const { formatMessage } = useVIntl()
 
 const worldsInHomeFeatureFlag = 'worlds_in_home' as FeatureFlag
@@ -90,6 +92,15 @@ const messages = defineMessages({
 	toggleSidebarDescription: {
 		id: 'app.appearance-settings.toggle-sidebar.description',
 		defaultMessage: 'Enables the ability to toggle the sidebar.',
+	},
+	sourceAccentTitle: {
+		id: 'app.appearance-settings.source-accent.title',
+		defaultMessage: 'Catalog colour accent',
+	},
+	sourceAccentDescription: {
+		id: 'app.appearance-settings.source-accent.description',
+		defaultMessage:
+			'On the Discover page, tints the accent green for Modrinth and orange for CurseForge based on the selected catalog.',
 	},
 	unknownPackWarningTitle: {
 		id: 'app.appearance-settings.unknown-pack-warning.title',
@@ -264,6 +275,20 @@ watch(
 					themeStore.toggleSidebar = settings.toggle_sidebar
 				}
 			"
+		/>
+	</div>
+
+	<div class="mt-6 flex items-center justify-between gap-4">
+		<div>
+			<h2 class="m-0 text-lg font-semibold text-contrast">
+				{{ formatMessage(messages.sourceAccentTitle) }}
+			</h2>
+			<p class="m-0 mt-1">{{ formatMessage(messages.sourceAccentDescription) }}</p>
+		</div>
+		<Toggle
+			id="source-colour-accent"
+			:model-value="accentBySource"
+			@update:model-value="(e) => (accentBySource = !!e)"
 		/>
 	</div>
 </template>

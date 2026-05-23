@@ -3,6 +3,7 @@ import type { Labrinth } from '@modrinth/api-client'
 import {
 	CheckIcon,
 	ClipboardCopyIcon,
+	DownloadIcon,
 	ExternalIcon,
 	GlobeIcon,
 	PlusIcon,
@@ -34,6 +35,7 @@ import type { LocationQuery } from 'vue-router'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 
 import ContextMenu from '@/components/ui/ContextMenu.vue'
+import CurseForgeInstallModal from '@/components/ui/CurseForgeInstallModal.vue'
 import { useAppServerBrowse } from '@/composables/browse/use-app-server-browse'
 import {
 	get_project,
@@ -41,7 +43,14 @@ import {
 	get_search_results_v3,
 	get_version_many,
 } from '@/helpers/cache.js'
+import {
+	installCurseForgeMod,
+	installCurseForgeModpack,
+	isCurseForgeAvailable,
+} from '@/helpers/curseforge-api'
 import { get_loader_versions as getLoaderManifest } from '@/helpers/metadata'
+import { unifiedSearch } from '@/helpers/unified-search'
+import { useSourceAccent, useSourceMode } from '@/composables/source-mode'
 import {
 	get as getInstance,
 	get_installed_project_ids as getInstalledProjectIds,
@@ -56,7 +65,7 @@ import {
 } from '@/providers/setup/server-install-content'
 import { useBreadcrumbs } from '@/store/breadcrumbs'
 
-const { handleError } = injectNotificationManager()
+const { handleError, addNotification } = injectNotificationManager()
 const { formatMessage } = useVIntl()
 const { installingServerProjects, playServerProject, showAddServerToInstanceModal } =
 	injectServerInstall()
@@ -461,6 +470,11 @@ onBeforeRouteLeave(() => {
 
 const projectType = ref<ProjectType>(route.params.projectType as ProjectType)
 
+// Catalog source for browse mode (empty query). A text search ignores this
+// and queries both Modrinth + CurseForge. Shared singleton so the choice
+// persists across navigation and app restarts.
+const sourceMode = useSourceMode()
+
 watch(
 	() => route.params.projectType as ProjectType,
 	async (newType) => {
@@ -668,6 +682,56 @@ async function chooseInstanceInstallVersion(
 	return { versionId: selectedVersion.id }
 }
 
+// ── CurseForge installs ──────────────────────────────────────────────────────
+// Keyed by CurseForge numeric mod id — CF mods have no Modrinth project_id, so
+// they can't reuse the Modrinth install-tracking state.
+const cfInstalling = ref(new Set<number>())
+const cfInstalled = ref(new Set<number>())
+const cfInstallModal = ref<{ show: (mod: unknown) => void } | null>(null)
+
+async function installCfMod(cfModId: number) {
+	const inst = instance.value
+	if (!inst || cfInstalling.value.has(cfModId) || cfInstalled.value.has(cfModId)) {
+		return
+	}
+	cfInstalling.value.add(cfModId)
+	try {
+		await installCurseForgeMod(cfModId, inst.path, inst.game_version, inst.loader)
+		cfInstalled.value.add(cfModId)
+		addNotification({
+			title: 'Mod installed',
+			text: `The CurseForge mod was added to ${inst.name}.`,
+			type: 'success',
+		})
+	} catch (e) {
+		handleError(e)
+	} finally {
+		cfInstalling.value.delete(cfModId)
+	}
+}
+
+/** Install a CurseForge modpack — creates a new instance, no instance picker. */
+async function installCfModpack(cfModId: number, name: string) {
+	if (cfInstalling.value.has(cfModId) || cfInstalled.value.has(cfModId)) {
+		return
+	}
+	cfInstalling.value.add(cfModId)
+	try {
+		const profile = await installCurseForgeModpack(cfModId, name)
+		cfInstalled.value.add(cfModId)
+		addNotification({
+			title: 'Modpack installed',
+			text: `${name} is ready to play.`,
+			type: 'success',
+		})
+		router.push(`/instance/${encodeURIComponent(profile)}`)
+	} catch (e) {
+		handleError(e)
+	} finally {
+		cfInstalling.value.delete(cfModId)
+	}
+}
+
 function getCardActions(
 	result: Labrinth.Search.v2.ResultSearchProject | Labrinth.Search.v3.ResultSearchProject,
 	currentProjectType: string,
@@ -682,6 +746,86 @@ function getCardActions(
 		installed?: boolean
 		installing?: boolean
 	}
+
+	// CurseForge-exclusive mods install via the CurseForge pipeline. Installing
+	// needs a target instance — without one the card just links to the CF page.
+	const sources = (
+		projectResult as {
+			sources?: { modrinth?: unknown; curseforge?: { mod_id: number } }
+		}
+	).sources
+	if (sources?.curseforge && !sources.modrinth) {
+		const cfModId = sources.curseforge.mod_id
+		const isCfInstalling = cfInstalling.value.has(cfModId)
+		const isCfInstalled = cfInstalled.value.has(cfModId)
+
+		// Modpacks create their own instance — install directly, no picker.
+		if (currentProjectType === 'modpack') {
+			return [
+				{
+					key: 'install',
+					label: formatMessage(
+						isCfInstalled
+							? commonMessages.installedLabel
+							: isCfInstalling
+								? commonMessages.installingLabel
+								: commonMessages.installButton,
+					),
+					icon: isCfInstalling ? SpinnerIcon : isCfInstalled ? CheckIcon : PlusIcon,
+					iconClass: isCfInstalling ? 'animate-spin' : undefined,
+					disabled: isCfInstalling || isCfInstalled,
+					color: 'brand',
+					type: 'outlined',
+					onClick: () =>
+						installCfModpack(
+							cfModId,
+							projectResult.title ?? projectResult.name ?? 'Modpack',
+						),
+				},
+			]
+		}
+
+		const hasInstance = !!instance.value
+		return [
+			{
+				key: 'install',
+				label: formatMessage(
+					isCfInstalled
+						? commonMessages.installedLabel
+						: isCfInstalling
+							? commonMessages.installingLabel
+							: hasInstance
+								? commonMessages.installButton
+								: messages.addToAnInstance,
+				),
+				icon: isCfInstalling
+					? SpinnerIcon
+					: isCfInstalled
+						? CheckIcon
+						: hasInstance
+							? DownloadIcon
+							: PlusIcon,
+				iconClass: isCfInstalling ? 'animate-spin' : undefined,
+				disabled: isCfInstalling || isCfInstalled,
+				color: 'brand',
+				type: 'outlined',
+				onClick: () => {
+					// With an instance context, install straight to it; otherwise
+					// open the instance picker modal (same modal as Modrinth mods).
+					if (hasInstance) {
+						installCfMod(cfModId)
+					} else {
+						cfInstallModal.value?.show({
+							id: cfModId,
+							name: projectResult.title ?? projectResult.name ?? 'Mod',
+							iconUrl: projectResult.icon_url ?? null,
+						})
+					}
+				},
+			},
+		]
+	}
+
 	const isInstalled =
 		projectResult.installed ||
 		allInstalledIds.value.has(projectResult.project_id || '') ||
@@ -837,8 +981,9 @@ function onSearchResultInstalled(id: string) {
 	newlyInstalled.value.push(id)
 }
 
-async function search(requestParams: string) {
-	debugLog('searching v3', requestParams)
+/** Modrinth-only search — used internally and passed to unifiedSearch */
+async function modrinthSearch(requestParams: string) {
+	debugLog('searching modrinth v3', requestParams)
 	const isServer = projectType.value === 'server'
 
 	const rawResults = await queryClient.fetchQuery({
@@ -853,12 +998,7 @@ async function search(requestParams: string) {
 	})
 
 	if (!rawResults) {
-		return {
-			projectHits: [],
-			serverHits: [],
-			total_hits: 0,
-			per_page: 20,
-		}
+		return { projectHits: [], serverHits: [], total_hits: 0, per_page: 20 }
 	}
 
 	if (isServer) {
@@ -897,6 +1037,40 @@ async function search(requestParams: string) {
 	}
 }
 
+/**
+ * Search entry point passed to useBrowseSearch.
+ * - Servers: Modrinth only (CurseForge has no servers).
+ * - Text query present: unified search across both catalogs.
+ * - Browse mode (empty query): single catalog chosen by the source toggle.
+ */
+/** Sidebar filter type ids that represent a loader choice. */
+const LOADER_FILTER_TYPE_IDS = [
+	'mod_loader',
+	'modpack_loader',
+	'plugin_loader',
+	'shader_loader',
+	'plugin_platform',
+]
+
+/** Pull game version / loader / categories out of the active sidebar filters. */
+function extractCfFilters() {
+	const filters = searchState.currentFilters.value
+	return {
+		gameVersion: filters.find((f) => f.type === 'game_version')?.option,
+		modLoader: filters.find((f) => LOADER_FILTER_TYPE_IDS.includes(f.type))?.option,
+		categories: filters.filter((f) => f.type.startsWith('category_')).map((f) => f.option),
+	}
+}
+
+async function search(requestParams: string) {
+	if (projectType.value === 'server') {
+		return modrinthSearch(requestParams)
+	}
+	const hasQuery = !!new URLSearchParams(requestParams).get('query')
+	const mode = hasQuery ? undefined : sourceMode.value
+	return unifiedSearch(requestParams, projectType.value, modrinthSearch, mode, extractCfFilters())
+}
+
 const isServerFilterContext = computed(() => isServerContext.value || isServerInstance.value)
 
 const lockedFilterMessages = computed(() => ({
@@ -931,6 +1105,39 @@ const searchState = useBrowseSearch({
 	}),
 })
 
+// ── Source colour accent ─────────────────────────────────────────────────────
+// When enabled, recolours the Discover page's brand accent to match the active
+// catalog. Scoped to this page via CSS vars on the root element.
+const accentBySource = useSourceAccent()
+
+const SOURCE_ACCENTS = {
+	modrinth: {
+		'--color-brand': '#00af5c',
+		'--color-brand-highlight': 'rgba(0, 175, 92, 0.25)',
+		'--color-brand-shadow': 'rgba(0, 175, 92, 0.6)',
+	},
+	curseforge: {
+		'--color-brand': '#e0561f',
+		'--color-brand-highlight': 'rgba(224, 86, 31, 0.25)',
+		'--color-brand-shadow': 'rgba(224, 86, 31, 0.6)',
+	},
+} as const
+
+const accentStyle = computed<Record<string, string>>(() => {
+	if (!accentBySource.value) return {}
+
+	// A text search queries both catalogs — blend the two accents.
+	if (searchState.query.value) {
+		return {
+			'--color-brand': 'color-mix(in oklch, #00af5c, #e0561f)',
+			'--color-brand-highlight': 'color-mix(in oklch, rgba(0,175,92,0.25), rgba(224,86,31,0.25))',
+			'--color-brand-shadow': 'color-mix(in oklch, rgba(0,175,92,0.6), rgba(224,86,31,0.6))',
+		}
+	}
+
+	return SOURCE_ACCENTS[sourceMode.value]
+})
+
 watch(
 	[
 		() => searchState.query.value,
@@ -952,6 +1159,12 @@ watch(queuedServerInstallCount, (count) => {
 	if (count === 0) {
 		hideSelectedServerInstalls.value = false
 	}
+})
+
+// Re-run the search when the catalog toggle changes (it is not part of the
+// request params that useBrowseSearch watches).
+watch(sourceMode, () => {
+	searchState.refreshSearch()
 })
 
 if (instance.value?.game_version) {
@@ -978,10 +1191,27 @@ provideBrowseManager({
 	tags,
 	projectType,
 	...searchState,
-	getProjectLink: (result: Labrinth.Search.v2.ResultSearchProject) => ({
-		path: `/project/${result.project_id ?? result.slug}`,
-		query: getProjectBrowseQuery(),
-	}),
+	// Catalog toggle — only offered when a CurseForge API key is configured.
+	sourceMode: isCurseForgeAvailable() ? sourceMode : undefined,
+	getProjectLink: (result: Labrinth.Search.v2.ResultSearchProject) => {
+		// CurseForge-exclusive mods have no Modrinth page — route them to the
+		// in-app CurseForge mod page instead of a /project/* page that 404s.
+		const sources = (
+			result as {
+				sources?: { modrinth?: unknown; curseforge?: { mod_id: number } }
+			}
+		).sources
+		if (sources?.curseforge && !sources.modrinth) {
+			return {
+				path: `/curseforge/${sources.curseforge.mod_id}`,
+				query: getProjectBrowseQuery(),
+			}
+		}
+		return {
+			path: `/project/${result.project_id ?? result.slug}`,
+			query: getProjectBrowseQuery(),
+		}
+	},
 	getServerProjectLink: (result: Labrinth.Search.v3.ResultSearchProject) => ({
 		path: `/project/${result.slug ?? result.project_id}`,
 		query: getProjectBrowseQuery(),
@@ -1030,7 +1260,7 @@ provideBrowseManager({
 </script>
 
 <template>
-	<div class="flex flex-col gap-3 p-6">
+	<div class="flex flex-col gap-3 p-6" :style="accentStyle">
 		<BrowsePageLayout>
 			<template #after>
 				<ContextMenu ref="contextMenuRef" @option-clicked="handleOptionsClick">
@@ -1057,6 +1287,7 @@ provideBrowseManager({
 			@browse-modpacks="() => {}"
 			@create="handleServerModpackFlowCreate"
 		/>
+		<CurseForgeInstallModal ref="cfInstallModal" />
 		<Teleport to="#sidebar-teleport-target">
 			<BrowseSidebar />
 		</Teleport>

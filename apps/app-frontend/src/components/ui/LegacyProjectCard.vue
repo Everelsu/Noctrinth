@@ -1,5 +1,5 @@
 <script setup>
-import { DownloadIcon, HeartIcon, TagIcon } from '@modrinth/assets'
+import { CurseForgeIcon, DownloadIcon, HeartIcon, ModrinthIcon, TagIcon } from '@modrinth/assets'
 import { Avatar, FormattedTag, TagItem, useCompactNumber } from '@modrinth/ui'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -20,6 +20,11 @@ const props = defineProps({
 		},
 	},
 })
+
+// Source badge helpers
+const onModrinth = computed(() => !!props.project.sources?.modrinth)
+const onCurseForge = computed(() => !!props.project.sources?.curseforge)
+const cfOnly = computed(() => onCurseForge.value && !onModrinth.value)
 
 const featuredCategory = computed(() => {
 	if (props.project.display_categories.includes('optimization')) {
@@ -58,8 +63,9 @@ const toTransparent = computed(() => {
 
 <template>
 	<div
-		class="card-shadow bg-bg-raised rounded-xl overflow-clip cursor-pointer hover:brightness-90 transition-all"
-		@click="router.push(`/project/${project.slug}`)"
+		class="card-shadow bg-bg-raised rounded-xl overflow-clip transition-all"
+		:class="cfOnly ? 'cursor-default opacity-80' : 'cursor-pointer hover:brightness-90'"
+		@click="!cfOnly && router.push(`/project/${project.slug}`)"
 	>
 		<div
 			class="w-full aspect-[2/1] bg-cover bg-center bg-no-repeat"
@@ -111,9 +117,36 @@ const toTransparent = computed(() => {
 						<FormattedTag :tag="featuredCategory" />
 					</TagItem>
 				</div>
+				<!-- Source platform icons -->
+				<div v-if="onModrinth || onCurseForge" class="ml-auto flex items-center gap-1.5">
+					<ModrinthIcon
+						v-if="onModrinth"
+						v-tooltip="'Available on Modrinth'"
+						class="source-icon source-icon--modrinth"
+					/>
+					<CurseForgeIcon
+						v-if="onCurseForge"
+						v-tooltip="'Available on CurseForge'"
+						class="source-icon source-icon--curseforge"
+					/>
+				</div>
 			</div>
 		</div>
 	</div>
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.source-icon {
+	width: 16px;
+	height: 16px;
+	flex-shrink: 0;
+
+	&--modrinth {
+		color: #1bd96a;
+	}
+
+	&--curseforge {
+		color: #f16436;
+	}
+}
+</style>

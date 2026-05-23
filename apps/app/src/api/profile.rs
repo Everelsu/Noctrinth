@@ -33,6 +33,7 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
             profile_update_project,
             profile_add_project_from_version,
             profile_add_project_from_path,
+            profile_add_project_from_curseforge,
             profile_toggle_disable_project,
             profile_remove_project,
             profile_update_managed_modrinth_version,
@@ -265,6 +266,19 @@ pub async fn profile_add_project_from_path(
 ) -> Result<String> {
     let res = profile::add_project_from_path(path, project_path, project_type)
         .await?;
+    Ok(res)
+}
+
+// Adds a project to a profile from a direct download URL (a CurseForge file)
+// invoke('plugin:profile|profile_add_project_from_curseforge')
+#[tauri::command]
+pub async fn profile_add_project_from_curseforge(
+    path: &str,
+    file_url: &str,
+    file_name: &str,
+) -> Result<String> {
+    let res =
+        profile::add_project_from_curseforge(path, file_url, file_name).await?;
     Ok(res)
 }
 

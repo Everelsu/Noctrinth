@@ -212,6 +212,20 @@ export async function add_project_from_path(
 	})
 }
 
+// Add a project to a profile from a direct download URL (a CurseForge file)
+// Returns a path to the new project file
+export async function add_project_from_curseforge(
+	path: string,
+	fileUrl: string,
+	fileName: string,
+): Promise<string> {
+	return await invoke('plugin:profile|profile_add_project_from_curseforge', {
+		path,
+		fileUrl,
+		fileName,
+	})
+}
+
 // Toggle disabling a project
 export async function toggle_disable_project(path: string, projectPath: string): Promise<string> {
 	return await invoke('plugin:profile|profile_toggle_disable_project', { path, projectPath })

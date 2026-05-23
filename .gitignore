@@ -59,6 +59,7 @@ apps/frontend/src/generated
 target
 generated
 .env
+.env.local
 
 # app testing dir
 app-playground-data/*

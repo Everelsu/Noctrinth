@@ -98,6 +98,10 @@ pub enum CreatePackLocation {
     // Create a pack from a file (such as an .mrpack for installing from a file, or a folder name for importing)
     FromFile {
         path: PathBuf,
+        // Present so a CurseForge modpack zip imported from disk can be
+        // resolved through the CurseForge API. Ignored for .mrpack files.
+        #[serde(default)]
+        curseforge_api_key: Option<String>,
     },
 }
 
@@ -169,7 +173,7 @@ pub async fn get_profile_from_pack(
             }),
             ..Default::default()
         }),
-        CreatePackLocation::FromFile { path } => {
+        CreatePackLocation::FromFile { path, .. } => {
             let file_name = path
                 .file_stem()
                 .unwrap_or_default()

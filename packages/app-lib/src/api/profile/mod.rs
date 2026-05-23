@@ -552,6 +552,41 @@ pub async fn add_project_from_path(
     Ok(path)
 }
 
+/// Add a project from a direct download URL (e.g. a CurseForge file).
+///
+/// Unlike `add_project_from_version`, this does not resolve a Modrinth
+/// version — it simply downloads the file at `file_url` and stores it in the
+/// profile. The project type is inferred from the JAR contents.
+///
+/// Returns the relative path to the installed project.
+#[tracing::instrument]
+pub async fn add_project_from_curseforge(
+    profile_path: &str,
+    file_url: &str,
+    file_name: &str,
+) -> crate::Result<String> {
+    let state = State::get().await?;
+
+    let bytes =
+        fetch::fetch(file_url, None, None, &state.fetch_semaphore, &state.pool)
+            .await?;
+
+    let project_path = Profile::add_project_bytes(
+        profile_path,
+        file_name,
+        bytes,
+        None,
+        None,
+        &state.io_semaphore,
+        &state.pool,
+    )
+    .await?;
+
+    emit_profile(profile_path, ProfilePayloadType::Edited).await?;
+
+    Ok(project_path)
+}
+
 /// Toggle whether a project is disabled or not
 /// Project path should be relative to the profile
 /// returns the new state, relative to the profile

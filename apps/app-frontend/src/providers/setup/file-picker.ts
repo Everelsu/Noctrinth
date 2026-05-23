@@ -29,7 +29,8 @@ export function setupFilePickerProvider() {
 		async pickModpackFile() {
 			const result = await open({
 				multiple: false,
-				filters: [{ name: 'Modpack', extensions: ['mrpack'] }],
+				// `.mrpack` (Modrinth) and `.zip` (CurseForge modpacks).
+				filters: [{ name: 'Modpack', extensions: ['mrpack', 'zip'] }],
 			})
 			if (!result) return null
 			const path = result.path ?? result

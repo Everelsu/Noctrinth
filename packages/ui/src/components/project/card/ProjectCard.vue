@@ -47,6 +47,22 @@
 				<div class="flex gap-2 shrink-0 empty:hidden smart-clickable:allow-pointer-events">
 					<slot name="actions" />
 				</div>
+				<!-- Source icons (grid layout) -->
+				<div
+					v-if="sources?.modrinth || sources?.curseforge"
+					class="flex items-center gap-1.5"
+				>
+					<ModrinthIcon
+						v-if="sources?.modrinth"
+						v-tooltip="'Available on Modrinth'"
+						class="source-icon source-icon--mr"
+					/>
+					<CurseForgeIcon
+						v-if="sources?.curseforge"
+						v-tooltip="'Available on CurseForge'"
+						class="source-icon source-icon--cf"
+					/>
+				</div>
 				<div class="mt-auto flex flex-col gap-3 flex-wrap overflow-hidden justify-between grow">
 					<div class="flex items-center gap-1 flex-wrap overflow-hidden">
 						<template v-if="isServerProject">
@@ -181,6 +197,17 @@
 							:deprioritized-tags="deprioritizedTags"
 							:max-tags="(maxTags || (!!$slots.actions ? 4 : 5)) + (!!environment ? 0 : 1)"
 						/>
+						<!-- Source icons -->
+						<ModrinthIcon
+							v-if="sources?.modrinth"
+							v-tooltip="'Available on Modrinth'"
+							class="source-icon source-icon--mr"
+						/>
+						<CurseForgeIcon
+							v-if="sources?.curseforge"
+							v-tooltip="'Available on CurseForge'"
+							class="source-icon source-icon--cf"
+						/>
 					</div>
 					<ServerModpackContent
 						v-if="serverModpackContent"
@@ -197,6 +224,7 @@
 </template>
 
 <script setup lang="ts">
+import { CurseForgeIcon, ModrinthIcon } from '@modrinth/assets'
 import type { ProjectStatus } from '@modrinth/utils'
 import dayjs from 'dayjs'
 import { computed } from 'vue'
@@ -260,6 +288,10 @@ const props = defineProps<{
 	environment?: ProjectCardEnvironmentProps
 	status?: ProjectStatus
 	maxTags?: number
+	sources?: {
+		modrinth?: { project_id: string; slug: string }
+		curseforge?: { mod_id: number; slug: string }
+	}
 }>()
 
 const baseCardStyle =
@@ -429,4 +461,19 @@ const cssColor = computed(() => {
 .placeholder-banner {
 	opacity: 0.7;
 }
+
+.source-icon {
+	width: 16px;
+	height: 16px;
+	flex-shrink: 0;
+
+	&--mr {
+		color: #1bd96a;
+	}
+
+	&--cf {
+		color: #f16436;
+	}
+}
+
 </style>

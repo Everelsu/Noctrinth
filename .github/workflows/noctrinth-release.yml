@@ -109,6 +109,17 @@ jobs:
             echo "MODRINTH_OAUTH_CLIENT_SECRET=${{ secrets.MODRINTH_OAUTH_CLIENT_SECRET }}"
           } >> packages/app-lib/.env
 
+      - name: Prepare CurseForge API key
+        shell: bash
+        env:
+          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
+        run: |
+          # The CurseForge key is read raw from this file by vite.config.ts
+          # (bypasses dotenv-expand so bcrypt-style `$` chars survive).
+          # Without this step CurseForge integration is silently disabled.
+          printf 'VITE_CURSEFORGE_API_KEY=%s\n' "$CURSEFORGE_API_KEY" \
+            > apps/app-frontend/.env.local
+
       - name: Sync crate versions with the release tag
         shell: bash
         env:

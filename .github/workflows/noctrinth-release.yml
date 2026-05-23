@@ -169,6 +169,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set release notes from Noctrinth changelog
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${TAG#v}"
+
+          # Pull the matching entry out of noctrinth-changelog.ts. If there
+          # isn't one we leave the auto-generated body alone rather than fail
+          # the whole release pipeline.
+          if node scripts/extract-changelog.mjs "$VERSION" RELEASE_BODY.md; then
+            echo "Updating release body for $TAG"
+            gh release edit "$TAG" --notes-file RELEASE_BODY.md
+          else
+            echo "::warning::No changelog entry for $VERSION — release body left as-is"
+          fi
+
       - name: Relocate updater manifest and strip signatures
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

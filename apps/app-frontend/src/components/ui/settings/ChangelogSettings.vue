@@ -32,6 +32,11 @@ function parseBody(body: string): ChangelogSection[] {
 		const line = rawLine.trim()
 		if (!line) continue
 
+		if (line.startsWith('### ')) {
+			current = { title: line.slice(4).trim(), items: [] }
+			sections.push(current)
+			continue
+		}
 		if (line.startsWith('## ')) {
 			current = { title: line.slice(3).trim(), items: [] }
 			sections.push(current)

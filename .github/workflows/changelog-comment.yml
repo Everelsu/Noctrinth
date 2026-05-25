@@ -1,0 +1,88 @@
+name: Changelog Comment
+
+# Posts a templated changelog skeleton as a comment on newly opened PRs so
+# contributors can fill in user-facing changes per area.
+#
+# Adapted from Modrinth's changelog-comment workflow.
+
+on:
+  pull_request_target:
+    types: [opened, reopened]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to post the changelog comment on (for testing)'
+        required: true
+        type: number
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  comment:
+    name: Post changelog comment
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Post changelog comment
+        uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const marker = '<!-- changelog -->';
+
+            const sections = [
+              '### Added',
+              '',
+              '### Changed',
+              '',
+              '### Deprecated',
+              '',
+              '### Removed',
+              '',
+              '### Fixed',
+              '',
+              '### Security',
+            ].join('\n');
+
+            const template = [
+              marker,
+              '## Pull request changelog',
+              '',
+              '<!-- Fill in the changelog under each section this PR affects.',
+              '     Empty sections are ignored. Delete the whole comment if',
+              '     the PR has no user-facing changes. -->',
+              '',
+              sections,
+            ].join('\n');
+
+            // Resolve PR number from event or workflow_dispatch input
+            const prNumber = context.payload.pull_request?.number
+              ?? parseInt('${{ github.event.inputs.pr_number }}', 10);
+
+            if (!prNumber || isNaN(prNumber)) {
+              core.setFailed('Could not determine PR number');
+              return;
+            }
+
+            // Skip if a changelog comment already exists
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+
+            if (comments.some((c) => c.body?.includes(marker))) {
+              core.info('Changelog comment already exists, skipping');
+              return;
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: template,
+            });
+
+            core.info(`Posted changelog comment on PR #${prNumber}`);

@@ -71,25 +71,58 @@ function renderInline(s) {
 }
 
 function renderMarkdown(src) {
-	const blocks = src.trim().split(/\n{2,}/)
+	const lines = src.replace(/\r\n/g, '\n').split('\n')
 	const out = []
-	for (const raw of blocks) {
-		const block = raw.trim()
-		if (!block) continue
-		if (block.startsWith('### ')) {
-			out.push(`<h3>${escapeHtml(block.slice(4).trim())}</h3>`)
-		} else if (block.startsWith('## ')) {
-			out.push(`<h2>${escapeHtml(block.slice(3).trim())}</h2>`)
-		} else if (/^- /m.test(block)) {
-			const items = block
-				.split('\n')
-				.map((l) => l.replace(/^- /, '').trim())
-				.filter(Boolean)
-			out.push(`<ul>${items.map((i) => `<li>${renderInline(i)}</li>`).join('')}</ul>`)
-		} else {
-			out.push(`<p>${renderInline(block)}</p>`)
+	let i = 0
+
+	while (i < lines.length) {
+		const trimmed = lines[i].trim()
+
+		// Blank line
+		if (!trimmed) {
+			i++
+			continue
 		}
+
+		// Headings — each on its own line
+		if (trimmed.startsWith('### ')) {
+			out.push(`<h3>${escapeHtml(trimmed.slice(4).trim())}</h3>`)
+			i++
+			continue
+		}
+		if (trimmed.startsWith('## ')) {
+			out.push(`<h2>${escapeHtml(trimmed.slice(3).trim())}</h2>`)
+			i++
+			continue
+		}
+		if (trimmed.startsWith('# ')) {
+			out.push(`<h1>${escapeHtml(trimmed.slice(2).trim())}</h1>`)
+			i++
+			continue
+		}
+
+		// Bullet list — consume consecutive `- ` lines
+		if (trimmed.startsWith('- ')) {
+			const items = []
+			while (i < lines.length && lines[i].trim().startsWith('- ')) {
+				items.push(lines[i].trim().slice(2).trim())
+				i++
+			}
+			out.push(`<ul>${items.map((it) => `<li>${renderInline(it)}</li>`).join('')}</ul>`)
+			continue
+		}
+
+		// Paragraph — consume until blank / heading / list
+		const paraLines = []
+		while (i < lines.length) {
+			const t = lines[i].trim()
+			if (!t || t.startsWith('#') || t.startsWith('- ')) break
+			paraLines.push(t)
+			i++
+		}
+		out.push(`<p>${renderInline(paraLines.join(' '))}</p>`)
 	}
+
 	return out.join('\n')
 }
 
@@ -177,9 +210,9 @@ const CSS = `
 		--border: #2d2240;
 		--button-bg: #2a1f3d;
 		--button-border: #3a2c54;
-		--text-contrast: #f3eefd;
-		--text: #d6cee8;
-		--text-secondary: #9b91b6;
+		--text-contrast: #f7f3ff;
+		--text: #e4dff0;
+		--text-secondary: #ada3c9;
 		--brand: #8e32f3;
 		--brand-soft: rgba(142, 50, 243, 0.18);
 		--mr-green: #1bd96a;
@@ -198,8 +231,11 @@ const CSS = `
 		background: var(--bg);
 		color: var(--text);
 		font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-		line-height: 1.5;
+		font-size: 16px;
+		line-height: 1.6;
 		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+		text-rendering: optimizeLegibility;
 	}
 	a { color: var(--link); text-decoration: none; }
 	a:hover { filter: brightness(1.2); text-decoration: underline; }
@@ -223,6 +259,15 @@ const CSS = `
 		width: 56px;
 		height: 56px;
 		flex-shrink: 0;
+		background-color: var(--brand);
+		-webkit-mask-image: url('logo.svg');
+		mask-image: url('logo.svg');
+		-webkit-mask-repeat: no-repeat;
+		mask-repeat: no-repeat;
+		-webkit-mask-position: center;
+		mask-position: center;
+		-webkit-mask-size: contain;
+		mask-size: contain;
 	}
 	.site-header__text h1 {
 		margin: 0;
@@ -319,16 +364,19 @@ const CSS = `
 	/* Body card (Modrinth's "ml-8 mt-3 rounded-2xl bg-bg-raised px-4 py-3") */
 	.entry__body {
 		margin-left: 2rem;
-		margin-top: 0.75rem;
-		padding: 0.75rem 1rem;
+		margin-top: 1rem;
+		padding: 1.25rem 1.5rem;
 		border-radius: 1rem;
 		background: var(--bg-raised);
+		border: 1px solid var(--border);
 	}
 
 	/* ── Markdown body (mirrors packages/ui's .changelog-body styles) ────────── */
 	.changelog-body {
-		line-height: 1.4;
+		line-height: 1.65;
 		word-break: break-word;
+		color: var(--text);
+		font-size: 0.975rem;
 	}
 	.changelog-body h1,
 	.changelog-body h2,
@@ -336,9 +384,10 @@ const CSS = `
 	.changelog-body h4,
 	.changelog-body h5,
 	.changelog-body h6 {
-		margin: 0 0 0.25em;
-		font-weight: 600;
+		margin: 0 0 0.5em;
+		font-weight: 700;
 		color: var(--text-contrast);
+		letter-spacing: -0.01em;
 	}
 	.changelog-body h1:not(:first-child),
 	.changelog-body h2:not(:first-child),
@@ -346,20 +395,46 @@ const CSS = `
 	.changelog-body h4:not(:first-child),
 	.changelog-body h5:not(:first-child),
 	.changelog-body h6:not(:first-child) {
-		margin-top: 0.75em;
+		margin-top: 1.5em;
 	}
-	.changelog-body h2 { font-size: 1.125rem; }
-	.changelog-body h3 { font-size: 1rem; }
+	.changelog-body h2 {
+		font-size: 1.15rem;
+		padding-bottom: 0.4rem;
+		border-bottom: 1px solid var(--border);
+	}
+	.changelog-body h3 {
+		color: var(--brand);
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		font-size: 0.78rem;
+		font-weight: 700;
+	}
 	.changelog-body ul {
 		padding-left: 1.25rem;
-		margin: 0.4rem 0 0;
+		margin: 0.5rem 0 0;
+		list-style: none;
 	}
-	.changelog-body li { margin: 0; }
-	.changelog-body * + li { margin-top: 0.5rem; }
+	.changelog-body li {
+		margin: 0;
+		position: relative;
+		padding-left: 0.25rem;
+	}
+	.changelog-body li::before {
+		content: '';
+		position: absolute;
+		left: -1rem;
+		top: 0.7em;
+		width: 5px;
+		height: 5px;
+		border-radius: 50%;
+		background: var(--brand);
+		opacity: 0.7;
+	}
+	.changelog-body * + li { margin-top: 0.45rem; }
 	.changelog-body p { margin: 0; }
-	.changelog-body * + p { margin-top: 0.5rem; }
+	.changelog-body * + p { margin-top: 0.75rem; }
 	.changelog-body h3 + * { margin-top: 0.5rem; }
-	.changelog-body * + h3 { margin-top: 0.75rem; }
+	.changelog-body * + h3 { margin-top: 1.25rem; }
 	.changelog-body code {
 		background: var(--bg);
 		font-size: var(--font-size-sm);
@@ -399,7 +474,7 @@ const HTML = `<!DOCTYPE html>
 <body>
 	<div class="page">
 		<header class="site-header">
-			<img class="site-header__logo" src="logo.svg" alt="Noctrinth">
+			<div class="site-header__logo" role="img" aria-label="Noctrinth"></div>
 			<div class="site-header__text">
 				<h1>Noctrinth Changelog</h1>
 				<p>Combined release notes for Noctrinth and upstream Modrinth App.</p>

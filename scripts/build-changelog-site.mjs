@@ -131,14 +131,24 @@ function isRecent(iso) {
 
 // ─── HTML rendering ──────────────────────────────────────────────────────────
 
-const SOURCE_LABEL = { noctrinth: 'Noctrinth', modrinth: 'Modrinth App' }
+const SOURCE_LABEL = { noctrinth: 'Noctrinth', modrinth: 'App' }
 
 function renderEntry(entry, index) {
 	const recent = isRecent(entry.date)
 	const isFirst = index === 0
-	const dotClass = recent || isFirst ? 'entry__dot--brand' : ''
-	const versionText = entry.version ?? formatLongDate(entry.date)
-	const dateText = recent ? formatRelative(entry.date) : formatLongDate(entry.date)
+	// Dot is filled with the source brand colour when recent or first;
+	// older entries get a muted hollow dot.
+	const dotClass =
+		recent || isFirst ? `entry__dot--${entry.source}` : 'entry__dot--muted'
+
+	const versionName = entry.version ?? formatLongDate(entry.date)
+
+	// Match Modrinth: show relative time for recent entries; long date when
+	// the entry has a version (so the date isn't already in the title); and
+	// nothing extra when the date itself IS the title.
+	let trailingDate = ''
+	if (recent) trailingDate = formatRelative(entry.date)
+	else if (entry.version) trailingDate = formatLongDate(entry.date)
 
 	return `
 		<div class="entry">
@@ -146,11 +156,11 @@ function renderEntry(entry, index) {
 				<div class="entry__dot ${dotClass}"></div>
 				<div class="entry__title">
 					<h2>
-						<span class="source-tag source-tag--${entry.source}">${SOURCE_LABEL[entry.source]}</span>
+						<span class="entry__type">${SOURCE_LABEL[entry.source]}</span>
 						<span class="dot-sep"></span>
-						<span class="version">${escapeHtml(versionText)}</span>
+						<span class="entry__version">${escapeHtml(versionName)}</span>
 					</h2>
-					<time class="entry__date" datetime="${escapeHtml(entry.date)}">${dateText}</time>
+					${trailingDate ? `<time class="entry__date" datetime="${escapeHtml(entry.date)}">${trailingDate}</time>` : ''}
 				</div>
 			</div>
 			<div class="entry__body changelog-body">${renderMarkdown(entry.body)}</div>
@@ -266,11 +276,11 @@ const CSS = `
 		flex-shrink: 0;
 		border-radius: 50%;
 		border: 2px solid var(--button-border);
-		background: var(--button-bg);
 	}
-	.entry__dot--brand {
-		background: var(--brand);
-	}
+	.entry__dot--noctrinth { background: var(--brand); }
+	.entry__dot--modrinth { background: var(--mr-green); }
+	.entry__dot--muted { background: var(--button-bg); }
+
 	.entry__title {
 		display: flex;
 		flex-wrap: wrap;
@@ -282,8 +292,12 @@ const CSS = `
 		align-items: center;
 		gap: 0.5rem;
 		margin: 0;
-		font-size: 1.15rem;
+		font-size: 1.25rem;
 		font-weight: 800;
+		color: var(--text-contrast);
+		line-height: 1.2;
+	}
+	.entry__type {
 		color: var(--text-contrast);
 	}
 	.dot-sep {
@@ -292,65 +306,50 @@ const CSS = `
 		border-radius: 50%;
 		background: var(--text-secondary);
 	}
-	.version {
-		font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-		font-size: 0.95rem;
-		font-weight: 600;
+	.entry__version {
+		font-weight: 700;
 		color: var(--text);
 	}
 	.entry__date {
 		color: var(--text-secondary);
-		font-size: 0.875rem;
-	}
-
-	/* Source tags (Modrinth/Noctrinth chips) */
-	.source-tag {
-		display: inline-flex;
-		align-items: center;
-		padding: 0.15rem 0.55rem;
-		border-radius: 999px;
-		font-size: 0.7rem;
-		font-weight: 800;
-		letter-spacing: 0.04em;
-		text-transform: uppercase;
-		line-height: 1;
-		height: 1.4rem;
-	}
-	.source-tag--noctrinth {
-		background: var(--brand-soft);
-		color: var(--brand);
-	}
-	.source-tag--modrinth {
-		background: var(--mr-green-soft);
-		color: var(--mr-green);
+		font-size: 0.9rem;
+		font-weight: 500;
 	}
 
 	/* Body card (Modrinth's "ml-8 mt-3 rounded-2xl bg-bg-raised px-4 py-3") */
 	.entry__body {
 		margin-left: 2rem;
 		margin-top: 0.75rem;
-		padding: 0.85rem 1.1rem 1rem;
-		border-radius: var(--radius-xl);
+		padding: 0.75rem 1rem;
+		border-radius: 1rem;
 		background: var(--bg-raised);
 	}
 
 	/* ── Markdown body (mirrors packages/ui's .changelog-body styles) ────────── */
 	.changelog-body {
-		line-height: 1.45;
+		line-height: 1.4;
 		word-break: break-word;
 	}
+	.changelog-body h1,
 	.changelog-body h2,
-	.changelog-body h3 {
+	.changelog-body h3,
+	.changelog-body h4,
+	.changelog-body h5,
+	.changelog-body h6 {
 		margin: 0 0 0.25em;
-		font-weight: 700;
+		font-weight: 600;
 		color: var(--text-contrast);
 	}
+	.changelog-body h1:not(:first-child),
 	.changelog-body h2:not(:first-child),
-	.changelog-body h3:not(:first-child) {
+	.changelog-body h3:not(:first-child),
+	.changelog-body h4:not(:first-child),
+	.changelog-body h5:not(:first-child),
+	.changelog-body h6:not(:first-child) {
 		margin-top: 0.75em;
 	}
-	.changelog-body h2 { font-size: 1.05rem; }
-	.changelog-body h3 { font-size: 0.95rem; }
+	.changelog-body h2 { font-size: 1.125rem; }
+	.changelog-body h3 { font-size: 1rem; }
 	.changelog-body ul {
 		padding-left: 1.25rem;
 		margin: 0.4rem 0 0;

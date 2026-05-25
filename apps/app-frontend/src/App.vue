@@ -884,7 +884,7 @@ async function checkUpdates() {
 						},
 						{
 							label: formatMessage(updatePopupMessages.changelog),
-							action: () => openUrl('https://modrinth.com/news/changelog?filter=app'),
+							action: () => openUrl('https://everelsu.github.io/Noctrinth/'),
 							keepOpen: true,
 						},
 					],

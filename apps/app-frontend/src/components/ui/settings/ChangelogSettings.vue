@@ -140,9 +140,9 @@ const entries = computed<ChangelogEntry[]>(() =>
 				website.
 			</p>
 			<ButtonStyled>
-				<button @click="openUrl('https://modrinth.com/news/changelog?filter=app')">
+				<button @click="openUrl('https://everelsu.github.io/Noctrinth/')">
 					<ExternalIcon />
-					Open Modrinth changelog
+					Open Noctrinth changelog
 				</button>
 			</ButtonStyled>
 		</div>

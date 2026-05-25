@@ -19,6 +19,16 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.13.24',
+		date: '2026-05-26T00:00:00+00:00',
+		body: `## Changed
+- Synced with upstream Modrinth (0.13.22 → 0.13.24): default Minecraft memory raised from 2 GB to 4 GB, improved Java installation UI, new "Enabled" sort button next to "Disabled" in content lists, compact log handling to prevent crashes on log spam, locale updates and various smaller fixes.
+
+## Fixed
+- Guarded against non-string values when decorating download URLs.
+- Page no longer fails to load when an auth cookie is invalid.`,
+	},
+	{
 		version: '0.13.21',
 		date: '2026-05-22T00:00:00+00:00',
 		body: `## Added

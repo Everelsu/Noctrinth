@@ -1,0 +1,54 @@
+name: Deploy Changelog Site
+
+# Builds the static changelog page from noctrinth-changelog.ts +
+# packages/blog/changelog.ts and publishes it to GitHub Pages.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/app-frontend/src/helpers/noctrinth-changelog.ts'
+      - 'packages/blog/changelog.ts'
+      - 'apps/app-frontend/src/assets/noctrinth-icon.svg'
+      - 'scripts/build-changelog-site.mjs'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deploy; don't cancel in-progress ones so a deploy
+# always finishes before the next starts.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Build site
+        run: node scripts/build-changelog-site.mjs site
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

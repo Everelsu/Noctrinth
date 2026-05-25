@@ -2,6 +2,7 @@
 
 # compiled output
 dist
+site
 tmp
 /out-tsc
 

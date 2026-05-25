@@ -213,8 +213,8 @@ const CSS = `
 		--text-contrast: #f7f3ff;
 		--text: #e4dff0;
 		--text-secondary: #ada3c9;
-		--brand: #8e32f3;
-		--brand-soft: rgba(142, 50, 243, 0.18);
+		--brand: #c78aff;
+		--brand-soft: rgba(199, 138, 255, 0.18);
 		--mr-green: #1bd96a;
 		--mr-green-soft: rgba(27, 217, 106, 0.18);
 		--link: #b283f9;

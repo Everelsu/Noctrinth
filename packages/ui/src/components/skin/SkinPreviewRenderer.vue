@@ -40,7 +40,7 @@
 			<Suspense>
 				<Group>
 					<Group
-						:rotation="[0, modelRotation, 0]"
+						:rotation="[modelPitch, modelRotation, 0]"
 						:position="[0, -0.05 * scale, 1.95]"
 						:scale="[0.8 * scale, 0.8 * scale, 0.8 * scale]"
 					>
@@ -518,22 +518,35 @@ function updateModelInfo() {
 const target = computed(() => centre.value)
 
 const modelRotation = ref(props.initialRotation + Math.PI)
+// Pitch (rotation around the model's X axis). Lets the user drag up/down to
+// peek at the crown / soles of the skin. Clamped to ±90° so the model never
+// rolls fully upside-down, which gets disorienting fast.
+const modelPitch = ref(0)
+const MAX_PITCH = Math.PI / 2
+
 const isDragging = ref(false)
 const previousX = ref(0)
+const previousY = ref(0)
 const hasDragged = ref(false)
 
 function onPointerDown(event: PointerEvent) {
 	;(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId)
 	isDragging.value = true
 	previousX.value = event.clientX
+	previousY.value = event.clientY
 	hasDragged.value = false
 }
 
 function onPointerMove(event: PointerEvent) {
 	if (!isDragging.value) return
 	const deltaX = event.clientX - previousX.value
+	const deltaY = event.clientY - previousY.value
 	modelRotation.value += deltaX * 0.01
+	// Drag down → see soles, drag up → see crown.
+	// Clamp inclusive of ±90° so user can look straight at top/bottom.
+	modelPitch.value = Math.min(MAX_PITCH, Math.max(-MAX_PITCH, modelPitch.value + deltaY * 0.01))
 	previousX.value = event.clientX
+	previousY.value = event.clientY
 	hasDragged.value = true
 }
 

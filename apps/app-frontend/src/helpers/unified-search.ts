@@ -12,6 +12,12 @@
 import type { Labrinth } from '@modrinth/api-client'
 import type { BrowseSearchResponse } from '@modrinth/ui'
 
+import {
+  lookupByCfId,
+  lookupByModrinthId,
+  lookupByModrinthSlug,
+  recordMapping,
+} from './cross-platform-mapping'
 import { mapCfMod, resolveCfCategoryId, searchCurseForge } from './curseforge-api'
 
 /** Structured filters extracted from the browse sidebar, for the CF query. */
@@ -35,6 +41,8 @@ export type UnifiedHit = Labrinth.Search.v2.ResultSearchProject & {
   sources?: ModSources
   /** CurseForge numeric mod ID, set when CF data is present. */
   cf_id?: number
+  /** Latest file names from CurseForge — used for filename-based installed detection. */
+  _cfFileNames?: string[]
 }
 
 export type UnifiedBrowseSearchResponse = BrowseSearchResponse & {
@@ -121,7 +129,7 @@ export async function unifiedSearch(
   // Resolve category slug → CurseForge category ID, then run the CF query.
   const curseForgeQuery = async () => {
     const categoryId = cfFilters?.categories?.length
-      ? await resolveCfCategoryId(cfFilters.categories)
+      ? await resolveCfCategoryId(cfFilters.categories, projectType)
       : undefined
     return searchCurseForge({
       ...parsedParams,
@@ -179,13 +187,26 @@ export async function unifiedSearch(
   // Build lookup maps so matching is O(n)
   const cfBySlug = new Map(cfMapped.map((h) => [h.slug, h]))
   const cfByName = new Map(cfMapped.map((h) => [h.name.toLowerCase(), h]))
+  const cfById = new Map(cfMapped.map((h) => [h.cf_id, h]))
   const matchedCfSlugs = new Set<string>()
 
   const unified: UnifiedHit[] = []
 
   for (const mrHit of mrHits) {
     const mrName = (mrHit.title ?? (mrHit as { name?: string }).name ?? '').toLowerCase()
-    const cfMatch = cfBySlug.get(mrHit.slug) ?? cfByName.get(mrName)
+
+    // Three-tier merge — fast cheap matches first, curated mapping last:
+    //   1. CF slug equals Modrinth slug (fast path, covers Sodium-style mods)
+    //   2. CF name equals Modrinth name (case-insensitive, catches small slug
+    //      drift like "fabric-api" / "fabricapi")
+    //   3. Curated cross-platform mapping (catches genuinely-different slugs,
+    //      e.g. Modrinth `iris` ↔ CurseForge `irisshaders`).
+    let cfMatch = cfBySlug.get(mrHit.slug) ?? cfByName.get(mrName)
+    if (!cfMatch) {
+      const mapped =
+        lookupByModrinthId(mrHit.project_id) ?? lookupByModrinthSlug(mrHit.slug)
+      if (mapped) cfMatch = cfById.get(mapped.curseforge.id)
+    }
 
     const hit: UnifiedHit = {
       ...mrHit,
@@ -198,9 +219,16 @@ export async function unifiedSearch(
         curseforge: { mod_id: cfMatch.cf_id, slug: cfMatch.slug },
       }
       hit.cf_id = cfMatch.cf_id
+      // Carry CF file names through the merge so filename-based installed
+      // detection works for mods that exist on both platforms.
+      hit._cfFileNames = cfMatch._cfFileNames
       // Combined download count across both platforms for a truthful total.
       hit.downloads = (mrHit.downloads ?? 0) + (cfMatch.downloads ?? 0)
       matchedCfSlugs.add(cfMatch.slug)
+
+      // Learn the mapping for next time — skipped silently if curated or
+      // already recorded. Lets the table grow organically as users browse.
+      recordMapping(mrHit.project_id, mrHit.slug, cfMatch.cf_id, cfMatch.slug)
     }
 
     unified.push(hit)

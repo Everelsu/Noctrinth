@@ -22,9 +22,32 @@
 			}"
 			class="page-number-container"
 		>
-			<div v-if="item === '-'" class="rotate-90 grid place-content-center">
-				<EllipsisVerticalIcon />
-			</div>
+			<template v-if="item === '-'">
+				<!-- Clickable gap: shows an inline page-number input on click. -->
+				<input
+					v-if="editingGap === index"
+					ref="gapInputRef"
+					v-model="gapInputValue"
+					type="number"
+					:min="1"
+					:max="count"
+					class="page-number-input"
+					:aria-label="`Jump to page (1 to ${count})`"
+					@keydown.enter="submitGap"
+					@keydown.escape="cancelGap"
+					@blur="cancelGap"
+				/>
+				<button
+					v-else
+					type="button"
+					class="page-gap-button rotate-90 grid place-content-center"
+					:aria-label="`Jump to page (1 to ${count})`"
+					:title="`Jump to page (1–${count})`"
+					@click="openGap(index)"
+				>
+					<EllipsisVerticalIcon />
+				</button>
+			</template>
 			<ButtonStyled
 				v-else
 				circular
@@ -66,7 +89,7 @@
 </template>
 <script setup lang="ts">
 import { ChevronLeftIcon, ChevronRightIcon, EllipsisVerticalIcon } from '@modrinth/assets'
-import { computed } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 
 import ButtonStyled from './ButtonStyled.vue'
 
@@ -86,6 +109,32 @@ const props = withDefaults(
 		linkFunction: (page: number) => void page,
 	},
 )
+
+// ── Gap-click page input ──────────────────────────────────────────────────
+const editingGap = ref<number | null>(null)
+const gapInputValue = ref<string>('')
+const gapInputRef = ref<HTMLInputElement | null>(null)
+
+function openGap(index: number) {
+	editingGap.value = index
+	gapInputValue.value = ''
+	nextTick(() => gapInputRef.value?.focus())
+}
+
+function submitGap() {
+	const n = Number(gapInputValue.value)
+	if (Number.isFinite(n) && n >= 1 && n <= props.count) {
+		editingGap.value = null
+		switchPage(Math.floor(n))
+	} else {
+		cancelGap()
+	}
+}
+
+function cancelGap() {
+	editingGap.value = null
+	gapInputValue.value = ''
+}
 
 const pages = computed(() => {
 	const pages: ('-' | number)[] = []
@@ -124,3 +173,42 @@ function switchPage(newPage: number) {
 	emit('switch-page', Math.min(Math.max(newPage, 1), props.count))
 }
 </script>
+
+<style scoped>
+.page-gap-button {
+	background: transparent;
+	border: none;
+	padding: 0.25rem;
+	color: inherit;
+	cursor: pointer;
+	border-radius: 9999px;
+	transition: background-color 120ms ease;
+}
+.page-gap-button:hover {
+	background: var(--color-button-bg);
+}
+.page-number-input {
+	width: 4rem;
+	height: 2rem;
+	padding: 0 0.5rem;
+	border-radius: 9999px;
+	border: 1px solid var(--color-button-bg);
+	background: var(--color-raised-bg);
+	color: var(--color-contrast);
+	text-align: center;
+	font-size: 0.875rem;
+	outline: none;
+}
+.page-number-input:focus {
+	border-color: var(--color-brand);
+}
+/* Hide the spin buttons — they crowd the small input. */
+.page-number-input::-webkit-outer-spin-button,
+.page-number-input::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+.page-number-input[type='number'] {
+	-moz-appearance: textfield;
+}
+</style>

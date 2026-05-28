@@ -7,6 +7,7 @@ import {
 	HeartIcon,
 	LinkIcon,
 	LockIcon,
+	SearchIcon,
 	TrashIcon,
 	XIcon,
 } from '@modrinth/assets'
@@ -14,12 +15,17 @@ import {
 	Avatar,
 	ButtonStyled,
 	ContentPageHeader,
+	defineMessages,
+	DropdownSelect,
 	FilterPills,
 	type FilterPillOption,
 	injectNotificationManager,
+	LoadingIndicator,
 	NavTabs,
 	ProjectCard,
+	StyledInput,
 	useCompactNumber,
+	useVIntl,
 } from '@modrinth/ui'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import dayjs from 'dayjs'
@@ -44,9 +50,81 @@ dayjs.extend(relativeTime)
 
 const { handleError } = injectNotificationManager()
 const { formatCompactNumber } = useCompactNumber()
+const { formatMessage } = useVIntl()
 const route = useRoute()
 const router = useRouter()
 const breadcrumbs = useBreadcrumbs()
+
+const messages = defineMessages({
+	tabCollections: { id: 'collection.tab.collections', defaultMessage: 'Collections' },
+	tabNotifications: { id: 'collection.tab.notifications', defaultMessage: 'Notifications' },
+	loading: { id: 'collection.loading', defaultMessage: 'Loading...' },
+	statusPrivate: { id: 'collection.status.private', defaultMessage: 'Private' },
+	statusPublic: { id: 'collection.status.public', defaultMessage: 'Public' },
+	statusUnlisted: { id: 'collection.status.unlisted', defaultMessage: 'Unlisted' },
+	statusRejected: { id: 'collection.status.rejected', defaultMessage: 'Rejected' },
+	projectsCountOne: { id: 'collection.projects-count.one', defaultMessage: 'project' },
+	projectsCountOther: { id: 'collection.projects-count.other', defaultMessage: 'projects' },
+	updatedAgo: { id: 'collection.updated-ago', defaultMessage: 'Updated {time}' },
+	edit: { id: 'collection.edit', defaultMessage: 'Edit' },
+	delete: { id: 'collection.delete', defaultMessage: 'Delete' },
+	openOnWeb: { id: 'collection.open-on-web', defaultMessage: 'Open on web' },
+	noMatching: { id: 'collection.no-matching', defaultMessage: 'No matching projects' },
+	noFollowed: { id: 'collection.no-followed', defaultMessage: "You haven't followed any projects yet" },
+	noProjects: { id: 'collection.no-projects', defaultMessage: 'No projects in this collection' },
+	unfollowProject: { id: 'collection.unfollow-project', defaultMessage: 'Unfollow project' },
+	unfollowing: { id: 'collection.unfollowing', defaultMessage: 'Unfollowing...' },
+	removeProject: { id: 'collection.remove-project', defaultMessage: 'Remove project' },
+	removing: { id: 'collection.removing', defaultMessage: 'Removing...' },
+	removeTooltip: { id: 'collection.remove-tooltip', defaultMessage: 'Remove from collection' },
+	sortBy: { id: 'collection.sort-by', defaultMessage: 'Sort by: ' },
+	sortByName: { id: 'collection.sort-by-name', defaultMessage: 'Sort by' },
+	sortNameAsc: { id: 'collection.sort.name', defaultMessage: 'Name (A-Z)' },
+	sortDownloads: { id: 'collection.sort.downloads', defaultMessage: 'Downloads' },
+	sortFollowers: { id: 'collection.sort.followers', defaultMessage: 'Followers' },
+	sortUpdated: { id: 'collection.sort.updated', defaultMessage: 'Recently updated' },
+	searchPlaceholder: { id: 'collection.search-placeholder', defaultMessage: 'Search projects...' },
+})
+
+const searchQuery = ref('')
+
+type SortMode = 'name' | 'downloads' | 'followers' | 'updated'
+const SORT_OPTIONS: SortMode[] = ['name', 'downloads', 'followers', 'updated']
+const SORT_STORAGE_KEY = 'noctrinth:collection:followed-sort'
+
+function loadInitialSort(): SortMode {
+	try {
+		const raw = localStorage.getItem(SORT_STORAGE_KEY)
+		if (raw && (SORT_OPTIONS as string[]).includes(raw)) return raw as SortMode
+	} catch {
+		// ignore
+	}
+	return 'name'
+}
+
+const sortMode = ref<SortMode>(loadInitialSort())
+
+function setSortMode(value: SortMode) {
+	sortMode.value = value
+	try {
+		localStorage.setItem(SORT_STORAGE_KEY, value)
+	} catch {
+		// ignore
+	}
+}
+
+function formatSortOption(option: SortMode): string {
+	switch (option) {
+		case 'name':
+			return formatMessage(messages.sortNameAsc)
+		case 'downloads':
+			return formatMessage(messages.sortDownloads)
+		case 'followers':
+			return formatMessage(messages.sortFollowers)
+		case 'updated':
+			return formatMessage(messages.sortUpdated)
+	}
+}
 
 const loading = ref(true)
 const collection = ref<Collection | null>(null)
@@ -122,11 +200,39 @@ const typeFilterOptions = computed<FilterPillOption[]>(() => {
 const showTypeFilter = computed(() => typeFilterOptions.value.length > 1)
 
 const filteredProjects = computed(() => {
-	if (typeFilters.value.length === 0) return projects.value
-	return projects.value.filter((p) => {
-		const t = getProjectType(p)
-		return t != null && typeFilters.value.includes(t)
+	const q = searchQuery.value.trim().toLowerCase()
+	const list = projects.value.filter((p) => {
+		if (typeFilters.value.length > 0) {
+			const t = getProjectType(p)
+			if (t == null || !typeFilters.value.includes(t)) return false
+		}
+		if (q) {
+			const haystack = `${p.title ?? p.name ?? ''} ${p.slug ?? ''} ${p.description ?? p.summary ?? ''}`.toLowerCase()
+			if (!haystack.includes(q)) return false
+		}
+		return true
 	})
+
+	const sorted = [...list]
+	switch (sortMode.value) {
+		case 'name':
+			sorted.sort((a, b) => String(a.title ?? a.name ?? '').localeCompare(String(b.title ?? b.name ?? '')))
+			break
+		case 'downloads':
+			sorted.sort((a, b) => (b.downloads ?? 0) - (a.downloads ?? 0))
+			break
+		case 'followers':
+			sorted.sort((a, b) => (b.follows ?? b.followers ?? 0) - (a.follows ?? a.followers ?? 0))
+			break
+		case 'updated':
+			sorted.sort(
+				(a, b) =>
+					new Date(b.date_modified ?? b.updated ?? 0).getTime() -
+					new Date(a.date_modified ?? a.updated ?? 0).getTime(),
+			)
+			break
+	}
+	return sorted
 })
 
 const editModal = ref<InstanceType<typeof CollectionEditModal>>()
@@ -197,6 +303,12 @@ async function load() {
 	}
 }
 
+// Top-level await blocks <Suspense> until the initial load finishes — the
+// app's top loading bar shows during the wait and the page only renders
+// when fully ready. The route-param watch below handles in-place navigation
+// between different collections (still uses `loading` for that case).
+await load()
+
 function openEdit() {
 	if (collection.value) editModal.value?.show(collection.value)
 }
@@ -250,28 +362,28 @@ watch(
 		if (route.name === 'Collection' && id) load()
 	},
 )
-onMounted(load)
 </script>
 
 <template>
-	<div class="p-6 flex flex-col gap-4">
+	<div v-if="loading" class="p-6 flex justify-center py-16">
+		<LoadingIndicator />
+	</div>
+	<div v-else class="p-6 flex flex-col gap-4">
 		<CollectionEditModal ref="editModal" @saved="onEditSaved" />
 		<CollectionDeleteModal ref="deleteModal" @deleted="onDeleted" />
 
 		<NavTabs
 			:links="[
 				{
-					label: 'Collections',
+					label: formatMessage(messages.tabCollections),
 					href: `/dashboard/collections`,
 					subpages: ['/collection/'],
 				},
-				{ label: 'Notifications', href: `/dashboard/notifications` },
+				{ label: formatMessage(messages.tabNotifications), href: `/dashboard/notifications` },
 			]"
 		/>
 
-		<p v-if="loading">Loading...</p>
-
-		<template v-else-if="collection">
+		<template v-if="collection">
 			<ContentPageHeader>
 				<template #icon>
 					<Avatar
@@ -291,7 +403,7 @@ onMounted(load)
 					<div class="flex items-center gap-2 font-medium">
 						<BoxIcon class="size-4" aria-hidden="true" />
 						{{ formatCompactNumber(projects.length) }}
-						{{ projects.length === 1 ? 'project' : 'projects' }}
+						{{ formatMessage(projects.length === 1 ? messages.projectsCountOne : messages.projectsCountOther) }}
 					</div>
 
 					<div class="w-1.5 h-1.5 rounded-full bg-surface-5"></div>
@@ -299,26 +411,26 @@ onMounted(load)
 					<div class="flex items-center gap-2 capitalize font-medium">
 						<template v-if="isFollowing || collection.status === 'private'">
 							<LockIcon class="size-4" aria-hidden="true" />
-							<span>Private</span>
+							<span>{{ formatMessage(messages.statusPrivate) }}</span>
 						</template>
 						<template v-else-if="collection.status === 'listed'">
 							<GlobeIcon class="size-4" aria-hidden="true" />
-							<span>Public</span>
+							<span>{{ formatMessage(messages.statusPublic) }}</span>
 						</template>
 						<template v-else-if="collection.status === 'unlisted'">
 							<LinkIcon class="size-4" aria-hidden="true" />
-							<span>Unlisted</span>
+							<span>{{ formatMessage(messages.statusUnlisted) }}</span>
 						</template>
 						<template v-else-if="collection.status === 'rejected'">
 							<XIcon class="size-4" aria-hidden="true" />
-							<span>Rejected</span>
+							<span>{{ formatMessage(messages.statusRejected) }}</span>
 						</template>
 					</div>
 
 					<template v-if="collection.updated">
 						<div class="w-1.5 h-1.5 rounded-full bg-surface-5"></div>
 						<div class="flex items-center gap-2 font-medium">
-							Updated {{ dayjs(collection.updated).fromNow() }}
+							{{ formatMessage(messages.updatedAgo, { time: dayjs(collection.updated).fromNow() }) }}
 						</div>
 					</template>
 				</template>
@@ -326,35 +438,65 @@ onMounted(load)
 					<ButtonStyled v-if="isOwner">
 						<button @click="openEdit">
 							<EditIcon />
-							Edit
+							{{ formatMessage(messages.edit) }}
 						</button>
 					</ButtonStyled>
 					<ButtonStyled v-if="isOwner" color="red">
 						<button @click="openDelete">
 							<TrashIcon />
-							Delete
+							{{ formatMessage(messages.delete) }}
 						</button>
 					</ButtonStyled>
 					<ButtonStyled v-if="!isFollowing">
 						<button @click="openOnWeb">
 							<ExternalIcon />
-							Open on web
+							{{ formatMessage(messages.openOnWeb) }}
 						</button>
 					</ButtonStyled>
 				</template>
 			</ContentPageHeader>
 
-			<FilterPills
-				v-if="showTypeFilter"
-				v-model="typeFilters"
-				:options="typeFilterOptions"
-				class="mt-1"
+			<StyledInput
+				v-model="searchQuery"
+				:icon="SearchIcon"
+				type="text"
+				clearable
+				:placeholder="formatMessage(messages.searchPlaceholder)"
+				wrapper-class="w-full mt-1"
+				input-class="!h-11"
 			/>
+			<div class="flex flex-wrap items-center gap-2">
+				<FilterPills
+					v-if="showTypeFilter"
+					v-model="typeFilters"
+					:options="typeFilterOptions"
+				/>
+				<DropdownSelect
+					v-slot="{ selected }"
+					:model-value="sortMode"
+					class="!w-auto ml-auto"
+					:name="formatMessage(messages.sortByName)"
+					:options="SORT_OPTIONS"
+					:display-name="formatSortOption"
+					@update:model-value="setSortMode"
+				>
+					<span class="font-semibold text-primary">{{ formatMessage(messages.sortBy) }}</span>
+					<span class="font-semibold text-secondary">{{ selected }}</span>
+				</DropdownSelect>
+			</div>
 
 			<div v-if="filteredProjects.length === 0" class="empty-state">
 				<BoxIcon class="mx-auto h-12 w-12 text-secondary opacity-50" aria-hidden="true" />
 				<p class="mt-4 text-lg font-medium text-contrast">
-					{{ typeFilters.length ? `No matching projects` : isFollowing ? "You haven't followed any projects yet" : 'No projects in this collection' }}
+					{{
+						formatMessage(
+							typeFilters.length
+								? messages.noMatching
+								: isFollowing
+									? messages.noFollowed
+									: messages.noProjects,
+						)
+					}}
 				</p>
 			</div>
 
@@ -380,19 +522,19 @@ onMounted(load)
 								@click.stop.prevent="removeProject(p.id)"
 							>
 								<HeartIcon />
-								{{ removingId === p.id ? 'Unfollowing...' : 'Unfollow project' }}
+								{{ formatMessage(removingId === p.id ? messages.unfollowing : messages.unfollowProject) }}
 							</button>
 						</ButtonStyled>
 					</template>
 					<template v-else-if="isOwner" #actions>
 						<ButtonStyled>
 							<button
-								v-tooltip="'Remove from collection'"
+								v-tooltip="formatMessage(messages.removeTooltip)"
 								:disabled="removingId === p.id"
 								@click.stop.prevent="removeProject(p.id)"
 							>
 								<XIcon />
-								{{ removingId === p.id ? 'Removing...' : 'Remove project' }}
+								{{ formatMessage(removingId === p.id ? messages.removing : messages.removeProject) }}
 							</button>
 						</ButtonStyled>
 					</template>

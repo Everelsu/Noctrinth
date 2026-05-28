@@ -178,6 +178,7 @@ fn main() {
                         "profile_get_many",
                         "profile_get_projects",
                         "profile_get_installed_project_ids",
+                        "profile_compute_cf_fingerprints",
                         "profile_get_content_items",
                         "profile_get_dependencies_as_content_items",
                         "profile_get_linked_modpack_info",

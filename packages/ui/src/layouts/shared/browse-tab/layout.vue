@@ -128,6 +128,7 @@ const messages = defineMessages({
 			>
 				<CurseForgeIcon class="source-toggle__icon" />
 				<span class="source-toggle__label">CurseForge</span>
+				<span class="source-toggle__alpha-badge" aria-label="Alpha">Alpha</span>
 			</button>
 		</div>
 
@@ -438,6 +439,43 @@ const messages = defineMessages({
 }
 .source-toggle__btn--cf:not(.is-active):hover {
 	background: #f164361a;
+}
+
+/* Alpha tag — only shown when the CurseForge button is active (expanded),
+   right next to the "CurseForge" label. Collapses with the label so it
+   doesn't overflow the narrow collapsed button. */
+.source-toggle__alpha-badge {
+	display: inline-flex;
+	align-items: center;
+	flex-shrink: 0;
+	max-width: 0;
+	opacity: 0;
+	padding: 0;
+	margin-left: 0;
+	overflow: hidden;
+	font-size: 0.6rem;
+	font-weight: 800;
+	line-height: 1;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	border-radius: 9999px;
+	border: 1px solid transparent;
+	white-space: nowrap;
+	transition:
+		max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+		opacity 0.2s ease,
+		padding 0.2s ease,
+		margin-left 0.2s ease;
+}
+
+.source-toggle__btn--cf.is-active .source-toggle__alpha-badge {
+	max-width: 5rem;
+	opacity: 1;
+	padding: 2px 6px;
+	margin-left: 4px;
+	background: rgba(31, 13, 5, 0.2);
+	border-color: rgba(31, 13, 5, 0.5);
+	color: #1f0d05;
 }
 
 @media (prefers-reduced-motion) {

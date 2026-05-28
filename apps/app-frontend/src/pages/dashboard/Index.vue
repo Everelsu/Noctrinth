@@ -1,11 +1,17 @@
 <script setup lang="ts">
-import { NavTabs } from '@modrinth/ui'
+import { defineMessages, NavTabs, useVIntl } from '@modrinth/ui'
 import { useRoute } from 'vue-router'
 
 import { useBreadcrumbs } from '@/store/breadcrumbs.js'
 
 const route = useRoute()
 const breadcrumbs = useBreadcrumbs()
+const { formatMessage } = useVIntl()
+
+const messages = defineMessages({
+	tabCollections: { id: 'dashboard.tab.collections', defaultMessage: 'Collections' },
+	tabNotifications: { id: 'dashboard.tab.notifications', defaultMessage: 'Notifications' },
+})
 
 breadcrumbs.setRootContext({ name: 'Dashboard', link: route.path })
 </script>
@@ -16,11 +22,11 @@ breadcrumbs.setRootContext({ name: 'Dashboard', link: route.path })
 		<NavTabs
 			:links="[
 				{
-					label: 'Collections',
+					label: formatMessage(messages.tabCollections),
 					href: `/dashboard/collections`,
 					subpages: ['/collection/'],
 				},
-				{ label: 'Notifications', href: `/dashboard/notifications` },
+				{ label: formatMessage(messages.tabNotifications), href: `/dashboard/notifications` },
 			]"
 		/>
 		<RouterView v-if="route.path.startsWith('/dashboard')" />

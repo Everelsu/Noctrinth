@@ -29,6 +29,7 @@ import { convertFileSrc } from '@tauri-apps/api/core'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
+import { loadCfInstalledProjectIds } from '@/helpers/cf-installed-store'
 import {
 	bestCfFileFor,
 	getCurseForgeModFiles,
@@ -52,13 +53,53 @@ const projectInfo = ref(null)
 let cfFiles = []
 let currentMod = null
 
+// Mirror of CF_REAL_LOADERS in helpers/curseforge-api.ts. Only real mod
+// loaders disqualify a file from a vanilla instance — informational tags
+// like "Iris", "OptiFine", "Data Pack" do not.
+const CF_REAL_LOADERS = new Set([
+	'forge',
+	'fabric',
+	'quilt',
+	'neoforge',
+	'cauldron',
+	'liteloader',
+])
+
 function isCompatible(gameVersion, loader) {
 	const loaderLower = (loader ?? '').toLowerCase()
-	return cfFiles.some(
-		(f) =>
-			f.gameVersions.includes(gameVersion) &&
-			f.gameVersions.some((v) => v.toLowerCase() === loaderLower),
-	)
+	const isVanilla = loaderLower === '' || loaderLower === 'vanilla'
+	return cfFiles.some((f) => {
+		if (!f.gameVersions.includes(gameVersion)) return false
+		// Only treat actual mod loaders as constraining — see CF_REAL_LOADERS.
+		const fileLoaders = f.gameVersions
+			.filter((v) => !/^\d/.test(v))
+			.map((v) => v.toLowerCase())
+			.filter((v) => CF_REAL_LOADERS.has(v))
+		if (isVanilla) {
+			// Vanilla: only files that don't declare a specific loader qualify.
+			return fileLoaders.length === 0
+		}
+		// Modded: accept this loader's files, or universal files with no loader.
+		return fileLoaders.length === 0 || fileLoaders.includes(loaderLower)
+	})
+}
+
+/**
+ * Build a descriptive "no match" error listing the MC versions the mod
+ * actually has files for — much more helpful than just "no compatible file".
+ */
+function buildNoFitMessage(gameVersion, loader) {
+	const availableVersions = Array.from(
+		new Set(cfFiles.flatMap((f) => f.gameVersions.filter((v) => /^\d/.test(v)))),
+	).sort()
+	const hint =
+		availableVersions.length > 0
+			? ` Available: ${availableVersions.slice(0, 8).join(', ')}${
+					availableVersions.length > 8 ? '…' : ''
+				}.`
+			: ''
+	const target = `${gameVersion}${loader ? ` / ${loader}` : ''}`
+	return `No CurseForge file fits ${target}.${hint}`
 }
 
 /**
@@ -115,11 +156,14 @@ async function show(mod, forcedFile = null) {
 		gameVersions.value = ordered.length > 0 ? ordered : [...gvSet]
 		releaseGameVersions.value = releases
 
+		const cfTag = `cf:${mod.id}`
 		instances.value = profiles.map((profile) => ({
 			id: profile.path,
 			name: profile.name,
 			iconUrl: profile.icon_path ? convertFileSrc(profile.icon_path) : null,
-			installed: false,
+			// Check the per-instance localStorage store for prior CF installs of
+			// this mod, so already-installed instances show "Installed" up-front.
+			installed: loadCfInstalledProjectIds(profile.path).includes(cfTag),
 			compatible: isCompatible(profile.game_version, profile.loader),
 			installing: false,
 		}))
@@ -140,13 +184,18 @@ async function onInstall(instance) {
 
 	const file = bestCfFileFor(cfFiles, target.game_version, target.loader)
 	if (!file) {
-		handleError(new Error('No CurseForge file is compatible with this instance.'))
+		handleError(new Error(buildNoFitMessage(target.game_version, target.loader)))
 		return
 	}
 
 	if (row) row.installing = true
 	try {
-		await installCurseForgeFile(file, target.path)
+		const result = await installCurseForgeFile(
+			file,
+			target.path,
+			target.game_version,
+			target.loader,
+		)
 		if (row) {
 			row.installed = true
 			row.installing = false
@@ -156,30 +205,52 @@ async function onInstall(instance) {
 			text: `${currentMod.name} was added to ${target.name}.`,
 			type: 'success',
 		})
+		notifyAboutDeps(result, target.name)
 	} catch (e) {
 		if (row) row.installing = false
 		handleError(e)
 	}
 }
 
+/** Surface optional/incompatible CF deps the auto-installer didn't pull in. */
+function notifyAboutDeps(result, instanceName) {
+	if (result?.incompatible?.length) {
+		addNotification({
+			title: 'Incompatible mod warning',
+			text: `${currentMod.name} declares ${result.incompatible.length} incompatible mod(s) — check ${instanceName} for conflicts.`,
+			type: 'warn',
+		})
+	}
+	if (result?.optional?.length) {
+		addNotification({
+			title: 'Optional dependencies available',
+			text: `${currentMod.name} has ${result.optional.length} optional add-on(s) — open its page to install them.`,
+			type: 'info',
+		})
+	}
+}
+
 async function onCreateAndInstall(data) {
 	try {
-		const id = await create(data.name, data.gameVersion, data.loader, 'latest', data.iconPath, false)
-		if (!id) return
-
+		// Pick the file BEFORE creating the profile — otherwise an incompatible
+		// pick leaves the user with an empty orphan instance.
 		const file = bestCfFileFor(cfFiles, data.gameVersion, data.loader)
 		if (!file) {
-			handleError(new Error('No CurseForge file is compatible with this version.'))
+			handleError(new Error(buildNoFitMessage(data.gameVersion, data.loader)))
 			return
 		}
 
+		const id = await create(data.name, data.gameVersion, data.loader, 'latest', data.iconPath, false)
+		if (!id) return
+
 		// ContentInstallModal already closes itself on create-and-install.
-		await installCurseForgeFile(file, id)
+		const result = await installCurseForgeFile(file, id, data.gameVersion, data.loader)
 		addNotification({
 			title: 'Mod installed',
 			text: `${currentMod.name} was added to ${data.name}.`,
 			type: 'success',
 		})
+		notifyAboutDeps(result, data.name)
 		await router.push(`/instance/${encodeURIComponent(id)}`)
 	} catch (e) {
 		handleError(e)

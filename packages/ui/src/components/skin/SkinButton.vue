@@ -31,10 +31,19 @@ function onImageLoad(type: 'forward' | 'backward') {
 </script>
 
 <template>
+	<!--
+		Selected ring uses `outline` (not `border`) with positive offset so the
+		highlight sits OUTSIDE the container, not inside an `overflow-hidden`
+		clip where the rounded corners would chew off the skin tile's edges.
+	-->
 	<div
 		v-tooltip="tooltip ?? undefined"
-		class="group flex relative overflow-hidden rounded-xl border-solid border-2 transition-colors duration-200"
-		:class="[selected ? 'border-brand' : 'border-transparent hover:border-inverted']"
+		class="group flex relative overflow-hidden rounded-xl transition-[outline-color] duration-200"
+		:class="[
+			selected
+				? 'outline outline-[3px] outline-brand outline-offset-2'
+				: 'outline outline-2 outline-transparent outline-offset-2 hover:outline-inverted',
+		]"
 	>
 		<button
 			class="skin-btn-bg absolute inset-0 cursor-pointer p-0 border-none group-hover:brightness-125"

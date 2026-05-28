@@ -17,23 +17,30 @@ export function useFormatNumber() {
 	return format
 }
 
-// `formatCompactNumber(1234567)` → `1.23M`
+// `formatCompactNumber(1234567)` → `1.23m`
+//
+// We bypass Intl's compact notation so the suffix is always the short Latin
+// `k` / `m` / `b` rather than locale-specific words (Russian "млн"/"тыс" etc.
+// look ugly and inflate the layout). The numeric part still goes through Intl
+// so the decimal/thousands separators stay locale-correct (e.g. "1,23m" in ru,
+// "1.23m" in en).
 //
 // Use `formatCompactNumberPlural` over `{(here!), plural, one {...} other {...}}`
 export function useCompactNumber() {
 	const { locale } = injectI18n()
 
 	function formatCompactNumber(value: number | bigint): string {
-		if (value < 10_000) {
-			const standardFormatter = getStandardFormatter(locale.value)
-			return standardFormatter.format(value)
+		const n = typeof value === 'bigint' ? Number(value) : value
+		if (n < 10_000) {
+			return getStandardFormatter(locale.value).format(value)
 		}
-		if (value < 1_000_000) {
-			const oneDigitCompactFormatter = getCompactFormatter(locale.value, 1)
-			return oneDigitCompactFormatter.format(value)
+		if (n < 1_000_000) {
+			return formatFixed(locale.value, n / 1_000, 1) + 'k'
 		}
-		const twoDigitsCompactFormatter = getCompactFormatter(locale.value, 2)
-		return twoDigitsCompactFormatter.format(value)
+		if (n < 1_000_000_000) {
+			return formatFixed(locale.value, n / 1_000_000, 2) + 'M'
+		}
+		return formatFixed(locale.value, n / 1_000_000_000, 2) + 'b'
 	}
 
 	function formatCompactNumberPlural(value: number | bigint): number | bigint {
@@ -58,15 +65,16 @@ function getStandardFormatter(locale: string): Intl.NumberFormat {
 	return formatter
 }
 
-function getCompactFormatter(locale: string, maximumFractionDigits: number): Intl.NumberFormat {
-	const cacheKey = `${locale}:compact:${maximumFractionDigits}`
+function getFixedFormatter(locale: string, maximumFractionDigits: number): Intl.NumberFormat {
+	const cacheKey = `${locale}:fixed:${maximumFractionDigits}`
 	let formatter = formatterCache.get(cacheKey)
 	if (!formatter) {
-		formatter = new Intl.NumberFormat(locale, {
-			notation: 'compact',
-			maximumFractionDigits,
-		})
+		formatter = new Intl.NumberFormat(locale, { maximumFractionDigits })
 		formatterCache.set(cacheKey, formatter)
 	}
 	return formatter
+}
+
+function formatFixed(locale: string, value: number, maxFractionDigits: number): string {
+	return getFixedFormatter(locale, maxFractionDigits).format(value)
 }

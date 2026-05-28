@@ -1,12 +1,28 @@
 <script setup lang="ts">
 import { ExternalIcon } from '@modrinth/assets'
 import { getChangelog } from '@modrinth/blog'
-import { ButtonStyled } from '@modrinth/ui'
+import { ButtonStyled, defineMessages, useVIntl } from '@modrinth/ui'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import dayjs from 'dayjs'
 import { computed, ref } from 'vue'
 
 import { getNoctrinthChangelog } from '@/helpers/noctrinth-changelog'
+
+const { formatMessage } = useVIntl()
+
+const messages = defineMessages({
+	sourceNoctrinth: { id: 'app.changelog.source.noctrinth', defaultMessage: 'Noctrinth' },
+	sourceModrinth: { id: 'app.changelog.source.modrinth', defaultMessage: 'Modrinth' },
+	modrinthNote: {
+		id: 'app.changelog.modrinth-note',
+		defaultMessage:
+			'Showing recent releases. The full Modrinth App changelog is available on their website.',
+	},
+	openNoctrinthChangelog: {
+		id: 'app.changelog.open-noctrinth',
+		defaultMessage: 'Open Noctrinth changelog',
+	},
+})
 
 interface ChangelogSection {
 	title: string
@@ -94,7 +110,7 @@ const entries = computed<ChangelogEntry[]>(() =>
 				"
 				@click="source = 'noctrinth'"
 			>
-				Noctrinth
+				{{ formatMessage(messages.sourceNoctrinth) }}
 			</button>
 			<button
 				class="cursor-pointer rounded-lg border-0 px-3 py-1.5 text-sm font-semibold transition-colors"
@@ -105,7 +121,7 @@ const entries = computed<ChangelogEntry[]>(() =>
 				"
 				@click="source = 'modrinth'"
 			>
-				Modrinth
+				{{ formatMessage(messages.sourceModrinth) }}
 			</button>
 		</div>
 
@@ -141,13 +157,12 @@ const entries = computed<ChangelogEntry[]>(() =>
 		<!-- Link to the authoritative Modrinth changelog -->
 		<div v-if="source === 'modrinth'" class="flex flex-col gap-2">
 			<p class="m-0 text-sm text-secondary">
-				Showing recent releases. The full Modrinth App changelog is available on their
-				website.
+				{{ formatMessage(messages.modrinthNote) }}
 			</p>
 			<ButtonStyled>
 				<button @click="openUrl('https://everelsu.github.io/Noctrinth/')">
 					<ExternalIcon />
-					Open Noctrinth changelog
+					{{ formatMessage(messages.openNoctrinthChangelog) }}
 				</button>
 			</ButtonStyled>
 		</div>

@@ -325,6 +325,30 @@ const messages = defineMessages({
 		defaultMessage:
 			'Minecraft authentication servers may be down right now. Check your internet connection and try again later.',
 	},
+	sidebarSkins: {
+		id: 'app.sidebar.skins',
+		defaultMessage: 'Skins (Beta)',
+	},
+	sidebarSignIn: {
+		id: 'app.sidebar.sign-in',
+		defaultMessage: 'Sign in',
+	},
+	accountSignedInAs: {
+		id: 'app.account.signed-in-as',
+		defaultMessage: 'Signed in as',
+	},
+	accountCollections: {
+		id: 'app.account.collections',
+		defaultMessage: 'Collections',
+	},
+	accountNotifications: {
+		id: 'app.account.notifications',
+		defaultMessage: 'Notifications',
+	},
+	accountSignOut: {
+		id: 'app.account.sign-out',
+		defaultMessage: 'Sign out',
+	},
 })
 
 async function setupApp() {
@@ -1229,7 +1253,7 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 			>
 				<CompassIcon />
 			</NavButton>
-			<NavButton v-tooltip.right="'Skins (Beta)'" to="/skins">
+			<NavButton v-tooltip.right="formatMessage(messages.sidebarSkins)" to="/skins">
 				<ChangeSkinIcon />
 			</NavButton>
 			<NavButton
@@ -1330,7 +1354,7 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 				<template #view-profile>
 					<UserIcon />
 					<span class="inline-flex items-center gap-1">
-						Signed in as
+						{{ formatMessage(messages.accountSignedInAs) }}
 						<span class="inline-flex items-center gap-1 text-contrast font-semibold">
 							<Avatar :src="credentials?.user?.avatar_url" alt="" size="20px" circle />
 							{{ credentials?.user?.username }}
@@ -1338,11 +1362,17 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 					</span>
 					<ExternalIcon />
 				</template>
-				<template #collections> <LibraryIcon /> Collections </template>
-				<template #notifications> <BellIcon /> Notifications </template>
-				<template #sign-out> <LogOutIcon /> Sign out </template>
+				<template #collections>
+					<LibraryIcon /> {{ formatMessage(messages.accountCollections) }}
+				</template>
+				<template #notifications>
+					<BellIcon /> {{ formatMessage(messages.accountNotifications) }}
+				</template>
+				<template #sign-out>
+					<LogOutIcon /> {{ formatMessage(messages.accountSignOut) }}
+				</template>
 			</OverflowMenu>
-			<NavButton v-else v-tooltip.right="'Sign in'" :to="() => signIn()">
+			<NavButton v-else v-tooltip.right="formatMessage(messages.sidebarSignIn)" :to="() => signIn()">
 				<LogInIcon class="text-brand" />
 			</NavButton>
 		</div>

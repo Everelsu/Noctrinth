@@ -18,6 +18,7 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
             profile_get_many,
             profile_get_projects,
             profile_get_installed_project_ids,
+            profile_compute_cf_fingerprints,
             profile_get_content_items,
             profile_get_dependencies_as_content_items,
             profile_get_linked_modpack_info,
@@ -85,6 +86,18 @@ pub async fn profile_get_installed_project_ids(
     path: &str,
 ) -> Result<Vec<String>> {
     let res = profile::get_installed_project_ids(path).await?;
+    Ok(res)
+}
+
+/// Compute CurseForge Murmur2 fingerprints for every .jar in the instance's
+/// mods/ folder. Used by the frontend to identify installed CurseForge mods
+/// by POST-ing the fingerprints to CF's `/v1/fingerprints` — the same way
+/// xmcl-launcher discovers CF metadata for manually-installed jars.
+#[tauri::command]
+pub async fn profile_compute_cf_fingerprints(
+    path: &str,
+) -> Result<Vec<(String, u32)>> {
+    let res = profile::compute_cf_fingerprints(path).await?;
     Ok(res)
 }
 

@@ -3,12 +3,14 @@ import { BoxIcon, GlobeIcon, LinkIcon, LockIcon, PlusIcon, SearchIcon, XIcon } f
 import {
 	Avatar,
 	ButtonStyled,
+	defineMessages,
 	DropdownSelect,
 	injectNotificationManager,
 	StyledInput,
 	useCompactNumber,
+	useVIntl,
 } from '@modrinth/ui'
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import CollectionCreateModal from '@/components/ui/modal/CollectionCreateModal.vue'
@@ -21,44 +23,62 @@ import { get as getCreds } from '@/helpers/mr_auth.ts'
 
 const { handleError } = injectNotificationManager()
 const { formatCompactNumber } = useCompactNumber()
+const { formatMessage } = useVIntl()
 const router = useRouter()
 
-const loading = ref(true)
+const messages = defineMessages({
+	searchPlaceholder: { id: 'collections.search-placeholder', defaultMessage: 'Search collections...' },
+	sortBy: { id: 'collections.sort-by', defaultMessage: 'Sort by: ' },
+	sortUpdated: { id: 'collections.sort.updated', defaultMessage: 'Recently Updated' },
+	sortCreated: { id: 'collections.sort.created', defaultMessage: 'Recently Created' },
+	sortName: { id: 'collections.sort.name', defaultMessage: 'Name (A-Z)' },
+	sortByName: { id: 'collections.sort-by-name', defaultMessage: 'Sort by' },
+	createNew: { id: 'collections.create-new', defaultMessage: 'Create new' },
+	loading: { id: 'collections.loading', defaultMessage: 'Loading collections...' },
+	signInPrompt: { id: 'collections.sign-in-prompt', defaultMessage: 'Sign in to view your collections' },
+	signInPromptBody: { id: 'collections.sign-in-prompt-body', defaultMessage: 'Sign in to your Modrinth account to see your collections here.' },
+	noMatch: { id: 'collections.no-match', defaultMessage: 'No collections match your search' },
+	noCollections: { id: 'collections.no-collections', defaultMessage: "You don't have any collections yet" },
+	noMatchBody: { id: 'collections.no-match-body', defaultMessage: 'Try adjusting your filters or search terms.' },
+	noCollectionsBody: { id: 'collections.no-collections-body', defaultMessage: 'Create your first collection on modrinth.com to get started!' },
+	followedProjects: { id: 'collections.followed-projects', defaultMessage: 'Followed projects' },
+	followedProjectsDesc: { id: 'collections.followed-projects-desc', defaultMessage: "Auto-generated collection of all the projects you're following." },
+	projectsCountOne: { id: 'collections.projects-count.one', defaultMessage: 'project' },
+	projectsCountOther: { id: 'collections.projects-count.other', defaultMessage: 'projects' },
+	statusPrivate: { id: 'collections.status.private', defaultMessage: 'Private' },
+	statusPublic: { id: 'collections.status.public', defaultMessage: 'Public' },
+	statusUnlisted: { id: 'collections.status.unlisted', defaultMessage: 'Unlisted' },
+	statusRejected: { id: 'collections.status.rejected', defaultMessage: 'Rejected' },
+})
+
 const signedIn = ref(true)
 const collections = ref<Collection[]>([])
 const followsCount = ref(0)
 const filterQuery = ref('')
 const sortBy = ref<'updated' | 'created' | 'name'>('updated')
 
-async function load() {
-	loading.value = true
-	try {
-		const creds = await getCreds()
-		if (!creds) {
-			signedIn.value = false
-			collections.value = []
-			followsCount.value = 0
-			return
-		}
-		signedIn.value = true
+// Top-level await so RouterView's <Suspense> holds the navigation (and shows
+// the top progress bar) until all data is ready — matches the Browse page UX.
+try {
+	const creds = await getCreds()
+	if (!creds) {
+		signedIn.value = false
+	} else {
 		const [cols, follows] = await Promise.all([
 			getUserCollections(creds.user_id),
 			getUserFollowedProjects(creds.user_id).catch(() => []),
 		])
 		collections.value = cols
 		followsCount.value = follows.length
-	} catch (e) {
-		handleError(e)
-		collections.value = []
-	} finally {
-		loading.value = false
 	}
+} catch (e) {
+	handleError(e)
 }
 
 function formatSortOption(option: string) {
-	if (option === 'updated') return 'Recently Updated'
-	if (option === 'created') return 'Recently Created'
-	return 'Name (A-Z)'
+	if (option === 'updated') return formatMessage(messages.sortUpdated)
+	if (option === 'created') return formatMessage(messages.sortCreated)
+	return formatMessage(messages.sortName)
 }
 
 const orderedCollections = computed(() => {
@@ -97,8 +117,6 @@ function onCreated(collection: Collection) {
 	collections.value = [collection, ...collections.value]
 	router.push(`/collection/${collection.id}`)
 }
-
-onMounted(load)
 </script>
 
 <template>
@@ -110,7 +128,7 @@ onMounted(load)
 				:icon="SearchIcon"
 				type="text"
 				clearable
-				placeholder="Search collections..."
+				:placeholder="formatMessage(messages.searchPlaceholder)"
 				wrapper-class="w-full"
 				input-class="!h-12"
 			/>
@@ -119,30 +137,28 @@ onMounted(load)
 					v-slot="{ selected }"
 					v-model="sortBy"
 					class="!w-auto flex-grow md:flex-grow-0"
-					name="Sort by"
+					:name="formatMessage(messages.sortByName)"
 					:options="['updated', 'created', 'name']"
 					:display-name="formatSortOption"
 				>
-					<span class="font-semibold text-primary">Sort by: </span>
+					<span class="font-semibold text-primary">{{ formatMessage(messages.sortBy) }}</span>
 					<span class="font-semibold text-secondary">{{ selected }}</span>
 				</DropdownSelect>
 				<ButtonStyled color="brand">
 					<button class="ml-auto" @click="openCreate">
 						<PlusIcon aria-hidden="true" />
-						Create new
+						{{ formatMessage(messages.createNew) }}
 					</button>
 				</ButtonStyled>
 			</div>
 		</div>
 
-		<p v-if="loading">Loading collections...</p>
-
-		<div v-else-if="!signedIn" class="empty-state-container">
+		<div v-if="!signedIn" class="empty-state-container">
 			<div class="py-12 text-center">
 				<BoxIcon class="mx-auto h-12 w-12 text-secondary opacity-50" aria-hidden="true" />
-				<p class="mt-4 text-lg font-medium text-contrast">Sign in to view your collections</p>
+				<p class="mt-4 text-lg font-medium text-contrast">{{ formatMessage(messages.signInPrompt) }}</p>
 				<p class="text-sm text-secondary">
-					Sign in to your Modrinth account to see your collections here.
+					{{ formatMessage(messages.signInPromptBody) }}
 				</p>
 			</div>
 		</div>
@@ -154,18 +170,10 @@ onMounted(load)
 			<div class="py-12 text-center">
 				<BoxIcon class="mx-auto h-12 w-12 text-secondary opacity-50" aria-hidden="true" />
 				<p class="mt-4 text-lg font-medium text-contrast">
-					{{
-						filterQuery
-							? 'No collections match your search'
-							: "You don't have any collections yet"
-					}}
+					{{ formatMessage(filterQuery ? messages.noMatch : messages.noCollections) }}
 				</p>
 				<p class="text-sm text-secondary">
-					{{
-						filterQuery
-							? 'Try adjusting your filters or search terms.'
-							: 'Create your first collection on modrinth.com to get started!'
-					}}
+					{{ formatMessage(filterQuery ? messages.noMatchBody : messages.noCollectionsBody) }}
 				</p>
 			</div>
 		</div>
@@ -178,19 +186,19 @@ onMounted(load)
 			>
 				<Avatar src="https://cdn.modrinth.com/follow-collection.png" size="64px" />
 				<div class="details">
-					<span class="title">Followed projects</span>
+					<span class="title">{{ formatMessage(messages.followedProjects) }}</span>
 					<span class="description">
-						Auto-generated collection of all the projects you're following.
+						{{ formatMessage(messages.followedProjectsDesc) }}
 					</span>
 					<div class="stat-bar">
 						<div class="stats">
 							<BoxIcon aria-hidden="true" />
 							{{ formatCompactNumber(followsCount) }}
-							{{ followsCount === 1 ? 'project' : 'projects' }}
+							{{ formatMessage(followsCount === 1 ? messages.projectsCountOne : messages.projectsCountOther) }}
 						</div>
 						<div class="stats">
 							<LockIcon aria-hidden="true" />
-							<span>Private</span>
+							<span>{{ formatMessage(messages.statusPrivate) }}</span>
 						</div>
 					</div>
 				</div>
@@ -211,24 +219,24 @@ onMounted(load)
 						<div class="stats">
 							<BoxIcon aria-hidden="true" />
 							{{ formatCompactNumber(collection.projects?.length || 0) }}
-							{{ (collection.projects?.length || 0) === 1 ? 'project' : 'projects' }}
+							{{ formatMessage((collection.projects?.length || 0) === 1 ? messages.projectsCountOne : messages.projectsCountOther) }}
 						</div>
 						<div class="stats">
 							<template v-if="collection.status === 'listed'">
 								<GlobeIcon aria-hidden="true" />
-								<span>Public</span>
+								<span>{{ formatMessage(messages.statusPublic) }}</span>
 							</template>
 							<template v-else-if="collection.status === 'unlisted'">
 								<LinkIcon aria-hidden="true" />
-								<span>Unlisted</span>
+								<span>{{ formatMessage(messages.statusUnlisted) }}</span>
 							</template>
 							<template v-else-if="collection.status === 'private'">
 								<LockIcon aria-hidden="true" />
-								<span>Private</span>
+								<span>{{ formatMessage(messages.statusPrivate) }}</span>
 							</template>
 							<template v-else-if="collection.status === 'rejected'">
 								<XIcon aria-hidden="true" />
-								<span>Rejected</span>
+								<span>{{ formatMessage(messages.statusRejected) }}</span>
 							</template>
 						</div>
 					</div>

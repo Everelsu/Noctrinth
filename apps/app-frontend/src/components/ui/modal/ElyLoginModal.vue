@@ -1,14 +1,16 @@
 <template>
-	<NewModal ref="modal" header="Sign in with Ely.by">
+	<NewModal ref="modal" :header="formatMessage(messages.header)">
 		<div class="min-w-md flex max-w-md flex-col gap-3">
 			<div class="flex flex-col gap-2">
 				<label for="ely-username">
-					<span class="text-lg font-semibold text-contrast">Username or email</span>
+					<span class="text-lg font-semibold text-contrast">
+						{{ formatMessage(messages.usernameLabel) }}
+					</span>
 				</label>
 				<StyledInput
 					id="ely-username"
 					v-model="username"
-					placeholder="Enter your Ely.by username or email..."
+					:placeholder="formatMessage(messages.usernamePlaceholder)"
 					autocomplete="username"
 					:disabled="loading"
 					@keyup.enter="submit"
@@ -16,14 +18,16 @@
 			</div>
 			<div class="flex flex-col gap-2">
 				<label for="ely-password">
-					<span class="text-lg font-semibold text-contrast">Password</span>
+					<span class="text-lg font-semibold text-contrast">
+						{{ formatMessage(messages.passwordLabel) }}
+					</span>
 				</label>
 				<div class="relative flex items-center">
 					<StyledInput
 						id="ely-password"
 						v-model="password"
 						:type="showPassword ? 'text' : 'password'"
-						placeholder="Enter your password..."
+						:placeholder="formatMessage(messages.passwordPlaceholder)"
 						autocomplete="current-password"
 						:disabled="loading"
 						class="w-full pr-10"
@@ -32,7 +36,9 @@
 					<button
 						type="button"
 						class="absolute right-2 border-0 bg-transparent cursor-pointer text-secondary hover:text-contrast p-1"
-						:aria-label="showPassword ? 'Hide password' : 'Show password'"
+						:aria-label="
+							formatMessage(showPassword ? messages.hidePassword : messages.showPassword)
+						"
 						@click="showPassword = !showPassword"
 					>
 						<EyeOffIcon v-if="showPassword" class="w-4 h-4" />
@@ -45,21 +51,21 @@
 				<ButtonStyled type="outlined">
 					<button :disabled="loading" @click="hide">
 						<XIcon aria-hidden="true" />
-						Cancel
+						{{ formatMessage(messages.cancel) }}
 					</button>
 				</ButtonStyled>
 				<ButtonStyled color="brand">
 					<button :disabled="loading || !username.trim() || !password" @click="submit">
 						<SpinnerIcon v-if="loading" class="animate-spin" aria-hidden="true" />
 						<LogInIcon v-else aria-hidden="true" />
-						{{ loading ? 'Signing in...' : 'Sign in' }}
+						{{ formatMessage(loading ? messages.signingIn : messages.signIn) }}
 					</button>
 				</ButtonStyled>
 			</div>
 			<p class="m-0 text-secondary text-sm text-center">
-				Don't have an account?
+				{{ formatMessage(messages.noAccount) }}
 				<a href="https://ely.by" target="_blank" rel="noopener noreferrer" class="text-brand">
-					Sign up at ely.by
+					{{ formatMessage(messages.signUpLink) }}
 				</a>
 			</p>
 		</div>
@@ -68,10 +74,41 @@
 
 <script setup lang="ts">
 import { EyeIcon, EyeOffIcon, LogInIcon, SpinnerIcon, XIcon } from '@modrinth/assets'
-import { ButtonStyled, NewModal, StyledInput } from '@modrinth/ui'
+import { ButtonStyled, defineMessages, NewModal, StyledInput, useVIntl } from '@modrinth/ui'
 import { ref } from 'vue'
 
 import { ely_login, type ElyCredentials } from '@/helpers/ely_auth'
+
+const { formatMessage } = useVIntl()
+
+const messages = defineMessages({
+	header: { id: 'ely-login.header', defaultMessage: 'Sign in with Ely.by' },
+	usernameLabel: { id: 'ely-login.username-label', defaultMessage: 'Username or email' },
+	usernamePlaceholder: {
+		id: 'ely-login.username-placeholder',
+		defaultMessage: 'Enter your Ely.by username or email...',
+	},
+	passwordLabel: { id: 'ely-login.password-label', defaultMessage: 'Password' },
+	passwordPlaceholder: {
+		id: 'ely-login.password-placeholder',
+		defaultMessage: 'Enter your password...',
+	},
+	showPassword: { id: 'ely-login.show-password', defaultMessage: 'Show password' },
+	hidePassword: { id: 'ely-login.hide-password', defaultMessage: 'Hide password' },
+	cancel: { id: 'ely-login.cancel', defaultMessage: 'Cancel' },
+	signIn: { id: 'ely-login.sign-in', defaultMessage: 'Sign in' },
+	signingIn: { id: 'ely-login.signing-in', defaultMessage: 'Signing in...' },
+	noAccount: { id: 'ely-login.no-account', defaultMessage: "Don't have an account?" },
+	signUpLink: { id: 'ely-login.sign-up-link', defaultMessage: 'Sign up at ely.by' },
+	loginFailedNetwork: {
+		id: 'ely-login.error.network',
+		defaultMessage: "Couldn't reach Ely.by servers. Check your internet connection.",
+	},
+	loginFailedGeneric: {
+		id: 'ely-login.error.generic',
+		defaultMessage: 'Login failed. Please check your credentials.',
+	},
+})
 
 const emit = defineEmits<{
 	'logged-in': [ElyCredentials]
@@ -119,13 +156,13 @@ function formatLoginError(e: unknown): string {
 			: String(e)
 
 	if (/request failed|error sending request/i.test(msg)) {
-		return "Couldn't reach Ely.by servers. Check your internet connection."
+		return formatMessage(messages.loginFailedNetwork)
 	}
 
 	// Strip the raw backend prefix for a cleaner display.
 	msg = msg.replace(/^Ely\.by login failed:\s*/i, '').trim()
 
-	return msg || 'Login failed. Please check your credentials.'
+	return msg || formatMessage(messages.loginFailedGeneric)
 }
 
 defineExpose({ show, hide })

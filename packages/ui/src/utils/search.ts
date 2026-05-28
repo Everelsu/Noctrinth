@@ -111,6 +111,13 @@ export function useSearch(
 	projectTypes: Ref<ProjectType[]>,
 	tags: Ref<Tags>,
 	providedFilters: Ref<FilterValue[]>,
+	/**
+	 * App-defined URL query keys that round-trip with the page (e.g. instance
+	 * path `i`, server id `sid`) but aren't actual search filters. Including
+	 * them here suppresses the "Unknown filter type: X" console errors that
+	 * fire when readQueryParams() encounters them.
+	 */
+	persistentQueryParams: string[] = [],
 ) {
 	const query = ref('')
 	const maxResults = ref(20)
@@ -557,6 +564,10 @@ export function useSearch(
 
 	function readQueryParams() {
 		const readParams = new Set<string>()
+
+		// Skip app-defined persistent params (instance path, server id, …) so
+		// they don't trigger "Unknown filter type" errors.
+		for (const key of persistentQueryParams) readParams.add(key)
 
 		// Load legacy params
 		loadQueryParam(['l'], (openSource) => {

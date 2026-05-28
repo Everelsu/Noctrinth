@@ -154,12 +154,22 @@ const cfInstallModal = ref(null)
 const description = mod ? await getCurseForgeModDescription(props.modId) : null
 const descriptionHtml = description || '<p>No description available.</p>'
 
-const files = (mod ? await getCurseForgeModFiles(props.modId) : null) ?? []
-
 // Instance context — present when this page was opened while adding content
 // to a specific instance (?i=<instance path> in the URL).
 const instanceId = typeof route.query.i === 'string' ? route.query.i : null
 const instanceContext = instanceId ? await getInstance(instanceId).catch(() => null) : null
+
+// When opened from an instance, narrow file list to versions compatible with
+// that instance's Minecraft version and loader so only installable versions
+// appear in the Versions tab. Without this filter all historical files (1.0 …
+// latest, every loader) are shown regardless of the instance.
+const files = mod
+	? (await getCurseForgeModFiles(
+			props.modId,
+			instanceContext?.game_version,
+			instanceContext?.loader,
+		) ?? [])
+	: []
 
 // ── Map CurseForge mod → Modrinth v2 project shape ──────────────────────────
 // Lets us reuse ProjectHeader / ProjectSidebar* unchanged.
@@ -330,13 +340,30 @@ async function runInstall(target, mode) {
 		mode === 'auto' ? bestCfFileFor(files, target.game_version, target.loader) : mode
 
 	if (!file) {
-		handleError(new Error('No CurseForge file is compatible with this instance.'))
+		// Build a useful "no match" message — list what's actually available.
+		const availableVersions = Array.from(
+			new Set(files.flatMap((f) => f.gameVersions.filter((v) => /^\d/.test(v)))),
+		).sort()
+		const versionHint =
+			availableVersions.length > 0
+				? ` Available: ${availableVersions.slice(0, 8).join(', ')}${availableVersions.length > 8 ? '…' : ''}.`
+				: ''
+		handleError(
+			new Error(
+				`No CurseForge file fits ${target.game_version}${target.loader ? ` / ${target.loader}` : ''}.${versionHint}`,
+			),
+		)
 		return
 	}
 
 	installBusy.value = true
 	try {
-		await installCurseForgeFile(file, target.path)
+		const result = await installCurseForgeFile(
+			file,
+			target.path,
+			target.game_version,
+			target.loader,
+		)
 		installedIds.value.add(file.id)
 		if (mode === 'auto') headerInstalled.value = true
 		addNotification({
@@ -344,6 +371,20 @@ async function runInstall(target, mode) {
 			text: `${mod.name} was added to ${target.name}.`,
 			type: 'success',
 		})
+		if (result?.incompatible?.length) {
+			addNotification({
+				title: 'Incompatible mod warning',
+				text: `${mod.name} declares ${result.incompatible.length} incompatible mod(s) — check ${target.name} for conflicts.`,
+				type: 'warn',
+			})
+		}
+		if (result?.optional?.length) {
+			addNotification({
+				title: 'Optional dependencies available',
+				text: `${mod.name} has ${result.optional.length} optional add-on(s) — open its page to install them.`,
+				type: 'info',
+			})
+		}
 	} catch (e) {
 		handleError(e)
 	} finally {

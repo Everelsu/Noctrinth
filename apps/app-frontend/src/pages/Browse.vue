@@ -44,16 +44,28 @@ import {
 	get_version_many,
 } from '@/helpers/cache.js'
 import {
+	getCurseForgeCategories,
 	installCurseForgeMod,
 	installCurseForgeModpack,
 	isCurseForgeAvailable,
+	mapCfCategoriesToTags,
 } from '@/helpers/curseforge-api'
 import { get_loader_versions as getLoaderManifest } from '@/helpers/metadata'
 import { unifiedSearch } from '@/helpers/unified-search'
+import {
+	cfIdToModrinthId as lookupCfIdToMr,
+	modrinthIdToCfId as lookupMrIdToCf,
+} from '@/helpers/cross-platform-mapping'
+import {
+	loadCfInstalledProjectIds,
+	refreshCfInstalledFromFingerprints,
+	storeCfInstalled,
+} from '@/helpers/cf-installed-store'
 import { useSourceAccent, useSourceMode } from '@/composables/source-mode'
 import {
 	get as getInstance,
 	get_installed_project_ids as getInstalledProjectIds,
+	get_projects as getProfileProjects,
 } from '@/helpers/profile.js'
 import { get_categories, get_game_versions, get_loaders } from '@/helpers/tags'
 import { get_profile_worlds } from '@/helpers/worlds'
@@ -72,6 +84,11 @@ const { installingServerProjects, playServerProject, showAddServerToInstanceModa
 const { install: installVersion } = injectContentInstall()
 const queryClient = useQueryClient()
 const debugLog = useDebugLogger('Browse')
+
+// Catalog source for browse mode (empty query). A text search ignores this
+// and queries both Modrinth + CurseForge. Declared early so `tags` computed
+// can reference it when building the sidebar category list.
+const sourceMode = useSourceMode()
 
 const router = useRouter()
 const route = useRoute()
@@ -126,10 +143,28 @@ const [categories, loaders, availableGameVersions] = await Promise.all([
 		.then(ref<Labrinth.Tags.v2.GameVersion[]>),
 ])
 
+// CurseForge categories — loaded in the background so they're ready when
+// the user switches to CF-only mode. Typed as the Modrinth category shape
+// so `useSearch` / BrowseSidebar can consume them without changes.
+const cfCategoriesRaw = ref<Labrinth.Tags.v2.Category[]>([])
+if (isCurseForgeAvailable()) {
+	getCurseForgeCategories()
+		.then((cfCats) => {
+			cfCategoriesRaw.value = mapCfCategoriesToTags(cfCats) as Labrinth.Tags.v2.Category[]
+		})
+		.catch(() => {})
+}
+
 const tags: Ref<Tags> = computed(() => ({
 	gameVersions: availableGameVersions.value ?? [],
 	loaders: loaders.value ?? [],
-	categories: categories.value ?? [],
+	// In CurseForge-only browse mode replace Modrinth categories with CF ones
+	// so the sidebar shows meaningful CurseForge sub-categories. In Modrinth
+	// or mixed (text-search) mode keep the Modrinth categories.
+	categories:
+		sourceMode.value === 'curseforge'
+			? cfCategoriesRaw.value
+			: (categories.value ?? []),
 }))
 
 type Instance = {
@@ -148,6 +183,9 @@ type Instance = {
 
 const instance: Ref<Instance | null> = ref(null)
 const installedProjectIds: Ref<string[] | null> = ref(null)
+// Basenames of files already installed in the instance (e.g. "jei-1.21.1-fabric-19.27.0.336.jar").
+// Used to detect CF mods installed before the localStorage store existed.
+const installedFileNames = ref<Set<string>>(new Set())
 const instanceHideInstalled = ref(false)
 const newlyInstalled = ref<string[]>([])
 const hiddenInstanceProjectIds = ref<Set<string>>(new Set())
@@ -219,12 +257,53 @@ async function initInstanceContext() {
 				})
 				.catch(handleError)
 		} else {
-			getInstalledProjectIds(route.query.i as string)
+			const instancePath = route.query.i as string
+			// Modrinth IDs (hash-based) + cached CF IDs from localStorage —
+			// the cached set renders the sidebar instantly without waiting on
+			// the fingerprint round-trip below.
+			getInstalledProjectIds(instancePath)
 				.then((ids) => {
-					debugLog('installedProjectIds loaded', { count: ids?.length })
-					installedProjectIds.value = ids
+					const cfIds = loadCfInstalledProjectIds(instancePath)
+					const merged = [...ids, ...cfIds]
+					debugLog('installedProjectIds loaded', { count: merged.length, cfCount: cfIds.length })
+					installedProjectIds.value = merged
 				})
 				.catch(handleError)
+
+			// Authoritative CF discovery in the background — XMCL-style:
+			// hash every .jar locally, POST to CurseForge /v1/fingerprints,
+			// union with the cached CF set. Catches mods added manually
+			// (drag-and-drop). The store keeps freshly-installed mods even
+			// if CF temporarily fails to recognise their fingerprint.
+			refreshCfInstalledFromFingerprints(instancePath)
+				.then((cfIds) => {
+					debugLog('CF fingerprint scan complete', { cfCount: cfIds.length })
+					// Replace the CF portion of installedProjectIds with the
+					// merged result the store just produced — it's already the
+					// union of (previous cache) ∪ (fingerprint-discovered).
+					const current = installedProjectIds.value ?? []
+					const modrinthOnly = current.filter((id) => !id.startsWith('cf:'))
+					installedProjectIds.value = [...modrinthOnly, ...cfIds]
+				})
+				.catch((err) => {
+					console.warn('[Browse] CF fingerprint refresh failed:', err)
+				})
+
+			// Load file basenames for filename-based CF installed detection.
+			// Kept as a secondary fallback for the brief window before the
+			// fingerprint scan finishes, and for any CF mod whose fingerprint
+			// CF doesn't recognise (rare — usually means the file was edited).
+			getProfileProjects(instancePath)
+				.then((projects) => {
+					const names = new Set<string>()
+					for (const filePath of Object.keys(projects)) {
+						const base = filePath.split('/').pop()
+						if (base) names.add(base)
+					}
+					installedFileNames.value = names
+					debugLog('installedFileNames loaded', { count: names.size })
+				})
+				.catch(() => {})
 		}
 
 		if (instance.value?.linked_data?.project_id) {
@@ -339,9 +418,22 @@ const serverContextFilters = computed(() => {
 	return filters
 })
 
-const combinedProvidedFilters = computed(() =>
-	isServerContext.value ? serverContextFilters.value : instanceFilters.value,
-)
+// CurseForge's mod search has no client/server parameter — lock the
+// environment filter to "both" in CF mode so the buttons are visibly fixed
+// rather than clickable-but-ignored.
+const curseForgeProvidedFilters = computed(() => {
+	if (sourceMode.value !== 'curseforge') return []
+	if (projectType.value !== 'mod' && projectType.value !== 'modpack') return []
+	return [
+		{ type: 'environment', option: 'client' },
+		{ type: 'environment', option: 'server' },
+	]
+})
+
+const combinedProvidedFilters = computed(() => {
+	const base = isServerContext.value ? serverContextFilters.value : instanceFilters.value
+	return [...base, ...curseForgeProvidedFilters.value]
+})
 
 const {
 	serverPings,
@@ -470,11 +562,6 @@ onBeforeRouteLeave(() => {
 
 const projectType = ref<ProjectType>(route.params.projectType as ProjectType)
 
-// Catalog source for browse mode (empty query). A text search ignores this
-// and queries both Modrinth + CurseForge. Shared singleton so the choice
-// persists across navigation and app restarts.
-const sourceMode = useSourceMode()
-
 watch(
 	() => route.params.projectType as ProjectType,
 	async (newType) => {
@@ -492,6 +579,7 @@ watch(
 			debugLog('instance context removed, resetting')
 			instance.value = null
 			installedProjectIds.value = null
+			installedFileNames.value = new Set()
 			instanceHideInstalled.value = false
 			newlyInstalled.value = []
 			isServerInstance.value = false
@@ -698,6 +786,10 @@ async function installCfMod(cfModId: number) {
 	try {
 		await installCurseForgeMod(cfModId, inst.path, inst.game_version, inst.loader)
 		cfInstalled.value.add(cfModId)
+		// Register as newly-installed so the card shows "Installed" for the
+		// rest of this session (cf: prefix matches the project_id format used
+		// in unified-search hit objects for CurseForge-exclusive mods).
+		onSearchResultInstalled(`cf:${cfModId}`)
 		addNotification({
 			title: 'Mod installed',
 			text: `The CurseForge mod was added to ${inst.name}.`,
@@ -979,6 +1071,28 @@ function onSearchResultInstalled(id: string) {
 		return
 	}
 	newlyInstalled.value.push(id)
+
+	// Cross-platform mirroring: if the installed project is known to also
+	// exist on the other platform, mark that ID as installed too — so a
+	// Modrinth-source install also lights up the CurseForge card for the
+	// same mod, and vice-versa. No-op when no mapping is known.
+	if (id.startsWith('cf:')) {
+		const cfId = Number(id.slice(3))
+		if (!Number.isNaN(cfId)) {
+			const mrId = lookupCfIdToMr(cfId)
+			if (mrId && !newlyInstalled.value.includes(mrId)) {
+				newlyInstalled.value.push(mrId)
+			}
+		}
+	} else {
+		const cfId = lookupMrIdToCf(id)
+		if (cfId != null) {
+			const mirror = `cf:${cfId}`
+			if (!newlyInstalled.value.includes(mirror)) {
+				newlyInstalled.value.push(mirror)
+			}
+		}
+	}
 }
 
 /** Modrinth-only search — used internally and passed to unifiedSearch */
@@ -1068,7 +1182,76 @@ async function search(requestParams: string) {
 	}
 	const hasQuery = !!new URLSearchParams(requestParams).get('query')
 	const mode = hasQuery ? undefined : sourceMode.value
-	return unifiedSearch(requestParams, projectType.value, modrinthSearch, mode, extractCfFilters())
+	const result = await unifiedSearch(
+		requestParams,
+		projectType.value,
+		modrinthSearch,
+		mode,
+		extractCfFilters(),
+	)
+
+	// Stamp installed flag for CurseForge hits — modrinthSearch only covers
+	// Modrinth project IDs; CF hits need additional checks:
+	//   1. localStorage-persisted CF mod IDs (new installs via this app)
+	//   2. Curated cross-platform mapping (same mod on both platforms)
+	//   3. Filename matching against the profile's installed files (catches
+	//      pre-existing installs and edge cases CF fingerprint missed)
+	if (instance.value) {
+		const installedSet = new Set([
+			...newlyInstalled.value,
+			...(installedProjectIds.value ?? []),
+		])
+		const fileNames = installedFileNames.value
+		result.projectHits = result.projectHits.map((hit) => {
+			if (hit.installed) return hit
+
+			const directCfId = (hit as { cf_id?: number }).cf_id
+			const cfProjectId = hit.project_id?.startsWith('cf:')
+				? hit.project_id
+				: directCfId != null
+					? `cf:${directCfId}`
+					: null
+
+			// (1) Direct CF ID match
+			if (cfProjectId && installedSet.has(cfProjectId)) {
+				return { ...hit, installed: true }
+			}
+
+			// (2) Cross-platform mapping — if this is a CF hit whose mapped
+			// Modrinth ID is in the installed set (user installed via Modrinth
+			// but viewing a CF result), mark installed. And vice-versa.
+			if (directCfId != null) {
+				const mapped = lookupCfIdToMr(directCfId)
+				if (mapped && installedSet.has(mapped)) {
+					return { ...hit, installed: true }
+				}
+			}
+			if (hit.project_id && !hit.project_id.startsWith('cf:')) {
+				const mappedCfId = lookupMrIdToCf(hit.project_id)
+				if (mappedCfId != null && installedSet.has(`cf:${mappedCfId}`)) {
+					return { ...hit, installed: true }
+				}
+			}
+
+			// (3) Filename fallback — latestFiles from the CF search response
+			// carry the actual .jar names; if any matches an installed file,
+			// the mod is already in the instance even if no ID matched.
+			const cfFileNames = (hit as { _cfFileNames?: string[] })._cfFileNames
+			if (fileNames.size > 0 && cfFileNames?.some((fn) => fileNames.has(fn))) {
+				// Persist so the next visit uses the fast ID path.
+				if (cfProjectId) {
+					const cfModId = Number(cfProjectId.replace('cf:', ''))
+					if (!Number.isNaN(cfModId)) {
+						storeCfInstalled(route.query.i as string, cfModId)
+					}
+				}
+				return { ...hit, installed: true }
+			}
+			return hit
+		})
+	}
+
+	return result
 }
 
 const isServerFilterContext = computed(() => isServerContext.value || isServerInstance.value)
@@ -1103,6 +1286,25 @@ const searchState = useBrowseSearch({
 		ai: instanceHideInstalled.value ? 'true' : undefined,
 		shi: serverHideInstalled.value ? 'true' : undefined,
 	}),
+})
+
+// installedProjectIds and installedFileNames load asynchronously after the
+// initial search has already run, so the first render shows CF mods as
+// "Install" instead of "Installed". Re-run the search when they arrive —
+// but coalesced through a single rAF, because during init these three refs
+// update in quick succession (Modrinth IDs, CF fingerprint scan, file-name
+// scan) and we don't want to fire three concurrent refreshSearches that
+// race + cancel each other (which also makes Vue's Suspense unmount path
+// throw null-DOM errors).
+let refreshScheduled = false
+watch([installedProjectIds, installedFileNames], () => {
+	if (!instance.value || refreshScheduled) return
+	refreshScheduled = true
+	requestAnimationFrame(() => {
+		refreshScheduled = false
+		if (!instance.value) return
+		searchState.refreshSearch().catch(() => {})
+	})
 })
 
 // ── Source colour accent ─────────────────────────────────────────────────────

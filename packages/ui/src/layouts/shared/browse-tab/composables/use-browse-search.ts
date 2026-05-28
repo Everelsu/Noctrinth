@@ -82,7 +82,12 @@ export function useBrowseSearch(options: UseBrowseSearchOptions): BrowseSearchSt
 		sortTypes,
 		requestParams,
 		createPageParams,
-	} = useSearch(projectTypes, options.tags, options.providedFilters ?? computed(() => []))
+	} = useSearch(
+		projectTypes,
+		options.tags,
+		options.providedFilters ?? computed(() => []),
+		options.persistentQueryParams,
+	)
 
 	const {
 		serverCurrentSortType,

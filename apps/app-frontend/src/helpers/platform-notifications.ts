@@ -80,14 +80,15 @@ export async function fetchExtraNotificationData(
 		}
 	}
 
-	const versions = await safe<any>(() =>
-		bulk.versions.size > 0 ? get_version_many([...bulk.versions]) : Promise.resolve([]),
-	)
-	for (const v of versions) {
-		if (v?.project_id) bulk.projects.add(v.project_id)
-	}
-
-	const [projects, users, organizations] = await Promise.all([
+	// All four bulk fetches launch in parallel — the previous implementation
+	// awaited versions first to discover extra project IDs, which serialised
+	// the slowest call with the second-slowest one (~2× the latency). The few
+	// version-derived projects not already in `bulk.projects` are fetched in
+	// a fast follow-up round-trip below.
+	const [versions, projects, users, organizations] = await Promise.all([
+		safe<any>(() =>
+			bulk.versions.size > 0 ? get_version_many([...bulk.versions]) : Promise.resolve([]),
+		),
 		safe<any>(() =>
 			bulk.projects.size > 0 ? get_project_many([...bulk.projects]) : Promise.resolve([]),
 		),
@@ -101,27 +102,37 @@ export async function fetchExtraNotificationData(
 		),
 	])
 
+	// Pick up any project ids referenced only via a version (and not already
+	// fetched). In practice this set is usually empty.
+	const fetchedProjectIds = new Set(projects.map((p) => p?.id).filter(Boolean))
+	const extraIds: string[] = []
+	for (const v of versions) {
+		if (v?.project_id && !fetchedProjectIds.has(v.project_id)) extraIds.push(v.project_id)
+	}
+	const allProjects =
+		extraIds.length > 0
+			? [...projects, ...(await safe<any>(() => get_project_many([...new Set(extraIds)])))]
+			: projects
+
+	// Index for O(1) lookup instead of repeated .find() per notification.
+	const projectMap = new Map<string, any>(allProjects.filter((p) => p?.id).map((p) => [p.id, p]))
+	const versionMap = new Map<string, any>(versions.filter((v) => v?.id).map((v) => [v.id, v]))
+	const userMap = new Map<string, any>(users.filter((u) => u?.id).map((u) => [u.id, u]))
+	const orgMap = new Map<string, any>(
+		organizations.filter((o) => o?.id).map((o) => [o.id, o]),
+	)
+
 	for (const n of notifications) {
 		n.extra_data = {}
-		if (n.body) {
-			if (n.body.project_id) {
-				n.extra_data.project = projects.find((x) => x?.id === n.body!.project_id)
-			}
-			if (n.body.organization_id) {
-				n.extra_data.organization = organizations.find(
-					(x) => x?.id === n.body!.organization_id,
-				)
-			}
-			if (n.body.invited_by) {
-				n.extra_data.invited_by = users.find((x) => x?.id === n.body!.invited_by)
-			}
-			if (n.body.version_id) {
-				n.extra_data.version = versions.find((x) => x?.id === n.body!.version_id)
-				if (!n.extra_data.project && n.extra_data.version?.project_id) {
-					n.extra_data.project = projects.find(
-						(x) => x?.id === n.extra_data!.version.project_id,
-					)
-				}
+		if (!n.body) continue
+		if (n.body.project_id) n.extra_data.project = projectMap.get(n.body.project_id)
+		if (n.body.organization_id) n.extra_data.organization = orgMap.get(n.body.organization_id)
+		if (n.body.invited_by) n.extra_data.invited_by = userMap.get(n.body.invited_by)
+		if (n.body.version_id) {
+			const v = versionMap.get(n.body.version_id)
+			n.extra_data.version = v
+			if (!n.extra_data.project && v?.project_id) {
+				n.extra_data.project = projectMap.get(v.project_id)
 			}
 		}
 	}
@@ -210,4 +221,76 @@ export async function declineTeamInvite(teamId: string, userId: string): Promise
 	if (!res.ok && res.status !== 204) {
 		throw new Error(`Failed to decline invite (HTTP ${res.status})`)
 	}
+}
+
+// ── Notification cache ───────────────────────────────────────────────────────
+//
+// `fetchExtraNotificationData` makes 3–4 bulk requests (projects, versions,
+// users, organizations) to enrich the raw notification list — fast on a warm
+// connection but visibly slow on first load. We persist the enriched result
+// per-user in localStorage so the next visit (even after an app restart) is
+// instant; a background refresh fixes anything stale. Callers can mutate the
+// cache (`patchCachedNotifications`) so optimistic UI changes survive reloads.
+//
+// localStorage (not sessionStorage) because Tauri spins up a fresh webview on
+// each launch — sessionStorage would be empty every time the user reopens
+// the app, defeating the cache.
+
+const CACHE_PREFIX = 'noctrinth:notifications:'
+const CACHE_TTL_MS = 60 * 60 * 1000 // 1 hour — stale-while-revalidate covers drift
+
+interface CachedNotifications {
+	at: number
+	data: PlatformNotification[]
+}
+
+function cacheKey(userId: string): string {
+	return CACHE_PREFIX + userId
+}
+
+/** Read the cached notification list for a user, or null if stale/missing. */
+export function readNotificationsCache(userId: string): PlatformNotification[] | null {
+	try {
+		const raw = localStorage.getItem(cacheKey(userId))
+		if (!raw) return null
+		const parsed = JSON.parse(raw) as CachedNotifications
+		if (!parsed || typeof parsed.at !== 'number') return null
+		if (Date.now() - parsed.at > CACHE_TTL_MS) return null
+		return parsed.data
+	} catch {
+		return null
+	}
+}
+
+/** Persist the enriched notification list. */
+export function writeNotificationsCache(
+	userId: string,
+	data: PlatformNotification[],
+): void {
+	try {
+		const payload: CachedNotifications = { at: Date.now(), data }
+		localStorage.setItem(cacheKey(userId), JSON.stringify(payload))
+	} catch {
+		// Quota exceeded or localStorage unavailable — silently skip.
+	}
+}
+
+/** Drop the cache (e.g. after a destructive action you don't want to mirror). */
+export function clearNotificationsCache(userId: string): void {
+	try {
+		localStorage.removeItem(cacheKey(userId))
+	} catch {
+		// ignore
+	}
+}
+
+/** In-place update the cached entries marked by the given ids as read. */
+export function patchCachedNotifications(
+	userId: string,
+	patch: (n: PlatformNotification) => PlatformNotification | null,
+): void {
+	const data = readNotificationsCache(userId)
+	if (!data) return
+	const next = data.map((n) => patch(n)).filter((n): n is PlatformNotification => n !== null)
+	writeNotificationsCache(userId, next)
 }

@@ -84,6 +84,21 @@ export async function get_installed_project_ids(path: string): Promise<string[]>
 	return await invoke('plugin:profile|profile_get_installed_project_ids', { path })
 }
 
+/**
+ * Compute CurseForge-style Murmur2 fingerprints for every .jar in this
+ * profile's `mods/` folder. Used to identify installed CurseForge mods
+ * by POST-ing the fingerprints to CF's `/v1/fingerprints` endpoint —
+ * the canonical way (no per-install metadata needed; works for mods
+ * dragged into the folder manually too).
+ *
+ * Returns `[filename, fingerprint]` pairs.
+ */
+export async function compute_cf_fingerprints(
+	path: string,
+): Promise<Array<[string, number]>> {
+	return await invoke('plugin:profile|profile_compute_cf_fingerprints', { path })
+}
+
 // Get content items with rich metadata for a profile
 // Returns content items filtered to exclude modpack files (if linked),
 // sorted alphabetically by project name

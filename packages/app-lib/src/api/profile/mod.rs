@@ -1170,6 +1170,8 @@ async fn run_credentials(
         }
     }
 
+    crate::minecraft_skins::flush_pending_skin_change().await?;
+
     crate::launcher::launch_minecraft(
         &java_args,
         &env_args,

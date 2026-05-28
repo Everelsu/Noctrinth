@@ -327,7 +327,7 @@ const messages = defineMessages({
 	},
 	sidebarSkins: {
 		id: 'app.sidebar.skins',
-		defaultMessage: 'Skins (Beta)',
+		defaultMessage: 'Skin selector',
 	},
 	sidebarSignIn: {
 		id: 'app.sidebar.sign-in',
@@ -358,6 +358,7 @@ async function setupApp() {
 		locale,
 		telemetry,
 		collapsed_navigation,
+		hide_nametag_skins_page,
 		advanced_rendering,
 		onboarded,
 		default_page,
@@ -388,6 +389,7 @@ async function setupApp() {
 	themeStore.setThemeState(theme)
 	themeStore.collapsedNavigation = collapsed_navigation
 	themeStore.advancedRendering = advanced_rendering
+	themeStore.hideNametagSkinsPage = hide_nametag_skins_page
 	themeStore.toggleSidebar = toggle_sidebar
 	themeStore.devMode = developer_mode
 	themeStore.featureFlags = feature_flags

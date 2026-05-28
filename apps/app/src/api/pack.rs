@@ -2,9 +2,9 @@ use crate::api::Result;
 
 use theseus::{
     pack::{
+        install::install_pack,
         install_curseforge::install_curseforge_pack,
         install_from::{CreatePackLocation, CreatePackProfile},
-        install_mrpack::install_zipped_mrpack,
     },
     prelude::*,
 };
@@ -24,7 +24,10 @@ pub async fn pack_install(
     location: CreatePackLocation,
     profile: String,
 ) -> Result<String> {
-    Ok(install_zipped_mrpack(location, profile).await?)
+    // `install_pack` is the format-agnostic dispatcher — it inspects the
+    // file (or version id) and routes to either the mrpack or CurseForge
+    // installer, neither of which knows about the other any more.
+    Ok(install_pack(location, profile).await?)
 }
 
 #[tauri::command]

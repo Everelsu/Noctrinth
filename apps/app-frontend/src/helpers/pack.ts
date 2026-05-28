@@ -101,8 +101,10 @@ export async function create_profile_and_install_from_file(
 	const location: PackLocationFile = {
 		type: 'fromFile',
 		path,
-		// Always supplied — the backend only uses it if the file turns out
-		// to be a CurseForge modpack (manifest.json), otherwise it's ignored.
+		// Always supplied — the backend only uses it when the file turns
+		// out to be a CurseForge modpack (manifest.json), and now also
+		// rejects CF modpacks early when this is empty so the user sees
+		// "need an API key" rather than a confusing 401 mid-install.
 		curseforge_api_key: CURSEFORGE_API_KEY,
 	}
 	const profile_creator = await invoke<PackProfileCreator>(

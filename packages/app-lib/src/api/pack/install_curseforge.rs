@@ -29,6 +29,7 @@ use crate::state::{Profile, cache_file_hash};
 use crate::util::fetch::{
     DownloadMeta, DownloadReason, fetch, fetch_advanced, fetch_mirrors, write,
 };
+use crate::util::io::sanitize_filename;
 use crate::{State, profile};
 
 const CF_FILES_ENDPOINT: &str = "https://api.curseforge.com/v1/mods/files";
@@ -102,17 +103,32 @@ impl CfFileData {
 /// Returns true if the zip looks like a CurseForge modpack — i.e. it contains
 /// a `manifest.json`. Used to route file imports to the right installer.
 pub async fn zip_has_curseforge_manifest(pack_file: &bytes::Bytes) -> bool {
+    zip_has_entry(pack_file, "manifest.json").await
+}
+
+/// Returns true if the zip is a Modrinth `.mrpack` — i.e. it contains
+/// `modrinth.index.json`. Sibling of `zip_has_curseforge_manifest` so the
+/// importer can route between formats without re-parsing the file twice.
+pub async fn zip_has_modrinth_index(pack_file: &bytes::Bytes) -> bool {
+    zip_has_entry(pack_file, "modrinth.index.json").await
+}
+
+async fn zip_has_entry(pack_file: &bytes::Bytes, name: &str) -> bool {
     match ZipFileReader::with_tokio(Cursor::new(pack_file)).await {
         Ok(zip) => zip
             .file()
             .entries()
             .iter()
-            .any(|f| matches!(f.filename().as_str(), Ok("manifest.json"))),
+            .any(|f| matches!(f.filename().as_str(), Ok(n) if n == name)),
         Err(_) => false,
     }
 }
 
 /// Install a CurseForge modpack from its download URL.
+///
+/// Owns its own cleanup-on-error wrapper because this entry point is
+/// reachable directly (e.g. from `create_profile_and_install_from_curseforge`
+/// on the frontend) and isn't routed through `crate::pack::install`.
 #[tracing::instrument(skip(curseforge_api_key))]
 pub async fn install_curseforge_pack(
     modpack_url: &str,
@@ -123,27 +139,12 @@ pub async fn install_curseforge_pack(
     let pack_file =
         fetch(modpack_url, None, None, &state.fetch_semaphore, &state.pool)
             .await?;
-    install_curseforge_pack_from_zip(pack_file, curseforge_api_key, profile_path)
-        .await
-}
-
-/// Install a CurseForge modpack from already-downloaded zip bytes.
-///
-/// On failure the profile is removed so a half-installed instance is never
-/// left behind — mirroring `install_zipped_mrpack`.
-#[tracing::instrument(skip(pack_file, curseforge_api_key))]
-pub async fn install_curseforge_pack_from_zip(
-    pack_file: bytes::Bytes,
-    curseforge_api_key: &str,
-    profile_path: String,
-) -> crate::Result<String> {
     let result = install_curseforge_pack_inner(
         pack_file,
         curseforge_api_key,
         profile_path.clone(),
     )
     .await;
-
     match result {
         Ok(path) => Ok(path),
         Err(err) => {
@@ -151,6 +152,26 @@ pub async fn install_curseforge_pack_from_zip(
             Err(err)
         }
     }
+}
+
+/// Install a CurseForge modpack from already-downloaded zip bytes.
+///
+/// Pure install — does **not** perform cleanup on failure. The caller (the
+/// `crate::pack::install` dispatcher in the file-import path, or
+/// `install_curseforge_pack` in the URL path) is responsible for removing
+/// the profile when something goes wrong.
+#[tracing::instrument(skip(pack_file, curseforge_api_key))]
+pub async fn install_curseforge_pack_from_zip(
+    pack_file: bytes::Bytes,
+    curseforge_api_key: &str,
+    profile_path: String,
+) -> crate::Result<String> {
+    install_curseforge_pack_inner(
+        pack_file,
+        curseforge_api_key,
+        profile_path,
+    )
+    .await
 }
 
 async fn install_curseforge_pack_inner(
@@ -314,7 +335,13 @@ async fn install_curseforge_pack_inner(
                 )
                 .await?;
 
-                let relative_path = format!("mods/{}", cf_file.file_name);
+                // CurseForge sometimes returns file names containing chars
+                // that Windows rejects in paths (`<>:"/\|?*`, control bytes,
+                // or U+FFFD from a lossy ANSI round-trip — symptom is
+                // `EpicSiegeMod_???? ???.jar`). Sanitise so the install
+                // doesn't die on ERROR_INVALID_NAME mid-stream.
+                let safe_file_name = sanitize_filename(&cf_file.file_name);
+                let relative_path = format!("mods/{safe_file_name}");
                 let path = profile::get_full_path(&profile_path)
                     .await?
                     .join(&relative_path);
@@ -368,6 +395,12 @@ async fn install_curseforge_pack_inner(
                 )))
             })?;
 
+        // Sanitise per-component — modpacks sometimes ship overrides with
+        // names containing Windows-reserved chars (`<>:"|?*`) that
+        // SafeRelativeUtf8UnixPathBuf doesn't catch.
+        let safe_relative_path =
+            crate::util::io::sanitize_relative_path(relative_path.as_str());
+
         let mut file_bytes = vec![];
         {
             let mut reader = zip_reader.reader_with_entry(index).await?;
@@ -378,9 +411,9 @@ async fn install_curseforge_pack_inner(
         cache_file_hash(
             file_bytes.clone(),
             &profile_path,
-            relative_path.as_str(),
+            &safe_relative_path,
             None,
-            ProjectType::get_from_parent_folder(relative_path.as_str()),
+            ProjectType::get_from_parent_folder(&safe_relative_path),
             &state.pool,
         )
         .await?;
@@ -388,7 +421,7 @@ async fn install_curseforge_pack_inner(
         write(
             &profile::get_full_path(&profile_path)
                 .await?
-                .join(relative_path.as_str()),
+                .join(&safe_relative_path),
             &file_bytes,
             &state.io_semaphore,
         )

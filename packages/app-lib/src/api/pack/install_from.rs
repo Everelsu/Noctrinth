@@ -173,7 +173,10 @@ pub async fn get_profile_from_pack(
             }),
             ..Default::default()
         }),
-        CreatePackLocation::FromFile { path, .. } => {
+        CreatePackLocation::FromFile {
+            path,
+            curseforge_api_key,
+        } => {
             let file_name = path
                 .file_stem()
                 .unwrap_or_default()
@@ -182,31 +185,80 @@ pub async fn get_profile_from_pack(
 
             let state = State::get().await?;
             let file_bytes = io::read(&path).await?;
-            let hash =
-                crate::util::fetch::sha1_async(bytes::Bytes::from(file_bytes))
-                    .await?;
-            let is_known_file = match CachedEntry::get_file_many(
-                &[&hash],
-                Some(CacheBehaviour::StaleWhileRevalidateSkipOffline),
-                &state.pool,
-                &state.api_semaphore,
-            )
-            .await
-            {
-                Ok(files) => !files.is_empty(),
-                Err(err) => {
-                    tracing::warn!(
-                        "Failed to check Modrinth file hash for {}: {}",
-                        path.display(),
-                        err
-                    );
-                    false
+            let file_bytes_shared = bytes::Bytes::from(file_bytes);
+
+            // Detect what kind of modpack this is so we can fail BEFORE the
+            // frontend creates an empty profile that we'd then have to delete
+            // out from under the user. The two recognised formats:
+            //   - Modrinth .mrpack: contains `modrinth.index.json`
+            //   - CurseForge zip: contains `manifest.json`
+            // Anything else flows through the legacy "unknown_file" warning
+            // path (user gets a confirm dialog before install).
+            let has_mrpack_manifest =
+                crate::pack::install_curseforge::zip_has_modrinth_index(
+                    &file_bytes_shared,
+                )
+                .await;
+            let has_cf_manifest =
+                crate::pack::install_curseforge::zip_has_curseforge_manifest(
+                    &file_bytes_shared,
+                )
+                .await;
+
+            // CurseForge modpack but no API key → there's no way the install
+            // can succeed. Error here so no profile is created in the first
+            // place — much better than installing-then-deleting.
+            if has_cf_manifest && !has_mrpack_manifest {
+                let valid_key = curseforge_api_key
+                    .as_deref()
+                    .map(|k| !k.trim().is_empty())
+                    .unwrap_or(false);
+                if !valid_key {
+                    return Err(crate::ErrorKind::InputError(
+                        "This is a CurseForge modpack, but no CurseForge API \
+                         key is available. The launcher needs an API key to \
+                         resolve modpack files through CurseForge."
+                            .to_string(),
+                    )
+                    .into());
                 }
+            }
+
+            // Hash-against-Modrinth lookup only for files that aren't an
+            // obvious modpack format — it's the legacy "is this a known
+            // file?" heuristic and incurs a network round-trip.
+            let is_recognised_pack = has_mrpack_manifest || has_cf_manifest;
+            let unknown_file = if is_recognised_pack {
+                false
+            } else {
+                let hash = crate::util::fetch::sha1_async(
+                    file_bytes_shared.clone(),
+                )
+                .await?;
+                let is_known_file = match CachedEntry::get_file_many(
+                    &[&hash],
+                    Some(CacheBehaviour::StaleWhileRevalidateSkipOffline),
+                    &state.pool,
+                    &state.api_semaphore,
+                )
+                .await
+                {
+                    Ok(files) => !files.is_empty(),
+                    Err(err) => {
+                        tracing::warn!(
+                            "Failed to check Modrinth file hash for {}: {}",
+                            path.display(),
+                            err
+                        );
+                        false
+                    }
+                };
+                !is_known_file
             };
 
             Ok(CreatePackProfile {
                 name: file_name,
-                unknown_file: !is_known_file,
+                unknown_file,
                 ..Default::default()
             })
         }

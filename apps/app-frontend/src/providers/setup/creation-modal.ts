@@ -4,7 +4,6 @@ import type {
 	CreationFlowContextValue,
 	CreationFlowModal,
 } from '@modrinth/ui'
-import { defineMessages, useVIntl } from '@modrinth/ui'
 import { provide, ref, useTemplateRef } from 'vue'
 import type { ComponentExposed } from 'vue-component-type-helpers'
 import { useRouter } from 'vue-router'
@@ -21,22 +20,13 @@ import type { InstanceLoader } from '@/helpers/types'
 
 export function setupCreationModal(
 	notificationManager: AbstractWebNotificationManager,
-	popupNotificationManager: AbstractPopupNotificationManager,
+	// Kept in the signature so callers don't break, but no longer used here —
+	// the redundant "installing modpack…" popup it powered was removed in
+	// favour of the dashboard's inline progress bar.
+	_popupNotificationManager: AbstractPopupNotificationManager,
 ) {
 	const { handleError } = notificationManager
-	const { formatMessage } = useVIntl()
 	const router = useRouter()
-
-	const messages = defineMessages({
-		installingModpackTitle: {
-			id: 'app.creation-modal.installing-modpack.title',
-			defaultMessage: 'Installing modpack...',
-		},
-		installingModpackDescription: {
-			id: 'app.creation-modal.installing-modpack.description',
-			defaultMessage: '{fileName}',
-		},
-	})
 
 	const installationModal =
 		useTemplateRef<ComponentExposed<typeof CreationFlowModal>>('installationModal')
@@ -108,24 +98,17 @@ export function setupCreationModal(
 			}
 
 			if (config.modpackFilePath.value) {
-				const waitingNotification = popupNotificationManager.addPopupNotification({
-					title: formatMessage(messages.installingModpackTitle),
-					text: formatMessage(messages.installingModpackDescription, {
-						fileName: config.modpackFilePath.value.split('/').pop() ?? config.modpackFilePath.value,
-					}),
-					type: 'info',
-					autoCloseMs: null,
-					waiting: true,
-				})
-
+				// No waiting-popup notification here on purpose — the dashboard
+				// already shows the install progress bar, and the popup just
+				// duplicated that info during the import. The
+				// `unknownPackWarningModal` flow below still surfaces the
+				// "is this really a modpack?" confirm dialog when needed.
 				await create_profile_and_install_from_file(
 					config.modpackFilePath.value,
 					(createProfile, fileName) => {
-						popupNotificationManager.removeNotification(waitingNotification.id)
 						unknownPackWarningModal.value?.show(createProfile, fileName)
 					},
 				).catch(handleError)
-				popupNotificationManager.removeNotification(waitingNotification.id)
 				trackEvent('InstanceCreate', { source: 'CreationModalModpackFile' })
 				return
 			}

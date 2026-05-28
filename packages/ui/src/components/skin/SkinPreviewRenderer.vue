@@ -65,19 +65,24 @@
 				>
 					<Group :position="modelOffset">
 						<primitive v-if="scene" :object="scene" />
+						<!--
+							Shadow is a child of the same group as the model —
+							it inherits position, rotation, and scale, so it
+							stays glued to the feet through every drag. The
+							[-π/2, 0, 0] rotation lays it flat IN THE MODEL'S
+							LOCAL FRAME, so when the figure pitches, the
+							shadow plane pitches with it.
+						-->
+						<TresMesh
+							:position="shadowLocalPosition"
+							:rotation="[-Math.PI / 2, 0, 0]"
+							:scale="spotlightScale"
+						>
+							<TresCircleGeometry :args="[1, 128]" />
+							<TresShaderMaterial v-bind="radialSpotlightShader" />
+						</TresMesh>
 					</Group>
 				</Group>
-			</Suspense>
-
-			<Suspense>
-				<TresMesh
-					:position="spotlightPosition"
-					:rotation="[-Math.PI / 2, 0, 0]"
-					:scale="spotlightScale"
-				>
-					<TresCircleGeometry :args="[1, 128]" />
-					<TresShaderMaterial v-bind="radialSpotlightShader" />
-				</TresMesh>
 			</Suspense>
 
 			<TresPerspectiveCamera
@@ -348,6 +353,24 @@ const animatedModelGroupPosition = computed<SkinPreviewTuple>(() => {
 const animatedModelGroupScale = computed<SkinPreviewTuple>(() => {
 	const [x, y, z] = modelGroupScale.value
 	return [x * clickImpulseScaleX.value, y * clickImpulseScaleY.value, z]
+})
+
+// Shadow lives INSIDE the model group, so it inherits position+rotation+scale
+// from the same transform stack as the model itself — it's truly attached to
+// the figure's feet. When the user spins or tilts the preview, the shadow
+// follows.
+//
+// Local Y inside the inner group: matches what the legacy world-space
+// spotlight used (`-sizeY/2 - epsilon`) but expressed in the inner frame.
+// The inner group is offset by `modelOffset = -modelCenter`, so a world Y of
+// `-sizeY/2 - eps` translates to local Y of `modelCenter.y - sizeY/2 - eps`.
+// (For a model whose local origin is at the feet — Mojang's player.gltf —
+// this lands ~`-eps` just below the soles regardless of model height.)
+const SHADOW_FEET_EPSILON = 0.02
+const shadowLocalPosition = computed<SkinPreviewTuple>(() => {
+	const [, cy] = modelCenter.value
+	const [, sizeY] = modelSize.value
+	return [0, cy - sizeY / 2 - SHADOW_FEET_EPSILON, 0]
 })
 
 defineExpose({

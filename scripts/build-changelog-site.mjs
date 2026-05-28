@@ -16,7 +16,7 @@ import { join } from 'node:path'
 const OUT_DIR = process.argv[2] ?? 'site'
 const NOCTRINTH_SRC = 'apps/app-frontend/src/helpers/noctrinth-changelog.ts'
 const MODRINTH_SRC = 'packages/blog/changelog.ts'
-const LOGO_SRC = 'apps/app-frontend/src/assets/noctrinth-icon.svg'
+const LOGO_SRC = 'apps/app/icons/noctrinth.svg'
 
 // ─── Changelog parsing ───────────────────────────────────────────────────────
 

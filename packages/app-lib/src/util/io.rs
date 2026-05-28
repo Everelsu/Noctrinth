@@ -390,3 +390,94 @@ macro_rules! get_resource_file {
         get_resource_file!(directory: env!($dir_env_name), file: $file_name)
     };
 }
+
+/// Replace characters that are illegal in Windows filenames with `_`.
+///
+/// Windows reserves `< > : " / \ | ? *` plus the ASCII control range
+/// (0x00–0x1F) and the trailing dot / space. Linux + macOS allow most of
+/// these on disk, but mod files shipped via Modrinth / CurseForge are
+/// expected to work everywhere, so we sanitise unconditionally.
+///
+/// Also collapses surrogate / replacement-character runs (U+FFFD) which
+/// appear when a string is round-tripped through a lossy ANSI code-page
+/// conversion — that's how `EpicSiegeMod_???????? ?????.jar` gets here
+/// when a CurseForge author uploaded a file with CJK characters and one of
+/// the encoding stops mangled them into literal `?`.
+///
+/// Returns a safe filename — empty input becomes `_` so the caller never
+/// has to special-case it.
+pub fn sanitize_filename(name: &str) -> String {
+    const FORBIDDEN: &[char] =
+        &['<', '>', ':', '"', '/', '\\', '|', '?', '*'];
+    let mut out: String = name
+        .chars()
+        .map(|c| {
+            if c.is_control() || FORBIDDEN.contains(&c) || c == '\u{FFFD}' {
+                '_'
+            } else {
+                c
+            }
+        })
+        .collect();
+
+    // Trim trailing dots/spaces — Windows treats `foo.` as `foo` when
+    // opening but rejects it when creating, which causes ERROR_INVALID_NAME.
+    while matches!(out.chars().next_back(), Some('.') | Some(' ')) {
+        out.pop();
+    }
+
+    if out.is_empty() {
+        out.push('_');
+    }
+    out
+}
+
+/// Sanitise every component of a `/`-separated relative path. Use this for
+/// paths extracted from a zip / pack manifest where individual filenames
+/// may contain Windows-reserved characters even if the structural form is
+/// valid (e.g. `overrides/mods/foo<bar>.jar`).
+pub fn sanitize_relative_path(path: &str) -> String {
+    path.split('/')
+        .filter(|c| !c.is_empty())
+        .map(sanitize_filename)
+        .collect::<Vec<_>>()
+        .join("/")
+}
+
+#[cfg(test)]
+mod sanitize_tests {
+    use super::sanitize_filename;
+
+    #[test]
+    fn replaces_windows_reserved() {
+        assert_eq!(sanitize_filename("a<b>c:d\"e/f\\g|h?i*j"), "a_b_c_d_e_f_g_h_i_j");
+    }
+
+    #[test]
+    fn collapses_replacement_char() {
+        // Simulates what happens when CJK chars got round-tripped through a
+        // lossy ANSI code-page conversion before reaching us.
+        assert_eq!(
+            sanitize_filename("EpicSiegeMod_\u{FFFD}\u{FFFD} \u{FFFD}.jar"),
+            "EpicSiegeMod___ _.jar"
+        );
+    }
+
+    #[test]
+    fn strips_trailing_dot_and_space() {
+        assert_eq!(sanitize_filename("name.jar.   "), "name.jar");
+    }
+
+    #[test]
+    fn empty_becomes_placeholder() {
+        assert_eq!(sanitize_filename(""), "_");
+        assert_eq!(sanitize_filename("..."), "_");
+    }
+
+    #[test]
+    fn keeps_normal_unicode() {
+        // Plain CJK that survived as proper UTF-8 should be kept — most
+        // modern filesystems handle it fine.
+        assert_eq!(sanitize_filename("汉字.jar"), "汉字.jar");
+    }
+}

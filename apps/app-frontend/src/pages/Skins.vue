@@ -865,7 +865,14 @@ await Promise.all([loadCapes(), loadSkins()])
 			</div>
 		</div>
 
-		<div class="pt-2">
+		<!--
+			Breathing room around the virtual list so the per-tile selection
+			border + focus outline (outline-2 + offset-2 = 4px outside the
+			element) don't get clipped by the grid edge or the WebView's
+			overlay scrollbar — which sits ON TOP of the right padding and
+			would otherwise eat into our 4px focus ring.
+		-->
+		<div class="pt-3 px-3 pb-3">
 			<VirtualSkinSectionList
 				ref="skinSectionList"
 				:saved-skins="savedSkins"

@@ -25,35 +25,18 @@ use super::install_from::{
 use crate::data::ProjectType;
 use std::io::{Cursor, ErrorKind};
 
-/// Install a pack
-/// Wrapper around install_pack_files that generates a pack creation description, and
-/// attempts to install the pack files. If it fails, it will remove the profile (fail safely)
-/// Install a modpack from a mrpack file (a modrinth .zip format)
+/// Install a Modrinth `.mrpack` modpack.
+///
+/// **Pure mrpack** — does not know about other formats. Routing between
+/// formats happens in `crate::pack::install::install_pack`, the top-level
+/// dispatcher that's the actual public entry point for pack installs.
+///
+/// Cleanup-on-error is the dispatcher's responsibility too, so this
+/// function is free to fail loudly without worrying about orphan profiles.
 pub async fn install_zipped_mrpack(
     location: CreatePackLocation,
     profile_path: String,
 ) -> crate::Result<String> {
-    // A CurseForge modpack zip (manifest.json) imported from a file needs the
-    // CurseForge installer rather than the Modrinth .mrpack pipeline.
-    if let CreatePackLocation::FromFile {
-        path,
-        curseforge_api_key: Some(api_key),
-    } = &location
-    {
-        let bytes = bytes::Bytes::from(io::read(path).await?);
-        if crate::pack::install_curseforge::zip_has_curseforge_manifest(&bytes)
-            .await
-        {
-            return crate::pack::install_curseforge::install_curseforge_pack_from_zip(
-                bytes,
-                api_key,
-                profile_path,
-            )
-            .await;
-        }
-    }
-
-    // Get file from description
     let create_pack: CreatePack = match location {
         CreatePackLocation::FromVersionId {
             project_id,
@@ -77,22 +60,8 @@ pub async fn install_zipped_mrpack(
         }
     };
 
-    // Install pack files, and if it fails, fail safely by removing the profile
-    let result = install_zipped_mrpack_files(
-        create_pack,
-        false,
-        DownloadReason::Modpack,
-    )
-    .await;
-
-    match result {
-        Ok(profile) => Ok(profile),
-        Err(err) => {
-            let _ = crate::api::profile::remove(&profile_path).await;
-
-            Err(err)
-        }
-    }
+    install_zipped_mrpack_files(create_pack, false, DownloadReason::Modpack)
+        .await
 }
 
 /// Install all pack files from a description
@@ -287,14 +256,24 @@ pub async fn install_zipped_mrpack_files(
                 )
                 .await?;
 
+                // The `.mrpack` format itself doesn't restrict filename
+                // characters (it's just a manifest with Unix-style relative
+                // paths), but Windows reserves `<>:"|?*` and the OS rejects
+                // those plus literal U+FFFD with ERROR_INVALID_NAME at
+                // write time. Sanitise per-component RIGHT BEFORE the
+                // filesystem call — the manifest stays untouched, only the
+                // on-disk filename is normalised. Pure OS-compat shim.
+                let on_disk_path = crate::util::io::sanitize_relative_path(
+                    project.path.as_str(),
+                );
                 let path = profile::get_full_path(&profile_path)
                     .await?
-                    .join(project.path.as_str());
+                    .join(&on_disk_path);
 
                 cache_file_hash(
                     file.clone(),
                     &profile_path,
-                    project.path.as_str(),
+                    &on_disk_path,
                     project.hashes.get(&PackFileHash::Sha1).map(|x| &**x),
                     ProjectType::get_from_parent_folder(&path),
                     &state.pool,
@@ -340,6 +319,12 @@ pub async fn install_zipped_mrpack_files(
                 ))
             })?;
 
+        // Same OS-compat shim as above — sanitise at the filesystem
+        // boundary, mrpack manifest itself stays untouched.
+        let on_disk_override_path = crate::util::io::sanitize_relative_path(
+            relative_override_file_path.as_str(),
+        );
+
         let mut file_bytes = vec![];
         let mut reader = zip_reader.reader_with_entry(index).await?;
         reader.read_to_end_checked(&mut file_bytes).await?;
@@ -349,11 +334,9 @@ pub async fn install_zipped_mrpack_files(
         cache_file_hash(
             file_bytes.clone(),
             &profile_path,
-            relative_override_file_path.as_str(),
+            &on_disk_override_path,
             None,
-            ProjectType::get_from_parent_folder(
-                relative_override_file_path.as_str(),
-            ),
+            ProjectType::get_from_parent_folder(&on_disk_override_path),
             &state.pool,
         )
         .await?;
@@ -361,7 +344,7 @@ pub async fn install_zipped_mrpack_files(
         write(
             &profile::get_full_path(&profile_path)
                 .await?
-                .join(relative_override_file_path.as_str()),
+                .join(&on_disk_override_path),
             &file_bytes,
             &state.io_semaphore,
         )

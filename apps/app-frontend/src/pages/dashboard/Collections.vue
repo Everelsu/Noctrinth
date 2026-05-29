@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { BoxIcon, GlobeIcon, LinkIcon, LockIcon, PlusIcon, SearchIcon, XIcon } from '@modrinth/assets'
+import {
+	BoxIcon,
+	GlobeIcon,
+	LinkIcon,
+	LockIcon,
+	PlusIcon,
+	SearchIcon,
+	XIcon,
+} from '@modrinth/assets'
 import {
 	Avatar,
 	ButtonStyled,
@@ -27,7 +35,10 @@ const { formatMessage } = useVIntl()
 const router = useRouter()
 
 const messages = defineMessages({
-	searchPlaceholder: { id: 'collections.search-placeholder', defaultMessage: 'Search collections...' },
+	searchPlaceholder: {
+		id: 'collections.search-placeholder',
+		defaultMessage: 'Search collections...',
+	},
 	sortBy: { id: 'collections.sort-by', defaultMessage: 'Sort by: ' },
 	sortUpdated: { id: 'collections.sort.updated', defaultMessage: 'Recently Updated' },
 	sortCreated: { id: 'collections.sort.created', defaultMessage: 'Recently Created' },
@@ -35,14 +46,32 @@ const messages = defineMessages({
 	sortByName: { id: 'collections.sort-by-name', defaultMessage: 'Sort by' },
 	createNew: { id: 'collections.create-new', defaultMessage: 'Create new' },
 	loading: { id: 'collections.loading', defaultMessage: 'Loading collections...' },
-	signInPrompt: { id: 'collections.sign-in-prompt', defaultMessage: 'Sign in to view your collections' },
-	signInPromptBody: { id: 'collections.sign-in-prompt-body', defaultMessage: 'Sign in to your Modrinth account to see your collections here.' },
+	signInPrompt: {
+		id: 'collections.sign-in-prompt',
+		defaultMessage: 'Sign in to view your collections',
+	},
+	signInPromptBody: {
+		id: 'collections.sign-in-prompt-body',
+		defaultMessage: 'Sign in to your Modrinth account to see your collections here.',
+	},
 	noMatch: { id: 'collections.no-match', defaultMessage: 'No collections match your search' },
-	noCollections: { id: 'collections.no-collections', defaultMessage: "You don't have any collections yet" },
-	noMatchBody: { id: 'collections.no-match-body', defaultMessage: 'Try adjusting your filters or search terms.' },
-	noCollectionsBody: { id: 'collections.no-collections-body', defaultMessage: 'Create your first collection on modrinth.com to get started!' },
+	noCollections: {
+		id: 'collections.no-collections',
+		defaultMessage: "You don't have any collections yet",
+	},
+	noMatchBody: {
+		id: 'collections.no-match-body',
+		defaultMessage: 'Try adjusting your filters or search terms.',
+	},
+	noCollectionsBody: {
+		id: 'collections.no-collections-body',
+		defaultMessage: 'Create your first collection on modrinth.com to get started!',
+	},
 	followedProjects: { id: 'collections.followed-projects', defaultMessage: 'Followed projects' },
-	followedProjectsDesc: { id: 'collections.followed-projects-desc', defaultMessage: "Auto-generated collection of all the projects you're following." },
+	followedProjectsDesc: {
+		id: 'collections.followed-projects-desc',
+		defaultMessage: "Auto-generated collection of all the projects you're following.",
+	},
 	projectsCountOne: { id: 'collections.projects-count.one', defaultMessage: 'project' },
 	projectsCountOther: { id: 'collections.projects-count.other', defaultMessage: 'projects' },
 	statusPrivate: { id: 'collections.status.private', defaultMessage: 'Private' },
@@ -95,8 +124,7 @@ const orderedCollections = computed(() => {
 })
 
 const showFollowingCard = computed(
-	() =>
-		signedIn.value && 'followed projects'.includes(filterQuery.value.toLowerCase()),
+	() => signedIn.value && 'followed projects'.includes(filterQuery.value.toLowerCase()),
 )
 
 function openCollection(id: string) {
@@ -156,7 +184,9 @@ function onCreated(collection: Collection) {
 		<div v-if="!signedIn" class="empty-state-container">
 			<div class="py-12 text-center">
 				<BoxIcon class="mx-auto h-12 w-12 text-secondary opacity-50" aria-hidden="true" />
-				<p class="mt-4 text-lg font-medium text-contrast">{{ formatMessage(messages.signInPrompt) }}</p>
+				<p class="mt-4 text-lg font-medium text-contrast">
+					{{ formatMessage(messages.signInPrompt) }}
+				</p>
 				<p class="text-sm text-secondary">
 					{{ formatMessage(messages.signInPromptBody) }}
 				</p>
@@ -194,7 +224,11 @@ function onCreated(collection: Collection) {
 						<div class="stats">
 							<BoxIcon aria-hidden="true" />
 							{{ formatCompactNumber(followsCount) }}
-							{{ formatMessage(followsCount === 1 ? messages.projectsCountOne : messages.projectsCountOther) }}
+							{{
+								formatMessage(
+									followsCount === 1 ? messages.projectsCountOne : messages.projectsCountOther,
+								)
+							}}
 						</div>
 						<div class="stats">
 							<LockIcon aria-hidden="true" />
@@ -219,7 +253,13 @@ function onCreated(collection: Collection) {
 						<div class="stats">
 							<BoxIcon aria-hidden="true" />
 							{{ formatCompactNumber(collection.projects?.length || 0) }}
-							{{ formatMessage((collection.projects?.length || 0) === 1 ? messages.projectsCountOne : messages.projectsCountOther) }}
+							{{
+								formatMessage(
+									(collection.projects?.length || 0) === 1
+										? messages.projectsCountOne
+										: messages.projectsCountOther,
+								)
+							}}
 						</div>
 						<div class="stats">
 							<template v-if="collection.status === 'listed'">

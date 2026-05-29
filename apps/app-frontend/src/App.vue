@@ -9,7 +9,6 @@ import {
 	VerboseLoggingFeature,
 } from '@modrinth/api-client'
 import {
-	ArrowBigUpDashIcon,
 	BellIcon,
 	ChangeSkinIcon,
 	CompassIcon,
@@ -85,7 +84,6 @@ import InstallToPlayModal from '@/components/ui/modal/InstallToPlayModal.vue'
 import ModpackAlreadyInstalledModal from '@/components/ui/modal/ModpackAlreadyInstalledModal.vue'
 import UpdateToPlayModal from '@/components/ui/modal/UpdateToPlayModal.vue'
 import NavButton from '@/components/ui/NavButton.vue'
-import PromotionWrapper from '@/components/ui/PromotionWrapper.vue'
 import QuickInstanceSwitcher from '@/components/ui/QuickInstanceSwitcher.vue'
 import SplashScreen from '@/components/ui/SplashScreen.vue'
 import WindowControls from '@/components/ui/WindowControls.vue'
@@ -703,14 +701,6 @@ async function logOut() {
 	await logout().catch(handleError)
 	await fetchCredentials()
 }
-
-const MIDAS_BITFLAG = 1 << 0
-const hasPlus = computed(
-	() =>
-		credentials.value &&
-		credentials.value.user &&
-		(credentials.value.user.badges & MIDAS_BITFLAG) === MIDAS_BITFLAG,
-)
 
 const showAd = computed(() => false)
 
@@ -1370,11 +1360,13 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 				<template #notifications>
 					<BellIcon /> {{ formatMessage(messages.accountNotifications) }}
 				</template>
-				<template #sign-out>
-					<LogOutIcon /> {{ formatMessage(messages.accountSignOut) }}
-				</template>
+				<template #sign-out> <LogOutIcon /> {{ formatMessage(messages.accountSignOut) }} </template>
 			</OverflowMenu>
-			<NavButton v-else v-tooltip.right="formatMessage(messages.sidebarSignIn)" :to="() => signIn()">
+			<NavButton
+				v-else
+				v-tooltip.right="formatMessage(messages.sidebarSignIn)"
+				:to="() => signIn()"
+			>
 				<LogInIcon class="text-brand" />
 			</NavButton>
 		</div>
@@ -1541,7 +1533,7 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 					</div>
 				</div>
 			</div>
-			</div>
+		</div>
 	</div>
 	<I18nDebugPanel />
 	<NotificationPanel :has-sidebar="sidebarVisible" />

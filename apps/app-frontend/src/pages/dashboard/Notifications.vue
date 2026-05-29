@@ -34,19 +34,28 @@ const messages = defineMessages({
 	markAllRead: { id: 'notifications.mark-all-read', defaultMessage: 'Mark all as read' },
 	back: { id: 'notifications.back', defaultMessage: 'Back' },
 	loading: { id: 'notifications.loading', defaultMessage: 'Loading notifications...' },
-	signInPrompt: { id: 'notifications.sign-in-prompt', defaultMessage: 'Sign in to view notifications' },
+	signInPrompt: {
+		id: 'notifications.sign-in-prompt',
+		defaultMessage: 'Sign in to view notifications',
+	},
 	signInPromptBody: {
 		id: 'notifications.sign-in-prompt-body',
 		defaultMessage: 'Sign in to your Modrinth account to see your notifications here.',
 	},
-	historyEmpty: { id: 'notifications.history-empty', defaultMessage: 'No notifications in history.' },
+	historyEmpty: {
+		id: 'notifications.history-empty',
+		defaultMessage: 'No notifications in history.',
+	},
 	unreadEmpty: {
 		id: 'notifications.unread-empty',
 		defaultMessage: "You don't have any unread notifications.",
 	},
 	typeAll: { id: 'notifications.type.all', defaultMessage: 'All' },
 	typeProjectUpdate: { id: 'notifications.type.project-update', defaultMessage: 'Updates' },
-	typeModeratorMessage: { id: 'notifications.type.moderator-message', defaultMessage: 'Moderator messages' },
+	typeModeratorMessage: {
+		id: 'notifications.type.moderator-message',
+		defaultMessage: 'Moderator messages',
+	},
 	typeStatusChange: { id: 'notifications.type.status-change', defaultMessage: 'Status changes' },
 	typeTeamInvite: { id: 'notifications.type.team-invite', defaultMessage: 'Team invites' },
 	typeOrganizationInvite: {
@@ -221,7 +230,9 @@ function formatType(t: string) {
 			<div class="header__row">
 				<div class="header__title">
 					<h2 class="text-2xl">
-						{{ formatMessage(showHistory ? messages.headingHistory : messages.headingNotifications) }}
+						{{
+							formatMessage(showHistory ? messages.headingHistory : messages.headingNotifications)
+						}}
 					</h2>
 				</div>
 				<template v-if="!showHistory">
@@ -252,7 +263,9 @@ function formatType(t: string) {
 			/>
 
 			<div v-if="!signedIn" class="py-12 text-center">
-				<p class="mt-4 text-lg font-medium text-contrast">{{ formatMessage(messages.signInPrompt) }}</p>
+				<p class="mt-4 text-lg font-medium text-contrast">
+					{{ formatMessage(messages.signInPrompt) }}
+				</p>
 				<p class="text-sm text-secondary">
 					{{ formatMessage(messages.signInPromptBody) }}
 				</p>

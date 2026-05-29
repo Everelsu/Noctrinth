@@ -10,8 +10,8 @@
 
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
 
-import { CURSEFORGE_API_KEY } from './curseforge-key'
 import { storeCfInstalled } from './cf-installed-store'
+import { CURSEFORGE_API_KEY } from './curseforge-key'
 import { create_profile_and_install_from_curseforge } from './pack'
 import { add_project_from_curseforge } from './profile'
 
@@ -37,20 +37,20 @@ const CF_API_KEY: string = CURSEFORGE_API_KEY
 // datapack-compat projects (and vice-versa).
 
 export const CF_CLASS_IDS: Record<string, number> = {
-  mod: 6,
-  modpack: 4471,
-  resourcepack: 12,
-  shader: 6552,
-  datapack: 6945,
+	mod: 6,
+	modpack: 4471,
+	resourcepack: 12,
+	shader: 6552,
+	datapack: 6945,
 }
 
 // ─── Mod-loader type IDs ──────────────────────────────────────────────────────
 
 export const CF_LOADER_TYPES: Record<string, number> = {
-  forge: 1,
-  fabric: 4,
-  quilt: 5,
-  neoforge: 6,
+	forge: 1,
+	fabric: 4,
+	quilt: 5,
+	neoforge: 6,
 }
 
 // ─── Sort field IDs ──────────────────────────────────────────────────────────
@@ -59,111 +59,111 @@ export const CF_LOADER_TYPES: Record<string, number> = {
 // 9 EarlyAccess, 10 FeaturedReleased, 11 ReleasedDate, 12 Rating.
 
 const CF_SORT_FIELDS: Record<string, number> = {
-  relevance: 2, // Popularity
-  downloads: 6, // TotalDownloads
-  follows: 12, // Rating
-  newest: 11, // ReleasedDate
-  updated: 3, // LastUpdated
+	relevance: 2, // Popularity
+	downloads: 6, // TotalDownloads
+	follows: 12, // Rating
+	newest: 11, // ReleasedDate
+	updated: 3, // LastUpdated
 }
 
 // ─── API types ────────────────────────────────────────────────────────────────
 
 export interface CfCategory {
-  id: number
-  name: string
-  slug: string
+	id: number
+	name: string
+	slug: string
 }
 
 export interface CfAuthor {
-  id: number
-  name: string
+	id: number
+	name: string
 }
 
 export interface CfFileIndex {
-  gameVersion: string
-  /** Loader type ID — 0 = any, 1 = Forge, 4 = Fabric, 5 = Quilt, 6 = NeoForge */
-  modLoader: number
+	gameVersion: string
+	/** Loader type ID — 0 = any, 1 = Forge, 4 = Fabric, 5 = Quilt, 6 = NeoForge */
+	modLoader: number
 }
 
 export interface CfLogo {
-  url: string
-  thumbnailUrl?: string
+	url: string
+	thumbnailUrl?: string
 }
 
 export interface CfMod {
-  id: number
-  name: string
-  slug: string
-  summary: string
-  downloadCount: number
-  thumbsUpCount: number
-  logo?: CfLogo
-  categories: CfCategory[]
-  authors: CfAuthor[]
-  dateCreated: string
-  dateModified: string
-  latestFilesIndexes: CfFileIndex[]
-  /** Full file objects included in search results — used for filename-based installed detection. */
-  latestFiles?: Array<{ id: number; modId: number; fileName: string }>
-  classId?: number
+	id: number
+	name: string
+	slug: string
+	summary: string
+	downloadCount: number
+	thumbsUpCount: number
+	logo?: CfLogo
+	categories: CfCategory[]
+	authors: CfAuthor[]
+	dateCreated: string
+	dateModified: string
+	latestFilesIndexes: CfFileIndex[]
+	/** Full file objects included in search results — used for filename-based installed detection. */
+	latestFiles?: Array<{ id: number; modId: number; fileName: string }>
+	classId?: number
 }
 
 export interface CfSearchResult {
-  data: CfMod[]
-  pagination: {
-    index: number
-    pageSize: number
-    resultCount: number
-    totalCount: number
-  }
+	data: CfMod[]
+	pagination: {
+		index: number
+		pageSize: number
+		resultCount: number
+		totalCount: number
+	}
 }
 
 // ─── Mapped hit shape (compatible with Modrinth v2 result) ───────────────────
 
 export interface CfMappedHit {
-  /** Namespaced ID so it never collides with a Modrinth project_id */
-  project_id: string
-  slug: string
-  /** Modrinth-compatible aliases */
-  title: string
-  name: string
-  description: string
-  summary: string
-  icon_url: string | null
-  downloads: number
-  follows: number
-  author: string
-  categories: string[]
-  display_categories: string[]
-  date_created: string
-  date_modified: string
-  color: null
-  featured_gallery: null
-  gallery: string[]
-  /** Original CurseForge numeric ID */
-  cf_id: number
-  sources: {
-    curseforge: { mod_id: number; slug: string }
-  }
-  /** File names from latestFiles — used for filename-based installed detection. */
-  _cfFileNames?: string[]
+	/** Namespaced ID so it never collides with a Modrinth project_id */
+	project_id: string
+	slug: string
+	/** Modrinth-compatible aliases */
+	title: string
+	name: string
+	description: string
+	summary: string
+	icon_url: string | null
+	downloads: number
+	follows: number
+	author: string
+	categories: string[]
+	display_categories: string[]
+	date_created: string
+	date_modified: string
+	color: null
+	featured_gallery: null
+	gallery: string[]
+	/** Original CurseForge numeric ID */
+	cf_id: number
+	sources: {
+		curseforge: { mod_id: number; slug: string }
+	}
+	/** File names from latestFiles — used for filename-based installed detection. */
+	_cfFileNames?: string[]
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 export function isCurseForgeAvailable(): boolean {
-  return CF_API_KEY.length > 0
+	return CF_API_KEY.length > 0
 }
 
 export interface CfSearchParams {
-  query?: string
-  projectType?: string
-  gameVersion?: string
-  modLoader?: string
-  categoryId?: number
-  limit?: number
-  offset?: number
-  sortBy?: string
+	query?: string
+	projectType?: string
+	gameVersion?: string
+	modLoader?: string
+	categoryId?: number
+	limit?: number
+	offset?: number
+	sortBy?: string
 }
 
 /**
@@ -174,43 +174,43 @@ export interface CfSearchParams {
 const CF_MAX_INDEX = 10_000
 
 export async function searchCurseForge(params: CfSearchParams): Promise<CfSearchResult | null> {
-  if (!isCurseForgeAvailable()) return null
+	if (!isCurseForgeAvailable()) return null
 
-  // CurseForge caps pagination — skip the request entirely past the limit.
-  if ((params.offset ?? 0) >= CF_MAX_INDEX) return null
+	// CurseForge caps pagination — skip the request entirely past the limit.
+	if ((params.offset ?? 0) >= CF_MAX_INDEX) return null
 
-  const classId = CF_CLASS_IDS[params.projectType ?? 'mod'] ?? CF_CLASS_IDS.mod
-  const loaderType = params.modLoader ? (CF_LOADER_TYPES[params.modLoader] ?? 0) : 0
-  const sortField = CF_SORT_FIELDS[params.sortBy ?? 'relevance'] ?? CF_SORT_FIELDS.relevance
-  // CurseForge max page size is 50
-  const pageSize = Math.min(params.limit ?? 20, 50)
+	const classId = CF_CLASS_IDS[params.projectType ?? 'mod'] ?? CF_CLASS_IDS.mod
+	const loaderType = params.modLoader ? (CF_LOADER_TYPES[params.modLoader] ?? 0) : 0
+	const sortField = CF_SORT_FIELDS[params.sortBy ?? 'relevance'] ?? CF_SORT_FIELDS.relevance
+	// CurseForge max page size is 50
+	const pageSize = Math.min(params.limit ?? 20, 50)
 
-  const qs = new URLSearchParams({
-    gameId: '432', // Minecraft
-    classId: String(classId),
-    pageSize: String(pageSize),
-    index: String(params.offset ?? 0),
-    sortField: String(sortField),
-    sortOrder: 'desc',
-  })
+	const qs = new URLSearchParams({
+		gameId: '432', // Minecraft
+		classId: String(classId),
+		pageSize: String(pageSize),
+		index: String(params.offset ?? 0),
+		sortField: String(sortField),
+		sortOrder: 'desc',
+	})
 
-  if (params.query) qs.set('searchFilter', params.query)
-  if (params.gameVersion) qs.set('gameVersion', params.gameVersion)
-  if (loaderType) qs.set('modLoaderType', String(loaderType))
-  if (params.categoryId) qs.set('categoryId', String(params.categoryId))
+	if (params.query) qs.set('searchFilter', params.query)
+	if (params.gameVersion) qs.set('gameVersion', params.gameVersion)
+	if (loaderType) qs.set('modLoaderType', String(loaderType))
+	if (params.categoryId) qs.set('categoryId', String(params.categoryId))
 
-  return cfFetch<CfSearchResult>(`/mods/search?${qs}`)
+	return cfFetch<CfSearchResult>(`/mods/search?${qs}`)
 }
 
 // ─── Categories ───────────────────────────────────────────────────────────────
 
 export interface CfCategoryInfo {
-  id: number
-  name: string
-  slug: string
-  classId?: number
-  isClass?: boolean
-  parentCategoryId?: number
+	id: number
+	name: string
+	slug: string
+	classId?: number
+	isClass?: boolean
+	parentCategoryId?: number
 }
 
 let categoriesCache: Promise<CfCategoryInfo[]> | null = null
@@ -224,21 +224,21 @@ let categoriesCache: Promise<CfCategoryInfo[]> | null = null
  * so the next caller retries.
  */
 export function getCurseForgeCategories(): Promise<CfCategoryInfo[]> {
-  if (!categoriesCache) {
-    categoriesCache = cfFetch<{ data: CfCategoryInfo[] }>('/categories?gameId=432')
-      .then((json) => {
-        if (!json) {
-          categoriesCache = null
-          return []
-        }
-        return json.data ?? []
-      })
-      .catch((err) => {
-        categoriesCache = null
-        throw err
-      })
-  }
-  return categoriesCache
+	if (!categoriesCache) {
+		categoriesCache = cfFetch<{ data: CfCategoryInfo[] }>('/categories?gameId=432')
+			.then((json) => {
+				if (!json) {
+					categoriesCache = null
+					return []
+				}
+				return json.data ?? []
+			})
+			.catch((err) => {
+				categoriesCache = null
+				throw err
+			})
+	}
+	return categoriesCache
 }
 
 /**
@@ -255,28 +255,28 @@ export function getCurseForgeCategories(): Promise<CfCategoryInfo[]> {
  * may resolve to the wrong class's category, yielding an empty result set.
  */
 export async function resolveCfCategoryId(
-  slugs: string[],
-  projectType?: string,
+	slugs: string[],
+	projectType?: string,
 ): Promise<number | undefined> {
-  if (!slugs.length) return undefined
-  const allCategories = await getCurseForgeCategories()
-  const classId = projectType ? CF_CLASS_IDS[projectType] : undefined
-  const categories = classId
-    ? allCategories.filter((c) => c.classId === classId && !c.isClass)
-    : allCategories.filter((c) => !c.isClass)
+	if (!slugs.length) return undefined
+	const allCategories = await getCurseForgeCategories()
+	const classId = projectType ? CF_CLASS_IDS[projectType] : undefined
+	const categories = classId
+		? allCategories.filter((c) => c.classId === classId && !c.isClass)
+		: allCategories.filter((c) => !c.isClass)
 
-  for (const slug of slugs) {
-    // Modrinth display slug path — preferred mapping wins so e.g. "adventure"
-    // resolves to CF's "adventure-and-rpg" (bigger pool) instead of CF's
-    // smaller "adventure" category. Per-type lookup so the same slug can mean
-    // different CF categories across mod / resourcepack / shader / datapack.
-    const cfSlug = pickCfSlugForType(slug, projectType)
-    let match = cfSlug ? categories.find((c) => c.slug === cfSlug) : undefined
-    // Fallback: treat the input as a raw CF slug.
-    if (!match) match = categories.find((c) => c.slug === slug)
-    if (match) return match.id
-  }
-  return undefined
+	for (const slug of slugs) {
+		// Modrinth display slug path — preferred mapping wins so e.g. "adventure"
+		// resolves to CF's "adventure-and-rpg" (bigger pool) instead of CF's
+		// smaller "adventure" category. Per-type lookup so the same slug can mean
+		// different CF categories across mod / resourcepack / shader / datapack.
+		const cfSlug = pickCfSlugForType(slug, projectType)
+		let match = cfSlug ? categories.find((c) => c.slug === cfSlug) : undefined
+		// Fallback: treat the input as a raw CF slug.
+		if (!match) match = categories.find((c) => c.slug === slug)
+		if (match) return match.id
+	}
+	return undefined
 }
 
 /**
@@ -284,51 +284,51 @@ export async function resolveCfCategoryId(
  * and returns parsed JSON (or null on any failure / missing key).
  */
 async function cfFetch<T>(path: string): Promise<T | null> {
-  if (!isCurseForgeAvailable()) return null
+	if (!isCurseForgeAvailable()) return null
 
-  try {
-    const res = await tauriFetch(`${CF_BASE}${path}`, {
-      headers: { 'x-api-key': CF_API_KEY },
-    })
+	try {
+		const res = await tauriFetch(`${CF_BASE}${path}`, {
+			headers: { 'x-api-key': CF_API_KEY },
+		})
 
-    if (!res.ok) {
-      const body = await res.text().catch(() => '(unreadable)')
-      console.warn('[CurseForge] Non-OK response:', res.status, path, body)
-      return null
-    }
+		if (!res.ok) {
+			const body = await res.text().catch(() => '(unreadable)')
+			console.warn('[CurseForge] Non-OK response:', res.status, path, body)
+			return null
+		}
 
-    return (await res.json()) as T
-  } catch (err) {
-    console.warn('[CurseForge] Request failed:', path, err)
-    return null
-  }
+		return (await res.json()) as T
+	} catch (err) {
+		console.warn('[CurseForge] Request failed:', path, err)
+		return null
+	}
 }
 
 /** POST variant — used by /v1/fingerprints which needs a JSON body. */
 async function cfPost<T>(path: string, body: unknown): Promise<T | null> {
-  if (!isCurseForgeAvailable()) return null
+	if (!isCurseForgeAvailable()) return null
 
-  try {
-    const res = await tauriFetch(`${CF_BASE}${path}`, {
-      method: 'POST',
-      headers: {
-        'x-api-key': CF_API_KEY,
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    })
+	try {
+		const res = await tauriFetch(`${CF_BASE}${path}`, {
+			method: 'POST',
+			headers: {
+				'x-api-key': CF_API_KEY,
+				'content-type': 'application/json',
+			},
+			body: JSON.stringify(body),
+		})
 
-    if (!res.ok) {
-      const text = await res.text().catch(() => '(unreadable)')
-      console.warn('[CurseForge] Non-OK POST:', res.status, path, text)
-      return null
-    }
+		if (!res.ok) {
+			const text = await res.text().catch(() => '(unreadable)')
+			console.warn('[CurseForge] Non-OK POST:', res.status, path, text)
+			return null
+		}
 
-    return (await res.json()) as T
-  } catch (err) {
-    console.warn('[CurseForge] POST failed:', path, err)
-    return null
-  }
+		return (await res.json()) as T
+	} catch (err) {
+		console.warn('[CurseForge] POST failed:', path, err)
+		return null
+	}
 }
 
 // ─── Fingerprint lookup ──────────────────────────────────────────────────────
@@ -340,24 +340,24 @@ async function cfPost<T>(path: string, body: unknown): Promise<T | null> {
 // CurseForge mods without needing to track every install ourselves.
 
 export interface CfFingerprintMatch {
-  id: number
-  file: {
-    id: number
-    modId: number
-    fileName: string
-    fileFingerprint: number
-  }
-  latestFiles?: unknown[]
+	id: number
+	file: {
+		id: number
+		modId: number
+		fileName: string
+		fileFingerprint: number
+	}
+	latestFiles?: unknown[]
 }
 
 export interface CfFingerprintMatchesResult {
-  isCacheBuilt: boolean
-  exactMatches: CfFingerprintMatch[]
-  exactFingerprints: number[]
-  partialMatches?: CfFingerprintMatch[]
-  partialMatchFingerprints?: Record<string, number[]>
-  installedFingerprints?: number[]
-  unmatchedFingerprints?: number[]
+	isCacheBuilt: boolean
+	exactMatches: CfFingerprintMatch[]
+	exactFingerprints: number[]
+	partialMatches?: CfFingerprintMatch[]
+	partialMatchFingerprints?: Record<string, number[]>
+	installedFingerprints?: number[]
+	unmatchedFingerprints?: number[]
 }
 
 /**
@@ -368,33 +368,30 @@ export interface CfFingerprintMatchesResult {
  * the CurseForge project ID for that local jar.
  */
 export async function getCurseForgeFingerprintMatches(
-  fingerprints: number[],
+	fingerprints: number[],
 ): Promise<CfFingerprintMatchesResult | null> {
-  if (fingerprints.length === 0) {
-    return {
-      isCacheBuilt: true,
-      exactMatches: [],
-      exactFingerprints: [],
-    }
-  }
-  // gameId=432 (Minecraft) — the scoped endpoint is what xmcl uses and
-  // is the recommended way per CF docs; it lets CF skip cross-game lookups.
-  const wrapped = await cfPost<{ data: CfFingerprintMatchesResult }>(
-    '/fingerprints/432',
-    { fingerprints },
-  )
-  if (!wrapped) {
-    console.warn(
-      `[CurseForge] Fingerprint lookup returned null for ${fingerprints.length} fp(s)`,
-    )
-    return null
-  }
-  console.debug(
-    `[CurseForge] Fingerprint lookup: ${wrapped.data.exactMatches?.length ?? 0}/${
-      fingerprints.length
-    } matched`,
-  )
-  return wrapped.data ?? null
+	if (fingerprints.length === 0) {
+		return {
+			isCacheBuilt: true,
+			exactMatches: [],
+			exactFingerprints: [],
+		}
+	}
+	// gameId=432 (Minecraft) — the scoped endpoint is what xmcl uses and
+	// is the recommended way per CF docs; it lets CF skip cross-game lookups.
+	const wrapped = await cfPost<{ data: CfFingerprintMatchesResult }>('/fingerprints/432', {
+		fingerprints,
+	})
+	if (!wrapped) {
+		console.warn(`[CurseForge] Fingerprint lookup returned null for ${fingerprints.length} fp(s)`)
+		return null
+	}
+	console.debug(
+		`[CurseForge] Fingerprint lookup: ${wrapped.data.exactMatches?.length ?? 0}/${
+			fingerprints.length
+		} matched`,
+	)
+	return wrapped.data ?? null
 }
 
 /**
@@ -403,128 +400,126 @@ export async function getCurseForgeFingerprintMatches(
  * card component and list logic.
  */
 export function mapCfMod(mod: CfMod): CfMappedHit {
-  const slugList = mod.categories.map((c) => c.slug)
-  return {
-    project_id: `cf:${mod.id}`,
-    slug: mod.slug,
-    title: mod.name,
-    name: mod.name,
-    description: mod.summary,
-    summary: mod.summary,
-    icon_url: mod.logo?.thumbnailUrl ?? mod.logo?.url ?? null,
-    downloads: mod.downloadCount,
-    follows: mod.thumbsUpCount,
-    author: mod.authors?.[0]?.name ?? '',
-    categories: slugList,
-    display_categories: slugList,
-    date_created: mod.dateCreated,
-    date_modified: mod.dateModified,
-    color: null,
-    featured_gallery: null,
-    gallery: [],
-    cf_id: mod.id,
-    sources: { curseforge: { mod_id: mod.id, slug: mod.slug } },
-    _cfFileNames: mod.latestFiles?.map((f) => f.fileName),
-  }
+	const slugList = mod.categories.map((c) => c.slug)
+	return {
+		project_id: `cf:${mod.id}`,
+		slug: mod.slug,
+		title: mod.name,
+		name: mod.name,
+		description: mod.summary,
+		summary: mod.summary,
+		icon_url: mod.logo?.thumbnailUrl ?? mod.logo?.url ?? null,
+		downloads: mod.downloadCount,
+		follows: mod.thumbsUpCount,
+		author: mod.authors?.[0]?.name ?? '',
+		categories: slugList,
+		display_categories: slugList,
+		date_created: mod.dateCreated,
+		date_modified: mod.dateModified,
+		color: null,
+		featured_gallery: null,
+		gallery: [],
+		cf_id: mod.id,
+		sources: { curseforge: { mod_id: mod.id, slug: mod.slug } },
+		_cfFileNames: mod.latestFiles?.map((f) => f.fileName),
+	}
 }
 
 // ─── Mod detail API ───────────────────────────────────────────────────────────
 
 export interface CfModLinks {
-  websiteUrl?: string | null
-  wikiUrl?: string | null
-  issuesUrl?: string | null
-  sourceUrl?: string | null
+	websiteUrl?: string | null
+	wikiUrl?: string | null
+	issuesUrl?: string | null
+	sourceUrl?: string | null
 }
 
 export interface CfScreenshot {
-  id: number
-  url: string
-  thumbnailUrl?: string
-  title?: string
-  description?: string
+	id: number
+	url: string
+	thumbnailUrl?: string
+	title?: string
+	description?: string
 }
 
 /** Full mod object returned by GET /v1/mods/{modId} — a superset of CfMod. */
 export interface CfModDetail extends CfMod {
-  links?: CfModLinks
-  screenshots?: CfScreenshot[]
-  dateReleased?: string
+	links?: CfModLinks
+	screenshots?: CfScreenshot[]
+	dateReleased?: string
 }
 
 /** Fetch the full detail object for a single CurseForge mod. */
 export async function getCurseForgeMod(modId: number | string): Promise<CfModDetail | null> {
-  const json = await cfFetch<{ data: CfModDetail }>(`/mods/${modId}`)
-  return json?.data ?? null
+	const json = await cfFetch<{ data: CfModDetail }>(`/mods/${modId}`)
+	return json?.data ?? null
 }
 
 /** Fetch the rendered HTML description for a CurseForge mod. */
-export async function getCurseForgeModDescription(
-  modId: number | string,
-): Promise<string | null> {
-  const json = await cfFetch<{ data: string }>(`/mods/${modId}/description`)
-  return json?.data ?? null
+export async function getCurseForgeModDescription(modId: number | string): Promise<string | null> {
+	const json = await cfFetch<{ data: string }>(`/mods/${modId}/description`)
+	return json?.data ?? null
 }
 
 /** Human-readable loader name for a CurseForge modLoader type ID. */
 export function cfLoaderName(modLoader: number): string {
-  const found = Object.entries(CF_LOADER_TYPES).find(([, id]) => id === modLoader)
-  return found ? found[0] : 'unknown'
+	const found = Object.entries(CF_LOADER_TYPES).find(([, id]) => id === modLoader)
+	return found ? found[0] : 'unknown'
 }
 
 /** Modrinth-style project type for a CurseForge class ID. */
 export function cfProjectType(classId?: number): string {
-  const found = Object.entries(CF_CLASS_IDS).find(([, id]) => id === classId)
-  return found ? found[0] : 'mod'
+	const found = Object.entries(CF_CLASS_IDS).find(([, id]) => id === classId)
+	return found ? found[0] : 'mod'
 }
 
 // ─── Mod files & installation ─────────────────────────────────────────────────
 
 /** CurseForge dependency relation types. */
 export const CF_RELATION_TYPE = {
-  EmbeddedLibrary: 1,
-  OptionalDependency: 2,
-  RequiredDependency: 3,
-  Tool: 4,
-  Incompatible: 5,
-  Include: 6,
+	EmbeddedLibrary: 1,
+	OptionalDependency: 2,
+	RequiredDependency: 3,
+	Tool: 4,
+	Incompatible: 5,
+	Include: 6,
 } as const
 
 /** Legacy alias — keep until call sites are migrated. */
 export const CF_RELATION_TYPE_REQUIRED = CF_RELATION_TYPE.RequiredDependency
 
 export interface CfModDependency {
-  modId: number
-  /** 1=EmbeddedLibrary 2=Optional 3=Required 4=Tool 5=Incompatible 6=Include */
-  relationType: number
+	modId: number
+	/** 1=EmbeddedLibrary 2=Optional 3=Required 4=Tool 5=Incompatible 6=Include */
+	relationType: number
 }
 
 /** Effective dependency category after parent→child type propagation. */
 export type CfEffectiveDepType = 'required' | 'optional' | 'incompatible'
 
 export interface CfResolvedDependency {
-  modId: number
-  type: CfEffectiveDepType
-  /** Best matching file for the dep (null for incompatibles / no match). */
-  file: CfModFile | null
+	modId: number
+	type: CfEffectiveDepType
+	/** Best matching file for the dep (null for incompatibles / no match). */
+	file: CfModFile | null
 }
 
 /** A single downloadable file of a CurseForge mod. */
 export interface CfModFile {
-  id: number
-  modId: number
-  displayName: string
-  fileName: string
-  /** 1 = release, 2 = beta, 3 = alpha */
-  releaseType: number
-  fileDate: string
-  /** Null when the author disabled third-party API downloads. */
-  downloadUrl: string | null
-  /** Mixed list — contains both Minecraft versions and loader names. */
-  gameVersions: string[]
-  fileLength: number
-  downloadCount: number
-  dependencies?: CfModDependency[]
+	id: number
+	modId: number
+	displayName: string
+	fileName: string
+	/** 1 = release, 2 = beta, 3 = alpha */
+	releaseType: number
+	fileDate: string
+	/** Null when the author disabled third-party API downloads. */
+	downloadUrl: string | null
+	/** Mixed list — contains both Minecraft versions and loader names. */
+	gameVersions: string[]
+	fileLength: number
+	downloadCount: number
+	dependencies?: CfModDependency[]
 }
 
 /**
@@ -532,18 +527,18 @@ export interface CfModFile {
  * CurseForge returns these newest-first.
  */
 export async function getCurseForgeModFiles(
-  modId: number | string,
-  gameVersion?: string,
-  modLoader?: string,
+	modId: number | string,
+	gameVersion?: string,
+	modLoader?: string,
 ): Promise<CfModFile[] | null> {
-  const qs = new URLSearchParams({ pageSize: '50' })
-  if (gameVersion) qs.set('gameVersion', gameVersion)
+	const qs = new URLSearchParams({ pageSize: '50' })
+	if (gameVersion) qs.set('gameVersion', gameVersion)
 
-  const loaderType = modLoader ? CF_LOADER_TYPES[modLoader] : undefined
-  if (loaderType) qs.set('modLoaderType', String(loaderType))
+	const loaderType = modLoader ? CF_LOADER_TYPES[modLoader] : undefined
+	if (loaderType) qs.set('modLoaderType', String(loaderType))
 
-  const json = await cfFetch<{ data: CfModFile[] }>(`/mods/${modId}/files?${qs}`)
-  return json?.data ?? null
+	const json = await cfFetch<{ data: CfModFile[] }>(`/mods/${modId}/files?${qs}`)
+	return json?.data ?? null
 }
 
 /**
@@ -562,20 +557,20 @@ export async function getCurseForgeModFiles(
  * Returns null when the input doesn't have a usable id/filename.
  */
 export function reconstructCfDownloadUrl(file: CfModFile): string | null {
-  if (!Number.isInteger(file.id) || file.id < 1000 || !file.fileName) {
-    return null
-  }
-  const head = Math.floor(file.id / 1000)
-  const tail = file.id % 1000
-  // Encode just the spaces — CF CDN serves filenames with `+`, `'`, `(`, `)`
-  // as literals; over-encoding (encodeURIComponent) breaks lookups.
-  const safeName = file.fileName.replace(/ /g, '%20')
-  return `https://edge.forgecdn.net/files/${head}/${tail}/${safeName}`
+	if (!Number.isInteger(file.id) || file.id < 1000 || !file.fileName) {
+		return null
+	}
+	const head = Math.floor(file.id / 1000)
+	const tail = file.id % 1000
+	// Encode just the spaces — CF CDN serves filenames with `+`, `'`, `(`, `)`
+	// as literals; over-encoding (encodeURIComponent) breaks lookups.
+	const safeName = file.fileName.replace(/ /g, '%20')
+	return `https://edge.forgecdn.net/files/${head}/${tail}/${safeName}`
 }
 
 /** Returns a downloadable URL — either the API-provided one or a reconstructed CDN URL. */
 export function effectiveCfDownloadUrl(file: CfModFile): string | null {
-  return file.downloadUrl ?? reconstructCfDownloadUrl(file)
+	return file.downloadUrl ?? reconstructCfDownloadUrl(file)
 }
 
 /**
@@ -586,8 +581,8 @@ export function effectiveCfDownloadUrl(file: CfModFile): string | null {
  * can reconstruct the CDN URL (see `reconstructCfDownloadUrl`).
  */
 export function pickBestCfFile(files: CfModFile[]): CfModFile | null {
-  if (files.length === 0) return null
-  return files.find((f) => f.releaseType === 1) ?? files[0]
+	if (files.length === 0) return null
+	return files.find((f) => f.releaseType === 1) ?? files[0]
 }
 
 /**
@@ -615,36 +610,36 @@ export function pickBestCfFile(files: CfModFile[]): CfModFile | null {
 const CF_REAL_LOADERS = new Set(['forge', 'fabric', 'quilt', 'neoforge', 'cauldron', 'liteloader'])
 
 export function bestCfFileFor(
-  files: CfModFile[],
-  gameVersion?: string,
-  loader?: string,
+	files: CfModFile[],
+	gameVersion?: string,
+	loader?: string,
 ): CfModFile | null {
-  const loaderLower = (loader ?? '').toLowerCase()
-  const isVanilla = loaderLower === '' || loaderLower === 'vanilla'
+	const loaderLower = (loader ?? '').toLowerCase()
+	const isVanilla = loaderLower === '' || loaderLower === 'vanilla'
 
-  const matches = files.filter((f) => {
-    // Don't filter on downloadUrl — we have a CDN-URL reconstruction
-    // fallback (reconstructCfDownloadUrl) so files where the author hid the
-    // distribution URL are still installable.
-    if (gameVersion && !f.gameVersions.includes(gameVersion)) return false
+	const matches = files.filter((f) => {
+		// Don't filter on downloadUrl — we have a CDN-URL reconstruction
+		// fallback (reconstructCfDownloadUrl) so files where the author hid the
+		// distribution URL are still installable.
+		if (gameVersion && !f.gameVersions.includes(gameVersion)) return false
 
-    // Only consider strings that ARE actually mod loaders. Other CF tags
-    // (Iris, OptiFine, Data Pack, Client, Server, …) are informational and
-    // must not disqualify a file from a vanilla instance.
-    const fileLoaders = f.gameVersions
-      .filter((v) => !/^\d/.test(v))
-      .map((v) => v.toLowerCase())
-      .filter((v) => CF_REAL_LOADERS.has(v))
+		// Only consider strings that ARE actually mod loaders. Other CF tags
+		// (Iris, OptiFine, Data Pack, Client, Server, …) are informational and
+		// must not disqualify a file from a vanilla instance.
+		const fileLoaders = f.gameVersions
+			.filter((v) => !/^\d/.test(v))
+			.map((v) => v.toLowerCase())
+			.filter((v) => CF_REAL_LOADERS.has(v))
 
-    if (isVanilla) {
-      // Vanilla: only files that don't declare a specific loader qualify.
-      return fileLoaders.length === 0
-    }
-    // Modded: accept this loader's files, or universal files with no loader.
-    return fileLoaders.length === 0 || fileLoaders.includes(loaderLower)
-  })
+		if (isVanilla) {
+			// Vanilla: only files that don't declare a specific loader qualify.
+			return fileLoaders.length === 0
+		}
+		// Modded: accept this loader's files, or universal files with no loader.
+		return fileLoaders.length === 0 || fileLoaders.includes(loaderLower)
+	})
 
-  return pickBestCfFile(matches)
+	return pickBestCfFile(matches)
 }
 
 /**
@@ -668,66 +663,66 @@ export function bestCfFileFor(
  * Returns a flat list (root excluded). Order is BFS-ish: closer deps first.
  */
 export async function resolveCfDependencies(
-  rootFile: CfModFile,
-  gameVersion?: string,
-  loader?: string,
+	rootFile: CfModFile,
+	gameVersion?: string,
+	loader?: string,
 ): Promise<CfResolvedDependency[]> {
-  const out: CfResolvedDependency[] = []
-  const seen = new Set<number>([rootFile.modId])
+	const out: CfResolvedDependency[] = []
+	const seen = new Set<number>([rootFile.modId])
 
-  async function visit(parentFile: CfModFile, parentType: CfEffectiveDepType) {
-    for (const dep of parentFile.dependencies ?? []) {
-      const rt = dep.relationType
-      // Non-runtime relationships — skip whole sub-tree.
-      if (
-        rt === CF_RELATION_TYPE.EmbeddedLibrary ||
-        rt === CF_RELATION_TYPE.Tool ||
-        rt === CF_RELATION_TYPE.Include
-      ) {
-        continue
-      }
-      if (seen.has(dep.modId)) continue
-      seen.add(dep.modId)
+	async function visit(parentFile: CfModFile, parentType: CfEffectiveDepType) {
+		for (const dep of parentFile.dependencies ?? []) {
+			const rt = dep.relationType
+			// Non-runtime relationships — skip whole sub-tree.
+			if (
+				rt === CF_RELATION_TYPE.EmbeddedLibrary ||
+				rt === CF_RELATION_TYPE.Tool ||
+				rt === CF_RELATION_TYPE.Include
+			) {
+				continue
+			}
+			if (seen.has(dep.modId)) continue
+			seen.add(dep.modId)
 
-      // Effective type after propagation.
-      let effective: CfEffectiveDepType
-      if (rt === CF_RELATION_TYPE.Incompatible) {
-        effective = 'incompatible'
-      } else if (rt === CF_RELATION_TYPE.OptionalDependency) {
-        effective = 'optional'
-      } else if (rt === CF_RELATION_TYPE.RequiredDependency) {
-        // Required-under-Optional softens to Optional — we don't install a
-        // hard requirement of something the user hasn't even agreed to.
-        effective = parentType === 'required' ? 'required' : 'optional'
-      } else {
-        continue
-      }
+			// Effective type after propagation.
+			let effective: CfEffectiveDepType
+			if (rt === CF_RELATION_TYPE.Incompatible) {
+				effective = 'incompatible'
+			} else if (rt === CF_RELATION_TYPE.OptionalDependency) {
+				effective = 'optional'
+			} else if (rt === CF_RELATION_TYPE.RequiredDependency) {
+				// Required-under-Optional softens to Optional — we don't install a
+				// hard requirement of something the user hasn't even agreed to.
+				effective = parentType === 'required' ? 'required' : 'optional'
+			} else {
+				continue
+			}
 
-      if (effective === 'incompatible') {
-        out.push({ modId: dep.modId, type: 'incompatible', file: null })
-        continue
-      }
+			if (effective === 'incompatible') {
+				out.push({ modId: dep.modId, type: 'incompatible', file: null })
+				continue
+			}
 
-      // Fetch the best matching file for the dep — version & loader aware.
-      let depFile: CfModFile | null = null
-      try {
-        const files = await getCurseForgeModFiles(dep.modId, gameVersion, loader)
-        if (files) depFile = bestCfFileFor(files, gameVersion, loader)
-      } catch (err) {
-        console.warn(`[CurseForge] Failed to resolve dep ${dep.modId}:`, err)
-      }
+			// Fetch the best matching file for the dep — version & loader aware.
+			let depFile: CfModFile | null = null
+			try {
+				const files = await getCurseForgeModFiles(dep.modId, gameVersion, loader)
+				if (files) depFile = bestCfFileFor(files, gameVersion, loader)
+			} catch (err) {
+				console.warn(`[CurseForge] Failed to resolve dep ${dep.modId}:`, err)
+			}
 
-      out.push({ modId: dep.modId, type: effective, file: depFile })
+			out.push({ modId: dep.modId, type: effective, file: depFile })
 
-      // Recurse — propagate the effective type downward.
-      if (depFile) {
-        await visit(depFile, effective)
-      }
-    }
-  }
+			// Recurse — propagate the effective type downward.
+			if (depFile) {
+				await visit(depFile, effective)
+			}
+		}
+	}
 
-  await visit(rootFile, 'required')
-  return out
+	await visit(rootFile, 'required')
+	return out
 }
 
 /**
@@ -747,79 +742,77 @@ export async function resolveCfDependencies(
  *                         prevent infinite loops for circular dependencies.
  */
 export async function installCurseForgeFile(
-  file: CfModFile,
-  profilePath: string,
-  gameVersion?: string,
-  loader?: string,
-  installedModIds: Set<number> = new Set(),
+	file: CfModFile,
+	profilePath: string,
+	gameVersion?: string,
+	loader?: string,
+	installedModIds: Set<number> = new Set(),
 ): Promise<{
-  optional: CfResolvedDependency[]
-  incompatible: CfResolvedDependency[]
+	optional: CfResolvedDependency[]
+	incompatible: CfResolvedDependency[]
 }> {
-  // If the author disabled API distribution, fall back to the CDN URL we
-  // can derive from the numeric file ID (works for the vast majority of
-  // such files — same trick MultiMC/PolyMC/Prism use).
-  const url = effectiveCfDownloadUrl(file)
-  if (!url) {
-    throw new Error(
-      `Couldn't build a download URL for "${file.fileName}" — the author disabled distribution and the CDN-fallback couldn't construct a valid URL either. Open the project on CurseForge and download it manually.`,
-    )
-  }
+	// If the author disabled API distribution, fall back to the CDN URL we
+	// can derive from the numeric file ID (works for the vast majority of
+	// such files — same trick MultiMC/PolyMC/Prism use).
+	const url = effectiveCfDownloadUrl(file)
+	if (!url) {
+		throw new Error(
+			`Couldn't build a download URL for "${file.fileName}" — the author disabled distribution and the CDN-fallback couldn't construct a valid URL either. Open the project on CurseForge and download it manually.`,
+		)
+	}
 
-  installedModIds.add(file.modId)
-  await add_project_from_curseforge(profilePath, url, file.fileName)
-  storeCfInstalled(profilePath, file.modId)
+	installedModIds.add(file.modId)
+	await add_project_from_curseforge(profilePath, url, file.fileName)
+	storeCfInstalled(profilePath, file.modId)
 
-  // Top-level pass: only the direct deps of this file. The recursive install
-  // below handles the deeper levels (via re-entry into installCurseForgeFile).
-  const directOptional: CfResolvedDependency[] = []
-  const directIncompatible: CfResolvedDependency[] = []
+	// Top-level pass: only the direct deps of this file. The recursive install
+	// below handles the deeper levels (via re-entry into installCurseForgeFile).
+	const directOptional: CfResolvedDependency[] = []
+	const directIncompatible: CfResolvedDependency[] = []
 
-  for (const dep of file.dependencies ?? []) {
-    const rt = dep.relationType
-    if (
-      rt === CF_RELATION_TYPE.EmbeddedLibrary ||
-      rt === CF_RELATION_TYPE.Tool ||
-      rt === CF_RELATION_TYPE.Include
-    ) {
-      continue
-    }
-    if (installedModIds.has(dep.modId)) continue
+	for (const dep of file.dependencies ?? []) {
+		const rt = dep.relationType
+		if (
+			rt === CF_RELATION_TYPE.EmbeddedLibrary ||
+			rt === CF_RELATION_TYPE.Tool ||
+			rt === CF_RELATION_TYPE.Include
+		) {
+			continue
+		}
+		if (installedModIds.has(dep.modId)) continue
 
-    if (rt === CF_RELATION_TYPE.Incompatible) {
-      directIncompatible.push({ modId: dep.modId, type: 'incompatible', file: null })
-      continue
-    }
+		if (rt === CF_RELATION_TYPE.Incompatible) {
+			directIncompatible.push({ modId: dep.modId, type: 'incompatible', file: null })
+			continue
+		}
 
-    if (rt === CF_RELATION_TYPE.OptionalDependency) {
-      // Surface but don't install silently.
-      let optFile: CfModFile | null = null
-      try {
-        const files = await getCurseForgeModFiles(dep.modId, gameVersion, loader)
-        if (files) optFile = bestCfFileFor(files, gameVersion, loader)
-      } catch (err) {
-        console.warn(`[CurseForge] Failed to resolve optional dep ${dep.modId}:`, err)
-      }
-      directOptional.push({ modId: dep.modId, type: 'optional', file: optFile })
-      continue
-    }
+		if (rt === CF_RELATION_TYPE.OptionalDependency) {
+			// Surface but don't install silently.
+			let optFile: CfModFile | null = null
+			try {
+				const files = await getCurseForgeModFiles(dep.modId, gameVersion, loader)
+				if (files) optFile = bestCfFileFor(files, gameVersion, loader)
+			} catch (err) {
+				console.warn(`[CurseForge] Failed to resolve optional dep ${dep.modId}:`, err)
+			}
+			directOptional.push({ modId: dep.modId, type: 'optional', file: optFile })
+			continue
+		}
 
-    if (rt === CF_RELATION_TYPE.RequiredDependency) {
-      // Install required. The recursive call propagates the same logic so a
-      // transitive `Optional` doesn't drag in its own `Required` automatically.
-      await installCurseForgeMod(
-        dep.modId,
-        profilePath,
-        gameVersion,
-        loader,
-        installedModIds,
-      ).catch((err) =>
-        console.warn(`[CurseForge] Skipping required dependency ${dep.modId}:`, err),
-      )
-    }
-  }
+		if (rt === CF_RELATION_TYPE.RequiredDependency) {
+			// Install required. The recursive call propagates the same logic so a
+			// transitive `Optional` doesn't drag in its own `Required` automatically.
+			await installCurseForgeMod(
+				dep.modId,
+				profilePath,
+				gameVersion,
+				loader,
+				installedModIds,
+			).catch((err) => console.warn(`[CurseForge] Skipping required dependency ${dep.modId}:`, err))
+		}
+	}
 
-  return { optional: directOptional, incompatible: directIncompatible }
+	return { optional: directOptional, incompatible: directIncompatible }
 }
 
 /**
@@ -831,25 +824,25 @@ export async function installCurseForgeFile(
  * @returns the created profile path
  */
 export async function installCurseForgeModpack(
-  modId: number,
-  modName: string,
-  file?: CfModFile,
+	modId: number,
+	modName: string,
+	file?: CfModFile,
 ): Promise<string> {
-  let target = file
-  if (!target) {
-    const files = await getCurseForgeModFiles(modId)
-    target = pickBestCfFile(files ?? []) ?? undefined
-  }
-  if (!target) {
-    throw new Error('No modpack file is available on CurseForge.')
-  }
-  const url = effectiveCfDownloadUrl(target)
-  if (!url) {
-    throw new Error(
-      `Couldn't build a download URL for "${target.fileName}" — open the project on CurseForge to download it manually.`,
-    )
-  }
-  return create_profile_and_install_from_curseforge(url, modName, CF_API_KEY)
+	let target = file
+	if (!target) {
+		const files = await getCurseForgeModFiles(modId)
+		target = pickBestCfFile(files ?? []) ?? undefined
+	}
+	if (!target) {
+		throw new Error('No modpack file is available on CurseForge.')
+	}
+	const url = effectiveCfDownloadUrl(target)
+	if (!url) {
+		throw new Error(
+			`Couldn't build a download URL for "${target.fileName}" — open the project on CurseForge to download it manually.`,
+		)
+	}
+	return create_profile_and_install_from_curseforge(url, modName, CF_API_KEY)
 }
 
 /**
@@ -862,47 +855,41 @@ export async function installCurseForgeModpack(
  * @param loader       Instance loader name (fabric/forge/quilt/neoforge)
  */
 export async function installCurseForgeMod(
-  modId: number,
-  profilePath: string,
-  gameVersion?: string,
-  loader?: string,
-  installedModIds: Set<number> = new Set(),
+	modId: number,
+	profilePath: string,
+	gameVersion?: string,
+	loader?: string,
+	installedModIds: Set<number> = new Set(),
 ): Promise<void> {
-  const files = await getCurseForgeModFiles(modId, gameVersion, loader)
+	const files = await getCurseForgeModFiles(modId, gameVersion, loader)
 
-  if (!files || files.length === 0) {
-    throw new Error(
-      `This mod has no files on CurseForge for any Minecraft version.`,
-    )
-  }
+	if (!files || files.length === 0) {
+		throw new Error(`This mod has no files on CurseForge for any Minecraft version.`)
+	}
 
-  // Apply local game-version + loader constraint. bestCfFileFor keeps files
-  // even when downloadUrl is null (we have a CDN reconstruction fallback).
-  const file = bestCfFileFor(files, gameVersion, loader)
-  if (!file) {
-    // Build a useful error: list the unique MC versions the mod actually
-    // supports so the user knows what's available.
-    const allVersions = Array.from(
-      new Set(
-        files.flatMap((f) => f.gameVersions.filter((v) => /^\d/.test(v))),
-      ),
-    ).sort()
-    const versionList =
-      allVersions.length > 0
-        ? `Available Minecraft versions: ${allVersions.slice(0, 8).join(', ')}${allVersions.length > 8 ? '…' : ''}.`
-        : 'No matching versions were returned by CurseForge.'
-    const target =
-      gameVersion && loader
-        ? `Minecraft ${gameVersion} (${loader})`
-        : gameVersion
-          ? `Minecraft ${gameVersion}`
-          : `loader "${loader}"`
-    throw new Error(
-      `No CurseForge file fits ${target}. ${versionList}`,
-    )
-  }
+	// Apply local game-version + loader constraint. bestCfFileFor keeps files
+	// even when downloadUrl is null (we have a CDN reconstruction fallback).
+	const file = bestCfFileFor(files, gameVersion, loader)
+	if (!file) {
+		// Build a useful error: list the unique MC versions the mod actually
+		// supports so the user knows what's available.
+		const allVersions = Array.from(
+			new Set(files.flatMap((f) => f.gameVersions.filter((v) => /^\d/.test(v)))),
+		).sort()
+		const versionList =
+			allVersions.length > 0
+				? `Available Minecraft versions: ${allVersions.slice(0, 8).join(', ')}${allVersions.length > 8 ? '…' : ''}.`
+				: 'No matching versions were returned by CurseForge.'
+		const target =
+			gameVersion && loader
+				? `Minecraft ${gameVersion} (${loader})`
+				: gameVersion
+					? `Minecraft ${gameVersion}`
+					: `loader "${loader}"`
+		throw new Error(`No CurseForge file fits ${target}. ${versionList}`)
+	}
 
-  await installCurseForgeFile(file, profilePath, gameVersion, loader, installedModIds)
+	await installCurseForgeFile(file, profilePath, gameVersion, loader, installedModIds)
 }
 
 // ─── Category tag helpers ─────────────────────────────────────────────────────
@@ -922,26 +909,26 @@ export async function installCurseForgeMod(
  * than mislead the user with off-topic results.
  */
 const MODRINTH_TO_CF_MOD_CATEGORY: Record<string, string> = {
-  // ── Strong 1:1 matches — CF target is well-populated and on-topic ────────
-  cursed: 'horror',
-  decoration: 'cosmetic',
-  equipment: 'armor-weapons-and-tools',
-  food: 'food',
-  library: 'library-api',
-  magic: 'magic',
-  management: 'server-utility',
-  mobs: 'mobs',
-  optimization: 'performance',
-  storage: 'storage',
-  technology: 'technology',
-  transportation: 'player-transport',
-  utility: 'utility-qol',
-  worldgen: 'world-gen',
-  // ── Intentionally omitted (no clean CF equivalent): ──────────────────────
-  //   adventure, quests           → CF's "adventure-and-rpg" and "quests"
-  //                                  contain off-topic mods that mislead users
-  //   game-mechanics, minigame    → no CF analogue
-  //   social, economy             → no CF analogue
+	// ── Strong 1:1 matches — CF target is well-populated and on-topic ────────
+	cursed: 'horror',
+	decoration: 'cosmetic',
+	equipment: 'armor-weapons-and-tools',
+	food: 'food',
+	library: 'library-api',
+	magic: 'magic',
+	management: 'server-utility',
+	mobs: 'mobs',
+	optimization: 'performance',
+	storage: 'storage',
+	technology: 'technology',
+	transportation: 'player-transport',
+	utility: 'utility-qol',
+	worldgen: 'world-gen',
+	// ── Intentionally omitted (no clean CF equivalent): ──────────────────────
+	//   adventure, quests           → CF's "adventure-and-rpg" and "quests"
+	//                                  contain off-topic mods that mislead users
+	//   game-mechanics, minigame    → no CF analogue
+	//   social, economy             → no CF analogue
 }
 
 /**
@@ -950,21 +937,21 @@ const MODRINTH_TO_CF_MOD_CATEGORY: Record<string, string> = {
  * sidebar (have icon + i18n).
  */
 const MODRINTH_TO_CF_RESOURCEPACK_CATEGORY: Record<string, string> = {
-  // Themed packs
-  decoration: 'miscellaneous',
-  fantasy: 'medieval',
-  realistic: 'photo-realistic',
-  'semi-realistic': 'photo-realistic',
-  cartoon: 'animated',
-  'vanilla-like': 'traditional',
-  themed: 'modern',
-  // Content-focused
-  blocks: 'mod-support',
-  combat: 'mod-support',
-  entities: 'miscellaneous',
-  font: 'font-packs',
-  fonts: 'font-packs',
-  gui: 'miscellaneous',
+	// Themed packs
+	decoration: 'miscellaneous',
+	fantasy: 'medieval',
+	realistic: 'photo-realistic',
+	'semi-realistic': 'photo-realistic',
+	cartoon: 'animated',
+	'vanilla-like': 'traditional',
+	themed: 'modern',
+	// Content-focused
+	blocks: 'mod-support',
+	combat: 'mod-support',
+	entities: 'miscellaneous',
+	font: 'font-packs',
+	fonts: 'font-packs',
+	gui: 'miscellaneous',
 }
 
 /**
@@ -972,30 +959,30 @@ const MODRINTH_TO_CF_RESOURCEPACK_CATEGORY: Record<string, string> = {
  * than Modrinth's — we map a handful of well-populated visual styles.
  */
 const MODRINTH_TO_CF_SHADER_CATEGORY: Record<string, string> = {
-  realistic: 'realistic',
-  fantasy: 'fantasy',
-  cartoon: 'cartoon',
-  'vanilla-like': 'vanilla-like',
-  cursed: 'horror',
-  potato: 'potato',
+	realistic: 'realistic',
+	fantasy: 'fantasy',
+	cartoon: 'cartoon',
+	'vanilla-like': 'vanilla-like',
+	cursed: 'horror',
+	potato: 'potato',
 }
 
 /**
  * Datapack categories. CF datapacks class (classId=6945).
  */
 const MODRINTH_TO_CF_DATAPACK_CATEGORY: Record<string, string> = {
-  adventure: 'adventure',
-  magic: 'magic',
-  mobs: 'mobs',
-  food: 'food',
-  utility: 'utility',
-  decoration: 'cosmetic',
-  storage: 'storage',
-  technology: 'technology',
-  worldgen: 'world-gen',
-  cursed: 'horror',
-  optimization: 'performance',
-  library: 'library',
+	adventure: 'adventure',
+	magic: 'magic',
+	mobs: 'mobs',
+	food: 'food',
+	utility: 'utility',
+	decoration: 'cosmetic',
+	storage: 'storage',
+	technology: 'technology',
+	worldgen: 'world-gen',
+	cursed: 'horror',
+	optimization: 'performance',
+	library: 'library',
 }
 
 /**
@@ -1005,10 +992,10 @@ const MODRINTH_TO_CF_DATAPACK_CATEGORY: Record<string, string> = {
  * `mapCfCategoriesToTags` so a mapping that's missing on CF doesn't appear.
  */
 const MODRINTH_TO_CF_BY_TYPE: Record<string, Record<string, string>> = {
-  mod: MODRINTH_TO_CF_MOD_CATEGORY,
-  resourcepack: MODRINTH_TO_CF_RESOURCEPACK_CATEGORY,
-  shader: MODRINTH_TO_CF_SHADER_CATEGORY,
-  datapack: MODRINTH_TO_CF_DATAPACK_CATEGORY,
+	mod: MODRINTH_TO_CF_MOD_CATEGORY,
+	resourcepack: MODRINTH_TO_CF_RESOURCEPACK_CATEGORY,
+	shader: MODRINTH_TO_CF_SHADER_CATEGORY,
+	datapack: MODRINTH_TO_CF_DATAPACK_CATEGORY,
 }
 
 /**
@@ -1018,21 +1005,21 @@ const MODRINTH_TO_CF_BY_TYPE: Record<string, Record<string, string>> = {
  * first and fall back to a flat union for callers that don't pass a type.
  */
 const MODRINTH_TO_CF_SLUG: Record<string, string> = (() => {
-  const out: Record<string, string> = {}
-  for (const map of Object.values(MODRINTH_TO_CF_BY_TYPE)) {
-    for (const [mrSlug, cfSlug] of Object.entries(map)) {
-      if (!(mrSlug in out)) out[mrSlug] = cfSlug
-    }
-  }
-  return out
+	const out: Record<string, string> = {}
+	for (const map of Object.values(MODRINTH_TO_CF_BY_TYPE)) {
+		for (const [mrSlug, cfSlug] of Object.entries(map)) {
+			if (!(mrSlug in out)) out[mrSlug] = cfSlug
+		}
+	}
+	return out
 })()
 
 function pickCfSlugForType(slug: string, projectType?: string): string | undefined {
-  if (projectType) {
-    const typed = MODRINTH_TO_CF_BY_TYPE[projectType]?.[slug]
-    if (typed) return typed
-  }
-  return MODRINTH_TO_CF_SLUG[slug]
+	if (projectType) {
+		const typed = MODRINTH_TO_CF_BY_TYPE[projectType]?.[slug]
+		if (typed) return typed
+	}
+	return MODRINTH_TO_CF_SLUG[slug]
 }
 
 /**
@@ -1048,38 +1035,38 @@ function pickCfSlugForType(slug: string, projectType?: string): string | undefin
  * value; setting it to the Modrinth slug makes all three work transparently.
  */
 export function mapCfCategoriesToTags(
-  cfCats: CfCategoryInfo[],
+	cfCats: CfCategoryInfo[],
 ): Array<{ icon: string; name: string; project_type: string; header: string }> {
-  // Class-scoped slug index: a slug may exist in multiple classes (e.g. "magic"
-  // for both mods and modpacks), so validation must be per-class.
-  const slugsByClass = new Map<number, Set<string>>()
-  for (const c of cfCats) {
-    if (c.isClass || c.classId == null) continue
-    let set = slugsByClass.get(c.classId)
-    if (!set) {
-      set = new Set()
-      slugsByClass.set(c.classId, set)
-    }
-    set.add(c.slug)
-  }
+	// Class-scoped slug index: a slug may exist in multiple classes (e.g. "magic"
+	// for both mods and modpacks), so validation must be per-class.
+	const slugsByClass = new Map<number, Set<string>>()
+	for (const c of cfCats) {
+		if (c.isClass || c.classId == null) continue
+		let set = slugsByClass.get(c.classId)
+		if (!set) {
+			set = new Set()
+			slugsByClass.set(c.classId, set)
+		}
+		set.add(c.slug)
+	}
 
-  const out: Array<{ icon: string; name: string; project_type: string; header: string }> = []
+	const out: Array<{ icon: string; name: string; project_type: string; header: string }> = []
 
-  for (const [projectType, map] of Object.entries(MODRINTH_TO_CF_BY_TYPE)) {
-    const classId = CF_CLASS_IDS[projectType]
-    const validSlugs = classId != null ? slugsByClass.get(classId) : undefined
-    if (!validSlugs) continue
-    for (const [mrSlug, cfSlug] of Object.entries(map)) {
-      // Defensive: skip entries whose CF target isn't in this class.
-      if (!validSlugs.has(cfSlug)) continue
-      out.push({
-        icon: '',
-        name: mrSlug,
-        project_type: projectType,
-        header: 'category',
-      })
-    }
-  }
+	for (const [projectType, map] of Object.entries(MODRINTH_TO_CF_BY_TYPE)) {
+		const classId = CF_CLASS_IDS[projectType]
+		const validSlugs = classId != null ? slugsByClass.get(classId) : undefined
+		if (!validSlugs) continue
+		for (const [mrSlug, cfSlug] of Object.entries(map)) {
+			// Defensive: skip entries whose CF target isn't in this class.
+			if (!validSlugs.has(cfSlug)) continue
+			out.push({
+				icon: '',
+				name: mrSlug,
+				project_type: projectType,
+				header: 'category',
+			})
+		}
+	}
 
-  return out
+	return out
 }

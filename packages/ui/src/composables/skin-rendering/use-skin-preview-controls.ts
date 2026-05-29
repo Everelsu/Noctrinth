@@ -36,10 +36,7 @@ export function useSkinPreviewControls({
 		modelRotation.value += deltaX * 0.01
 		// Drag down → see soles, drag up → see crown. Clamp inclusive of ±90°
 		// so user can look straight at top/bottom but not flip past.
-		modelPitch.value = Math.min(
-			MAX_PITCH,
-			Math.max(-MAX_PITCH, modelPitch.value + deltaY * 0.01),
-		)
+		modelPitch.value = Math.min(MAX_PITCH, Math.max(-MAX_PITCH, modelPitch.value + deltaY * 0.01))
 		previousX.value = event.clientX
 		previousY.value = event.clientY
 		hasDragged.value = true

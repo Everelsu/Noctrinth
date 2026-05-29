@@ -48,10 +48,7 @@
 					<slot name="actions" />
 				</div>
 				<!-- Source icons (grid layout) -->
-				<div
-					v-if="sources?.modrinth || sources?.curseforge"
-					class="flex items-center gap-1.5"
-				>
+				<div v-if="sources?.modrinth || sources?.curseforge" class="flex items-center gap-1.5">
 					<ModrinthIcon
 						v-if="sources?.modrinth"
 						v-tooltip="'Available on Modrinth'"
@@ -475,5 +472,4 @@ const cssColor = computed(() => {
 		color: #f16436;
 	}
 }
-
 </style>

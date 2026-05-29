@@ -1,10 +1,6 @@
 <script setup lang="ts">
 import { BookmarkIcon, CheckIcon, PlusIcon, SearchIcon } from '@modrinth/assets'
-import {
-	FloatingPanel,
-	injectNotificationManager,
-	StyledInput,
-} from '@modrinth/ui'
+import { FloatingPanel, injectNotificationManager, StyledInput } from '@modrinth/ui'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import CollectionCreateModal from '@/components/ui/modal/CollectionCreateModal.vue'
@@ -30,8 +26,7 @@ const togglingId = ref<string | null>(null)
 const panel = ref<InstanceType<typeof FloatingPanel>>()
 const createModal = ref<InstanceType<typeof CollectionCreateModal>>()
 
-const containsProject = (c: Collection): boolean =>
-	(c.projects || []).includes(props.projectId)
+const containsProject = (c: Collection): boolean => (c.projects || []).includes(props.projectId)
 
 const isInAnyCollection = computed(() => collections.value.some(containsProject))
 
@@ -89,9 +84,12 @@ function onCreated(collection: Collection) {
 	addProjectToCollection(collection.id, props.projectId, []).catch(handleError)
 }
 
-watch(() => props.projectId, () => {
-	if (signedIn.value) load()
-})
+watch(
+	() => props.projectId,
+	() => {
+		if (signedIn.value) load()
+	},
+)
 
 onMounted(load)
 </script>
@@ -126,7 +124,9 @@ onMounted(load)
 					<p v-if="!signedIn" class="hint">Sign in to Modrinth to save projects.</p>
 					<p v-else-if="loading" class="hint">Loading collections...</p>
 					<p v-else-if="filtered.length === 0" class="hint">
-						{{ filter ? 'No collections match your search.' : "You don't have any collections yet." }}
+						{{
+							filter ? 'No collections match your search.' : "You don't have any collections yet."
+						}}
 					</p>
 					<button
 						v-for="c in filtered"
@@ -135,11 +135,7 @@ onMounted(load)
 						:disabled="togglingId === c.id"
 						@click="toggle(c)"
 					>
-						<span
-							class="check-box"
-							:class="{ checked: containsProject(c) }"
-							aria-hidden="true"
-						>
+						<span class="check-box" :class="{ checked: containsProject(c) }" aria-hidden="true">
 							<CheckIcon v-if="containsProject(c)" />
 						</span>
 						<span class="row-name">{{ c.name }}</span>

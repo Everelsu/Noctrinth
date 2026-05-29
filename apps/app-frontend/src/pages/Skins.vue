@@ -23,7 +23,7 @@ import { type DragDropEvent, getCurrentWebview } from '@tauri-apps/api/webview'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { computedAsync } from '@vueuse/core'
 import type { Ref } from 'vue'
-import { computed, inject, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
+import { computed, inject, onMounted, onUnmounted, ref, useTemplateRef } from 'vue'
 
 import type AccountsCard from '@/components/ui/AccountsCard.vue'
 import EditSkinModal from '@/components/ui/skin/EditSkinModal.vue'
@@ -150,6 +150,23 @@ const messages = defineMessages({
 	signInButton: {
 		id: 'app.skins.sign-in.button',
 		defaultMessage: 'Sign In',
+	},
+	elySkinsPageTitle: {
+		id: 'ely-skins.page-title',
+		defaultMessage: 'Skins',
+	},
+	elySkinsSectionTitle: {
+		id: 'ely-skins.section-title',
+		defaultMessage: 'Ely.by skin',
+	},
+	elySkinsDescription: {
+		id: 'ely-skins.description',
+		defaultMessage:
+			"Skins for Ely.by accounts are changed on the Ely.by website. The button below opens the skin page directly — if you aren't signed in, Ely.by will ask you to log in first.",
+	},
+	elySkinsChangeButton: {
+		id: 'ely-skins.change-button',
+		defaultMessage: 'Change skin on Ely.by',
 	},
 })
 
@@ -734,12 +751,19 @@ async function processSkinFileBuffer(buffer: Uint8Array | ArrayBuffer) {
 	}
 }
 
-watch(
-	() => selectedSkin.value?.cape_id,
-	() => {},
-)
+async function loadInitialData() {
+	// Resolve the current user first so loadSkins/loadCapes can skip the
+	// Mojang API when no Microsoft account is active.
+	await loadCurrentUser()
+	await Promise.all([loadCapes(), loadSkins()])
+}
 
 onMounted(() => {
+	// Kicked off after mount (rather than via a top-level await in setup) so a
+	// hanging or rejected backend call can never stall <Suspense>, which would
+	// otherwise leave the page stuck on the global loading bar and never render
+	// the sign-in prompt for users without an active account.
+	void loadInitialData()
 	userCheckInterval = window.setInterval(checkUserChanges, 250)
 	void setupAddSkinDragDropListener()
 })
@@ -776,11 +800,6 @@ async function checkUserChanges() {
 		}
 	}
 }
-
-// Resolve the current user first so loadSkins/loadCapes can skip the
-// Mojang API when no Microsoft account is active.
-await loadCurrentUser()
-await Promise.all([loadCapes(), loadSkins()])
 </script>
 
 <template>
@@ -895,7 +914,9 @@ await Promise.all([loadCapes(), loadSkins()])
 
 	<div v-else-if="elyAccount" class="p-4 skin-layout">
 		<div class="preview-panel">
-			<h1 class="m-0 text-2xl font-bold flex items-center gap-2">Skins</h1>
+			<h1 class="m-0 text-2xl font-bold flex items-center gap-2">
+				{{ formatMessage(messages.elySkinsPageTitle) }}
+			</h1>
 			<div class="preview-container">
 				<SkinPreviewRenderer
 					:texture-src="elySkinTexture || ''"
@@ -907,19 +928,17 @@ await Promise.all([loadCapes(), loadSkins()])
 
 		<div class="skins-container">
 			<section class="flex flex-col gap-4 mt-1">
-				<h2 class="text-lg font-bold m-0 text-primary">Ely.by skin</h2>
-				<div
-					class="bg-bg-raised card-shadow rounded-lg p-5 flex flex-col gap-4 shadow-md max-w-xl"
-				>
+				<h2 class="text-lg font-bold m-0 text-primary">
+					{{ formatMessage(messages.elySkinsSectionTitle) }}
+				</h2>
+				<div class="bg-bg-raised card-shadow rounded-lg p-5 flex flex-col gap-4 shadow-md max-w-xl">
 					<p class="text-secondary m-0">
-						Skins for Ely.by accounts are changed on the Ely.by website. The button below
-						opens the skin page directly — if you aren't signed in, Ely.by will ask you to
-						log in first.
+						{{ formatMessage(messages.elySkinsDescription) }}
 					</p>
 					<ButtonStyled color="brand">
 						<button @click="openElySkinPage">
 							<ExternalIcon />
-							Change skin on Ely.by
+							{{ formatMessage(messages.elySkinsChangeButton) }}
 						</button>
 					</ButtonStyled>
 				</div>
@@ -927,9 +946,9 @@ await Promise.all([loadCapes(), loadSkins()])
 		</div>
 	</div>
 
-	<div v-else class="box-border flex min-h-full items-center justify-center pt-[25%]">
+	<div v-else class="box-border flex min-h-full items-center justify-center p-4">
 		<div
-			class="relative mx-auto flex w-full max-w-xl flex-col gap-5 rounded-lg bg-bg-raised p-7 shadow-lg"
+			class="relative mx-auto mt-28 flex w-full max-w-xl flex-col gap-5 rounded-lg bg-bg-raised p-7 shadow-lg"
 		>
 			<img
 				:src="ExcitedRinthbot"
@@ -954,7 +973,7 @@ await Promise.all([loadCapes(), loadSkins()])
 				<p class="text-lg m-0">
 					{{ formatMessage(messages.signInDescription) }}
 				</p>
-				<ButtonStyled v-show="accountsCard" color="brand" :disabled="accountsCard.loginDisabled">
+				<ButtonStyled v-if="accountsCard" color="brand" :disabled="accountsCard.loginDisabled">
 					<button :disabled="accountsCard.loginDisabled" @click="login">
 						<LogInIcon v-if="!accountsCard.loginDisabled" />
 						<SpinnerIcon v-else class="animate-spin" />

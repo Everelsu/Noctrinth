@@ -10,7 +10,6 @@ import {
 	ShieldIcon,
 	ToggleRightIcon,
 } from '@modrinth/assets'
-import NoctrinthIcon from '@/assets/noctrinth-icon.svg?component'
 import {
 	commonMessages,
 	commonSettingsMessages,
@@ -24,6 +23,7 @@ import { getVersion } from '@tauri-apps/api/app'
 import { platform as getOsPlatform, version as getOsVersion } from '@tauri-apps/plugin-os'
 import { ref, watch } from 'vue'
 
+import NoctrinthIcon from '@/assets/noctrinth-icon.svg?component'
 import AppearanceSettings from '@/components/ui/settings/AppearanceSettings.vue'
 import ChangelogSettings from '@/components/ui/settings/ChangelogSettings.vue'
 import DefaultInstanceSettings from '@/components/ui/settings/DefaultInstanceSettings.vue'

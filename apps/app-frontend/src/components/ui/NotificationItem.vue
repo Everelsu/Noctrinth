@@ -6,11 +6,7 @@
 			read: notification.read,
 		}"
 	>
-		<RouterLink
-			v-if="!type"
-			:to="notification.link || '#'"
-			class="notification__icon backed-svg"
-		>
+		<RouterLink v-if="!type" :to="notification.link || '#'" class="notification__icon backed-svg">
 			<BellIcon />
 		</RouterLink>
 		<DoubleIcon v-else class="notification__icon">
@@ -18,12 +14,7 @@
 				<RouterLink v-if="project" :to="projectLink(project)" tabindex="-1">
 					<Avatar size="xs" :src="project.icon_url" no-shadow />
 				</RouterLink>
-				<a
-					v-else-if="organization"
-					href="#"
-					tabindex="-1"
-					@click.prevent="openOrg(organization)"
-				>
+				<a v-else-if="organization" href="#" tabindex="-1" @click.prevent="openOrg(organization)">
 					<Avatar size="xs" :src="organization.icon_url" no-shadow />
 				</a>
 				<a v-else-if="user" href="#" tabindex="-1" @click.prevent="openUser(user)">
@@ -48,9 +39,13 @@
 
 		<div class="notification__title">
 			<template v-if="type === 'project_update' && project && version">
-				A project you follow,
-				<RouterLink :to="projectLink(project)" class="title-link">{{ project.title }}</RouterLink>
-				, has been updated:
+				<IntlFormatted :message-id="messages.projectUpdated" :values="{ title: project.title }">
+					<template #project="{ children }">
+						<RouterLink :to="projectLink(project)" class="title-link">
+							<component :is="() => children" />
+						</RouterLink>
+					</template>
+				</IntlFormatted>
 			</template>
 			<template v-else-if="type === 'team_invite' && project">
 				<a
@@ -63,11 +58,13 @@
 					<span>{{ invitedBy.username }}</span>
 				</a>
 				<span>
-					has invited you to join
-					<RouterLink :to="projectLink(project)" class="title-link">
-						{{ project.title }}
-					</RouterLink>
-					.
+					<IntlFormatted :message-id="messages.invitedToJoin" :values="{ name: project.title }">
+						<template #target="{ children }">
+							<RouterLink :to="projectLink(project)" class="title-link">
+								<component :is="() => children" />
+							</RouterLink>
+						</template>
+					</IntlFormatted>
 				</span>
 			</template>
 			<template v-else-if="type === 'organization_invite' && organization">
@@ -81,30 +78,45 @@
 					<span>{{ invitedBy.username }}</span>
 				</a>
 				<span>
-					has invited you to join
-					<a
-						href="#"
-						class="title-link"
-						@click.prevent="openOrg(organization)"
-					>{{ organization.name }}</a>
-					.
+					<IntlFormatted :message-id="messages.invitedToJoin" :values="{ name: organization.name }">
+						<template #target="{ children }">
+							<a href="#" class="title-link" @click.prevent="openOrg(organization)">
+								<component :is="() => children" />
+							</a>
+						</template>
+					</IntlFormatted>
 				</span>
 			</template>
 			<template v-else-if="type === 'status_change' && project">
-				<RouterLink :to="projectLink(project)" class="title-link">
-					{{ project.title }}
-				</RouterLink>
-				updated from <strong>{{ notification.body?.old_status }}</strong>
-				to <strong>{{ notification.body?.new_status }}</strong>
-				by the moderators.
+				<IntlFormatted
+					:message-id="messages.statusChanged"
+					:values="{
+						title: project.title,
+						oldStatus: notification.body?.old_status,
+						newStatus: notification.body?.new_status,
+					}"
+				>
+					<template #project="{ children }">
+						<RouterLink :to="projectLink(project)" class="title-link">
+							<component :is="() => children" />
+						</RouterLink>
+					</template>
+					<template #strong="{ children }">
+						<strong><component :is="() => children" /></strong>
+					</template>
+				</IntlFormatted>
 			</template>
 			<template v-else-if="type === 'moderator_message' && project">
-				Your project,
-				<RouterLink :to="projectLink(project)" class="title-link">{{ project.title }}</RouterLink>
-				, has received
-				<template v-if="notification.grouped_notifs">messages</template>
-				<template v-else>a message</template>
-				from the moderators.
+				<IntlFormatted
+					:message-id="messages.moderatorMessage"
+					:values="{ title: project.title, count: notification.grouped_notifs ? 2 : 1 }"
+				>
+					<template #project="{ children }">
+						<RouterLink :to="projectLink(project)" class="title-link">
+							<component :is="() => children" />
+						</RouterLink>
+					</template>
+				</IntlFormatted>
 			</template>
 			<a v-else href="#" class="title-link" @click.prevent="openExternal(notification.link)">
 				{{ notification.title }}
@@ -113,11 +125,7 @@
 
 		<div v-if="hasBody" class="notification__body">
 			<div v-if="type === 'project_update'" class="version-list">
-				<div
-					v-for="notif in groupedWithVersion"
-					:key="notif.id"
-					class="version-link"
-				>
+				<div v-for="notif in groupedWithVersion" :key="notif.id" class="version-link">
 					<VersionIcon />
 					<RouterLink
 						:to="versionLink(notif.extra_data!.project, notif.extra_data!.version)"
@@ -126,7 +134,7 @@
 						{{ notif.extra_data!.version.name }}
 					</RouterLink>
 					<span class="version-info">
-						for
+						{{ formatMessage(messages.versionFor) }}
 						<span class="loaders">{{ formatLoaders(notif.extra_data!.version) }}</span>
 						{{ formatVersions(notif.extra_data!.version.game_versions) }}
 						<span :title="formatDateTime(notif.extra_data!.version.date_published)" class="date">
@@ -142,37 +150,36 @@
 
 		<span class="notification__date">
 			<span v-if="notification.read" class="read-badge inline-flex items-center gap-1">
-				<CheckCircleIcon /> Read
+				<CheckCircleIcon /> {{ formatMessage(messages.readBadge) }}
 			</span>
 			<span :title="formatDateTime(notification.created)" class="inline-flex items-center gap-1">
-				<CalendarIcon /> Received {{ formatRelative(notification.created) }}
+				<CalendarIcon />
+				{{ formatMessage(messages.received, { time: formatRelative(notification.created) }) }}
 			</span>
 		</span>
 
 		<div class="notification__actions">
 			<div class="input-group">
 				<template
-					v-if="
-						(type === 'team_invite' || type === 'organization_invite') && !notification.read
-					"
+					v-if="(type === 'team_invite' || type === 'organization_invite') && !notification.read"
 				>
 					<ButtonStyled color="brand">
 						<button @click="onAccept">
 							<CheckIcon />
-							Accept
+							{{ formatMessage(messages.accept) }}
 						</button>
 					</ButtonStyled>
 					<ButtonStyled color="red">
 						<button @click="onDecline">
 							<XIcon />
-							Decline
+							{{ formatMessage(messages.decline) }}
 						</button>
 					</ButtonStyled>
 				</template>
 				<ButtonStyled v-else-if="!notification.read">
 					<button @click="onMarkRead">
 						<CheckIcon />
-						Mark as read
+						{{ formatMessage(messages.markAsRead) }}
 					</button>
 				</ButtonStyled>
 			</div>
@@ -191,12 +198,21 @@ import {
 	VersionIcon,
 	XIcon,
 } from '@modrinth/assets'
-import { Avatar, ButtonStyled, DoubleIcon, injectNotificationManager } from '@modrinth/ui'
+import {
+	Avatar,
+	ButtonStyled,
+	defineMessages,
+	DoubleIcon,
+	injectNotificationManager,
+	IntlFormatted,
+	useVIntl,
+} from '@modrinth/ui'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { computed } from 'vue'
 
+import { get as getCreds } from '@/helpers/mr_auth.ts'
 import {
 	acceptTeamInvite,
 	declineTeamInvite,
@@ -204,7 +220,6 @@ import {
 	markIdsAsRead,
 	type PlatformNotification,
 } from '@/helpers/platform-notifications'
-import { get as getCreds } from '@/helpers/mr_auth.ts'
 
 dayjs.extend(relativeTime)
 
@@ -214,11 +229,73 @@ const props = defineProps<{
 
 const emit = defineEmits<{
 	'update:notification': []
-	'read': [string[]]
-	'remove': [string[]]
+	read: [string[]]
+	remove: [string[]]
 }>()
 
+const { formatMessage } = useVIntl()
 const { addNotification } = injectNotificationManager()
+
+const messages = defineMessages({
+	projectUpdated: {
+		id: 'app.notifications.project-updated',
+		defaultMessage: 'A project you follow, <project>{title}</project>, has been updated:',
+	},
+	invitedToJoin: {
+		id: 'app.notifications.invited-to-join',
+		defaultMessage: 'has invited you to join <target>{name}</target>.',
+	},
+	statusChanged: {
+		id: 'app.notifications.status-changed',
+		defaultMessage:
+			'<project>{title}</project> updated from <strong>{oldStatus}</strong> to <strong>{newStatus}</strong> by the moderators.',
+	},
+	moderatorMessage: {
+		id: 'app.notifications.moderator-message',
+		defaultMessage:
+			'Your project, <project>{title}</project>, has received {count, plural, one {a message} other {messages}} from the moderators.',
+	},
+	versionFor: {
+		id: 'app.notifications.version-for',
+		defaultMessage: 'for',
+	},
+	readBadge: {
+		id: 'app.notifications.read-badge',
+		defaultMessage: 'Read',
+	},
+	received: {
+		id: 'app.notifications.received',
+		defaultMessage: 'Received {time}',
+	},
+	accept: {
+		id: 'app.notifications.accept',
+		defaultMessage: 'Accept',
+	},
+	decline: {
+		id: 'app.notifications.decline',
+		defaultMessage: 'Decline',
+	},
+	markAsRead: {
+		id: 'app.notifications.mark-as-read',
+		defaultMessage: 'Mark as read',
+	},
+	errorMarkRead: {
+		id: 'app.notifications.error.mark-read',
+		defaultMessage: 'Error marking notification as read',
+	},
+	errorAccept: {
+		id: 'app.notifications.error.accept',
+		defaultMessage: 'Error accepting invite',
+	},
+	errorDecline: {
+		id: 'app.notifications.error.decline',
+		defaultMessage: 'Error declining invite',
+	},
+	notSignedIn: {
+		id: 'app.notifications.not-signed-in',
+		defaultMessage: 'Not signed in',
+	},
+})
 
 const type = computed(() =>
 	!props.notification.body || props.notification.body.type === 'legacy_markdown'
@@ -231,9 +308,7 @@ const user = computed(() => props.notification.extra_data?.user)
 const organization = computed(() => props.notification.extra_data?.organization)
 const invitedBy = computed(() => props.notification.extra_data?.invited_by)
 
-const hasBody = computed(
-	() => !type.value || type.value === 'project_update',
-)
+const hasBody = computed(() => !type.value || type.value === 'project_update')
 
 const groupedWithVersion = computed(() => {
 	const all = props.notification.grouped_notifs
@@ -242,16 +317,23 @@ const groupedWithVersion = computed(() => {
 	return all.filter((x) => x.extra_data?.version)
 })
 
-function projectLink(p: any): string {
+interface NotifEntity {
+	id?: string
+	slug?: string
+	username?: string
+	loaders?: string[]
+}
+
+function projectLink(p: NotifEntity): string {
 	return `/project/${p.slug || p.id}`
 }
-function versionLink(p: any, v: any): string {
+function versionLink(p: NotifEntity, v: NotifEntity): string {
 	return `/project/${p.slug || p.id}/version/${v.id}`
 }
-function openUser(u: any) {
+function openUser(u: NotifEntity) {
 	openUrl(`https://modrinth.com/user/${u.username}`)
 }
-function openOrg(o: any) {
+function openOrg(o: NotifEntity) {
 	openUrl(`https://modrinth.com/organization/${o.slug || o.id}`)
 }
 function openExternal(link?: string) {
@@ -269,10 +351,8 @@ function formatRelative(date: string): string {
 function formatDateTime(date: string): string {
 	return dayjs(date).format('MMMM D, YYYY [at] h:mm A')
 }
-function formatLoaders(v: any): string {
-	return (v?.loaders || [])
-		.map((l: string) => l.charAt(0).toUpperCase() + l.slice(1))
-		.join(', ')
+function formatLoaders(v: NotifEntity): string {
+	return (v?.loaders || []).map((l: string) => l.charAt(0).toUpperCase() + l.slice(1)).join(', ')
 }
 function formatVersions(versions: string[] | undefined): string {
 	if (!versions || versions.length === 0) return ''
@@ -281,10 +361,7 @@ function formatVersions(versions: string[] | undefined): string {
 }
 
 function idsForThis(): string[] {
-	return [
-		props.notification.id,
-		...(props.notification.grouped_notifs?.map((n) => n.id) || []),
-	]
+	return [props.notification.id, ...(props.notification.grouped_notifs?.map((n) => n.id) || [])]
 }
 
 async function onMarkRead() {
@@ -295,7 +372,7 @@ async function onMarkRead() {
 		await markIdsAsRead(ids)
 	} catch (err) {
 		addNotification({
-			title: 'Error marking notification as read',
+			title: formatMessage(messages.errorMarkRead),
 			text: (err as Error).message,
 			type: 'error',
 		})
@@ -313,7 +390,7 @@ async function onAccept() {
 		markIdsAsRead(ids).catch(() => {})
 	} catch (err) {
 		addNotification({
-			title: 'Error accepting invite',
+			title: formatMessage(messages.errorAccept),
 			text: (err as Error).message,
 			type: 'error',
 		})
@@ -326,13 +403,13 @@ async function onDecline() {
 	const ids = idsForThis()
 	try {
 		const creds = await getCreds()
-		if (!creds) throw new Error('Not signed in')
+		if (!creds) throw new Error(formatMessage(messages.notSignedIn))
 		await declineTeamInvite(teamId, creds.user_id)
 		emit('remove', ids)
 		deleteIds(ids).catch(() => {})
 	} catch (err) {
 		addNotification({
-			title: 'Error declining invite',
+			title: formatMessage(messages.errorDecline),
 			text: (err as Error).message,
 			type: 'error',
 		})

@@ -23,42 +23,42 @@
  *     waiting for the next scan.
  */
 
-import { compute_cf_fingerprints } from './profile'
 import { getCurseForgeFingerprintMatches } from './curseforge-api'
+import { compute_cf_fingerprints } from './profile'
 
 const KEY_PREFIX = 'cfins_'
 
 function storeKey(instancePath: string): string {
-  return KEY_PREFIX + btoa(unescape(encodeURIComponent(instancePath)))
+	return KEY_PREFIX + btoa(unescape(encodeURIComponent(instancePath)))
 }
 
 /** Read the persisted list of "cf:<modId>" tags for an instance. */
 function readRawIds(instancePath: string): number[] {
-  try {
-    const raw = localStorage.getItem(storeKey(instancePath))
-    return raw ? (JSON.parse(raw) as number[]) : []
-  } catch {
-    return []
-  }
+	try {
+		const raw = localStorage.getItem(storeKey(instancePath))
+		return raw ? (JSON.parse(raw) as number[]) : []
+	} catch {
+		return []
+	}
 }
 
 function writeRawIds(instancePath: string, ids: number[]): void {
-  try {
-    // De-dup + sort for stable storage.
-    const unique = [...new Set(ids)].sort((a, b) => a - b)
-    localStorage.setItem(storeKey(instancePath), JSON.stringify(unique))
-  } catch {
-    // ignore quota / disabled storage
-  }
+	try {
+		// De-dup + sort for stable storage.
+		const unique = [...new Set(ids)].sort((a, b) => a - b)
+		localStorage.setItem(storeKey(instancePath), JSON.stringify(unique))
+	} catch {
+		// ignore quota / disabled storage
+	}
 }
 
 /** Persist a single CF mod ID for the given instance (optimistic write). */
 export function storeCfInstalled(instancePath: string, modId: number): void {
-  const ids = readRawIds(instancePath)
-  if (!ids.includes(modId)) {
-    ids.push(modId)
-    writeRawIds(instancePath, ids)
-  }
+	const ids = readRawIds(instancePath)
+	if (!ids.includes(modId)) {
+		ids.push(modId)
+		writeRawIds(instancePath, ids)
+	}
 }
 
 /**
@@ -66,7 +66,7 @@ export function storeCfInstalled(instancePath: string, modId: number): void {
  * format the BrowseSidebar / installed-check use.
  */
 export function loadCfInstalledProjectIds(instancePath: string): string[] {
-  return readRawIds(instancePath).map((id) => `cf:${id}`)
+	return readRawIds(instancePath).map((id) => `cf:${id}`)
 }
 
 /**
@@ -89,50 +89,46 @@ export function loadCfInstalledProjectIds(instancePath: string): string[] {
  *
  * To intentionally clear stale entries, callers can use `clearCfInstalled`.
  */
-export async function refreshCfInstalledFromFingerprints(
-  instancePath: string,
-): Promise<string[]> {
-  let pairs: Array<[string, number]>
-  try {
-    pairs = await compute_cf_fingerprints(instancePath)
-  } catch (err) {
-    console.warn('[CF-installed] fingerprint scan failed:', err)
-    return loadCfInstalledProjectIds(instancePath)
-  }
+export async function refreshCfInstalledFromFingerprints(instancePath: string): Promise<string[]> {
+	let pairs: Array<[string, number]>
+	try {
+		pairs = await compute_cf_fingerprints(instancePath)
+	} catch (err) {
+		console.warn('[CF-installed] fingerprint scan failed:', err)
+		return loadCfInstalledProjectIds(instancePath)
+	}
 
-  if (pairs.length === 0) {
-    // No files anywhere — likely a brand-new instance or a transient FS
-    // hiccup. Preserve cache; user-driven uninstall is the right channel
-    // for cleanup (see `clearCfInstalled`).
-    return loadCfInstalledProjectIds(instancePath)
-  }
+	if (pairs.length === 0) {
+		// No files anywhere — likely a brand-new instance or a transient FS
+		// hiccup. Preserve cache; user-driven uninstall is the right channel
+		// for cleanup (see `clearCfInstalled`).
+		return loadCfInstalledProjectIds(instancePath)
+	}
 
-  const fingerprints = pairs.map(([, fp]) => fp >>> 0) // ensure unsigned
-  const matches = await getCurseForgeFingerprintMatches(fingerprints)
-  if (!matches) {
-    // CF API unavailable — keep whatever we had.
-    return loadCfInstalledProjectIds(instancePath)
-  }
+	const fingerprints = pairs.map(([, fp]) => fp >>> 0) // ensure unsigned
+	const matches = await getCurseForgeFingerprintMatches(fingerprints)
+	if (!matches) {
+		// CF API unavailable — keep whatever we had.
+		return loadCfInstalledProjectIds(instancePath)
+	}
 
-  const discoveredIds = matches.exactMatches
-    .map((m) => m.file.modId)
-    .filter((x) => x > 0)
+	const discoveredIds = matches.exactMatches.map((m) => m.file.modId).filter((x) => x > 0)
 
-  if (discoveredIds.length === 0) {
-    // CF recognised nothing despite us having files — almost certainly an
-    // API blip or a brand-new file CF hasn't indexed yet. Preserve cache.
-    return loadCfInstalledProjectIds(instancePath)
-  }
+	if (discoveredIds.length === 0) {
+		// CF recognised nothing despite us having files — almost certainly an
+		// API blip or a brand-new file CF hasn't indexed yet. Preserve cache.
+		return loadCfInstalledProjectIds(instancePath)
+	}
 
-  // Union with existing cache so a freshly-installed mod whose fingerprint
-  // CF hasn't indexed yet is not lost.
-  const existing = readRawIds(instancePath)
-  const merged = Array.from(new Set([...existing, ...discoveredIds]))
-  writeRawIds(instancePath, merged)
-  return merged.map((id) => `cf:${id}`)
+	// Union with existing cache so a freshly-installed mod whose fingerprint
+	// CF hasn't indexed yet is not lost.
+	const existing = readRawIds(instancePath)
+	const merged = Array.from(new Set([...existing, ...discoveredIds]))
+	writeRawIds(instancePath, merged)
+	return merged.map((id) => `cf:${id}`)
 }
 
 /** Explicitly wipe the cache for an instance — for manual "rescan" flows. */
 export function clearCfInstalled(instancePath: string): void {
-  writeRawIds(instancePath, [])
+	writeRawIds(instancePath, [])
 }

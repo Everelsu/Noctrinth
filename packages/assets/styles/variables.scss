@@ -361,7 +361,11 @@ html {
 
 	--shadow-card: rgba(0, 0, 0, 0.25) 0px 2px 4px 0px;
 
-	--brand-gradient-bg: linear-gradient(0deg, rgba(35, 14, 55, 0.2) 0%, rgba(110, 45, 160, 0.1) 100%);
+	--brand-gradient-bg: linear-gradient(
+		0deg,
+		rgba(35, 14, 55, 0.2) 0%,
+		rgba(110, 45, 160, 0.1) 100%
+	);
 	--brand-gradient-strong-bg: linear-gradient(270deg, #110d17 10%, #1a1223 100%);
 	--brand-gradient-button: rgba(255, 255, 255, 0.08);
 	--brand-gradient-border: rgba(200, 155, 255, 0.08);

@@ -117,7 +117,6 @@ import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import CurseForgeInstallModal from '@/components/ui/CurseForgeInstallModal.vue'
-import Gallery from '@/pages/project/Gallery.vue'
 import {
 	bestCfFileFor,
 	cfLoaderName,
@@ -130,6 +129,7 @@ import {
 } from '@/helpers/curseforge-api'
 import { get as getInstance } from '@/helpers/profile'
 import { get_game_versions, get_loaders } from '@/helpers/tags'
+import Gallery from '@/pages/project/Gallery.vue'
 
 const props = defineProps({
 	modId: {
@@ -164,11 +164,11 @@ const instanceContext = instanceId ? await getInstance(instanceId).catch(() => n
 // appear in the Versions tab. Without this filter all historical files (1.0 …
 // latest, every loader) are shown regardless of the instance.
 const files = mod
-	? (await getCurseForgeModFiles(
+	? ((await getCurseForgeModFiles(
 			props.modId,
 			instanceContext?.game_version,
 			instanceContext?.loader,
-		) ?? [])
+		)) ?? [])
 	: []
 
 // ── Map CurseForge mod → Modrinth v2 project shape ──────────────────────────
@@ -252,9 +252,7 @@ const CF_RELEASE_TYPE = { 1: 'release', 2: 'beta', 3: 'alpha' }
 
 function mapCfFileToVersion(file) {
 	const versions = file.gameVersions.filter((v) => /^\d/.test(v))
-	const fileLoaders = file.gameVersions
-		.filter((v) => !/^\d/.test(v))
-		.map((v) => v.toLowerCase())
+	const fileLoaders = file.gameVersions.filter((v) => !/^\d/.test(v)).map((v) => v.toLowerCase())
 	return {
 		id: String(file.id),
 		version_number: file.displayName || file.fileName,
@@ -336,8 +334,7 @@ async function handleInstallModpack(file) {
 }
 
 async function runInstall(target, mode) {
-	const file =
-		mode === 'auto' ? bestCfFileFor(files, target.game_version, target.loader) : mode
+	const file = mode === 'auto' ? bestCfFileFor(files, target.game_version, target.loader) : mode
 
 	if (!file) {
 		// Build a useful "no match" message — list what's actually available.

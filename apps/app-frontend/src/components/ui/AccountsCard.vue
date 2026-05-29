@@ -44,7 +44,11 @@
 		</template>
 		<div class="bg-button-bg pt-1 pb-2 border border-solid border-surface-5">
 			<template v-if="allAccounts.length > 0">
-				<div v-for="account in allAccounts" :key="account.profile.id" class="flex gap-1 items-center">
+				<div
+					v-for="account in allAccounts"
+					:key="account.profile.id"
+					class="flex gap-1 items-center"
+				>
 					<button
 						class="flex items-center flex-shrink flex-grow overflow-clip gap-2 p-2 border-0 bg-transparent cursor-pointer button-base min-w-0"
 						@click="setAccount(account)"
@@ -57,9 +61,7 @@
 						<Avatar :src="getAccountAvatarUrl(account)" size="24px" />
 						<p
 							class="m-0 truncate min-w-0"
-							:class="
-								isAccountSelected(account) ? 'text-contrast font-semibold' : 'text-primary'
-							"
+							:class="isAccountSelected(account) ? 'text-contrast font-semibold' : 'text-primary'"
 						>
 							{{ account.profile.name }}
 						</p>
@@ -124,6 +126,7 @@ import {
 import type { Ref } from 'vue'
 import { computed, onUnmounted, ref } from 'vue'
 
+import ElyLoginModal from '@/components/ui/modal/ElyLoginModal.vue'
 import { trackEvent } from '@/helpers/analytics'
 import {
 	get_default_user,
@@ -145,7 +148,6 @@ import { getPlayerHeadUrl } from '@/helpers/rendering/batch-skin-renderer.ts'
 import type { Skin } from '@/helpers/skins'
 import { get_available_skins } from '@/helpers/skins'
 import { handleSevereError } from '@/store/error.js'
-import ElyLoginModal from '@/components/ui/modal/ElyLoginModal.vue'
 
 const { formatMessage } = useVIntl()
 const { handleError } = injectNotificationManager()
@@ -353,8 +355,7 @@ function isAccountSelected(account: AnyCredential): boolean {
 	const selected = selectedAccount.value
 	if (!selected) return false
 	return (
-		selected.profile.id === account.profile.id &&
-		isElyAccount(selected) === isElyAccount(account)
+		selected.profile.id === account.profile.id && isElyAccount(selected) === isElyAccount(account)
 	)
 }
 

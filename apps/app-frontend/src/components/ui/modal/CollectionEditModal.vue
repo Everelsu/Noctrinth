@@ -24,10 +24,7 @@
 						wrapper-class="w-full"
 					/>
 				</div>
-				<label
-					class="mb-2 mt-4 block text-lg font-semibold text-contrast"
-					for="ce-desc"
-				>
+				<label class="mb-2 mt-4 block text-lg font-semibold text-contrast" for="ce-desc">
 					Description
 				</label>
 				<StyledInput
@@ -37,10 +34,7 @@
 					:maxlength="255"
 					wrapper-class="h-24"
 				/>
-				<label
-					for="ce-visibility"
-					class="mb-2 mt-4 block text-lg font-semibold text-contrast"
-				>
+				<label for="ce-visibility" class="mb-2 mt-4 block text-lg font-semibold text-contrast">
 					Visibility
 				</label>
 				<RadioButtons

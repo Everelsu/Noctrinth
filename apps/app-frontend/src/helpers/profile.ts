@@ -93,9 +93,7 @@ export async function get_installed_project_ids(path: string): Promise<string[]>
  *
  * Returns `[filename, fingerprint]` pairs.
  */
-export async function compute_cf_fingerprints(
-	path: string,
-): Promise<Array<[string, number]>> {
+export async function compute_cf_fingerprints(path: string): Promise<Array<[string, number]>> {
 	return await invoke('plugin:profile|profile_compute_cf_fingerprints', { path })
 }
 

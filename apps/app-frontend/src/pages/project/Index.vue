@@ -137,16 +137,15 @@
 							</button>
 						</ButtonStyled>
 						<ButtonStyled
-							v-tooltip="!currentUserId ? 'Sign in to follow' : isFollowing ? 'Following' : 'Follow'"
+							v-tooltip="
+								!currentUserId ? 'Sign in to follow' : isFollowing ? 'Following' : 'Follow'
+							"
 							size="large"
 							circular
 							type="transparent"
 						>
 							<button :disabled="!currentUserId || followLoading" @click="toggleFollow">
-								<HeartIcon
-									:class="{ 'text-brand fill-current': isFollowing }"
-									aria-hidden="true"
-								/>
+								<HeartIcon :class="{ 'text-brand fill-current': isFollowing }" aria-hidden="true" />
 							</button>
 						</ButtonStyled>
 						<SaveToCollectionButton v-if="currentUserId" :project-id="data.id" />
@@ -292,8 +291,8 @@ import { computed, onUnmounted, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import ContextMenu from '@/components/ui/ContextMenu.vue'
-import SaveToCollectionButton from '@/components/ui/SaveToCollectionButton.vue'
 import InstanceIndicator from '@/components/ui/InstanceIndicator.vue'
+import SaveToCollectionButton from '@/components/ui/SaveToCollectionButton.vue'
 import {
 	get_organization,
 	get_project,
@@ -303,13 +302,9 @@ import {
 	get_version_many,
 } from '@/helpers/cache.js'
 import { process_listener } from '@/helpers/events'
-import {
-	followProject,
-	isFollowingProject,
-	unfollowProject,
-} from '@/helpers/modrinth-api'
-import { get as getCreds } from '@/helpers/mr_auth.ts'
 import { get_loader_versions as getLoaderManifest } from '@/helpers/metadata'
+import { followProject, isFollowingProject, unfollowProject } from '@/helpers/modrinth-api'
+import { get as getCreds } from '@/helpers/mr_auth.ts'
 import { get_by_profile_path } from '@/helpers/process'
 import {
 	get as getInstance,

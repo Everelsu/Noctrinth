@@ -31,7 +31,13 @@
 			</div>
 			<p class="m-0">
 				Your new collection will be created as a public collection with
-				{{ initialProjects.length === 0 ? 'no projects' : initialProjects.length === 1 ? '1 project' : `${initialProjects.length} projects` }}.
+				{{
+					initialProjects.length === 0
+						? 'no projects'
+						: initialProjects.length === 1
+							? '1 project'
+							: `${initialProjects.length} projects`
+				}}.
 			</p>
 			<div class="flex justify-end gap-2">
 				<ButtonStyled type="outlined">
@@ -54,12 +60,7 @@
 
 <script setup lang="ts">
 import { PlusIcon, SpinnerIcon, XIcon } from '@modrinth/assets'
-import {
-	ButtonStyled,
-	injectNotificationManager,
-	NewModal,
-	StyledInput,
-} from '@modrinth/ui'
+import { ButtonStyled, injectNotificationManager, NewModal, StyledInput } from '@modrinth/ui'
 import { ref } from 'vue'
 
 import { type Collection, createCollection } from '@/helpers/modrinth-api'

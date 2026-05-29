@@ -40,16 +40,13 @@ export interface RawNotification {
 }
 
 export interface PlatformNotification extends RawNotification {
-	extra_data?: {
-		project?: any
-		organization?: any
-		user?: any
-		version?: any
-		thread?: any
-		report?: any
-		invited_by?: any
-	}
+	extra_data?: Record<string, unknown>
 	grouped_notifs?: PlatformNotification[]
+}
+
+interface CacheEntity {
+	id?: string
+	project_id?: string
 }
 
 async function safe<T>(fn: () => Promise<T[] | null | undefined>): Promise<T[]> {
@@ -86,16 +83,16 @@ export async function fetchExtraNotificationData(
 	// version-derived projects not already in `bulk.projects` are fetched in
 	// a fast follow-up round-trip below.
 	const [versions, projects, users, organizations] = await Promise.all([
-		safe<any>(() =>
+		safe<CacheEntity>(() =>
 			bulk.versions.size > 0 ? get_version_many([...bulk.versions]) : Promise.resolve([]),
 		),
-		safe<any>(() =>
+		safe<CacheEntity>(() =>
 			bulk.projects.size > 0 ? get_project_many([...bulk.projects]) : Promise.resolve([]),
 		),
-		safe<any>(() =>
+		safe<CacheEntity>(() =>
 			bulk.users.size > 0 ? get_user_many([...bulk.users]) : Promise.resolve([]),
 		),
-		safe<any>(() =>
+		safe<CacheEntity>(() =>
 			bulk.organizations.size > 0
 				? get_organization_many([...bulk.organizations])
 				: Promise.resolve([]),
@@ -111,15 +108,21 @@ export async function fetchExtraNotificationData(
 	}
 	const allProjects =
 		extraIds.length > 0
-			? [...projects, ...(await safe<any>(() => get_project_many([...new Set(extraIds)])))]
+			? [...projects, ...(await safe<CacheEntity>(() => get_project_many([...new Set(extraIds)])))]
 			: projects
 
 	// Index for O(1) lookup instead of repeated .find() per notification.
-	const projectMap = new Map<string, any>(allProjects.filter((p) => p?.id).map((p) => [p.id, p]))
-	const versionMap = new Map<string, any>(versions.filter((v) => v?.id).map((v) => [v.id, v]))
-	const userMap = new Map<string, any>(users.filter((u) => u?.id).map((u) => [u.id, u]))
-	const orgMap = new Map<string, any>(
-		organizations.filter((o) => o?.id).map((o) => [o.id, o]),
+	const projectMap = new Map<string, CacheEntity>(
+		allProjects.filter((p) => p?.id).map((p) => [p.id as string, p]),
+	)
+	const versionMap = new Map<string, CacheEntity>(
+		versions.filter((v) => v?.id).map((v) => [v.id as string, v]),
+	)
+	const userMap = new Map<string, CacheEntity>(
+		users.filter((u) => u?.id).map((u) => [u.id as string, u]),
+	)
+	const orgMap = new Map<string, CacheEntity>(
+		organizations.filter((o) => o?.id).map((o) => [o.id as string, o]),
 	)
 
 	for (const n of notifications) {
@@ -144,9 +147,7 @@ function isSimilar(a: PlatformNotification, b: PlatformNotification | undefined)
 	return !!a?.body?.project_id && a.body!.project_id === b?.body?.project_id
 }
 
-export function groupNotifications(
-	notifications: PlatformNotification[],
-): PlatformNotification[] {
+export function groupNotifications(notifications: PlatformNotification[]): PlatformNotification[] {
 	const grouped: PlatformNotification[] = []
 	for (let i = 0; i < notifications.length; i++) {
 		const current = notifications[i]
@@ -263,10 +264,7 @@ export function readNotificationsCache(userId: string): PlatformNotification[] |
 }
 
 /** Persist the enriched notification list. */
-export function writeNotificationsCache(
-	userId: string,
-	data: PlatformNotification[],
-): void {
+export function writeNotificationsCache(userId: string, data: PlatformNotification[]): void {
 	try {
 		const payload: CachedNotifications = { at: Date.now(), data }
 		localStorage.setItem(cacheKey(userId), JSON.stringify(payload))

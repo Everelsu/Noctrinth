@@ -27,8 +27,8 @@ watch(
 		<div>
 			<h2 class="m-0 text-lg font-semibold text-contrast">Personalized ads</h2>
 			<p class="m-0 mt-1 text-sm">
-				Our ad provider, Aditude, shows ads based on your preferences. By disabling this
-				option, you opt out and ads will no longer be shown based on your interests.
+				Our ad provider, Aditude, shows ads based on your preferences. By disabling this option, you
+				opt out and ads will no longer be shown based on your interests.
 			</p>
 		</div>
 		<Toggle id="personalized-ads" v-model="settings.personalized_ads" />
@@ -38,9 +38,9 @@ watch(
 		<div>
 			<h2 class="m-0 text-lg font-semibold text-contrast">Telemetry</h2>
 			<p class="m-0 mt-1 text-sm">
-				We collect anonymized analytics and usage data to improve the user experience and
-				customize your experience. By disabling this option, you opt out and your data will no
-				longer be collected.
+				We collect anonymized analytics and usage data to improve the user experience and customize
+				your experience. By disabling this option, you opt out and your data will no longer be
+				collected.
 			</p>
 		</div>
 		<Toggle id="opt-out-analytics" v-model="settings.telemetry" />

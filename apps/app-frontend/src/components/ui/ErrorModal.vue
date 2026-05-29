@@ -40,8 +40,7 @@ defineExpose({
 		if (errorVal.message && errorVal.message.includes('Minecraft authentication error:')) {
 			title.value = 'Unable to sign in to Minecraft'
 			errorType.value = 'minecraft_auth'
-			supportLink.value =
-				''
+			supportLink.value = ''
 
 			if (
 				errorVal.message.includes('existing connection was forcibly closed') ||
@@ -162,9 +161,9 @@ async function copyToClipboard(text) {
 					<template v-if="metadata.network">
 						<h3>Network issues</h3>
 						<p>
-							It looks like there were issues with Noctrinth connecting to Microsoft's
-							servers. This is often the result of a poor connection, so we recommend trying again
-							to see if it works. If issues continue to persist, follow the steps in
+							It looks like there were issues with Noctrinth connecting to Microsoft's servers. This
+							is often the result of a poor connection, so we recommend trying again to see if it
+							works. If issues continue to persist, follow the steps in
 							<a
 								href="https://support.modrinth.com/en/articles/9038231-minecraft-sign-in-issues#h_e71a5f805f"
 							>
@@ -176,9 +175,9 @@ async function copyToClipboard(text) {
 					<template v-else-if="metadata.hostsFile">
 						<h3>Network issues</h3>
 						<p>
-							Noctrinth tried to connect to Microsoft / Xbox / Minecraft services, but the
-							remote server rejected the connection. This may indicate that these services are
-							blocked by the hosts file. Please visit
+							Noctrinth tried to connect to Microsoft / Xbox / Minecraft services, but the remote
+							server rejected the connection. This may indicate that these services are blocked by
+							the hosts file. Please visit
 							<a
 								href="https://support.modrinth.com/en/articles/9038231-minecraft-sign-in-issues#h_d694a29256"
 							>
@@ -215,9 +214,8 @@ async function copyToClipboard(text) {
 					<template v-if="metadata.readOnly">
 						<h3>Change directory permissions</h3>
 						<p>
-							It looks like Noctrinth is unable to write to the directory you selected.
-							Please adjust the permissions of the directory and try again or cancel the directory
-							change.
+							It looks like Noctrinth is unable to write to the directory you selected. Please
+							adjust the permissions of the directory and try again or cancel the directory change.
 						</p>
 					</template>
 					<template v-else-if="metadata.notEnoughSpace">
@@ -229,8 +227,8 @@ async function copyToClipboard(text) {
 					</template>
 					<template v-else>
 						<p>
-							Noctrinth is unable to migrate to the new directory you selected. Please
-							contact support for help or cancel the directory change.
+							Noctrinth is unable to migrate to the new directory you selected. Please contact
+							support for help or cancel the directory change.
 						</p>
 					</template>
 
@@ -259,8 +257,8 @@ async function copyToClipboard(text) {
 				</div>
 				<template v-else-if="errorType === 'state_init'">
 					<p>
-						Noctrinth failed to load correctly. This may be because of a corrupted file, or
-						because the app is missing crucial files.
+						Noctrinth failed to load correctly. This may be because of a corrupted file, or because
+						the app is missing crucial files.
 					</p>
 					<p>You may be able to fix it through one of the following ways:</p>
 					<ul>

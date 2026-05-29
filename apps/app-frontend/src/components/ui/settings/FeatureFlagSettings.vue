@@ -19,7 +19,8 @@ const FLAG_META: Record<FeatureFlag, { name: string; description: string }> = {
 	},
 	page_path: {
 		name: 'Show page path',
-		description: 'Display the current internal route path in the bottom-left corner — useful for debugging.',
+		description:
+			'Display the current internal route path in the bottom-left corner — useful for debugging.',
 	},
 	worlds_tab: {
 		name: 'Worlds tab',
@@ -75,11 +76,7 @@ watch(
 </script>
 <template>
 	<div class="flex flex-col gap-4 min-w-[600px]">
-		<div
-			v-for="option in options"
-			:key="option"
-			class="flex items-center justify-between gap-4"
-		>
+		<div v-for="option in options" :key="option" class="flex items-center justify-between gap-4">
 			<div class="min-w-0">
 				<h2 class="m-0 text-lg font-semibold text-contrast">
 					{{ flagMeta(option).name }}

@@ -167,6 +167,12 @@ watch(
 .skin-button--selected:focus-within {
 	border-color: var(--color-brand);
 	background: var(--color-brand-highlight);
+	outline: 2px solid var(--color-brand);
+	outline-offset: -2px;
+	box-shadow:
+		0 0 0 1px var(--color-brand-highlight),
+		0 2px 6px rgba(0, 0, 0, 0.25),
+		0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 .skin-button__image-parent {

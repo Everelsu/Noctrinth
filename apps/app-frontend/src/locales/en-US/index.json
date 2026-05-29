@@ -1,4 +1,16 @@
 {
+  "app.account.collections": {
+    "message": "Collections"
+  },
+  "app.account.notifications": {
+    "message": "Notifications"
+  },
+  "app.account.sign-out": {
+    "message": "Sign out"
+  },
+  "app.account.signed-in-as": {
+    "message": "Signed in as"
+  },
   "app.action-bar.downloading-java": {
     "message": "Downloading Java {version}"
   },
@@ -42,7 +54,7 @@
     "message": "Advanced rendering"
   },
   "app.appearance-settings.color-theme.description": {
-    "message": "Select your preferred color theme for Noctrinth."
+    "message": "Select your preferred color theme for Noctrinth App."
   },
   "app.appearance-settings.color-theme.title": {
     "message": "Color theme"
@@ -86,6 +98,12 @@
   "app.appearance-settings.select-option": {
     "message": "Select an option"
   },
+  "app.appearance-settings.source-accent.description": {
+    "message": "On the Discover page, tints the accent green for Modrinth and orange for CurseForge based on the selected catalog."
+  },
+  "app.appearance-settings.source-accent.title": {
+    "message": "Catalog colour accent"
+  },
   "app.appearance-settings.toggle-sidebar.description": {
     "message": "Enables the ability to toggle the sidebar."
   },
@@ -93,7 +111,7 @@
     "message": "Toggle sidebar"
   },
   "app.appearance-settings.unknown-pack-warning.description": {
-    "message": "If you attempt to install a Modrinth Pack file (.mrpack) that isn't hosted on Modrinth, we'll make sure you understand the risks before installing it."
+    "message": "If you attempt to install a modpack file (.mrpack) that isn't from the catalog, we'll make sure you understand the risks before installing it."
   },
   "app.appearance-settings.unknown-pack-warning.title": {
     "message": "Warn me before installing unknown modpacks"
@@ -143,11 +161,17 @@
   "app.browse.server.installing": {
     "message": "Installing"
   },
-  "app.creation-modal.installing-modpack.description": {
-    "message": "{fileName}"
+  "app.changelog.modrinth-note": {
+    "message": "Showing recent releases. The full Modrinth App changelog is available on their website."
   },
-  "app.creation-modal.installing-modpack.title": {
-    "message": "Installing modpack..."
+  "app.changelog.open-noctrinth": {
+    "message": "Open Noctrinth changelog"
+  },
+  "app.changelog.source.modrinth": {
+    "message": "Modrinth"
+  },
+  "app.changelog.source.noctrinth": {
+    "message": "Noctrinth"
   },
   "app.export-modal.description-placeholder": {
     "message": "Enter modpack description..."
@@ -299,6 +323,48 @@
   "app.modal.update-to-play.update-required-description": {
     "message": "An update is required to play {name}. Please update to the latest version to launch the game."
   },
+  "app.notifications.accept": {
+    "message": "Accept"
+  },
+  "app.notifications.decline": {
+    "message": "Decline"
+  },
+  "app.notifications.error.accept": {
+    "message": "Error accepting invite"
+  },
+  "app.notifications.error.decline": {
+    "message": "Error declining invite"
+  },
+  "app.notifications.error.mark-read": {
+    "message": "Error marking notification as read"
+  },
+  "app.notifications.invited-to-join": {
+    "message": "has invited you to join <target>{name}</target>."
+  },
+  "app.notifications.mark-as-read": {
+    "message": "Mark as read"
+  },
+  "app.notifications.moderator-message": {
+    "message": "Your project, <project>{title}</project>, has received {count, plural, one {a message} other {messages}} from the moderators."
+  },
+  "app.notifications.not-signed-in": {
+    "message": "Not signed in"
+  },
+  "app.notifications.project-updated": {
+    "message": "A project you follow, <project>{title}</project>, has been updated:"
+  },
+  "app.notifications.read-badge": {
+    "message": "Read"
+  },
+  "app.notifications.received": {
+    "message": "Received {time}"
+  },
+  "app.notifications.status-changed": {
+    "message": "<project>{title}</project> updated from <strong>{oldStatus}</strong> to <strong>{newStatus}</strong> by the moderators."
+  },
+  "app.notifications.version-for": {
+    "message": "for"
+  },
   "app.project.install-button.already-installed": {
     "message": "This project is already installed"
   },
@@ -317,6 +383,9 @@
   "app.settings.tabs.appearance": {
     "message": "Appearance"
   },
+  "app.settings.tabs.changelog": {
+    "message": "Changelog"
+  },
   "app.settings.tabs.default-instance-options": {
     "message": "Default instance options"
   },
@@ -331,6 +400,12 @@
   },
   "app.settings.tabs.resource-management": {
     "message": "Resource management"
+  },
+  "app.sidebar.sign-in": {
+    "message": "Sign in"
+  },
+  "app.sidebar.skins": {
+    "message": "Skin selector"
   },
   "app.skins.add-button": {
     "message": "Add skin"
@@ -453,7 +528,7 @@
     "message": "Sign In"
   },
   "app.skins.sign-in.description": {
-    "message": "Please sign into your Minecraft account to use the skin management features of the Modrinth app."
+    "message": "Please sign into your Minecraft account to use the skin management features of the Noctrinth app."
   },
   "app.skins.sign-in.rinthbot-alt": {
     "message": "Excited Modrinth Bot"
@@ -523,6 +598,219 @@
   },
   "app.world.world-item.players-online": {
     "message": "{count} online"
+  },
+  "collection.delete": {
+    "message": "Delete"
+  },
+  "collection.edit": {
+    "message": "Edit"
+  },
+  "collection.loading": {
+    "message": "Loading..."
+  },
+  "collection.no-followed": {
+    "message": "You haven't followed any projects yet"
+  },
+  "collection.no-matching": {
+    "message": "No matching projects"
+  },
+  "collection.no-projects": {
+    "message": "No projects in this collection"
+  },
+  "collection.open-on-web": {
+    "message": "Open on web"
+  },
+  "collection.projects-count.one": {
+    "message": "project"
+  },
+  "collection.projects-count.other": {
+    "message": "projects"
+  },
+  "collection.remove-project": {
+    "message": "Remove project"
+  },
+  "collection.remove-tooltip": {
+    "message": "Remove from collection"
+  },
+  "collection.removing": {
+    "message": "Removing..."
+  },
+  "collection.search-placeholder": {
+    "message": "Search projects..."
+  },
+  "collection.sort-by": {
+    "message": "Sort by: "
+  },
+  "collection.sort-by-name": {
+    "message": "Sort by"
+  },
+  "collection.sort.downloads": {
+    "message": "Downloads"
+  },
+  "collection.sort.followers": {
+    "message": "Followers"
+  },
+  "collection.sort.name": {
+    "message": "Name (A-Z)"
+  },
+  "collection.sort.updated": {
+    "message": "Recently updated"
+  },
+  "collection.status.private": {
+    "message": "Private"
+  },
+  "collection.status.public": {
+    "message": "Public"
+  },
+  "collection.status.rejected": {
+    "message": "Rejected"
+  },
+  "collection.status.unlisted": {
+    "message": "Unlisted"
+  },
+  "collection.tab.collections": {
+    "message": "Collections"
+  },
+  "collection.tab.notifications": {
+    "message": "Notifications"
+  },
+  "collection.unfollow-project": {
+    "message": "Unfollow project"
+  },
+  "collection.unfollowing": {
+    "message": "Unfollowing..."
+  },
+  "collection.updated-ago": {
+    "message": "Updated {time}"
+  },
+  "collections.create-new": {
+    "message": "Create new"
+  },
+  "collections.followed-projects": {
+    "message": "Followed projects"
+  },
+  "collections.followed-projects-desc": {
+    "message": "Auto-generated collection of all the projects you're following."
+  },
+  "collections.loading": {
+    "message": "Loading collections..."
+  },
+  "collections.no-collections": {
+    "message": "You don't have any collections yet"
+  },
+  "collections.no-collections-body": {
+    "message": "Create your first collection on modrinth.com to get started!"
+  },
+  "collections.no-match": {
+    "message": "No collections match your search"
+  },
+  "collections.no-match-body": {
+    "message": "Try adjusting your filters or search terms."
+  },
+  "collections.projects-count.one": {
+    "message": "project"
+  },
+  "collections.projects-count.other": {
+    "message": "projects"
+  },
+  "collections.search-placeholder": {
+    "message": "Search collections..."
+  },
+  "collections.sign-in-prompt": {
+    "message": "Sign in to view your collections"
+  },
+  "collections.sign-in-prompt-body": {
+    "message": "Sign in to your Modrinth account to see your collections here."
+  },
+  "collections.sort-by": {
+    "message": "Sort by: "
+  },
+  "collections.sort-by-name": {
+    "message": "Sort by"
+  },
+  "collections.sort.created": {
+    "message": "Recently Created"
+  },
+  "collections.sort.name": {
+    "message": "Name (A-Z)"
+  },
+  "collections.sort.updated": {
+    "message": "Recently Updated"
+  },
+  "collections.status.private": {
+    "message": "Private"
+  },
+  "collections.status.public": {
+    "message": "Public"
+  },
+  "collections.status.rejected": {
+    "message": "Rejected"
+  },
+  "collections.status.unlisted": {
+    "message": "Unlisted"
+  },
+  "dashboard.tab.collections": {
+    "message": "Collections"
+  },
+  "dashboard.tab.notifications": {
+    "message": "Notifications"
+  },
+  "ely-login.cancel": {
+    "message": "Cancel"
+  },
+  "ely-login.error.generic": {
+    "message": "Login failed. Please check your credentials."
+  },
+  "ely-login.error.network": {
+    "message": "Couldn't reach Ely.by servers. Check your internet connection."
+  },
+  "ely-login.header": {
+    "message": "Sign in with Ely.by"
+  },
+  "ely-login.hide-password": {
+    "message": "Hide password"
+  },
+  "ely-login.no-account": {
+    "message": "Don't have an account?"
+  },
+  "ely-login.password-label": {
+    "message": "Password"
+  },
+  "ely-login.password-placeholder": {
+    "message": "Enter your password..."
+  },
+  "ely-login.show-password": {
+    "message": "Show password"
+  },
+  "ely-login.sign-in": {
+    "message": "Sign in"
+  },
+  "ely-login.sign-up-link": {
+    "message": "Sign up at ely.by"
+  },
+  "ely-login.signing-in": {
+    "message": "Signing in..."
+  },
+  "ely-login.subtitle": {
+    "message": "Use your Ely.by credentials to add the account to Noctrinth."
+  },
+  "ely-login.username-label": {
+    "message": "Username or email"
+  },
+  "ely-login.username-placeholder": {
+    "message": "Enter your Ely.by username or email..."
+  },
+  "ely-skins.change-button": {
+    "message": "Change skin on Ely.by"
+  },
+  "ely-skins.description": {
+    "message": "Skins for Ely.by accounts are changed on the Ely.by website. The button below opens the skin page directly — if you aren't signed in, Ely.by will ask you to log in first."
+  },
+  "ely-skins.page-title": {
+    "message": "Skins"
+  },
+  "ely-skins.section-title": {
+    "message": "Ely.by skin"
   },
   "friends.action.add-friend": {
     "message": "Add a friend"
@@ -854,8 +1142,17 @@
   "minecraft-account.add-account": {
     "message": "Add account"
   },
+  "minecraft-account.add-ely-account": {
+    "message": "Add Ely.by account"
+  },
   "minecraft-account.label": {
     "message": "Minecraft account"
+  },
+  "minecraft-account.label-ely-by": {
+    "message": "Ely.by account"
+  },
+  "minecraft-account.label-microsoft": {
+    "message": "Microsoft account"
   },
   "minecraft-account.not-signed-in": {
     "message": "Not signed in"
@@ -868,6 +1165,57 @@
   },
   "minecraft-account.sign-in": {
     "message": "Sign in to Minecraft"
+  },
+  "notifications.back": {
+    "message": "Back"
+  },
+  "notifications.heading": {
+    "message": "Notifications"
+  },
+  "notifications.heading-history": {
+    "message": "Notification history"
+  },
+  "notifications.history-empty": {
+    "message": "No notifications in history."
+  },
+  "notifications.loading": {
+    "message": "Loading notifications..."
+  },
+  "notifications.mark-all-read": {
+    "message": "Mark all as read"
+  },
+  "notifications.sign-in-prompt": {
+    "message": "Sign in to view notifications"
+  },
+  "notifications.sign-in-prompt-body": {
+    "message": "Sign in to your Modrinth account to see your notifications here."
+  },
+  "notifications.type.all": {
+    "message": "All"
+  },
+  "notifications.type.moderator-message": {
+    "message": "Moderator messages"
+  },
+  "notifications.type.organization-invite": {
+    "message": "Organization invites"
+  },
+  "notifications.type.other": {
+    "message": "Other"
+  },
+  "notifications.type.project-update": {
+    "message": "Updates"
+  },
+  "notifications.type.status-change": {
+    "message": "Status changes"
+  },
+  "notifications.type.team-invite": {
+    "message": "Team invites"
+  },
+  "notifications.unread-empty": {
+    "message": "You don't have any unread notifications."
+  },
+  "notifications.view-history": {
+    "message": "View history"
   },
   "search.filter.locked.instance": {
     "message": "Provided by the instance"

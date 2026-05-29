@@ -105,12 +105,7 @@ const messages = defineMessages({
 	/>
 
 	<div class="flex flex-wrap items-center gap-2">
-		<div
-			v-if="showSourceToggle"
-			class="source-toggle"
-			role="group"
-			aria-label="Catalog source"
-		>
+		<div v-if="showSourceToggle" class="source-toggle" role="group" aria-label="Catalog source">
 			<button
 				type="button"
 				class="source-toggle__btn source-toggle__btn--mr"
@@ -315,7 +310,10 @@ const messages = defineMessages({
 					:sources="
 						ctx.query.value
 							? ((result as { sources?: unknown }).sources as
-									| { modrinth?: { project_id: string; slug: string }; curseforge?: { mod_id: number; slug: string } }
+									| {
+											modrinth?: { project_id: string; slug: string }
+											curseforge?: { mod_id: number; slug: string }
+									  }
 									| undefined)
 							: undefined
 					"

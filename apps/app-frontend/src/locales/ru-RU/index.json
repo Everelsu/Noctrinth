@@ -1072,5 +1072,170 @@
   },
   "unknown-pack-warning-modal.warning.title": {
     "message": "Предупреждение о неизвестном файле"
+  },
+  "ely-login.subtitle": {
+    "message": "Войдите с данными Ely.by, чтобы добавить аккаунт в Noctrinth."
+  },
+  "app.skins.title": {
+    "message": "Выбор скина"
+  },
+  "app.skins.section.saved-skins": {
+    "message": "Сохранённые скины"
+  },
+  "app.skins.section.default-skins": {
+    "message": "Стандартные скины"
+  },
+  "app.skins.add-button": {
+    "message": "Добавить скин"
+  },
+  "app.skins.add-button.drag-and-drop": {
+    "message": "Перетащите сюда"
+  },
+  "app.skins.apply-button": {
+    "message": "Применить"
+  },
+  "app.skins.edit-button": {
+    "message": "Изменить скин"
+  },
+  "app.skins.delete-button": {
+    "message": "Удалить скин"
+  },
+  "app.skins.preview.edit-button": {
+    "message": "Изменить скин"
+  },
+  "app.skins.previewing-badge": {
+    "message": "Предпросмотр"
+  },
+  "app.skins.sign-in.title": {
+    "message": "Войдите в аккаунт"
+  },
+  "app.skins.sign-in.description": {
+    "message": "Войдите в свой аккаунт Minecraft, чтобы управлять скинами в приложении Noctrinth."
+  },
+  "app.skins.sign-in.button": {
+    "message": "Войти"
+  },
+  "app.skins.sign-in.rinthbot-alt": {
+    "message": "Радостный бот Modrinth"
+  },
+  "app.skins.delete-modal.title": {
+    "message": "Вы уверены, что хотите удалить этот скин?"
+  },
+  "app.skins.delete-modal.description": {
+    "message": "Это безвозвратно удалит выбранный скин. Это действие нельзя отменить."
+  },
+  "app.skins.dropped-file-error.title": {
+    "message": "Ошибка обработки файла"
+  },
+  "app.skins.dropped-file-error.text": {
+    "message": "Не удалось прочитать перетащенный файл."
+  },
+  "app.skins.rate-limit.title": {
+    "message": "Не так быстро!"
+  },
+  "app.skins.rate-limit.text": {
+    "message": "Вы меняете скин слишком часто. Серверы Mojang временно заблокировали дальнейшие запросы. Подождите немного и попробуйте снова."
+  },
+  "app.skins.modal.add-title": {
+    "message": "Добавление скина"
+  },
+  "app.skins.modal.edit-title": {
+    "message": "Изменение скина"
+  },
+  "app.skins.modal.add-skin-button": {
+    "message": "Добавить скин"
+  },
+  "app.skins.modal.save-skin-button": {
+    "message": "Сохранить скин"
+  },
+  "app.skins.modal.saving-tooltip": {
+    "message": "Сохранение..."
+  },
+  "app.skins.modal.replace-texture-button": {
+    "message": "Заменить текстуру"
+  },
+  "app.skins.modal.texture-section": {
+    "message": "Текстура"
+  },
+  "app.skins.modal.arm-style-section": {
+    "message": "Стиль рук"
+  },
+  "app.skins.modal.arm-style-slim": {
+    "message": "Тонкие"
+  },
+  "app.skins.modal.arm-style-wide": {
+    "message": "Широкие"
+  },
+  "app.skins.modal.cape-section": {
+    "message": "Плащ"
+  },
+  "app.skins.modal.cape-fallback-name": {
+    "message": "Плащ"
+  },
+  "app.skins.modal.no-cape-tooltip": {
+    "message": "Без плаща"
+  },
+  "app.skins.modal.none-cape-option": {
+    "message": "Нет"
+  },
+  "app.skins.modal.make-edit-first-tooltip": {
+    "message": "Сначала измените скин!"
+  },
+  "app.skins.modal.upload-skin-first-tooltip": {
+    "message": "Сначала загрузите скин!"
+  },
+  "ely-skins.page-title": {
+    "message": "Скины"
+  },
+  "ely-skins.section-title": {
+    "message": "Скин Ely.by"
+  },
+  "ely-skins.description": {
+    "message": "Скины для аккаунтов Ely.by меняются на сайте Ely.by. Кнопка ниже откроет страницу скинов напрямую — если вы не вошли, Ely.by сначала попросит авторизоваться."
+  },
+  "ely-skins.change-button": {
+    "message": "Изменить скин на Ely.by"
+  },
+  "app.notifications.project-updated": {
+    "message": "Проект, на который вы подписаны, <project>{title}</project>, был обновлён:"
+  },
+  "app.notifications.invited-to-join": {
+    "message": "пригласил(а) вас присоединиться к <target>{name}</target>."
+  },
+  "app.notifications.status-changed": {
+    "message": "<project>{title}</project> сменил статус с <strong>{oldStatus}</strong> на <strong>{newStatus}</strong> по решению модераторов."
+  },
+  "app.notifications.moderator-message": {
+    "message": "Ваш проект, <project>{title}</project>, получил {count, plural, one {сообщение} other {сообщения}} от модераторов."
+  },
+  "app.notifications.version-for": {
+    "message": "для"
+  },
+  "app.notifications.read-badge": {
+    "message": "Прочитано"
+  },
+  "app.notifications.received": {
+    "message": "Получено {time}"
+  },
+  "app.notifications.accept": {
+    "message": "Принять"
+  },
+  "app.notifications.decline": {
+    "message": "Отклонить"
+  },
+  "app.notifications.mark-as-read": {
+    "message": "Отметить прочитанным"
+  },
+  "app.notifications.error.mark-read": {
+    "message": "Не удалось отметить уведомление прочитанным"
+  },
+  "app.notifications.error.accept": {
+    "message": "Не удалось принять приглашение"
+  },
+  "app.notifications.error.decline": {
+    "message": "Не удалось отклонить приглашение"
+  },
+  "app.notifications.not-signed-in": {
+    "message": "Вы не вошли в аккаунт"
   }
 }

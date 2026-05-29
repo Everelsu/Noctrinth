@@ -56,14 +56,7 @@ let currentMod = null
 // Mirror of CF_REAL_LOADERS in helpers/curseforge-api.ts. Only real mod
 // loaders disqualify a file from a vanilla instance — informational tags
 // like "Iris", "OptiFine", "Data Pack" do not.
-const CF_REAL_LOADERS = new Set([
-	'forge',
-	'fabric',
-	'quilt',
-	'neoforge',
-	'cauldron',
-	'liteloader',
-])
+const CF_REAL_LOADERS = new Set(['forge', 'fabric', 'quilt', 'neoforge', 'cauldron', 'liteloader'])
 
 function isCompatible(gameVersion, loader) {
 	const loaderLower = (loader ?? '').toLowerCase()
@@ -240,7 +233,14 @@ async function onCreateAndInstall(data) {
 			return
 		}
 
-		const id = await create(data.name, data.gameVersion, data.loader, 'latest', data.iconPath, false)
+		const id = await create(
+			data.name,
+			data.gameVersion,
+			data.loader,
+			'latest',
+			data.iconPath,
+			false,
+		)
 		if (!id) return
 
 		// ContentInstallModal already closes itself on create-and-install.

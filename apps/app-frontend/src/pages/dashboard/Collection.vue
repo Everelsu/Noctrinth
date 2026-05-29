@@ -17,8 +17,8 @@ import {
 	ContentPageHeader,
 	defineMessages,
 	DropdownSelect,
-	FilterPills,
 	type FilterPillOption,
+	FilterPills,
 	injectNotificationManager,
 	LoadingIndicator,
 	NavTabs,
@@ -30,7 +30,7 @@ import {
 import { openUrl } from '@tauri-apps/plugin-opener'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import CollectionDeleteModal from '@/components/ui/modal/CollectionDeleteModal.vue'
@@ -70,7 +70,10 @@ const messages = defineMessages({
 	delete: { id: 'collection.delete', defaultMessage: 'Delete' },
 	openOnWeb: { id: 'collection.open-on-web', defaultMessage: 'Open on web' },
 	noMatching: { id: 'collection.no-matching', defaultMessage: 'No matching projects' },
-	noFollowed: { id: 'collection.no-followed', defaultMessage: "You haven't followed any projects yet" },
+	noFollowed: {
+		id: 'collection.no-followed',
+		defaultMessage: "You haven't followed any projects yet",
+	},
 	noProjects: { id: 'collection.no-projects', defaultMessage: 'No projects in this collection' },
 	unfollowProject: { id: 'collection.unfollow-project', defaultMessage: 'Unfollow project' },
 	unfollowing: { id: 'collection.unfollowing', defaultMessage: 'Unfollowing...' },
@@ -126,9 +129,24 @@ function formatSortOption(option: SortMode): string {
 	}
 }
 
+interface CollectionProject {
+	id: string
+	slug?: string
+	title?: string
+	name?: string
+	description?: string
+	summary?: string
+	project_type?: string
+	project_types?: string[]
+	display_categories?: string[]
+	categories?: string[]
+	loaders?: string[]
+	[key: string]: unknown
+}
+
 const loading = ref(true)
 const collection = ref<Collection | null>(null)
-const projects = ref<any[]>([])
+const projects = ref<CollectionProject[]>([])
 const currentUserId = ref<string | null>(null)
 const removingId = ref<string | null>(null)
 const typeFilters = ref<string[]>([])
@@ -155,7 +173,7 @@ function stripMarkdown(text: string | null | undefined): string {
  * (de-duped), so users see both "adventure"/"library" tags AND the mod loaders (forge, fabric...).
  * The website does the same thing on its collection page.
  */
-function buildTags(p: any): string[] {
+function buildTags(p: CollectionProject): string[] {
 	const seen = new Set<string>()
 	const out: string[] = []
 	const push = (arr?: string[] | null) => {
@@ -177,7 +195,7 @@ function buildTags(p: any): string[] {
  * endpoint (`project_types` array). Without this, the Followed view had no
  * type filter because `project_type` was always undefined there.
  */
-function getProjectType(p: any): string | undefined {
+function getProjectType(p: CollectionProject): string | undefined {
 	if (p.project_type) return p.project_type
 	if (Array.isArray(p.project_types) && p.project_types.length > 0) {
 		return p.project_types[0]
@@ -207,7 +225,8 @@ const filteredProjects = computed(() => {
 			if (t == null || !typeFilters.value.includes(t)) return false
 		}
 		if (q) {
-			const haystack = `${p.title ?? p.name ?? ''} ${p.slug ?? ''} ${p.description ?? p.summary ?? ''}`.toLowerCase()
+			const haystack =
+				`${p.title ?? p.name ?? ''} ${p.slug ?? ''} ${p.description ?? p.summary ?? ''}`.toLowerCase()
 			if (!haystack.includes(q)) return false
 		}
 		return true
@@ -216,7 +235,9 @@ const filteredProjects = computed(() => {
 	const sorted = [...list]
 	switch (sortMode.value) {
 		case 'name':
-			sorted.sort((a, b) => String(a.title ?? a.name ?? '').localeCompare(String(b.title ?? b.name ?? '')))
+			sorted.sort((a, b) =>
+				String(a.title ?? a.name ?? '').localeCompare(String(b.title ?? b.name ?? '')),
+			)
 			break
 		case 'downloads':
 			sorted.sort((a, b) => (b.downloads ?? 0) - (a.downloads ?? 0))
@@ -403,7 +424,11 @@ watch(
 					<div class="flex items-center gap-2 font-medium">
 						<BoxIcon class="size-4" aria-hidden="true" />
 						{{ formatCompactNumber(projects.length) }}
-						{{ formatMessage(projects.length === 1 ? messages.projectsCountOne : messages.projectsCountOther) }}
+						{{
+							formatMessage(
+								projects.length === 1 ? messages.projectsCountOne : messages.projectsCountOther,
+							)
+						}}
 					</div>
 
 					<div class="w-1.5 h-1.5 rounded-full bg-surface-5"></div>
@@ -430,7 +455,9 @@ watch(
 					<template v-if="collection.updated">
 						<div class="w-1.5 h-1.5 rounded-full bg-surface-5"></div>
 						<div class="flex items-center gap-2 font-medium">
-							{{ formatMessage(messages.updatedAgo, { time: dayjs(collection.updated).fromNow() }) }}
+							{{
+								formatMessage(messages.updatedAgo, { time: dayjs(collection.updated).fromNow() })
+							}}
 						</div>
 					</template>
 				</template>
@@ -466,11 +493,7 @@ watch(
 				input-class="!h-11"
 			/>
 			<div class="flex flex-wrap items-center gap-2">
-				<FilterPills
-					v-if="showTypeFilter"
-					v-model="typeFilters"
-					:options="typeFilterOptions"
-				/>
+				<FilterPills v-if="showTypeFilter" v-model="typeFilters" :options="typeFilterOptions" />
 				<DropdownSelect
 					v-slot="{ selected }"
 					:model-value="sortMode"
@@ -517,12 +540,13 @@ watch(
 				>
 					<template v-if="isFollowing" #actions>
 						<ButtonStyled>
-							<button
-								:disabled="removingId === p.id"
-								@click.stop.prevent="removeProject(p.id)"
-							>
+							<button :disabled="removingId === p.id" @click.stop.prevent="removeProject(p.id)">
 								<HeartIcon />
-								{{ formatMessage(removingId === p.id ? messages.unfollowing : messages.unfollowProject) }}
+								{{
+									formatMessage(
+										removingId === p.id ? messages.unfollowing : messages.unfollowProject,
+									)
+								}}
 							</button>
 						</ButtonStyled>
 					</template>
@@ -534,7 +558,9 @@ watch(
 								@click.stop.prevent="removeProject(p.id)"
 							>
 								<XIcon />
-								{{ formatMessage(removingId === p.id ? messages.removing : messages.removeProject) }}
+								{{
+									formatMessage(removingId === p.id ? messages.removing : messages.removeProject)
+								}}
 							</button>
 						</ButtonStyled>
 					</template>

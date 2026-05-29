@@ -37,12 +37,22 @@ import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import ContextMenu from '@/components/ui/ContextMenu.vue'
 import CurseForgeInstallModal from '@/components/ui/CurseForgeInstallModal.vue'
 import { useAppServerBrowse } from '@/composables/browse/use-app-server-browse'
+import { useSourceAccent, useSourceMode } from '@/composables/source-mode'
 import {
 	get_project,
 	get_project_v3,
 	get_search_results_v3,
 	get_version_many,
 } from '@/helpers/cache.js'
+import {
+	loadCfInstalledProjectIds,
+	refreshCfInstalledFromFingerprints,
+	storeCfInstalled,
+} from '@/helpers/cf-installed-store'
+import {
+	cfIdToModrinthId as lookupCfIdToMr,
+	modrinthIdToCfId as lookupMrIdToCf,
+} from '@/helpers/cross-platform-mapping'
 import {
 	getCurseForgeCategories,
 	installCurseForgeMod,
@@ -51,23 +61,13 @@ import {
 	mapCfCategoriesToTags,
 } from '@/helpers/curseforge-api'
 import { get_loader_versions as getLoaderManifest } from '@/helpers/metadata'
-import { unifiedSearch } from '@/helpers/unified-search'
-import {
-	cfIdToModrinthId as lookupCfIdToMr,
-	modrinthIdToCfId as lookupMrIdToCf,
-} from '@/helpers/cross-platform-mapping'
-import {
-	loadCfInstalledProjectIds,
-	refreshCfInstalledFromFingerprints,
-	storeCfInstalled,
-} from '@/helpers/cf-installed-store'
-import { useSourceAccent, useSourceMode } from '@/composables/source-mode'
 import {
 	get as getInstance,
 	get_installed_project_ids as getInstalledProjectIds,
 	get_projects as getProfileProjects,
 } from '@/helpers/profile.js'
 import { get_categories, get_game_versions, get_loaders } from '@/helpers/tags'
+import { unifiedSearch } from '@/helpers/unified-search'
 import { get_profile_worlds } from '@/helpers/worlds'
 import { injectContentInstall } from '@/providers/content-install'
 import { injectServerInstall } from '@/providers/server-install'
@@ -161,10 +161,7 @@ const tags: Ref<Tags> = computed(() => ({
 	// In CurseForge-only browse mode replace Modrinth categories with CF ones
 	// so the sidebar shows meaningful CurseForge sub-categories. In Modrinth
 	// or mixed (text-search) mode keep the Modrinth categories.
-	categories:
-		sourceMode.value === 'curseforge'
-			? cfCategoriesRaw.value
-			: (categories.value ?? []),
+	categories: sourceMode.value === 'curseforge' ? cfCategoriesRaw.value : (categories.value ?? []),
 }))
 
 type Instance = {
@@ -869,10 +866,7 @@ function getCardActions(
 					color: 'brand',
 					type: 'outlined',
 					onClick: () =>
-						installCfModpack(
-							cfModId,
-							projectResult.title ?? projectResult.name ?? 'Modpack',
-						),
+						installCfModpack(cfModId, projectResult.title ?? projectResult.name ?? 'Modpack'),
 				},
 			]
 		}
@@ -1197,10 +1191,7 @@ async function search(requestParams: string) {
 	//   3. Filename matching against the profile's installed files (catches
 	//      pre-existing installs and edge cases CF fingerprint missed)
 	if (instance.value) {
-		const installedSet = new Set([
-			...newlyInstalled.value,
-			...(installedProjectIds.value ?? []),
-		])
+		const installedSet = new Set([...newlyInstalled.value, ...(installedProjectIds.value ?? [])])
 		const fileNames = installedFileNames.value
 		result.projectHits = result.projectHits.map((hit) => {
 			if (hit.installed) return hit

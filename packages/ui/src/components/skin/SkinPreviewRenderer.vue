@@ -286,7 +286,6 @@ const {
 	modelOffset,
 	nametagTop,
 	previewControlsPositionStyle,
-	spotlightPosition,
 	spotlightScale,
 	subtitlePositionStyle,
 } = useSkinPreviewFit({

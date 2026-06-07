@@ -7,10 +7,8 @@ use crate::state::{
     CacheBehaviour, CachedEntry, LinkedData, Profile, ProfileInstallStage,
     SideType,
 };
-use crate::util::fetch::{
-    DownloadMeta, DownloadReason, fetch, fetch_advanced, sha1_file_async,
-    write_cached_icon,
-};
+use crate::util::fetch::{DownloadMeta, DownloadReason, fetch, fetch_advanced, write_cached_icon};
+use crate::util::io;
 use path_util::SafeRelativeUtf8UnixPathBuf;
 use reqwest::Method;
 use serde::{Deserialize, Serialize};

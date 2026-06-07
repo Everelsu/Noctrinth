@@ -15,7 +15,7 @@
     "message": "Скачивание Java {version}"
   },
   "app.action-bar.downloads": {
-    "message": "Скачивание"
+    "message": "Загрузки"
   },
   "app.action-bar.hide-more-running-instances": {
     "message": "Скрыть другие активные сборки"
@@ -39,7 +39,7 @@
     "message": "Остановить сборку"
   },
   "app.action-bar.view-active-downloads": {
-    "message": "Посмотреть текущие скачивания"
+    "message": "Посмотреть текущие загрузки"
   },
   "app.action-bar.view-instance": {
     "message": "Посмотреть сборку"
@@ -150,7 +150,7 @@
     "message": "Сборки"
   },
   "app.browse.server-instance-content-warning": {
-    "message": "Добавление контента может нарушить совместимость при подключении к серверу. Также весь добавленный контент будет удалён при обновлении содержимого серверной сборки."
+    "message": "Добавление контента может сломать совместимость при подключении к серверу. Весь добавленный контент также будет удалён при обновлении сервера."
   },
   "app.browse.server.installing": {
     "message": "Установка"
@@ -242,6 +242,66 @@
   "app.instance.mods.successfully-uploaded": {
     "message": "Успешно загружено"
   },
+  "app.instance.screenshots.copied": {
+    "message": "Скриншот скопирован в буфер обмена"
+  },
+  "app.instance.screenshots.copy": {
+    "message": "Копировать"
+  },
+  "app.instance.screenshots.copy-failed": {
+    "message": "Не удалось скопировать скриншот"
+  },
+  "app.instance.screenshots.count": {
+    "message": "{count, plural, one {# скриншот} few {# скриншота} many {# скриншотов} other {# скриншота}}"
+  },
+  "app.instance.screenshots.delete.description": {
+    "message": "Скриншот будет безвозвратно удалён с диска. Это действие нельзя отменить."
+  },
+  "app.instance.screenshots.delete.title": {
+    "message": "Удалить этот скриншот?"
+  },
+  "app.instance.screenshots.empty.description": {
+    "message": "Нажмите F2 во время игры в этой сборке, чтобы сделать скриншот."
+  },
+  "app.instance.screenshots.empty.title": {
+    "message": "Скриншотов пока нет"
+  },
+  "app.instance.screenshots.exit-fullscreen": {
+    "message": "Выйти из полноэкранного режима"
+  },
+  "app.instance.screenshots.fullscreen": {
+    "message": "Во весь экран"
+  },
+  "app.instance.screenshots.fullscreen-failed": {
+    "message": "Полноэкранный режим недоступен"
+  },
+  "app.instance.screenshots.next": {
+    "message": "Вперёд"
+  },
+  "app.instance.screenshots.open-folder-button": {
+    "message": "Открыть папку"
+  },
+  "app.instance.screenshots.previous": {
+    "message": "Назад"
+  },
+  "app.instance.screenshots.refresh": {
+    "message": "Обновить"
+  },
+  "app.instance.screenshots.reveal": {
+    "message": "Показать в папке"
+  },
+  "app.instance.screenshots.sort-newest": {
+    "message": "Сначала новые"
+  },
+  "app.instance.screenshots.sort-oldest": {
+    "message": "Сначала старые"
+  },
+  "app.instance.screenshots.zoom-in": {
+    "message": "Приблизить"
+  },
+  "app.instance.screenshots.zoom-out": {
+    "message": "Отдалить"
+  },
   "app.instance.worlds.add-server": {
     "message": "Добавить сервер"
   },
@@ -323,6 +383,48 @@
   "app.modal.update-to-play.update-required-description": {
     "message": "Обновите {name} до последней версии, чтобы запустить игру."
   },
+  "app.notifications.accept": {
+    "message": "Принять"
+  },
+  "app.notifications.decline": {
+    "message": "Отклонить"
+  },
+  "app.notifications.error.accept": {
+    "message": "Не удалось принять приглашение"
+  },
+  "app.notifications.error.decline": {
+    "message": "Не удалось отклонить приглашение"
+  },
+  "app.notifications.error.mark-read": {
+    "message": "Не удалось отметить уведомление прочитанным"
+  },
+  "app.notifications.invited-to-join": {
+    "message": "пригласил(а) вас присоединиться к <target>{name}</target>."
+  },
+  "app.notifications.mark-as-read": {
+    "message": "Отметить прочитанным"
+  },
+  "app.notifications.moderator-message": {
+    "message": "Ваш проект, <project>{title}</project>, получил {count, plural, one {сообщение} other {сообщения}} от модераторов."
+  },
+  "app.notifications.not-signed-in": {
+    "message": "Вы не вошли в аккаунт"
+  },
+  "app.notifications.project-updated": {
+    "message": "Проект, на который вы подписаны, <project>{title}</project>, был обновлён:"
+  },
+  "app.notifications.read-badge": {
+    "message": "Прочитано"
+  },
+  "app.notifications.received": {
+    "message": "Получено {time}"
+  },
+  "app.notifications.status-changed": {
+    "message": "<project>{title}</project> сменил статус с <strong>{oldStatus}</strong> на <strong>{newStatus}</strong> по решению модераторов."
+  },
+  "app.notifications.version-for": {
+    "message": "для"
+  },
   "app.project.install-button.already-installed": {
     "message": "Этот проект уже установлен"
   },
@@ -365,17 +467,152 @@
   "app.sidebar.skins": {
     "message": "Выбор скина"
   },
+  "app.skins.add-button": {
+    "message": "Добавить скин"
+  },
+  "app.skins.add-button.drag-and-drop": {
+    "message": "Перетащите сюда"
+  },
+  "app.skins.apply-button": {
+    "message": "Применить"
+  },
+  "app.skins.delete-button": {
+    "message": "Удалить скин"
+  },
+  "app.skins.delete-modal.description": {
+    "message": "Выбранный скин будет удалён навсегда. Это действие необратимо."
+  },
+  "app.skins.delete-modal.title": {
+    "message": "Вы действительно хотите удалить этот скин?"
+  },
+  "app.skins.dropped-file-error.text": {
+    "message": "Не удалось прочитать перетащенный файл."
+  },
+  "app.skins.dropped-file-error.title": {
+    "message": "Ошибка обработки файла"
+  },
+  "app.skins.edit-button": {
+    "message": "Изменить скин"
+  },
+  "app.skins.modal.add-skin-button": {
+    "message": "Добавить скин"
+  },
+  "app.skins.modal.add-title": {
+    "message": "Добавление скина"
+  },
+  "app.skins.modal.arm-style-section": {
+    "message": "Руки"
+  },
+  "app.skins.modal.arm-style-slim": {
+    "message": "Тонкие"
+  },
+  "app.skins.modal.arm-style-wide": {
+    "message": "Широкие"
+  },
+  "app.skins.modal.cape-fallback-name": {
+    "message": "Плащ"
+  },
+  "app.skins.modal.cape-section": {
+    "message": "Плащ"
+  },
+  "app.skins.modal.edit-title": {
+    "message": "Настройка скина"
+  },
+  "app.skins.modal.make-edit-first-tooltip": {
+    "message": "Сначала внесите изменения в скин!"
+  },
+  "app.skins.modal.no-cape-tooltip": {
+    "message": "Без плаща"
+  },
+  "app.skins.modal.none-cape-option": {
+    "message": "Нет"
+  },
+  "app.skins.modal.replace-texture-button": {
+    "message": "Заменить текстуру"
+  },
+  "app.skins.modal.save-skin-button": {
+    "message": "Сохранить скин"
+  },
+  "app.skins.modal.saving-tooltip": {
+    "message": "Сохранение..."
+  },
+  "app.skins.modal.texture-section": {
+    "message": "Текстура"
+  },
+  "app.skins.modal.upload-skin-first-tooltip": {
+    "message": "Сначала загрузите скин!"
+  },
+  "app.skins.preview.edit-button": {
+    "message": "Изменить"
+  },
+  "app.skins.previewing-badge": {
+    "message": "Предпросмотр"
+  },
+  "app.skins.rate-limit.text": {
+    "message": "Слишком частая смена скина. Серверы Mojang временно заблокировали дальнейшие запросы. Подождите немного, прежде чем попробовать снова."
+  },
+  "app.skins.rate-limit.title": {
+    "message": "Не так быстро!"
+  },
+  "app.skins.section.builders-and-biomes": {
+    "message": "Builders & Biomes"
+  },
+  "app.skins.section.chase-the-skies": {
+    "message": "Chase the Skies"
+  },
+  "app.skins.section.default-skins": {
+    "message": "Стандартные скины"
+  },
+  "app.skins.section.minecon-earth-2017": {
+    "message": "MINECON Earth 2017"
+  },
+  "app.skins.section.modrinth": {
+    "message": "Modrinth"
+  },
+  "app.skins.section.mounts-of-mayhem": {
+    "message": "Mounts of Mayhem"
+  },
+  "app.skins.section.saved-skins": {
+    "message": "Сохранённые скины"
+  },
+  "app.skins.section.striding-hero": {
+    "message": "Striding Hero"
+  },
+  "app.skins.section.the-copper-age": {
+    "message": "The Copper Age"
+  },
+  "app.skins.section.the-garden-awakens": {
+    "message": "The Garden Awakens"
+  },
+  "app.skins.section.tiny-takeover": {
+    "message": "Tiny Takeover"
+  },
+  "app.skins.sign-in.button": {
+    "message": "Войти"
+  },
+  "app.skins.sign-in.description": {
+    "message": "Чтобы использовать функции управления скинами Modrinth App, войдите в свою учётную запись Minecraft."
+  },
+  "app.skins.sign-in.rinthbot-alt": {
+    "message": "Восторженный Modrinth Bot"
+  },
+  "app.skins.sign-in.title": {
+    "message": "Войдите"
+  },
+  "app.skins.title": {
+    "message": "Выбор скина"
+  },
   "app.update-popup.body": {
-    "message": "Версия Noctrinth App {version} готова к установке! Перезапустите приложение, чтобы обновить его, или оно обновится автоматически после закрытия."
+    "message": "Версия Modrinth App {version} готова к установке! Перезапустите приложение, чтобы обновить его, или оно обновится автоматически после закрытия."
   },
   "app.update-popup.body.download-complete": {
-    "message": "Скачивание версии Noctrinth App {version} завершено. Перезапустите приложение, чтобы обновить его, или оно обновится автоматически после закрытия."
+    "message": "Скачивание версии Modrinth App {version} завершено. Перезапустите приложение, чтобы обновить его, или оно обновится автоматически после закрытия."
   },
   "app.update-popup.body.linux": {
-    "message": "Доступна версия Noctrinth App {version}. Обновите приложение через менеджер пакетов, чтобы получить последние улучшения и исправления!"
+    "message": "Доступна версия Modrinth App {version}. Обновите приложение через менеджер пакетов, чтобы получить последние улучшения и исправления!"
   },
   "app.update-popup.body.metered": {
-    "message": "Версия Noctrinth App {version} доступна для скачивания! Используется сеть с лимитным тарифным планом, поэтому скачивание не началось автоматически."
+    "message": "Версия Modrinth App {version} доступна для скачивания! Используется сеть с лимитным тарифным планом, поэтому скачивание не началось автоматически."
   },
   "app.update-popup.changelog": {
     "message": "Список изменений"
@@ -430,6 +667,15 @@
   },
   "collection.edit": {
     "message": "Изменить"
+  },
+  "collection.filter.all": {
+    "message": "Все"
+  },
+  "collection.following.description": {
+    "message": "Автоматически созданная коллекция всех проектов, на которые вы подписаны."
+  },
+  "collection.following.name": {
+    "message": "Отслеживаемые проекты"
   },
   "collection.loading": {
     "message": "Загрузка…"
@@ -499,6 +745,24 @@
   },
   "collection.tab.notifications": {
     "message": "Уведомления"
+  },
+  "collection.type.datapack": {
+    "message": "Дата-паки"
+  },
+  "collection.type.mod": {
+    "message": "Моды"
+  },
+  "collection.type.modpack": {
+    "message": "Сборки"
+  },
+  "collection.type.plugin": {
+    "message": "Плагины"
+  },
+  "collection.type.resourcepack": {
+    "message": "Ресурспаки"
+  },
+  "collection.type.shader": {
+    "message": "Шейдеры"
   },
   "collection.unfollow-project": {
     "message": "Отписаться от проекта"
@@ -617,11 +881,26 @@
   "ely-login.signing-in": {
     "message": "Вход…"
   },
+  "ely-login.subtitle": {
+    "message": "Войдите с данными Ely.by, чтобы добавить аккаунт в Noctrinth."
+  },
   "ely-login.username-label": {
     "message": "Имя пользователя или email"
   },
   "ely-login.username-placeholder": {
     "message": "Введите имя пользователя или email Ely.by…"
+  },
+  "ely-skins.change-button": {
+    "message": "Изменить скин на Ely.by"
+  },
+  "ely-skins.description": {
+    "message": "Скины для аккаунтов Ely.by меняются на сайте Ely.by. Кнопка ниже откроет страницу скинов напрямую — если вы не вошли, Ely.by сначала попросит авторизоваться."
+  },
+  "ely-skins.page-title": {
+    "message": "Скины"
+  },
+  "ely-skins.section-title": {
+    "message": "Скин Ely.by"
   },
   "friends.action.add-friend": {
     "message": "Добавить в друзья"
@@ -843,19 +1122,19 @@
     "message": "Java и память"
   },
   "instance.settings.tabs.java.custom-environment-variables": {
-    "message": "Пользовательские настройки запуска"
+    "message": "Переопределение переменных среды"
   },
   "instance.settings.tabs.java.custom-java-arguments": {
-    "message": "Пользовательские аргументы Java"
+    "message": "Переопределение аргументов Java"
   },
   "instance.settings.tabs.java.custom-java-installation": {
-    "message": "Пользовательская установка Java"
+    "message": "Переопределение расположения Java"
   },
   "instance.settings.tabs.java.custom-memory-allocation": {
-    "message": "Пользовательский объём памяти"
+    "message": "Переопределение выделенной памяти"
   },
   "instance.settings.tabs.java.enter-environment-variables": {
-    "message": "Введите дополнительные параметры системы..."
+    "message": "Введите переменные среды..."
   },
   "instance.settings.tabs.java.enter-java-arguments": {
     "message": "Введите аргументы Java..."
@@ -1072,257 +1351,5 @@
   },
   "unknown-pack-warning-modal.warning.title": {
     "message": "Предупреждение о неизвестном файле"
-  },
-  "ely-login.subtitle": {
-    "message": "Войдите с данными Ely.by, чтобы добавить аккаунт в Noctrinth."
-  },
-  "app.skins.title": {
-    "message": "Выбор скина"
-  },
-  "app.skins.section.saved-skins": {
-    "message": "Сохранённые скины"
-  },
-  "app.skins.section.default-skins": {
-    "message": "Стандартные скины"
-  },
-  "app.skins.add-button": {
-    "message": "Добавить скин"
-  },
-  "app.skins.add-button.drag-and-drop": {
-    "message": "Перетащите сюда"
-  },
-  "app.skins.apply-button": {
-    "message": "Применить"
-  },
-  "app.skins.edit-button": {
-    "message": "Изменить скин"
-  },
-  "app.skins.delete-button": {
-    "message": "Удалить скин"
-  },
-  "app.skins.preview.edit-button": {
-    "message": "Изменить скин"
-  },
-  "app.skins.previewing-badge": {
-    "message": "Предпросмотр"
-  },
-  "app.skins.sign-in.title": {
-    "message": "Войдите в аккаунт"
-  },
-  "app.skins.sign-in.description": {
-    "message": "Войдите в свой аккаунт Minecraft, чтобы управлять скинами в приложении Noctrinth."
-  },
-  "app.skins.sign-in.button": {
-    "message": "Войти"
-  },
-  "app.skins.sign-in.rinthbot-alt": {
-    "message": "Радостный бот Modrinth"
-  },
-  "app.skins.delete-modal.title": {
-    "message": "Вы уверены, что хотите удалить этот скин?"
-  },
-  "app.skins.delete-modal.description": {
-    "message": "Это безвозвратно удалит выбранный скин. Это действие нельзя отменить."
-  },
-  "app.skins.dropped-file-error.title": {
-    "message": "Ошибка обработки файла"
-  },
-  "app.skins.dropped-file-error.text": {
-    "message": "Не удалось прочитать перетащенный файл."
-  },
-  "app.skins.rate-limit.title": {
-    "message": "Не так быстро!"
-  },
-  "app.skins.rate-limit.text": {
-    "message": "Вы меняете скин слишком часто. Серверы Mojang временно заблокировали дальнейшие запросы. Подождите немного и попробуйте снова."
-  },
-  "app.skins.modal.add-title": {
-    "message": "Добавление скина"
-  },
-  "app.skins.modal.edit-title": {
-    "message": "Изменение скина"
-  },
-  "app.skins.modal.add-skin-button": {
-    "message": "Добавить скин"
-  },
-  "app.skins.modal.save-skin-button": {
-    "message": "Сохранить скин"
-  },
-  "app.skins.modal.saving-tooltip": {
-    "message": "Сохранение..."
-  },
-  "app.skins.modal.replace-texture-button": {
-    "message": "Заменить текстуру"
-  },
-  "app.skins.modal.texture-section": {
-    "message": "Текстура"
-  },
-  "app.skins.modal.arm-style-section": {
-    "message": "Стиль рук"
-  },
-  "app.skins.modal.arm-style-slim": {
-    "message": "Тонкие"
-  },
-  "app.skins.modal.arm-style-wide": {
-    "message": "Широкие"
-  },
-  "app.skins.modal.cape-section": {
-    "message": "Плащ"
-  },
-  "app.skins.modal.cape-fallback-name": {
-    "message": "Плащ"
-  },
-  "app.skins.modal.no-cape-tooltip": {
-    "message": "Без плаща"
-  },
-  "app.skins.modal.none-cape-option": {
-    "message": "Нет"
-  },
-  "app.skins.modal.make-edit-first-tooltip": {
-    "message": "Сначала измените скин!"
-  },
-  "app.skins.modal.upload-skin-first-tooltip": {
-    "message": "Сначала загрузите скин!"
-  },
-  "ely-skins.page-title": {
-    "message": "Скины"
-  },
-  "ely-skins.section-title": {
-    "message": "Скин Ely.by"
-  },
-  "ely-skins.description": {
-    "message": "Скины для аккаунтов Ely.by меняются на сайте Ely.by. Кнопка ниже откроет страницу скинов напрямую — если вы не вошли, Ely.by сначала попросит авторизоваться."
-  },
-  "ely-skins.change-button": {
-    "message": "Изменить скин на Ely.by"
-  },
-  "app.notifications.project-updated": {
-    "message": "Проект, на который вы подписаны, <project>{title}</project>, был обновлён:"
-  },
-  "app.notifications.invited-to-join": {
-    "message": "пригласил(а) вас присоединиться к <target>{name}</target>."
-  },
-  "app.notifications.status-changed": {
-    "message": "<project>{title}</project> сменил статус с <strong>{oldStatus}</strong> на <strong>{newStatus}</strong> по решению модераторов."
-  },
-  "app.notifications.moderator-message": {
-    "message": "Ваш проект, <project>{title}</project>, получил {count, plural, one {сообщение} other {сообщения}} от модераторов."
-  },
-  "app.notifications.version-for": {
-    "message": "для"
-  },
-  "app.notifications.read-badge": {
-    "message": "Прочитано"
-  },
-  "app.notifications.received": {
-    "message": "Получено {time}"
-  },
-  "app.notifications.accept": {
-    "message": "Принять"
-  },
-  "app.notifications.decline": {
-    "message": "Отклонить"
-  },
-  "app.notifications.mark-as-read": {
-    "message": "Отметить прочитанным"
-  },
-  "app.notifications.error.mark-read": {
-    "message": "Не удалось отметить уведомление прочитанным"
-  },
-  "app.notifications.error.accept": {
-    "message": "Не удалось принять приглашение"
-  },
-  "app.notifications.error.decline": {
-    "message": "Не удалось отклонить приглашение"
-  },
-  "app.notifications.not-signed-in": {
-    "message": "Вы не вошли в аккаунт"
-  },
-  "app.instance.screenshots.count": {
-    "message": "{count, plural, one {# скриншот} few {# скриншота} many {# скриншотов} other {# скриншота}}"
-  },
-  "app.instance.screenshots.sort-newest": {
-    "message": "Сначала новые"
-  },
-  "app.instance.screenshots.sort-oldest": {
-    "message": "Сначала старые"
-  },
-  "app.instance.screenshots.open-folder-button": {
-    "message": "Открыть папку"
-  },
-  "app.instance.screenshots.refresh": {
-    "message": "Обновить"
-  },
-  "app.instance.screenshots.empty.title": {
-    "message": "Скриншотов пока нет"
-  },
-  "app.instance.screenshots.empty.description": {
-    "message": "Нажмите F2 во время игры в этой сборке, чтобы сделать скриншот."
-  },
-  "app.instance.screenshots.copy": {
-    "message": "Копировать"
-  },
-  "app.instance.screenshots.copied": {
-    "message": "Скриншот скопирован в буфер обмена"
-  },
-  "app.instance.screenshots.copy-failed": {
-    "message": "Не удалось скопировать скриншот"
-  },
-  "app.instance.screenshots.reveal": {
-    "message": "Показать в папке"
-  },
-  "app.instance.screenshots.fullscreen": {
-    "message": "Во весь экран"
-  },
-  "app.instance.screenshots.exit-fullscreen": {
-    "message": "Выйти из полноэкранного режима"
-  },
-  "app.instance.screenshots.zoom-in": {
-    "message": "Приблизить"
-  },
-  "app.instance.screenshots.zoom-out": {
-    "message": "Отдалить"
-  },
-  "app.instance.screenshots.previous": {
-    "message": "Назад"
-  },
-  "app.instance.screenshots.next": {
-    "message": "Вперёд"
-  },
-  "app.instance.screenshots.delete.title": {
-    "message": "Удалить этот скриншот?"
-  },
-  "app.instance.screenshots.delete.description": {
-    "message": "Скриншот будет безвозвратно удалён с диска. Это действие нельзя отменить."
-  },
-  "app.instance.screenshots.fullscreen-failed": {
-    "message": "Полноэкранный режим недоступен"
-  },
-  "collection.following.name": {
-    "message": "Отслеживаемые проекты"
-  },
-  "collection.following.description": {
-    "message": "Автоматически созданная коллекция всех проектов, на которые вы подписаны."
-  },
-  "collection.filter.all": {
-    "message": "Все"
-  },
-  "collection.type.mod": {
-    "message": "Моды"
-  },
-  "collection.type.modpack": {
-    "message": "Сборки"
-  },
-  "collection.type.resourcepack": {
-    "message": "Ресурспаки"
-  },
-  "collection.type.shader": {
-    "message": "Шейдеры"
-  },
-  "collection.type.datapack": {
-    "message": "Дата-паки"
-  },
-  "collection.type.plugin": {
-    "message": "Плагины"
   }
 }

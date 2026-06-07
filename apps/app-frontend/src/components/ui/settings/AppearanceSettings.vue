@@ -12,8 +12,9 @@ const themeStore = useTheming()
 const accentBySource = useSourceAccent()
 const { formatMessage } = useVIntl()
 
-const worldsInHomeFeatureFlag = 'worlds_in_home' as FeatureFlag
-const skipUnknownPackWarningFeatureFlag = 'skip_unknown_pack_warning' as FeatureFlag
+const worldsInHomeFlag: FeatureFlag = 'worlds_in_home'
+const skipUnknownPackWarningFlag: FeatureFlag = 'skip_unknown_pack_warning'
+const showPlayTimeFlag: FeatureFlag = 'show_instance_play_time'
 
 const messages = defineMessages({
 	colorThemeTitle: {
@@ -111,6 +112,14 @@ const messages = defineMessages({
 		defaultMessage:
 			"If you attempt to install a modpack file (.mrpack) that isn't from the catalog, we'll make sure you understand the risks before installing it.",
 	},
+	showPlayTimeTitle: {
+		id: 'app.appearance-settings.show-play-time.title',
+		defaultMessage: 'Show play time',
+	},
+	showPlayTimeDescription: {
+		id: 'app.appearance-settings.show-play-time.description',
+		defaultMessage: `Displays how much time you've spent playing an instance.`,
+	},
 })
 
 const os = ref(await getOS())
@@ -164,25 +173,6 @@ watch(
 		/>
 	</div>
 
-	<div class="mt-6 flex items-center justify-between">
-		<div>
-			<h2 class="m-0 text-lg font-semibold text-contrast">
-				{{ formatMessage(messages.hideNametagTitle) }}
-			</h2>
-			<p class="m-0 mt-1">{{ formatMessage(messages.hideNametagDescription) }}</p>
-		</div>
-		<Toggle
-			id="hide-nametag-skins-page"
-			:model-value="themeStore.hideNametagSkinsPage"
-			@update:model-value="
-				(e) => {
-					themeStore.hideNametagSkinsPage = !!e
-					settings.hide_nametag_skins_page = themeStore.hideNametagSkinsPage
-				}
-			"
-		/>
-	</div>
-
 	<div v-if="os !== 'MacOS'" class="mt-6 flex items-center justify-between gap-4">
 		<div>
 			<h2 class="m-0 text-lg font-semibold text-contrast">
@@ -201,6 +191,44 @@ watch(
 			<p class="m-0 mt-1">{{ formatMessage(messages.minimizeLauncherDescription) }}</p>
 		</div>
 		<Toggle id="minimize-launcher" v-model="settings.hide_on_process_start" />
+	</div>
+
+	<div class="mt-6 flex items-center justify-between">
+		<div>
+			<h2 class="m-0 text-lg font-semibold text-contrast">
+				{{ formatMessage(messages.showPlayTimeTitle) }}
+			</h2>
+			<p class="m-0 mt-1">{{ formatMessage(messages.showPlayTimeDescription) }}</p>
+		</div>
+		<Toggle
+			:model-value="themeStore.getFeatureFlag(showPlayTimeFlag)"
+			@update:model-value="
+				() => {
+					const newValue = !themeStore.getFeatureFlag(showPlayTimeFlag)
+					themeStore.featureFlags[showPlayTimeFlag] = newValue
+					settings.feature_flags[showPlayTimeFlag] = newValue
+				}
+			"
+		/>
+	</div>
+
+	<div class="mt-6 flex items-center justify-between">
+		<div>
+			<h2 class="m-0 text-lg font-semibold text-contrast">
+				{{ formatMessage(messages.hideNametagTitle) }}
+			</h2>
+			<p class="m-0 mt-1">{{ formatMessage(messages.hideNametagDescription) }}</p>
+		</div>
+		<Toggle
+			id="hide-nametag-skins-page"
+			:model-value="themeStore.hideNametagSkinsPage"
+			@update:model-value="
+				(e) => {
+					themeStore.hideNametagSkinsPage = !!e
+					settings.hide_nametag_skins_page = themeStore.hideNametagSkinsPage
+				}
+			"
+		/>
 	</div>
 
 	<div class="mt-6 flex items-center justify-between">
@@ -237,12 +265,12 @@ watch(
 			<p class="m-0 mt-1">{{ formatMessage(messages.jumpBackIntoWorldsDescription) }}</p>
 		</div>
 		<Toggle
-			:model-value="themeStore.getFeatureFlag(worldsInHomeFeatureFlag)"
+			:model-value="themeStore.getFeatureFlag(worldsInHomeFlag)"
 			@update:model-value="
 				() => {
-					const newValue = !themeStore.getFeatureFlag(worldsInHomeFeatureFlag)
-					themeStore.featureFlags[worldsInHomeFeatureFlag] = newValue
-					settings.feature_flags[worldsInHomeFeatureFlag] = newValue
+					const newValue = !themeStore.getFeatureFlag(worldsInHomeFlag)
+					themeStore.featureFlags[worldsInHomeFlag] = newValue
+					settings.feature_flags[worldsInHomeFlag] = newValue
 				}
 			"
 		/>
@@ -256,13 +284,13 @@ watch(
 			<p class="m-0 mt-1">{{ formatMessage(messages.unknownPackWarningDescription) }}</p>
 		</div>
 		<Toggle
-			:model-value="!themeStore.getFeatureFlag(skipUnknownPackWarningFeatureFlag)"
+			:model-value="!themeStore.getFeatureFlag(skipUnknownPackWarningFlag)"
 			@update:model-value="
 				(e) => {
 					const warnBeforeUnknownPackInstall = !!e
 					const skipUnknownPackWarning = !warnBeforeUnknownPackInstall
-					themeStore.featureFlags[skipUnknownPackWarningFeatureFlag] = skipUnknownPackWarning
-					settings.feature_flags[skipUnknownPackWarningFeatureFlag] = skipUnknownPackWarning
+					themeStore.featureFlags[skipUnknownPackWarningFlag] = skipUnknownPackWarning
+					settings.feature_flags[skipUnknownPackWarningFlag] = skipUnknownPackWarning
 				}
 			"
 		/>

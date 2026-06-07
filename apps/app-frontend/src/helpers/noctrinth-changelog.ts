@@ -21,6 +21,20 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.14.4',
+		date: '2026-06-07T00:00:00+00:00',
+		body: `### Added
+- Screenshots tab for instances. Browse, zoom, copy to clipboard, reveal in explorer, and delete screenshots taken in-game — all from inside the app.
+
+### Changed
+- Synced with upstream Modrinth (0.14.1 → 0.14.3): play-time toggle in instance header, Mr. Pack default skin, Pride Fundraiser banner, tooltip and card styling improvements, large \`.mrpack\` import crash fix, content-update modal fix, Windows path separator fix in the Files tab, and translation updates.
+- Update popup changelog button now links to the Noctrinth GitHub page instead of the Modrinth website.
+- Download notification icon colour updated to match Noctrinth's purple brand palette.
+
+### Fixed
+- Russian locale updated with all missing translation keys (skin selector strings, collections, notifications, screenshots).`,
+	},
+	{
 		version: '0.14.0',
 		date: '2026-05-29T00:00:00+00:00',
 		body: `### Added

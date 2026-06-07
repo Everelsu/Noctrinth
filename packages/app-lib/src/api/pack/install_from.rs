@@ -8,10 +8,9 @@ use crate::state::{
     SideType,
 };
 use crate::util::fetch::{
-    DownloadMeta, DownloadReason, fetch, fetch_advanced, write_cached_icon,
+    DownloadMeta, DownloadReason, fetch, fetch_advanced, sha1_file_async,
+    write_cached_icon,
 };
-use crate::util::io;
-
 use path_util::SafeRelativeUtf8UnixPathBuf;
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
@@ -139,10 +138,20 @@ impl Default for CreatePackProfile {
 }
 
 #[derive(Clone)]
+pub enum CreatePackFile {
+    Bytes(bytes::Bytes),
+    // Local packs can be larger than available memory, so keep them file-backed.
+    Path(PathBuf),
+}
+
+#[derive(Clone)]
 pub struct CreatePack {
-    pub file: bytes::Bytes,
+    pub file: CreatePackFile,
     pub description: CreatePackDescription,
 }
+
+// The hash lookup only gates the unknown-pack warning, so avoid a long blocking scan for huge local packs.
+const MAX_LOCAL_FILE_HASH_LOOKUP_SIZE: u64 = 1024 * 1024 * 1024;
 
 #[derive(Clone, Debug)]
 pub struct CreatePackDescription {
@@ -436,7 +445,7 @@ pub async fn generate_pack_from_version_id(
     }
 
     Ok(CreatePack {
-        file,
+        file: CreatePackFile::Bytes(file),
         description: CreatePackDescription {
             icon,
             override_title: Some(title),
@@ -454,9 +463,8 @@ pub async fn generate_pack_from_file(
     path: PathBuf,
     profile_path: String,
 ) -> crate::Result<CreatePack> {
-    let file = io::read(&path).await?;
     Ok(CreatePack {
-        file: bytes::Bytes::from(file),
+        file: CreatePackFile::Path(path),
         description: CreatePackDescription {
             icon: None,
             override_title: None,

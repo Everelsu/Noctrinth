@@ -11,7 +11,10 @@ mod facets;
 mod metrics;
 mod old;
 
-use std::{collections::HashMap, num::NonZeroU64};
+use std::{
+    collections::{HashMap, HashSet},
+    num::NonZeroU64,
+};
 
 use crate::database::PgPool;
 use actix_web::{HttpRequest, post, web};
@@ -26,6 +29,7 @@ use crate::{
     },
     database::{
         self, DBProject,
+        models::version_item::VersionQueryResult,
         models::{
             DBAffiliateCode, DBAffiliateCodeId, DBProjectId, DBUser, DBVersion,
             DBVersionId,
@@ -44,6 +48,7 @@ use crate::{
     routes::ApiError,
 };
 
+#[cfg(test)]
 pub(crate) use metrics::normalize_download_source;
 pub use metrics::*;
 
@@ -108,6 +113,10 @@ pub const MIN_RESOLUTION: TimeDelta = TimeDelta::minutes(60);
 /// Maximum number of [`TimeSlice`]s in a [`GetResponse`], controlled by
 /// [`TimeRange::resolution`].
 pub const MAX_TIME_SLICES: usize = 1024;
+pub(crate) const UNKNOWN_LOADER: &str = "unknown";
+pub(crate) const UNKNOWN_COUNTRY: &str = "XX";
+pub(crate) const COUNTRY_PRIVACY_FLOOR: u64 = 50;
+pub(crate) const COUNTRY_PLAYTIME_PRIVACY_FLOOR_SECONDS: u64 = 4 * 60 * 60;
 
 // response
 
@@ -277,7 +286,7 @@ pub async fn fetch_analytics(
         .filter(|version| {
             visible_version_ids.contains(&version.inner.id)
                 && version.inner.date_published >= req.time_range.start
-                && version.inner.date_published <= req.time_range.end
+                && version.inner.date_published < req.time_range.end
         })
         .map(|version| ProjectAnalyticsEvent {
             project_id: version.inner.project_id.into(),
@@ -305,6 +314,7 @@ pub async fn fetch_analytics(
             .into_iter()
             .map(|code| code.id)
             .collect::<Vec<_>>();
+    let project_loaders = project_loader_map(&parent_version_data);
 
     let mut query_clickhouse_cx = QueryClickhouseContext {
         clickhouse: &clickhouse,
@@ -313,6 +323,7 @@ pub async fn fetch_analytics(
         project_ids: &project_ids,
         parent_version_ids: &parent_version_ids,
         affiliate_code_ids: &affiliate_code_ids,
+        project_loaders: &project_loaders,
     };
 
     if let Some(metrics) = &req.return_metrics.project_views {
@@ -395,12 +406,59 @@ pub(crate) fn none_if_zero_version_id(v: DBVersionId) -> Option<VersionId> {
     if v.0 == 0 { None } else { Some(v.into()) }
 }
 
-pub(crate) fn condense_country(country: String, count: u64) -> String {
-    // Every country under '50' (view or downloads) should be condensed into 'XX'
-    if count < 50 {
-        "XX".to_string()
+pub(crate) fn apply_country_privacy(
+    country: &mut Option<String>,
+    country_filter_applied: bool,
+    count: u64,
+    floor: u64,
+) -> bool {
+    if count >= floor {
+        return true;
+    }
+
+    if country_filter_applied {
+        return false;
+    }
+
+    if country.is_some() {
+        *country = Some(UNKNOWN_COUNTRY.to_string());
+    }
+
+    true
+}
+
+pub(crate) fn project_loader_map(
+    versions: &[VersionQueryResult],
+) -> HashMap<DBProjectId, HashSet<String>> {
+    let mut loaders = HashMap::<DBProjectId, HashSet<String>>::new();
+
+    for version in versions {
+        loaders
+            .entry(version.inner.project_id)
+            .or_default()
+            .extend(version.loaders.iter().cloned());
+    }
+
+    loaders
+}
+
+pub(crate) fn normalize_loader_for_project(
+    loader: String,
+    project_id: DBProjectId,
+    project_loaders: &HashMap<DBProjectId, HashSet<String>>,
+) -> String {
+    if loader.is_empty() {
+        return loader;
+    }
+
+    let loader_is_valid = project_loaders
+        .get(&project_id)
+        .is_some_and(|loaders| loaders.contains(&loader));
+
+    if loader_is_valid {
+        loader
     } else {
-        country
+        UNKNOWN_LOADER.to_string()
     }
 }
 
@@ -423,7 +481,8 @@ async fn fetch_project_status_change_events(
         WHERE
             t.mod_id = ANY($1)
             AND tm.body->>'type' = 'status_change'
-            AND tm.created BETWEEN $2 AND $3
+            AND tm.created >= $2
+            AND tm.created < $3
         "#,
         &project_id_values,
         time_range.start,
@@ -462,6 +521,7 @@ pub(crate) struct QueryClickhouseContext<'a> {
     pub(crate) project_ids: &'a [DBProjectId],
     pub(crate) parent_version_ids: &'a [DBVersionId],
     pub(crate) affiliate_code_ids: &'a [DBAffiliateCodeId],
+    pub(crate) project_loaders: &'a HashMap<DBProjectId, HashSet<String>>,
 }
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -472,11 +532,11 @@ pub(crate) struct ClickhouseQueryParams {
 }
 
 pub(crate) enum ClickhouseFilterParam<'a> {
-    String(&'static str, &'a [String]),
+    String(&'a [String]),
     Bool(&'static str, &'a [bool]),
-    VersionId(&'static str, &'a [VersionId]),
-    AffiliateCodeId(&'static str, &'a [AffiliateCodeId]),
-    DownloadReason(&'static str, &'a [DownloadReason]),
+    VersionId(&'a [VersionId]),
+    AffiliateCodeId(&'a [AffiliateCodeId]),
+    DownloadReason(&'a [DownloadReason]),
 }
 
 impl ClickhouseFilterParam<'_> {
@@ -485,7 +545,7 @@ impl ClickhouseFilterParam<'_> {
         query: clickhouse::query::Query,
     ) -> clickhouse::query::Query {
         match self {
-            Self::String(name, values) => query.param(name, values),
+            Self::String(values) => query.bind(values),
             Self::Bool(name, values) => {
                 let value = match values {
                     [false] => 0,
@@ -494,36 +554,30 @@ impl ClickhouseFilterParam<'_> {
                 };
                 query.param(name, value)
             }
-            Self::VersionId(name, values) => {
+            Self::VersionId(values) => {
                 let values = values
                     .iter()
                     .map(|id| DBVersionId::from(*id))
                     .collect::<Vec<_>>();
-                query.param(name, values)
+                query.bind(values)
             }
-            Self::AffiliateCodeId(name, values) => {
+            Self::AffiliateCodeId(values) => {
                 let values = values
                     .iter()
                     .map(|id| DBAffiliateCodeId::from(*id))
                     .collect::<Vec<_>>();
-                query.param(name, values)
+                query.bind(values)
             }
-            Self::DownloadReason(name, values) => {
+            Self::DownloadReason(values) => {
                 let values =
                     values.iter().map(ToString::to_string).collect::<Vec<_>>();
-                query.param(name, values)
+                query.bind(values)
             }
         }
     }
 }
 
 impl ClickhouseQueryParams {
-    pub(crate) const PROJECT_IDS: Self = Self {
-        project_ids: true,
-        parent_version_ids: false,
-        affiliate_code_ids: false,
-    };
-
     pub(crate) const fn empty() -> Self {
         Self {
             project_ids: false,
@@ -568,13 +622,13 @@ where
         .param("time_range_end", cx.req.time_range.end.timestamp())
         .param("time_slices", cx.time_slices.len());
     if params.project_ids {
-        query = query.param("project_ids", cx.project_ids);
+        query = query.bind(cx.project_ids);
     }
     if params.parent_version_ids {
-        query = query.param("parent_version_ids", cx.parent_version_ids);
+        query = query.bind(cx.parent_version_ids);
     }
     if params.affiliate_code_ids {
-        query = query.param("affiliate_code_ids", cx.affiliate_code_ids);
+        query = query.bind(cx.affiliate_code_ids);
     }
     for (param_name, used) in use_columns {
         query = query.param(param_name, used)
@@ -600,6 +654,9 @@ pub(crate) fn add_to_time_slice(
     bucket: usize,
     data: AnalyticsData,
 ) -> Result<(), ApiError> {
+    // Bucketed analytics queries must filter time ranges as `[start, end)`.
+    // `widthBucket` returns `num_time_slices + 1` for values at or after
+    // `end`, which is outside the response slice array.
     // row.recorded <  time_range_start => bucket = 0
     // row.recorded >= time_range_end   => bucket = num_time_slices
     //   (note: this is out of range of `time_slices`!)
@@ -744,6 +801,45 @@ mod tests {
             serde_json::to_value(DownloadSource::Other).unwrap(),
             json!("other")
         );
+    }
+
+    #[test]
+    fn country_privacy_floor_suppresses_small_constrained_buckets() {
+        let mut country = None;
+        assert!(apply_country_privacy(
+            &mut country,
+            false,
+            1,
+            COUNTRY_PRIVACY_FLOOR
+        ));
+        assert_eq!(country, None);
+
+        let mut country = Some("US".into());
+        assert!(apply_country_privacy(
+            &mut country,
+            false,
+            49,
+            COUNTRY_PRIVACY_FLOOR
+        ));
+        assert_eq!(country, Some("XX".into()));
+
+        let mut country = Some("US".into());
+        assert!(!apply_country_privacy(
+            &mut country,
+            true,
+            49,
+            COUNTRY_PRIVACY_FLOOR
+        ));
+        assert_eq!(country, Some("US".into()));
+
+        let mut country = Some("US".into());
+        assert!(apply_country_privacy(
+            &mut country,
+            true,
+            50,
+            COUNTRY_PRIVACY_FLOOR
+        ));
+        assert_eq!(country, Some("US".into()));
     }
 
     #[test]

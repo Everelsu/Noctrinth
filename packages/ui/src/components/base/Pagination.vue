@@ -106,7 +106,6 @@ const props = withDefaults(
 	{
 		page: 1,
 		count: 1,
-		linkFunction: (page: number) => void page,
 	},
 )
 

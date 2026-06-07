@@ -26,7 +26,7 @@ export function setupFilePickerProvider() {
 			const file = await createFileFromPath(path, 'icon')
 			return { file, path, previewUrl: convertFileSrc(path) }
 		},
-		async pickModpackFile() {
+		async pickModpackFile(options) {
 			const result = await open({
 				multiple: false,
 				// `.mrpack` (Modrinth) and `.zip` (CurseForge modpacks).
@@ -35,12 +35,19 @@ export function setupFilePickerProvider() {
 			if (!result) return null
 			const path = result.path ?? result
 			if (!path) return null
-			const file = await createFileFromPath(
+			if (options?.readFile === false) {
+				// Instance imports stream from the native path, keeping large packs out of JS memory.
+				return { path, previewUrl: '' }
+			}
+			return {
+				file: await createFileFromPath(
+					path,
+					'modpack.mrpack',
+					'application/x-modrinth-modpack+zip',
+				),
 				path,
-				'modpack.mrpack',
-				'application/x-modrinth-modpack+zip',
-			)
-			return { file, path, previewUrl: '' }
+				previewUrl: '',
+			}
 		},
 	})
 }

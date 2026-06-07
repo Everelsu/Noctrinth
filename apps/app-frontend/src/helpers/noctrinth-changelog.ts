@@ -21,7 +21,7 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
-		version: '0.14.4',
+		version: '0.14.3',
 		date: '2026-06-07T00:00:00+00:00',
 		body: `### Added
 - Screenshots tab for instances. Browse, zoom, copy to clipboard, reveal in explorer, and delete screenshots taken in-game — all from inside the app.

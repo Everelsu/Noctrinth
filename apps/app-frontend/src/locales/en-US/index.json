@@ -242,6 +242,51 @@
   "app.instance.mods.successfully-uploaded": {
     "message": "Successfully uploaded"
   },
+  "app.instance.screenshots.copied": {
+    "message": "Screenshot copied to clipboard"
+  },
+  "app.instance.screenshots.copy": {
+    "message": "Copy image"
+  },
+  "app.instance.screenshots.copy-failed": {
+    "message": "Failed to copy screenshot"
+  },
+  "app.instance.screenshots.count": {
+    "message": "{count, plural, one {# screenshot} other {# screenshots}}"
+  },
+  "app.instance.screenshots.delete.description": {
+    "message": "This will permanently delete the screenshot from disk. This cannot be undone."
+  },
+  "app.instance.screenshots.delete.title": {
+    "message": "Delete this screenshot?"
+  },
+  "app.instance.screenshots.empty.description": {
+    "message": "Press F2 while playing this instance to capture a screenshot."
+  },
+  "app.instance.screenshots.empty.title": {
+    "message": "No screenshots yet"
+  },
+  "app.instance.screenshots.next": {
+    "message": "Next"
+  },
+  "app.instance.screenshots.open-folder-button": {
+    "message": "Open folder"
+  },
+  "app.instance.screenshots.previous": {
+    "message": "Previous"
+  },
+  "app.instance.screenshots.refresh": {
+    "message": "Refresh"
+  },
+  "app.instance.screenshots.reveal": {
+    "message": "Show in folder"
+  },
+  "app.instance.screenshots.sort-newest": {
+    "message": "Newest first"
+  },
+  "app.instance.screenshots.sort-oldest": {
+    "message": "Oldest first"
+  },
   "app.instance.worlds.add-server": {
     "message": "Add server"
   },
@@ -605,6 +650,15 @@
   "collection.edit": {
     "message": "Edit"
   },
+  "collection.filter.all": {
+    "message": "All"
+  },
+  "collection.following.description": {
+    "message": "Auto-generated collection of all the projects you're following."
+  },
+  "collection.following.name": {
+    "message": "Followed projects"
+  },
   "collection.loading": {
     "message": "Loading..."
   },
@@ -673,6 +727,24 @@
   },
   "collection.tab.notifications": {
     "message": "Notifications"
+  },
+  "collection.type.datapack": {
+    "message": "Data packs"
+  },
+  "collection.type.mod": {
+    "message": "Mods"
+  },
+  "collection.type.modpack": {
+    "message": "Modpacks"
+  },
+  "collection.type.plugin": {
+    "message": "Plugins"
+  },
+  "collection.type.resourcepack": {
+    "message": "Resource packs"
+  },
+  "collection.type.shader": {
+    "message": "Shaders"
   },
   "collection.unfollow-project": {
     "message": "Unfollow project"

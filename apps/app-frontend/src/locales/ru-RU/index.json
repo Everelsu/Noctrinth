@@ -1237,5 +1237,92 @@
   },
   "app.notifications.not-signed-in": {
     "message": "Вы не вошли в аккаунт"
+  },
+  "app.instance.screenshots.count": {
+    "message": "{count, plural, one {# скриншот} few {# скриншота} many {# скриншотов} other {# скриншота}}"
+  },
+  "app.instance.screenshots.sort-newest": {
+    "message": "Сначала новые"
+  },
+  "app.instance.screenshots.sort-oldest": {
+    "message": "Сначала старые"
+  },
+  "app.instance.screenshots.open-folder-button": {
+    "message": "Открыть папку"
+  },
+  "app.instance.screenshots.refresh": {
+    "message": "Обновить"
+  },
+  "app.instance.screenshots.empty.title": {
+    "message": "Скриншотов пока нет"
+  },
+  "app.instance.screenshots.empty.description": {
+    "message": "Нажмите F2 во время игры в этой сборке, чтобы сделать скриншот."
+  },
+  "app.instance.screenshots.copy": {
+    "message": "Копировать"
+  },
+  "app.instance.screenshots.copied": {
+    "message": "Скриншот скопирован в буфер обмена"
+  },
+  "app.instance.screenshots.copy-failed": {
+    "message": "Не удалось скопировать скриншот"
+  },
+  "app.instance.screenshots.reveal": {
+    "message": "Показать в папке"
+  },
+  "app.instance.screenshots.fullscreen": {
+    "message": "Во весь экран"
+  },
+  "app.instance.screenshots.exit-fullscreen": {
+    "message": "Выйти из полноэкранного режима"
+  },
+  "app.instance.screenshots.zoom-in": {
+    "message": "Приблизить"
+  },
+  "app.instance.screenshots.zoom-out": {
+    "message": "Отдалить"
+  },
+  "app.instance.screenshots.previous": {
+    "message": "Назад"
+  },
+  "app.instance.screenshots.next": {
+    "message": "Вперёд"
+  },
+  "app.instance.screenshots.delete.title": {
+    "message": "Удалить этот скриншот?"
+  },
+  "app.instance.screenshots.delete.description": {
+    "message": "Скриншот будет безвозвратно удалён с диска. Это действие нельзя отменить."
+  },
+  "app.instance.screenshots.fullscreen-failed": {
+    "message": "Полноэкранный режим недоступен"
+  },
+  "collection.following.name": {
+    "message": "Отслеживаемые проекты"
+  },
+  "collection.following.description": {
+    "message": "Автоматически созданная коллекция всех проектов, на которые вы подписаны."
+  },
+  "collection.filter.all": {
+    "message": "Все"
+  },
+  "collection.type.mod": {
+    "message": "Моды"
+  },
+  "collection.type.modpack": {
+    "message": "Сборки"
+  },
+  "collection.type.resourcepack": {
+    "message": "Ресурспаки"
+  },
+  "collection.type.shader": {
+    "message": "Шейдеры"
+  },
+  "collection.type.datapack": {
+    "message": "Дата-паки"
+  },
+  "collection.type.plugin": {
+    "message": "Плагины"
   }
 }

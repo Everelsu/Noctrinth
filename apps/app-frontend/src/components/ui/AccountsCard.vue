@@ -312,7 +312,9 @@ const avatarUrl = computed(() => {
 		if (cachedUrl) {
 			return cachedUrl
 		}
-		return `https://mc-heads.net/avatar/${equippedSkin.value.texture_key}/128`
+		// No rendered head cached yet — fall through to the UUID-based head below.
+		// (mc-heads.net only accepts a username/UUID, not a Mojang texture hash,
+		// so a `texture_key` URL would just render a default Steve.)
 	}
 	if (selectedAccount.value?.profile?.id) {
 		return microsoftHeadUrl(selectedAccount.value.profile.id)

@@ -292,6 +292,15 @@ export default new createRouter({
 						breadcrumb: [{ name: '?Instance', link: '/instance/{id}/' }, { name: 'Logs' }],
 					},
 				},
+				{
+					path: 'screenshots',
+					name: 'InstanceScreenshots',
+					component: Instance.Screenshots,
+					meta: {
+						useRootContext: true,
+						breadcrumb: [{ name: '?Instance', link: '/instance/{id}/' }, { name: 'Screenshots' }],
+					},
+				},
 			],
 		},
 	],

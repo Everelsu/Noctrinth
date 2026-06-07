@@ -56,6 +56,7 @@ type VirtualSkinSectionListExpose = {
 }
 
 const PENDING_SKIN_REFRESH_DELAY_MS = 11_000
+const USER_CHECK_INTERVAL_MS = 1_000
 const messages = defineMessages({
 	skinSelectorTitle: {
 		id: 'app.skins.title',
@@ -764,7 +765,10 @@ onMounted(() => {
 	// otherwise leave the page stuck on the global loading bar and never render
 	// the sign-in prompt for users without an active account.
 	void loadInitialData()
-	userCheckInterval = window.setInterval(checkUserChanges, 250)
+	// Poll for account switches once per second. This is a deliberately cheap
+	// fallback (a 1s delay to reflect an account change is imperceptible) that
+	// avoids hammering the backend with a get_default_user IPC call 4×/second.
+	userCheckInterval = window.setInterval(checkUserChanges, USER_CHECK_INTERVAL_MS)
 	void setupAddSkinDragDropListener()
 })
 

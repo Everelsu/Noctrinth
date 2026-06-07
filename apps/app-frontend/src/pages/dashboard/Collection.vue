@@ -87,7 +87,33 @@ const messages = defineMessages({
 	sortFollowers: { id: 'collection.sort.followers', defaultMessage: 'Followers' },
 	sortUpdated: { id: 'collection.sort.updated', defaultMessage: 'Recently updated' },
 	searchPlaceholder: { id: 'collection.search-placeholder', defaultMessage: 'Search projects...' },
+	followingName: { id: 'collection.following.name', defaultMessage: 'Followed projects' },
+	followingDescription: {
+		id: 'collection.following.description',
+		defaultMessage: "Auto-generated collection of all the projects you're following.",
+	},
+	filterAll: { id: 'collection.filter.all', defaultMessage: 'All' },
+	typeMod: { id: 'collection.type.mod', defaultMessage: 'Mods' },
+	typeModpack: { id: 'collection.type.modpack', defaultMessage: 'Modpacks' },
+	typeResourcepack: { id: 'collection.type.resourcepack', defaultMessage: 'Resource packs' },
+	typeShader: { id: 'collection.type.shader', defaultMessage: 'Shaders' },
+	typeDatapack: { id: 'collection.type.datapack', defaultMessage: 'Data packs' },
+	typePlugin: { id: 'collection.type.plugin', defaultMessage: 'Plugins' },
 })
+
+const TYPE_LABELS: Record<string, (typeof messages)[keyof typeof messages]> = {
+	mod: messages.typeMod,
+	modpack: messages.typeModpack,
+	resourcepack: messages.typeResourcepack,
+	shader: messages.typeShader,
+	datapack: messages.typeDatapack,
+	plugin: messages.typePlugin,
+}
+
+function formatTypeLabel(type: string): string {
+	const message = TYPE_LABELS[type]
+	return message ? formatMessage(message) : type.charAt(0).toUpperCase() + type.slice(1) + 's'
+}
 
 const searchQuery = ref('')
 
@@ -211,7 +237,7 @@ const typeFilterOptions = computed<FilterPillOption[]>(() => {
 	}
 	return Array.from(seen).map((t) => ({
 		id: t,
-		label: t.charAt(0).toUpperCase() + t.slice(1) + 's',
+		label: formatTypeLabel(t),
 	}))
 })
 
@@ -277,8 +303,8 @@ async function loadFollowing() {
 	collection.value = {
 		id: 'following',
 		user: creds.user_id,
-		name: 'Followed projects',
-		description: "Auto-generated collection of all the projects you're following.",
+		name: formatMessage(messages.followingName),
+		description: formatMessage(messages.followingDescription),
 		icon_url: 'https://cdn.modrinth.com/follow-collection.png',
 		color: null,
 		status: 'private',
@@ -493,7 +519,9 @@ watch(
 				input-class="!h-11"
 			/>
 			<div class="flex flex-wrap items-center gap-2">
-				<FilterPills v-if="showTypeFilter" v-model="typeFilters" :options="typeFilterOptions" />
+				<FilterPills v-if="showTypeFilter" v-model="typeFilters" :options="typeFilterOptions">
+					<template #all>{{ formatMessage(messages.filterAll) }}</template>
+				</FilterPills>
 				<DropdownSelect
 					v-slot="{ selected }"
 					:model-value="sortMode"

@@ -277,6 +277,7 @@ import {
 	FolderOpenIcon,
 	GlobeIcon,
 	HashIcon,
+	ImageIcon,
 	MoreVerticalIcon,
 	PackageIcon,
 	PlayIcon,
@@ -503,6 +504,11 @@ const tabs = computed(() => [
 		label: 'Logs',
 		href: `${basePath.value}/logs`,
 		icon: TerminalSquareIcon,
+	},
+	{
+		label: 'Screenshots',
+		href: `${basePath.value}/screenshots`,
+		icon: ImageIcon,
 	},
 ])
 

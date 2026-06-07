@@ -148,8 +148,6 @@ pub struct CreatePack {
     pub description: CreatePackDescription,
 }
 
-// The hash lookup only gates the unknown-pack warning, so avoid a long blocking scan for huge local packs.
-const MAX_LOCAL_FILE_HASH_LOOKUP_SIZE: u64 = 1024 * 1024 * 1024;
 
 #[derive(Clone, Debug)]
 pub struct CreatePackDescription {

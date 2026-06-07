@@ -567,34 +567,6 @@ pub async fn sha1_async(bytes: Bytes) -> crate::Result<String> {
     Ok(hash)
 }
 
-pub async fn sha1_file_async(
-    path: impl AsRef<Path>,
-) -> crate::Result<(u64, String)> {
-    let path = path.as_ref();
-    // Local files can be multi-gigabyte .mrpacks, so hash them without materializing bytes.
-    let mut file = File::open(path)
-        .await
-        .map_err(|e| IOError::with_path(e, path))?;
-    let mut hasher = sha1_smol::Sha1::new();
-    let mut size = 0;
-    let mut buffer = vec![0; 262144];
-
-    loop {
-        let bytes_read = file
-            .read(&mut buffer)
-            .await
-            .map_err(|e| IOError::with_path(e, path))?;
-        if bytes_read == 0 {
-            break;
-        }
-
-        hasher.update(&buffer[..bytes_read]);
-        size += bytes_read as u64;
-    }
-
-    Ok((size, hasher.digest().to_string()))
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

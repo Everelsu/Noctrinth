@@ -1200,7 +1200,7 @@ async function installUpdate() {
 setAppUpdateActions({
 	download: downloadAvailableUpdate,
 	install: installUpdate,
-	changelog: () => openUrl('https://github.com/Everelsu/Noctrinth'),
+	changelog: () => openUrl('https://everelsu.github.io/Noctrinth/'),
 })
 
 async function openModrinthProjectLinkInApp(parsed) {

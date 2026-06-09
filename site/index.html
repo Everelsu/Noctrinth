@@ -283,9 +283,163 @@
 					<h2>
 						<span class="entry__type">Noctrinth</span>
 						<span class="dot-sep"></span>
+						<span class="entry__version">0.14.5</span>
+					</h2>
+					<time class="entry__date" datetime="2026-06-09T00:00:00+00:00" title="June 9, 2026 at 9:00 AM">32 minutes ago</time>
+				</div>
+			</div>
+			<div class="entry__body changelog-body"><h3>Changed</h3>
+<ul><li>Synced with upstream Modrinth (0.14.3 → 0.14.5): new &quot;release channels&quot; instance setting that controls which content versions count as an update (defaults to release-only), reworked updater UI (the &quot;Reload to update&quot; action moved to the top-right action bar and update pop-ups now appear only after the prompt has been ignored for 24 hours), uncommon plugin loaders collapsed behind a &quot;Show more&quot; toggle, and assorted analytics and translation updates.</li><li>Update pop-up &quot;Changelog&quot; button now opens the Noctrinth GitHub page instead of the Modrinth website.</li><li>Changelog website timestamps are now recalculated live on every visit (and refreshed each minute) instead of being frozen at build time, so &quot;X days ago&quot; labels stay accurate. Hovering a timestamp shows the exact patch date and time.</li></ul>
+<h3>Fixed</h3>
+<ul><li>Fixed drag-and-drop file upload not working in the instance Files tab.</li><li>Fixed a layering issue where the expanded console view in the Logs tab could render behind other elements.</li><li>Fixed the updater restarting the app even when a restart wasn't requested.</li></ul></div>
+		</div>
+
+		<div class="entry">
+			<div class="entry__head">
+				<div class="entry__dot entry__dot--modrinth"></div>
+				<div class="entry__title">
+					<h2>
+						<span class="entry__type">App</span>
+						<span class="dot-sep"></span>
+						<span class="entry__version">0.14.5</span>
+					</h2>
+					<time class="entry__date" datetime="2026-06-08T22:54:32+00:00" title="June 9, 2026 at 7:54 AM">2 hours ago</time>
+				</div>
+			</div>
+			<div class="entry__body changelog-body"><h2>Added</h2>
+<ul><li>Added a new setting to the General tab of instance settings which allows you to control what content versions are considered an update. By default this will be set to release channel only.</li><li>Fixed drag and drop file upload not working in instances Files tab.</li><li>Fixed layering issue with the expanded console view in the Logs tab of instances and Modrinth Hosting panels.</li></ul>
+<h2>Changed</h2>
+<ul><li>Moved &quot;Reload to update&quot; button from the bottom left to the top right action bar.</li><li>Changed update notifications to show only after 24 hours of ignoring the &quot;Reload to update&quot; button.</li><li>Updated translations</li></ul>
+<h2>Fixed</h2>
+<ul><li>Fixed updater restarting the app even if you didn't ask it to.</li><li>Fixed user pages incorrectly opening in the app when clicking user objects in the Modrinth Hosting</li></ul></div>
+		</div>
+
+		<div class="entry">
+			<div class="entry__head">
+				<div class="entry__dot entry__dot--noctrinth"></div>
+				<div class="entry__title">
+					<h2>
+						<span class="entry__type">Noctrinth</span>
+						<span class="dot-sep"></span>
+						<span class="entry__version">0.14.3</span>
+					</h2>
+					<time class="entry__date" datetime="2026-06-07T00:00:00+00:00" title="June 7, 2026 at 9:00 AM">2 days ago</time>
+				</div>
+			</div>
+			<div class="entry__body changelog-body"><h3>Added</h3>
+<ul><li>Screenshots tab for instances. Browse, zoom, copy to clipboard, reveal in explorer, and delete screenshots taken in-game — all from inside the app.</li></ul>
+<h3>Changed</h3>
+<ul><li>Synced with upstream Modrinth (0.14.1 → 0.14.3): play-time toggle in instance header, Mr. Pack default skin, Pride Fundraiser banner, tooltip and card styling improvements, large <code>.mrpack</code> import crash fix, content-update modal fix, Windows path separator fix in the Files tab, and translation updates.</li><li>Update popup changelog button now links to the Noctrinth GitHub page instead of the Modrinth website.</li><li>Download notification icon colour updated to match Noctrinth's purple brand palette.</li></ul>
+<h3>Fixed</h3>
+<ul><li>Russian locale updated with all missing translation keys (skin selector strings, collections, notifications, screenshots).</li></ul></div>
+		</div>
+
+		<div class="entry">
+			<div class="entry__head">
+				<div class="entry__dot entry__dot--modrinth"></div>
+				<div class="entry__title">
+					<h2>
+						<span class="entry__type">App</span>
+						<span class="dot-sep"></span>
+						<span class="entry__version">0.14.3</span>
+					</h2>
+					<time class="entry__date" datetime="2026-06-02T16:37:52+00:00" title="June 3, 2026 at 1:37 AM">6 days ago</time>
+				</div>
+			</div>
+			<div class="entry__body changelog-body"><h2>Added</h2>
+<ul><li>Added toggle to hide play time from instance header.</li></ul>
+<h2>Changed</h2>
+<ul><li>Updated translations</li></ul>
+<h2>Fixed</h2>
+<ul><li>Fixed importing large .mrpack files in Modrinth App causing OS freezing or crashing.</li><li>Fixed the content update modal in the Content tab of instances hiding available updates in some cases.</li><li>Fixed copying full paths from the Files tab using mixed path separators on Windows.</li></ul></div>
+		</div>
+
+		<div class="entry">
+			<div class="entry__head">
+				<div class="entry__dot entry__dot--muted"></div>
+				<div class="entry__title">
+					<h2>
+						<span class="entry__type">App</span>
+						<span class="dot-sep"></span>
+						<span class="entry__version">0.14.2</span>
+					</h2>
+					<time class="entry__date" datetime="2026-05-31T16:45:15-07:00" title="June 1, 2026 at 8:45 AM">June 1, 2026</time>
+				</div>
+			</div>
+			<div class="entry__body changelog-body"><h2>Added</h2>
+<ul><li>New Australia region for Modrinth Hosting</li></ul>
+<h2>Fixed</h2>
+<ul><li>Germany Modrinth hosting region not providing latency data.</li></ul></div>
+		</div>
+
+		<div class="entry">
+			<div class="entry__head">
+				<div class="entry__dot entry__dot--muted"></div>
+				<div class="entry__title">
+					<h2>
+						<span class="entry__type">App</span>
+						<span class="dot-sep"></span>
+						<span class="entry__version">0.14.1</span>
+					</h2>
+					<time class="entry__date" datetime="2026-05-31T16:45:15+00:00" title="June 1, 2026 at 1:45 AM">June 1, 2026</time>
+				</div>
+			</div>
+			<div class="entry__body changelog-body"><h2>Added</h2>
+<ul><li>Pride Fundraiser 2026 banner in the Modrinth App sidebar with donation progress, supporter count, days remaining, and a donation link.</li><li>Modrinth Pride Fundraiser supporters can now access exclusive Mr. Pack Pride skins in the Modrinth App Skin selector.</li><li>Mr. Pack is now available as a default skin in the Modrinth App Skin selector.</li></ul>
+<h2>Changed</h2>
+<ul><li>Updated tooltips from pure black backgrounds to a style consistent with other popovers.</li><li>Floating tooltips and pop-ups now have stronger shadows.</li><li>Updated cards across Modrinth with consistent subtle borders.</li></ul></div>
+		</div>
+
+		<div class="entry">
+			<div class="entry__head">
+				<div class="entry__dot entry__dot--muted"></div>
+				<div class="entry__title">
+					<h2>
+						<span class="entry__type">Noctrinth</span>
+						<span class="dot-sep"></span>
+						<span class="entry__version">0.14.0</span>
+					</h2>
+					<time class="entry__date" datetime="2026-05-29T00:00:00+00:00" title="May 29, 2026 at 9:00 AM">May 29, 2026</time>
+				</div>
+			</div>
+			<div class="entry__body changelog-body"><h3>Added</h3>
+<ul><li>CurseForge install detection via fingerprint API. Borrowed XMCL's approach: every <code>.jar</code>, <code>.zip</code> in <code>mods/</code>, <code>shaderpacks/</code>, <code>resourcepacks/</code>, <code>datapacks/</code> is hashed with CurseForge's Murmur2 (whitespace-stripped, seed = 1) and resolved through <code>POST /v1/fingerprints/432</code>. Catches mods you dragged into the folder manually, mods installed before this app version existed, and instances restored from backup — without any per-install bookkeeping.</li><li>Cross-platform mapping. A curated table of well-known Modrinth ↔ CurseForge ID pairs (Sodium, JEI, Iris, Create, Botania, JourneyMap, …) is consulted whenever <code>unifiedSearch</code> merges a Modrinth hit with a CurseForge hit; the table also grows automatically from successful runtime slug-matches (persisted to localStorage). Mods that exist on both platforms now show up as a single card in unified search, and installing one platform's version marks the other as installed too.</li><li>CurseForge dependency resolver with relationType propagation. The XMCL algorithm: <code>Embedded</code> / <code>Tool</code> / <code>Include</code> deps are skipped (not runtime), <code>Incompatible</code> mods are surfaced as a warning, <code>Optional</code> deps are returned for the UI to offer (not silently installed), and <code>Required</code> deps stay required ONLY if every ancestor was also required — preventing silent install of a hard requirement of something you didn't ask for.</li><li>CurseForge categories for shader / resource pack / datapack tabs. Sidebar in CF mode now has curated category lists for all four content types (mods + 3 others), each mapping a Modrinth icon-bearing slug to a real CurseForge category slug that actually returns results. The same Modrinth slug can resolve to different CF categories depending on the active project type.</li><li>Pagination &quot;…&quot; → page input. Clicking the gap in the pagination row turns it into a small number input; Enter jumps to that page (clamped to <code>[1, count]</code>), Escape or blur cancels. Works everywhere <code>Pagination</code> is rendered.</li><li>CurseForge &quot;Alpha&quot; badge on the source toggle, visible only when CurseForge is the active catalog — flags the integration as experimental until proven stable.</li><li>Russian translations for the account dropdown, Collections page (incl. sort/search), Notifications page (incl. all type chips), Collection detail page, sidebar tooltips, Ely.by login modal, Changelog tab, dashboard nav tabs.</li><li>Search and sort for the Followed-projects view (and any collection): filter by query (matches title, slug, description) + sort by Name (A-Z) / Downloads / Followers / Recently updated. Sort choice persists across reloads.</li></ul>
+<h3>Changed</h3>
+<ul><li>Synced with upstream Modrinth 0.14.0. New skin selector out of beta, skin preview improvements, project analytics performance, Daedalus manifest uploads on new game versions, allowing <code>user-images.githubusercontent.com</code> in CSP, and various smaller fixes.</li><li>Skin preview rotation. Drag up / down now tilts the model around its pitch axis (clamped to ±90°) so the crown and soles are reachable, in addition to the existing yaw drag. The spotlight shadow is now parented to the model and sits at the feet — it tilts and translates with the figure instead of staying as a static rug below.</li><li>CurseForge content sidebar redesign. Curated Modrinth-style category list (Library, Magic, Storage, Technology, Equipment, Mobs, …) instead of CurseForge's raw taxonomy.\</li><li>Compact number suffixes are now Latin (<code>k</code>, <code>m</code>, <code>b</code>) regardless of locale, while keeping the numeric formatting locale-correct (<code>1,23m</code> in Russian, <code>1.23m</code> in English). <code>355,64 млн</code> and similar long ICU labels no longer crowd the UI on Cyrillic locales.</li></ul>
+<h3>Fixed</h3>
+<ul><li>Modpack file import no longer mysteriously deletes the instance.** If the selected file isn't a recognised modpack (no <code>modrinth.index.json</code> and no <code>manifest.json</code>), or if it's a CurseForge modpack without a CurseForge API key, the user sees a clear error message BEFORE any profile is created. The dispatcher's cleanup-on-error contract guarantees that even when something fails mid-install, no orphan profiles are left behind.</li><li>Filename sanitisation at the Windows filesystem boundary.** Modpacks shipping files with names like <code>EpicSiegeMod_汉字.jar</code> (or its mangled <code>EpicSiegeMod_???? ???.jar</code> form from a lossy ANSI round-trip) no longer crash the install with <code>ERROR_INVALID_NAME (os error 123)</code>. Reserved Windows characters (<code>&lt;&gt;:&quot;|?*</code>), control bytes, and U+FFFD are replaced with <code>_</code> right before <code>write()</code> — the manifest itself is untouched.</li><li>CurseForge categories were swapped.**</li><li>Vanilla instances can now install CurseForge resource packs, shaders, and datapacks. The &quot;compatible loader&quot; check was rejecting any file whose <code>gameVersions</code> contained a non-numeric entry, but those entries also include informational tags like <code>Iris</code>, <code>OptiFine</code>, <code>Data Pack</code> that aren't actual mod loaders. The check now only treats Forge / Fabric / Quilt / NeoForge / Cauldron / LiteLoader as disqualifying.</li></ul></div>
+		</div>
+
+		<div class="entry">
+			<div class="entry__head">
+				<div class="entry__dot entry__dot--muted"></div>
+				<div class="entry__title">
+					<h2>
+						<span class="entry__type">App</span>
+						<span class="dot-sep"></span>
+						<span class="entry__version">0.14.0</span>
+					</h2>
+					<time class="entry__date" datetime="2026-05-27T22:30:20+00:00" title="May 28, 2026 at 7:30 AM">May 28, 2026</time>
+				</div>
+			</div>
+			<div class="entry__body changelog-body"><h2>Added</h2>
+<ul><li>Skin selections can now be previewed in the Skin selector before applying or resetting them.</li><li>The Tiny Takeover default skin pack in the Skin selector.</li><li>The skin preview in the Skin selections page now feels pain.</li></ul>
+<h2>Changed</h2>
+<ul><li>Renamed the Skins page to Skin selector and removed its beta label.</li><li>Redesigned the Skin selector with a sticky preview, larger skin cards, and collapsible skin pack sections.</li><li>Moved PNG skin uploads from a separate modal to the Add skin card in Saved skins.</li><li>Changed cape selection so each saved skin controls its own cape instead of using a separate default cape.</li><li>Moved cape selection into the Edit skin modal, with a <code>None</code> option for saving skins without capes.</li><li>Updated skin previews for more consistent framing across the Skin selector, skin editor, and skin cards.</li><li>Skin and cape changes made outside Modrinth App are now reflected when the Skin selector refreshes or on app launch safely.</li><li>Images from <code>user-images.githubusercontent.com</code> are no longer proxied.</li></ul>
+<h2>Fixed</h2>
+<ul><li>Fixed duplicate saved skin cards appearing when the same texture was saved with different arm or cape settings.</li><li>Fixed skins equipped outside Modrinth App disappearing from the Skin selector after switching to another skin.</li><li>Fixed skin selection hanging when a skin texture download stopped responding.</li><li>Fixed the hide nametag setting not updating the Skin selector preview until the page refreshed.</li></ul></div>
+		</div>
+
+		<div class="entry">
+			<div class="entry__head">
+				<div class="entry__dot entry__dot--muted"></div>
+				<div class="entry__title">
+					<h2>
+						<span class="entry__type">Noctrinth</span>
+						<span class="dot-sep"></span>
 						<span class="entry__version">0.13.24</span>
 					</h2>
-					<time class="entry__date" datetime="2026-05-26T00:00:00+00:00">in 22 hours</time>
+					<time class="entry__date" datetime="2026-05-26T00:00:00+00:00" title="May 26, 2026 at 9:00 AM">May 26, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h3>Changed</h3>
@@ -296,14 +450,14 @@
 
 		<div class="entry">
 			<div class="entry__head">
-				<div class="entry__dot entry__dot--modrinth"></div>
+				<div class="entry__dot entry__dot--muted"></div>
 				<div class="entry__title">
 					<h2>
 						<span class="entry__type">App</span>
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.13.24</span>
 					</h2>
-					<time class="entry__date" datetime="2026-05-24T17:46:23+00:00">9 hours ago</time>
+					<time class="entry__date" datetime="2026-05-24T17:46:23+00:00" title="May 25, 2026 at 2:46 AM">May 25, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Changed</h2>
@@ -312,14 +466,14 @@
 
 		<div class="entry">
 			<div class="entry__head">
-				<div class="entry__dot entry__dot--modrinth"></div>
+				<div class="entry__dot entry__dot--muted"></div>
 				<div class="entry__title">
 					<h2>
 						<span class="entry__type">App</span>
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.13.23</span>
 					</h2>
-					<time class="entry__date" datetime="2026-05-24T16:26:23+00:00">10 hours ago</time>
+					<time class="entry__date" datetime="2026-05-24T16:26:23+00:00" title="May 25, 2026 at 1:26 AM">May 25, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Fixed</h2>
@@ -328,14 +482,14 @@
 
 		<div class="entry">
 			<div class="entry__head">
-				<div class="entry__dot entry__dot--modrinth"></div>
+				<div class="entry__dot entry__dot--muted"></div>
 				<div class="entry__title">
 					<h2>
 						<span class="entry__type">App</span>
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.13.22</span>
 					</h2>
-					<time class="entry__date" datetime="2026-05-24T05:00:37+00:00">21 hours ago</time>
+					<time class="entry__date" datetime="2026-05-24T05:00:37+00:00" title="May 24, 2026 at 2:00 PM">May 24, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Added</h2>
@@ -346,14 +500,14 @@
 
 		<div class="entry">
 			<div class="entry__head">
-				<div class="entry__dot entry__dot--noctrinth"></div>
+				<div class="entry__dot entry__dot--muted"></div>
 				<div class="entry__title">
 					<h2>
 						<span class="entry__type">Noctrinth</span>
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.13.21</span>
 					</h2>
-					<time class="entry__date" datetime="2026-05-22T00:00:00+00:00">3 days ago</time>
+					<time class="entry__date" datetime="2026-05-22T00:00:00+00:00" title="May 22, 2026 at 9:00 AM">May 22, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h3>Added</h3>
@@ -364,14 +518,14 @@
 
 		<div class="entry">
 			<div class="entry__head">
-				<div class="entry__dot entry__dot--modrinth"></div>
+				<div class="entry__dot entry__dot--muted"></div>
 				<div class="entry__title">
 					<h2>
 						<span class="entry__type">App</span>
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.13.21</span>
 					</h2>
-					<time class="entry__date" datetime="2026-05-21T22:13:35+00:00">3 days ago</time>
+					<time class="entry__date" datetime="2026-05-21T22:13:35+00:00" title="May 22, 2026 at 7:13 AM">May 22, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Fixed</h2>
@@ -380,14 +534,14 @@
 
 		<div class="entry">
 			<div class="entry__head">
-				<div class="entry__dot entry__dot--noctrinth"></div>
+				<div class="entry__dot entry__dot--muted"></div>
 				<div class="entry__title">
 					<h2>
 						<span class="entry__type">Noctrinth</span>
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.13.20</span>
 					</h2>
-					<time class="entry__date" datetime="2026-05-21T00:00:00+00:00">4 days ago</time>
+					<time class="entry__date" datetime="2026-05-21T00:00:00+00:00" title="May 21, 2026 at 9:00 AM">May 21, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h3>Changed</h3>
@@ -396,14 +550,14 @@
 
 		<div class="entry">
 			<div class="entry__head">
-				<div class="entry__dot entry__dot--modrinth"></div>
+				<div class="entry__dot entry__dot--muted"></div>
 				<div class="entry__title">
 					<h2>
 						<span class="entry__type">App</span>
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.13.20</span>
 					</h2>
-					<time class="entry__date" datetime="2026-05-20T19:48:04+00:00">4 days ago</time>
+					<time class="entry__date" datetime="2026-05-20T19:48:04+00:00" title="May 21, 2026 at 4:48 AM">May 21, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Changed</h2>
@@ -414,14 +568,14 @@
 
 		<div class="entry">
 			<div class="entry__head">
-				<div class="entry__dot entry__dot--noctrinth"></div>
+				<div class="entry__dot entry__dot--muted"></div>
 				<div class="entry__title">
 					<h2>
 						<span class="entry__type">Noctrinth</span>
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.13.19</span>
 					</h2>
-					<time class="entry__date" datetime="2026-05-20T00:00:00+00:00">5 days ago</time>
+					<time class="entry__date" datetime="2026-05-20T00:00:00+00:00" title="May 20, 2026 at 9:00 AM">May 20, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h3>Fixed</h3>
@@ -432,14 +586,14 @@
 
 		<div class="entry">
 			<div class="entry__head">
-				<div class="entry__dot entry__dot--modrinth"></div>
+				<div class="entry__dot entry__dot--muted"></div>
 				<div class="entry__title">
 					<h2>
 						<span class="entry__type">App</span>
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.13.19</span>
 					</h2>
-					<time class="entry__date" datetime="2026-05-19T18:50:27+00:00">5 days ago</time>
+					<time class="entry__date" datetime="2026-05-19T18:50:27+00:00" title="May 20, 2026 at 3:50 AM">May 20, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Changed</h2>
@@ -457,7 +611,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.13.18</span>
 					</h2>
-					<time class="entry__date" datetime="2026-05-18T00:00:00+00:00">May 18, 2026</time>
+					<time class="entry__date" datetime="2026-05-18T00:00:00+00:00" title="May 18, 2026 at 9:00 AM">May 18, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h3>Changed</h3>
@@ -475,7 +629,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.13.18</span>
 					</h2>
-					<time class="entry__date" datetime="2026-05-17T20:46:06+00:00">May 18, 2026</time>
+					<time class="entry__date" datetime="2026-05-17T20:46:06+00:00" title="May 18, 2026 at 5:46 AM">May 18, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Fixed</h2>
@@ -491,7 +645,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.13.17</span>
 					</h2>
-					<time class="entry__date" datetime="2026-05-17T00:00:00+00:00">May 17, 2026</time>
+					<time class="entry__date" datetime="2026-05-17T00:00:00+00:00" title="May 17, 2026 at 9:00 AM">May 17, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h3>Added</h3>
@@ -509,7 +663,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.13.17</span>
 					</h2>
-					<time class="entry__date" datetime="2026-05-12T20:06:07+00:00">May 13, 2026</time>
+					<time class="entry__date" datetime="2026-05-12T20:06:07+00:00" title="May 13, 2026 at 5:06 AM">May 13, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Fixed</h2>
@@ -525,7 +679,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.13.15</span>
 					</h2>
-					<time class="entry__date" datetime="2026-05-11T20:16:06+00:00">May 12, 2026</time>
+					<time class="entry__date" datetime="2026-05-11T20:16:06+00:00" title="May 12, 2026 at 5:16 AM">May 12, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Changed</h2>
@@ -543,7 +697,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.13.14</span>
 					</h2>
-					<time class="entry__date" datetime="2026-05-09T21:42:48+00:00">May 10, 2026</time>
+					<time class="entry__date" datetime="2026-05-09T21:42:48+00:00" title="May 10, 2026 at 6:42 AM">May 10, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Fixed</h2>
@@ -559,7 +713,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.13.13</span>
 					</h2>
-					<time class="entry__date" datetime="2026-05-09T19:06:18+00:00">May 10, 2026</time>
+					<time class="entry__date" datetime="2026-05-09T19:06:18+00:00" title="May 10, 2026 at 4:06 AM">May 10, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Changed</h2>
@@ -577,7 +731,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.13.12</span>
 					</h2>
-					<time class="entry__date" datetime="2026-05-08T02:24:09+00:00">May 8, 2026</time>
+					<time class="entry__date" datetime="2026-05-08T02:24:09+00:00" title="May 8, 2026 at 11:24 AM">May 8, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Changed</h2>
@@ -595,7 +749,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.13.11</span>
 					</h2>
-					<time class="entry__date" datetime="2026-05-06T22:11:04+00:00">May 7, 2026</time>
+					<time class="entry__date" datetime="2026-05-06T22:11:04+00:00" title="May 7, 2026 at 7:11 AM">May 7, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Fixed</h2>
@@ -611,7 +765,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.13.10</span>
 					</h2>
-					<time class="entry__date" datetime="2026-05-04T19:57:12+00:00">May 5, 2026</time>
+					<time class="entry__date" datetime="2026-05-04T19:57:12+00:00" title="May 5, 2026 at 4:57 AM">May 5, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Fixed</h2>
@@ -627,7 +781,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.13.9</span>
 					</h2>
-					<time class="entry__date" datetime="2026-05-03T18:07:44+00:00">May 4, 2026</time>
+					<time class="entry__date" datetime="2026-05-03T18:07:44+00:00" title="May 4, 2026 at 3:07 AM">May 4, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Fixed</h2>
@@ -643,7 +797,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.13.8</span>
 					</h2>
-					<time class="entry__date" datetime="2026-05-02T22:09:01+00:00">May 3, 2026</time>
+					<time class="entry__date" datetime="2026-05-02T22:09:01+00:00" title="May 3, 2026 at 7:09 AM">May 3, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Fixed</h2>
@@ -659,7 +813,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.13.7</span>
 					</h2>
-					<time class="entry__date" datetime="2026-04-29T17:19:44+00:00">April 30, 2026</time>
+					<time class="entry__date" datetime="2026-04-29T17:19:44+00:00" title="April 30, 2026 at 2:19 AM">April 30, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Added</h2>
@@ -679,7 +833,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.13.6</span>
 					</h2>
-					<time class="entry__date" datetime="2026-04-27T19:59:24+00:00">April 28, 2026</time>
+					<time class="entry__date" datetime="2026-04-27T19:59:24+00:00" title="April 28, 2026 at 4:59 AM">April 28, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><p>*Note: Modrinth App v0.13.5's release has been skipped - it's changes have been bundled into 0.13.6.*</p>
@@ -698,7 +852,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.13.4</span>
 					</h2>
-					<time class="entry__date" datetime="2026-04-20T20:48:51+00:00">April 21, 2026</time>
+					<time class="entry__date" datetime="2026-04-20T20:48:51+00:00" title="April 21, 2026 at 5:48 AM">April 21, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Fixed</h2>
@@ -714,7 +868,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.13.3</span>
 					</h2>
-					<time class="entry__date" datetime="2026-04-19T00:07:46+00:00">April 19, 2026</time>
+					<time class="entry__date" datetime="2026-04-19T00:07:46+00:00" title="April 19, 2026 at 9:07 AM">April 19, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Fixed</h2>
@@ -730,7 +884,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.13.2</span>
 					</h2>
-					<time class="entry__date" datetime="2026-04-18T19:00:59+00:00">April 19, 2026</time>
+					<time class="entry__date" datetime="2026-04-18T19:00:59+00:00" title="April 19, 2026 at 4:00 AM">April 19, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Added</h2>
@@ -750,7 +904,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.13.1</span>
 					</h2>
-					<time class="entry__date" datetime="2026-04-15T19:39:48+00:00">April 16, 2026</time>
+					<time class="entry__date" datetime="2026-04-15T19:39:48+00:00" title="April 16, 2026 at 4:39 AM">April 16, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Fixed</h2>
@@ -766,7 +920,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.13.0</span>
 					</h2>
-					<time class="entry__date" datetime="2026-04-12T22:12:15+00:00">April 13, 2026</time>
+					<time class="entry__date" datetime="2026-04-12T22:12:15+00:00" title="April 13, 2026 at 7:12 AM">April 13, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Changed</h2>
@@ -782,7 +936,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.12.6</span>
 					</h2>
-					<time class="entry__date" datetime="2026-04-03T16:45:00-07:00">April 4, 2026</time>
+					<time class="entry__date" datetime="2026-04-03T16:45:00-07:00" title="April 4, 2026 at 8:45 AM">April 4, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Fixed</h2>
@@ -798,7 +952,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.12.5</span>
 					</h2>
-					<time class="entry__date" datetime="2026-03-26T18:45:00-07:00">March 27, 2026</time>
+					<time class="entry__date" datetime="2026-03-26T18:45:00-07:00" title="March 27, 2026 at 10:45 AM">March 27, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Added</h2>
@@ -818,7 +972,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.12.2</span>
 					</h2>
-					<time class="entry__date" datetime="2026-03-13T00:15:00-00:00">March 13, 2026</time>
+					<time class="entry__date" datetime="2026-03-13T00:15:00-00:00" title="March 13, 2026 at 9:15 AM">March 13, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Hotfixes</h2>
@@ -834,7 +988,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.12.1</span>
 					</h2>
-					<time class="entry__date" datetime="2026-03-12T16:30:00-00:00">March 13, 2026</time>
+					<time class="entry__date" datetime="2026-03-12T16:30:00-00:00" title="March 13, 2026 at 1:30 AM">March 13, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Improvements</h2>
@@ -850,7 +1004,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.12.0</span>
 					</h2>
-					<time class="entry__date" datetime="2026-03-12T14:05:00-00:00">March 12, 2026</time>
+					<time class="entry__date" datetime="2026-03-12T14:05:00-00:00" title="March 12, 2026 at 11:05 PM">March 12, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Major changes</h2>
@@ -868,7 +1022,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.11.4</span>
 					</h2>
-					<time class="entry__date" datetime="2026-03-10T16:40:00-00:00">March 11, 2026</time>
+					<time class="entry__date" datetime="2026-03-10T16:40:00-00:00" title="March 11, 2026 at 1:40 AM">March 11, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Improvements</h2>
@@ -884,7 +1038,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.11.3</span>
 					</h2>
-					<time class="entry__date" datetime="2026-03-06T19:10:00-08:00">March 7, 2026</time>
+					<time class="entry__date" datetime="2026-03-06T19:10:00-08:00" title="March 7, 2026 at 12:10 PM">March 7, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Improvements</h2>
@@ -900,7 +1054,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.11.2</span>
 					</h2>
-					<time class="entry__date" datetime="2026-03-03T17:30:00-08:00">March 4, 2026</time>
+					<time class="entry__date" datetime="2026-03-03T17:30:00-08:00" title="March 4, 2026 at 10:30 AM">March 4, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>[Introducing Server Projects](/news/article/introducing-server-projects)</h2>
@@ -916,7 +1070,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.10.29</span>
 					</h2>
-					<time class="entry__date" datetime="2026-02-09T16:45:00-08:00">February 10, 2026</time>
+					<time class="entry__date" datetime="2026-02-09T16:45:00-08:00" title="February 10, 2026 at 9:45 AM">February 10, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><p>v0.10.28 failed to release due to a technical issue; its changes are included in this changelog.</p>
@@ -933,7 +1087,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.10.27</span>
 					</h2>
-					<time class="entry__date" datetime="2026-01-23T13:00:00-08:00">January 24, 2026</time>
+					<time class="entry__date" datetime="2026-01-23T13:00:00-08:00" title="January 24, 2026 at 6:00 AM">January 24, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Improvements</h2>
@@ -949,7 +1103,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.10.26</span>
 					</h2>
-					<time class="entry__date" datetime="2026-01-15T13:30:00-08:00">January 16, 2026</time>
+					<time class="entry__date" datetime="2026-01-15T13:30:00-08:00" title="January 16, 2026 at 6:30 AM">January 16, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Improvements</h2>
@@ -965,7 +1119,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.10.25</span>
 					</h2>
-					<time class="entry__date" datetime="2026-01-08T12:30:00-08:00">January 9, 2026</time>
+					<time class="entry__date" datetime="2026-01-08T12:30:00-08:00" title="January 9, 2026 at 5:30 AM">January 9, 2026</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Added</h2>
@@ -983,7 +1137,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.10.24</span>
 					</h2>
-					<time class="entry__date" datetime="2025-12-22T12:55:00-08:00">December 23, 2025</time>
+					<time class="entry__date" datetime="2025-12-22T12:55:00-08:00" title="December 23, 2025 at 5:55 AM">December 23, 2025</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Improvements</h2>
@@ -999,7 +1153,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.10.23</span>
 					</h2>
-					<time class="entry__date" datetime="2025-12-16T13:15:00-08:00">December 17, 2025</time>
+					<time class="entry__date" datetime="2025-12-16T13:15:00-08:00" title="December 17, 2025 at 6:15 AM">December 17, 2025</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Improvements</h2>
@@ -1015,7 +1169,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.10.22</span>
 					</h2>
-					<time class="entry__date" datetime="2025-12-11T17:00:00-08:00">December 12, 2025</time>
+					<time class="entry__date" datetime="2025-12-11T17:00:00-08:00" title="December 12, 2025 at 10:00 AM">December 12, 2025</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Improvements</h2>
@@ -1031,7 +1185,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.10.21</span>
 					</h2>
-					<time class="entry__date" datetime="2025-11-28T11:45:00-08:00">November 29, 2025</time>
+					<time class="entry__date" datetime="2025-11-28T11:45:00-08:00" title="November 29, 2025 at 4:45 AM">November 29, 2025</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Improvements</h2>
@@ -1047,7 +1201,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.10.20</span>
 					</h2>
-					<time class="entry__date" datetime="2025-11-19T15:15:00-08:00">November 20, 2025</time>
+					<time class="entry__date" datetime="2025-11-19T15:15:00-08:00" title="November 20, 2025 at 8:15 AM">November 20, 2025</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Improvements</h2>
@@ -1063,7 +1217,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.10.19</span>
 					</h2>
-					<time class="entry__date" datetime="2025-11-11T12:50:00-08:00">November 12, 2025</time>
+					<time class="entry__date" datetime="2025-11-11T12:50:00-08:00" title="November 12, 2025 at 5:50 AM">November 12, 2025</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Improvements</h2>
@@ -1079,7 +1233,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.10.18</span>
 					</h2>
-					<time class="entry__date" datetime="2025-11-10T11:20:00-08:00">November 11, 2025</time>
+					<time class="entry__date" datetime="2025-11-10T11:20:00-08:00" title="November 11, 2025 at 4:20 AM">November 11, 2025</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><p>No changes.</p></div>
@@ -1094,7 +1248,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.10.17</span>
 					</h2>
-					<time class="entry__date" datetime="2025-11-07T09:30:00-08:00">November 8, 2025</time>
+					<time class="entry__date" datetime="2025-11-07T09:30:00-08:00" title="November 8, 2025 at 2:30 AM">November 8, 2025</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Improvements</h2>
@@ -1110,7 +1264,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.10.16</span>
 					</h2>
-					<time class="entry__date" datetime="2025-10-30T16:30:00-07:00">October 31, 2025</time>
+					<time class="entry__date" datetime="2025-10-30T16:30:00-07:00" title="October 31, 2025 at 8:30 AM">October 31, 2025</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Security fixes</h2>
@@ -1128,7 +1282,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.10.15</span>
 					</h2>
-					<time class="entry__date" datetime="2025-10-26T18:30:00-07:00">October 27, 2025</time>
+					<time class="entry__date" datetime="2025-10-26T18:30:00-07:00" title="October 27, 2025 at 10:30 AM">October 27, 2025</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Improvements</h2>
@@ -1144,7 +1298,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.10.14</span>
 					</h2>
-					<time class="entry__date" datetime="2025-10-24T21:05:00-07:00">October 25, 2025</time>
+					<time class="entry__date" datetime="2025-10-24T21:05:00-07:00" title="October 25, 2025 at 1:05 PM">October 25, 2025</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Improvements</h2>
@@ -1160,7 +1314,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.10.13</span>
 					</h2>
-					<time class="entry__date" datetime="2025-10-19T17:45:00-07:00">October 20, 2025</time>
+					<time class="entry__date" datetime="2025-10-19T17:45:00-07:00" title="October 20, 2025 at 9:45 AM">October 20, 2025</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Improvements</h2>
@@ -1176,7 +1330,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.10.12</span>
 					</h2>
-					<time class="entry__date" datetime="2025-10-15T12:15:00-07:00">October 16, 2025</time>
+					<time class="entry__date" datetime="2025-10-15T12:15:00-07:00" title="October 16, 2025 at 4:15 AM">October 16, 2025</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Improvements</h2>
@@ -1192,7 +1346,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.10.11</span>
 					</h2>
-					<time class="entry__date" datetime="2025-10-15T04:11:00-07:00">October 15, 2025</time>
+					<time class="entry__date" datetime="2025-10-15T04:11:00-07:00" title="October 15, 2025 at 8:11 PM">October 15, 2025</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Improvements</h2>
@@ -1208,7 +1362,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.10.10</span>
 					</h2>
-					<time class="entry__date" datetime="2025-10-04T17:20:00-07:00">October 5, 2025</time>
+					<time class="entry__date" datetime="2025-10-04T17:20:00-07:00" title="October 5, 2025 at 9:20 AM">October 5, 2025</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h2>Improvements</h2>
@@ -1224,7 +1378,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.10.9</span>
 					</h2>
-					<time class="entry__date" datetime="2025-10-04T09:45:00-07:00">October 5, 2025</time>
+					<time class="entry__date" datetime="2025-10-04T09:45:00-07:00" title="October 5, 2025 at 1:45 AM">October 5, 2025</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h3>Security fixes</h3>
@@ -1240,7 +1394,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.10.8</span>
 					</h2>
-					<time class="entry__date" datetime="2025-09-29T12:50:00-07:00">September 30, 2025</time>
+					<time class="entry__date" datetime="2025-09-29T12:50:00-07:00" title="September 30, 2025 at 4:50 AM">September 30, 2025</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h3>Improvements</h3>
@@ -1256,7 +1410,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.10.7</span>
 					</h2>
-					<time class="entry__date" datetime="2025-08-20T13:30:00-07:00">August 21, 2025</time>
+					<time class="entry__date" datetime="2025-08-20T13:30:00-07:00" title="August 21, 2025 at 5:30 AM">August 21, 2025</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h3>Improvements</h3>
@@ -1272,7 +1426,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.10.6</span>
 					</h2>
-					<time class="entry__date" datetime="2025-08-15T13:15:00-07:00">August 16, 2025</time>
+					<time class="entry__date" datetime="2025-08-15T13:15:00-07:00" title="August 16, 2025 at 5:15 AM">August 16, 2025</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h3>Improvements</h3>
@@ -1288,7 +1442,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.10.5</span>
 					</h2>
-					<time class="entry__date" datetime="2025-08-15T11:45:00-07:00">August 16, 2025</time>
+					<time class="entry__date" datetime="2025-08-15T11:45:00-07:00" title="August 16, 2025 at 3:45 AM">August 16, 2025</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h3>Improvements</h3>
@@ -1305,7 +1459,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.10.3</span>
 					</h2>
-					<time class="entry__date" datetime="2025-07-07T01:10:00-07:00">July 7, 2025</time>
+					<time class="entry__date" datetime="2025-07-07T01:10:00-07:00" title="July 7, 2025 at 5:10 PM">July 7, 2025</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h3>Improvements</h3>
@@ -1323,7 +1477,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.10.2</span>
 					</h2>
-					<time class="entry__date" datetime="2025-07-06T16:30:00-07:00">July 7, 2025</time>
+					<time class="entry__date" datetime="2025-07-06T16:30:00-07:00" title="July 7, 2025 at 8:30 AM">July 7, 2025</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h3>Improvements</h3>
@@ -1341,7 +1495,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.10.1</span>
 					</h2>
-					<time class="entry__date" datetime="2025-07-05T12:00:00-07:00">July 6, 2025</time>
+					<time class="entry__date" datetime="2025-07-05T12:00:00-07:00" title="July 6, 2025 at 4:00 AM">July 6, 2025</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h3>Improvements</h3>
@@ -1357,7 +1511,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.10.0</span>
 					</h2>
-					<time class="entry__date" datetime="2025-07-04T12:00:00-07:00">July 5, 2025</time>
+					<time class="entry__date" datetime="2025-07-04T12:00:00-07:00" title="July 5, 2025 at 4:00 AM">July 5, 2025</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><p><strong>Note: This update is no longer available to download due to issues, you should use v0.10.1</strong></p>
@@ -1376,7 +1530,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.9.5</span>
 					</h2>
-					<time class="entry__date" datetime="2025-05-01T18:10:00-07:00">May 2, 2025</time>
+					<time class="entry__date" datetime="2025-05-01T18:10:00-07:00" title="May 2, 2025 at 10:10 AM">May 2, 2025</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h3>Improvements</h3>
@@ -1392,7 +1546,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.9.4</span>
 					</h2>
-					<time class="entry__date" datetime="2025-04-26T19:15:00-07:00">April 27, 2025</time>
+					<time class="entry__date" datetime="2025-04-26T19:15:00-07:00" title="April 27, 2025 at 11:15 AM">April 27, 2025</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h3>Added</h3>
@@ -1410,7 +1564,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.9.3</span>
 					</h2>
-					<time class="entry__date" datetime="2025-02-06T10:00:00-08:00">February 7, 2025</time>
+					<time class="entry__date" datetime="2025-02-06T10:00:00-08:00" title="February 7, 2025 at 3:00 AM">February 7, 2025</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h3>Improvements</h3>
@@ -1426,7 +1580,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.9.2</span>
 					</h2>
-					<time class="entry__date" datetime="2024-12-25T14:00:00-08:00">December 26, 2024</time>
+					<time class="entry__date" datetime="2024-12-25T14:00:00-08:00" title="December 26, 2024 at 7:00 AM">December 26, 2024</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h3>Improvements</h3>
@@ -1442,7 +1596,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.9.1</span>
 					</h2>
-					<time class="entry__date" datetime="2024-12-24T22:00:00-08:00">December 25, 2024</time>
+					<time class="entry__date" datetime="2024-12-24T22:00:00-08:00" title="December 25, 2024 at 3:00 PM">December 25, 2024</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h3>Added</h3>
@@ -1460,7 +1614,7 @@
 						<span class="dot-sep"></span>
 						<span class="entry__version">0.9.0</span>
 					</h2>
-					<time class="entry__date" datetime="2024-12-23T22:16:00-08:00">December 24, 2024</time>
+					<time class="entry__date" datetime="2024-12-23T22:16:00-08:00" title="December 24, 2024 at 3:16 PM">December 24, 2024</time>
 				</div>
 			</div>
 			<div class="entry__body changelog-body"><h3>Improvements</h3>
@@ -1472,50 +1626,38 @@
 			<a href="https://github.com/Everelsu/noctrinth" rel="noopener">Source on GitHub</a>
 		</footer>
 	</div>
+	<script>
+	(function () {
+		var rtf = new Intl.RelativeTimeFormat('en-US', { numeric: 'auto' });
+		var longFmt = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+		var absFmt = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 
-<script>
-(function () {
-	var MINUTE = 60 * 1000;
-	var HOUR   = 60 * MINUTE;
-	var DAY    = 24 * HOUR;
-	var WEEK   =  7 * DAY;
-
-	var MONTHS = [
-		'January','February','March','April','May','June',
-		'July','August','September','October','November','December'
-	];
-
-	function formatRelative(date) {
-		var diff = Date.now() - date.getTime(); // positive = past, negative = future
-		var abs  = Math.abs(diff);
-
-		if (abs < MINUTE) return 'just now';
-
-		if (diff < 0) {
-			// future
-			if (abs < HOUR)  { var m = Math.round(abs / MINUTE); return 'in ' + m + (m === 1 ? ' minute' : ' minutes'); }
-			if (abs < DAY)   { var h = Math.round(abs / HOUR);   return 'in ' + h + (h === 1 ? ' hour'   : ' hours');   }
-			if (abs < WEEK)  { var d = Math.round(abs / DAY);    return 'in ' + d + (d === 1 ? ' day'    : ' days');    }
-		} else {
-			// past
-			if (abs < HOUR)  { var m = Math.round(abs / MINUTE); return m + (m === 1 ? ' minute ago' : ' minutes ago'); }
-			if (abs < DAY)   { var h = Math.round(abs / HOUR);   return h + (h === 1 ? ' hour ago'   : ' hours ago');   }
-			if (abs < WEEK)  { var d = Math.round(abs / DAY);    return d + (d === 1 ? ' day ago'    : ' days ago');    }
+		function relative(date) {
+			var sec = (date.getTime() - Date.now()) / 1000;
+			if (Math.abs(sec) < 60) return rtf.format(Math.round(sec), 'second');
+			var min = sec / 60;
+			if (Math.abs(min) < 60) return rtf.format(Math.round(min), 'minute');
+			var hr = min / 60;
+			if (Math.abs(hr) < 24) return rtf.format(Math.round(hr), 'hour');
+			var day = hr / 24;
+			if (Math.abs(day) < 30) return rtf.format(Math.round(day), 'day');
+			return longFmt.format(date);
 		}
 
-		return MONTHS[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear();
-	}
+		function update() {
+			var nodes = document.querySelectorAll('time[datetime]');
+			for (var i = 0; i < nodes.length; i++) {
+				var el = nodes[i];
+				var date = new Date(el.getAttribute('datetime'));
+				if (isNaN(date.getTime())) continue;
+				el.textContent = relative(date);
+				el.title = absFmt.format(date);
+			}
+		}
 
-	function updateTimes() {
-		document.querySelectorAll('time[datetime]').forEach(function (el) {
-			var date = new Date(el.getAttribute('datetime'));
-			if (!isNaN(date.getTime())) el.textContent = formatRelative(date);
-		});
-	}
-
-	updateTimes();
-	setInterval(updateTimes, 60 * 1000);
-})();
+		update();
+		setInterval(update, 60000);
+	})();
 </script>
 </body>
 </html>

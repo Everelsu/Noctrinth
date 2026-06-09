@@ -134,11 +134,24 @@ const longDateFmt = new Intl.DateTimeFormat('en-US', {
 	day: 'numeric',
 })
 
+const absDateTimeFmt = new Intl.DateTimeFormat('en-US', {
+	year: 'numeric',
+	month: 'long',
+	day: 'numeric',
+	hour: 'numeric',
+	minute: '2-digit',
+})
+
 const relTimeFmt = new Intl.RelativeTimeFormat('en-US', { numeric: 'auto' })
 
 function formatLongDate(iso) {
 	const d = new Date(iso)
 	return Number.isNaN(d.getTime()) ? '' : longDateFmt.format(d)
+}
+
+function formatAbsoluteDateTime(iso) {
+	const d = new Date(iso)
+	return Number.isNaN(d.getTime()) ? '' : absDateTimeFmt.format(d)
 }
 
 function formatRelative(iso) {
@@ -193,7 +206,7 @@ function renderEntry(entry, index) {
 						<span class="dot-sep"></span>
 						<span class="entry__version">${escapeHtml(versionName)}</span>
 					</h2>
-					${trailingDate ? `<time class="entry__date" datetime="${escapeHtml(entry.date)}">${trailingDate}</time>` : ''}
+					${trailingDate ? `<time class="entry__date" datetime="${escapeHtml(entry.date)}" title="${escapeHtml(formatAbsoluteDateTime(entry.date))}">${trailingDate}</time>` : ''}
 				</div>
 			</div>
 			<div class="entry__body changelog-body">${renderMarkdown(entry.body)}</div>
@@ -201,6 +214,44 @@ function renderEntry(entry, index) {
 }
 
 const entriesHtml = all.map(renderEntry).join('\n')
+
+// Client-side live time. The build bakes in a relative label ("3 days ago"),
+// but a static page never rebuilds — so recompute every `<time datetime>` on
+// load and once a minute, mirroring the build-time formatRelative logic. Each
+// element also gets the exact patch date + time as a hover title.
+const TIME_SCRIPT = `
+	(function () {
+		var rtf = new Intl.RelativeTimeFormat('en-US', { numeric: 'auto' });
+		var longFmt = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+		var absFmt = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+
+		function relative(date) {
+			var sec = (date.getTime() - Date.now()) / 1000;
+			if (Math.abs(sec) < 60) return rtf.format(Math.round(sec), 'second');
+			var min = sec / 60;
+			if (Math.abs(min) < 60) return rtf.format(Math.round(min), 'minute');
+			var hr = min / 60;
+			if (Math.abs(hr) < 24) return rtf.format(Math.round(hr), 'hour');
+			var day = hr / 24;
+			if (Math.abs(day) < 30) return rtf.format(Math.round(day), 'day');
+			return longFmt.format(date);
+		}
+
+		function update() {
+			var nodes = document.querySelectorAll('time[datetime]');
+			for (var i = 0; i < nodes.length; i++) {
+				var el = nodes[i];
+				var date = new Date(el.getAttribute('datetime'));
+				if (isNaN(date.getTime())) continue;
+				el.textContent = relative(date);
+				el.title = absFmt.format(date);
+			}
+		}
+
+		update();
+		setInterval(update, 60000);
+	})();
+`
 
 const CSS = `
 	:root {
@@ -488,6 +539,7 @@ const HTML = `<!DOCTYPE html>
 			<a href="https://github.com/Everelsu/noctrinth" rel="noopener">Source on GitHub</a>
 		</footer>
 	</div>
+	<script>${TIME_SCRIPT}</script>
 </body>
 </html>
 `

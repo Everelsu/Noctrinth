@@ -24,6 +24,7 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 		version: '0.14.6',
 		date: '2026-06-12T00:00:00+00:00',
 		body: `### Added
+- Ely.by skin management without leaving the app. The "Change skin" button on the Skins page now opens Ely.by in an embedded window instead of the external browser, and the skin preview refreshes automatically as soon as the window is closed. (Ely.by has no public skin-upload API, so the website remains the only supported upload path — it just lives inside the app now.)
 - CurseForge master toggle in Settings → Appearance. One switch enables or disables every CurseForge search feature at once: the catalog toggle on the Discover page, CurseForge results in unified search, and CurseForge project pages. Turning it off while CurseForge is the active catalog automatically switches Discover back to Modrinth.
 
 ### Changed

@@ -31,3 +31,12 @@ export async function ely_get_default_user(): Promise<string | null> {
 export async function ely_set_default_user(user: string): Promise<void> {
 	await invoke('plugin:ely-auth|ely_set_default_user', { user })
 }
+
+/**
+ * Opens (or focuses) the embedded Ely.by skin-management window. Listen for
+ * the `ely-skin-window-closed` Tauri event to refresh skin previews after the
+ * user closes it.
+ */
+export async function ely_open_skin_window(): Promise<void> {
+	await invoke('plugin:ely-auth|ely_open_skin_window')
+}

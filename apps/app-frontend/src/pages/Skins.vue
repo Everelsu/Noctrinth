@@ -22,8 +22,8 @@ import {
 } from '@modrinth/ui'
 import { arrayBufferToBase64 } from '@modrinth/utils'
 import { useQuery } from '@tanstack/vue-query'
+import { listen } from '@tauri-apps/api/event'
 import { type DragDropEvent, getCurrentWebview } from '@tauri-apps/api/webview'
-import { openUrl } from '@tauri-apps/plugin-opener'
 import { computedAsync } from '@vueuse/core'
 import type { Ref } from 'vue'
 import { computed, inject, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
@@ -33,7 +33,8 @@ import EditSkinModal from '@/components/ui/skin/EditSkinModal.vue'
 import VirtualSkinSectionList from '@/components/ui/skin/VirtualSkinSectionList.vue'
 import { trackEvent } from '@/helpers/analytics'
 import { check_reachable, get_default_user, login as login_flow, users } from '@/helpers/auth'
-import { getElySkinTexture } from '@/helpers/ely_skins'
+import { ely_open_skin_window } from '@/helpers/ely_auth'
+import { clearElySkinCache, getElySkinTexture } from '@/helpers/ely_skins'
 import type { RenderResult } from '@/helpers/rendering/batch-skin-renderer.ts'
 import { generateSkinPreviews, skinBlobUrlMap } from '@/helpers/rendering/batch-skin-renderer.ts'
 import type { Cape, Skin, SkinTextureUrl } from '@/helpers/skins.ts'
@@ -191,7 +192,7 @@ const messages = defineMessages({
 	elySkinsDescription: {
 		id: 'ely-skins.description',
 		defaultMessage:
-			"Skins for Ely.by accounts are changed on the Ely.by website. The button below opens the skin page directly — if you aren't signed in, Ely.by will ask you to log in first.",
+			"Skins for Ely.by accounts are managed on the Ely.by website. The button below opens it in a window right here in the app — if you aren't signed in, Ely.by will ask you to log in first. Once you close the window, the preview updates automatically.",
 	},
 	elySkinsChangeButton: {
 		id: 'ely-skins.change-button',
@@ -239,7 +240,11 @@ const elyAccount = computed<ElySelectedAccount | undefined>(() => {
 	return undefined
 })
 
+/** Bumped when the embedded Ely.by skin window closes to refetch the texture. */
+const elySkinRefresh = ref(0)
+
 const elySkinTexture = computedAsync(async () => {
+	void elySkinRefresh.value
 	const account = elyAccount.value
 	if (!account) {
 		return ''
@@ -252,12 +257,23 @@ const elySkinTexture = computedAsync(async () => {
 }, '')
 
 /**
- * Opens the Ely.by skin page directly. If the user is not signed in to the
- * Ely.by website, Ely.by itself redirects to its login page and returns to
- * the skin page once the user has logged in.
+ * Opens the embedded Ely.by skin-management window. If the user is not signed
+ * in to the Ely.by website, Ely.by itself redirects to its login page and
+ * returns to the skin page once the user has logged in.
  */
 function openElySkinPage() {
-	openUrl('https://ely.by/skins/add')
+	ely_open_skin_window().catch(handleError)
+}
+
+let unlistenElySkinWindow: UnlistenFn | null = null
+
+async function setupElySkinWindowListener() {
+	unlistenElySkinWindow = await listen('ely-skin-window-closed', () => {
+		// The skin may have just been changed on the website — drop the cached
+		// texture and refetch so the preview reflects the new skin.
+		clearElySkinCache()
+		elySkinRefresh.value++
+	})
 }
 
 const username = computed(() => currentUser.value?.profile?.name ?? undefined)
@@ -1031,6 +1047,7 @@ onMounted(() => {
 	// avoids hammering the backend with a get_default_user IPC call 4×/second.
 	userCheckInterval = window.setInterval(checkUserChanges, USER_CHECK_INTERVAL_MS)
 	void setupAddSkinDragDropListener()
+	void setupElySkinWindowListener()
 })
 
 onUnmounted(() => {
@@ -1045,6 +1062,11 @@ onUnmounted(() => {
 	if (pendingSkinRefreshTimeout !== null) {
 		window.clearTimeout(pendingSkinRefreshTimeout)
 		pendingSkinRefreshTimeout = null
+	}
+
+	if (unlistenElySkinWindow) {
+		unlistenElySkinWindow()
+		unlistenElySkinWindow = null
 	}
 
 	if (unlistenAddSkinDragDrop) {

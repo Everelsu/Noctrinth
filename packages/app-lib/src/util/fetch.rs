@@ -16,7 +16,7 @@ use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 use std::time::{self};
 use tokio::sync::Semaphore;
-use tokio::{fs::File, io::AsyncReadExt, io::AsyncWriteExt};
+use tokio::{fs::File, io::AsyncWriteExt};
 
 pub const DOWNLOAD_META_HEADER: &str = "modrinth-download-meta";
 

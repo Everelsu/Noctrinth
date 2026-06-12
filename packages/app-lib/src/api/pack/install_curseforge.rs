@@ -300,6 +300,8 @@ async fn install_curseforge_pack_inner(
         reason: DownloadReason::Modpack,
         game_version: profile.game_version.clone(),
         loader: profile.loader.as_str().to_string(),
+        // CurseForge files have no Modrinth version id to attribute.
+        dependent_on: None,
     };
 
     // 7. Download every resolved mod file into the profile.

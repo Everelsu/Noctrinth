@@ -903,7 +903,7 @@
     "message": "Change skin on Ely.by"
   },
   "ely-skins.description": {
-    "message": "Skins for Ely.by accounts are changed on the Ely.by website. The button below opens the skin page directly — if you aren't signed in, Ely.by will ask you to log in first."
+    "message": "Skins for Ely.by accounts are managed on the Ely.by website. The button below opens it in a window right here in the app — if you aren't signed in, Ely.by will ask you to log in first. Once you close the window, the preview updates automatically."
   },
   "ely-skins.page-title": {
     "message": "Skins"

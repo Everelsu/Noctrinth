@@ -1,5 +1,5 @@
 use crate::api::Result;
-use tauri::Runtime;
+use tauri::{Emitter, Manager, Runtime};
 use tauri::plugin::TauriPlugin;
 use theseus::ely_auth;
 use theseus::prelude::ElyCredentials;
@@ -13,6 +13,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             ely_get_default_user,
             ely_set_default_user,
             ely_get_skin_texture,
+            ely_open_skin_window,
         ])
         .build()
 }
@@ -45,4 +46,45 @@ pub async fn ely_set_default_user(user: uuid::Uuid) -> Result<()> {
 #[tauri::command]
 pub async fn ely_get_skin_texture(username: String) -> Result<Vec<u8>> {
     Ok(ely_auth::get_skin_texture(&username).await?)
+}
+
+/// Label of the embedded Ely.by skin-management window. The frontend listens
+/// for `ELY_SKIN_WINDOW_CLOSED_EVENT` to know when to refresh the skin preview.
+const ELY_SKIN_WINDOW_LABEL: &str = "ely-skin-manager";
+const ELY_SKIN_WINDOW_CLOSED_EVENT: &str = "ely-skin-window-closed";
+
+/// Opens (or focuses) an embedded webview window with the Ely.by skin upload
+/// page. Ely.by has no public skin-upload API, so the website is the only
+/// supported way to change a skin — embedding it keeps the flow inside the
+/// app. When the window is closed, an event is emitted so the Skins page can
+/// drop its texture cache and re-render the preview.
+#[tauri::command]
+pub async fn ely_open_skin_window<R: Runtime>(app: tauri::AppHandle<R>) -> Result<()> {
+    if let Some(existing) = app.get_webview_window(ELY_SKIN_WINDOW_LABEL) {
+        existing.set_focus().ok();
+        return Ok(());
+    }
+
+    let url: tauri::Url = "https://ely.by/skins/add"
+        .parse()
+        .expect("static Ely.by URL must parse");
+
+    let window = tauri::WebviewWindowBuilder::new(
+        &app,
+        ELY_SKIN_WINDOW_LABEL,
+        tauri::WebviewUrl::External(url),
+    )
+    .title("Ely.by — skin")
+    .inner_size(1080.0, 800.0)
+    .center()
+    .build()?;
+
+    let handle = app.clone();
+    window.on_window_event(move |event| {
+        if matches!(event, tauri::WindowEvent::Destroyed) {
+            handle.emit(ELY_SKIN_WINDOW_CLOSED_EVENT, ()).ok();
+        }
+    });
+
+    Ok(())
 }

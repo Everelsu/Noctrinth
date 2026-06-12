@@ -68,6 +68,7 @@ reqwest = { workspace = true, features = [
   "macos-system-configuration",
   "multipart",
   "rustls-tls-webpki-roots",
+  "socks",
   "stream",
 ] }
 rgb = { workspace = true }

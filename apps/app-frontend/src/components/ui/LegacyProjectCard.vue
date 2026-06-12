@@ -1,5 +1,5 @@
 <script setup>
-import { CurseForgeIcon, DownloadIcon, HeartIcon, ModrinthIcon, TagIcon } from '@modrinth/assets'
+import { DownloadIcon, HeartIcon, TagIcon } from '@modrinth/assets'
 import { Avatar, FormattedTag, TagItem, useCompactNumber } from '@modrinth/ui'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -21,10 +21,10 @@ const props = defineProps({
 	},
 })
 
-// Source badge helpers
-const onModrinth = computed(() => !!props.project.sources?.modrinth)
-const onCurseForge = computed(() => !!props.project.sources?.curseforge)
-const cfOnly = computed(() => onCurseForge.value && !onModrinth.value)
+/** CurseForge-exclusive projects have no Modrinth page to navigate to. */
+const cfOnly = computed(
+	() => !!props.project.sources?.curseforge && !props.project.sources?.modrinth,
+)
 
 const featuredCategory = computed(() => {
 	if (props.project.display_categories.includes('optimization')) {
@@ -117,36 +117,8 @@ const toTransparent = computed(() => {
 						<FormattedTag :tag="featuredCategory" />
 					</TagItem>
 				</div>
-				<!-- Source platform icons -->
-				<div v-if="onModrinth || onCurseForge" class="ml-auto flex items-center gap-1.5">
-					<ModrinthIcon
-						v-if="onModrinth"
-						v-tooltip="'Available on Modrinth'"
-						class="source-icon source-icon--modrinth"
-					/>
-					<CurseForgeIcon
-						v-if="onCurseForge"
-						v-tooltip="'Available on CurseForge'"
-						class="source-icon source-icon--curseforge"
-					/>
-				</div>
 			</div>
 		</div>
 	</div>
 </template>
 
-<style scoped lang="scss">
-.source-icon {
-	width: 16px;
-	height: 16px;
-	flex-shrink: 0;
-
-	&--modrinth {
-		color: #1bd96a;
-	}
-
-	&--curseforge {
-		color: #f16436;
-	}
-}
-</style>

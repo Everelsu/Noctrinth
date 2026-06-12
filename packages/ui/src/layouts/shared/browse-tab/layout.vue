@@ -44,10 +44,9 @@ const maxResultsOptions = computed<ComboboxOption<number>[]>(() =>
 	})),
 )
 
-// Catalog toggle is shown only in browse mode (empty query, non-server).
-const showSourceToggle = computed(
-	() => !!ctx.sourceMode && !ctx.query.value && !ctx.isServerType.value,
-)
+// Catalog toggle is shown whenever a CurseForge key is configured (the
+// catalogs are separate — the toggle also applies to text-query searches).
+const showSourceToggle = computed(() => !!ctx.sourceMode && !ctx.isServerType.value)
 
 function setSource(value: 'modrinth' | 'curseforge') {
 	if (ctx.sourceMode) ctx.sourceMode.value = value

@@ -8,6 +8,7 @@ import {
 	LogInIcon,
 	RotateCounterClockwiseIcon,
 	SpinnerIcon,
+	UpdatedIcon,
 } from '@modrinth/assets'
 import {
 	ButtonStyled,
@@ -34,11 +35,17 @@ import VirtualSkinSectionList from '@/components/ui/skin/VirtualSkinSectionList.
 import { trackEvent } from '@/helpers/analytics'
 import { check_reachable, get_default_user, login as login_flow, users } from '@/helpers/auth'
 import { ely_open_skin_window } from '@/helpers/ely_auth'
-import { clearElySkinCache, getElySkinTexture } from '@/helpers/ely_skins'
+import {
+	clearElySkinCache,
+	ELY_FALLBACK_SKIN,
+	getElyCapeTexture,
+	getElySkinTexture,
+} from '@/helpers/ely_skins'
 import type { RenderResult } from '@/helpers/rendering/batch-skin-renderer.ts'
 import { generateSkinPreviews, skinBlobUrlMap } from '@/helpers/rendering/batch-skin-renderer.ts'
 import type { Cape, Skin, SkinTextureUrl } from '@/helpers/skins.ts'
 import {
+	determineModelType,
 	equip_skin,
 	filterDefaultSkins,
 	filterSavedSkins,
@@ -198,6 +205,15 @@ const messages = defineMessages({
 		id: 'ely-skins.change-button',
 		defaultMessage: 'Change skin on Ely.by',
 	},
+	elySkinsRefreshButton: {
+		id: 'ely-skins.refresh-button',
+		defaultMessage: 'Refresh preview',
+	},
+	elySkinsDefaultNotice: {
+		id: 'ely-skins.default-notice',
+		defaultMessage:
+			"This account has no custom skin uploaded (or it couldn't be loaded), so the default skin is shown.",
+	},
 })
 
 const editSkinModal = useTemplateRef('editSkinModal')
@@ -243,18 +259,50 @@ const elyAccount = computed<ElySelectedAccount | undefined>(() => {
 /** Bumped when the embedded Ely.by skin window closes to refetch the texture. */
 const elySkinRefresh = ref(0)
 
-const elySkinTexture = computedAsync(async () => {
-	void elySkinRefresh.value
-	const account = elyAccount.value
-	if (!account) {
-		return ''
-	}
-	try {
-		return await getElySkinTexture(account.profile.name)
-	} catch {
-		return ''
-	}
-}, '')
+const elySkinTexture = ref('')
+const elySkinVariant = ref<'CLASSIC' | 'SLIM'>('CLASSIC')
+const elyCapeTexture = ref<string | undefined>(undefined)
+/** True when the user has no custom skin / fetch failed — Steve is shown. */
+const elySkinIsFallback = ref(false)
+
+// Loads skin + cape + model variant for the active Ely.by account. The
+// preview must never hang on an eternal loading state, so any failure falls
+// back to the bundled Steve texture instead of an empty texture-src (which
+// the renderer treats as "still loading" forever).
+watch(
+	// Keyed by username (not the account object) so the 1s account poll
+	// can't retrigger the load every tick with identical data.
+	() => [elyAccount.value?.profile.name, elySkinRefresh.value] as const,
+	async ([username]) => {
+		if (!username) return
+
+		let texture: string
+		let isFallback = false
+		try {
+			texture = await getElySkinTexture(username)
+		} catch {
+			texture = ELY_FALLBACK_SKIN
+			isFallback = true
+		}
+
+		let variant: 'CLASSIC' | 'SLIM' = 'CLASSIC'
+		try {
+			variant = await determineModelType(texture)
+		} catch {
+			// Unreadable texture — keep the classic model.
+		}
+
+		const cape = await getElyCapeTexture(username)
+
+		// The account may have changed while we were fetching.
+		if (elyAccount.value?.profile.name !== username) return
+		elySkinTexture.value = texture
+		elySkinVariant.value = variant
+		elyCapeTexture.value = cape ?? undefined
+		elySkinIsFallback.value = isFallback
+	},
+	{ immediate: true },
+)
 
 /**
  * Opens the embedded Ely.by skin-management window. If the user is not signed
@@ -263,6 +311,13 @@ const elySkinTexture = computedAsync(async () => {
  */
 function openElySkinPage() {
 	ely_open_skin_window().catch(handleError)
+}
+
+/** Drops cached Ely.by textures and refetches the preview and account heads. */
+function refreshElySkin() {
+	clearElySkinCache()
+	elySkinRefresh.value++
+	void accountsCard.value?.refreshValues()
 }
 
 let unlistenElySkinWindow: UnlistenFn | null = null
@@ -1212,21 +1267,30 @@ async function checkUserChanges() {
 		</div>
 	</div>
 
-	<div v-else-if="elyAccount" class="p-4 skin-layout">
-		<div class="preview-panel">
+	<div v-else-if="elyAccount" class="skin-layout box-border min-h-full p-4">
+		<div class="sticky top-6 self-start p-2 pt-0">
 			<h1 class="m-0 text-2xl font-bold flex items-center gap-2">
 				{{ formatMessage(messages.elySkinsPageTitle) }}
 			</h1>
-			<div class="preview-container">
+			<!--
+				The explicit height matters: the renderer's auto-fit needs a
+				non-zero container, otherwise it never resolves and the preview
+				is stuck on its loading state forever.
+			-->
+			<div
+				class="ml-5 mt-4 flex h-[calc(80vh-1rem)] items-center justify-center max-[700px]:h-[calc(50vh-1rem)]"
+			>
 				<SkinPreviewRenderer
-					:texture-src="elySkinTexture || ''"
+					:texture-src="elySkinTexture || ELY_FALLBACK_SKIN"
+					:variant="elySkinVariant"
+					:cape-src="elyCapeTexture"
 					:nametag="elyAccount.profile.name"
 					:initial-rotation="Math.PI / 8"
 				/>
 			</div>
 		</div>
 
-		<div class="skins-container">
+		<div class="pt-3 px-3 pb-3">
 			<section class="flex flex-col gap-4 mt-1">
 				<h2 class="text-lg font-bold m-0 text-primary">
 					{{ formatMessage(messages.elySkinsSectionTitle) }}
@@ -1235,12 +1299,23 @@ async function checkUserChanges() {
 					<p class="text-secondary m-0">
 						{{ formatMessage(messages.elySkinsDescription) }}
 					</p>
-					<ButtonStyled color="brand">
-						<button @click="openElySkinPage">
-							<ExternalIcon />
-							{{ formatMessage(messages.elySkinsChangeButton) }}
-						</button>
-					</ButtonStyled>
+					<p v-if="elySkinIsFallback" class="text-secondary m-0">
+						{{ formatMessage(messages.elySkinsDefaultNotice) }}
+					</p>
+					<div class="flex flex-wrap gap-2">
+						<ButtonStyled color="brand">
+							<button @click="openElySkinPage">
+								<ExternalIcon />
+								{{ formatMessage(messages.elySkinsChangeButton) }}
+							</button>
+						</ButtonStyled>
+						<ButtonStyled>
+							<button @click="refreshElySkin">
+								<UpdatedIcon />
+								{{ formatMessage(messages.elySkinsRefreshButton) }}
+							</button>
+						</ButtonStyled>
+					</div>
 				</div>
 			</section>
 		</div>

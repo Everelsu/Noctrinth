@@ -234,17 +234,20 @@ export async function add_project_from_path(
 	})
 }
 
-// Add a project to a profile from a direct download URL (a CurseForge file)
+// Add a project to a profile from direct download URL mirrors (a CurseForge
+// file), verifying the download against sha1 when provided.
 // Returns a path to the new project file
 export async function add_project_from_curseforge(
 	path: string,
-	fileUrl: string,
+	fileUrls: string[],
 	fileName: string,
+	sha1?: string,
 ): Promise<string> {
 	return await invoke('plugin:profile|profile_add_project_from_curseforge', {
 		path,
-		fileUrl,
+		fileUrls,
 		fileName,
+		sha1: sha1 ?? null,
 	})
 }
 

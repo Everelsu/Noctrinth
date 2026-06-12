@@ -59,7 +59,6 @@ import { useQuery, useQueryClient } from '@tanstack/vue-query'
 import { getVersion } from '@tauri-apps/api/app'
 import { invoke } from '@tauri-apps/api/core'
 import { getCurrentWindow } from '@tauri-apps/api/window'
-import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { type } from '@tauri-apps/plugin-os'
 import { saveWindowState, StateFlags } from '@tauri-apps/plugin-window-state'
@@ -89,13 +88,14 @@ import { useCheckDisableMouseover } from '@/composables/macCssFix.js'
 import { config } from '@/config'
 import { hide_ads_window, init_ads_window, show_ads_window } from '@/helpers/ads.js'
 import { debugAnalytics, initAnalytics, trackEvent } from '@/helpers/analytics'
-import { check_reachable } from '@/helpers/auth.js'
+import { check_reachable, get_default_user } from '@/helpers/auth.js'
 import { get_user, get_version } from '@/helpers/cache.js'
 import { command_listener, notification_listener, warning_listener } from '@/helpers/events.js'
 import { cancelLogin, get as getCreds, login, logout } from '@/helpers/mr_auth.ts'
 import { create_profile_and_install_from_file } from '@/helpers/pack'
 import { list } from '@/helpers/profile.js'
 import { mergeUrlQuery, parseModrinthLink } from '@/helpers/project-links.ts'
+import { proxiedFetch as tauriFetch } from '@/helpers/proxy-fetch'
 import { get as getSettings, set as setSettings } from '@/helpers/settings.ts'
 import { get_opening_command, initialize_state } from '@/helpers/state'
 import { hasActivePride26Midas, hasMidasBadge } from '@/helpers/user-campaigns.ts'
@@ -464,9 +464,14 @@ async function setupApp() {
 	fetchCredentials()
 
 	try {
-		const skins = (await get_available_skins()) ?? []
-		const capes = (await get_available_capes()) ?? []
-		generateSkinPreviews(skins, capes)
+		// The Mojang skin API only works for an active Microsoft account —
+		// skip the preview warm-up entirely when none is active (e.g. an
+		// Ely.by account is selected) instead of producing a backend error.
+		if (await get_default_user()) {
+			const skins = (await get_available_skins()) ?? []
+			const capes = (await get_available_capes()) ?? []
+			generateSkinPreviews(skins, capes)
+		}
 	} catch (error) {
 		console.warn('Failed to generate skin previews in app setup.', error)
 	}

@@ -8,9 +8,8 @@
  * Docs: https://docs.curseforge.com/rest-api/
  */
 
-import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
-
 import { useCurseForgeEnabled } from '@/composables/source-mode'
+import { proxiedFetch as tauriFetch } from '@/helpers/proxy-fetch'
 
 import { storeCfInstalled } from './cf-installed-store'
 import { CURSEFORGE_API_KEY } from './curseforge-key'
@@ -281,56 +280,72 @@ export async function resolveCfCategoryId(
 	return undefined
 }
 
+const CF_REQUEST_ATTEMPTS = 3
+const CF_RETRY_BASE_DELAY_MS = 500
+
+function sleep(ms: number): Promise<void> {
+	return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+/** Transient statuses worth retrying: rate limit and server-side errors. */
+function isRetryableStatus(status: number): boolean {
+	return status === 429 || status >= 500
+}
+
 /**
- * Shared CurseForge GET helper — attaches the API key, handles errors,
- * and returns parsed JSON (or null on any failure / missing key).
+ * Shared CurseForge request helper — attaches the API key, retries transient
+ * failures (network errors, 429, 5xx) with exponential backoff, and returns
+ * parsed JSON (or null on definitive failure / missing key).
  */
-async function cfFetch<T>(path: string): Promise<T | null> {
+async function cfRequest<T>(path: string, init?: Parameters<typeof tauriFetch>[1]): Promise<T | null> {
 	if (!isCurseForgeAvailable()) return null
 
-	try {
-		const res = await tauriFetch(`${CF_BASE}${path}`, {
-			headers: { 'x-api-key': CF_API_KEY },
-		})
+	for (let attempt = 1; attempt <= CF_REQUEST_ATTEMPTS; attempt++) {
+		const lastAttempt = attempt === CF_REQUEST_ATTEMPTS
+		try {
+			const res = await tauriFetch(`${CF_BASE}${path}`, {
+				...init,
+				headers: { 'x-api-key': CF_API_KEY, ...init?.headers },
+			})
 
-		if (!res.ok) {
+			if (res.ok) {
+				return (await res.json()) as T
+			}
+
 			const body = await res.text().catch(() => '(unreadable)')
-			console.warn('[CurseForge] Non-OK response:', res.status, path, body)
-			return null
+			if (!isRetryableStatus(res.status) || lastAttempt) {
+				console.warn('[CurseForge] Non-OK response:', res.status, path, body)
+				return null
+			}
+			console.warn(
+				`[CurseForge] HTTP ${res.status} on ${path}, retrying (${attempt}/${CF_REQUEST_ATTEMPTS})`,
+			)
+		} catch (err) {
+			if (lastAttempt) {
+				console.warn('[CurseForge] Request failed:', path, err)
+				return null
+			}
+			console.warn(
+				`[CurseForge] Network error on ${path}, retrying (${attempt}/${CF_REQUEST_ATTEMPTS}):`,
+				err,
+			)
 		}
-
-		return (await res.json()) as T
-	} catch (err) {
-		console.warn('[CurseForge] Request failed:', path, err)
-		return null
+		await sleep(CF_RETRY_BASE_DELAY_MS * 2 ** (attempt - 1))
 	}
+	return null
+}
+
+async function cfFetch<T>(path: string): Promise<T | null> {
+	return cfRequest<T>(path)
 }
 
 /** POST variant — used by /v1/fingerprints which needs a JSON body. */
 async function cfPost<T>(path: string, body: unknown): Promise<T | null> {
-	if (!isCurseForgeAvailable()) return null
-
-	try {
-		const res = await tauriFetch(`${CF_BASE}${path}`, {
-			method: 'POST',
-			headers: {
-				'x-api-key': CF_API_KEY,
-				'content-type': 'application/json',
-			},
-			body: JSON.stringify(body),
-		})
-
-		if (!res.ok) {
-			const text = await res.text().catch(() => '(unreadable)')
-			console.warn('[CurseForge] Non-OK POST:', res.status, path, text)
-			return null
-		}
-
-		return (await res.json()) as T
-	} catch (err) {
-		console.warn('[CurseForge] POST failed:', path, err)
-		return null
-	}
+	return cfRequest<T>(path, {
+		method: 'POST',
+		headers: { 'content-type': 'application/json' },
+		body: JSON.stringify(body),
+	})
 }
 
 // ─── Fingerprint lookup ──────────────────────────────────────────────────────
@@ -522,6 +537,13 @@ export interface CfModFile {
 	fileLength: number
 	downloadCount: number
 	dependencies?: CfModDependency[]
+	/** File checksums. algo: 1 = SHA1, 2 = MD5. */
+	hashes?: { value: string; algo: number }[]
+}
+
+/** SHA1 checksum of a CurseForge file, when the API provides one. */
+export function cfFileSha1(file: CfModFile): string | undefined {
+	return file.hashes?.find((h) => h.algo === 1)?.value
 }
 
 /**
@@ -573,6 +595,19 @@ export function reconstructCfDownloadUrl(file: CfModFile): string | null {
 /** Returns a downloadable URL — either the API-provided one or a reconstructed CDN URL. */
 export function effectiveCfDownloadUrl(file: CfModFile): string | null {
 	return file.downloadUrl ?? reconstructCfDownloadUrl(file)
+}
+
+/**
+ * All download URL candidates for a file, in preference order: the
+ * API-provided URL first, then the reconstructed CDN URL. The Rust side
+ * tries them as mirrors, so a flaky primary doesn't fail the install.
+ */
+export function cfDownloadMirrors(file: CfModFile): string[] {
+	const urls: string[] = []
+	if (file.downloadUrl) urls.push(file.downloadUrl)
+	const cdn = reconstructCfDownloadUrl(file)
+	if (cdn && !urls.includes(cdn)) urls.push(cdn)
+	return urls
 }
 
 /**
@@ -755,16 +790,18 @@ export async function installCurseForgeFile(
 }> {
 	// If the author disabled API distribution, fall back to the CDN URL we
 	// can derive from the numeric file ID (works for the vast majority of
-	// such files — same trick MultiMC/PolyMC/Prism use).
-	const url = effectiveCfDownloadUrl(file)
-	if (!url) {
+	// such files — same trick MultiMC/PolyMC/Prism use). Both URLs are
+	// passed as mirrors and the download is sha1-verified when CF provides
+	// a checksum.
+	const mirrors = cfDownloadMirrors(file)
+	if (mirrors.length === 0) {
 		throw new Error(
 			`Couldn't build a download URL for "${file.fileName}" — the author disabled distribution and the CDN-fallback couldn't construct a valid URL either. Open the project on CurseForge and download it manually.`,
 		)
 	}
 
 	installedModIds.add(file.modId)
-	await add_project_from_curseforge(profilePath, url, file.fileName)
+	await add_project_from_curseforge(profilePath, mirrors, file.fileName, cfFileSha1(file))
 	storeCfInstalled(profilePath, file.modId)
 
 	// Top-level pass: only the direct deps of this file. The recursive install

@@ -1,6 +1,13 @@
 <script setup>
-import { BoxIcon, FolderSearchIcon, TrashIcon } from '@modrinth/assets'
-import { ButtonStyled, injectNotificationManager, Slider, StyledInput } from '@modrinth/ui'
+import { BoxIcon, FolderSearchIcon, GlobeIcon, TrashIcon } from '@modrinth/assets'
+import {
+	ButtonStyled,
+	defineMessages,
+	injectNotificationManager,
+	Slider,
+	StyledInput,
+	useVIntl,
+} from '@modrinth/ui'
 import { open } from '@tauri-apps/plugin-dialog'
 import { ref, watch } from 'vue'
 
@@ -9,7 +16,20 @@ import { purge_cache_types } from '@/helpers/cache.js'
 import { get, set } from '@/helpers/settings.ts'
 
 const { handleError } = injectNotificationManager()
+const { formatMessage } = useVIntl()
 const settings = ref(await get())
+
+const messages = defineMessages({
+	proxyTitle: {
+		id: 'app.resource-settings.proxy.title',
+		defaultMessage: 'Proxy',
+	},
+	proxyDescription: {
+		id: 'app.resource-settings.proxy.description',
+		defaultMessage:
+			'Routes all launcher network traffic (Modrinth API, CDN downloads, CurseForge) through a proxy. Supports http://, https://, socks5:// and socks5h:// URLs. Useful when Modrinth is not reachable in your region. Leave empty to connect directly. (app restart required to take effect)',
+	},
+})
 
 watch(
 	settings,
@@ -18,6 +38,10 @@ watch(
 
 		if (!setSettings.custom_dir) {
 			setSettings.custom_dir = null
+		}
+
+		if (!setSettings.proxy_url) {
+			setSettings.proxy_url = null
 		}
 
 		await set(setSettings)
@@ -104,6 +128,23 @@ async function findLauncherDir() {
 			<p class="m-0 leading-tight text-secondary">
 				Noctrinth App stores a cache of data to speed up loading. This can be purged to force the
 				app to reload data. This may slow down the app temporarily.
+			</p>
+		</div>
+
+		<div class="flex flex-col gap-2.5">
+			<h2 class="m-0 text-lg font-semibold text-contrast">
+				{{ formatMessage(messages.proxyTitle) }}
+			</h2>
+			<StyledInput
+				id="proxy-url"
+				v-model="settings.proxy_url"
+				:icon="GlobeIcon"
+				type="text"
+				placeholder="socks5://127.0.0.1:1080"
+				wrapper-class="w-full"
+			/>
+			<p class="m-0 leading-tight text-secondary">
+				{{ formatMessage(messages.proxyDescription) }}
 			</p>
 		</div>
 

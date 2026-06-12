@@ -1,0 +1,2 @@
+ALTER TABLE settings
+ADD COLUMN proxy_url TEXT NULL;

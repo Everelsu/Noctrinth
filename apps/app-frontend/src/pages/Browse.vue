@@ -85,10 +85,16 @@ const { install: installVersion } = injectContentInstall()
 const queryClient = useQueryClient()
 const debugLog = useDebugLogger('Browse')
 
-// Catalog source for browse mode (empty query). A text search ignores this
-// and queries both Modrinth + CurseForge. Declared early so `tags` computed
-// can reference it when building the sidebar category list.
+// Catalog source — every search (browse and text query) targets exactly the
+// catalog selected by this toggle. Declared early so `tags` computed can
+// reference it when building the sidebar category list.
 const sourceMode = useSourceMode()
+
+// CurseForge search supports a game version, a mod loader, and (mapped)
+// categories — nothing else. Modrinth-only filter groups (client/server
+// environment, license/open-source) are hidden entirely in CF mode instead
+// of being shown as clickable-but-ignored buttons.
+const CF_UNSUPPORTED_FILTER_IDS = new Set(['environment', 'license'])
 
 const router = useRouter()
 const route = useRoute()
@@ -415,22 +421,9 @@ const serverContextFilters = computed(() => {
 	return filters
 })
 
-// CurseForge's mod search has no client/server parameter — lock the
-// environment filter to "both" in CF mode so the buttons are visibly fixed
-// rather than clickable-but-ignored.
-const curseForgeProvidedFilters = computed(() => {
-	if (sourceMode.value !== 'curseforge') return []
-	if (projectType.value !== 'mod' && projectType.value !== 'modpack') return []
-	return [
-		{ type: 'environment', option: 'client' },
-		{ type: 'environment', option: 'server' },
-	]
-})
-
-const combinedProvidedFilters = computed(() => {
-	const base = isServerContext.value ? serverContextFilters.value : instanceFilters.value
-	return [...base, ...curseForgeProvidedFilters.value]
-})
+const combinedProvidedFilters = computed(() =>
+	isServerContext.value ? serverContextFilters.value : instanceFilters.value,
+)
 
 const {
 	serverPings,
@@ -1148,8 +1141,8 @@ async function modrinthSearch(requestParams: string) {
 /**
  * Search entry point passed to useBrowseSearch.
  * - Servers: Modrinth only (CurseForge has no servers).
- * - Text query present: unified search across both catalogs.
- * - Browse mode (empty query): single catalog chosen by the source toggle.
+ * - Everything else: a single catalog chosen by the source toggle — the two
+ *   catalogs are separate modules and results are never merged.
  */
 /** Sidebar filter type ids that represent a loader choice. */
 const LOADER_FILTER_TYPE_IDS = [
@@ -1174,8 +1167,7 @@ async function search(requestParams: string) {
 	if (projectType.value === 'server') {
 		return modrinthSearch(requestParams)
 	}
-	const hasQuery = !!new URLSearchParams(requestParams).get('query')
-	const mode = hasQuery ? undefined : sourceMode.value
+	const mode = isCurseForgeAvailable() ? sourceMode.value : 'modrinth'
 	const result = await unifiedSearch(
 		requestParams,
 		projectType.value,
@@ -1318,16 +1310,6 @@ const SOURCE_ACCENTS = {
 
 const accentStyle = computed<Record<string, string>>(() => {
 	if (!accentBySource.value) return {}
-
-	// A text search queries both catalogs — blend the two accents.
-	if (searchState.query.value) {
-		return {
-			'--color-brand': 'color-mix(in oklch, #00af5c, #e0561f)',
-			'--color-brand-highlight': 'color-mix(in oklch, rgba(0,175,92,0.25), rgba(224,86,31,0.25))',
-			'--color-brand-shadow': 'color-mix(in oklch, rgba(0,175,92,0.6), rgba(224,86,31,0.6))',
-		}
-	}
-
 	return SOURCE_ACCENTS[sourceMode.value]
 })
 
@@ -1355,8 +1337,18 @@ watch(queuedServerInstallCount, (count) => {
 })
 
 // Re-run the search when the catalog toggle changes (it is not part of the
-// request params that useBrowseSearch watches).
-watch(sourceMode, () => {
+// request params that useBrowseSearch watches). Filters CurseForge can't
+// express are dropped on switch so they don't silently shape the next
+// Modrinth query either.
+watch(sourceMode, (mode) => {
+	if (mode === 'curseforge') {
+		const cleaned = searchState.currentFilters.value.filter(
+			(f) => !CF_UNSUPPORTED_FILTER_IDS.has(f.type),
+		)
+		if (cleaned.length !== searchState.currentFilters.value.length) {
+			searchState.currentFilters.value = cleaned
+		}
+	}
 	searchState.refreshSearch()
 })
 
@@ -1380,10 +1372,17 @@ function getProjectBrowseQuery() {
 	}
 }
 
+const visibleFilters = computed(() =>
+	sourceMode.value === 'curseforge'
+		? searchState.filters.value.filter((f) => !CF_UNSUPPORTED_FILTER_IDS.has(f.id))
+		: searchState.filters.value,
+)
+
 provideBrowseManager({
 	tags,
 	projectType,
 	...searchState,
+	filters: visibleFilters,
 	// Catalog toggle — only offered when a CurseForge API key is configured.
 	sourceMode: isCurseForgeAvailable() ? sourceMode : undefined,
 	getProjectLink: (result: Labrinth.Search.v2.ResultSearchProject) => {

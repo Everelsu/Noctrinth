@@ -59,6 +59,12 @@
   "app.appearance-settings.color-theme.title": {
     "message": "Тема"
   },
+  "app.appearance-settings.curseforge-enabled.description": {
+    "message": "Включает все функции поиска CurseForge: переключатель каталога на странице «Обзор», результаты CurseForge и страницы проектов CurseForge."
+  },
+  "app.appearance-settings.curseforge-enabled.title": {
+    "message": "Поиск по CurseForge"
+  },
   "app.appearance-settings.default-landing-page.description": {
     "message": "Страница, которая открывается при запуске лаунчера."
   },
@@ -442,6 +448,12 @@
   },
   "app.project.install-context.install-content-to-instance": {
     "message": "Установка контента в сборку"
+  },
+  "app.resource-settings.proxy.description": {
+    "message": "Направляет весь сетевой трафик лаунчера (Modrinth API, загрузки с CDN, CurseForge) через прокси. Поддерживаются URL вида http://, https://, socks5:// и socks5h://. Полезно, когда Modrinth недоступен в вашем регионе. Оставьте пустым для прямого подключения. (требуется перезапуск приложения)"
+  },
+  "app.resource-settings.proxy.title": {
+    "message": "Прокси"
   },
   "app.settings.developer-mode-enabled": {
     "message": "Режим разработчика включён."
@@ -896,11 +908,17 @@
   "ely-skins.change-button": {
     "message": "Изменить скин на Ely.by"
   },
+  "ely-skins.default-notice": {
+    "message": "У этого аккаунта нет загруженного скина (или его не удалось загрузить) — показан стандартный скин."
+  },
   "ely-skins.description": {
     "message": "Скины для аккаунтов Ely.by управляются на сайте Ely.by. Кнопка ниже откроет его в окне прямо в приложении — если вы не вошли, Ely.by сначала попросит авторизоваться. После закрытия окна превью обновится автоматически."
   },
   "ely-skins.page-title": {
     "message": "Скины"
+  },
+  "ely-skins.refresh-button": {
+    "message": "Обновить превью"
   },
   "ely-skins.section-title": {
     "message": "Скин Ely.by"

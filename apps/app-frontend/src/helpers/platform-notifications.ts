@@ -2,7 +2,7 @@
  * Port of `apps/frontend/src/helpers/platform-notifications.ts` for the launcher.
  * Uses tauriFetch + cache helpers instead of the Modrinth API client.
  */
-import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
+import { proxiedFetch as tauriFetch } from '@/helpers/proxy-fetch'
 
 import {
 	get_organization_many,

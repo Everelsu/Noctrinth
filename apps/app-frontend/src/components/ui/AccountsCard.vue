@@ -123,6 +123,7 @@ import {
 	injectNotificationManager,
 	useVIntl,
 } from '@modrinth/ui'
+import { listen } from '@tauri-apps/api/event'
 import type { Ref } from 'vue'
 import { computed, onUnmounted, ref } from 'vue'
 
@@ -142,7 +143,7 @@ import {
 	ely_set_default_user,
 	type ElyCredentials,
 } from '@/helpers/ely_auth'
-import { getElyHeadUrl } from '@/helpers/ely_skins'
+import { clearElySkinCache, getElyHeadUrl } from '@/helpers/ely_skins'
 import { process_listener } from '@/helpers/events'
 import { getPlayerHeadUrl } from '@/helpers/rendering/batch-skin-renderer.ts'
 import type { Skin } from '@/helpers/skins'
@@ -413,8 +414,16 @@ const unlisten = await process_listener(async (e) => {
 	}
 })
 
+// When the embedded Ely.by skin window closes, the skin may have changed —
+// drop the texture caches and re-render the account head avatars.
+const unlistenElySkinWindow = await listen('ely-skin-window-closed', () => {
+	clearElySkinCache()
+	void loadElyAccounts()
+})
+
 onUnmounted(() => {
 	unlisten()
+	unlistenElySkinWindow()
 })
 
 const messages = defineMessages({

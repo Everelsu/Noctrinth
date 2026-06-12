@@ -168,6 +168,10 @@ impl State {
         tracing::info!("Fetching app settings");
         let mut settings = Settings::get(&pool).await?;
 
+        // Must happen before any HTTP client is first used — the reqwest
+        // clients are built lazily once and bake the proxy in at that point.
+        crate::util::fetch::set_proxy_url(settings.proxy_url.clone());
+
         let fetch_semaphore =
             FetchSemaphore(Semaphore::new(settings.max_concurrent_downloads));
         let io_semaphore =

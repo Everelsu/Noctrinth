@@ -289,16 +289,23 @@ pub async fn profile_add_project_from_path(
     Ok(res)
 }
 
-// Adds a project to a profile from a direct download URL (a CurseForge file)
+// Adds a project to a profile from direct download URL mirrors (a CurseForge
+// file), with optional SHA1 integrity verification
 // invoke('plugin:profile|profile_add_project_from_curseforge')
 #[tauri::command]
 pub async fn profile_add_project_from_curseforge(
     path: &str,
-    file_url: &str,
+    file_urls: Vec<String>,
     file_name: &str,
+    sha1: Option<String>,
 ) -> Result<String> {
-    let res =
-        profile::add_project_from_curseforge(path, file_url, file_name).await?;
+    let res = profile::add_project_from_curseforge(
+        path,
+        &file_urls,
+        file_name,
+        sha1.as_deref(),
+    )
+    .await?;
     Ok(res)
 }
 

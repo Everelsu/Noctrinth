@@ -68,6 +68,12 @@
   "app.appearance-settings.color-theme.title": {
     "message": "Color theme"
   },
+  "app.appearance-settings.curseforge-enabled.description": {
+    "message": "Enables all CurseForge search features: the catalog toggle on the Discover page, CurseForge results, and CurseForge project pages."
+  },
+  "app.appearance-settings.curseforge-enabled.title": {
+    "message": "CurseForge search"
+  },
   "app.appearance-settings.default-landing-page.description": {
     "message": "Change the page to which the launcher opens on."
   },
@@ -179,12 +185,6 @@
   "app.changelog.modrinth-note": {
     "message": "Showing recent releases. The full Modrinth App changelog is available on their website."
   },
-  "app.content-install.no-compatible-versions": {
-    "message": "No available versions match {compatibilityLabel}. Select a version to install anyway. Dependencies will not be installed automatically."
-  },
-  "app.creation-modal.installing-modpack.description": {
-    "message": "{fileName}"
-  },
   "app.changelog.open-noctrinth": {
     "message": "Open Noctrinth changelog"
   },
@@ -193,6 +193,12 @@
   },
   "app.changelog.source.noctrinth": {
     "message": "Noctrinth"
+  },
+  "app.content-install.no-compatible-versions": {
+    "message": "No available versions match {compatibilityLabel}. Select a version to install anyway. Dependencies will not be installed automatically."
+  },
+  "app.creation-modal.installing-modpack.description": {
+    "message": "{fileName}"
   },
   "app.export-modal.description-placeholder": {
     "message": "Enter modpack description..."
@@ -439,6 +445,12 @@
   },
   "app.project.install-context.install-content-to-instance": {
     "message": "Install content to instance"
+  },
+  "app.resource-settings.proxy.description": {
+    "message": "Routes all launcher network traffic (Modrinth API, CDN downloads, CurseForge) through a proxy. Supports http://, https://, socks5:// and socks5h:// URLs. Useful when Modrinth is not reachable in your region. Leave empty to connect directly. (app restart required to take effect)"
+  },
+  "app.resource-settings.proxy.title": {
+    "message": "Proxy"
   },
   "app.settings.developer-mode-enabled": {
     "message": "Developer mode enabled."
@@ -902,11 +914,17 @@
   "ely-skins.change-button": {
     "message": "Change skin on Ely.by"
   },
+  "ely-skins.default-notice": {
+    "message": "This account has no custom skin uploaded (or it couldn't be loaded), so the default skin is shown."
+  },
   "ely-skins.description": {
     "message": "Skins for Ely.by accounts are managed on the Ely.by website. The button below opens it in a window right here in the app — if you aren't signed in, Ely.by will ask you to log in first. Once you close the window, the preview updates automatically."
   },
   "ely-skins.page-title": {
     "message": "Skins"
+  },
+  "ely-skins.refresh-button": {
+    "message": "Refresh preview"
   },
   "ely-skins.section-title": {
     "message": "Ely.by skin"

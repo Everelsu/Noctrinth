@@ -61,6 +61,8 @@ struct CfManifestModLoader {
 
 #[derive(Deserialize)]
 struct CfManifestFile {
+    #[serde(rename = "projectID")]
+    project_id: i64,
     #[serde(rename = "fileID")]
     file_id: i64,
 }
@@ -75,6 +77,7 @@ struct CfFilesResponse {
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct CfFileData {
+    id: i64,
     file_name: String,
     /// `None` when the author disabled third-party downloads.
     download_url: Option<String>,
@@ -95,6 +98,40 @@ impl CfFileData {
             .iter()
             .find(|h| h.algo == 1)
             .map(|h| h.value.as_str())
+    }
+
+    /// Reconstruct the public CDN URL from the numeric file ID. The CDN
+    /// serves files at a predictable path even when the author disabled API
+    /// distribution (which only nulls `download_url` in the JSON response) —
+    /// the same workaround MultiMC / PolyMC / Prism use:
+    ///   https://edge.forgecdn.net/files/<id / 1000>/<id % 1000>/<fileName>
+    fn cdn_fallback_url(&self) -> Option<String> {
+        if self.id < 1000 || self.file_name.is_empty() {
+            return None;
+        }
+        // Encode just the spaces — the CDN serves `+`, `'`, `(`, `)` as
+        // literals; over-encoding breaks lookups.
+        let safe_name = self.file_name.replace(' ', "%20");
+        Some(format!(
+            "https://edge.forgecdn.net/files/{}/{}/{safe_name}",
+            self.id / 1000,
+            self.id % 1000
+        ))
+    }
+
+    /// Download URL candidates in preference order: the API-provided URL
+    /// first, then the reconstructed CDN URL.
+    fn download_candidates(&self) -> Vec<String> {
+        let mut urls = Vec::with_capacity(2);
+        if let Some(url) = &self.download_url {
+            urls.push(url.clone());
+        }
+        if let Some(url) = self.cdn_fallback_url()
+            && !urls.contains(&url)
+        {
+            urls.push(url);
+        }
+        urls
     }
 }
 
@@ -213,7 +250,7 @@ async fn install_curseforge_pack_inner(
     let file_ids: Vec<i64> =
         manifest.files.iter().map(|f| f.file_id).collect();
 
-    let resolved: CfFilesResponse = {
+    let mut resolved: CfFilesResponse = {
         let body = fetch_advanced(
             Method::POST,
             CF_FILES_ENDPOINT,
@@ -228,6 +265,53 @@ async fn install_curseforge_pack_inner(
         .await?;
         serde_json::from_slice(&body)?
     };
+
+    // The bulk endpoint occasionally omits some of the requested files (and
+    // dedups repeated ids). Re-fetch every missing file individually via
+    // GET /v1/mods/{projectId}/files/{fileId} — the XMCL approach — so a
+    // flaky bulk response can't silently produce a pack with missing mods.
+    {
+        let returned: std::collections::HashSet<i64> =
+            resolved.data.iter().map(|f| f.id).collect();
+        let missing: Vec<&CfManifestFile> = manifest
+            .files
+            .iter()
+            .filter(|f| !returned.contains(&f.file_id))
+            .collect();
+
+        if !missing.is_empty() {
+            tracing::warn!(
+                "CurseForge bulk file lookup omitted {} of {} files; re-fetching individually",
+                missing.len(),
+                manifest.files.len()
+            );
+        }
+
+        for file in missing {
+            #[derive(Deserialize)]
+            struct CfSingleFileResponse {
+                data: CfFileData,
+            }
+
+            let body = fetch_advanced(
+                Method::GET,
+                &format!(
+                    "https://api.curseforge.com/v1/mods/{}/files/{}",
+                    file.project_id, file.file_id
+                ),
+                None,
+                None,
+                Some(("x-api-key", curseforge_api_key)),
+                None,
+                None,
+                &state.fetch_semaphore,
+                &state.pool,
+            )
+            .await?;
+            let single: CfSingleFileResponse = serde_json::from_slice(&body)?;
+            resolved.data.push(single.data);
+        }
+    }
 
     // 4. Build profile dependencies (Minecraft version + loader).
     let mut dependencies: HashMap<PackDependency, String> = HashMap::new();
@@ -304,12 +388,10 @@ async fn install_curseforge_pack_inner(
         dependent_on: None,
     };
 
-    // 7. Download every resolved mod file into the profile.
-    let files: Vec<CfFileData> = resolved
-        .data
-        .into_iter()
-        .filter(|f| f.download_url.is_some())
-        .collect();
+    // 7. Download every resolved mod file into the profile. Files whose
+    // download_url was hidden by the author are NOT skipped — the CDN
+    // fallback URL is derived from the file id instead.
+    let files = resolved.data;
     let num_files = files.len();
 
     loading_try_for_each_concurrent(
@@ -323,13 +405,19 @@ async fn install_curseforge_pack_inner(
             let profile_path = profile_path.clone();
             let download_meta = download_meta.clone();
             async move {
-                let Some(download_url) = cf_file.download_url.as_deref()
-                else {
-                    return Ok(());
-                };
+                let candidates = cf_file.download_candidates();
+                if candidates.is_empty() {
+                    return Err(crate::ErrorKind::InputError(format!(
+                        "No download URL could be determined for \"{}\" (file id {})",
+                        cf_file.file_name, cf_file.id
+                    ))
+                    .into());
+                }
+                let mirrors: Vec<&str> =
+                    candidates.iter().map(String::as_str).collect();
 
                 let bytes = fetch_mirrors(
-                    &[download_url],
+                    &mirrors,
                     cf_file.sha1(),
                     Some(&download_meta),
                     &state.fetch_semaphore,

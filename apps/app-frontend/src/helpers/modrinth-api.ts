@@ -2,9 +2,8 @@
  * Authenticated requests to the Modrinth REST API.
  * Uses the OAuth session token from the logged-in user.
  */
-import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
-
 import { get as getCreds } from '@/helpers/mr_auth.ts'
+import { proxiedFetch as tauriFetch } from '@/helpers/proxy-fetch'
 
 const API_BASE = 'https://api.modrinth.com'
 

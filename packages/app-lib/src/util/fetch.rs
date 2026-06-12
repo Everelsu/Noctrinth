@@ -157,10 +157,32 @@ static GLOBAL_FETCH_FENCE: LazyLock<FetchFence> =
         inner: Mutex::new(FenceInner::new()),
     });
 
+/// Proxy URL applied to every launcher HTTP client. Must be set (via
+/// [`set_proxy_url`]) before the first request is made — the clients are
+/// built lazily on first use and never rebuilt, so later changes only take
+/// effect after an app restart.
+static PROXY_URL: parking_lot::RwLock<Option<String>> =
+    parking_lot::RwLock::new(None);
+
+pub fn set_proxy_url(url: Option<String>) {
+    *PROXY_URL.write() = url.filter(|u| !u.trim().is_empty());
+}
+
 fn reqwest_client_builder() -> reqwest::ClientBuilder {
-    reqwest::Client::builder()
+    let mut builder = reqwest::Client::builder()
         .tcp_keepalive(Some(time::Duration::from_secs(10)))
-        .user_agent(crate::launcher_user_agent())
+        .user_agent(crate::launcher_user_agent());
+
+    if let Some(url) = PROXY_URL.read().as_deref() {
+        match reqwest::Proxy::all(url) {
+            Ok(proxy) => builder = builder.proxy(proxy),
+            Err(e) => {
+                tracing::warn!("Ignoring invalid proxy URL {url}: {e}")
+            }
+        }
+    }
+
+    builder
 }
 
 pub static INSECURE_REQWEST_CLIENT: LazyLock<reqwest::Client> =

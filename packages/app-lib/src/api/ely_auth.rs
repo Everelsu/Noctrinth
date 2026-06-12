@@ -57,9 +57,12 @@ pub async fn users() -> crate::Result<Vec<ElyCredentials>> {
 pub async fn get_skin_texture(username: &str) -> crate::Result<Vec<u8>> {
     use crate::util::fetch::INSECURE_REQWEST_CLIENT;
 
+    // The timestamp query busts HTTP caches (CDN and client) so a freshly
+    // uploaded skin shows up immediately instead of a stale cached texture.
     let url = format!(
-        "https://skinsystem.ely.by/skins/{}.png",
-        urlencoding::encode(username)
+        "https://skinsystem.ely.by/skins/{}.png?_={}",
+        urlencoding::encode(username),
+        chrono::Utc::now().timestamp_millis()
     );
 
     let resp = INSECURE_REQWEST_CLIENT

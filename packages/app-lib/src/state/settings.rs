@@ -45,6 +45,11 @@ pub struct Settings {
     pub pending_update_toast_for_version: Option<String>,
     pub auto_download_updates: Option<bool>,
 
+    /// Proxy URL applied to all launcher HTTP traffic (e.g.
+    /// `socks5://127.0.0.1:1080` or `http://host:port`). Requires an app
+    /// restart to take effect because reqwest clients are built once.
+    pub proxy_url: Option<String>,
+
     pub version: usize,
 }
 
@@ -69,8 +74,15 @@ impl Settings {
     const CURRENT_VERSION: usize = 3;
 
     pub async fn get(
-        exec: impl sqlx::Executor<'_, Database = sqlx::Sqlite>,
+        exec: impl sqlx::Executor<'_, Database = sqlx::Sqlite> + Copy,
     ) -> crate::Result<Self> {
+        // proxy_url is read with a runtime-checked query so the sqlx offline
+        // cache (.sqlx) does not need regenerating for this fork-only column.
+        let proxy_url: Option<String> =
+            sqlx::query_scalar("SELECT proxy_url FROM settings")
+                .fetch_one(exec)
+                .await?;
+
         let res = sqlx::query!(
             "
             SELECT
@@ -142,13 +154,14 @@ impl Settings {
             pending_update_toast_for_version: res
                 .pending_update_toast_for_version,
             auto_download_updates: res.auto_download_updates.map(|x| x == 1),
+            proxy_url,
             version: res.version as usize,
         })
     }
 
     pub async fn update(
         &self,
-        exec: impl sqlx::Executor<'_, Database = sqlx::Sqlite>,
+        exec: impl sqlx::Executor<'_, Database = sqlx::Sqlite> + Copy,
     ) -> crate::Result<()> {
         let max_concurrent_writes = self.max_concurrent_writes as i32;
         let max_concurrent_downloads = self.max_concurrent_downloads as i32;
@@ -242,6 +255,12 @@ impl Settings {
         )
         .execute(exec)
         .await?;
+
+        // Runtime-checked for the same reason as in `get` — fork-only column.
+        sqlx::query("UPDATE settings SET proxy_url = $1")
+            .bind(&self.proxy_url)
+            .execute(exec)
+            .await?;
 
         Ok(())
     }

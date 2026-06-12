@@ -752,24 +752,33 @@ pub async fn add_project_from_path(
     Ok(path)
 }
 
-/// Add a project from a direct download URL (e.g. a CurseForge file).
+/// Add a project from direct download URLs (e.g. a CurseForge file).
 ///
 /// Unlike `add_project_from_version`, this does not resolve a Modrinth
-/// version — it simply downloads the file at `file_url` and stores it in the
-/// profile. The project type is inferred from the JAR contents.
+/// version — it downloads the file from the first mirror that works and
+/// stores it in the profile. The project type is inferred from the JAR
+/// contents. When `sha1` is provided, the download is integrity-checked and
+/// retried on mismatch.
 ///
 /// Returns the relative path to the installed project.
 #[tracing::instrument]
 pub async fn add_project_from_curseforge(
     profile_path: &str,
-    file_url: &str,
+    file_urls: &[String],
     file_name: &str,
+    sha1: Option<&str>,
 ) -> crate::Result<String> {
     let state = State::get().await?;
 
-    let bytes =
-        fetch::fetch(file_url, None, None, &state.fetch_semaphore, &state.pool)
-            .await?;
+    let mirrors: Vec<&str> = file_urls.iter().map(String::as_str).collect();
+    let bytes = fetch::fetch_mirrors(
+        &mirrors,
+        sha1,
+        None,
+        &state.fetch_semaphore,
+        &state.pool,
+    )
+    .await?;
 
     let project_path = Profile::add_project_bytes(
         profile_path,

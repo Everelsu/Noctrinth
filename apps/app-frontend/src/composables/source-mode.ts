@@ -35,6 +35,40 @@ export function useSourceMode() {
 	return sourceMode
 }
 
+// ─── CurseForge master switch ─────────────────────────────────────────────────
+
+const CF_ENABLED_KEY = 'noctrinth:curseforge-enabled'
+
+function loadCurseForgeEnabled(): boolean {
+	try {
+		return localStorage.getItem(CF_ENABLED_KEY) !== 'false'
+	} catch {
+		return true
+	}
+}
+
+const curseForgeEnabled = ref<boolean>(loadCurseForgeEnabled())
+
+watch(curseForgeEnabled, (value) => {
+	try {
+		localStorage.setItem(CF_ENABLED_KEY, String(value))
+	} catch {
+		// localStorage unavailable — in-memory persistence still works.
+	}
+	if (!value && sourceMode.value === 'curseforge') {
+		sourceMode.value = 'modrinth'
+	}
+})
+
+/**
+ * Master switch for all CurseForge search/browse functionality. On by default
+ * (when an API key is configured); turning it off hides the catalog toggle and
+ * makes every CurseForge API helper report CurseForge as unavailable.
+ */
+export function useCurseForgeEnabled() {
+	return curseForgeEnabled
+}
+
 // ─── Source colour accent ─────────────────────────────────────────────────────
 
 const ACCENT_KEY = 'noctrinth:source-accent'

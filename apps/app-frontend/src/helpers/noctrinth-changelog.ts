@@ -21,6 +21,15 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.14.6',
+		date: '2026-06-12T00:00:00+00:00',
+		body: `### Added
+- CurseForge master toggle in Settings → Appearance. One switch enables or disables every CurseForge search feature at once: the catalog toggle on the Discover page, CurseForge results in unified search, and CurseForge project pages. Turning it off while CurseForge is the active catalog automatically switches Discover back to Modrinth.
+
+### Changed
+- Synced with upstream Modrinth (0.14.5 → 0.14.6): drag-and-drop reordering of saved skins, draggable Mojang default skins, fixed translucency on the skin outer layer, better offline handling on the Skins page, live system-theme updates without an app restart, new error cases in the Microsoft sign-in error modal, and fixes for notification pop-ups appearing over open modals, the loading flash when deleting a skin, and hardcoded skins not being editable.`,
+	},
+	{
 		version: '0.14.5',
 		date: '2026-06-09T00:00:00+00:00',
 		body: `### Changed

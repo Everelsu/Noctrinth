@@ -2,7 +2,7 @@
 import { Combobox, defineMessages, ThemeSelector, Toggle, useVIntl } from '@modrinth/ui'
 import { ref, watch } from 'vue'
 
-import { useSourceAccent } from '@/composables/source-mode'
+import { useCurseForgeEnabled, useSourceAccent } from '@/composables/source-mode'
 import { get, set } from '@/helpers/settings.ts'
 import { getOS } from '@/helpers/utils'
 import { useTheming } from '@/store/state'
@@ -10,6 +10,7 @@ import type { ColorTheme, FeatureFlag } from '@/store/theme.ts'
 
 const themeStore = useTheming()
 const accentBySource = useSourceAccent()
+const curseForgeEnabled = useCurseForgeEnabled()
 const { formatMessage } = useVIntl()
 
 const worldsInHomeFlag: FeatureFlag = 'worlds_in_home'
@@ -93,6 +94,15 @@ const messages = defineMessages({
 	toggleSidebarDescription: {
 		id: 'app.appearance-settings.toggle-sidebar.description',
 		defaultMessage: 'Enables the ability to toggle the sidebar.',
+	},
+	curseForgeEnabledTitle: {
+		id: 'app.appearance-settings.curseforge-enabled.title',
+		defaultMessage: 'CurseForge search',
+	},
+	curseForgeEnabledDescription: {
+		id: 'app.appearance-settings.curseforge-enabled.description',
+		defaultMessage:
+			'Enables all CurseForge search features: the catalog toggle on the Discover page, CurseForge results, and CurseForge project pages.',
 	},
 	sourceAccentTitle: {
 		id: 'app.appearance-settings.source-accent.title',
@@ -312,6 +322,20 @@ watch(
 					themeStore.toggleSidebar = settings.toggle_sidebar
 				}
 			"
+		/>
+	</div>
+
+	<div class="mt-6 flex items-center justify-between gap-4">
+		<div>
+			<h2 class="m-0 text-lg font-semibold text-contrast">
+				{{ formatMessage(messages.curseForgeEnabledTitle) }}
+			</h2>
+			<p class="m-0 mt-1">{{ formatMessage(messages.curseForgeEnabledDescription) }}</p>
+		</div>
+		<Toggle
+			id="curseforge-enabled"
+			:model-value="curseForgeEnabled"
+			@update:model-value="(e) => (curseForgeEnabled = !!e)"
 		/>
 	</div>
 

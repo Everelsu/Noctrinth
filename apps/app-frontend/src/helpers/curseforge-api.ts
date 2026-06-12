@@ -10,6 +10,8 @@
 
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
 
+import { useCurseForgeEnabled } from '@/composables/source-mode'
+
 import { storeCfInstalled } from './cf-installed-store'
 import { CURSEFORGE_API_KEY } from './curseforge-key'
 import { create_profile_and_install_from_curseforge } from './pack'
@@ -152,7 +154,7 @@ export interface CfMappedHit {
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 export function isCurseForgeAvailable(): boolean {
-	return CF_API_KEY.length > 0
+	return CF_API_KEY.length > 0 && useCurseForgeEnabled().value
 }
 
 export interface CfSearchParams {

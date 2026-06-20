@@ -357,6 +357,7 @@ impl FriendsSocket {
             concat!(env!("MODRINTH_API_URL_V3"), "friends"),
             None,
             None,
+            Some("/v3/friends"),
             semaphore,
             exec,
         )
@@ -385,6 +386,7 @@ impl FriendsSocket {
             None,
             None,
             None,
+            Some("/v3/friend/:user_id"),
             semaphore,
             exec,
         )
@@ -418,6 +420,7 @@ impl FriendsSocket {
             None,
             None,
             None,
+            Some("/v3/friend/:user_id"),
             semaphore,
             exec,
         )

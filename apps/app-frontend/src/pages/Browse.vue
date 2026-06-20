@@ -30,7 +30,7 @@ import {
 import { useQueryClient } from '@tanstack/vue-query'
 import { convertFileSrc } from '@tauri-apps/api/core'
 import type { Ref } from 'vue'
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import type { LocationQuery } from 'vue-router'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 
@@ -60,6 +60,7 @@ import {
 	isCurseForgeAvailable,
 	mapCfCategoriesToTags,
 } from '@/helpers/curseforge-api'
+import { profile_listener } from '@/helpers/events.js'
 import { get_loader_versions as getLoaderManifest } from '@/helpers/metadata'
 import {
 	get as getInstance,
@@ -231,6 +232,69 @@ watchServerContextChanges()
 
 await initInstanceContext()
 
+async function refreshInstalledProjectIds() {
+	if (!route.query.i) return
+
+	if (route.query.from === 'worlds') {
+		const worlds = await get_profile_worlds(route.query.i as string).catch(handleError)
+		if (!worlds) return
+
+		const serverProjectIds = worlds
+			.filter((w) => w.type === 'server' && 'project_id' in w && w.project_id)
+			.map((w) => (w as { project_id: string }).project_id)
+		debugLog('installedServerProjectIds loaded', { count: serverProjectIds.length })
+		installedProjectIds.value = serverProjectIds
+		return
+	}
+
+	const instancePath = route.query.i as string
+	// Modrinth IDs (hash-based) + cached CF IDs from localStorage —
+	// the cached set renders the sidebar instantly without waiting on
+	// the fingerprint round-trip below.
+	const ids = await getInstalledProjectIds(instancePath).catch(handleError)
+	if (ids) {
+		const cfIds = loadCfInstalledProjectIds(instancePath)
+		const merged = [...ids, ...cfIds]
+		debugLog('installedProjectIds loaded', { count: merged.length, cfCount: cfIds.length })
+		installedProjectIds.value = merged
+	}
+
+	// Authoritative CF discovery in the background — XMCL-style:
+	// hash every .jar locally, POST to CurseForge /v1/fingerprints,
+	// union with the cached CF set. Catches mods added manually
+	// (drag-and-drop). The store keeps freshly-installed mods even
+	// if CF temporarily fails to recognise their fingerprint.
+	refreshCfInstalledFromFingerprints(instancePath)
+		.then((cfIds) => {
+			debugLog('CF fingerprint scan complete', { cfCount: cfIds.length })
+			// Replace the CF portion of installedProjectIds with the
+			// merged result the store just produced — it's already the
+			// union of (previous cache) ∪ (fingerprint-discovered).
+			const current = installedProjectIds.value ?? []
+			const modrinthOnly = current.filter((id) => !id.startsWith('cf:'))
+			installedProjectIds.value = [...modrinthOnly, ...cfIds]
+		})
+		.catch((err) => {
+			console.warn('[Browse] CF fingerprint refresh failed:', err)
+		})
+
+	// Load file basenames for filename-based CF installed detection.
+	// Kept as a secondary fallback for the brief window before the
+	// fingerprint scan finishes, and for any CF mod whose fingerprint
+	// CF doesn't recognise (rare — usually means the file was edited).
+	getProfileProjects(instancePath)
+		.then((projects) => {
+			const names = new Set<string>()
+			for (const filePath of Object.keys(projects)) {
+				const base = filePath.split('/').pop()
+				if (base) names.add(base)
+			}
+			installedFileNames.value = names
+			debugLog('installedFileNames loaded', { count: names.size })
+		})
+		.catch(() => {})
+}
+
 async function initInstanceContext() {
 	debugLog('initInstanceContext', {
 		queryI: route.query.i,
@@ -249,65 +313,7 @@ async function initInstanceContext() {
 			gameVersion: instance.value?.game_version,
 		})
 
-		if (route.query.from === 'worlds') {
-			get_profile_worlds(route.query.i as string)
-				.then((worlds) => {
-					const serverProjectIds = worlds
-						.filter((w) => w.type === 'server' && 'project_id' in w && w.project_id)
-						.map((w) => (w as { project_id: string }).project_id)
-					debugLog('installedServerProjectIds loaded', { count: serverProjectIds.length })
-					installedProjectIds.value = serverProjectIds
-				})
-				.catch(handleError)
-		} else {
-			const instancePath = route.query.i as string
-			// Modrinth IDs (hash-based) + cached CF IDs from localStorage —
-			// the cached set renders the sidebar instantly without waiting on
-			// the fingerprint round-trip below.
-			getInstalledProjectIds(instancePath)
-				.then((ids) => {
-					const cfIds = loadCfInstalledProjectIds(instancePath)
-					const merged = [...ids, ...cfIds]
-					debugLog('installedProjectIds loaded', { count: merged.length, cfCount: cfIds.length })
-					installedProjectIds.value = merged
-				})
-				.catch(handleError)
-
-			// Authoritative CF discovery in the background — XMCL-style:
-			// hash every .jar locally, POST to CurseForge /v1/fingerprints,
-			// union with the cached CF set. Catches mods added manually
-			// (drag-and-drop). The store keeps freshly-installed mods even
-			// if CF temporarily fails to recognise their fingerprint.
-			refreshCfInstalledFromFingerprints(instancePath)
-				.then((cfIds) => {
-					debugLog('CF fingerprint scan complete', { cfCount: cfIds.length })
-					// Replace the CF portion of installedProjectIds with the
-					// merged result the store just produced — it's already the
-					// union of (previous cache) ∪ (fingerprint-discovered).
-					const current = installedProjectIds.value ?? []
-					const modrinthOnly = current.filter((id) => !id.startsWith('cf:'))
-					installedProjectIds.value = [...modrinthOnly, ...cfIds]
-				})
-				.catch((err) => {
-					console.warn('[Browse] CF fingerprint refresh failed:', err)
-				})
-
-			// Load file basenames for filename-based CF installed detection.
-			// Kept as a secondary fallback for the brief window before the
-			// fingerprint scan finishes, and for any CF mod whose fingerprint
-			// CF doesn't recognise (rare — usually means the file was edited).
-			getProfileProjects(instancePath)
-				.then((projects) => {
-					const names = new Set<string>()
-					for (const filePath of Object.keys(projects)) {
-						const base = filePath.split('/').pop()
-						if (base) names.add(base)
-					}
-					installedFileNames.value = names
-					debugLog('installedFileNames loaded', { count: names.size })
-				})
-				.catch(() => {})
-		}
+		await refreshInstalledProjectIds()
 
 		if (instance.value?.linked_data?.project_id) {
 			debugLog('checking linked project for server status', instance.value.linked_data.project_id)
@@ -1028,10 +1034,10 @@ function getCardActions(
 						selectedInstall.versionId,
 						instance.value ? instance.value.path : null,
 						'SearchCard',
-						(versionId) => {
+						(versionId, installedProjectIds) => {
 							setProjectInstalling(projectResult.project_id, false)
 							if (versionId) {
-								onSearchResultInstalled(projectResult.project_id)
+								onSearchResultsInstalled(installedProjectIds ?? [projectResult.project_id])
 							}
 						},
 						(profile) => {
@@ -1057,7 +1063,7 @@ function onSearchResultInstalled(id: string) {
 		markServerProjectInstalled(id)
 		return
 	}
-	newlyInstalled.value.push(id)
+	const toAdd = [id]
 
 	// Cross-platform mirroring: if the installed project is known to also
 	// exist on the other platform, mark that ID as installed too — so a
@@ -1067,19 +1073,24 @@ function onSearchResultInstalled(id: string) {
 		const cfId = Number(id.slice(3))
 		if (!Number.isNaN(cfId)) {
 			const mrId = lookupCfIdToMr(cfId)
-			if (mrId && !newlyInstalled.value.includes(mrId)) {
-				newlyInstalled.value.push(mrId)
-			}
+			if (mrId) toAdd.push(mrId)
 		}
 	} else {
 		const cfId = lookupMrIdToCf(id)
-		if (cfId != null) {
-			const mirror = `cf:${cfId}`
-			if (!newlyInstalled.value.includes(mirror)) {
-				newlyInstalled.value.push(mirror)
-			}
-		}
+		if (cfId != null) toAdd.push(`cf:${cfId}`)
 	}
+
+	newlyInstalled.value = Array.from(new Set([...newlyInstalled.value, ...toAdd]))
+}
+
+function onSearchResultsInstalled(ids: string[]) {
+	if (isServerContext.value) {
+		for (const id of ids) {
+			markServerProjectInstalled(id)
+		}
+		return
+	}
+	newlyInstalled.value = Array.from(new Set([...newlyInstalled.value, ...ids]))
 }
 
 /** Modrinth-only search — used internally and passed to unifiedSearch */
@@ -1366,6 +1377,38 @@ if (instance.value?.game_version) {
 }
 
 await searchState.refreshSearch()
+
+type UnlistenFn = () => void
+
+let isUnmounted = false
+let unlistenProfiles: UnlistenFn | null = null
+
+onMounted(() => {
+	profile_listener(async (event: { event: string; profile_path_id: string }) => {
+		if (
+			instance.value &&
+			event.profile_path_id === instance.value.path &&
+			event.event === 'synced'
+		) {
+			await refreshInstalledProjectIds()
+			await searchState.refreshSearch()
+		}
+	})
+		.then((unlisten) => {
+			if (isUnmounted) {
+				unlisten()
+				return
+			}
+
+			unlistenProfiles = unlisten
+		})
+		.catch(handleError)
+})
+
+onUnmounted(() => {
+	isUnmounted = true
+	unlistenProfiles?.()
+})
 
 function getProjectBrowseQuery() {
 	return {

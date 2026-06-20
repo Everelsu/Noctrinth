@@ -21,7 +21,7 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
-		version: '0.14.7',
+		version: '0.14.8',
 		date: '2026-06-20T00:00:00+00:00',
 		body: `### Changed
 - CurseForge search is now off by default. New installs see only Modrinth; turn CurseForge on in Settings → Appearance to reveal the catalog toggle on the Discover page and all CurseForge results and project pages.

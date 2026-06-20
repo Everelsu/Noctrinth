@@ -81,6 +81,7 @@ import InstallToPlayModal from '@/components/ui/modal/InstallToPlayModal.vue'
 import ModpackAlreadyInstalledModal from '@/components/ui/modal/ModpackAlreadyInstalledModal.vue'
 import UpdateToPlayModal from '@/components/ui/modal/UpdateToPlayModal.vue'
 import NavButton from '@/components/ui/NavButton.vue'
+import PrideFundraiserBanner from '@/components/ui/PrideFundraiserBanner.vue'
 import QuickInstanceSwitcher from '@/components/ui/QuickInstanceSwitcher.vue'
 import SplashScreen from '@/components/ui/SplashScreen.vue'
 import WindowControls from '@/components/ui/WindowControls.vue'
@@ -98,7 +99,6 @@ import { mergeUrlQuery, parseModrinthLink } from '@/helpers/project-links.ts'
 import { proxiedFetch as tauriFetch } from '@/helpers/proxy-fetch'
 import { get as getSettings, set as setSettings } from '@/helpers/settings.ts'
 import { get_opening_command, initialize_state } from '@/helpers/state'
-import { hasActivePride26Midas, hasMidasBadge } from '@/helpers/user-campaigns.ts'
 import {
 	areUpdatesEnabled,
 	enqueueUpdateForInstallation,
@@ -207,12 +207,6 @@ const tauriApiClient = new TauriModrinthClient({
 	],
 })
 provideModrinthClient(tauriApiClient)
-const { data: authenticatedModrinthUser } = useQuery({
-	queryKey: computed(() => ['authenticated-user', 'campaigns', credentials.value?.user?.id]),
-	queryFn: () => tauriApiClient.labrinth.users_v3.getAuthenticated(),
-	enabled: () => !!credentials.value?.session,
-	retry: false,
-})
 providePageContext({
 	hierarchicalSidebarAvailable: ref(true),
 	showAds: ref(false),

@@ -1364,17 +1364,20 @@ watch(queuedServerInstallCount, (count) => {
 })
 
 // Re-run the search when the catalog toggle changes (it is not part of the
-// request params that useBrowseSearch watches). Filters CurseForge can't
-// express are dropped on switch so they don't silently shape the next
-// Modrinth query either.
+// request params that useBrowseSearch watches). On switch, drop filters that
+// don't carry across catalogs so they don't silently shape the next query:
+//   - category filters: Modrinth and CurseForge have different taxonomies, so
+//     a selection from one catalog is meaningless (and returns nothing) in the
+//     other. Game version and loader are universal and are kept.
+//   - CurseForge-unsupported groups (environment, license) when entering CF.
 watch(sourceMode, (mode) => {
-	if (mode === 'curseforge') {
-		const cleaned = searchState.currentFilters.value.filter(
-			(f) => !CF_UNSUPPORTED_FILTER_IDS.has(f.type),
-		)
-		if (cleaned.length !== searchState.currentFilters.value.length) {
-			searchState.currentFilters.value = cleaned
-		}
+	const cleaned = searchState.currentFilters.value.filter((f) => {
+		if (f.type.startsWith('category_')) return false
+		if (mode === 'curseforge' && CF_UNSUPPORTED_FILTER_IDS.has(f.type)) return false
+		return true
+	})
+	if (cleaned.length !== searchState.currentFilters.value.length) {
+		searchState.currentFilters.value = cleaned
 	}
 	// Catalogs have different result counts, so the current page may not exist
 	// in the catalog being switched to — reset to the first page.

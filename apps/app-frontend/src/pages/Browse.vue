@@ -1349,6 +1349,9 @@ watch(sourceMode, (mode) => {
 			searchState.currentFilters.value = cleaned
 		}
 	}
+	// Catalogs have different result counts, so the current page may not exist
+	// in the catalog being switched to — reset to the first page.
+	searchState.currentPage.value = 1
 	searchState.refreshSearch()
 })
 
@@ -1365,7 +1368,6 @@ if (instance.value?.game_version) {
 await searchState.refreshSearch()
 
 function getProjectBrowseQuery() {
-	if (!installContext.value) return undefined
 	return {
 		...route.query,
 		b: route.fullPath,

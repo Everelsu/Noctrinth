@@ -183,14 +183,16 @@ export async function searchCurseForge(params: CfSearchParams): Promise<CfSearch
 	const classId = CF_CLASS_IDS[params.projectType ?? 'mod'] ?? CF_CLASS_IDS.mod
 	const loaderType = params.modLoader ? (CF_LOADER_TYPES[params.modLoader] ?? 0) : 0
 	const sortField = CF_SORT_FIELDS[params.sortBy ?? 'relevance'] ?? CF_SORT_FIELDS.relevance
-	// CurseForge max page size is 50
-	const pageSize = Math.min(params.limit ?? 20, 50)
+	// CurseForge max page size is 50, and it rejects requests where
+	// index + pageSize exceeds the cap — clamp to the remaining window.
+	const offset = params.offset ?? 0
+	const pageSize = Math.min(params.limit ?? 20, 50, CF_MAX_INDEX - offset)
 
 	const qs = new URLSearchParams({
 		gameId: '432', // Minecraft
 		classId: String(classId),
 		pageSize: String(pageSize),
-		index: String(params.offset ?? 0),
+		index: String(offset),
 		sortField: String(sortField),
 		sortOrder: 'desc',
 	})

@@ -187,6 +187,7 @@ export default new createRouter({
 			component: Pages.CurseForgeProject,
 			props: true,
 			meta: {
+				useContext: true,
 				breadcrumb: [{ name: 'CurseForge mod' }],
 			},
 		},

@@ -1363,5 +1363,95 @@
   },
   "unknown-pack-warning-modal.warning.title": {
     "message": "Предупреждение о неизвестном файле"
+  },
+  "app.appearance-settings.source-accent.description": {
+    "message": "На странице обзора окрашивает акцент в зелёный для Modrinth и оранжевый для CurseForge в зависимости от выбранного каталога."
+  },
+  "app.appearance-settings.source-accent.title": {
+    "message": "Цветовой акцент каталога"
+  },
+  "app.instance.mods.projects-were-added": {
+    "message": "Добавлено проектов: {count}"
+  },
+  "app.instance.worlds.search-worlds-placeholder": {
+    "message": "Поиск среди {count} миров..."
+  },
+  "app.update-popup.body": {
+    "message": "Noctrinth v{version} готов к установке! Перезагрузите, чтобы обновить сейчас, или обновление произойдёт автоматически при закрытии Noctrinth."
+  },
+  "instance.files.adding-files": {
+    "message": "Добавление файлов ({completed}/{total})"
+  },
+  "app.curseforge-project.install": {
+    "message": "Установить"
+  },
+  "app.curseforge-project.installing": {
+    "message": "Установка…"
+  },
+  "app.curseforge-project.installed": {
+    "message": "Установлено"
+  },
+  "app.curseforge-project.open-on-curseforge": {
+    "message": "Открыть на CurseForge"
+  },
+  "app.curseforge-project.tab.description": {
+    "message": "Описание"
+  },
+  "app.curseforge-project.tab.versions": {
+    "message": "Версии"
+  },
+  "app.curseforge-project.tab.gallery": {
+    "message": "Галерея"
+  },
+  "app.curseforge-project.no-description": {
+    "message": "Описание отсутствует."
+  },
+  "app.curseforge-project.not-found.title": {
+    "message": "Мод не найден"
+  },
+  "app.curseforge-project.not-found.description": {
+    "message": "Не удалось загрузить этот мод CurseForge. Возможно, он был удалён, или CurseForge сейчас недоступен."
+  },
+  "app.curseforge-install.instance-load-error": {
+    "message": "Не удалось загрузить инстанс."
+  },
+  "app.curseforge-install.installed.title": {
+    "message": "Мод установлен"
+  },
+  "app.curseforge-install.installed.text": {
+    "message": "{modName} добавлен в {instanceName}."
+  },
+  "app.curseforge-install.incompatible.title": {
+    "message": "Предупреждение о несовместимости"
+  },
+  "app.curseforge-install.optional.title": {
+    "message": "Доступны необязательные зависимости"
+  },
+  "app.browse.cf-mod-installed.title": {
+    "message": "Мод установлен"
+  },
+  "app.browse.cf-mod-installed.text": {
+    "message": "Мод CurseForge добавлен в {instanceName}."
+  },
+  "app.browse.cf-modpack-installed.title": {
+    "message": "Сборка установлена"
+  },
+  "app.browse.cf-modpack-installed.text": {
+    "message": "{name} готова к игре."
+  },
+  "app.instance.screenshots.count": {
+    "message": "{count, plural, one {# скриншот} other {# скриншотов}}"
+  },
+  "app.modal.install-to-play.mod-count": {
+    "message": "{count, plural, one {# мод} other {# модов}}"
+  },
+  "friends.action.view-friend-requests": {
+    "message": "{count} {count, plural, one {запрос} other {запросов}} в друзья"
+  },
+  "app.curseforge-install.incompatible.text": {
+    "message": "{modName} объявляет {count, plural, one {# несовместимый мод} other {# несовместимых модов}} — проверьте {instanceName} на наличие конфликтов."
+  },
+  "app.curseforge-install.optional.text": {
+    "message": "У {modName} есть {count, plural, one {# необязательное дополнение} other {# необязательных дополнений}} — откройте его страницу, чтобы установить их."
   }
 }

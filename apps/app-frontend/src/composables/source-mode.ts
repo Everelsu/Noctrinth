@@ -41,9 +41,9 @@ const CF_ENABLED_KEY = 'noctrinth:curseforge-enabled'
 
 function loadCurseForgeEnabled(): boolean {
 	try {
-		return localStorage.getItem(CF_ENABLED_KEY) !== 'false'
+		return localStorage.getItem(CF_ENABLED_KEY) === 'true'
 	} catch {
-		return true
+		return false
 	}
 }
 
@@ -61,9 +61,9 @@ watch(curseForgeEnabled, (value) => {
 })
 
 /**
- * Master switch for all CurseForge search/browse functionality. On by default
- * (when an API key is configured); turning it off hides the catalog toggle and
- * makes every CurseForge API helper report CurseForge as unavailable.
+ * Master switch for all CurseForge search/browse functionality. Off by default;
+ * turning it on reveals the catalog toggle and enables every CurseForge API
+ * helper. While off, every CurseForge helper reports CurseForge as unavailable.
  */
 export function useCurseForgeEnabled() {
 	return curseForgeEnabled

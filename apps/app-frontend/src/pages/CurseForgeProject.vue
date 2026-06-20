@@ -30,14 +30,20 @@
 							<SpinnerIcon v-if="installBtnBusy" class="animate-spin" />
 							<CheckIcon v-else-if="installBtnDone" />
 							<DownloadIcon v-else />
-							{{ installBtnBusy ? 'Installing…' : installBtnDone ? 'Installed' : 'Install' }}
+							{{
+								installBtnBusy
+									? formatMessage(messages.installing)
+									: installBtnDone
+										? formatMessage(messages.installed)
+										: formatMessage(messages.install)
+							}}
 						</button>
 					</ButtonStyled>
 
 					<ButtonStyled size="large" color="standard">
 						<button @click="openExternal(mod.links?.websiteUrl)">
 							<ExternalIcon />
-							Open on CurseForge
+							{{ formatMessage(messages.openOnCurseForge) }}
 						</button>
 					</ButtonStyled>
 				</template>
@@ -73,7 +79,11 @@
 						>
 							<CheckIcon v-if="rowInstalled(version)" />
 							<DownloadIcon v-else />
-							{{ rowInstalled(version) ? 'Installed' : 'Install' }}
+							{{
+								rowInstalled(version)
+									? formatMessage(messages.installed)
+									: formatMessage(messages.install)
+							}}
 						</button>
 					</ButtonStyled>
 				</template>
@@ -89,10 +99,9 @@
 	<!-- Error state -->
 	<div v-else class="flex flex-col gap-4 p-6">
 		<Card class="flex flex-col items-center gap-2 py-12 text-center">
-			<h2 class="m-0 text-contrast">Mod not found</h2>
+			<h2 class="m-0 text-contrast">{{ formatMessage(messages.notFoundTitle) }}</h2>
 			<p class="m-0 text-secondary">
-				This CurseForge mod could not be loaded. It may have been removed, or CurseForge is
-				unavailable right now.
+				{{ formatMessage(messages.notFoundDescription) }}
 			</p>
 		</Card>
 	</div>
@@ -103,6 +112,7 @@ import { CheckIcon, DownloadIcon, ExternalIcon, SpinnerIcon } from '@modrinth/as
 import {
 	ButtonStyled,
 	Card,
+	defineMessages,
 	injectNotificationManager,
 	NavTabs,
 	ProjectHeader,
@@ -111,6 +121,7 @@ import {
 	ProjectSidebarDetails,
 	ProjectSidebarLinks,
 	ProjectSidebarTags,
+	useVIntl,
 } from '@modrinth/ui'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { computed, ref } from 'vue'
@@ -140,7 +151,37 @@ const props = defineProps({
 
 const route = useRoute()
 const router = useRouter()
+const { formatMessage } = useVIntl()
 const { handleError, addNotification } = injectNotificationManager()
+
+const messages = defineMessages({
+	install: { id: 'app.curseforge-project.install', defaultMessage: 'Install' },
+	installing: { id: 'app.curseforge-project.installing', defaultMessage: 'Installing…' },
+	installed: { id: 'app.curseforge-project.installed', defaultMessage: 'Installed' },
+	openOnCurseForge: {
+		id: 'app.curseforge-project.open-on-curseforge',
+		defaultMessage: 'Open on CurseForge',
+	},
+	tabDescription: {
+		id: 'app.curseforge-project.tab.description',
+		defaultMessage: 'Description',
+	},
+	tabVersions: { id: 'app.curseforge-project.tab.versions', defaultMessage: 'Versions' },
+	tabGallery: { id: 'app.curseforge-project.tab.gallery', defaultMessage: 'Gallery' },
+	noDescription: {
+		id: 'app.curseforge-project.no-description',
+		defaultMessage: 'No description available.',
+	},
+	notFoundTitle: {
+		id: 'app.curseforge-project.not-found.title',
+		defaultMessage: 'Mod not found',
+	},
+	notFoundDescription: {
+		id: 'app.curseforge-project.not-found.description',
+		defaultMessage:
+			'This CurseForge mod could not be loaded. It may have been removed, or CurseForge is unavailable right now.',
+	},
+})
 
 // Async setup — RouterView wraps pages in <Suspense>, so top-level await is fine.
 const [mod, allLoaders, allGameVersions] = await Promise.all([
@@ -152,7 +193,7 @@ const [mod, allLoaders, allGameVersions] = await Promise.all([
 const cfInstallModal = ref(null)
 
 const description = mod ? await getCurseForgeModDescription(props.modId) : null
-const descriptionHtml = description || '<p>No description available.</p>'
+const descriptionHtml = description || `<p>${formatMessage(messages.noDescription)}</p>`
 
 // Instance context — present when this page was opened while adding content
 // to a specific instance (?i=<instance path> in the URL).
@@ -236,11 +277,11 @@ const project = mod
 const activeTab = ref(0)
 const tabs = computed(() => {
 	const list = [
-		{ label: 'Description', href: 'cf-description' },
-		{ label: 'Versions', href: 'cf-versions' },
+		{ label: formatMessage(messages.tabDescription), href: 'cf-description' },
+		{ label: formatMessage(messages.tabVersions), href: 'cf-versions' },
 	]
 	if (mod?.screenshots?.length) {
-		list.push({ label: 'Gallery', href: 'cf-gallery' })
+		list.push({ label: formatMessage(messages.tabGallery), href: 'cf-gallery' })
 	}
 	return list
 })

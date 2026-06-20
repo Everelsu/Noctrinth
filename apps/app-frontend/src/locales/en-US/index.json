@@ -164,6 +164,18 @@
   "app.browse.back-to-instance": {
     "message": "Back to instance"
   },
+  "app.browse.cf-mod-installed.text": {
+    "message": "The CurseForge mod was added to {instanceName}."
+  },
+  "app.browse.cf-mod-installed.title": {
+    "message": "Mod installed"
+  },
+  "app.browse.cf-modpack-installed.text": {
+    "message": "{name} is ready to play."
+  },
+  "app.browse.cf-modpack-installed.title": {
+    "message": "Modpack installed"
+  },
   "app.browse.discover-content": {
     "message": "Discover content"
   },
@@ -196,6 +208,57 @@
   },
   "app.content-install.no-compatible-versions": {
     "message": "No available versions match {compatibilityLabel}. Select a version to install anyway. Dependencies will not be installed automatically."
+  },
+  "app.curseforge-install.incompatible.text": {
+    "message": "{modName} declares {count, plural, one {# incompatible mod} other {# incompatible mods}} — check {instanceName} for conflicts."
+  },
+  "app.curseforge-install.incompatible.title": {
+    "message": "Incompatible mod warning"
+  },
+  "app.curseforge-install.installed.text": {
+    "message": "{modName} was added to {instanceName}."
+  },
+  "app.curseforge-install.installed.title": {
+    "message": "Mod installed"
+  },
+  "app.curseforge-install.instance-load-error": {
+    "message": "Instance could not be loaded."
+  },
+  "app.curseforge-install.optional.text": {
+    "message": "{modName} has {count, plural, one {# optional add-on} other {# optional add-ons}} — open its page to install them."
+  },
+  "app.curseforge-install.optional.title": {
+    "message": "Optional dependencies available"
+  },
+  "app.curseforge-project.install": {
+    "message": "Install"
+  },
+  "app.curseforge-project.installed": {
+    "message": "Installed"
+  },
+  "app.curseforge-project.installing": {
+    "message": "Installing…"
+  },
+  "app.curseforge-project.no-description": {
+    "message": "No description available."
+  },
+  "app.curseforge-project.not-found.description": {
+    "message": "This CurseForge mod could not be loaded. It may have been removed, or CurseForge is unavailable right now."
+  },
+  "app.curseforge-project.not-found.title": {
+    "message": "Mod not found"
+  },
+  "app.curseforge-project.open-on-curseforge": {
+    "message": "Open on CurseForge"
+  },
+  "app.curseforge-project.tab.description": {
+    "message": "Description"
+  },
+  "app.curseforge-project.tab.gallery": {
+    "message": "Gallery"
+  },
+  "app.curseforge-project.tab.versions": {
+    "message": "Versions"
   },
   "app.export-modal.description-placeholder": {
     "message": "Enter modpack description..."

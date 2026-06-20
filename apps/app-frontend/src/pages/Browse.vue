@@ -531,6 +531,22 @@ const messages = defineMessages({
 		id: 'search.filter.locked.instance.sync',
 		defaultMessage: 'Sync with instance',
 	},
+	cfModInstalledTitle: {
+		id: 'app.browse.cf-mod-installed.title',
+		defaultMessage: 'Mod installed',
+	},
+	cfModInstalledText: {
+		id: 'app.browse.cf-mod-installed.text',
+		defaultMessage: 'The CurseForge mod was added to {instanceName}.',
+	},
+	cfModpackInstalledTitle: {
+		id: 'app.browse.cf-modpack-installed.title',
+		defaultMessage: 'Modpack installed',
+	},
+	cfModpackInstalledText: {
+		id: 'app.browse.cf-modpack-installed.text',
+		defaultMessage: '{name} is ready to play.',
+	},
 })
 
 const breadcrumbs = useBreadcrumbs()
@@ -787,8 +803,8 @@ async function installCfMod(cfModId: number) {
 		// in unified-search hit objects for CurseForge-exclusive mods).
 		onSearchResultInstalled(`cf:${cfModId}`)
 		addNotification({
-			title: 'Mod installed',
-			text: `The CurseForge mod was added to ${inst.name}.`,
+			title: formatMessage(messages.cfModInstalledTitle),
+			text: formatMessage(messages.cfModInstalledText, { instanceName: inst.name }),
 			type: 'success',
 		})
 	} catch (e) {
@@ -808,8 +824,8 @@ async function installCfModpack(cfModId: number, name: string) {
 		const profile = await installCurseForgeModpack(cfModId, name)
 		cfInstalled.value.add(cfModId)
 		addNotification({
-			title: 'Modpack installed',
-			text: `${name} is ready to play.`,
+			title: formatMessage(messages.cfModpackInstalledTitle),
+			text: formatMessage(messages.cfModpackInstalledText, { name }),
 			type: 'success',
 		})
 		router.push(`/instance/${encodeURIComponent(profile)}`)

@@ -776,6 +776,7 @@ pub async fn add_project_from_curseforge(
         &mirrors,
         sha1,
         None,
+        None,
         &state.fetch_semaphore,
         &state.pool,
     )
@@ -785,6 +786,7 @@ pub async fn add_project_from_curseforge(
         profile_path,
         file_name,
         bytes,
+        None,
         None,
         None,
         &state.io_semaphore,

@@ -174,7 +174,7 @@ pub async fn install_curseforge_pack(
 ) -> crate::Result<String> {
     let state = State::get().await?;
     let pack_file =
-        fetch(modpack_url, None, None, &state.fetch_semaphore, &state.pool)
+        fetch(modpack_url, None, None, None, &state.fetch_semaphore, &state.pool)
             .await?;
     let result = install_curseforge_pack_inner(
         pack_file,
@@ -259,6 +259,7 @@ async fn install_curseforge_pack_inner(
             Some(("x-api-key", curseforge_api_key)),
             None,
             None,
+            None,
             &state.fetch_semaphore,
             &state.pool,
         )
@@ -302,6 +303,7 @@ async fn install_curseforge_pack_inner(
                 None,
                 None,
                 Some(("x-api-key", curseforge_api_key)),
+                None,
                 None,
                 None,
                 &state.fetch_semaphore,
@@ -420,6 +422,7 @@ async fn install_curseforge_pack_inner(
                     &mirrors,
                     cf_file.sha1(),
                     Some(&download_meta),
+                    None,
                     &state.fetch_semaphore,
                     &state.pool,
                 )
@@ -442,6 +445,7 @@ async fn install_curseforge_pack_inner(
                     &relative_path,
                     cf_file.sha1(),
                     ProjectType::get_from_parent_folder(&path),
+                    None,
                     &state.pool,
                 )
                 .await?;
@@ -504,6 +508,7 @@ async fn install_curseforge_pack_inner(
             &safe_relative_path,
             None,
             ProjectType::get_from_parent_folder(&safe_relative_path),
+            None,
             &state.pool,
         )
         .await?;

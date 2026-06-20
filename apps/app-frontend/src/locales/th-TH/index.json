@@ -131,12 +131,6 @@
   "app.browse.server.installing": {
     "message": "กำลังติดตั้ง"
   },
-  "app.creation-modal.installing-modpack.description": {
-    "message": "{fileName}"
-  },
-  "app.creation-modal.installing-modpack.title": {
-    "message": "กำลังติดตั้งแพ็กม็อด..."
-  },
   "app.export-modal.description-placeholder": {
     "message": "กรอกคำอธิบายมอดแพ็ก.."
   },

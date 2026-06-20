@@ -146,12 +146,6 @@
   "app.browse.server.installing": {
     "message": "Installere"
   },
-  "app.creation-modal.installing-modpack.description": {
-    "message": "{fileName}"
-  },
-  "app.creation-modal.installing-modpack.title": {
-    "message": "Installere modpack..."
-  },
   "app.export-modal.description-placeholder": {
     "message": "Indtast modpack beskrivelse..."
   },

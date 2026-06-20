@@ -433,5 +433,4 @@ const cssColor = computed(() => {
 .placeholder-banner {
 	opacity: 0.7;
 }
-
 </style>

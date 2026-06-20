@@ -299,7 +299,10 @@ function isRetryableStatus(status: number): boolean {
  * failures (network errors, 429, 5xx) with exponential backoff, and returns
  * parsed JSON (or null on definitive failure / missing key).
  */
-async function cfRequest<T>(path: string, init?: Parameters<typeof tauriFetch>[1]): Promise<T | null> {
+async function cfRequest<T>(
+	path: string,
+	init?: Parameters<typeof tauriFetch>[1],
+): Promise<T | null> {
 	if (!isCurseForgeAvailable()) return null
 
 	for (let attempt = 1; attempt <= CF_REQUEST_ATTEMPTS; attempt++) {

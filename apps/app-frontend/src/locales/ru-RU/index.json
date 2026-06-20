@@ -191,12 +191,6 @@
   "app.content-install.no-compatible-versions": {
     "message": "Не найдено доступных версий, совместимых с {compatibilityLabel}. Выберите версию для установки вручную. Зависимости не будут установлены автоматически."
   },
-  "app.creation-modal.installing-modpack.description": {
-    "message": "{fileName}"
-  },
-  "app.creation-modal.installing-modpack.title": {
-    "message": "Установка сборки..."
-  },
   "app.export-modal.description-placeholder": {
     "message": "Введите описание сборки..."
   },
@@ -254,9 +248,6 @@
   "app.instance.mods.project-was-added": {
     "message": "«{name}» добавлен"
   },
-  "app.instance.mods.projects-were-added": {
-    "message": "{count, plural, one {Добавлен # проект} few {Добавлено # проекта} other {Добавлено # проектов}}"
-  },
   "app.instance.mods.share-text": {
     "message": "Что в моей сборке:"
   },
@@ -275,9 +266,6 @@
   "app.instance.screenshots.copy-failed": {
     "message": "Не удалось скопировать скриншот"
   },
-  "app.instance.screenshots.count": {
-    "message": "{count, plural, one {# скриншот} few {# скриншота} many {# скриншотов} other {# скриншота}}"
-  },
   "app.instance.screenshots.delete.description": {
     "message": "Скриншот будет безвозвратно удалён с диска. Это действие нельзя отменить."
   },
@@ -289,15 +277,6 @@
   },
   "app.instance.screenshots.empty.title": {
     "message": "Скриншотов пока нет"
-  },
-  "app.instance.screenshots.exit-fullscreen": {
-    "message": "Выйти из полноэкранного режима"
-  },
-  "app.instance.screenshots.fullscreen": {
-    "message": "Во весь экран"
-  },
-  "app.instance.screenshots.fullscreen-failed": {
-    "message": "Полноэкранный режим недоступен"
   },
   "app.instance.screenshots.next": {
     "message": "Вперёд"
@@ -320,20 +299,11 @@
   "app.instance.screenshots.sort-oldest": {
     "message": "Сначала старые"
   },
-  "app.instance.screenshots.zoom-in": {
-    "message": "Приблизить"
-  },
-  "app.instance.screenshots.zoom-out": {
-    "message": "Отдалить"
-  },
   "app.instance.worlds.add-server": {
     "message": "Добавить сервер"
   },
   "app.instance.worlds.browse-servers": {
     "message": "Найти серверы"
-  },
-  "app.instance.worlds.delete-world-description": {
-    "message": "«{name}» будет **удалён навсегда**. Его невозможно восстановить."
   },
   "app.instance.worlds.delete-world-title": {
     "message": "Вы действительно хотите удалить этот мир?"
@@ -356,17 +326,8 @@
   "app.instance.worlds.no-worlds-heading": {
     "message": "Нет серверов и миров"
   },
-  "app.instance.worlds.remove-server-description": {
-    "message": "«{name}» будет удалён из списка — в том числе в игре. Его невозможно восстановить."
-  },
-  "app.instance.worlds.remove-server-description-with-address": {
-    "message": "«{name}» ({address}) будет удалён из списка — в том числе в игре. Его невозможно восстановить."
-  },
   "app.instance.worlds.remove-server-title": {
     "message": "Вы действительно хотите удалить {name}?"
-  },
-  "app.instance.worlds.search-worlds-placeholder": {
-    "message": "Поиск по {count, plural, one {# миру} other {# мирам}}..."
   },
   "app.instance.worlds.this-server": {
     "message": "этот сервер"
@@ -379,9 +340,6 @@
   },
   "app.modal.install-to-play.install-button": {
     "message": "Установить"
-  },
-  "app.modal.install-to-play.mod-count": {
-    "message": "{count, plural, one {# мод} few {# мода} other {# модов}}"
   },
   "app.modal.install-to-play.required-modpack": {
     "message": "Необходимая сборка"
@@ -941,9 +899,6 @@
   "friends.action.add-friend": {
     "message": "Добавить в друзья"
   },
-  "friends.action.view-friend-requests": {
-    "message": "{count} {count, plural, one {запрос} few {запроса} other {запросов}} дружбы"
-  },
   "friends.add-friend.submit": {
     "message": "Отправить запрос дружбы"
   },
@@ -1036,9 +991,6 @@
   },
   "instance.edit-world.title": {
     "message": "Настройка мира"
-  },
-  "instance.files.adding-files": {
-    "message": "Добавление файлов ({completed, number}/⁠{total, number})"
   },
   "instance.files.save-as": {
     "message": "Сохранить как..."

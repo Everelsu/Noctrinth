@@ -155,12 +155,6 @@
   "app.browse.server.installing": {
     "message": "Instalování"
   },
-  "app.creation-modal.installing-modpack.description": {
-    "message": "{fileName}"
-  },
-  "app.creation-modal.installing-modpack.title": {
-    "message": "Probíhá instalace modpacku..."
-  },
   "app.export-modal.description-placeholder": {
     "message": "Přidej popis modpacku..."
   },

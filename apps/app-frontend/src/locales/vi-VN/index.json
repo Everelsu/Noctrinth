@@ -149,12 +149,6 @@
   "app.browse.server.installing": {
     "message": "Đang cài đặt"
   },
-  "app.creation-modal.installing-modpack.description": {
-    "message": "{fileName}"
-  },
-  "app.creation-modal.installing-modpack.title": {
-    "message": "Đang cài đặt modpack..."
-  },
   "app.export-modal.description-placeholder": {
     "message": "Thêm miêu tả cho gói modpack..."
   },

@@ -10,10 +10,11 @@
 
 import { useCurseForgeEnabled } from '@/composables/source-mode'
 import { create_profile_and_install_from_curseforge } from '@/helpers/install'
-import { add_project_from_curseforge } from '@/helpers/instance'
+import { add_project_from_curseforge, install_project_with_dependencies } from '@/helpers/instance'
 import { proxiedFetch as tauriFetch } from '@/helpers/proxy-fetch'
 
 import { storeCfInstalled } from './cf-installed-store'
+import { cfIdToModrinthId } from './cross-platform-mapping'
 import { CURSEFORGE_API_KEY } from './curseforge-key'
 
 const CF_BASE = 'https://api.curseforge.com/v1'
@@ -851,8 +852,31 @@ export async function installCurseForgeFile(
 		}
 
 		if (rt === CF_RELATION_TYPE.RequiredDependency) {
-			// Install required. The recursive call propagates the same logic so a
-			// transitive `Optional` doesn't drag in its own `Required` automatically.
+			// Dependency Redirect: Modrinth is the primary source. If this required
+			// CurseForge dependency is the same mod as a known Modrinth project,
+			// install it from Modrinth instead — that avoids pulling a CurseForge
+			// duplicate of a library (e.g. Cloth Config, Architectury) the Modrinth
+			// graph already covers, and lets Modrinth resolve its own sub-deps.
+			const modrinthId = cfIdToModrinthId(dep.modId)
+			if (modrinthId) {
+				try {
+					await install_project_with_dependencies(profilePath, {
+						project_id: modrinthId,
+						content_type: 'mod',
+					})
+					installedModIds.add(dep.modId)
+					continue
+				} catch (err) {
+					console.warn(
+						`[CurseForge] Modrinth redirect for dependency ${dep.modId} failed, falling back to CurseForge:`,
+						err,
+					)
+				}
+			}
+
+			// Install required from CurseForge. The recursive call propagates the
+			// same logic so a transitive `Optional` doesn't drag in its own
+			// `Required` automatically.
 			await installCurseForgeMod(
 				dep.modId,
 				profilePath,

@@ -149,26 +149,14 @@ export async function install_create_modpack_instance(
  */
 export async function create_profile_and_install_from_curseforge(
 	modpackUrl: string,
-	title: string,
 	curseforgeApiKey: string,
 ): Promise<string> {
-	const job = await install_create_instance({
-		name: title,
-		gameVersion: '1.21.1',
-		loader: 'vanilla' as InstanceLoader,
-		loaderVersion: null,
-		iconPath: null,
-	})
-	const instanceId = job.instance_id ?? job.target.instance_id ?? null
-	if (!instanceId) {
-		throw new Error('Failed to create instance for CurseForge modpack')
-	}
-	await invoke('plugin:install|install_curseforge', {
+	// The backend creates the instance from the pack manifest (Minecraft
+	// version + loader) and returns its id.
+	return await invoke('plugin:install|install_curseforge', {
 		modpackUrl,
 		curseforgeApiKey,
-		profile: instanceId,
 	})
-	return instanceId
 }
 
 export async function install_import_instance(

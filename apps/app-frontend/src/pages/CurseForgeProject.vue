@@ -359,7 +359,7 @@ async function handleInstallModpack(file) {
 	if (!mod || modpackBusy.value || modpackInstalled.value) return
 	modpackBusy.value = true
 	try {
-		const profile = await installCurseForgeModpack(mod.id, mod.name, file)
+		const profile = await installCurseForgeModpack(mod.id, file)
 		modpackInstalled.value = true
 		addNotification({
 			title: 'Modpack installed',

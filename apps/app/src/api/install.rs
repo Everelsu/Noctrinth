@@ -30,19 +30,16 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
         .build()
 }
 
-/// Install a CurseForge modpack into an already-created instance. The instance
-/// is created by the frontend first (with placeholder loader/version), then the
-/// pack manifest corrects them during install.
+/// Install a CurseForge modpack. The instance is created by the backend from
+/// the pack manifest (Minecraft version + loader) and its id is returned.
 #[tauri::command]
 pub async fn install_curseforge(
     modpack_url: &str,
     curseforge_api_key: &str,
-    profile: String,
 ) -> Result<String> {
     Ok(theseus::pack::install_curseforge::install_curseforge_pack(
         modpack_url,
         curseforge_api_key,
-        profile,
     )
     .await?)
 }

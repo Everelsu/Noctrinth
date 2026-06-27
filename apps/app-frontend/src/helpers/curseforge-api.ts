@@ -898,11 +898,7 @@ export async function installCurseForgeFile(
  * @param file  Optional specific modpack file; otherwise the best is picked.
  * @returns the created profile path
  */
-export async function installCurseForgeModpack(
-	modId: number,
-	modName: string,
-	file?: CfModFile,
-): Promise<string> {
+export async function installCurseForgeModpack(modId: number, file?: CfModFile): Promise<string> {
 	let target = file
 	if (!target) {
 		const files = await getCurseForgeModFiles(modId)
@@ -917,7 +913,7 @@ export async function installCurseForgeModpack(
 			`Couldn't build a download URL for "${target.fileName}" — open the project on CurseForge to download it manually.`,
 		)
 	}
-	return create_profile_and_install_from_curseforge(url, modName, CF_API_KEY)
+	return create_profile_and_install_from_curseforge(url, CF_API_KEY)
 }
 
 /**

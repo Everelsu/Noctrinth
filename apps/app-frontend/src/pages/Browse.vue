@@ -839,7 +839,7 @@ async function installCfModpack(cfModId: number, name: string) {
 	}
 	cfInstalling.value.add(cfModId)
 	try {
-		const profile = await installCurseForgeModpack(cfModId, name)
+		const profile = await installCurseForgeModpack(cfModId)
 		cfInstalled.value.add(cfModId)
 		addNotification({
 			title: formatMessage(messages.cfModpackInstalledTitle),

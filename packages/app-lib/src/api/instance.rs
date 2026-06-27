@@ -17,7 +17,8 @@ pub use self::content::{
     list_content_sets, sync_content_files,
 };
 pub use self::curseforge::{
-    add_curseforge_bytes, add_project_from_curseforge, compute_cf_fingerprints,
+    CurseForgeContent, add_curseforge_bytes, add_project_from_curseforge,
+    compute_cf_fingerprints, get_curseforge_content,
 };
 pub use self::export_mrpack::{
     create_mrpack_json, export_mrpack, get_pack_export_candidates,

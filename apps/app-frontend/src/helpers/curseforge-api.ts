@@ -13,7 +13,10 @@ import { create_profile_and_install_from_curseforge } from '@/helpers/install'
 import {
 	add_project_from_curseforge,
 	curseforge_manual_download,
+	type CurseForgeContent,
+	get_curseforge_content,
 	install_project_with_dependencies,
+	remove_project,
 } from '@/helpers/instance'
 import { proxiedFetch as tauriFetch } from '@/helpers/proxy-fetch'
 
@@ -1178,4 +1181,65 @@ export function mapCfCategoriesToTags(
 	}
 
 	return out
+}
+
+// ─── Provider-aware updates ─────────────────────────────────────────────────
+
+export interface CfUpdate {
+	content: CurseForgeContent
+	newFile: CfModFile
+}
+
+/**
+ * Check every CurseForge-sourced file in the instance for a newer file on
+ * CurseForge that matches the instance's game version + loader. CurseForge file
+ * ids increase monotonically, so a higher id means a newer file.
+ */
+export async function checkCurseForgeUpdates(
+	instanceId: string,
+	gameVersion?: string,
+	loader?: string,
+): Promise<CfUpdate[]> {
+	const content = await get_curseforge_content(instanceId)
+	const updates: CfUpdate[] = []
+	for (const item of content) {
+		const files = await getCurseForgeModFiles(item.curseforge_project_id, gameVersion, loader)
+		if (!files) continue
+		const best = bestCfFileFor(files, gameVersion, loader)
+		if (best && best.id > item.curseforge_file_id) {
+			updates.push({ content: item, newFile: best })
+		}
+	}
+	return updates
+}
+
+/**
+ * Apply a single CurseForge update: remove the old file, then install the new
+ * one (with its dependencies). The new file is recorded as CurseForge content.
+ */
+export async function applyCurseForgeUpdate(
+	update: CfUpdate,
+	instanceId: string,
+	gameVersion?: string,
+	loader?: string,
+): Promise<void> {
+	await remove_project(instanceId, update.content.file_path)
+	await installCurseForgeFile(update.newFile, instanceId, gameVersion, loader)
+}
+
+/**
+ * Update every out-of-date CurseForge file in the instance. Returns the number
+ * of files updated. Modrinth content is handled separately by the Modrinth
+ * update flow — the two providers never touch each other's files.
+ */
+export async function updateAllCurseForge(
+	instanceId: string,
+	gameVersion?: string,
+	loader?: string,
+): Promise<number> {
+	const updates = await checkCurseForgeUpdates(instanceId, gameVersion, loader)
+	for (const update of updates) {
+		await applyCurseForgeUpdate(update, instanceId, gameVersion, loader)
+	}
+	return updates.length
 }

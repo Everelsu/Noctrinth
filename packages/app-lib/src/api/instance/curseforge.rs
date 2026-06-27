@@ -5,11 +5,65 @@
 //! from its download mirrors. Kept in its own module so the upstream `instance`
 //! API stays untouched and easy to re-sync.
 
+use serde::Serialize;
+
 use super::paths::get_full_path;
 use crate::event::InstancePayloadType;
 use crate::event::emit::emit_instance;
 use crate::state::{ContentSourceKind, State};
 use crate::util::fetch;
+
+/// A CurseForge-sourced content file installed in an instance, with the
+/// CurseForge project/file ids needed to check for updates against the CF API.
+#[derive(Debug, Clone, Serialize)]
+pub struct CurseForgeContent {
+    pub file_path: String,
+    pub file_name: String,
+    pub curseforge_project_id: i64,
+    pub curseforge_file_id: i64,
+    pub enabled: bool,
+}
+
+/// List every CurseForge-sourced file in the instance with its stored CF
+/// project/file ids. Used to drive provider-aware update checks (Modrinth
+/// content updates through the Modrinth flow; CurseForge content through here).
+///
+/// Uses a runtime-checked query so the sqlx offline cache (.sqlx) doesn't need
+/// regenerating for this fork-only access pattern.
+#[tracing::instrument]
+pub async fn get_curseforge_content(
+    instance_id: &str,
+) -> crate::Result<Vec<CurseForgeContent>> {
+    let state = State::get().await?;
+
+    let rows: Vec<(String, String, Option<String>, Option<String>, i64)> =
+        sqlx::query_as(
+            "
+            SELECT f.relative_path, f.file_name, e.project_id, e.version_id, e.enabled
+            FROM instance_content_entries e
+            JOIN instance_files f ON e.file_id = f.id
+            WHERE e.instance_id = ? AND e.source_kind = 'curseforge'
+            ",
+        )
+        .bind(instance_id)
+        .fetch_all(&state.pool)
+        .await?;
+
+    Ok(rows
+        .into_iter()
+        .filter_map(|(file_path, file_name, project_id, version_id, enabled)| {
+            let curseforge_project_id = project_id?.parse().ok()?;
+            let curseforge_file_id = version_id?.parse().ok()?;
+            Some(CurseForgeContent {
+                file_path,
+                file_name,
+                curseforge_project_id,
+                curseforge_file_id,
+                enabled: enabled != 0,
+            })
+        })
+        .collect())
+}
 
 /// Compute CurseForge-style Murmur2 fingerprints for every CurseForge-
 /// installable file in the instance.

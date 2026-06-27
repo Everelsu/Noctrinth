@@ -43,6 +43,7 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
             instance_add_project_from_path,
             instance_compute_cf_fingerprints,
             instance_add_project_from_curseforge,
+            instance_get_curseforge_content,
             instance_curseforge_manual_download,
             instance_toggle_disable_project,
             instance_remove_project,
@@ -667,6 +668,13 @@ pub async fn instance_add_project_from_curseforge(
 /// file whose author disabled third-party API distribution. The download is
 /// intercepted, written to a temp path we control (the OS-reported path is
 /// empty on macOS), then imported into the instance as CurseForge content.
+#[tauri::command]
+pub async fn instance_get_curseforge_content(
+    instance_id: &str,
+) -> Result<Vec<theseus::instance::CurseForgeContent>> {
+    Ok(theseus::instance::get_curseforge_content(instance_id).await?)
+}
+
 #[tauri::command]
 pub async fn instance_curseforge_manual_download<R: tauri::Runtime>(
     app: tauri::AppHandle<R>,

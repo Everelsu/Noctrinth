@@ -39,6 +39,24 @@ export async function get_installed_project_ids(instanceId: string): Promise<str
 	return await invoke('plugin:instance|instance_get_installed_project_ids', { instanceId })
 }
 
+/** A CurseForge-sourced file installed in an instance (with its CF ids). */
+export interface CurseForgeContent {
+	file_path: string
+	file_name: string
+	curseforge_project_id: number
+	curseforge_file_id: number
+	enabled: boolean
+}
+
+/**
+ * List every CurseForge-sourced file in the instance with its stored CurseForge
+ * project/file ids. Drives provider-aware update checks — CurseForge content is
+ * updated through the CurseForge API, Modrinth content through the Modrinth flow.
+ */
+export async function get_curseforge_content(instanceId: string): Promise<CurseForgeContent[]> {
+	return await invoke('plugin:instance|instance_get_curseforge_content', { instanceId })
+}
+
 /**
  * Compute CurseForge-style Murmur2 fingerprints for every CurseForge-installable
  * file in the instance. POST these to CF's `/v1/fingerprints` to identify

@@ -138,7 +138,7 @@ import {
 	installCurseForgeFile,
 	installCurseForgeModpack,
 } from '@/helpers/curseforge-api'
-import { get as getInstance } from '@/helpers/profile'
+import { get as getInstance } from '@/helpers/instance'
 import { get_game_versions, get_loaders } from '@/helpers/tags'
 import Gallery from '@/pages/project/Gallery.vue'
 

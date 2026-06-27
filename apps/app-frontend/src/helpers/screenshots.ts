@@ -11,7 +11,7 @@
  */
 import { invoke } from '@tauri-apps/api/core'
 
-import { get_full_path } from '@/helpers/profile'
+import { get_full_path } from '@/helpers/instance'
 
 export interface Screenshot {
 	/** Stable unique key — the absolute file path. */

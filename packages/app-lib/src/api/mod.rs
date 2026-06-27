@@ -3,6 +3,7 @@ pub mod cache;
 pub mod ely_auth;
 pub mod friends;
 pub mod handler;
+pub mod instance;
 pub mod jre;
 pub mod logs;
 pub mod metadata;
@@ -11,7 +12,6 @@ pub mod minecraft_skins;
 pub mod mr_auth;
 pub mod pack;
 pub mod process;
-pub mod profile;
 pub mod server_address;
 pub mod settings;
 pub mod tags;
@@ -19,15 +19,21 @@ pub mod worlds;
 
 pub mod data {
     pub use crate::state::{
-        CacheBehaviour, CacheValueType, ContentItem, ContentItemOwner,
-        ContentItemProject, ContentItemVersion, Credentials, Dependency,
-        DirectoryInfo, ElyCredentials, Hooks, JavaVersion, LinkedData,
-        LinkedModpackInfo, MemorySettings, ModLoader, ModrinthCredentials,
-        Organization, OwnerType, ProcessMetadata, ProfileFile, Project,
+        AppliedContentSetPatch, CacheBehaviour, CacheValueType, ContentFile,
+        ContentItem, ContentItemOwner, ContentItemProject, ContentItemVersion,
+        CreateInstance, Credentials, Dependency, DirectoryInfo, EditInstance,
+        ElyCredentials, Hooks, InstanceInstallCandidate, InstanceInstallTarget,
+        InstanceLaunchOverridesPatch, InstanceLink, InstanceMetadata,
+        JavaVersion, LinkedModpackInfo, MemorySettings, ModLoader,
+        ModrinthCredentials, Organization, OwnerType, ProcessMetadata, Project,
         ProjectType, ProjectV3, SearchResult, SearchResults, SearchResultsV3,
         Settings, TeamMember, Theme, User, UserFriend, Version, WindowSize,
     };
     pub use ariadne::users::UserStatus;
+    pub use modrinth_content_management::{
+        ContentType, ResolutionPreferences, ResolveContentPlan,
+        ResolveContentRequest,
+    };
 }
 
 pub mod prelude {
@@ -35,10 +41,9 @@ pub mod prelude {
         State,
         data::*,
         event::CommandPayload,
-        ely_auth, jre, metadata, minecraft_auth, mr_auth, pack, process,
-        profile::{self, Profile, create},
-        settings,
-        state::ReleaseChannel,
+        ely_auth, install, instance, jre, metadata, minecraft_auth, mr_auth,
+        pack, process, settings,
+        state::{ReleaseChannel, db_backup::app_db_backup_dir},
         util::{
             io::{IOError, canonicalize},
             network::{is_network_metered, tcp_listen_any_loopback, tcp_listen_loopback_port},

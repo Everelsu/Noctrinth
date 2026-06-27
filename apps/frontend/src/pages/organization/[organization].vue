@@ -144,32 +144,37 @@
 				</ContentPageHeader>
 			</div>
 			<div class="normal-page__sidebar">
-				<div class="card flex-card">
-					<h2>Members</h2>
-					<div class="details-list">
-						<template v-for="member in acceptedMembers" :key="member?.user.id">
-							<nuxt-link
-								class="details-list__item details-list__item--type-large"
-								:to="`/user/${member?.user?.username}`"
-							>
-								<Avatar :src="member?.user.avatar_url" circle />
-								<div class="rows">
-									<span class="flex items-center gap-1">
-										{{ member?.user?.username }}
-										<CrownIcon
-											v-if="member?.is_owner"
-											v-tooltip="'Organization owner'"
-											class="text-brand-orange"
-										/>
-									</span>
-									<span class="details-list__item__text--style-secondary">
-										{{ member?.role ? member.role : 'Member' }}
-									</span>
-								</div>
-							</nuxt-link>
-						</template>
+
+				<SidebarCard title="Members">
+					<div class="flex flex-col gap-3 font-semibold">
+						<nuxt-link
+							v-for="member in acceptedMembers"
+							:key="`member-${member?.user?.id}`"
+							class="group flex w-fit items-center gap-2 leading-[1.2] text-primary"
+							:to="`/user/${member?.user?.username}`"
+						>
+							<Avatar
+								:src="member.user.avatar_url"
+								:alt="member.user.username"
+								size="32px"
+								circle
+							/>
+							<div class="flex flex-col">
+								<span class="flex w-full flex-nowrap items-center gap-1 group-hover:underline">
+									<span class="min-w-0 overflow-hidden truncate">{{ member.user.username }}</span>
+									<CrownIcon
+										v-if="member.is_owner"
+										v-tooltip="'Organization owner'"
+										class="text-brand-orange"
+									/>
+								</span>
+								<span class="text-sm font-normal text-secondary">
+									{{ member?.role ? member.role : 'Member' }}
+								</span>
+							</div>
+						</nuxt-link>
 					</div>
-				</div>
+				</SidebarCard>
 			</div>
 			<div class="normal-page__content">
 				<div v-if="isInvited" class="universal-card information invited">
@@ -209,7 +214,7 @@
 							: (projects ?? [])
 						)
 							.slice()
-							.sort((a, b) => b.downloads - a.downloads)"
+							.sort(projectUserSorting)"
 						:key="project.id"
 					>
 						<ProjectCard
@@ -308,6 +313,7 @@ import {
 	PROJECT_DEP_MARKER_QUERY,
 	ProjectCard,
 	ProjectCardList,
+	SidebarCard,
 	useCompactNumber,
 	useFormatNumber,
 	useVIntl,
@@ -316,7 +322,6 @@ import type { Organization, ProjectStatus, ProjectType } from '@modrinth/utils'
 import { useQuery } from '@tanstack/vue-query'
 
 import UpToDate from '~/assets/images/illustrations/up_to_date.svg?component'
-import AdPlaceholder from '~/components/ui/AdPlaceholder.vue'
 import ModalCreation from '~/components/ui/create/ProjectCreateModal.vue'
 import NavStack from '~/components/ui/NavStack.vue'
 import { acceptTeamInvite, removeTeamMember } from '~/helpers/teams.js'
@@ -325,6 +330,7 @@ import {
 	provideOrganizationContext,
 } from '~/providers/organization-context.ts'
 import { isPermission } from '~/utils/permissions.ts'
+import { projectUserSorting } from '~/utils/projects.ts'
 
 type ProjectV3 = Labrinth.Projects.v3.Project & {
 	client_side: 'required' | 'optional' | 'unsupported'
@@ -763,5 +769,9 @@ async function copyPermalink() {
 
 .popout-checkbox {
 	padding: var(--gap-sm) var(--gap-md);
+}
+
+.new-page {
+	column-gap: 1.5rem;
 }
 </style>

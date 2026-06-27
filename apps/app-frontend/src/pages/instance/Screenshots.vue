@@ -25,7 +25,7 @@ import dayjs from 'dayjs'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import ContextMenu from '@/components/ui/ContextMenu.vue'
-import { get_full_path } from '@/helpers/profile'
+import { get_full_path } from '@/helpers/instance'
 import {
 	copyScreenshotToClipboard,
 	deleteScreenshot,

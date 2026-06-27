@@ -23,8 +23,9 @@
  *     waiting for the next scan.
  */
 
+import { compute_cf_fingerprints } from '@/helpers/instance'
+
 import { getCurseForgeFingerprintMatches } from './curseforge-api'
-import { compute_cf_fingerprints } from './profile'
 
 const KEY_PREFIX = 'cfins_'
 

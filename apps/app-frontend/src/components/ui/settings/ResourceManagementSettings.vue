@@ -1,5 +1,5 @@
 <script setup>
-import { BoxIcon, FolderSearchIcon, GlobeIcon, TrashIcon } from '@modrinth/assets'
+import { BoxIcon, FolderOpenIcon, FolderSearchIcon, GlobeIcon, TrashIcon } from '@modrinth/assets'
 import {
 	ButtonStyled,
 	defineMessages,
@@ -14,10 +14,14 @@ import { ref, watch } from 'vue'
 import ConfirmModalWrapper from '@/components/ui/modal/ConfirmModalWrapper.vue'
 import { purge_cache_types } from '@/helpers/cache.js'
 import { get, set } from '@/helpers/settings.ts'
+import { showAppDbBackupsFolder } from '@/helpers/utils.js'
+import { useTheming } from '@/store/state'
 
 const { handleError } = injectNotificationManager()
 const { formatMessage } = useVIntl()
+const themeStore = useTheming()
 const settings = ref(await get())
+const purgeCacheConfirmModal = ref(null)
 
 const messages = defineMessages({
 	proxyTitle: {
@@ -72,6 +76,19 @@ async function purgeCache() {
 	]).catch(handleError)
 }
 
+function handlePurgeCacheClick() {
+	if (themeStore.getFeatureFlag('skip_non_essential_warnings')) {
+		void purgeCache()
+		return
+	}
+
+	purgeCacheConfirmModal.value?.show()
+}
+
+async function openDbBackupsFolder() {
+	await showAppDbBackupsFolder().catch(handleError)
+}
+
 async function findLauncherDir() {
 	const newDir = await open({
 		multiple: false,
@@ -121,7 +138,7 @@ async function findLauncherDir() {
 				@proceed="purgeCache"
 			/>
 			<h2 class="m-0 text-lg font-semibold text-contrast">App cache</h2>
-			<button id="purge-cache" class="btn min-w-max" @click="$refs.purgeCacheConfirmModal.show()">
+			<button id="purge-cache" class="btn min-w-max" @click="handlePurgeCacheClick">
 				<TrashIcon />
 				Purge cache
 			</button>
@@ -175,6 +192,17 @@ async function findLauncherDir() {
 			<p class="m-0 leading-tight text-secondary">
 				The maximum amount of files the launcher can write to the disk at once. Set this to a lower
 				value if you are frequently getting I/O errors. (app restart required to take effect)
+			</p>
+		</div>
+
+		<div class="flex flex-col gap-2.5">
+			<h2 class="mt-0 m-0 text-lg font-semibold text-contrast">App database backups</h2>
+			<button id="open-db-backups-folder" class="btn min-w-max" @click="openDbBackupsFolder">
+				<FolderOpenIcon />
+				Open backups folder
+			</button>
+			<p class="m-0 leading-tight text-secondary">
+				Backups of important app data are stored here in case you need to recover them later.
 			</p>
 		</div>
 	</div>

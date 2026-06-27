@@ -9,12 +9,12 @@
  */
 
 import { useCurseForgeEnabled } from '@/composables/source-mode'
+import { create_profile_and_install_from_curseforge } from '@/helpers/install'
+import { add_project_from_curseforge } from '@/helpers/instance'
 import { proxiedFetch as tauriFetch } from '@/helpers/proxy-fetch'
 
 import { storeCfInstalled } from './cf-installed-store'
 import { CURSEFORGE_API_KEY } from './curseforge-key'
-import { create_profile_and_install_from_curseforge } from './pack'
-import { add_project_from_curseforge } from './profile'
 
 const CF_BASE = 'https://api.curseforge.com/v1'
 

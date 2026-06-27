@@ -171,6 +171,8 @@ pub async fn add_project_from_curseforge(
     instance_id: &str,
     file_urls: &[String],
     file_name: &str,
+    curseforge_project_id: i64,
+    curseforge_file_id: i64,
     sha1: Option<&str>,
 ) -> crate::Result<String> {
     let state = State::get().await?;
@@ -186,6 +188,11 @@ pub async fn add_project_from_curseforge(
     )
     .await?;
 
+    // CurseForge has no Modrinth hash mapping, so the numeric project/file ids
+    // are persisted in the content entry's project_id/version_id columns as
+    // strings (tagged by the CurseForge source kind) for later update checks.
+    let cf_project_id = curseforge_project_id.to_string();
+    let cf_file_id = curseforge_file_id.to_string();
     let project_path = crate::state::instances::commands::add_project_bytes(
         instance_id,
         file_name,
@@ -193,8 +200,8 @@ pub async fn add_project_from_curseforge(
         sha1,
         None,
         ContentSourceKind::CurseForge,
-        None,
-        None,
+        Some(&cf_project_id),
+        Some(&cf_file_id),
         &state,
     )
     .await?;

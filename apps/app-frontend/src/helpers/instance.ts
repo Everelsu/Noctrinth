@@ -61,12 +61,16 @@ export async function add_project_from_curseforge(
 	instanceId: string,
 	fileUrls: string[],
 	fileName: string,
+	curseforgeProjectId: number,
+	curseforgeFileId: number,
 	sha1?: string,
 ): Promise<string> {
 	return await invoke('plugin:instance|instance_add_project_from_curseforge', {
 		instanceId,
 		fileUrls,
 		fileName,
+		curseforgeProjectId,
+		curseforgeFileId,
 		sha1: sha1 ?? null,
 	})
 }

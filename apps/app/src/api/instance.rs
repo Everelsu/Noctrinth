@@ -647,12 +647,16 @@ pub async fn instance_add_project_from_curseforge(
     instance_id: &str,
     file_urls: Vec<String>,
     file_name: &str,
+    curseforge_project_id: i64,
+    curseforge_file_id: i64,
     sha1: Option<String>,
 ) -> Result<String> {
     Ok(theseus::instance::add_project_from_curseforge(
         instance_id,
         &file_urls,
         file_name,
+        curseforge_project_id,
+        curseforge_file_id,
         sha1.as_deref(),
     )
     .await?)

@@ -806,7 +806,14 @@ export async function installCurseForgeFile(
 	}
 
 	installedModIds.add(file.modId)
-	await add_project_from_curseforge(profilePath, mirrors, file.fileName, cfFileSha1(file))
+	await add_project_from_curseforge(
+		profilePath,
+		mirrors,
+		file.fileName,
+		file.modId,
+		file.id,
+		cfFileSha1(file),
+	)
 	storeCfInstalled(profilePath, file.modId)
 
 	// Top-level pass: only the direct deps of this file. The recursive install

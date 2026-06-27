@@ -192,7 +192,7 @@ pub async fn add_project_from_curseforge(
         bytes,
         sha1,
         None,
-        ContentSourceKind::Local,
+        ContentSourceKind::CurseForge,
         None,
         None,
         &state,

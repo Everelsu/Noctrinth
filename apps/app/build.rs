@@ -193,6 +193,7 @@ fn main() {
                         "instance_get_installed_project_ids",
                         "instance_compute_cf_fingerprints",
                         "instance_add_project_from_curseforge",
+                        "instance_curseforge_manual_download",
                         "instance_get_install_candidates",
                         "instance_content",
                         "instance_get_content_items",

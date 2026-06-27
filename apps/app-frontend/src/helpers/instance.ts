@@ -53,6 +53,29 @@ export async function compute_cf_fingerprints(
 }
 
 /**
+ * Open an embedded CurseForge file page so the user can download a file whose
+ * author disabled third-party API distribution. The download is intercepted and
+ * imported into the instance as CurseForge content. Returns the new file path.
+ */
+export async function curseforge_manual_download(
+	instanceId: string,
+	filePageUrl: string,
+	fileName: string,
+	curseforgeProjectId: number,
+	curseforgeFileId: number,
+	sha1?: string,
+): Promise<string> {
+	return await invoke('plugin:instance|instance_curseforge_manual_download', {
+		instanceId,
+		filePageUrl,
+		fileName,
+		curseforgeProjectId,
+		curseforgeFileId,
+		sha1: sha1 ?? null,
+	})
+}
+
+/**
  * Add a project to an instance from direct download URL mirrors (a CurseForge
  * file), verifying the download against sha1 when provided.
  * Returns the path to the new project file.

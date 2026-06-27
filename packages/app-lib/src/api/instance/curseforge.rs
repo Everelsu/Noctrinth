@@ -188,9 +188,35 @@ pub async fn add_project_from_curseforge(
     )
     .await?;
 
-    // CurseForge has no Modrinth hash mapping, so the numeric project/file ids
-    // are persisted in the content entry's project_id/version_id columns as
-    // strings (tagged by the CurseForge source kind) for later update checks.
+    add_curseforge_bytes(
+        instance_id,
+        file_name,
+        bytes,
+        curseforge_project_id,
+        curseforge_file_id,
+        sha1,
+    )
+    .await
+}
+
+/// Record already-downloaded CurseForge file bytes as content in the instance.
+///
+/// Shared by the API-download path (`add_project_from_curseforge`) and the
+/// manual WebView-download path (for files whose author disabled third-party
+/// distribution). CurseForge has no Modrinth hash mapping, so the numeric
+/// project/file ids are persisted in the content entry's project_id/version_id
+/// columns (tagged by the CurseForge source kind) for later update checks.
+pub async fn add_curseforge_bytes(
+    instance_id: &str,
+    file_name: &str,
+    bytes: impl Into<bytes::Bytes>,
+    curseforge_project_id: i64,
+    curseforge_file_id: i64,
+    sha1: Option<&str>,
+) -> crate::Result<String> {
+    let state = State::get().await?;
+
+    let bytes = bytes.into();
     let cf_project_id = curseforge_project_id.to_string();
     let cf_file_id = curseforge_file_id.to_string();
     let project_path = crate::state::instances::commands::add_project_bytes(

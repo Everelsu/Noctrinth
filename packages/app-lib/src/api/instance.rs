@@ -16,7 +16,9 @@ pub use self::content::{
     get_linked_modpack_content, get_linked_modpack_info, get_projects,
     list_content_sets, sync_content_files,
 };
-pub use self::curseforge::{add_project_from_curseforge, compute_cf_fingerprints};
+pub use self::curseforge::{
+    add_curseforge_bytes, add_project_from_curseforge, compute_cf_fingerprints,
+};
 pub use self::export_mrpack::{
     create_mrpack_json, export_mrpack, get_pack_export_candidates,
 };

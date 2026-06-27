@@ -10,7 +10,11 @@
 
 import { useCurseForgeEnabled } from '@/composables/source-mode'
 import { create_profile_and_install_from_curseforge } from '@/helpers/install'
-import { add_project_from_curseforge, install_project_with_dependencies } from '@/helpers/instance'
+import {
+	add_project_from_curseforge,
+	curseforge_manual_download,
+	install_project_with_dependencies,
+} from '@/helpers/instance'
 import { proxiedFetch as tauriFetch } from '@/helpers/proxy-fetch'
 
 import { storeCfInstalled } from './cf-installed-store'
@@ -784,6 +788,30 @@ export async function resolveCfDependencies(
  * @param installedModIds  Tracks IDs already queued in this call tree to
  *                         prevent infinite loops for circular dependencies.
  */
+/**
+ * Download a CurseForge file manually through an embedded CurseForge window —
+ * the legal fallback for files whose author disabled third-party distribution.
+ * Resolves the project's website URL and opens its `/download/<fileId>` page,
+ * which auto-starts the download; the backend intercepts and imports it.
+ */
+async function manualDownloadFile(file: CfModFile, profilePath: string): Promise<void> {
+	const detail = await getCurseForgeMod(file.modId)
+	const website = detail?.links?.websiteUrl
+	if (!website) {
+		throw new Error(
+			`Couldn't open a manual download for "${file.fileName}" — the CurseForge project page is unavailable.`,
+		)
+	}
+	await curseforge_manual_download(
+		profilePath,
+		`${website}/download/${file.id}`,
+		file.fileName,
+		file.modId,
+		file.id,
+		cfFileSha1(file),
+	)
+}
+
 export async function installCurseForgeFile(
 	file: CfModFile,
 	profilePath: string,
@@ -800,21 +828,31 @@ export async function installCurseForgeFile(
 	// passed as mirrors and the download is sha1-verified when CF provides
 	// a checksum.
 	const mirrors = cfDownloadMirrors(file)
-	if (mirrors.length === 0) {
-		throw new Error(
-			`Couldn't build a download URL for "${file.fileName}" — the author disabled distribution and the CDN-fallback couldn't construct a valid URL either. Open the project on CurseForge and download it manually.`,
-		)
-	}
 
 	installedModIds.add(file.modId)
-	await add_project_from_curseforge(
-		profilePath,
-		mirrors,
-		file.fileName,
-		file.modId,
-		file.id,
-		cfFileSha1(file),
-	)
+	if (mirrors.length > 0) {
+		try {
+			await add_project_from_curseforge(
+				profilePath,
+				mirrors,
+				file.fileName,
+				file.modId,
+				file.id,
+				cfFileSha1(file),
+			)
+		} catch (err) {
+			// The API/CDN download failed — most often because the author
+			// disabled third-party distribution (allowProjectDistribution=false)
+			// and the CDN reconstruction returned 403. Fall back to a manual
+			// download in an embedded CurseForge window (Prism's approach).
+			console.warn(`[CurseForge] Direct download failed for ${file.fileName}, trying manual:`, err)
+			await manualDownloadFile(file, profilePath)
+		}
+	} else {
+		// No downloadUrl and no constructible CDN URL — manual download is the
+		// only option.
+		await manualDownloadFile(file, profilePath)
+	}
 	storeCfInstalled(profilePath, file.modId)
 
 	// Top-level pass: only the direct deps of this file. The recursive install

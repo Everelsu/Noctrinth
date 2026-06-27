@@ -43,6 +43,7 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
             instance_add_project_from_path,
             instance_compute_cf_fingerprints,
             instance_add_project_from_curseforge,
+            instance_curseforge_manual_download,
             instance_toggle_disable_project,
             instance_remove_project,
             instance_update_managed_modrinth_version,
@@ -660,6 +661,109 @@ pub async fn instance_add_project_from_curseforge(
         sha1.as_deref(),
     )
     .await?)
+}
+
+/// Open an embedded CurseForge file page so the user can manually download a
+/// file whose author disabled third-party API distribution. The download is
+/// intercepted, written to a temp path we control (the OS-reported path is
+/// empty on macOS), then imported into the instance as CurseForge content.
+#[tauri::command]
+pub async fn instance_curseforge_manual_download<R: tauri::Runtime>(
+    app: tauri::AppHandle<R>,
+    instance_id: String,
+    file_page_url: String,
+    file_name: String,
+    curseforge_project_id: i64,
+    curseforge_file_id: i64,
+    sha1: Option<String>,
+) -> Result<String> {
+    use tauri::Manager;
+    use tauri::webview::DownloadEvent;
+
+    let url: tauri::Url = file_page_url.parse().map_err(|_| {
+        theseus::ErrorKind::InputError("Invalid CurseForge file URL".to_string())
+            .as_error()
+    })?;
+    let label = format!("cf-download-{curseforge_file_id}");
+
+    if let Some(existing) = app.get_webview_window(&label) {
+        existing.close().ok();
+    }
+
+    let temp_dest = std::env::temp_dir()
+        .join(format!("noctrinth-cf-{curseforge_file_id}-{file_name}"));
+
+    let (tx, rx) = tokio::sync::oneshot::channel::<Option<PathBuf>>();
+    let tx = std::sync::Arc::new(std::sync::Mutex::new(Some(tx)));
+
+    let dest_for_download = temp_dest.clone();
+    let tx_download = tx.clone();
+    let tx_close = tx.clone();
+
+    let window = tauri::WebviewWindowBuilder::new(
+        &app,
+        &label,
+        tauri::WebviewUrl::External(url),
+    )
+    .title("CurseForge — manual download")
+    .inner_size(1080.0, 800.0)
+    .center()
+    .on_download(move |_webview, event| {
+        match event {
+            DownloadEvent::Requested { destination, .. } => {
+                *destination = dest_for_download.clone();
+            }
+            DownloadEvent::Finished { success, .. } => {
+                if let Some(sender) = tx_download.lock().unwrap().take() {
+                    let _ = sender.send(
+                        success.then(|| dest_for_download.clone()),
+                    );
+                }
+            }
+            _ => {}
+        }
+        true
+    })
+    .build()?;
+
+    window.on_window_event(move |event| {
+        if matches!(event, tauri::WindowEvent::Destroyed)
+            && let Some(sender) = tx_close.lock().unwrap().take()
+        {
+            let _ = sender.send(None);
+        }
+    });
+
+    let downloaded = rx.await.ok().flatten().ok_or_else(|| {
+        theseus::ErrorKind::InputError(
+            "Manual download was cancelled before the file finished downloading."
+                .to_string(),
+        )
+        .as_error()
+    })?;
+
+    if let Some(win) = app.get_webview_window(&label) {
+        win.close().ok();
+    }
+
+    let bytes = tokio::fs::read(&downloaded).await.map_err(|e| {
+        theseus::ErrorKind::InputError(format!(
+            "Failed to read the downloaded file: {e}"
+        ))
+        .as_error()
+    })?;
+    let _ = tokio::fs::remove_file(&downloaded).await;
+
+    let path = theseus::instance::add_curseforge_bytes(
+        &instance_id,
+        &file_name,
+        bytes,
+        curseforge_project_id,
+        curseforge_file_id,
+        sha1.as_deref(),
+    )
+    .await?;
+    Ok(path)
 }
 
 #[tauri::command]

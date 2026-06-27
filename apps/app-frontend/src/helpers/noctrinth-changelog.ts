@@ -21,6 +21,19 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.15.1',
+		date: '2026-06-27T00:00:00+00:00',
+		body: `### Changed
+- Synced with upstream Modrinth (0.14.8 → 0.15.1). This is a large release: the launcher backend was rewritten — instances and their content are now managed through a new content-management pipeline (the old "profile" model is gone), instance installs run as background jobs, and there are upstream fixes and UI refinements across the board.
+- Re-ported Noctrinth's Ely.by account support on top of the new backend: launching with an Ely.by account (via the authlib-injector agent) works as before.
+
+### Fixed
+- The Discover page no longer jumps back to the first page when you install a mod inside an instance with "hide installed" turned on — the list now re-filters in place.
+
+### Known issues
+- CurseForge **modpack** installation is temporarily disabled while it is reworked against the new 0.15 content-management pipeline. Installing individual CurseForge mods, CurseForge search, project pages, and installed-state detection are unaffected.`,
+	},
+	{
 		version: '0.14.8',
 		date: '2026-06-20T00:00:00+00:00',
 		body: `### Changed

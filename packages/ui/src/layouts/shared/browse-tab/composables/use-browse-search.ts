@@ -179,6 +179,15 @@ export function useBrowseSearch(options: UseBrowseSearchOptions): BrowseSearchSt
 
 	const providedFiltersOrEmpty = computed(() => options.providedFilters?.value ?? [])
 
+	// Page-reset trigger excludes the negative `project_id` filters that back
+	// the "hide installed" / "hide selected" toggles. Installing content in an
+	// instance grows that hidden set, which must re-filter the results in place
+	// — but it should NOT yank the user back to page 1 (the search still re-runs
+	// via the effectiveRequestParams watcher, which sees the full filter set).
+	const pageResetFilters = computed(() =>
+		providedFiltersOrEmpty.value.filter((f) => !(f.type === 'project_id' && f.negative)),
+	)
+
 	watch(
 		[
 			query,
@@ -189,7 +198,7 @@ export function useBrowseSearch(options: UseBrowseSearchOptions): BrowseSearchSt
 			currentFilters,
 			serverCurrentFilters,
 			overriddenProvidedFilterTypes,
-			providedFiltersOrEmpty,
+			pageResetFilters,
 		],
 		() => {
 			currentPage.value = 1

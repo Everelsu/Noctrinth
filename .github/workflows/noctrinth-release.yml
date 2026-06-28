@@ -93,6 +93,24 @@ jobs:
         if: matrix.platform == 'macos-latest'
         run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
 
+      - name: Fix macOS compiler-rt (clang_rt) path
+        if: matrix.platform == 'macos-latest'
+        shell: bash
+        run: |
+          # GitHub's macos-latest (Xcode 16) relocated the static compiler-rt
+          # libs, so linking the `cidre` crate fails with
+          # "ld: library 'clang_rt.osx' not found" (the toolchain looks under a
+          # clang/<ver>/lib/darwin path that no longer exists). Find the real
+          # libclang_rt.osx.a and add its directory to LIBRARY_PATH so the
+          # linker resolves -lclang_rt.osx regardless of the clang version dir.
+          rt_lib=$(find "$(xcode-select -p)" -name 'libclang_rt.osx.a' 2>/dev/null | head -n1)
+          if [ -n "$rt_lib" ]; then
+            echo "Using compiler-rt at: $(dirname "$rt_lib")"
+            echo "LIBRARY_PATH=$(dirname "$rt_lib"):${LIBRARY_PATH:-}" >> "$GITHUB_ENV"
+          else
+            echo "::warning::libclang_rt.osx.a not found under $(xcode-select -p)"
+          fi
+
       - name: Cache Rust build
         uses: Swatinem/rust-cache@v2
         with:

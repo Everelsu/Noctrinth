@@ -40,8 +40,14 @@ import {
 	getCurseForgeModFiles,
 	installCurseForgeFile,
 } from '@/helpers/curseforge-api'
-import { create, get as getInstance, list as listInstances } from '@/helpers/profile.js'
+import {
+	install_create_instance,
+	installJobInstanceId,
+	wait_for_install_job,
+} from '@/helpers/install'
+import { get as getInstance, list as listInstances } from '@/helpers/instance'
 import { get_game_versions } from '@/helpers/tags'
+import type { InstanceLoader } from '@/helpers/types'
 
 const { formatMessage } = useVIntl()
 const { handleError, addNotification } = injectNotificationManager()
@@ -282,15 +288,18 @@ async function onCreateAndInstall(data) {
 			return
 		}
 
-		const id = await create(
-			data.name,
-			data.gameVersion,
-			data.loader,
-			'latest',
-			data.iconPath,
-			false,
-		)
+		const job = await install_create_instance({
+			name: data.name,
+			gameVersion: data.gameVersion,
+			loader: data.loader as InstanceLoader,
+			loaderVersion: 'latest',
+			iconPath: data.iconPath ?? null,
+		})
+		const id = installJobInstanceId(job)
 		if (!id) return
+		// Wait for the instance + Minecraft install to finish so its content set
+		// exists before we add CurseForge files into it.
+		await wait_for_install_job(job.job_id)
 
 		// ContentInstallModal already closes itself on create-and-install.
 		const result = await installCurseForgeFile(file, id, data.gameVersion, data.loader)

@@ -47,7 +47,6 @@ import {
 } from '@/helpers/install'
 import { get as getInstance, list as listInstances } from '@/helpers/instance'
 import { get_game_versions } from '@/helpers/tags'
-import type { InstanceLoader } from '@/helpers/types'
 
 const { formatMessage } = useVIntl()
 const { handleError, addNotification } = injectNotificationManager()
@@ -291,7 +290,7 @@ async function onCreateAndInstall(data) {
 		const job = await install_create_instance({
 			name: data.name,
 			gameVersion: data.gameVersion,
-			loader: data.loader as InstanceLoader,
+			loader: data.loader,
 			loaderVersion: 'latest',
 			iconPath: data.iconPath ?? null,
 		})

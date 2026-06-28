@@ -195,12 +195,12 @@ async function show(mod, forcedFile = null) {
 
 		const cfTag = `cf:${mod.id}`
 		instances.value = profiles.map((profile) => ({
-			id: profile.path,
+			id: profile.id,
 			name: profile.name,
 			iconUrl: profile.icon_path ? convertFileSrc(profile.icon_path) : null,
 			// Check the per-instance localStorage store for prior CF installs of
 			// this mod, so already-installed instances show "Installed" up-front.
-			installed: loadCfInstalledProjectIds(profile.path).includes(cfTag),
+			installed: loadCfInstalledProjectIds(profile.id).includes(cfTag),
 			compatible: isCompatible(profile.game_version, profile.loader),
 			installing: false,
 		}))

@@ -1200,7 +1200,12 @@ const LOADER_FILTER_TYPE_IDS = [
 
 /** Pull game version / loader / categories out of the active sidebar filters. */
 function extractCfFilters() {
-	const filters = searchState.currentFilters.value
+	// Provided filters (the instance's locked game version + loader, shown as
+	// "Provided by the instance") live in combinedProvidedFilters, NOT in
+	// currentFilters — so they must be merged in, otherwise a CurseForge search
+	// inside an instance silently ignores the instance's version/loader and
+	// surfaces mods that have no file for it. Provided filters take precedence.
+	const filters = [...combinedProvidedFilters.value, ...searchState.currentFilters.value]
 	return {
 		gameVersion: filters.find((f) => f.type === 'game_version')?.option,
 		modLoader: filters.find((f) => LOADER_FILTER_TYPE_IDS.includes(f.type))?.option,

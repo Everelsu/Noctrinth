@@ -832,6 +832,13 @@ export async function installCurseForgeFile(
 	// a checksum.
 	const mirrors = cfDownloadMirrors(file)
 
+	// Whether CurseForge gave us a real API download URL. When it did, that's
+	// the normal path — if it fails we surface the error rather than popping an
+	// embedded window. The manual window is reserved for files whose author
+	// disabled third-party distribution (no API url), where our CDN guess is the
+	// only programmatic option and may legitimately be blocked.
+	const hasApiUrl = !!file.downloadUrl
+
 	installedModIds.add(file.modId)
 	if (mirrors.length > 0) {
 		try {
@@ -844,11 +851,11 @@ export async function installCurseForgeFile(
 				cfFileSha1(file),
 			)
 		} catch (err) {
-			// The API/CDN download failed — most often because the author
-			// disabled third-party distribution (allowProjectDistribution=false)
-			// and the CDN reconstruction returned 403. Fall back to a manual
-			// download in an embedded CurseForge window (Prism's approach).
-			console.warn(`[CurseForge] Direct download failed for ${file.fileName}, trying manual:`, err)
+			// API-distributable mod that still failed to download → genuine error
+			// (network, etc.), not a distribution block. Don't open a window.
+			if (hasApiUrl) throw err
+			// Author-restricted file (CDN guess 403'd) — last resort: manual window.
+			console.warn(`[CurseForge] Restricted file ${file.fileName}, manual download:`, err)
 			await manualDownloadFile(file, profilePath)
 		}
 	} else {

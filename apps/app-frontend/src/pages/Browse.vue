@@ -814,7 +814,7 @@ async function installCfMod(cfModId: number) {
 	}
 	cfInstalling.value.add(cfModId)
 	try {
-		await installCurseForgeMod(cfModId, inst.path, inst.game_version, inst.loader)
+		await installCurseForgeMod(cfModId, inst.id, inst.game_version, inst.loader)
 		cfInstalled.value.add(cfModId)
 		// Register as newly-installed so the card shows "Installed" for the
 		// rest of this session (cf: prefix matches the project_id format used

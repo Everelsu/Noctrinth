@@ -227,12 +227,7 @@ async function onInstall(instance) {
 
 	if (row) row.installing = true
 	try {
-		const result = await installCurseForgeFile(
-			file,
-			target.path,
-			target.game_version,
-			target.loader,
-		)
+		const result = await installCurseForgeFile(file, target.id, target.game_version, target.loader)
 		if (row) {
 			row.installed = true
 			row.installing = false

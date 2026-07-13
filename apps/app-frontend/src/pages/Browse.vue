@@ -23,6 +23,8 @@ import {
 	preferencesDiffer,
 	provideBrowseManager,
 	requestInstall,
+	stripServerRuntimeInstallFilters,
+	stripServerRuntimeInstallOverrides,
 	useBrowseSearch,
 	useDebugLogger,
 	useVIntl,
@@ -67,6 +69,7 @@ import {
 	get_projects as getProfileProjects,
 } from '@/helpers/instance'
 import { get_loader_versions as getLoaderManifest } from '@/helpers/metadata'
+import { get as getSettings, set as setSettings } from '@/helpers/settings.ts'
 import { get_categories, get_game_versions, get_loaders } from '@/helpers/tags'
 import { unifiedSearch } from '@/helpers/unified-search'
 import { get_instance_worlds } from '@/helpers/worlds'
@@ -496,7 +499,7 @@ const messages = defineMessages({
 	},
 	hideAddedServers: {
 		id: 'app.browse.hide-added-servers',
-		defaultMessage: 'Hide already added servers',
+		defaultMessage: 'Hide servers already added',
 	},
 	installingToServer: {
 		id: 'app.browse.server.installing',
@@ -790,7 +793,6 @@ async function chooseInstanceInstallVersion(
 	const selectedVersion = getLatestMatchingInstallVersion(
 		await getInstallProjectVersions(project.project_id),
 		selectedPreferences,
-		projectTypeValue,
 	)
 
 	if (!selectedVersion) {
@@ -1004,11 +1006,15 @@ function getCardActions(
 							project: projectResult,
 							contentType,
 							mode: isModpack ? 'immediate' : 'queue',
-							selectedFilters: isModpack ? [] : searchState.currentFilters.value,
+							selectedFilters: isModpack
+								? []
+								: stripServerRuntimeInstallFilters(searchState.currentFilters.value),
 							providedFilters: isModpack ? [] : combinedProvidedFilters.value,
 							overriddenProvidedFilterTypes: isModpack
 								? []
-								: searchState.overriddenProvidedFilterTypes.value,
+								: stripServerRuntimeInstallOverrides(
+										searchState.overriddenProvidedFilterTypes.value,
+									),
 							targetPreferences: getServerInstallTargetPreferences(contentType),
 							getProjectVersions: getInstallProjectVersions,
 							queue: serverInstallQueue,
@@ -1135,7 +1141,7 @@ async function modrinthSearch(requestParams: string) {
 	const rawResults = await queryClient.fetchQuery({
 		queryKey: ['search', 'v3', requestParams],
 		queryFn: () =>
-			get_search_results_v3(requestParams) as Promise<{
+			get_search_results_v3(requestParams, 'must_revalidate') as Promise<{
 				result: Labrinth.Search.v3.SearchResults & {
 					hits: (Labrinth.Search.v3.ResultSearchProject & { installed?: boolean })[]
 				}
@@ -1461,10 +1467,24 @@ const visibleFilters = computed(() =>
 		: searchState.filters.value,
 )
 
+const advancedFiltersCollapsed = computed({
+	get: () => themeStore.getFeatureFlag('advanced_filters_collapsed'),
+	set: (value) => {
+		themeStore.featureFlags['advanced_filters_collapsed'] = value
+		getSettings()
+			.then((settings) => {
+				settings.feature_flags['advanced_filters_collapsed'] = value
+				return setSettings(settings)
+			})
+			.catch(handleError)
+	},
+})
+
 provideBrowseManager({
 	tags,
 	projectType,
 	...searchState,
+	advancedFiltersCollapsed,
 	filters: visibleFilters,
 	// Catalog toggle — only offered when a CurseForge API key is configured.
 	sourceMode: isCurseForgeAvailable() ? sourceMode : undefined,

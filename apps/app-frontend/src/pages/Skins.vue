@@ -126,6 +126,10 @@ const messages = defineMessages({
 		id: 'app.skins.section.tiny-takeover',
 		defaultMessage: 'Tiny Takeover',
 	},
+	chaosCubedSection: {
+		id: 'app.skins.section.chaos-cubed',
+		defaultMessage: 'Chaos Cubed',
+	},
 	rateLimitTitle: {
 		id: 'app.skins.rate-limit.title',
 		defaultMessage: 'Slow down!',
@@ -593,6 +597,8 @@ function getDefaultSkinSectionTitle(section?: string) {
 			return formatMessage(messages.mountsOfMayhemSection)
 		case 'Tiny Takeover':
 			return formatMessage(messages.tinyTakeoverSection)
+		case 'Chaos Cubed':
+			return formatMessage(messages.chaosCubedSection)
 		case 'Default skins':
 			return formatMessage(messages.defaultSkinsSection)
 		default:

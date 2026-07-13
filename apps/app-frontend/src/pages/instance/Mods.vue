@@ -1360,7 +1360,9 @@ provideContentManager({
 			title: item.file_name.replace('.disabled', ''),
 			icon_url: null,
 		},
-		projectLink: item.project?.id ? { path: `/project/${item.project.id}` } : undefined,
+		projectLink: item.project?.id
+			? { path: `/project/${item.project.id}`, query: { i: props.instance.id } }
+			: undefined,
 		version: item.version ?? {
 			id: item.file_name,
 			version_number: formatMessage(commonMessages.unknownLabel),
@@ -1370,6 +1372,7 @@ provideContentManager({
 			item.project?.id && item.version?.id
 				? {
 						path: `/project/${item.project.id}/version/${item.version.id}`,
+						query: { i: props.instance.id },
 					}
 				: undefined,
 		owner: item.owner
@@ -1452,7 +1455,7 @@ onMounted(() => {
 			props.instance &&
 			event.instance_id === props.instance.id &&
 			event.event === 'synced' &&
-			props.instance.install_stage !== 'pack_installing' &&
+			props.instance.install_stage === 'installed' &&
 			!isBulkOperating.value
 		) {
 			await initProjects()

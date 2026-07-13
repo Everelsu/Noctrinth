@@ -69,6 +69,7 @@ pub enum FeatureFlag {
     I18nDebug,
     ShowInstancePlayTime,
     SkipNonEssentialWarnings,
+    AdvancedFiltersCollapsed,
 }
 
 impl Settings {

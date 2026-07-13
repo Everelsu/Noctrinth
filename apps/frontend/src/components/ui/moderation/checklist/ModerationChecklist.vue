@@ -478,7 +478,6 @@ import {
 	handleKeybind,
 	initializeActionState,
 	kebabToTitleCase,
-	keybinds,
 	type MultiSelectChipsAction,
 	processMessage,
 	type Stage,
@@ -533,6 +532,7 @@ import ModpackPermissionsFlow from './ModpackPermissionsFlow.vue'
 const notifications = injectNotificationManager()
 const { addNotification } = notifications
 const debug = useDebugLogger('ModerationChecklist')
+const keybinds = useModerationKeybinds()
 
 const keybindsModal = ref<InstanceType<typeof KeybindsModal>>()
 const takeOverModal = ref<InstanceType<typeof ConfirmModal>>()
@@ -1266,7 +1266,7 @@ function handleKeybinds(event: KeyboardEvent) {
 				},
 			},
 		},
-		keybinds,
+		Object.values(keybinds.value),
 	)
 }
 
@@ -1949,7 +1949,10 @@ function generateModpackMessage(allFiles: {
 
 const hasNextProject = ref(false)
 async function refreshModerationCaches(threadId?: string) {
-	const refreshes: Promise<unknown>[] = [invalidate(), refreshNuxtData('moderation-projects')]
+	const refreshes: Promise<unknown>[] = [
+		invalidate(),
+		queryClient.invalidateQueries({ queryKey: ['moderation-projects'] }),
+	]
 
 	if (threadId) {
 		refreshes.push(queryClient.invalidateQueries({ queryKey: ['thread', threadId] }))

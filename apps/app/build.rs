@@ -163,6 +163,7 @@ fn main() {
                         "install_job_retry",
                         "install_job_cancel",
                         "install_job_dismiss",
+                        "install_job_support_details",
                         "install_curseforge",
                     ])
                     .default_permission(
@@ -287,6 +288,8 @@ fn main() {
                         "hide_ads_window",
                         "scroll_ads_window",
                         "show_ads_window",
+                        "show_ads_consent_overlay",
+                        "hide_ads_consent_overlay",
                         "record_ads_click",
                         "open_link",
                         "get_ads_personalization",

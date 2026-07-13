@@ -21,6 +21,14 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.15.10',
+		date: '2026-07-14T00:00:00+00:00',
+		body: `### Changed
+- Synced with upstream Modrinth (0.15.1 → 0.15.10). Highlights: a new advanced filter category on the Discover page with options to exclude other content types from mod and data pack search; redesigned version pages and project download modal; a redesigned modpack export modal; the "Chaos Cubed" official skin pack in the Skin selector; better install error handling (a "Copy details" button on failure notifications, an install queue capped at three concurrent jobs, and live download progress reporting); and connect/read timeouts on all launcher HTTP requests so stalled connections fail fast instead of hanging.
+- Upstream fixes brought in by the sync: app freezes when opening instance pages, instance edits not appearing to be saved immediately, content desync when enabling/disabling/removing mods, search cache shortened to 10 minutes, environment filter fixes in Discover, version/project links keeping track of the instance you came from, and a Files tab memory leak.
+- Noctrinth's CurseForge search filters, install pipeline and proxy support were re-integrated on top of the reworked upstream search (new environment filter), install error contexts, and the shared version page.`,
+	},
+	{
 		version: '0.15.1',
 		date: '2026-06-27T00:00:00+00:00',
 		body: `### Added

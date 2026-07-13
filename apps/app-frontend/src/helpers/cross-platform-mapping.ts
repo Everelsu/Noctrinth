@@ -76,7 +76,7 @@ const MAPPINGS: PlatformMapping[] = [
 
 	// ── Shaders ──────────────────────────────────────────────────────────────
 	{ modrinth: { id: 'YL57xq9U', slug: 'iris' }, curseforge: { id: 455508, slug: 'irisshaders' } },
-	{ modrinth: { id: 'oculus', slug: 'oculus' }, curseforge: { id: 581495, slug: 'oculus' } },
+	{ modrinth: { id: 'GBeCx05I', slug: 'oculus' }, curseforge: { id: 581495, slug: 'oculus' } },
 
 	// ── Maps ─────────────────────────────────────────────────────────────────
 	{

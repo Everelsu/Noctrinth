@@ -71,10 +71,12 @@
 				:loaders="allLoaders"
 				:game-versions="allGameVersions"
 			>
+				<!-- Files without a downloadUrl stay installable: the CDN fallback and
+				     the manual-download window cover author-restricted files. -->
 				<template #actions="{ version }">
 					<ButtonStyled>
 						<button
-							:disabled="installBtnBusy || rowInstalled(version) || !rowFile(version).downloadUrl"
+							:disabled="installBtnBusy || rowInstalled(version)"
 							@click="onInstallClick(rowFile(version))"
 						>
 							<CheckIcon v-if="rowInstalled(version)" />
@@ -134,7 +136,7 @@ import {
 	cfProjectType,
 	getCurseForgeMod,
 	getCurseForgeModDescription,
-	getCurseForgeModFiles,
+	getCurseForgeModFilesPaged,
 	installCurseForgeFile,
 	installCurseForgeModpack,
 } from '@/helpers/curseforge-api'
@@ -181,6 +183,57 @@ const messages = defineMessages({
 		defaultMessage:
 			'This CurseForge mod could not be loaded. It may have been removed, or CurseForge is unavailable right now.',
 	},
+	modInstalledTitle: {
+		id: 'app.curseforge-project.mod-installed.title',
+		defaultMessage: 'Mod installed',
+	},
+	modInstalledText: {
+		id: 'app.curseforge-project.mod-installed.text',
+		defaultMessage: '{modName} was added to {instanceName}.',
+	},
+	modpackInstalledTitle: {
+		id: 'app.curseforge-project.modpack-installed.title',
+		defaultMessage: 'Modpack installed',
+	},
+	modpackInstalledText: {
+		id: 'app.curseforge-project.modpack-installed.text',
+		defaultMessage: '{modpackName} is ready to play.',
+	},
+	incompatibleTitle: {
+		id: 'app.curseforge-project.incompatible.title',
+		defaultMessage: 'Incompatible mod warning',
+	},
+	incompatibleText: {
+		id: 'app.curseforge-project.incompatible.text',
+		defaultMessage:
+			'{modName} declares {count, plural, one {# incompatible mod} other {# incompatible mods}} — check {instanceName} for conflicts.',
+	},
+	optionalTitle: {
+		id: 'app.curseforge-project.optional.title',
+		defaultMessage: 'Optional dependencies available',
+	},
+	optionalText: {
+		id: 'app.curseforge-project.optional.text',
+		defaultMessage:
+			'{modName} has {count, plural, one {# optional add-on} other {# optional add-ons}} — open its page to install them.',
+	},
+	failedDepsTitle: {
+		id: 'app.curseforge-project.failed-deps.title',
+		defaultMessage: 'Some dependencies failed',
+	},
+	failedDepsText: {
+		id: 'app.curseforge-project.failed-deps.text',
+		defaultMessage:
+			'{count, plural, one {# required dependency} other {# required dependencies}} of {modName} could not be installed — the mod may not run until you add {count, plural, one {it} other {them}} manually.',
+	},
+	noFitError: {
+		id: 'app.curseforge-project.no-fit',
+		defaultMessage: 'No CurseForge file fits {target}.{hint}',
+	},
+	noFitHint: {
+		id: 'app.curseforge-project.no-fit-hint',
+		defaultMessage: ' Available: {versions}.',
+	},
 })
 
 // Async setup — RouterView wraps pages in <Suspense>, so top-level await is fine.
@@ -203,9 +256,11 @@ const instanceContext = instanceId ? await getInstance(instanceId).catch(() => n
 // When opened from an instance, narrow file list to versions compatible with
 // that instance's Minecraft version and loader so only installable versions
 // appear in the Versions tab. Without this filter all historical files (1.0 …
-// latest, every loader) are shown regardless of the instance.
+// latest, every loader) are shown regardless of the instance. The paged
+// variant fetches beyond CurseForge's 50-file first page so long-lived mods
+// show their full version history.
 const files = mod
-	? ((await getCurseForgeModFiles(
+	? ((await getCurseForgeModFilesPaged(
 			props.modId,
 			instanceContext?.game_version,
 			instanceContext?.loader,
@@ -354,19 +409,20 @@ function onInstallClick(mode) {
 	}
 }
 
-// Install a CurseForge modpack — creates a new instance from the pack.
+// Install a CurseForge modpack — creates a new instance from the pack. The
+// install runs as a job (progress shows in the app action bar).
 async function handleInstallModpack(file) {
 	if (!mod || modpackBusy.value || modpackInstalled.value) return
 	modpackBusy.value = true
 	try {
-		const profile = await installCurseForgeModpack(mod.id, file)
+		const instanceId = await installCurseForgeModpack(mod.id, file)
 		modpackInstalled.value = true
 		addNotification({
-			title: 'Modpack installed',
-			text: `${mod.name} is ready to play.`,
+			title: formatMessage(messages.modpackInstalledTitle),
+			text: formatMessage(messages.modpackInstalledText, { modpackName: mod.name }),
 			type: 'success',
 		})
-		router.push(`/instance/${encodeURIComponent(profile)}`)
+		router.push(`/instance/${encodeURIComponent(instanceId)}`)
 	} catch (e) {
 		handleError(e)
 	} finally {
@@ -384,11 +440,17 @@ async function runInstall(target, mode) {
 		).sort()
 		const versionHint =
 			availableVersions.length > 0
-				? ` Available: ${availableVersions.slice(0, 8).join(', ')}${availableVersions.length > 8 ? '…' : ''}.`
+				? formatMessage(messages.noFitHint, {
+						versions:
+							availableVersions.slice(0, 8).join(', ') + (availableVersions.length > 8 ? '…' : ''),
+					})
 				: ''
 		handleError(
 			new Error(
-				`No CurseForge file fits ${target.game_version}${target.loader ? ` / ${target.loader}` : ''}.${versionHint}`,
+				formatMessage(messages.noFitError, {
+					target: `${target.game_version}${target.loader ? ` / ${target.loader}` : ''}`,
+					hint: versionHint,
+				}),
 			),
 		)
 		return
@@ -400,21 +462,41 @@ async function runInstall(target, mode) {
 		installedIds.value.add(file.id)
 		if (mode === 'auto') headerInstalled.value = true
 		addNotification({
-			title: 'Mod installed',
-			text: `${mod.name} was added to ${target.name}.`,
+			title: formatMessage(messages.modInstalledTitle),
+			text: formatMessage(messages.modInstalledText, {
+				modName: mod.name,
+				instanceName: target.name,
+			}),
 			type: 'success',
 		})
+		if (result?.failedRequired?.length) {
+			addNotification({
+				title: formatMessage(messages.failedDepsTitle),
+				text: formatMessage(messages.failedDepsText, {
+					modName: mod.name,
+					count: result.failedRequired.length,
+				}),
+				type: 'warn',
+			})
+		}
 		if (result?.incompatible?.length) {
 			addNotification({
-				title: 'Incompatible mod warning',
-				text: `${mod.name} declares ${result.incompatible.length} incompatible mod(s) — check ${target.name} for conflicts.`,
+				title: formatMessage(messages.incompatibleTitle),
+				text: formatMessage(messages.incompatibleText, {
+					modName: mod.name,
+					count: result.incompatible.length,
+					instanceName: target.name,
+				}),
 				type: 'warn',
 			})
 		}
 		if (result?.optional?.length) {
 			addNotification({
-				title: 'Optional dependencies available',
-				text: `${mod.name} has ${result.optional.length} optional add-on(s) — open its page to install them.`,
+				title: formatMessage(messages.optionalTitle),
+				text: formatMessage(messages.optionalText, {
+					modName: mod.name,
+					count: result.optional.length,
+				}),
 				type: 'info',
 			})
 		}
@@ -430,12 +512,30 @@ function openExternal(url) {
 }
 
 // Open links inside the rendered description in the system browser.
+// CurseForge descriptions often contain relative links (`/minecraft/…`, or
+// `/linkout?remoteUrl=…`); the WebView resolves those against the app's own
+// origin, which produces a dead URL — rebase them onto curseforge.com and
+// unwrap linkout redirects before opening.
 function onDescriptionClick(event) {
 	const anchor = event.target?.closest?.('a')
-	if (anchor?.href) {
-		event.preventDefault()
-		openUrl(anchor.href)
+	if (!anchor?.href) return
+	event.preventDefault()
+
+	let url = anchor.href
+	try {
+		const parsed = new URL(url)
+		if (parsed.origin === window.location.origin) {
+			url = `https://www.curseforge.com${parsed.pathname}${parsed.search}${parsed.hash}`
+		}
+		const linkout = new URL(url)
+		if (linkout.pathname === '/linkout') {
+			const remote = linkout.searchParams.get('remoteUrl')
+			if (remote) url = decodeURIComponent(remote)
+		}
+	} catch {
+		// Malformed URL — fall through and let the OS handler reject it.
 	}
+	openUrl(url)
 }
 </script>
 

@@ -23,10 +23,26 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
 		version: '0.15.10',
 		date: '2026-07-14T00:00:00+00:00',
-		body: `### Changed
+		body: `### Added
+- Two-factor authentication (TOTP) support for Ely.by sign-in. When an account is protected with 2FA, the login dialog now asks for the 6-digit code instead of failing with an error.
+- Failed required CurseForge dependencies are now reported after an install ("N required dependencies could not be installed") instead of being silently skipped.
+- The Versions tab of CurseForge project pages now pages through the full file list (previously only the 50 newest files were shown).
+
+### Changed
+- CurseForge modpack installs were reworked to run through the launcher's install-job pipeline — the same one Modrinth packs use. Installs now queue, show live per-file download progress in the action bar, can be cancelled and retried, and roll the instance back cleanly on failure. Modpack files download several at a time instead of one-by-one, and when files fail you get one error listing all of them rather than dying on the first.
 - Synced with upstream Modrinth (0.15.1 → 0.15.10). Highlights: a new advanced filter category on the Discover page with options to exclude other content types from mod and data pack search; redesigned version pages and project download modal; a redesigned modpack export modal; the "Chaos Cubed" official skin pack in the Skin selector; better install error handling (a "Copy details" button on failure notifications, an install queue capped at three concurrent jobs, and live download progress reporting); and connect/read timeouts on all launcher HTTP requests so stalled connections fail fast instead of hanging.
 - Upstream fixes brought in by the sync: app freezes when opening instance pages, instance edits not appearing to be saved immediately, content desync when enabling/disabling/removing mods, search cache shortened to 10 minutes, environment filter fixes in Discover, version/project links keeping track of the instance you came from, and a Files tab memory leak.
-- Noctrinth's CurseForge search filters, install pipeline and proxy support were re-integrated on top of the reworked upstream search (new environment filter), install error contexts, and the shared version page.`,
+- "Update all" for CurseForge content now checks for updates several mods at a time and skips disabled files (updating one would silently re-enable it).
+- CurseForge install notifications on the project page are now translated (previously always English).
+- Noctrinth's CurseForge search filters, install pipeline and proxy support were re-integrated on top of the reworked upstream search (new environment filter), install error contexts, and the shared version page.
+
+### Fixed
+- Importing a CurseForge modpack from a local .zip works again — the creation modal previously rejected it with "no CurseForge API key is available" even when the key was configured, and the new-instance preview now shows the pack's real name, Minecraft version and loader from its manifest.
+- A flaky connection or an Ely.by outage no longer signs you out of your Ely.by account: stored credentials are only removed when Ely.by explicitly rejects both the token and its refresh.
+- Updating a CurseForge mod no longer deletes the old file before the new one has downloaded — a failed download now leaves the old, working file in place.
+- Install buttons on CurseForge version rows are no longer disabled for files whose author hid the download URL — the CDN fallback and manual-download window handle those, same as the main Install button.
+- Links inside CurseForge project descriptions that point to other CurseForge pages (relative links and /linkout redirects) now open correctly in the browser instead of a dead app-origin URL.
+- Fixed the Oculus entry in the cross-platform mod mapping using a slug instead of the Modrinth project id, which broke installed-state mirroring between the two catalogs for that mod.`,
 	},
 	{
 		version: '0.15.1',

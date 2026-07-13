@@ -106,6 +106,19 @@ pub enum CreatePackLocation {
         #[serde(default)]
         curseforge_api_key: Option<String>,
     },
+    // Create a pack from a CurseForge modpack file download URL. Runs through
+    // the same install-job pipeline as Modrinth packs (progress, retry,
+    // rollback).
+    FromCurseforgeUrl {
+        url: String,
+        // Pack name/icon for the instance while the manifest is downloading;
+        // corrected from the manifest during install.
+        #[serde(default)]
+        title: Option<String>,
+        #[serde(default)]
+        icon_url: Option<String>,
+        curseforge_api_key: String,
+    },
 }
 
 #[derive(Serialize, Deserialize)]
@@ -232,6 +245,33 @@ pub async fn get_instance_from_pack(
                     )
                     .into());
                 }
+
+                // Preview with the pack's real name, Minecraft version and
+                // loader from the manifest so the creation modal (and the
+                // instance created by the job) shows accurate info instead
+                // of the filename and placeholder defaults.
+                let meta =
+                    crate::pack::install_curseforge::read_curseforge_pack_meta(
+                        &file_bytes_shared,
+                    )
+                    .await?;
+                return Ok(CreatePackInstance {
+                    name: meta.name.clone(),
+                    game_version: meta.game_version,
+                    modloader: meta.loader,
+                    loader_version: meta.loader_version,
+                    link: Some(InstanceLink::ImportedModpack {
+                        project_id: None,
+                        version_id: None,
+                        name: Some(meta.name),
+                        version_number: meta.version,
+                        filename: path
+                            .file_name()
+                            .map(|x| x.to_string_lossy().to_string()),
+                    }),
+                    unknown_file: false,
+                    ..Default::default()
+                });
             }
 
             // Hash-against-Modrinth lookup only for files that aren't an
@@ -272,6 +312,22 @@ pub async fn get_instance_from_pack(
                 ..Default::default()
             })
         }
+        CreatePackLocation::FromCurseforgeUrl {
+            title, icon_url, ..
+        } => Ok(CreatePackInstance {
+            name: title
+                .clone()
+                .unwrap_or_else(|| "CurseForge modpack".to_string()),
+            icon_url,
+            link: Some(InstanceLink::ImportedModpack {
+                project_id: None,
+                version_id: None,
+                name: title,
+                version_number: None,
+                filename: None,
+            }),
+            ..Default::default()
+        }),
     }
 }
 

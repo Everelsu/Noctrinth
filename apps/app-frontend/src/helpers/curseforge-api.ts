@@ -9,7 +9,11 @@
  */
 
 import { useCurseForgeEnabled } from '@/composables/source-mode'
-import { create_profile_and_install_from_curseforge } from '@/helpers/install'
+import {
+	install_curseforge_modpack,
+	installJobInstanceId,
+	wait_for_install_job,
+} from '@/helpers/install'
 import {
 	add_project_from_curseforge,
 	curseforge_manual_download,
@@ -578,6 +582,36 @@ export async function getCurseForgeModFiles(
 	return json?.data ?? null
 }
 
+/** How many 50-file pages `getCurseForgeModFilesPaged` fetches at most. */
+const CF_FILES_MAX_PAGES = 4
+
+/**
+ * Like `getCurseForgeModFiles`, but pages through the file list (up to
+ * `CF_FILES_MAX_PAGES` × 50 files). The single-page variant only sees the 50
+ * newest files, which truncates the Versions tab for long-lived mods.
+ */
+export async function getCurseForgeModFilesPaged(
+	modId: number | string,
+	gameVersion?: string,
+	modLoader?: string,
+): Promise<CfModFile[] | null> {
+	const loaderType = modLoader ? CF_LOADER_TYPES[modLoader] : undefined
+	const out: CfModFile[] = []
+
+	for (let page = 0; page < CF_FILES_MAX_PAGES; page++) {
+		const qs = new URLSearchParams({ pageSize: '50', index: String(page * 50) })
+		if (gameVersion) qs.set('gameVersion', gameVersion)
+		if (loaderType) qs.set('modLoaderType', String(loaderType))
+
+		const json = await cfFetch<{ data: CfModFile[] }>(`/mods/${modId}/files?${qs}`)
+		if (!json) return page === 0 ? null : out
+		out.push(...json.data)
+		if (json.data.length < 50) break
+	}
+
+	return out
+}
+
 /**
  * Reconstruct a downloadable URL for a CurseForge file when the API hides
  * `downloadUrl` (the author opted out of third-party distribution).
@@ -821,9 +855,12 @@ export async function installCurseForgeFile(
 	gameVersion?: string,
 	loader?: string,
 	installedModIds: Set<number> = new Set(),
+	failedRequired: Set<number> = new Set(),
 ): Promise<{
 	optional: CfResolvedDependency[]
 	incompatible: CfResolvedDependency[]
+	/** CF mod ids of required dependencies that could not be installed. */
+	failedRequired: number[]
 }> {
 	// If the author disabled API distribution, fall back to the CDN URL we
 	// can derive from the numeric file ID (works for the vast majority of
@@ -924,27 +961,37 @@ export async function installCurseForgeFile(
 
 			// Install required from CurseForge. The recursive call propagates the
 			// same logic so a transitive `Optional` doesn't drag in its own
-			// `Required` automatically.
+			// `Required` automatically. Failures are collected so the caller can
+			// tell the user the mod may not run instead of failing silently.
 			await installCurseForgeMod(
 				dep.modId,
 				profilePath,
 				gameVersion,
 				loader,
 				installedModIds,
-			).catch((err) => console.warn(`[CurseForge] Skipping required dependency ${dep.modId}:`, err))
+				failedRequired,
+			).catch((err) => {
+				console.warn(`[CurseForge] Skipping required dependency ${dep.modId}:`, err)
+				failedRequired.add(dep.modId)
+			})
 		}
 	}
 
-	return { optional: directOptional, incompatible: directIncompatible }
+	return {
+		optional: directOptional,
+		incompatible: directIncompatible,
+		failedRequired: [...failedRequired],
+	}
 }
 
 /**
  * Install a CurseForge modpack — downloads the pack and creates a new
- * instance from it. Unlike a mod, a modpack is not added to an existing
- * instance.
+ * instance from it, through the regular install-job pipeline (live progress
+ * in the action bar, cancel/retry, rollback on failure). Unlike a mod, a
+ * modpack is not added to an existing instance.
  *
  * @param file  Optional specific modpack file; otherwise the best is picked.
- * @returns the created profile path
+ * @returns the created instance id
  */
 export async function installCurseForgeModpack(modId: number, file?: CfModFile): Promise<string> {
 	let target = file
@@ -961,7 +1008,22 @@ export async function installCurseForgeModpack(modId: number, file?: CfModFile):
 			`Couldn't build a download URL for "${target.fileName}" — open the project on CurseForge to download it manually.`,
 		)
 	}
-	return create_profile_and_install_from_curseforge(url, CF_API_KEY)
+
+	// Pack name/icon give the install job a proper display while the manifest
+	// is still downloading; both are corrected from the manifest afterwards.
+	const detail = await getCurseForgeMod(modId).catch(() => null)
+	const job = await install_curseforge_modpack(
+		url,
+		CF_API_KEY,
+		detail?.name ?? null,
+		detail?.logo?.thumbnailUrl ?? detail?.logo?.url ?? null,
+	)
+	const finished = await wait_for_install_job(job.job_id)
+	const instanceId = installJobInstanceId(finished)
+	if (!instanceId) {
+		throw new Error('CurseForge modpack install finished without an instance id.')
+	}
+	return instanceId
 }
 
 /**
@@ -979,6 +1041,7 @@ export async function installCurseForgeMod(
 	gameVersion?: string,
 	loader?: string,
 	installedModIds: Set<number> = new Set(),
+	failedRequired: Set<number> = new Set(),
 ): Promise<void> {
 	const files = await getCurseForgeModFiles(modId, gameVersion, loader)
 
@@ -1008,7 +1071,14 @@ export async function installCurseForgeMod(
 		throw new Error(`No CurseForge file fits ${target}. ${versionList}`)
 	}
 
-	await installCurseForgeFile(file, profilePath, gameVersion, loader, installedModIds)
+	await installCurseForgeFile(
+		file,
+		profilePath,
+		gameVersion,
+		loader,
+		installedModIds,
+		failedRequired,
+	)
 }
 
 // ─── Category tag helpers ─────────────────────────────────────────────────────
@@ -1197,32 +1267,52 @@ export interface CfUpdate {
 	newFile: CfModFile
 }
 
+/** How many update lookups run against the CurseForge API at once. */
+const CF_UPDATE_CHECK_CONCURRENCY = 6
+
 /**
  * Check every CurseForge-sourced file in the instance for a newer file on
  * CurseForge that matches the instance's game version + loader. CurseForge file
  * ids increase monotonically, so a higher id means a newer file.
+ *
+ * Disabled files are skipped — updating one would replace it with an enabled
+ * copy, silently re-activating content the user turned off.
+ *
+ * Lookups run concurrently (bounded) so instances with many CurseForge mods
+ * don't take one round-trip per mod.
  */
 export async function checkCurseForgeUpdates(
 	instanceId: string,
 	gameVersion?: string,
 	loader?: string,
 ): Promise<CfUpdate[]> {
-	const content = await get_curseforge_content(instanceId)
-	const updates: CfUpdate[] = []
-	for (const item of content) {
-		const files = await getCurseForgeModFiles(item.curseforge_project_id, gameVersion, loader)
-		if (!files) continue
-		const best = bestCfFileFor(files, gameVersion, loader)
-		if (best && best.id > item.curseforge_file_id) {
-			updates.push({ content: item, newFile: best })
+	const content = (await get_curseforge_content(instanceId)).filter((item) => item.enabled)
+	const results: (CfUpdate | null)[] = new Array(content.length).fill(null)
+
+	let next = 0
+	async function worker() {
+		while (next < content.length) {
+			const index = next++
+			const item = content[index]
+			const files = await getCurseForgeModFiles(item.curseforge_project_id, gameVersion, loader)
+			if (!files) continue
+			const best = bestCfFileFor(files, gameVersion, loader)
+			if (best && best.id > item.curseforge_file_id) {
+				results[index] = { content: item, newFile: best }
+			}
 		}
 	}
-	return updates
+	await Promise.all(
+		Array.from({ length: Math.min(CF_UPDATE_CHECK_CONCURRENCY, content.length) }, worker),
+	)
+
+	return results.filter((u): u is CfUpdate => u !== null)
 }
 
 /**
- * Apply a single CurseForge update: remove the old file, then install the new
- * one (with its dependencies). The new file is recorded as CurseForge content.
+ * Apply a single CurseForge update: install the new file first, then remove
+ * the old one. This order means a failed download leaves the old, working
+ * file in place instead of losing the mod entirely.
  */
 export async function applyCurseForgeUpdate(
 	update: CfUpdate,
@@ -1230,8 +1320,13 @@ export async function applyCurseForgeUpdate(
 	gameVersion?: string,
 	loader?: string,
 ): Promise<void> {
-	await remove_project(instanceId, update.content.file_path)
 	await installCurseForgeFile(update.newFile, instanceId, gameVersion, loader)
+	// Guard against the (unusual) case of the new file landing on the same
+	// path — removing it then would delete the freshly installed file.
+	const newFileName = update.newFile.fileName
+	if (update.content.file_name !== newFileName) {
+		await remove_project(instanceId, update.content.file_path)
+	}
 }
 
 /**

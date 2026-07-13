@@ -82,6 +82,27 @@
 					</StyledInput>
 				</div>
 
+				<div v-if="needsTotp" class="flex flex-col gap-1.5">
+					<label for="ely-totp" class="text-sm font-semibold text-contrast">
+						{{ formatMessage(messages.totpLabel) }}
+					</label>
+					<StyledInput
+						id="ely-totp"
+						v-model="totp"
+						class="w-full"
+						:icon="ShieldIcon"
+						inputmode="numeric"
+						autocomplete="one-time-code"
+						:placeholder="formatMessage(messages.totpPlaceholder)"
+						:disabled="loading"
+						:error="!!errorMessage"
+						@keyup.enter="submit"
+					/>
+					<p class="m-0 text-xs text-secondary">
+						{{ formatMessage(messages.totpHint) }}
+					</p>
+				</div>
+
 				<Transition
 					enter-active-class="transition-all duration-200 ease-out"
 					enter-from-class="opacity-0 -translate-y-1"
@@ -100,7 +121,7 @@
 					<ButtonStyled color="brand" size="large">
 						<button
 							class="!w-full"
-							:disabled="loading || !username.trim() || !password"
+							:disabled="loading || !username.trim() || !password || (needsTotp && !totp.trim())"
 							@click="submit"
 						>
 							<SpinnerIcon v-if="loading" class="animate-spin" aria-hidden="true" />
@@ -140,6 +161,7 @@ import {
 	EyeOffIcon,
 	LockIcon,
 	LogInIcon,
+	ShieldIcon,
 	SpinnerIcon,
 	TriangleAlertIcon,
 	UserIcon,
@@ -190,6 +212,15 @@ const messages = defineMessages({
 		id: 'ely-login.error.generic',
 		defaultMessage: 'Login failed. Please check your credentials.',
 	},
+	totpLabel: { id: 'ely-login.totp-label', defaultMessage: 'Two-factor code' },
+	totpPlaceholder: {
+		id: 'ely-login.totp-placeholder',
+		defaultMessage: 'Enter the 6-digit code...',
+	},
+	totpHint: {
+		id: 'ely-login.totp-hint',
+		defaultMessage: 'This account is protected with two-factor authentication.',
+	},
 })
 
 const emit = defineEmits<{
@@ -199,6 +230,8 @@ const emit = defineEmits<{
 const modal = ref<InstanceType<typeof NewModal>>()
 const username = ref('')
 const password = ref('')
+const totp = ref('')
+const needsTotp = ref(false)
 const showPassword = ref(false)
 const loading = ref(false)
 const errorMessage = ref('')
@@ -206,6 +239,8 @@ const errorMessage = ref('')
 function show(event?: MouseEvent) {
 	username.value = ''
 	password.value = ''
+	totp.value = ''
+	needsTotp.value = false
 	showPassword.value = false
 	loading.value = false
 	errorMessage.value = ''
@@ -218,25 +253,39 @@ function hide() {
 
 async function submit() {
 	if (!username.value.trim() || !password.value) return
+	if (needsTotp.value && !totp.value.trim()) return
 	loading.value = true
 	errorMessage.value = ''
 	try {
-		const creds = await ely_login(username.value.trim(), password.value)
+		// Ely.by delivers the TOTP code appended to the password ("password:code").
+		const effectivePassword =
+			needsTotp.value && totp.value.trim()
+				? `${password.value}:${totp.value.trim()}`
+				: password.value
+		const creds = await ely_login(username.value.trim(), effectivePassword)
 		emit('logged-in', creds)
 		hide()
 	} catch (e: unknown) {
-		errorMessage.value = formatLoginError(e)
+		const raw = extractErrorMessage(e)
+		// Ely.by rejects 2FA-protected accounts with this message until the
+		// TOTP code is appended — reveal the code field instead of an error.
+		if (/two.?factor/i.test(raw) && !needsTotp.value) {
+			needsTotp.value = true
+		} else {
+			errorMessage.value = formatLoginError(raw)
+		}
 	} finally {
 		loading.value = false
 	}
 }
 
-function formatLoginError(e: unknown): string {
-	let msg =
-		e && typeof e === 'object' && 'message' in e
-			? String((e as { message: string }).message)
-			: String(e)
+function extractErrorMessage(e: unknown): string {
+	return e && typeof e === 'object' && 'message' in e
+		? String((e as { message: string }).message)
+		: String(e)
+}
 
+function formatLoginError(msg: string): string {
 	if (/request failed|error sending request/i.test(msg)) {
 		return formatMessage(messages.loginFailedNetwork)
 	}

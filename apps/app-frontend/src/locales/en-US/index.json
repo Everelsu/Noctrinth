@@ -296,6 +296,12 @@
   "app.content-install.no-compatible-versions": {
     "message": "No available versions match {compatibilityLabel}. Select a version to install anyway. Dependencies will not be installed automatically."
   },
+  "app.curseforge-install.failed-deps.text": {
+    "message": "{count, plural, one {# required dependency} other {# required dependencies}} of {modName} could not be installed — the mod may not run until you add {count, plural, one {it} other {them}} manually."
+  },
+  "app.curseforge-install.failed-deps.title": {
+    "message": "Some dependencies failed"
+  },
   "app.curseforge-install.incompatible.text": {
     "message": "{modName} declares {count, plural, one {# incompatible mod} other {# incompatible mods}} — check {instanceName} for conflicts."
   },
@@ -317,6 +323,18 @@
   "app.curseforge-install.optional.title": {
     "message": "Optional dependencies available"
   },
+  "app.curseforge-project.failed-deps.text": {
+    "message": "{count, plural, one {# required dependency} other {# required dependencies}} of {modName} could not be installed — the mod may not run until you add {count, plural, one {it} other {them}} manually."
+  },
+  "app.curseforge-project.failed-deps.title": {
+    "message": "Some dependencies failed"
+  },
+  "app.curseforge-project.incompatible.text": {
+    "message": "{modName} declares {count, plural, one {# incompatible mod} other {# incompatible mods}} — check {instanceName} for conflicts."
+  },
+  "app.curseforge-project.incompatible.title": {
+    "message": "Incompatible mod warning"
+  },
   "app.curseforge-project.install": {
     "message": "Install"
   },
@@ -326,8 +344,26 @@
   "app.curseforge-project.installing": {
     "message": "Installing…"
   },
+  "app.curseforge-project.mod-installed.text": {
+    "message": "{modName} was added to {instanceName}."
+  },
+  "app.curseforge-project.mod-installed.title": {
+    "message": "Mod installed"
+  },
+  "app.curseforge-project.modpack-installed.text": {
+    "message": "{modpackName} is ready to play."
+  },
+  "app.curseforge-project.modpack-installed.title": {
+    "message": "Modpack installed"
+  },
   "app.curseforge-project.no-description": {
     "message": "No description available."
+  },
+  "app.curseforge-project.no-fit": {
+    "message": "No CurseForge file fits {target}.{hint}"
+  },
+  "app.curseforge-project.no-fit-hint": {
+    "message": " Available: {versions}."
   },
   "app.curseforge-project.not-found.description": {
     "message": "This CurseForge mod could not be loaded. It may have been removed, or CurseForge is unavailable right now."
@@ -337,6 +373,12 @@
   },
   "app.curseforge-project.open-on-curseforge": {
     "message": "Open on CurseForge"
+  },
+  "app.curseforge-project.optional.text": {
+    "message": "{modName} has {count, plural, one {# optional add-on} other {# optional add-ons}} — open its page to install them."
+  },
+  "app.curseforge-project.optional.title": {
+    "message": "Optional dependencies available"
   },
   "app.curseforge-project.tab.description": {
     "message": "Description"
@@ -1132,6 +1174,15 @@
   },
   "ely-login.subtitle": {
     "message": "Use your Ely.by credentials to add the account to Noctrinth."
+  },
+  "ely-login.totp-hint": {
+    "message": "This account is protected with two-factor authentication."
+  },
+  "ely-login.totp-label": {
+    "message": "Two-factor code"
+  },
+  "ely-login.totp-placeholder": {
+    "message": "Enter the 6-digit code..."
   },
   "ely-login.username-label": {
     "message": "Username or email"

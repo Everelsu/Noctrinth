@@ -1552,5 +1552,56 @@
   },
   "app.curseforge-install.optional.text": {
     "message": "У {modName} есть {count, plural, one {# необязательное дополнение} other {# необязательных дополнений}} — откройте его страницу, чтобы установить их."
+  },
+  "app.curseforge-install.failed-deps.title": {
+    "message": "Часть зависимостей не установлена"
+  },
+  "app.curseforge-install.failed-deps.text": {
+    "message": "Не удалось установить {count, plural, one {# обязательную зависимость} few {# обязательные зависимости} other {# обязательных зависимостей}} мода {modName} — мод может не запуститься, пока вы не добавите их вручную."
+  },
+  "app.curseforge-project.mod-installed.title": {
+    "message": "Мод установлен"
+  },
+  "app.curseforge-project.mod-installed.text": {
+    "message": "{modName} добавлен в {instanceName}."
+  },
+  "app.curseforge-project.modpack-installed.title": {
+    "message": "Сборка установлена"
+  },
+  "app.curseforge-project.modpack-installed.text": {
+    "message": "{modpackName} готова к игре."
+  },
+  "app.curseforge-project.incompatible.title": {
+    "message": "Предупреждение о несовместимости"
+  },
+  "app.curseforge-project.incompatible.text": {
+    "message": "{modName} объявляет {count, plural, one {# несовместимый мод} other {# несовместимых модов}} — проверьте {instanceName} на наличие конфликтов."
+  },
+  "app.curseforge-project.optional.title": {
+    "message": "Доступны необязательные зависимости"
+  },
+  "app.curseforge-project.optional.text": {
+    "message": "У {modName} есть {count, plural, one {# необязательное дополнение} other {# необязательных дополнений}} — откройте его страницу, чтобы установить их."
+  },
+  "app.curseforge-project.failed-deps.title": {
+    "message": "Часть зависимостей не установлена"
+  },
+  "app.curseforge-project.failed-deps.text": {
+    "message": "Не удалось установить {count, plural, one {# обязательную зависимость} few {# обязательные зависимости} other {# обязательных зависимостей}} мода {modName} — мод может не запуститься, пока вы не добавите их вручную."
+  },
+  "app.curseforge-project.no-fit": {
+    "message": "На CurseForge нет файла, подходящего под {target}.{hint}"
+  },
+  "app.curseforge-project.no-fit-hint": {
+    "message": " Доступно: {versions}."
+  },
+  "ely-login.totp-label": {
+    "message": "Код двухфакторной аутентификации"
+  },
+  "ely-login.totp-placeholder": {
+    "message": "Введите 6-значный код..."
+  },
+  "ely-login.totp-hint": {
+    "message": "Этот аккаунт защищён двухфакторной аутентификацией."
   }
 }

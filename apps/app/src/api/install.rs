@@ -31,16 +31,25 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
         .build()
 }
 
-/// Install a CurseForge modpack. The instance is created by the backend from
-/// the pack manifest (Minecraft version + loader) and its id is returned.
+/// Install a CurseForge modpack from its download URL through the regular
+/// install-job pipeline (queueing, live progress, cancel/retry, rollback).
+/// The instance is created from the pack manifest (Minecraft version +
+/// loader); the returned job snapshot carries the job id to track.
 #[tauri::command]
 pub async fn install_curseforge(
-    modpack_url: &str,
-    curseforge_api_key: &str,
-) -> Result<String> {
-    Ok(theseus::pack::install_curseforge::install_curseforge_pack(
-        modpack_url,
-        curseforge_api_key,
+    modpack_url: String,
+    curseforge_api_key: String,
+    title: Option<String>,
+    icon_url: Option<String>,
+) -> Result<InstallJobSnapshot> {
+    Ok(theseus::install::create_modpack_instance(
+        CreatePackLocation::FromCurseforgeUrl {
+            url: modpack_url,
+            title,
+            icon_url,
+            curseforge_api_key,
+        },
+        None,
     )
     .await?)
 }

@@ -95,6 +95,14 @@ fn display_from_request(state: &InstallJobState) -> Option<InstallJobDisplay> {
             crate::api::pack::install_from::CreatePackLocation::FromFile {
                 ..
             } => None,
+            crate::api::pack::install_from::CreatePackLocation::FromCurseforgeUrl {
+                title,
+                icon_url,
+                ..
+            } => title.as_ref().map(|title| InstallJobDisplay {
+                title: title.clone(),
+                icon: icon_url.clone(),
+            }),
         },
         InstallRequest::ImportInstance {
             instance_folder, ..

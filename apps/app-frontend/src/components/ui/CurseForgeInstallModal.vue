@@ -83,6 +83,15 @@ const messages = defineMessages({
 		defaultMessage:
 			'{modName} has {count, plural, one {# optional add-on} other {# optional add-ons}} — open its page to install them.',
 	},
+	failedDepsTitle: {
+		id: 'app.curseforge-install.failed-deps.title',
+		defaultMessage: 'Some dependencies failed',
+	},
+	failedDepsText: {
+		id: 'app.curseforge-install.failed-deps.text',
+		defaultMessage:
+			'{count, plural, one {# required dependency} other {# required dependencies}} of {modName} could not be installed — the mod may not run until you add {count, plural, one {it} other {them}} manually.',
+	},
 })
 
 const modal = ref(null)
@@ -247,8 +256,18 @@ async function onInstall(instance) {
 	}
 }
 
-/** Surface optional/incompatible CF deps the auto-installer didn't pull in. */
+/** Surface optional/incompatible/failed CF deps the auto-installer didn't pull in. */
 function notifyAboutDeps(result, instanceName) {
+	if (result?.failedRequired?.length) {
+		addNotification({
+			title: formatMessage(messages.failedDepsTitle),
+			text: formatMessage(messages.failedDepsText, {
+				modName: currentMod.name,
+				count: result.failedRequired.length,
+			}),
+			type: 'warn',
+		})
+	}
 	if (result?.incompatible?.length) {
 		addNotification({
 			title: formatMessage(messages.incompatibleTitle),

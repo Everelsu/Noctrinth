@@ -92,7 +92,11 @@ import { debugAnalytics, initAnalytics, trackEvent } from '@/helpers/analytics'
 import { check_reachable, get_default_user } from '@/helpers/auth.js'
 import { get_user, get_version } from '@/helpers/cache.js'
 import { command_listener, notification_listener, warning_listener } from '@/helpers/events.js'
-import { install_create_modpack_instance, install_get_modpack_preview } from '@/helpers/install'
+import {
+	install_create_modpack_instance,
+	install_get_modpack_preview,
+	packLocationFromFile,
+} from '@/helpers/install'
 import { list, run } from '@/helpers/instance'
 import { cancelLogin, get as getCreds, login, logout } from '@/helpers/mr_auth.ts'
 import { mergeUrlQuery, parseModrinthLink } from '@/helpers/project-links.ts'
@@ -868,7 +872,7 @@ async function handleCommand(e) {
 	if (e.event === 'RunMRPack') {
 		// RunMRPack should directly install a local mrpack given a path
 		if (e.path.endsWith('.mrpack')) {
-			const location = { type: 'fromFile', path: e.path }
+			const location = packLocationFromFile(e.path)
 			const preview = await install_get_modpack_preview(location).catch(handleError)
 			if (preview?.unknownFile) {
 				const splitPath = e.path.split(/[\\/]/)

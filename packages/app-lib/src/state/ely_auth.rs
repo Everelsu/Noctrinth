@@ -29,6 +29,21 @@ impl Serialize for ElyCredentials {
     }
 }
 
+/// Result of a token validity probe against Ely.by.
+enum ElyTokenCheck {
+    Valid,
+    Invalid,
+    /// Network failure or a 5xx — the token's state is unknown.
+    Unreachable,
+}
+
+/// Result of a successful round-trip to the Ely.by refresh endpoint.
+enum ElyRefresh {
+    Refreshed,
+    /// Ely.by explicitly refused the token pair — it is permanently dead.
+    Rejected,
+}
+
 #[derive(Deserialize)]
 struct ElyAuthResponse {
     #[serde(rename = "accessToken")]
@@ -90,7 +105,7 @@ impl ElyCredentials {
         })
     }
 
-    async fn validate(&self) -> bool {
+    async fn validate(&self) -> ElyTokenCheck {
         let resp = INSECURE_REQWEST_CLIENT
             .post("https://authserver.ely.by/auth/validate")
             .json(&serde_json::json!({
@@ -100,10 +115,21 @@ impl ElyCredentials {
             .send()
             .await;
 
-        matches!(resp, Ok(r) if r.status().as_u16() == 204)
+        match resp {
+            Ok(r) if r.status().as_u16() == 204 => ElyTokenCheck::Valid,
+            // Server-side errors say nothing about the token — don't treat
+            // them as a rejection.
+            Ok(r) if r.status().is_server_error() => ElyTokenCheck::Unreachable,
+            Ok(_) => ElyTokenCheck::Invalid,
+            Err(_) => ElyTokenCheck::Unreachable,
+        }
     }
 
-    async fn refresh(&mut self) -> crate::Result<()> {
+    /// Refresh the access token. `Ok(ElyRefresh::Rejected)` means Ely.by
+    /// explicitly refused the token pair (it is dead); `Err` means the answer
+    /// is unknown (network failure, server error) and the stored credentials
+    /// must NOT be discarded.
+    async fn refresh(&mut self) -> crate::Result<ElyRefresh> {
         let resp = INSECURE_REQWEST_CLIENT
             .post("https://authserver.ely.by/auth/refresh")
             .json(&serde_json::json!({
@@ -118,8 +144,11 @@ impl ElyCredentials {
         let body = resp.text().await
             .map_err(|e| crate::ErrorKind::OtherError(format!("Failed to read Ely.by refresh response: {e}")))?;
 
-        if !status.is_success() {
+        if status.is_server_error() {
             return Err(crate::ErrorKind::OtherError(format!("Ely.by token refresh failed: HTTP {status}")).into());
+        }
+        if !status.is_success() {
+            return Ok(ElyRefresh::Rejected);
         }
 
         #[derive(Deserialize)]
@@ -132,7 +161,7 @@ impl ElyCredentials {
             .map_err(|e| crate::ErrorKind::OtherError(format!("Failed to parse Ely.by refresh response: {e}")))?;
 
         self.access_token = data.access_token;
-        Ok(())
+        Ok(ElyRefresh::Refreshed)
     }
 
     pub async fn get_active(
@@ -157,18 +186,26 @@ impl ElyCredentials {
             active: row.active == 1,
         };
 
-        // Validate and refresh if needed
-        if !creds.validate().await {
-            match creds.refresh().await {
-                Ok(()) => {
+        // Validate and refresh if needed. The account is only removed when
+        // Ely.by explicitly rejects both the token and its refresh — a network
+        // failure (offline play, Ely.by outage) keeps the stored credentials,
+        // so a flaky connection can no longer sign the user out.
+        match creds.validate().await {
+            ElyTokenCheck::Valid | ElyTokenCheck::Unreachable => {}
+            ElyTokenCheck::Invalid => match creds.refresh().await {
+                Ok(ElyRefresh::Refreshed) => {
                     creds.upsert(exec).await.ok();
                 }
-                Err(_) => {
-                    // Token dead, remove
+                Ok(ElyRefresh::Rejected) => {
                     Self::remove(creds.uuid, exec).await.ok();
                     return Ok(None);
                 }
-            }
+                Err(err) => {
+                    tracing::warn!(
+                        "Could not refresh Ely.by token (keeping stored credentials): {err}"
+                    );
+                }
+            },
         }
 
         Ok(Some(creds))

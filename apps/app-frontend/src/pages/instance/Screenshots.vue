@@ -385,13 +385,9 @@ onUnmounted(() => {
 
 		<template v-else>
 			<div class="flex flex-wrap items-center justify-between gap-3">
-				<div
-					v-tooltip="formatMessage(messages.count, { count: screenshots.length })"
-					class="flex items-center gap-2 rounded-full bg-button-bg px-3 py-1.5 text-sm font-semibold text-secondary"
-				>
-					<ImageIcon class="size-4 shrink-0" />
-					<span class="tabular-nums">{{ screenshots.length }}</span>
-				</div>
+				<span class="text-sm font-semibold text-secondary">
+					{{ formatMessage(messages.count, { count: screenshots.length }) }}
+				</span>
 				<div class="flex items-center gap-2">
 					<ButtonStyled>
 						<button

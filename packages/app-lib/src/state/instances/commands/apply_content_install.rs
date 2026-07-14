@@ -498,8 +498,11 @@ pub(crate) async fn add_project_bytes(
     let scope = resolve_content_scope(instance_id, None, state).await?;
     let project_type = match project_type {
         Some(project_type) => project_type,
-        None => infer_project_type(&bytes)?,
+        None => infer_project_type(file_name, &bytes)?,
     };
+    // Sanitize so a file dragged in from a filesystem with laxer rules (or a
+    // network share) can't produce a path Windows refuses to create.
+    let file_name = crate::util::io::sanitize_filename(file_name);
     let relative_path = format!("{}/{}", project_type.get_folder(), file_name);
     let full_path =
         instance_full_path(state, &scope.instance).join(&relative_path);
@@ -538,7 +541,7 @@ pub(crate) async fn add_project_bytes(
         content_rows::UpsertInstanceFile {
             instance_id: &scope.instance.id,
             relative_path: &relative_path,
-            file_name,
+            file_name: &file_name,
             enabled: !relative_path.ends_with(".disabled"),
             sha1: &sha1,
             size: bytes.len() as u64,
@@ -844,13 +847,28 @@ async fn upsert_entry_for_file(
     Ok(())
 }
 
-fn infer_project_type(bytes: &Bytes) -> crate::Result<ProjectType> {
+fn infer_project_type(
+    file_name: &str,
+    bytes: &Bytes,
+) -> crate::Result<ProjectType> {
+    // Extension fallback for archives without any recognisable marker.
+    // Legacy tweaker/coremod jars (the "!mixinbootstrap.jar" kind) often
+    // carry no fabric.mod.json / mods.toml / mcmod.info at all, yet a .jar
+    // dropped into an instance is a mod for every practical purpose —
+    // refusing it entirely is far worse than assuming.
+    let lower_name = file_name.to_ascii_lowercase();
+    let extension_fallback = (lower_name.ends_with(".jar")
+        || lower_name.ends_with(".litemod"))
+    .then_some(ProjectType::Mod);
+
     let cursor = std::io::Cursor::new(&**bytes);
-    let mut archive = zip::ZipArchive::new(cursor).map_err(|_| {
-        crate::ErrorKind::InputError(
-            "Unable to infer project type for input file".to_string(),
-        )
-    })?;
+    let Ok(mut archive) = zip::ZipArchive::new(cursor) else {
+        return extension_fallback.ok_or_else(|| {
+            crate::Error::from(crate::ErrorKind::InputError(
+                "Unable to infer project type for input file".to_string(),
+            ))
+        });
+    };
 
     if archive.by_name("fabric.mod.json").is_ok()
         || archive.by_name("quilt.mod.json").is_ok()
@@ -858,22 +876,46 @@ fn infer_project_type(bytes: &Bytes) -> crate::Result<ProjectType> {
         || archive.by_name("META-INF/mods.toml").is_ok()
         || archive.by_name("mcmod.info").is_ok()
     {
-        Ok(ProjectType::Mod)
-    } else if archive.by_name("pack.mcmeta").is_ok() {
-        if archive.file_names().any(|name| name.starts_with("data/")) {
+        return Ok(ProjectType::Mod);
+    }
+
+    // Root-level pack markers, then packs zipped with a single wrapping
+    // folder ("MyPack/pack.mcmeta") — a very common way users receive them.
+    let names: Vec<&str> = archive.file_names().collect();
+    let has_at_depth = |suffix: &str| {
+        names.iter().any(|name| {
+            *name == suffix
+                || name
+                    .split_once('/')
+                    .is_some_and(|(dir, rest)| !dir.is_empty() && rest == suffix)
+        })
+    };
+    let dir_at_depth = |dir_prefix: &str| {
+        names.iter().any(|name| {
+            name.starts_with(dir_prefix)
+                || name
+                    .split_once('/')
+                    .is_some_and(|(dir, rest)| {
+                        !dir.is_empty() && rest.starts_with(dir_prefix)
+                    })
+        })
+    };
+
+    if has_at_depth("pack.mcmeta") {
+        if dir_at_depth("data/") {
             Ok(ProjectType::DataPack)
         } else {
             Ok(ProjectType::ResourcePack)
         }
-    } else if archive
-        .file_names()
-        .any(|name| name.starts_with("shaders/"))
-    {
+    } else if dir_at_depth("shaders/") {
         Ok(ProjectType::ShaderPack)
+    } else if let Some(project_type) = extension_fallback {
+        Ok(project_type)
     } else {
-        Err(crate::ErrorKind::InputError(
-            "Unable to infer project type for input file".to_string(),
-        )
+        Err(crate::ErrorKind::InputError(format!(
+            "Unable to infer project type for \"{file_name}\" — expected a \
+             mod (.jar), resource pack, data pack, or shader pack archive"
+        ))
         .into())
     }
 }

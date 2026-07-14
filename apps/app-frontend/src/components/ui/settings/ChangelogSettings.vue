@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ExternalIcon } from '@modrinth/assets'
 import { getChangelog } from '@modrinth/blog'
-import { ButtonStyled, defineMessages, useVIntl } from '@modrinth/ui'
+import { ButtonStyled, Chips, defineMessages, useVIntl } from '@modrinth/ui'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import dayjs from 'dayjs'
 import { computed, ref } from 'vue'
@@ -17,6 +17,14 @@ const messages = defineMessages({
 		id: 'app.changelog.modrinth-note',
 		defaultMessage:
 			'Showing recent releases. The full Modrinth App changelog is available on their website.',
+	},
+	openModrinthChangelog: {
+		id: 'app.changelog.open-modrinth',
+		defaultMessage: 'Open Modrinth changelog',
+	},
+	noctrinthNote: {
+		id: 'app.changelog.noctrinth-note',
+		defaultMessage: 'The full Noctrinth changelog is also available online.',
 	},
 	openNoctrinthChangelog: {
 		id: 'app.changelog.open-noctrinth',
@@ -38,6 +46,11 @@ interface ChangelogEntry {
 type ChangelogSource = 'noctrinth' | 'modrinth'
 
 const source = ref<ChangelogSource>('noctrinth')
+const sourceOptions: ChangelogSource[] = ['noctrinth', 'modrinth']
+
+function formatSourceLabel(option: ChangelogSource): string {
+	return formatMessage(option === 'noctrinth' ? messages.sourceNoctrinth : messages.sourceModrinth)
+}
 
 /** Parses a changelog markdown body into titled sections. */
 function parseBody(body: string): ChangelogSection[] {
@@ -98,32 +111,14 @@ const entries = computed<ChangelogEntry[]>(() =>
 </script>
 
 <template>
-	<div class="flex flex-col gap-5 min-w-[600px]">
-		<!-- Source toggle -->
-		<div class="flex w-fit gap-1 rounded-xl bg-button-bg p-1">
-			<button
-				class="cursor-pointer rounded-lg border-0 px-3 py-1.5 text-sm font-semibold transition-colors"
-				:class="
-					source === 'noctrinth'
-						? 'bg-brand text-brand-inverted'
-						: 'bg-transparent text-secondary hover:text-contrast'
-				"
-				@click="source = 'noctrinth'"
-			>
-				{{ formatMessage(messages.sourceNoctrinth) }}
-			</button>
-			<button
-				class="cursor-pointer rounded-lg border-0 px-3 py-1.5 text-sm font-semibold transition-colors"
-				:class="
-					source === 'modrinth'
-						? 'bg-brand text-brand-inverted'
-						: 'bg-transparent text-secondary hover:text-contrast'
-				"
-				@click="source = 'modrinth'"
-			>
-				{{ formatMessage(messages.sourceModrinth) }}
-			</button>
-		</div>
+	<div class="flex flex-col gap-5">
+		<Chips
+			v-model="source"
+			:items="sourceOptions"
+			:format-label="formatSourceLabel"
+			:capitalize="false"
+			never-empty
+		/>
 
 		<section
 			v-for="(entry, entryIdx) in entries"
@@ -154,10 +149,21 @@ const entries = computed<ChangelogEntry[]>(() =>
 			</div>
 		</section>
 
-		<!-- Link to the authoritative Modrinth changelog -->
+		<!-- Link to the full changelog for the selected source -->
 		<div v-if="source === 'modrinth'" class="flex flex-col gap-2">
 			<p class="m-0 text-sm text-secondary">
 				{{ formatMessage(messages.modrinthNote) }}
+			</p>
+			<ButtonStyled>
+				<button @click="openUrl('https://modrinth.com/news/changelog?filter=app')">
+					<ExternalIcon />
+					{{ formatMessage(messages.openModrinthChangelog) }}
+				</button>
+			</ButtonStyled>
+		</div>
+		<div v-else class="flex flex-col gap-2">
+			<p class="m-0 text-sm text-secondary">
+				{{ formatMessage(messages.noctrinthNote) }}
 			</p>
 			<ButtonStyled>
 				<button @click="openUrl('https://everelsu.github.io/Noctrinth/')">

@@ -284,6 +284,12 @@
   "app.changelog.modrinth-note": {
     "message": "Showing recent releases. The full Modrinth App changelog is available on their website."
   },
+  "app.changelog.noctrinth-note": {
+    "message": "The full Noctrinth changelog is also available online."
+  },
+  "app.changelog.open-modrinth": {
+    "message": "Open Modrinth changelog"
+  },
   "app.changelog.open-noctrinth": {
     "message": "Open Noctrinth changelog"
   },
@@ -1171,9 +1177,6 @@
   },
   "ely-login.signing-in": {
     "message": "Signing in..."
-  },
-  "ely-login.subtitle": {
-    "message": "Use your Ely.by credentials to add the account to Noctrinth."
   },
   "ely-login.totp-hint": {
     "message": "This account is protected with two-factor authentication."

@@ -200,6 +200,12 @@
   "app.changelog.modrinth-note": {
     "message": "Показаны недавние выпуски. Полный список изменений приложения Modrinth доступен на их сайте."
   },
+  "app.changelog.noctrinth-note": {
+    "message": "Полный список изменений Noctrinth также доступен онлайн."
+  },
+  "app.changelog.open-modrinth": {
+    "message": "Открыть список изменений Modrinth"
+  },
   "app.changelog.open-noctrinth": {
     "message": "Открыть список изменений Noctrinth"
   },
@@ -432,7 +438,7 @@
     "message": "Установить"
   },
   "app.modal.install-to-play.mod-count": {
-    "message": "{count, plural, one {# мод} few {# мода} other {# модов}}"
+    "message": "{count, plural, one {# мод} other {# модов}}"
   },
   "app.modal.install-to-play.required-modpack": {
     "message": "Необходимая сборка"
@@ -962,9 +968,6 @@
   "ely-login.signing-in": {
     "message": "Вход…"
   },
-  "ely-login.subtitle": {
-    "message": "Войдите с данными Ely.by, чтобы добавить аккаунт в Noctrinth."
-  },
   "ely-login.username-label": {
     "message": "Имя пользователя или email"
   },
@@ -993,7 +996,7 @@
     "message": "Добавить в друзья"
   },
   "friends.action.view-friend-requests": {
-    "message": "{count} {count, plural, one {запрос} few {запроса} other {запросов}} дружбы"
+    "message": "{count} {count, plural, one {запрос} other {запросов}} в друзья"
   },
   "friends.add-friend.submit": {
     "message": "Отправить запрос дружбы"
@@ -1540,12 +1543,6 @@
   },
   "app.instance.screenshots.count": {
     "message": "{count, plural, one {# скриншот} other {# скриншотов}}"
-  },
-  "app.modal.install-to-play.mod-count": {
-    "message": "{count, plural, one {# мод} other {# модов}}"
-  },
-  "friends.action.view-friend-requests": {
-    "message": "{count} {count, plural, one {запрос} other {запросов}} в друзья"
   },
   "app.curseforge-install.incompatible.text": {
     "message": "{modName} объявляет {count, plural, one {# несовместимый мод} other {# несовместимых модов}} — проверьте {instanceName} на наличие конфликтов."

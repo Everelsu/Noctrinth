@@ -5,18 +5,20 @@ name: Noctrinth Release
 # generated `latest.json` from the latest published release.
 #
 # Release flow:
-#   1. Bump the version in apps/app-frontend/package.json
+#   1. Bump the version in apps/app-frontend/package.json (the single source of
+#      truth — the crate versions and release name are derived from it).
 #   2. Commit, then push a matching tag, e.g.
-#        git tag noctrinth-v0.15.11 && git push origin noctrinth-v0.15.11
+#        git tag v0.15.11 && git push origin v0.15.11
+#      Either `v0.15.11` or `noctrinth-v0.15.11` triggers a release; the tag
+#      name is only a label, the built version always comes from package.json.
 #   3. This workflow builds every OS, creates a DRAFT release, uploads the
 #      bundles + latest.json. Review it, then publish the draft — updates go
 #      live for existing installs once the release is published.
 #
-# The tag prefix is `noctrinth-v` on purpose: `git fetch upstream` pulls in
-# Modrinth's own `v*` tags on every sync, and triggering on a bare `v*` would
-# fire this heavy multi-OS build for an upstream tag that has nothing to do
-# with a Noctrinth release. The dedicated prefix guarantees this workflow only
-# runs for tags we create.
+# Note on tags: `git fetch upstream` pulls in Modrinth's own `v*` tags. Those
+# stay local unless you run `git push --tags`; push only the specific release
+# tag (`git push origin v0.15.11`) so an upstream tag never triggers a build.
+# The `noctrinth-v*` pattern is offered as a collision-free alternative.
 #
 # Required repository secrets:
 #   TAURI_SIGNING_PRIVATE_KEY           contents of ~/.tauri/noctrinth-updater.key
@@ -25,11 +27,12 @@ name: Noctrinth Release
 on:
   push:
     tags:
+      - 'v*'
       - 'noctrinth-v*'
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag (e.g. noctrinth-v0.15.11)'
+        description: 'Existing release tag to build (e.g. v0.15.11)'
         required: true
 
 concurrency:
@@ -143,15 +146,15 @@ jobs:
           printf 'VITE_CURSEFORGE_API_KEY=%s\n' "$CURSEFORGE_API_KEY" \
             > apps/app-frontend/.env.local
 
-      - name: Sync crate versions with the release tag
+      - name: Sync crate versions from package.json
         shell: bash
-        env:
-          TAG: ${{ github.event.inputs.tag || github.ref_name }}
         run: |
           # The app version lives in app-frontend/package.json; mirror it into
           # the Rust crates so the user-agent and crate metadata stay in sync.
-          # Only package.json + the git tag need to be bumped by hand.
-          VERSION="${TAG#noctrinth-v}"
+          # Reading it here (rather than parsing the git tag) means a tag named
+          # `v0.15.11` — or anything else — can never write an invalid version
+          # like "v0.15.11" into Cargo.toml, which Cargo rejects as non-semver.
+          VERSION=$(node -p "require('./apps/app-frontend/package.json').version")
           echo "Setting crate versions to $VERSION"
           for f in apps/app/Cargo.toml packages/app-lib/Cargo.toml; do
             # `sed -i` is not portable (GNU vs BSD/macOS), so write to a temp
@@ -199,7 +202,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          VERSION="${TAG#noctrinth-v}"
+          # Match the changelog entry by the package.json version, the same
+          # source the crate versions came from — independent of the tag name.
+          VERSION=$(node -p "require('./apps/app-frontend/package.json').version")
 
           # Pull the matching entry out of noctrinth-changelog.ts. If there
           # isn't one we leave the auto-generated body alone rather than fail

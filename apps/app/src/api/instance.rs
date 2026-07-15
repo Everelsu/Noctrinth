@@ -45,6 +45,7 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
             instance_add_project_from_curseforge,
             instance_get_curseforge_content,
             instance_curseforge_manual_download,
+            instance_is_file_on_modrinth,
             instance_toggle_disable_project,
             instance_remove_project,
             instance_update_managed_modrinth_version,
@@ -772,6 +773,11 @@ pub async fn instance_curseforge_manual_download<R: tauri::Runtime>(
     )
     .await?;
     Ok(path)
+}
+
+#[tauri::command]
+pub async fn instance_is_file_on_modrinth(project_path: &Path) -> Result<bool> {
+    Ok(theseus::instance::is_file_on_modrinth(project_path).await?)
 }
 
 #[tauri::command]

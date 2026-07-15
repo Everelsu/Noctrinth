@@ -131,7 +131,8 @@ pub struct CreatePackInstance {
     pub icon: Option<PathBuf>,          // the icon for the instance
     pub icon_url: Option<String>, // the URL icon for an instance during import
     pub link: Option<InstanceLink>,
-    pub unknown_file: bool, // true when pack file isn't found on Modrinth via hash lookup
+    pub unknown_file: bool, // true when the mrpack archive isn't found on Modrinth via hash lookup
+    pub external_files_in_modpack: Vec<String>,
     pub skip_install_profile: Option<bool>,
     pub no_watch: Option<bool>,
 }
@@ -148,6 +149,7 @@ impl Default for CreatePackInstance {
             icon_url: None,
             link: None,
             unknown_file: false,
+            external_files_in_modpack: Vec::new(),
             skip_install_profile: Some(true),
             no_watch: Some(false),
         }
@@ -167,6 +169,7 @@ pub struct CreatePack {
     pub description: CreatePackDescription,
 }
 
+const MAX_LOCAL_FILE_HASH_LOOKUP_SIZE: u64 = 1024 * 1024 * 1024;
 
 #[derive(Clone, Debug)]
 pub struct CreatePackDescription {
@@ -306,9 +309,16 @@ pub async fn get_instance_from_pack(
                 !is_known_file
             };
 
+            let external_files_in_modpack =
+                super::install_mrpack::get_external_files_from_mrpack(
+                    &CreatePackFile::Path(path),
+                )
+                .await?;
+
             Ok(CreatePackInstance {
                 name: file_name,
                 unknown_file,
+                external_files_in_modpack,
                 ..Default::default()
             })
         }

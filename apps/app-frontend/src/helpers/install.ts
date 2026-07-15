@@ -54,6 +54,7 @@ export interface InstallModpackPreview {
 	iconUrl?: string | null
 	link?: InstanceLink | null
 	unknownFile: boolean
+	externalFilesInModpack: string[]
 }
 
 export interface InstallCreateInstanceRequest {

@@ -95,9 +95,20 @@ jobs:
           workspaces: '. -> target'
 
       # app-lib reads Modrinth endpoint URLs at compile time via env!(). The
-      # staging template supplies safe placeholder values — no secrets needed.
+      # staging template supplies safe placeholder values for those — but it
+      # does NOT include MODRINTH_OAUTH_CLIENT_ID/SECRET (those are injected
+      # from repo secrets only in the release workflow). env!() requires the
+      # variable to be *declared*, even as an empty/dummy value, or the crate
+      # fails to compile — so append harmless placeholders here. CI only
+      # compiles the crate; it never performs a real OAuth flow, so these
+      # never need to be real credentials.
       - name: Prepare app-lib environment
-        run: cp packages/app-lib/.env.staging packages/app-lib/.env
+        run: |
+          cp packages/app-lib/.env.staging packages/app-lib/.env
+          cat >> packages/app-lib/.env <<'EOF'
+          MODRINTH_OAUTH_CLIENT_ID=ci-placeholder
+          MODRINTH_OAUTH_CLIENT_SECRET=ci-placeholder
+          EOF
 
       # Tauri's build.rs requires the frontendDist directory to exist. A stub
       # index.html satisfies it so the Rust can be type-checked without first

@@ -279,10 +279,16 @@ pub async fn get_instance_from_pack(
 
             // Hash-against-Modrinth lookup only for files that aren't an
             // obvious modpack format — it's the legacy "is this a known
-            // file?" heuristic and incurs a network round-trip.
+            // file?" heuristic and incurs a network round-trip. Very large
+            // files are never looked up (matching upstream): treating them as
+            // unknown avoids a pointless hash of a multi-gigabyte archive.
             let is_recognised_pack = has_mrpack_manifest || has_cf_manifest;
             let unknown_file = if is_recognised_pack {
                 false
+            } else if file_bytes_shared.len() as u64
+                > MAX_LOCAL_FILE_HASH_LOOKUP_SIZE
+            {
+                true
             } else {
                 let hash = crate::util::fetch::sha1_async(
                     file_bytes_shared.clone(),

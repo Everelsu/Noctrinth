@@ -1,0 +1,114 @@
+name: Noctrinth CI
+
+# Fork-tailored continuous integration.
+#
+# WHEN IT RUNS
+#   • Pull requests targeting `main`
+#   • Pushes to `main` (including the merge commits from upstream syncs)
+#   • Manually, via the "Run workflow" button (workflow_dispatch)
+#
+# WHAT IT CHECKS — only what the Noctrinth desktop app actually ships:
+#   • frontend : lint + typecheck of the app frontend and the shared UI/libs
+#                it depends on (`pnpm prepr`)
+#   • rust     : the app-lib crate (`theseus`) and the Tauri app crate
+#                (`theseus_gui`) compile, plus app-lib unit tests
+#
+# WHAT IT DELIBERATELY DOES NOT DO
+#   The fork does not ship the Modrinth backend (labrinth), the website, or
+#   daedalus, so this workflow never spins up Postgres/Clickhouse, never needs
+#   Blacksmith runners, and never touches organisation secrets. That is why
+#   the heavy upstream `CI` workflow (turbo-ci.yml) was removed — it was built
+#   for the Modrinth monorepo's infrastructure, not a desktop-app fork, and
+#   would queue forever on runners this repo doesn't have.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  # One run per ref; a newer push to a branch cancels the older run, but never
+  # cancels a run on `main` (so a merge to main always completes).
+  group: noctrinth-ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    name: Frontend lint & typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      # prepr = the project's own lint + typecheck pass (see root CLAUDE.md).
+      # Libs first because the app frontend type-checks against them.
+      - name: Check shared frontend libraries
+        run: pnpm prepr:frontend:lib
+
+      - name: Check app frontend
+        run: pnpm prepr:frontend:app
+
+  rust:
+    name: App Rust check
+    runs-on: ubuntu-latest
+    env:
+      # Make `cargo test` treat crates without tests as a pass rather than an error.
+      NEXTEST_NO_TESTS: pass
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Tauri build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libgtk-3-dev \
+            build-essential \
+            libssl-dev
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: '. -> target'
+
+      # app-lib reads Modrinth endpoint URLs at compile time via env!(). The
+      # staging template supplies safe placeholder values — no secrets needed.
+      - name: Prepare app-lib environment
+        run: cp packages/app-lib/.env.staging packages/app-lib/.env
+
+      # Tauri's build.rs requires the frontendDist directory to exist. A stub
+      # index.html satisfies it so the Rust can be type-checked without first
+      # doing a full frontend build (the frontend job already covers that).
+      - name: Stub frontend dist for Tauri build.rs
+        run: |
+          mkdir -p apps/app-frontend/dist
+          printf '<!doctype html><title>ci</title>' > apps/app-frontend/dist/index.html
+
+      - name: Check app-lib and app crates
+        run: cargo check -p theseus -p theseus_gui --all-targets
+
+      - name: Run app-lib unit tests
+        run: cargo test -p theseus

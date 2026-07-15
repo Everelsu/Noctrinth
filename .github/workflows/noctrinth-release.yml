@@ -6,10 +6,17 @@ name: Noctrinth Release
 #
 # Release flow:
 #   1. Bump the version in apps/app-frontend/package.json
-#   2. Commit, then push a matching tag, e.g.  git tag v0.2.0 && git push origin v0.2.0
+#   2. Commit, then push a matching tag, e.g.
+#        git tag noctrinth-v0.15.11 && git push origin noctrinth-v0.15.11
 #   3. This workflow builds every OS, creates a DRAFT release, uploads the
 #      bundles + latest.json. Review it, then publish the draft — updates go
 #      live for existing installs once the release is published.
+#
+# The tag prefix is `noctrinth-v` on purpose: `git fetch upstream` pulls in
+# Modrinth's own `v*` tags on every sync, and triggering on a bare `v*` would
+# fire this heavy multi-OS build for an upstream tag that has nothing to do
+# with a Noctrinth release. The dedicated prefix guarantees this workflow only
+# runs for tags we create.
 #
 # Required repository secrets:
 #   TAURI_SIGNING_PRIVATE_KEY           contents of ~/.tauri/noctrinth-updater.key
@@ -18,13 +25,11 @@ name: Noctrinth Release
 on:
   push:
     tags:
-      # Noctrinth-specific prefix so release tags never collide with the
-      # upstream Modrinth `v*` tags that arrive with every upstream sync.
-      - 'v*'
+      - 'noctrinth-v*'
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag (e.g. v0.13.18)'
+        description: 'Release tag (e.g. noctrinth-v0.15.11)'
         required: true
 
 concurrency:
@@ -146,7 +151,7 @@ jobs:
           # The app version lives in app-frontend/package.json; mirror it into
           # the Rust crates so the user-agent and crate metadata stay in sync.
           # Only package.json + the git tag need to be bumped by hand.
-          VERSION="${TAG#v}"
+          VERSION="${TAG#noctrinth-v}"
           echo "Setting crate versions to $VERSION"
           for f in apps/app/Cargo.toml packages/app-lib/Cargo.toml; do
             # `sed -i` is not portable (GNU vs BSD/macOS), so write to a temp
@@ -194,7 +199,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          VERSION="${TAG#v}"
+          VERSION="${TAG#noctrinth-v}"
 
           # Pull the matching entry out of noctrinth-changelog.ts. If there
           # isn't one we leave the auto-generated body alone rather than fail

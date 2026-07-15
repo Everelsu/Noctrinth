@@ -21,6 +21,18 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.15.11',
+		date: '2026-07-15T00:00:00+00:00',
+		body: `### Changed
+- Synced with upstream Modrinth (0.15.10 → 0.15.11): malware warning modal changes, shift-click to toggle file selection in the Files tab, shader config files renamed on version change, dependents search in Discover, download modal fixes, and new moderation keybinds.
+- The Ely.by sign-in dialog was redesigned to match the app's standard modals — regular titled dialog instead of the custom gradient header with a placeholder avatar.
+- The changelog settings tab now uses the app's standard chip selector for switching between Noctrinth and Modrinth changelogs, and the "open full changelog" link now points at the right site for each source (it previously opened the Noctrinth site while describing the Modrinth one).
+- The screenshot counter on the Screenshots tab is now plain text instead of a pill badge, matching the rest of the app.
+
+### Fixed
+- Fixed local files failing to add to an instance with "Unable to infer project type": plain .jar files without loader metadata (common for legacy tweaker/coremod jars with names like "!mixinbootstrap.jar") are now accepted as mods, packs zipped inside a wrapping folder are recognised, and filenames with characters Windows forbids are sanitised on write.`,
+	},
+	{
 		version: '0.15.10',
 		date: '2026-07-14T00:00:00+00:00',
 		body: `### Added
@@ -34,13 +46,9 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 - Upstream fixes brought in by the sync: app freezes when opening instance pages, instance edits not appearing to be saved immediately, content desync when enabling/disabling/removing mods, search cache shortened to 10 minutes, environment filter fixes in Discover, version/project links keeping track of the instance you came from, and a Files tab memory leak.
 - "Update all" for CurseForge content now checks for updates several mods at a time and skips disabled files (updating one would silently re-enable it).
 - CurseForge install notifications on the project page are now translated (previously always English).
-- The Ely.by sign-in dialog was redesigned to match the app's standard modals — regular titled dialog instead of the custom gradient header with a placeholder avatar.
-- The changelog settings tab now uses the app's standard chip selector for switching between Noctrinth and Modrinth changelogs, and the "open full changelog" link now points at the right site for each source (it previously opened the Noctrinth site while describing the Modrinth one).
-- The screenshot counter on the Screenshots tab is now plain text instead of a pill badge, matching the rest of the app.
 - Noctrinth's CurseForge search filters, install pipeline and proxy support were re-integrated on top of the reworked upstream search (new environment filter), install error contexts, and the shared version page.
 
 ### Fixed
-- Fixed local files failing to add to an instance with "Unable to infer project type": plain .jar files without loader metadata (common for legacy tweaker/coremod jars with names like "!mixinbootstrap.jar") are now accepted as mods, packs zipped inside a wrapping folder are recognised, and filenames with characters Windows forbids are sanitised on write.
 - Importing a CurseForge modpack from a local .zip works again — the creation modal previously rejected it with "no CurseForge API key is available" even when the key was configured, and the new-instance preview now shows the pack's real name, Minecraft version and loader from its manifest.
 - A flaky connection or an Ely.by outage no longer signs you out of your Ely.by account: stored credentials are only removed when Ely.by explicitly rejects both the token and its refresh.
 - Updating a CurseForge mod no longer deletes the old file before the new one has downloaded — a failed download now leaves the old, working file in place.

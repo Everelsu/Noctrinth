@@ -178,8 +178,7 @@ const unsubscribeSidebarToggle = themeStore.$subscribe(() => {
 	sidebarToggled.value = !themeStore.toggleSidebar
 })
 const forceSidebar = computed(
-	() =>
-		route.path.startsWith('/browse') || route.path.startsWith('/project'),
+	() => route.path.startsWith('/browse') || route.path.startsWith('/project'),
 )
 const sidebarVisible = computed(() => sidebarToggled.value || forceSidebar.value)
 const hostingRouteActive = computed(() => route.path.startsWith('/hosting'))
@@ -262,7 +261,7 @@ const hasPlus = computed(
 // Noctrinth does not serve Modrinth's ads. Upstream's gating is kept intact
 // behind this flag so the sync stays a one-line diff — flip it to re-enable
 // the ad window, the consent popup and the Modrinth+ upsell.
-const ADS_ENABLED: boolean = false
+const ADS_ENABLED = false
 const showAd = computed(
 	() => ADS_ENABLED && sidebarVisible.value && !hasPlus.value && credentials.value !== undefined,
 )
@@ -1097,7 +1096,7 @@ async function handleCommand(e) {
 	if (e.event === 'RunMRPack') {
 		// RunMRPack should directly install a local mrpack given a path
 		if (e.path.endsWith('.mrpack')) {
-			const location: CreatePackLocation = { type: 'fromFile', path: e.path }
+			const location = { type: 'fromFile', path: e.path }
 			const preview = await install_get_modpack_preview(location).catch(handleError)
 			if (preview?.unknownFile || preview?.externalFilesInModpack.length > 0) {
 				const splitPath = e.path.split(/[\\/]/)

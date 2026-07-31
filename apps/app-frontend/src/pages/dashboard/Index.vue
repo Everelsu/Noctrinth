@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import { UserIcon } from '@modrinth/assets'
 import { defineMessages, NavTabs, useVIntl } from '@modrinth/ui'
 import { useRoute } from 'vue-router'
 
-import { useBreadcrumbs } from '@/store/breadcrumbs.js'
+import { useRootBreadcrumb } from '@/providers/breadcrumbs'
 
 const route = useRoute()
-const breadcrumbs = useBreadcrumbs()
 const { formatMessage } = useVIntl()
 
 const messages = defineMessages({
@@ -13,7 +13,13 @@ const messages = defineMessages({
 	tabNotifications: { id: 'dashboard.tab.notifications', defaultMessage: 'Notifications' },
 })
 
-breadcrumbs.setRootContext({ name: 'Dashboard', link: route.path })
+useRootBreadcrumb({
+	slot: 'root',
+	id: 'dashboard',
+	label: 'Dashboard',
+	to: '/dashboard',
+	visual: { type: 'icon', component: UserIcon },
+})
 </script>
 
 <template>

@@ -65,25 +65,16 @@ export default new createRouter({
 			name: 'Dashboard',
 			component: Dashboard.Index,
 			redirect: '/dashboard/collections',
-			meta: {
-				breadcrumb: [{ name: 'Dashboard' }],
-			},
 			children: [
 				{
 					path: 'collections',
 					name: 'Collections',
 					component: Dashboard.Collections,
-					meta: {
-						breadcrumb: [{ name: 'Collections' }],
-					},
 				},
 				{
 					path: 'notifications',
 					name: 'Notifications',
 					component: Dashboard.Notifications,
-					meta: {
-						breadcrumb: [{ name: 'Notifications' }],
-					},
 				},
 			],
 		},
@@ -91,12 +82,6 @@ export default new createRouter({
 			path: '/collection/:id',
 			name: 'Collection',
 			component: Dashboard.Collection,
-			meta: {
-				breadcrumb: [
-					{ name: 'Collections', link: '/dashboard/collections' },
-					{ name: '?Collection' },
-				],
-			},
 		},
 		{
 			path: '/skins',
@@ -221,7 +206,6 @@ export default new createRouter({
 					component: Instance.Screenshots,
 					meta: {
 						useRootContext: true,
-						breadcrumb: [{ name: '?Instance', link: '/instance/{id}/' }, { name: 'Screenshots' }],
 					},
 				},
 			],

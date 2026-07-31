@@ -5,6 +5,7 @@ import {
 	ExternalIcon,
 	GlobeIcon,
 	HeartIcon,
+	LibraryIcon,
 	LinkIcon,
 	LockIcon,
 	SearchIcon,
@@ -14,7 +15,6 @@ import {
 import {
 	Avatar,
 	ButtonStyled,
-	ContentPageHeader,
 	defineMessages,
 	DropdownSelect,
 	type FilterPillOption,
@@ -22,6 +22,8 @@ import {
 	injectNotificationManager,
 	LoadingIndicator,
 	NavTabs,
+	PageHeader,
+	PageHeaderActions,
 	ProjectCard,
 	StyledInput,
 	useCompactNumber,
@@ -44,7 +46,7 @@ import {
 	unfollowProject,
 } from '@/helpers/modrinth-api'
 import { get as getCreds } from '@/helpers/mr_auth.ts'
-import { useBreadcrumbs } from '@/store/breadcrumbs'
+import { useRootBreadcrumb } from '@/providers/breadcrumbs'
 
 dayjs.extend(relativeTime)
 
@@ -53,7 +55,13 @@ const { formatCompactNumber } = useCompactNumber()
 const { formatMessage } = useVIntl()
 const route = useRoute()
 const router = useRouter()
-const breadcrumbs = useBreadcrumbs()
+useRootBreadcrumb({
+	slot: 'root',
+	id: 'collections',
+	label: 'Collections',
+	to: '/dashboard/collections',
+	visual: { type: 'icon', component: LibraryIcon },
+})
 
 const messages = defineMessages({
 	tabCollections: { id: 'collection.tab.collections', defaultMessage: 'Collections' },
@@ -340,9 +348,6 @@ async function load() {
 		} else {
 			await loadCollection(id)
 		}
-		if (collection.value) {
-			breadcrumbs.setName('Collection', collection.value.name)
-		}
 	} catch (e) {
 		handleError(e)
 	} finally {
@@ -431,8 +436,8 @@ watch(
 		/>
 
 		<template v-if="collection">
-			<ContentPageHeader>
-				<template #icon>
+			<PageHeader :title="collection.name">
+				<template #leading>
 					<Avatar
 						:src="collection.icon_url ?? undefined"
 						:alt="collection.name"
@@ -440,13 +445,10 @@ watch(
 						:tint-by="collection.id"
 					/>
 				</template>
-				<template #title>
-					{{ collection.name }}
-				</template>
 				<template v-if="collection.description" #summary>
 					{{ collection.description }}
 				</template>
-				<template #stats>
+				<template #metadata>
 					<div class="flex items-center gap-2 font-medium">
 						<BoxIcon class="size-4" aria-hidden="true" />
 						{{ formatCompactNumber(projects.length) }}
@@ -488,26 +490,28 @@ watch(
 					</template>
 				</template>
 				<template #actions>
-					<ButtonStyled v-if="isOwner">
-						<button @click="openEdit">
-							<EditIcon />
-							{{ formatMessage(messages.edit) }}
-						</button>
-					</ButtonStyled>
-					<ButtonStyled v-if="isOwner" color="red">
-						<button @click="openDelete">
-							<TrashIcon />
-							{{ formatMessage(messages.delete) }}
-						</button>
-					</ButtonStyled>
-					<ButtonStyled v-if="!isFollowing">
-						<button @click="openOnWeb">
-							<ExternalIcon />
-							{{ formatMessage(messages.openOnWeb) }}
-						</button>
-					</ButtonStyled>
+					<PageHeaderActions>
+						<ButtonStyled v-if="isOwner">
+							<button @click="openEdit">
+								<EditIcon />
+								{{ formatMessage(messages.edit) }}
+							</button>
+						</ButtonStyled>
+						<ButtonStyled v-if="isOwner" color="red">
+							<button @click="openDelete">
+								<TrashIcon />
+								{{ formatMessage(messages.delete) }}
+							</button>
+						</ButtonStyled>
+						<ButtonStyled v-if="!isFollowing">
+							<button @click="openOnWeb">
+								<ExternalIcon />
+								{{ formatMessage(messages.openOnWeb) }}
+							</button>
+						</ButtonStyled>
+					</PageHeaderActions>
 				</template>
-			</ContentPageHeader>
+			</PageHeader>
 
 			<StyledInput
 				v-model="searchQuery"

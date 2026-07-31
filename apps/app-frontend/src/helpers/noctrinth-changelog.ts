@@ -21,7 +21,7 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
-		version: '0.17.4',
+		version: '0.17.3',
 		date: '2026-07-31T00:00:00+00:00',
 		body: `### Added
 - Synced with upstream Modrinth (0.15.11 → 0.17.x). Highlights from upstream: user profile pages inside the app, shared instances with invites and updates, an instance Share tab, a reworked settings layout grouped into Display / Account / Instances, a new breadcrumbs system, a rebuilt project page header, instance quarantine handling, a toggle to hide already-installed modpacks, and a fix for search jumping back to page 1.

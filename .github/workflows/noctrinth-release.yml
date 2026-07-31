@@ -8,8 +8,8 @@ name: Noctrinth Release
 #   1. Bump the version in apps/app-frontend/package.json (the single source of
 #      truth — the crate versions and release name are derived from it).
 #   2. Commit, then push a matching tag, e.g.
-#        git tag v0.17.4 && git push origin v0.17.4
-#      Either `v0.17.4` or `noctrinth-v0.17.4` triggers a release; the tag
+#        git tag v0.17.3 && git push origin v0.17.3
+#      Either `v0.17.3` or `noctrinth-v0.17.3` triggers a release; the tag
 #      name is only a label, the built version always comes from package.json.
 #   3. This workflow builds every OS, creates a DRAFT release, uploads the
 #      bundles + latest.json. Review it, then publish the draft — updates go
@@ -17,7 +17,7 @@ name: Noctrinth Release
 #
 # Note on tags: `git fetch upstream` pulls in Modrinth's own `v*` tags. Those
 # stay local unless you run `git push --tags`; push only the specific release
-# tag (`git push origin v0.17.4`) so an upstream tag never triggers a build.
+# tag (`git push origin v0.17.3`) so an upstream tag never triggers a build.
 # The `noctrinth-v*` pattern is offered as a collision-free alternative.
 #
 # Required repository secrets:
@@ -32,7 +32,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Existing release tag to build (e.g. v0.17.4)'
+        description: 'Existing release tag to build (e.g. v0.17.3)'
         required: true
 
 concurrency:
@@ -135,8 +135,8 @@ jobs:
           # The app version lives in app-frontend/package.json; mirror it into
           # the Rust crates so the user-agent and crate metadata stay in sync.
           # Reading it here (rather than parsing the git tag) means a tag named
-          # `v0.17.4` — or anything else — can never write an invalid version
-          # like "v0.17.4" into Cargo.toml, which Cargo rejects as non-semver.
+          # `v0.17.3` — or anything else — can never write an invalid version
+          # like "v0.17.3" into Cargo.toml, which Cargo rejects as non-semver.
           VERSION=$(node -p "require('./apps/app-frontend/package.json').version")
           echo "Setting crate versions to $VERSION"
           for f in apps/app/Cargo.toml packages/app-lib/Cargo.toml; do

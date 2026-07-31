@@ -502,6 +502,14 @@ pub(crate) async fn add_project_bytes(
     version_id: Option<&str>,
     state: &State,
 ) -> crate::Result<String> {
+    if !path_util::is_safe_file_name(file_name) {
+        return Err(crate::ErrorKind::InputError(format!(
+            "Project file {file_name} has an invalid file name"
+        ))
+        .into());
+    }
+
+    let _content_lock = state.lock_instance_content(instance_id).await;
     let scope = resolve_content_scope(instance_id, None, state).await?;
     let project_type = match project_type {
         Some(project_type) => project_type,
@@ -532,18 +540,23 @@ pub(crate) async fn add_project_bytes(
             }
         })
     };
+
+    fetch::write(&full_path, &bytes, &state.io_semaphore).await?;
+    let modified_at_ns =
+        crate::state::file_modified_at_ns(&io::metadata(&full_path).await?)?;
     cache_file_hash(
         bytes.clone(),
         &scope.instance.id,
         &relative_path,
+        modified_at_ns,
         Some(&sha1),
         Some(project_type),
         known_modrinth_file,
         &state.pool,
     )
     .await?;
-    fetch::write(&full_path, &bytes, &state.io_semaphore).await?;
 
+    let mut tx = state.pool.begin().await?;
     let file = content_rows::upsert_instance_file_from_parts(
         content_rows::UpsertInstanceFile {
             instance_id: &scope.instance.id,
@@ -554,7 +567,7 @@ pub(crate) async fn add_project_bytes(
             size: bytes.len() as u64,
             missing: false,
         },
-        &state.pool,
+        &mut tx,
     )
     .await?;
     upsert_entry_for_file(
@@ -564,9 +577,11 @@ pub(crate) async fn add_project_bytes(
         project_id,
         version_id,
         source_kind,
-        &state.pool,
+        &mut tx,
     )
     .await?;
+    tx.commit().await?;
+    super::mark_shared_instance_stale(instance_id, &state.pool).await?;
 
     Ok(relative_path)
 }
@@ -582,12 +597,14 @@ pub(crate) async fn record_project_file(
     version_id: Option<&str>,
     state: &State,
 ) -> crate::Result<()> {
+    let _content_lock = state.lock_instance_content(instance_id).await;
     let scope = resolve_content_scope(instance_id, None, state).await?;
     let file_name = Path::new(relative_path)
         .file_name()
         .unwrap_or_default()
         .to_string_lossy()
         .to_string();
+    let mut tx = state.pool.begin().await?;
     let file = content_rows::upsert_instance_file_from_parts(
         content_rows::UpsertInstanceFile {
             instance_id: &scope.instance.id,
@@ -598,7 +615,7 @@ pub(crate) async fn record_project_file(
             size,
             missing: false,
         },
-        &state.pool,
+        &mut tx,
     )
     .await?;
     upsert_entry_for_file(
@@ -608,9 +625,13 @@ pub(crate) async fn record_project_file(
         project_id,
         version_id,
         source_kind,
-        &state.pool,
+        &mut tx,
     )
-    .await
+    .await?;
+    tx.commit().await?;
+    super::mark_shared_instance_stale(instance_id, &state.pool).await?;
+
+    Ok(())
 }
 
 pub(crate) async fn toggle_disable_project(
@@ -619,6 +640,7 @@ pub(crate) async fn toggle_disable_project(
     desired_enabled: Option<bool>,
     state: &State,
 ) -> crate::Result<String> {
+    let _content_lock = state.lock_instance_content(instance_id).await;
     let scope = resolve_content_scope(instance_id, None, state).await?;
     let base = instance_full_path(state, &scope.instance);
     let trimmed = project_path.trim_end_matches(".disabled");
@@ -652,13 +674,14 @@ pub(crate) async fn toggle_disable_project(
         .unwrap_or_default()
         .to_string_lossy()
         .to_string();
+    let mut tx = state.pool.begin().await?;
     let file = match content_rows::rename_instance_file(
         &scope.instance.id,
         &current_path,
         &new_path,
         &file_name,
         enabled,
-        &state.pool,
+        &mut tx,
     )
     .await?
     {
@@ -670,21 +693,24 @@ pub(crate) async fn toggle_disable_project(
                 &new_path,
                 &file_name,
                 enabled,
-                &state.pool,
+                &mut tx,
             )
             .await?
             {
                 Some(file) => file,
-                None => index_existing_file(&scope, &new_path, state).await?,
+                None => {
+                    index_existing_file(&scope, &new_path, state, &mut tx)
+                        .await?
+                }
             }
         }
-        None => index_existing_file(&scope, &new_path, state).await?,
+        None => index_existing_file(&scope, &new_path, state, &mut tx).await?,
     };
     let updated_entry = content_rows::set_content_entry_enabled_for_file(
         &scope.content_set_id,
         &file.id,
         enabled,
-        &state.pool,
+        &mut tx,
     )
     .await?;
     if !updated_entry {
@@ -701,10 +727,13 @@ pub(crate) async fn toggle_disable_project(
             None,
             None,
             ContentSourceKind::Local,
-            &state.pool,
+            &mut tx,
         )
         .await?;
     }
+    tx.commit().await?;
+
+    super::mark_shared_instance_stale(instance_id, &state.pool).await?;
 
     Ok(new_path)
 }
@@ -714,6 +743,7 @@ pub(crate) async fn remove_project(
     project_path: &str,
     state: &State,
 ) -> crate::Result<()> {
+    let _content_lock = state.lock_instance_content(instance_id).await;
     let scope = resolve_content_scope(instance_id, None, state).await?;
     let base = instance_full_path(state, &scope.instance);
     let file = content_rows::get_instance_file_by_relative_path(
@@ -723,24 +753,57 @@ pub(crate) async fn remove_project(
     )
     .await?;
 
-    io::remove_file(base.join(project_path)).await?;
+    match io::remove_file(base.join(project_path)).await {
+        Ok(()) => {}
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => {}
+        Err(err) => return Err(err.into()),
+    }
 
     if let Some(file) = file {
+        let mut tx = state.pool.begin().await?;
         content_rows::remove_content_entries_for_file(
             &scope.content_set_id,
             &file.id,
-            &state.pool,
+            &mut tx,
         )
         .await?;
         content_rows::remove_instance_file_by_relative_path(
             &scope.instance.id,
             project_path,
-            &state.pool,
+            &mut tx,
         )
         .await?;
+        tx.commit().await?;
     }
 
+    super::mark_shared_instance_stale(instance_id, &state.pool).await?;
+
     Ok(())
+}
+
+pub(crate) async fn content_source_kind_for_project_path(
+    instance_id: &str,
+    project_path: &str,
+    state: &State,
+) -> crate::Result<Option<ContentSourceKind>> {
+    let scope = resolve_content_scope(instance_id, None, state).await?;
+    let Some(file) = content_rows::get_instance_file_by_relative_path(
+        &scope.instance.id,
+        project_path,
+        &state.pool,
+    )
+    .await?
+    else {
+        return Ok(None);
+    };
+    let entries =
+        content_rows::get_content_entries(&scope.content_set_id, &state.pool)
+            .await?;
+
+    Ok(entries.into_iter().find_map(|entry| {
+        (entry.file_id.as_deref() == Some(file.id.as_str()))
+            .then_some(entry.source_kind)
+    }))
 }
 
 pub(crate) async fn rename_project_companion_file(
@@ -818,6 +881,7 @@ async fn index_existing_file(
     scope: &ContentScope,
     relative_path: &str,
     state: &State,
+    tx: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
 ) -> crate::Result<InstanceFile> {
     let full_path =
         instance_full_path(state, &scope.instance).join(relative_path);
@@ -844,7 +908,7 @@ async fn index_existing_file(
             size,
             missing: false,
         },
-        &state.pool,
+        tx,
     )
     .await?;
     upsert_entry_for_file(
@@ -854,7 +918,7 @@ async fn index_existing_file(
         None,
         None,
         ContentSourceKind::Local,
-        &state.pool,
+        tx,
     )
     .await?;
 
@@ -868,7 +932,7 @@ async fn upsert_entry_for_file(
     project_id: Option<&str>,
     version_id: Option<&str>,
     source_kind: ContentSourceKind,
-    pool: &sqlx::SqlitePool,
+    tx: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
 ) -> crate::Result<()> {
     content_rows::upsert_content_entry_from_parts(
         content_rows::UpsertContentEntry {
@@ -883,7 +947,7 @@ async fn upsert_entry_for_file(
             client_requirement: ContentRequirement::Required,
             enabled: file.enabled,
         },
-        pool,
+        tx,
     )
     .await?;
 

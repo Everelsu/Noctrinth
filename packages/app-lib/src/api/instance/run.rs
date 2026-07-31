@@ -25,6 +25,22 @@ pub async fn run(
     quick_play_type: QuickPlayType,
 ) -> crate::Result<ProcessMetadata> {
     let state = State::get().await?;
+    if crate::state::instances::adapters::sqlite::instance_rows::is_instance_quarantined(
+        instance_id,
+        &state.pool,
+    )
+    .await?
+    {
+        return Err(crate::ErrorKind::InputError(
+            "This instance has been quarantined".to_string(),
+        )
+        .into());
+    }
+    super::shared::check_shared_instance_availability_before_launch(
+        instance_id,
+        &state,
+    )
+    .await?;
 
     // Prefer a signed-in Microsoft account.
     if let Some(default_account) =
@@ -77,6 +93,17 @@ async fn run_credentials(
                 "Tried to run a nonexistent instance {instance_id}!"
             ))
         })?;
+    if crate::state::instances::adapters::sqlite::instance_rows::is_instance_quarantined(
+        instance_id,
+        &state.pool,
+    )
+    .await?
+    {
+        return Err(crate::ErrorKind::InputError(
+            "This instance has been quarantined".to_string(),
+        )
+        .into());
+    }
 
     let pre_launch_hooks = context
         .launch_overrides

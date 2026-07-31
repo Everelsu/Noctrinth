@@ -25,6 +25,7 @@ export interface UseBrowseSearchOptions {
 	}>
 	providedFilters?: ComputedRef<FilterValue[]>
 	environmentOverride?: ComputedRef<EnvironmentSearchOverride | undefined>
+	active?: ComputedRef<boolean>
 	search: (params: string) => Promise<BrowseSearchResponse>
 	persistentQueryParams: string[]
 	getExtraQueryParams?: () => Record<string, string | undefined>
@@ -74,6 +75,7 @@ export function useBrowseSearch(options: UseBrowseSearchOptions): BrowseSearchSt
 
 	debug('init, projectType:', options.projectType.value)
 
+	const active = computed(() => options.active?.value ?? true)
 	const projectTypes = computed(() => [options.projectType.value] as ProjectType[])
 	const isServerType = computed(() => options.projectType.value === 'server')
 
@@ -185,7 +187,17 @@ export function useBrowseSearch(options: UseBrowseSearchOptions): BrowseSearchSt
 	let searchVersion = 0
 	let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null
 
+	function clearSearchDebounce() {
+		if (searchDebounceTimer) {
+			clearTimeout(searchDebounceTimer)
+			searchDebounceTimer = null
+		}
+	}
+
 	const providedFiltersOrEmpty = computed(() => options.providedFilters?.value ?? [])
+	const effectiveCurrentFilters = computed(() =>
+		isServerType.value ? serverCurrentFilters.value : currentFilters.value,
+	)
 
 	// Page-reset trigger excludes the negative `project_id` filters that back
 	// the "hide installed" / "hide selected" toggles. Installing content in an
@@ -201,10 +213,8 @@ export function useBrowseSearch(options: UseBrowseSearchOptions): BrowseSearchSt
 			query,
 			maxResults,
 			options.projectType,
-			currentSortType,
-			serverCurrentSortType,
-			currentFilters,
-			serverCurrentFilters,
+			effectiveCurrentSortType,
+			effectiveCurrentFilters,
 			overriddenProvidedFilterTypes,
 			pageResetFilters,
 		],
@@ -219,13 +229,27 @@ export function useBrowseSearch(options: UseBrowseSearchOptions): BrowseSearchSt
 			from: oldVal?.substring(0, 80),
 			to: newVal?.substring(0, 80),
 		})
-		if (searchDebounceTimer) clearTimeout(searchDebounceTimer)
+		clearSearchDebounce()
+		if (!active.value) {
+			return
+		}
 		searchDebounceTimer = setTimeout(() => {
 			refreshSearch()
 		}, 200)
 	})
 
+	watch(active, (isActive, wasActive) => {
+		clearSearchDebounce()
+		if (isActive && wasActive === false) {
+			void refreshSearch()
+		}
+	})
+
 	async function refreshSearch() {
+		if (!active.value) {
+			return
+		}
+
 		const version = ++searchVersion
 		debug('refreshSearch start', {
 			version,
@@ -242,6 +266,10 @@ export function useBrowseSearch(options: UseBrowseSearchOptions): BrowseSearchSt
 
 		try {
 			const response = await options.search(effectiveRequestParams.value)
+
+			if (!active.value) {
+				return
+			}
 
 			if (version !== searchVersion) {
 				debug('refreshSearch stale, discarding', { version, current: searchVersion })
@@ -273,6 +301,10 @@ export function useBrowseSearch(options: UseBrowseSearchOptions): BrowseSearchSt
 	}
 
 	function updateUrlParams() {
+		if (!active.value) {
+			return
+		}
+
 		debug('updateUrlParams', { path: route.path })
 		const persistentParams: Record<string, string | (string | null)[] | null | undefined> = {}
 

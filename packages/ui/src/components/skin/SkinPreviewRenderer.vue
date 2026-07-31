@@ -21,7 +21,7 @@
 			class="absolute left-0 right-0 z-10 flex items-center justify-center pointer-events-none"
 			:style="subtitlePositionStyle"
 		>
-			<div ref="subtitleElement" class="pointer-events-auto" @click="ignoreControlClick">
+			<div ref="subtitleElement" class="w-full pointer-events-auto" @click="ignoreControlClick">
 				<slot name="subtitle" />
 			</div>
 		</div>
@@ -138,6 +138,7 @@ import { createRadialSpotlightShader, syncDamageFlashShader } from './skin-previ
 const props = withDefaults(
 	defineProps<{
 		textureSrc: string
+		earsTextureSrc?: string
 		capeSrc?: string
 		variant?: 'SLIM' | 'CLASSIC' | 'UNKNOWN'
 		nametag?: string
@@ -152,9 +153,11 @@ const props = withDefaults(
 		fov?: number
 		initialRotation?: number
 		animationConfig?: SkinPreviewAnimationConfig
+		earsEnabled?: boolean
 	}>(),
 	{
 		variant: 'CLASSIC',
+		earsTextureSrc: undefined,
 		capeSrc: undefined,
 		initialRotation: 15.75,
 		nametag: undefined,
@@ -162,6 +165,7 @@ const props = withDefaults(
 		lockFit: true,
 		framing: 'page',
 		fitZoom: 1,
+		earsEnabled: true,
 		animationConfig: () => ({
 			baseAnimation: 'idle',
 			randomAnimations: ['idle_sub_1', 'idle_sub_2', 'idle_sub_3'],
@@ -170,6 +174,10 @@ const props = withDefaults(
 		}),
 	},
 )
+
+const emit = defineEmits<{
+	earsFeaturesDetected: [detected: boolean]
+}>()
 
 const skinPreviewContainer = useTemplateRef<HTMLElement>('skinPreviewContainer')
 const subtitleElement = useTemplateRef<HTMLElement>('subtitleElement')
@@ -265,13 +273,16 @@ const {
 	},
 })
 
-const { isModelLoaded, isTextureLoaded, modelCenter, modelSize, scene } = useSkinPreviewScene({
-	selectedModelSrc,
-	textureSrc: toRef(props, 'textureSrc'),
-	capeSrc: toRef(props, 'capeSrc'),
-	initializeAnimations,
-	cleanupAnimationState,
-})
+const { hasEarsFeatures, isModelLoaded, isTextureLoaded, modelCenter, modelSize, scene } =
+	useSkinPreviewScene({
+		selectedModelSrc,
+		textureSrc: toRef(props, 'textureSrc'),
+		earsTextureSrc: toRef(props, 'earsTextureSrc'),
+		capeSrc: toRef(props, 'capeSrc'),
+		earsEnabled: toRef(props, 'earsEnabled'),
+		initializeAnimations,
+		cleanupAnimationState,
+	})
 
 function syncDamageFlashShaderMaterials() {
 	syncDamageFlashShader(scene.value, damageFlashIntensity.value)
@@ -315,6 +326,13 @@ const { isPreviewVisible, showLoading } = useSkinPreviewLoading(isReady)
 onMounted(observeSubtitleElement)
 
 watch(hasSubtitle, () => nextTick(observeSubtitleElement), { flush: 'post' })
+watch(
+	hasEarsFeatures,
+	(detected) => {
+		emit('earsFeaturesDetected', detected)
+	},
+	{ immediate: true },
+)
 watch(scene, syncDamageFlashShaderMaterials, { immediate: true })
 watch(damageFlashIntensity, syncDamageFlashShaderMaterials)
 

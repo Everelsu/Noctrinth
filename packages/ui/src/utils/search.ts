@@ -29,13 +29,15 @@ export type FilterOption = BaseOption &
 		| { method: 'environment'; environment: 'client' | 'server' }
 	)
 
+export type FilterMode = 'include' | 'exclude'
+
 export type FilterType = {
 	id: string
 	formatted_name: string
 	options: FilterOption[]
 	supported_project_types: ProjectType[]
 	query_param: string
-	supports_negative_filter: boolean
+	supports: FilterMode[]
 	toggle_groups?: {
 		id: string
 		formatted_name: string
@@ -46,7 +48,7 @@ export type FilterType = {
 	ordering?: number
 } & (
 	| {
-			display: 'all' | 'scrollable' | 'none' | 'toggle'
+			display: 'all' | 'scrollable' | 'none'
 	  }
 	| {
 			display: 'expandable'
@@ -198,7 +200,7 @@ export function useSearch(
 							: ([category.project_type] as ProjectType[]),
 					display: 'all',
 					query_param: category.header === 'resolutions' ? 'g' : 'f',
-					supports_negative_filter: true,
+					supports: ['include', 'exclude'],
 					searchable: false,
 					options: [],
 				}
@@ -234,7 +236,7 @@ export function useSearch(
 				supported_project_types: ['mod', 'modpack'],
 				display: 'all',
 				query_param: 'e',
-				supports_negative_filter: false,
+				supports: ['include'],
 				searchable: false,
 				options: [
 					{
@@ -274,7 +276,7 @@ export function useSearch(
 				supported_project_types: ALL_PROJECT_TYPES,
 				display: 'scrollable',
 				query_param: 'v',
-				supports_negative_filter: false,
+				supports: ['include'],
 				toggle_groups: [
 					{
 						id: 'all_versions',
@@ -312,7 +314,7 @@ export function useSearch(
 				supported_project_types: ['mod'],
 				display: 'expandable',
 				query_param: 'g',
-				supports_negative_filter: true,
+				supports: ['include', 'exclude'],
 				default_values: DEFAULT_MOD_LOADERS,
 				searchable: false,
 				options: tags.value.loaders
@@ -344,7 +346,7 @@ export function useSearch(
 				supported_project_types: ['modpack'],
 				display: 'all',
 				query_param: 'g',
-				supports_negative_filter: true,
+				supports: ['include', 'exclude'],
 				searchable: false,
 				options: tags.value.loaders
 					.filter((loader) => loader.supported_project_types.includes('modpack'))
@@ -370,7 +372,7 @@ export function useSearch(
 				display: 'expandable',
 				default_values: DEFAULT_PLUGIN_LOADERS,
 				query_param: 'g',
-				supports_negative_filter: true,
+				supports: ['include', 'exclude'],
 				searchable: false,
 				options: tags.value.loaders
 					.filter(
@@ -399,7 +401,7 @@ export function useSearch(
 				supported_project_types: ['plugin'],
 				display: 'all',
 				query_param: 'g',
-				supports_negative_filter: true,
+				supports: ['include', 'exclude'],
 				searchable: false,
 				options: tags.value.loaders
 					.filter((loader) => PLUGIN_PLATFORMS.includes(loader.name))
@@ -423,7 +425,7 @@ export function useSearch(
 				),
 				supported_project_types: ['shader'],
 				query_param: 'g',
-				supports_negative_filter: true,
+				supports: ['include', 'exclude'],
 				searchable: false,
 				display: 'expandable',
 				default_values: DEFAULT_SHADER_LOADERS,
@@ -446,7 +448,7 @@ export function useSearch(
 				),
 				supported_project_types: ['mod', 'modpack', 'resourcepack', 'shader', 'plugin', 'datapack'],
 				query_param: 'l',
-				supports_negative_filter: true,
+				supports: ['include', 'exclude'],
 				display: 'all',
 				searchable: false,
 				options: [
@@ -473,7 +475,7 @@ export function useSearch(
 				),
 				supported_project_types: ALL_PROJECT_TYPES,
 				query_param: 'pid',
-				supports_negative_filter: true,
+				supports: ['include', 'exclude'],
 				display: 'none',
 				searchable: false,
 				options: [],
@@ -488,8 +490,9 @@ export function useSearch(
 					}),
 				),
 				supported_project_types: ['mod', 'plugin', 'datapack'],
-				display: 'toggle',
+				display: 'all',
 				query_param: 'a',
+				supports: ['exclude'],
 				searchable: false,
 				ordering: -1000,
 				options: excludeableProjectTypes.map((target) => ({

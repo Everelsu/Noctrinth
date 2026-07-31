@@ -1,5 +1,5 @@
 use crate::state::{CacheBehaviour, CachedEntry};
-use crate::util::fetch::{FetchSemaphore, REQWEST_CLIENT, fetch_advanced};
+use crate::util::fetch::{FetchSemaphore, fetch_advanced};
 use chrono::{DateTime, Duration, TimeZone, Utc};
 use dashmap::DashMap;
 use futures::TryStreamExt;
@@ -23,12 +23,6 @@ impl ModrinthCredentials {
 
         if let Some(mut creds) = creds {
             if creds.expires < Utc::now() {
-                // OAuth access tokens (mro_ prefix) cannot be refreshed — require re-auth
-                if creds.session.starts_with("mro_") {
-                    Self::remove(&creds.user_id, exec).await?;
-                    return Ok(None);
-                }
-
                 #[derive(Deserialize)]
                 struct Session {
                     session: String,
@@ -197,76 +191,30 @@ impl ModrinthCredentials {
     }
 }
 
-const OAUTH_SCOPES: &str =
-    "USER_READ USER_READ_EMAIL USER_WRITE NOTIFICATION_READ NOTIFICATION_WRITE \
-     COLLECTION_READ COLLECTION_WRITE COLLECTION_CREATE COLLECTION_DELETE";
-
-pub fn build_login_url(redirect_uri: &str) -> String {
-    format!(
-        "{}auth/authorize?client_id={}&redirect_uri={}&scope={}&response_type=code",
-        env!("MODRINTH_URL"),
-        env!("MODRINTH_OAUTH_CLIENT_ID"),
-        urlencoding::encode(redirect_uri),
-        urlencoding::encode(OAUTH_SCOPES),
-    )
+pub const fn get_login_url() -> &'static str {
+    concat!(env!("MODRINTH_URL"), "auth/sign-in")
 }
 
-#[derive(Deserialize)]
-struct OAuthTokenResponse {
-    access_token: String,
-    expires_in: i64,
+pub const fn get_signup_url() -> &'static str {
+    concat!(env!("MODRINTH_URL"), "auth/sign-up")
 }
 
-pub async fn exchange_code_for_token(
+pub async fn finish_login_flow(
     code: &str,
-    redirect_uri: &str,
     semaphore: &FetchSemaphore,
-    exec: impl sqlx::Executor<'_, Database = sqlx::Sqlite> + Copy,
+    exec: impl sqlx::Executor<'_, Database = sqlx::Sqlite>,
 ) -> crate::Result<ModrinthCredentials> {
-    let response = REQWEST_CLIENT
-        .post(concat!(env!("MODRINTH_API_BASE_URL"), "_internal/oauth/token"))
-        .header("Authorization", env!("MODRINTH_OAUTH_CLIENT_SECRET"))
-        .form(&[
-            ("grant_type", "authorization_code"),
-            ("code", code),
-            ("redirect_uri", redirect_uri),
-            ("client_id", env!("MODRINTH_OAUTH_CLIENT_ID")),
-        ])
-        .send()
-        .await
-        .map_err(|e| {
-            crate::ErrorKind::OtherError(format!(
-                "Modrinth OAuth token request failed: {e}"
-            ))
-        })?;
+    // The authorization code actually is the access token, since labrinth doesn't
+    // issue separate authorization codes. Therefore, this is equivalent to an
+    // implicit OAuth grant flow, and no additional exchanging or finalization is
+    // needed. TODO not do this for the reasons outlined at
+    // https://oauth.net/2/grant-types/implicit/
 
-    let status = response.status();
-    let body = response.text().await.map_err(|e| {
-        crate::ErrorKind::OtherError(format!(
-            "Failed to read Modrinth OAuth token response: {e}"
-        ))
-    })?;
-
-    if !status.is_success() {
-        return Err(crate::ErrorKind::OtherError(format!(
-            "Modrinth OAuth token exchange failed (HTTP {status}): {body}"
-        ))
-        .into());
-    }
-
-    let token_resp =
-        serde_json::from_str::<OAuthTokenResponse>(&body).map_err(|e| {
-            crate::ErrorKind::OtherError(format!(
-                "Failed to parse Modrinth OAuth token response: {e}. Body: {body}"
-            ))
-        })?;
-
-    let info =
-        fetch_info(&token_resp.access_token, semaphore, exec).await?;
+    let info = fetch_info(code, semaphore, exec).await?;
 
     Ok(ModrinthCredentials {
-        session: token_resp.access_token,
-        expires: Utc::now() + Duration::seconds(token_resp.expires_in),
+        session: code.to_string(),
+        expires: Utc::now() + Duration::weeks(2),
         user_id: info.id,
         active: true,
     })

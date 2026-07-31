@@ -49,7 +49,7 @@ pub mod prelude {
         state::{ReleaseChannel, db_backup::app_db_backup_dir},
         util::{
             io::{IOError, canonicalize},
-            network::{is_network_metered, tcp_listen_any_loopback, tcp_listen_loopback_port},
+            network::{is_network_metered, tcp_listen_any_loopback},
         },
     };
 }

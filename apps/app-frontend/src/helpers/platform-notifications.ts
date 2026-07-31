@@ -223,7 +223,6 @@ export async function declineTeamInvite(teamId: string, userId: string): Promise
 	}
 }
 
-// ── Notification cache ───────────────────────────────────────────────────────
 //
 // `fetchExtraNotificationData` makes 3–4 bulk requests (projects, versions,
 // users, organizations) to enrich the raw notification list — fast on a warm

@@ -18,8 +18,6 @@ const NOCTRINTH_SRC = 'apps/app-frontend/src/helpers/noctrinth-changelog.ts'
 const MODRINTH_SRC = 'packages/blog/changelog.ts'
 const LOGO_SRC = 'apps/app/icons/noctrinth.svg'
 
-// ─── Changelog parsing ───────────────────────────────────────────────────────
-
 /**
  * Pull every `{ ... body: `...` ... }` object out of a changelog TS source
  * and read the fields we care about with separate per-field regexes.
@@ -51,7 +49,6 @@ const all = [...noctrinth, ...modrinth]
 	.filter((e) => e.date)
 	.sort((a, b) => new Date(b.date) - new Date(a.date))
 
-// ─── Minimal markdown → HTML ─────────────────────────────────────────────────
 // Just what changelog entries use: ##/### headings, - bullets, **bold**,
 // `code`, [text](url) links.
 
@@ -126,8 +123,6 @@ function renderMarkdown(src) {
 	return out.join('\n')
 }
 
-// ─── Date formatting + recency ───────────────────────────────────────────────
-
 const longDateFmt = new Intl.DateTimeFormat('en-US', {
 	year: 'numeric',
 	month: 'long',
@@ -174,8 +169,6 @@ function isRecent(iso) {
 	const t = new Date(iso).getTime()
 	return Date.now() - t < oneWeekMs
 }
-
-// ─── HTML rendering ──────────────────────────────────────────────────────────
 
 const SOURCE_LABEL = { noctrinth: 'Noctrinth', modrinth: 'App' }
 
@@ -543,8 +536,6 @@ const HTML = `<!DOCTYPE html>
 </body>
 </html>
 `
-
-// ─── Write output ────────────────────────────────────────────────────────────
 
 mkdirSync(OUT_DIR, { recursive: true })
 writeFileSync(join(OUT_DIR, 'index.html'), HTML)

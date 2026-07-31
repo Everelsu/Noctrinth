@@ -109,7 +109,6 @@ const props = withDefaults(
 	},
 )
 
-// ── Gap-click page input ──────────────────────────────────────────────────
 const editingGap = ref<number | null>(null)
 const gapInputValue = ref<string>('')
 const gapInputRef = ref<HTMLInputElement | null>(null)

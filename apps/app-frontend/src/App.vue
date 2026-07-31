@@ -259,10 +259,16 @@ const hasPlus = computed(
 		(hasMidasBadge(credentials.value.user) ||
 			hasActivePride26Midas(authenticatedModrinthUser.value?.campaigns?.pride_26)),
 )
+// Noctrinth does not serve Modrinth's ads. Upstream's gating is kept intact
+// behind this flag so the sync stays a one-line diff — flip it to re-enable
+// the ad window, the consent popup and the Modrinth+ upsell.
+const ADS_ENABLED: boolean = false
 const showAd = computed(
-	() => sidebarVisible.value && !hasPlus.value && credentials.value !== undefined,
+	() => ADS_ENABLED && sidebarVisible.value && !hasPlus.value && credentials.value !== undefined,
 )
-const adConsentAvailable = computed(() => credentials.value !== undefined && !hasPlus.value)
+const adConsentAvailable = computed(
+	() => ADS_ENABLED && credentials.value !== undefined && !hasPlus.value,
+)
 providePageContext({
 	hierarchicalSidebarAvailable: ref(true),
 	showAds: showAd,
@@ -348,11 +354,13 @@ const authUnreachable = computed(() => {
 
 onMounted(async () => {
 	await useCheckDisableMouseover()
-	try {
-		unlistenAdsConsent = await ads_consent_listener(handleAdsConsentRequired)
-		handleAdsConsentRequired(await should_show_ads_consent_popup())
-	} catch (error) {
-		handleError(error)
+	if (ADS_ENABLED) {
+		try {
+			unlistenAdsConsent = await ads_consent_listener(handleAdsConsentRequired)
+			handleAdsConsentRequired(await should_show_ads_consent_popup())
+		} catch (error) {
+			handleError(error)
+		}
 	}
 
 	document.querySelector('body').addEventListener('click', handleClick)

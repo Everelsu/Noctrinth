@@ -21,6 +21,24 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.17.4',
+		date: '2026-07-31T00:00:00+00:00',
+		body: `### Added
+- Synced with upstream Modrinth (0.15.11 → 0.17.x). Highlights from upstream: user profile pages inside the app, shared instances with invites and updates, an instance Share tab, a reworked settings layout grouped into Display / Account / Instances, a new breadcrumbs system, a rebuilt project page header, instance quarantine handling, a toggle to hide already-installed modpacks, and a fix for search jumping back to page 1.
+
+### Changed
+- Upstream is now the source of truth. Where Modrinth had shipped its own version of something Noctrinth carried, the fork's variant was dropped: the custom Modrinth OAuth flow, the browse page-reset patch, and the feature-flag settings redesign all gave way to upstream's.
+- The proxy setting and Noctrinth branding were carried over into upstream's new settings layout; the in-app changelog now lives under Display.
+
+### Removed
+- CurseForge integration. Search, installs, project pages, the catalog toggle, the fingerprint/mapping helpers and the backend installer are all gone. Importing a CurseForge instance from another launcher still works — that has always been an upstream feature.
+- Modrinth's ads stay disabled in Noctrinth, including the new consent popup and Modrinth+ upsell that upstream added.
+
+### Fixed
+- The Screenshots tab failed to list anything. It was passing an instance path where the backend expects an instance id after upstream's profile-to-instance rewrite, so every load errored with "Unknown instance".
+- A byte-order mark had crept into a shared UI component and a locale file, and a dead OAuth loopback listener was left behind by the reverted sign-in rework.`,
+	},
+	{
 		version: '0.15.11',
 		date: '2026-07-15T00:00:00+00:00',
 		body: `### Changed

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Labrinth } from '@modrinth/api-client'
-import { CurseForgeIcon, ModrinthIcon, SearchIcon } from '@modrinth/assets'
+import { SearchIcon } from '@modrinth/assets'
 import { computed, ref, toValue } from 'vue'
 
 import ButtonStyled from '#ui/components/base/ButtonStyled.vue'
@@ -43,14 +43,6 @@ const maxResultsOptions = computed<ComboboxOption<number>[]>(() =>
 		label: String(n),
 	})),
 )
-
-// Catalog toggle is shown whenever a CurseForge key is configured (the
-// catalogs are separate — the toggle also applies to text-query searches).
-const showSourceToggle = computed(() => !!ctx.sourceMode && !ctx.isServerType.value)
-
-function setSource(value: 'modrinth' | 'curseforge') {
-	if (ctx.sourceMode) ctx.sourceMode.value = value
-}
 
 const messages = defineMessages({
 	searchPlaceholder: {
@@ -138,28 +130,6 @@ function getProjectCardTags(result: Labrinth.Search.v3.ResultSearchProject, disp
 	/>
 
 	<div class="flex flex-wrap items-center gap-2">
-		<div v-if="showSourceToggle" class="source-toggle" role="group" aria-label="Catalog source">
-			<button
-				type="button"
-				class="source-toggle__btn source-toggle__btn--mr"
-				:class="{ 'is-active': ctx.sourceMode?.value === 'modrinth' }"
-				@click="setSource('modrinth')"
-			>
-				<ModrinthIcon class="source-toggle__icon" />
-				<span class="source-toggle__label">Modrinth</span>
-			</button>
-			<button
-				type="button"
-				class="source-toggle__btn source-toggle__btn--cf"
-				:class="{ 'is-active': ctx.sourceMode?.value === 'curseforge' }"
-				@click="setSource('curseforge')"
-			>
-				<CurseForgeIcon class="source-toggle__icon" />
-				<span class="source-toggle__label">CurseForge</span>
-				<span class="source-toggle__alpha-badge" aria-label="Alpha">Alpha</span>
-			</button>
-		</div>
-
 		<Combobox
 			:model-value="ctx.effectiveCurrentSortType.value"
 			:options="sortOptions"
@@ -339,16 +309,6 @@ function getProjectCardTags(result: Labrinth.Search.v3.ResultSearchProject, disp
 							: undefined
 					"
 					:layout="ctx.effectiveLayout.value"
-					:sources="
-						ctx.query.value
-							? ((result as { sources?: unknown }).sources as
-									| {
-											modrinth?: { project_id: string; slug: string }
-											curseforge?: { mod_id: number; slug: string }
-									  }
-									| undefined)
-							: undefined
-					"
 					@contextmenu.prevent.stop="(event: MouseEvent) => ctx.onContextMenu?.(event, result)"
 					@mouseenter="ctx.onProjectHover?.(result)"
 					@mouseleave="ctx.onProjectHoverEnd?.()"
@@ -389,129 +349,3 @@ function getProjectCardTags(result: Labrinth.Search.v3.ResultSearchProject, disp
 
 	<slot name="after" />
 </template>
-
-<style scoped lang="scss">
-/* Animated catalog-source toggle — the active option expands to reveal its
-   label, the other collapses to just its icon. */
-.source-toggle {
-	display: flex;
-	gap: 4px;
-	width: 15rem;
-	padding: 4px;
-	border-radius: 12px;
-	background: var(--color-button-bg);
-}
-
-.source-toggle__btn {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 6px;
-	flex-grow: 0;
-	flex-shrink: 1;
-	min-width: 2.75rem;
-	padding: 8px 0;
-	border: none;
-	border-radius: 8px;
-	background: transparent;
-	cursor: pointer;
-	font-weight: 700;
-	font-size: 0.875rem;
-	white-space: nowrap;
-	overflow: hidden;
-	transition:
-		flex-grow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-		background-color 0.2s ease,
-		color 0.2s ease;
-}
-
-.source-toggle__icon {
-	width: 18px;
-	height: 18px;
-	flex-shrink: 0;
-}
-
-.source-toggle__label {
-	max-width: 0;
-	opacity: 0;
-	overflow: hidden;
-	transition:
-		max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-		opacity 0.2s ease;
-}
-
-.source-toggle__btn.is-active {
-	flex-grow: 1;
-}
-
-.source-toggle__btn.is-active .source-toggle__label {
-	max-width: 8rem;
-	opacity: 1;
-}
-
-.source-toggle__btn--mr {
-	color: #1bd96a;
-}
-.source-toggle__btn--mr.is-active {
-	background: #1bd96a;
-	color: #07130c;
-}
-.source-toggle__btn--mr:not(.is-active):hover {
-	background: #1bd96a1a;
-}
-
-.source-toggle__btn--cf {
-	color: #f16436;
-}
-.source-toggle__btn--cf.is-active {
-	background: #f16436;
-	color: #1f0d05;
-}
-.source-toggle__btn--cf:not(.is-active):hover {
-	background: #f164361a;
-}
-
-/* Alpha tag — only shown when the CurseForge button is active (expanded),
-   right next to the "CurseForge" label. Collapses with the label so it
-   doesn't overflow the narrow collapsed button. */
-.source-toggle__alpha-badge {
-	display: inline-flex;
-	align-items: center;
-	flex-shrink: 0;
-	max-width: 0;
-	opacity: 0;
-	padding: 0;
-	margin-left: 0;
-	overflow: hidden;
-	font-size: 0.6rem;
-	font-weight: 800;
-	line-height: 1;
-	letter-spacing: 0.05em;
-	text-transform: uppercase;
-	border-radius: 9999px;
-	border: 1px solid transparent;
-	white-space: nowrap;
-	transition:
-		max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-		opacity 0.2s ease,
-		padding 0.2s ease,
-		margin-left 0.2s ease;
-}
-
-.source-toggle__btn--cf.is-active .source-toggle__alpha-badge {
-	max-width: 5rem;
-	opacity: 1;
-	padding: 2px 6px;
-	margin-left: 4px;
-	background: rgba(31, 13, 5, 0.2);
-	border-color: rgba(31, 13, 5, 0.5);
-	color: #1f0d05;
-}
-
-@media (prefers-reduced-motion) {
-	.source-toggle__btn,
-	.source-toggle__label {
-		transition: none;
-	}
-}
-</style>

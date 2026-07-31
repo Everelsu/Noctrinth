@@ -101,11 +101,7 @@ import { debugAnalytics, initAnalytics, trackEvent } from '@/helpers/analytics'
 import { check_reachable, get_default_user } from '@/helpers/auth.js'
 import { get_user, get_version } from '@/helpers/cache.js'
 import { command_listener, notification_listener, warning_listener } from '@/helpers/events.js'
-import {
-	install_create_modpack_instance,
-	install_get_modpack_preview,
-	packLocationFromFile,
-} from '@/helpers/install'
+import { install_create_modpack_instance, install_get_modpack_preview } from '@/helpers/install'
 import { can_current_user_use_shared_instances, get as getInstance, run } from '@/helpers/instance'
 import { get as getCreds, login, logout } from '@/helpers/mr_auth.ts'
 import { mergeUrlQuery, parseModrinthLink } from '@/helpers/project-links.ts'
@@ -183,9 +179,7 @@ const unsubscribeSidebarToggle = themeStore.$subscribe(() => {
 })
 const forceSidebar = computed(
 	() =>
-		route.path.startsWith('/browse') ||
-		route.path.startsWith('/project') ||
-		route.path.startsWith('/curseforge'),
+		route.path.startsWith('/browse') || route.path.startsWith('/project'),
 )
 const sidebarVisible = computed(() => sidebarToggled.value || forceSidebar.value)
 const hostingRouteActive = computed(() => route.path.startsWith('/hosting'))
@@ -1095,7 +1089,7 @@ async function handleCommand(e) {
 	if (e.event === 'RunMRPack') {
 		// RunMRPack should directly install a local mrpack given a path
 		if (e.path.endsWith('.mrpack')) {
-			const location = packLocationFromFile(e.path)
+			const location: CreatePackLocation = { type: 'fromFile', path: e.path }
 			const preview = await install_get_modpack_preview(location).catch(handleError)
 			if (preview?.unknownFile || preview?.externalFilesInModpack.length > 0) {
 				const splitPath = e.path.split(/[\\/]/)

@@ -13,9 +13,6 @@ use super::shared_instance::{
 };
 use super::{diagnostics, recovery, store};
 use crate::ErrorKind;
-use crate::api::pack::install_curseforge::{
-    install_curseforge_pack_files_with_reporter, zip_file_has_entry,
-};
 use crate::api::pack::install_from::{
     CreatePackLocation, generate_pack_from_file,
     generate_pack_from_version_id_with_reporter, get_instance_from_pack,
@@ -1285,10 +1282,7 @@ pub(super) async fn install_pack(
             )
             .await?
         }
-        CreatePackLocation::FromFile {
-            path,
-            curseforge_api_key,
-        } => {
+        CreatePackLocation::FromFile { path } => {
             reporter
                 .set_context(
                     InstallErrorContext::new("read local modpack file")
@@ -1296,68 +1290,7 @@ pub(super) async fn install_pack(
                         .build(),
                 )
                 .await?;
-            // Route CurseForge zips to the CurseForge installer; everything
-            // else continues through the mrpack path (file-backed, so large
-            // .mrpack files are not loaded into memory just for this check).
-            let is_curseforge = zip_file_has_entry(&path, "manifest.json")
-                .await?
-                && !zip_file_has_entry(&path, "modrinth.index.json").await?;
-            if is_curseforge {
-                let api_key = curseforge_api_key
-                    .filter(|k| !k.trim().is_empty())
-                    .ok_or_else(|| {
-                        crate::ErrorKind::InputError(
-                            "This is a CurseForge modpack, but no CurseForge \
-                             API key is available."
-                                .to_string(),
-                        )
-                    })?;
-                let bytes = bytes::Bytes::from(
-                    crate::util::io::read(&path).await?,
-                );
-                install_curseforge_pack_files_with_reporter(
-                    bytes,
-                    &api_key,
-                    &instance_id,
-                    reason,
-                    reporter,
-                )
-                .await?;
-                return Ok(());
-            }
             generate_pack_from_file(path, instance_id.clone()).await?
-        }
-        CreatePackLocation::FromCurseforgeUrl {
-            url,
-            curseforge_api_key,
-            ..
-        } => {
-            reporter
-                .set_context(
-                    InstallErrorContext::new("download modpack file")
-                        .urls(vec![url.clone()])
-                        .build(),
-                )
-                .await?;
-            let state = State::get().await?;
-            let bytes = crate::util::fetch::fetch(
-                &url,
-                None,
-                None,
-                None,
-                &state.fetch_semaphore,
-                &state.pool,
-            )
-            .await?;
-            install_curseforge_pack_files_with_reporter(
-                bytes,
-                &curseforge_api_key,
-                &instance_id,
-                reason,
-                reporter,
-            )
-            .await?;
-            return Ok(());
         }
     };
 
@@ -1631,12 +1564,5 @@ pub(super) fn modpack_details(
             version_id: None,
             title: None,
         },
-        CreatePackLocation::FromCurseforgeUrl { title, .. } => {
-            InstallPhaseDetails::Modpack {
-                project_id: None,
-                version_id: None,
-                title: title.clone(),
-            }
-        }
     }
 }

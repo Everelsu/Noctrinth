@@ -1,6 +1,5 @@
 import { invoke } from '@tauri-apps/api/core'
 
-import { CURSEFORGE_API_KEY } from './curseforge-key'
 import { install_job_listener } from './events'
 import type { InstanceLink, InstanceLoader } from './types'
 
@@ -15,35 +14,9 @@ export interface PackLocationVersionId {
 export interface PackLocationFile {
 	type: 'fromFile'
 	path: string
-	/** Lets the backend resolve CurseForge modpack zips imported from disk. */
-	curseforge_api_key?: string | null
 }
 
-export interface PackLocationCurseforgeUrl {
-	type: 'fromCurseforgeUrl'
-	url: string
-	title?: string | null
-	icon_url?: string | null
-	curseforge_api_key: string
-}
-
-export type CreatePackLocation =
-	| PackLocationVersionId
-	| PackLocationFile
-	| PackLocationCurseforgeUrl
-
-/**
- * Build a `fromFile` pack location. Always stamps the CurseForge API key so a
- * CurseForge modpack zip picked from disk can be resolved by the backend —
- * without it the preview/install fails even when the key is configured.
- */
-export function packLocationFromFile(path: string): PackLocationFile {
-	return {
-		type: 'fromFile',
-		path,
-		curseforge_api_key: CURSEFORGE_API_KEY || null,
-	}
-}
+export type CreatePackLocation = PackLocationVersionId | PackLocationFile
 
 export interface InstallModpackPreview {
 	name: string
@@ -290,27 +263,6 @@ export async function install_create_modpack_instance(
 	return await invoke<InstallJobSnapshot>('plugin:install|install_create_modpack_instance', {
 		location,
 		postInstallEdit,
-	})
-}
-
-/**
- * Enqueue a CurseForge modpack install as a regular install job: the backend
- * creates the instance from the pack manifest (Minecraft version + loader)
- * and downloads everything with live progress in the app action bar.
- *
- * @returns the queued job snapshot — use `wait_for_install_job` to await it.
- */
-export async function install_curseforge_modpack(
-	modpackUrl: string,
-	curseforgeApiKey: string,
-	title?: string | null,
-	iconUrl?: string | null,
-): Promise<InstallJobSnapshot> {
-	return await invoke<InstallJobSnapshot>('plugin:install|install_curseforge', {
-		modpackUrl,
-		curseforgeApiKey,
-		title: title ?? null,
-		iconUrl: iconUrl ?? null,
 	})
 }
 

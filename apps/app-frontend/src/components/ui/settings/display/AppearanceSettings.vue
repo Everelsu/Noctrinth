@@ -17,7 +17,7 @@ const messages = defineMessages({
 	},
 	colorThemeDescription: {
 		id: 'app.appearance-settings.color-theme.description',
-		defaultMessage: 'Choose the color theme used by Modrinth App.',
+		defaultMessage: 'Choose the color theme used by Noctrinth.',
 	},
 	advancedRenderingTitle: {
 		id: 'app.appearance-settings.advanced-rendering.title',

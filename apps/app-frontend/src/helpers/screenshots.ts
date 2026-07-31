@@ -76,8 +76,8 @@ function isScreenshotFile(name: string): boolean {
  * Lists every screenshot in the given instance, newest first. Returns an empty
  * array if the instance has no `screenshots/` folder (or it can't be read).
  */
-export async function listInstanceScreenshots(instancePath: string): Promise<Screenshot[]> {
-	const fullPath = await get_full_path(instancePath)
+export async function listInstanceScreenshots(instanceId: string): Promise<Screenshot[]> {
+	const fullPath = await get_full_path(instanceId)
 	const screenshotsDir = `${fullPath}/screenshots`
 
 	if (!(await fsExists(screenshotsDir))) {

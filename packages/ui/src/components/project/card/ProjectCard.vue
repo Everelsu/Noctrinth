@@ -252,10 +252,6 @@ const props = defineProps<{
 	environment?: ProjectCardEnvironmentValue
 	status?: ProjectStatus
 	maxTags?: number
-	sources?: {
-		modrinth?: { project_id: string; slug: string }
-		curseforge?: { mod_id: number; slug: string }
-	}
 }>()
 
 const baseCardStyle =

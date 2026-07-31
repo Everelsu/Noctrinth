@@ -526,21 +526,6 @@ pub(crate) async fn add_project_bytes(
         None => fetch::sha1_async(bytes.clone()).await?,
     };
 
-    // CurseForge files carry CF numeric ids in project_id/version_id, but they
-    // are NOT Modrinth files — caching them as KnownModrinthFile would poison
-    // the Modrinth hash cache. Only record a Modrinth mapping for Modrinth-
-    // sourced content.
-    let known_modrinth_file = if source_kind == ContentSourceKind::CurseForge {
-        None
-    } else {
-        project_id.zip(version_id).map(|(project_id, version_id)| {
-            KnownModrinthFile {
-                project_id,
-                version_id,
-            }
-        })
-    };
-
     fetch::write(&full_path, &bytes, &state.io_semaphore).await?;
     let modified_at_ns =
         crate::state::file_modified_at_ns(&io::metadata(&full_path).await?)?;
@@ -551,7 +536,12 @@ pub(crate) async fn add_project_bytes(
         modified_at_ns,
         Some(&sha1),
         Some(project_type),
-        known_modrinth_file,
+        project_id.zip(version_id).map(|(project_id, version_id)| {
+            KnownModrinthFile {
+                project_id,
+                version_id,
+            }
+        }),
         &state.pool,
     )
     .await?;

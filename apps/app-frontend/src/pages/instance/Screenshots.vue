@@ -116,7 +116,7 @@ async function loadScreenshots() {
 	if (initial) loading.value = true
 	else refreshing.value = true
 	try {
-		screenshots.value = await listInstanceScreenshots(props.instance.path)
+		screenshots.value = await listInstanceScreenshots(props.instance.id)
 	} catch (error) {
 		handleError(error as Error)
 	} finally {
@@ -190,7 +190,7 @@ async function revealShot(shot: Screenshot | null) {
 
 async function openScreenshotsFolder() {
 	try {
-		const fullPath = await get_full_path(props.instance.path)
+		const fullPath = await get_full_path(props.instance.id)
 		await openPath(`${fullPath}/screenshots`)
 	} catch (error) {
 		handleError(error as Error)

@@ -168,7 +168,6 @@ fn main() {
                         "install_job_cancel",
                         "install_job_dismiss",
                         "install_job_support_details",
-                        "install_curseforge",
                     ])
                     .default_permission(
                         DefaultPermissionRule::AllowAllCommands,
@@ -204,10 +203,6 @@ fn main() {
                         "instance_get_many",
                         "instance_get_projects",
                         "instance_get_installed_project_ids",
-                        "instance_compute_cf_fingerprints",
-                        "instance_add_project_from_curseforge",
-                        "instance_get_curseforge_content",
-                        "instance_curseforge_manual_download",
                         "instance_get_install_candidates",
                         "instance_content",
                         "instance_get_content_items",

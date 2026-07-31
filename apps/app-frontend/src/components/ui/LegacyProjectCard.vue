@@ -21,11 +21,6 @@ const props = defineProps({
 	},
 })
 
-/** CurseForge-exclusive projects have no Modrinth page to navigate to. */
-const cfOnly = computed(
-	() => !!props.project.sources?.curseforge && !props.project.sources?.modrinth,
-)
-
 const featuredCategory = computed(() => {
 	if (props.project.display_categories.includes('optimization')) {
 		return 'optimization'
@@ -63,9 +58,8 @@ const toTransparent = computed(() => {
 
 <template>
 	<div
-		class="card-shadow bg-bg-raised rounded-xl overflow-clip transition-all"
-		:class="cfOnly ? 'cursor-default opacity-80' : 'cursor-pointer hover:brightness-90'"
-		@click="!cfOnly && router.push(`/project/${project.slug}`)"
+		class="card-shadow bg-bg-raised rounded-xl overflow-clip cursor-pointer hover:brightness-90 transition-all"
+		@click="router.push(`/project/${project.slug}`)"
 	>
 		<div
 			class="w-full aspect-[2/1] bg-cover bg-center bg-no-repeat"
@@ -121,3 +115,5 @@ const toTransparent = computed(() => {
 		</div>
 	</div>
 </template>
+
+<style scoped lang="scss"></style>

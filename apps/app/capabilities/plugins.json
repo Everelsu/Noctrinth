@@ -37,9 +37,6 @@
 					"url": "https://api.mclo.gs/*"
 				},
 				{
-					"url": "https://api.curseforge.com/*"
-				},
-				{
 					"url": "https://fill.papermc.io/*"
 				},
 				{

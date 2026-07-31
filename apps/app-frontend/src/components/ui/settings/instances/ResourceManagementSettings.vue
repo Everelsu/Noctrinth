@@ -1,5 +1,5 @@
 <script setup>
-import { BoxIcon, FolderOpenIcon, FolderSearchIcon, TrashIcon } from '@modrinth/assets'
+import { BoxIcon, FolderOpenIcon, FolderSearchIcon, GlobeIcon, TrashIcon } from '@modrinth/assets'
 import {
 	ButtonStyled,
 	defineMessages,
@@ -33,7 +33,7 @@ const messages = defineMessages({
 	appDirectoryDescription: {
 		id: 'app.settings.resource-management.app-directory.description',
 		defaultMessage:
-			'Where Modrinth App stores instances and other files. Changes take effect after restarting the app.',
+			'Where Noctrinth stores instances and other files. Changes take effect after restarting the app.',
 	},
 	selectAppDirectory: {
 		id: 'app.settings.resource-management.app-directory.select',
@@ -46,6 +46,15 @@ const messages = defineMessages({
 	appCacheTitle: {
 		id: 'app.settings.resource-management.app-cache.title',
 		defaultMessage: 'App cache',
+	},
+	proxyTitle: {
+		id: 'app.resource-settings.proxy.title',
+		defaultMessage: 'Proxy',
+	},
+	proxyDescription: {
+		id: 'app.resource-settings.proxy.description',
+		defaultMessage:
+			'Routes all launcher network traffic (Modrinth API and CDN downloads) through a proxy. Supports http://, https://, socks5:// and socks5h:// URLs. Useful when Modrinth is not reachable in your region. Leave empty to connect directly. (app restart required to take effect)',
 	},
 	purgeCache: {
 		id: 'app.settings.resource-management.app-cache.purge',
@@ -113,6 +122,10 @@ watch(
 
 		if (!setSettings.custom_dir) {
 			setSettings.custom_dir = null
+		}
+
+		if (!setSettings.proxy_url) {
+			setSettings.proxy_url = null
 		}
 
 		await set(setSettings)
@@ -241,6 +254,23 @@ async function findLauncherDir() {
 			</button>
 			<p class="m-0 leading-tight text-secondary">
 				{{ formatMessage(messages.appCacheDescription) }}
+			</p>
+		</div>
+
+		<div class="flex flex-col gap-2.5">
+			<h2 class="m-0 text-lg font-semibold text-contrast">
+				{{ formatMessage(messages.proxyTitle) }}
+			</h2>
+			<StyledInput
+				id="proxy-url"
+				v-model="settings.proxy_url"
+				:icon="GlobeIcon"
+				type="text"
+				placeholder="socks5://127.0.0.1:1080"
+				wrapper-class="w-full"
+			/>
+			<p class="m-0 leading-tight text-secondary">
+				{{ formatMessage(messages.proxyDescription) }}
 			</p>
 		</div>
 

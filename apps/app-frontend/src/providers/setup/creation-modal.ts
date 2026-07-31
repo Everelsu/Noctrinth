@@ -13,10 +13,10 @@ import { trackEvent } from '@/helpers/analytics'
 import { get_project_versions, get_search_results } from '@/helpers/cache.js'
 import { import_instance } from '@/helpers/import.js'
 import {
+	type CreatePackLocation,
 	install_create_instance,
 	install_create_modpack_instance,
 	install_get_modpack_preview,
-	packLocationFromFile,
 } from '@/helpers/install'
 import { list } from '@/helpers/instance'
 import { get_loader_versions as getLoaderManifest } from '@/helpers/metadata.js'
@@ -104,7 +104,10 @@ export function setupCreationModal(notificationManager: AbstractWebNotificationM
 			}
 
 			if (config.modpackFilePath.value) {
-				const location = packLocationFromFile(config.modpackFilePath.value)
+				const location: CreatePackLocation = {
+					type: 'fromFile',
+					path: config.modpackFilePath.value,
+				}
 				const preview = await install_get_modpack_preview(location)
 
 				if (preview.unknownFile || preview.externalFilesInModpack.length > 0) {

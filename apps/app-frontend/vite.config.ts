@@ -26,24 +26,6 @@ if (existsSync(envFilePath)) {
 	}
 }
 
-// Read the CurseForge API key from .env.local *raw*, bypassing Vite's
-// dotenv-expand. CurseForge keys are bcrypt-style (`$2a$10$…`); dotenv-expand
-// would otherwise treat each `$xx` as an (undefined) variable and mangle the
-// key. Injected below via `define` so the key can be pasted verbatim.
-let curseForgeApiKey = ''
-const localEnvFilePath = resolve(projectRootDir, '.env.local')
-if (existsSync(localEnvFilePath)) {
-	for (const line of readFileSync(localEnvFilePath, 'utf-8').split('\n')) {
-		const trimmed = line.trim()
-		if (!trimmed || trimmed.startsWith('#')) continue
-		if (!trimmed.startsWith('VITE_CURSEFORGE_API_KEY=')) continue
-		curseForgeApiKey = trimmed
-			.slice('VITE_CURSEFORGE_API_KEY='.length)
-			.trim()
-			.replace(/^['"]|['"]$/g, '')
-	}
-}
-
 // https://vitejs.dev/config/
 export default defineConfig({
 	css: {
@@ -92,7 +74,6 @@ export default defineConfig({
 	clearScreen: false,
 	// tauri expects a fixed port, fail if that port is not available
 	server: {
-		host: '127.0.0.1',
 		port: 1420,
 		strictPort: true,
 		headers: {
@@ -114,10 +95,6 @@ export default defineConfig({
 	// to make use of `TAURI_ENV_DEBUG` and other env variables
 	// https://v2.tauri.app/reference/environment-variables/#tauri-cli-hook-commands
 	envPrefix: ['VITE_', 'TAURI_', 'MODRINTH_', 'SHARED_INSTANCES_'],
-	define: {
-		// CurseForge key — read raw above to survive dotenv-expand untouched
-		__NOCTRINTH_CURSEFORGE_KEY__: JSON.stringify(curseForgeApiKey),
-	},
 	build: {
 		rolldownOptions: {
 			onwarn(warning, defaultHandler) {

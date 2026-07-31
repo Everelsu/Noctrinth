@@ -22,7 +22,6 @@ import { get_project_versions, get_version } from '@/helpers/cache'
 import {
 	install_existing_instance,
 	install_pack_to_existing_instance,
-	packLocationFromFile,
 	wait_for_install_job,
 } from '@/helpers/install'
 import {
@@ -190,10 +189,10 @@ async function installLocalModpackFromPicker() {
 	const picked = await filePicker.pickModpackFile({ readFile: false })
 	if (!picked?.path) return false
 
-	const job = await install_pack_to_existing_instance(
-		instance.value.id,
-		packLocationFromFile(picked.path),
-	).catch(handleError)
+	const job = await install_pack_to_existing_instance(instance.value.id, {
+		type: 'fromFile',
+		path: picked.path,
+	}).catch(handleError)
 	if (!job) return false
 
 	const completed = await wait_for_install_job(job.job_id).catch(handleError)

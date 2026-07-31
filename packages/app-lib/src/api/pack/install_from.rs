@@ -10,9 +10,8 @@ use crate::state::{
 };
 use crate::util::fetch::{
     DownloadMeta, DownloadReason, FetchProgressFn, fetch,
-    fetch_advanced_with_progress, sha1_file_async, write_cached_icon,
+    fetch_advanced_with_progress, sha1_file_async,
 };
-use crate::util::io;
 use path_util::SafeRelativeUtf8UnixPathBuf;
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
@@ -101,23 +100,6 @@ pub enum CreatePackLocation {
     // Create a pack from a file (such as an .mrpack for installing from a file, or a folder name for importing)
     FromFile {
         path: PathBuf,
-        // Present so a CurseForge modpack zip imported from disk can be
-        // resolved through the CurseForge API. Ignored for .mrpack files.
-        #[serde(default)]
-        curseforge_api_key: Option<String>,
-    },
-    // Create a pack from a CurseForge modpack file download URL. Runs through
-    // the same install-job pipeline as Modrinth packs (progress, retry,
-    // rollback).
-    FromCurseforgeUrl {
-        url: String,
-        // Pack name/icon for the instance while the manifest is downloading;
-        // corrected from the manifest during install.
-        #[serde(default)]
-        title: Option<String>,
-        #[serde(default)]
-        icon_url: Option<String>,
-        curseforge_api_key: String,
     },
 }
 
@@ -199,102 +181,19 @@ pub async fn get_instance_from_pack(
             }),
             ..Default::default()
         }),
-        CreatePackLocation::FromFile {
-            path,
-            curseforge_api_key,
-        } => {
+        CreatePackLocation::FromFile { path } => {
             let file_name = path
                 .file_stem()
                 .unwrap_or_default()
                 .to_string_lossy()
                 .to_string();
 
-            let state = State::get().await?;
-            let file_bytes = io::read(&path).await?;
-            let file_bytes_shared = bytes::Bytes::from(file_bytes);
-
-            // Detect what kind of modpack this is so we can fail BEFORE the
-            // frontend creates an empty profile that we'd then have to delete
-            // out from under the user. The two recognised formats:
-            //   - Modrinth .mrpack: contains `modrinth.index.json`
-            //   - CurseForge zip: contains `manifest.json`
-            // Anything else flows through the legacy "unknown_file" warning
-            // path (user gets a confirm dialog before install).
-            let has_mrpack_manifest =
-                crate::pack::install_curseforge::zip_has_modrinth_index(
-                    &file_bytes_shared,
-                )
-                .await;
-            let has_cf_manifest =
-                crate::pack::install_curseforge::zip_has_curseforge_manifest(
-                    &file_bytes_shared,
-                )
-                .await;
-
-            // CurseForge modpack but no API key → there's no way the install
-            // can succeed. Error here so no profile is created in the first
-            // place — much better than installing-then-deleting.
-            if has_cf_manifest && !has_mrpack_manifest {
-                let valid_key = curseforge_api_key
-                    .as_deref()
-                    .map(|k| !k.trim().is_empty())
-                    .unwrap_or(false);
-                if !valid_key {
-                    return Err(crate::ErrorKind::InputError(
-                        "This is a CurseForge modpack, but no CurseForge API \
-                         key is available. The launcher needs an API key to \
-                         resolve modpack files through CurseForge."
-                            .to_string(),
-                    )
-                    .into());
-                }
-
-                // Preview with the pack's real name, Minecraft version and
-                // loader from the manifest so the creation modal (and the
-                // instance created by the job) shows accurate info instead
-                // of the filename and placeholder defaults.
-                let meta =
-                    crate::pack::install_curseforge::read_curseforge_pack_meta(
-                        &file_bytes_shared,
-                    )
-                    .await?;
-                return Ok(CreatePackInstance {
-                    name: meta.name.clone(),
-                    game_version: meta.game_version,
-                    modloader: meta.loader,
-                    loader_version: meta.loader_version,
-                    link: Some(InstanceLink::ImportedModpack {
-                        project_id: None,
-                        version_id: None,
-                        name: Some(meta.name),
-                        version_number: meta.version,
-                        filename: path
-                            .file_name()
-                            .map(|x| x.to_string_lossy().to_string()),
-                    }),
-                    unknown_file: false,
-                    ..Default::default()
-                });
-            }
-
-            // Hash-against-Modrinth lookup only for files that aren't an
-            // obvious modpack format — it's the legacy "is this a known
-            // file?" heuristic and incurs a network round-trip. Very large
-            // files are never looked up (matching upstream): treating them as
-            // unknown avoids a pointless hash of a multi-gigabyte archive.
-            let is_recognised_pack = has_mrpack_manifest || has_cf_manifest;
-            let unknown_file = if is_recognised_pack {
-                false
-            } else if file_bytes_shared.len() as u64
-                > MAX_LOCAL_FILE_HASH_LOOKUP_SIZE
+            let is_known_file = if tokio::fs::metadata(&path).await?.len()
+                <= MAX_LOCAL_FILE_HASH_LOOKUP_SIZE
             {
-                true
-            } else {
-                let hash = crate::util::fetch::sha1_async(
-                    file_bytes_shared.clone(),
-                )
-                .await?;
-                let is_known_file = match CachedEntry::get_file_many(
+                let state = State::get().await?;
+                let (_, hash) = sha1_file_async(&path).await?;
+                match CachedEntry::get_file_many(
                     &[&hash],
                     Some(CacheBehaviour::StaleWhileRevalidateSkipOffline),
                     &state.pool,
@@ -311,8 +210,9 @@ pub async fn get_instance_from_pack(
                         );
                         false
                     }
-                };
-                !is_known_file
+                }
+            } else {
+                false
             };
 
             let external_files_in_modpack =
@@ -323,27 +223,11 @@ pub async fn get_instance_from_pack(
 
             Ok(CreatePackInstance {
                 name: file_name,
-                unknown_file,
+                unknown_file: !is_known_file,
                 external_files_in_modpack,
                 ..Default::default()
             })
         }
-        CreatePackLocation::FromCurseforgeUrl {
-            title, icon_url, ..
-        } => Ok(CreatePackInstance {
-            name: title
-                .clone()
-                .unwrap_or_else(|| "CurseForge modpack".to_string()),
-            icon_url,
-            link: Some(InstanceLink::ImportedModpack {
-                project_id: None,
-                version_id: None,
-                name: title,
-                version_number: None,
-                filename: None,
-            }),
-            ..Default::default()
-        }),
     }
 }
 

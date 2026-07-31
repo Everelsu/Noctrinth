@@ -148,16 +148,6 @@ export default new createRouter({
 			},
 		},
 		{
-			path: '/curseforge/:modId',
-			name: 'CurseForgeProject',
-			component: Pages.CurseForgeProject,
-			props: true,
-			meta: {
-				useContext: true,
-				breadcrumb: [{ name: 'CurseForge mod' }],
-			},
-		},
-		{
 			path: '/project/:id',
 			name: 'Project',
 			component: Project.Index,

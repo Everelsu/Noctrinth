@@ -128,7 +128,6 @@ import ShareModalWrapper from '@/components/ui/modal/ShareModalWrapper.vue'
 import { useManagedContentPolicy } from '@/composables/instances/use-managed-content-policy'
 import { trackEvent } from '@/helpers/analytics'
 import { get_project_versions, get_version, get_version_many } from '@/helpers/cache.js'
-import { updateAllCurseForge } from '@/helpers/curseforge-api'
 import {
 	instance_bulk_update_progress_listener,
 	instance_listener,
@@ -794,14 +793,6 @@ async function bulkUpdateAllProjects(onProgress?: (status: BulkOperationStatus) 
 		}
 
 		await update_all(props.instance.id)
-		// Provider-aware second pass: Modrinth content was handled above; update
-		// any CurseForge-sourced files through the CurseForge API. The two
-		// providers never touch each other's files.
-		await updateAllCurseForge(
-			props.instance.id,
-			props.instance.game_version,
-			props.instance.loader,
-		).catch((err) => console.warn('[CurseForge] Update-all pass failed:', err))
 		await refreshContentState('must_revalidate')
 	} catch (err) {
 		handleError(err as Error)

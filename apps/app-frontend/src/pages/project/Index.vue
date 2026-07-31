@@ -151,7 +151,10 @@
 								type="transparent"
 							>
 								<button :disabled="!currentUserId || followLoading" @click="toggleFollow">
-									<HeartIcon :class="{ 'text-brand fill-current': isFollowing }" aria-hidden="true" />
+									<HeartIcon
+										:class="{ 'text-brand fill-current': isFollowing }"
+										aria-hidden="true"
+									/>
 								</button>
 							</ButtonStyled>
 							<SaveToCollectionButton v-if="currentUserId" :project-id="data.id" />

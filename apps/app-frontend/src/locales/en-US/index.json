@@ -512,6 +512,9 @@
   "app.instance.screenshots.sort-oldest": {
     "message": "Oldest first"
   },
+  "app.instance.screenshots.zoom": {
+    "message": "Zoom"
+  },
   "app.instance.share.empty.description": {
     "message": "You can share this instance with your friends!"
   },
@@ -659,6 +662,9 @@
   "app.instance.worlds.no-worlds-heading": {
     "message": "No servers or worlds added"
   },
+  "app.instance.worlds.refreshing": {
+    "message": "Refreshing..."
+  },
   "app.instance.worlds.remove-server-modal.remove-button": {
     "message": "Remove server"
   },
@@ -718,6 +724,24 @@
   },
   "app.java-selector.test-installation": {
     "message": "Test Java installation"
+  },
+  "app.migration.modrinth.action.choose": {
+    "message": "Choose instances"
+  },
+  "app.migration.modrinth.action.dismiss": {
+    "message": "Dismiss"
+  },
+  "app.migration.modrinth.action.import-all": {
+    "message": "Import all"
+  },
+  "app.migration.modrinth.action.importing": {
+    "message": "Importing..."
+  },
+  "app.migration.modrinth.description": {
+    "message": "{count, plural, one {# instance was} other {# instances were}} found in your Modrinth App installation. Importing copies them here — your Modrinth App stays untouched."
+  },
+  "app.migration.modrinth.title": {
+    "message": "Bring your instances over from Modrinth App"
   },
   "app.modal.install-to-play.additional-context": {
     "message": "Additional context"

@@ -21,6 +21,26 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.17.4-beta.1',
+		date: '2026-08-04T00:00:00+00:00',
+		body: `### Added
+- Modrinth App migration. A banner on the home page detects an existing Modrinth App install and offers to import all of its instances, or hand-pick which ones — reading instance metadata straight out of Modrinth App's own database. Modrinth App also appears as its own entry in the regular "Import instance" flow. Either way, an optional checkbox removes each instance from Modrinth App once its copy has safely finished importing.
+- CurseForge modpack \`.zip\` import from disk is back — install from a local file, same job pipeline (queueing, progress, retry, rollback) as everything else. Search, browse and project pages stay removed.
+- A link to the fork's author on the Changelog settings tab.
+
+### Changed
+- The top-left wordmark dropped "app" from the logo, matching Modrinth's own rebrand.
+- The "Beta" badge on the Language settings tab is purple instead of green, matching the rest of Noctrinth's palette.
+- Byte-size units (KiB/MiB/GiB/TiB) are shown in English instead of transliterated Russian, matching the units players already know.
+- The instance Screenshots tab was rebuilt to match the project Gallery's grid and image viewer, with screenshot-only actions (zoom, copy, reveal in folder, delete) folded into the same floating control bar. Opening the screenshots folder no longer waits for a fresh disk lookup on every click.
+- The embedded Ely.by skin window now hides instead of closing, so a sign-in there is remembered for the rest of the session instead of only the first open.
+- Synced with upstream Modrinth: friends lists collapse offline members by default (with the choice remembered), and a race condition in server ping lookups before the protocol version was resolved is fixed.
+
+### Fixed
+- Ctrl+C failed to copy text out of instance logs and the terminal-style consoles on a non-Latin keyboard layout (e.g. Russian), because the shortcut was matched against the typed character instead of the physical key. Ctrl+A (select all) had the same problem, and on Windows/Linux didn't work at all.
+- Uploading a profile picture in Settings → Profile rejected anything over 256 KiB with a plain browser alert — the exact limit Modrinth's server enforces, so almost any real photo failed. Oversized images are now automatically scaled and compressed to fit, and a failed save now shows the actual error instead of a generic message.`,
+	},
+	{
 		version: '0.17.3',
 		date: '2026-07-31T00:00:00+00:00',
 		body: `### Added

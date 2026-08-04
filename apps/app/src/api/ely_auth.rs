@@ -1,6 +1,6 @@
 use crate::api::Result;
-use tauri::{Emitter, Manager, Runtime};
 use tauri::plugin::TauriPlugin;
+use tauri::{Emitter, Manager, Runtime};
 use theseus::ely_auth;
 use theseus::prelude::ElyCredentials;
 
@@ -19,7 +19,10 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
 }
 
 #[tauri::command]
-pub async fn ely_login(username: String, password: String) -> Result<ElyCredentials> {
+pub async fn ely_login(
+    username: String,
+    password: String,
+) -> Result<ElyCredentials> {
     Ok(ely_auth::login(&username, &password).await?)
 }
 
@@ -58,9 +61,24 @@ const ELY_SKIN_WINDOW_CLOSED_EVENT: &str = "ely-skin-window-closed";
 /// supported way to change a skin — embedding it keeps the flow inside the
 /// app. When the window is closed, an event is emitted so the Skins page can
 /// drop its texture cache and re-render the preview.
+///
+/// Closing hides the window instead of destroying it. Ely.by cannot be logged
+/// in from the launcher's own credentials — its OAuth2 scopes cover account
+/// info and Minecraft sessions, not the website session, and no skin API
+/// exists — so the sign-in inside this webview is the only one there is.
+/// Keeping the webview alive keeps that sign-in, which means the page is
+/// reached logged in on every subsequent open rather than only the first.
 #[tauri::command]
-pub async fn ely_open_skin_window<R: Runtime>(app: tauri::AppHandle<R>) -> Result<()> {
+pub async fn ely_open_skin_window<R: Runtime>(
+    app: tauri::AppHandle<R>,
+) -> Result<()> {
     if let Some(existing) = app.get_webview_window(ELY_SKIN_WINDOW_LABEL) {
+        // Send it back to the upload page: it was left wherever the user
+        // navigated to before hiding it.
+        existing
+            .eval("window.location.assign('https://ely.by/skins/add')")
+            .ok();
+        existing.show().ok();
         existing.set_focus().ok();
         return Ok(());
     }
@@ -81,8 +99,21 @@ pub async fn ely_open_skin_window<R: Runtime>(app: tauri::AppHandle<R>) -> Resul
 
     let handle = app.clone();
     window.on_window_event(move |event| {
-        if matches!(event, tauri::WindowEvent::Destroyed) {
-            handle.emit(ELY_SKIN_WINDOW_CLOSED_EVENT, ()).ok();
+        match event {
+            tauri::WindowEvent::CloseRequested { api, .. } => {
+                api.prevent_close();
+                if let Some(window) =
+                    handle.get_webview_window(ELY_SKIN_WINDOW_LABEL)
+                {
+                    window.hide().ok();
+                }
+                handle.emit(ELY_SKIN_WINDOW_CLOSED_EVENT, ()).ok();
+            }
+            // Still emitted on app shutdown, when the window really does go.
+            tauri::WindowEvent::Destroyed => {
+                handle.emit(ELY_SKIN_WINDOW_CLOSED_EVENT, ()).ok();
+            }
+            _ => {}
         }
     });
 

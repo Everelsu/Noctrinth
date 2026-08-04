@@ -1,9 +1,14 @@
 import { createContext } from '.'
 
 export interface ImportableLauncher {
+	/** Launcher type identifier the platform layer imports by */
 	name: string
+	/** Human-readable name, when the identifier isn't presentable */
+	displayName?: string
 	path: string
 	instances: string[]
+	/** Whether imported instances can be deleted from this launcher afterwards */
+	supportsDeletingSource?: boolean
 }
 
 export interface InstanceImportProvider {

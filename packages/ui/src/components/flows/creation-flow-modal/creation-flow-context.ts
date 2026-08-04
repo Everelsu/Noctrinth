@@ -181,6 +181,8 @@ export interface CreationFlowContextValue {
 	importLaunchers: Ref<ImportableLauncher[]>
 	importSelectedInstances: Ref<Record<string, Set<string>>>
 	importSearchQuery: Ref<string>
+	/** Delete each imported instance from the launcher it came from */
+	importDeleteSource: Ref<boolean>
 
 	// Confirm stage
 	hardReset: Ref<boolean>
@@ -333,6 +335,7 @@ export function createCreationFlowContext(
 	const importLaunchers = ref<ImportableLauncher[]>([])
 	const importSelectedInstances = ref<Record<string, Set<string>>>({})
 	const importSearchQuery = ref('')
+	const importDeleteSource = ref(false)
 
 	const hardReset = ref(isInitialSetup)
 	const loading = ref(false)
@@ -464,6 +467,7 @@ export function createCreationFlowContext(
 		importLaunchers.value = []
 		importSelectedInstances.value = {}
 		importSearchQuery.value = ''
+		importDeleteSource.value = false
 
 		hardReset.value = isInitialSetup
 		loading.value = false
@@ -590,6 +594,7 @@ export function createCreationFlowContext(
 		importLaunchers,
 		importSelectedInstances,
 		importSearchQuery,
+		importDeleteSource,
 		hardReset,
 		loading,
 		finishDisabled,

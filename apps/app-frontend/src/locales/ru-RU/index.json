@@ -485,6 +485,9 @@
   "app.instance.screenshots.sort-oldest": {
     "message": "Сначала старые"
   },
+  "app.instance.screenshots.zoom": {
+    "message": "Масштаб"
+  },
   "app.instance.share.empty.description": {
     "message": "Поделитесь сборкой со своими друзьями!"
   },
@@ -584,6 +587,9 @@
   "app.instance.worlds.no-worlds-heading": {
     "message": "Нет серверов и миров"
   },
+  "app.instance.worlds.refreshing": {
+    "message": "Обновление..."
+  },
   "app.instance.worlds.remove-server-modal.remove-button": {
     "message": "Удалить сервер"
   },
@@ -598,6 +604,24 @@
   },
   "app.instance.worlds.search-worlds-placeholder": {
     "message": "Поиск среди {count} миров..."
+  },
+  "app.migration.modrinth.action.choose": {
+    "message": "Выбрать сборки"
+  },
+  "app.migration.modrinth.action.dismiss": {
+    "message": "Скрыть"
+  },
+  "app.migration.modrinth.action.import-all": {
+    "message": "Перенести все"
+  },
+  "app.migration.modrinth.action.importing": {
+    "message": "Переносим..."
+  },
+  "app.migration.modrinth.description": {
+    "message": "{count, plural, one {Найдена # сборка} few {Найдено # сборки} many {Найдено # сборок} other {Найдено # сборки}} в вашей установке Modrinth App. При переносе они копируются сюда — сам Modrinth App остаётся нетронутым."
+  },
+  "app.migration.modrinth.title": {
+    "message": "Перенесите свои сборки из Modrinth App"
   },
   "app.modal.install-to-play.additional-context": {
     "message": "Дополнительный контекст"
@@ -630,7 +654,7 @@
     "message": "Используйте эту форму, чтобы отправить жалобу на сборки, которые могут нарушать наши <rules-link>Правила</rules-link> или <terms-link>Условия использования</terms-link>."
   },
   "app.modal.install-to-play.report-image-too-large": {
-    "message": "Размер файла превышает лимит в 1 МиБ"
+    "message": "Размер файла превышает лимит в 1 MiB"
   },
   "app.modal.install-to-play.report-reason": {
     "message": "Какое правило нарушает данная сборка?"

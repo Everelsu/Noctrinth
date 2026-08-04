@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import {
-	ChevronLeftIcon,
-	ChevronRightIcon,
+	CalendarIcon,
 	ClipboardCopyIcon,
+	ContractIcon,
+	ExpandIcon,
 	FolderOpenIcon,
 	ImageIcon,
+	LeftArrowIcon,
+	RightArrowIcon,
 	SortAscIcon,
 	SortDescIcon,
 	SpinnerIcon,
@@ -14,6 +17,7 @@ import {
 } from '@modrinth/assets'
 import {
 	ButtonStyled,
+	Card,
 	commonMessages,
 	ConfirmModal,
 	defineMessages,
@@ -71,6 +75,7 @@ const messages = defineMessages({
 	openFolder: { id: 'app.instance.screenshots.reveal', defaultMessage: 'Show in folder' },
 	previous: { id: 'app.instance.screenshots.previous', defaultMessage: 'Previous' },
 	next: { id: 'app.instance.screenshots.next', defaultMessage: 'Next' },
+	zoom: { id: 'app.instance.screenshots.zoom', defaultMessage: 'Zoom' },
 	deleteTitle: {
 		id: 'app.instance.screenshots.delete.title',
 		defaultMessage: 'Delete this screenshot?',
@@ -188,13 +193,24 @@ async function revealShot(shot: Screenshot | null) {
 	await highlightInFolder(shot.path).catch((error) => handleError(error as Error))
 }
 
-async function openScreenshotsFolder() {
+// Resolved once on mount: looking the instance path up on every click added a
+// round trip to a button that already feels slow because it waits on the OS
+// file manager.
+const screenshotsFolder = ref<string | null>(null)
+
+async function resolveScreenshotsFolder() {
 	try {
 		const fullPath = await get_full_path(props.instance.id)
-		await openPath(`${fullPath}/screenshots`)
+		screenshotsFolder.value = `${fullPath}/screenshots`
 	} catch (error) {
 		handleError(error as Error)
 	}
+}
+
+async function openScreenshotsFolder() {
+	if (!screenshotsFolder.value) await resolveScreenshotsFolder()
+	if (!screenshotsFolder.value) return
+	await openPath(screenshotsFolder.value).catch((error) => handleError(error as Error))
 }
 
 function requestDelete(shot: Screenshot | null) {
@@ -343,6 +359,7 @@ function onKeydown(event: KeyboardEvent) {
 onMounted(() => {
 	window.addEventListener('keydown', onKeydown)
 	void loadScreenshots()
+	void resolveScreenshotsFolder()
 })
 
 onUnmounted(() => {
@@ -418,121 +435,46 @@ onUnmounted(() => {
 				</div>
 			</div>
 
-			<div
-				class="grid grid-cols-2 gap-3 sm:grid-cols-3 min-[1100px]:grid-cols-4 min-[1500px]:grid-cols-5"
-			>
-				<button
-					v-for="shot in orderedScreenshots"
-					:key="shot.id"
-					type="button"
-					class="group relative aspect-video w-full cursor-pointer overflow-hidden rounded-xl border border-solid border-divider bg-bg-raised p-0 transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:border-brand hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-					@click="openLightbox(shot)"
-					@contextmenu.prevent="openContextMenu($event, shot)"
-					@mouseenter="hoveredShot = shot"
-					@mouseleave="hoveredShot?.id === shot.id && (hoveredShot = null)"
-					@focus="hoveredShot = shot"
-					@blur="hoveredShot?.id === shot.id && (hoveredShot = null)"
-				>
-					<img
-						:src="srcFor(shot)"
-						alt=""
-						loading="lazy"
-						class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-					/>
-					<div
-						class="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-0.5 bg-gradient-to-t from-black/80 to-transparent px-3 pb-2 pt-6 text-left opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+			<div class="gallery">
+				<Card v-for="shot in orderedScreenshots" :key="shot.id" class="gallery-item">
+					<a
+						role="button"
+						:tabindex="0"
+						:aria-label="shot.fileName"
+						@click="openLightbox(shot)"
+						@keydown.enter.prevent="openLightbox(shot)"
+						@keydown.space.prevent="openLightbox(shot)"
+						@contextmenu.prevent="openContextMenu($event, shot)"
+						@mouseenter="hoveredShot = shot"
+						@mouseleave="hoveredShot?.id === shot.id && (hoveredShot = null)"
+						@focus="hoveredShot = shot"
+						@blur="hoveredShot?.id === shot.id && (hoveredShot = null)"
 					>
-						<span class="truncate text-xs font-medium text-white/90">
-							{{ formatTimestamp(shot.modified) }}
-						</span>
+						<img :src="srcFor(shot)" :alt="shot.fileName" loading="lazy" class="gallery-image" />
+					</a>
+					<div class="gallery-body">
+						<h3 class="truncate">{{ shot.fileName }}</h3>
 					</div>
-				</button>
+					<span class="gallery-time">
+						<CalendarIcon />
+						{{ formatTimestamp(shot.modified) }}
+						<template v-if="shot.size"> · {{ formatSize(shot.size) }} </template>
+					</span>
+				</Card>
 			</div>
 		</template>
 
 		<Teleport to="body">
-			<div
-				v-if="lightboxScreenshot"
-				class="fixed inset-0 z-[90] flex flex-col bg-black/90 backdrop-blur-sm"
-				@click.self="closeLightbox"
-			>
-				<div
-					class="relative z-10 flex items-center justify-between gap-3 bg-gradient-to-b from-black/70 to-transparent p-4 pb-8"
-					@click.stop
-				>
-					<div class="flex min-w-0 flex-col">
-						<span class="truncate text-base font-semibold text-white">
-							{{ lightboxScreenshot.fileName }}
-						</span>
-						<span class="truncate text-sm text-white/60">
-							{{ formatTimestamp(lightboxScreenshot.modified) }}
-							<template v-if="lightboxScreenshot.size">
-								· {{ formatSize(lightboxScreenshot.size) }}
-							</template>
-						</span>
-					</div>
-					<div
-						v-if="orderedScreenshots.length > 1"
-						class="absolute left-1/2 top-4 -translate-x-1/2 rounded-full bg-white/10 px-3 py-1 text-sm font-semibold tabular-nums text-white"
-					>
-						{{ (lightboxIndex ?? 0) + 1 }} / {{ orderedScreenshots.length }}
-					</div>
-					<div class="flex shrink-0 items-center gap-1.5">
-						<ButtonStyled circular>
-							<button
-								v-tooltip="formatMessage(messages.copy)"
-								@click="copyShot(lightboxScreenshot)"
-							>
-								<ClipboardCopyIcon />
-							</button>
-						</ButtonStyled>
-						<ButtonStyled circular>
-							<button
-								v-tooltip="formatMessage(messages.openFolder)"
-								@click="revealShot(lightboxScreenshot)"
-							>
-								<FolderOpenIcon />
-							</button>
-						</ButtonStyled>
-						<ButtonStyled circular color="red">
-							<button
-								v-tooltip="formatMessage(commonMessages.deleteLabel)"
-								@click="requestDelete(lightboxScreenshot)"
-							>
-								<TrashIcon />
-							</button>
-						</ButtonStyled>
-						<ButtonStyled circular>
-							<button v-tooltip="formatMessage(commonMessages.closeButton)" @click="closeLightbox">
-								<XIcon />
-							</button>
-						</ButtonStyled>
-					</div>
-				</div>
-
-				<div
-					class="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden px-4 pb-4"
-					@click.self="closeLightbox"
-					@wheel="onWheel"
-				>
-					<button
-						v-if="orderedScreenshots.length > 1"
-						type="button"
-						class="absolute left-4 z-10 flex size-12 cursor-pointer items-center justify-center rounded-full border-0 bg-white/10 text-white transition-colors hover:bg-white/20"
-						:aria-label="formatMessage(messages.previous)"
-						@click.stop="showPrevious"
-					>
-						<ChevronLeftIcon class="size-7" />
-					</button>
-
+			<div v-if="lightboxScreenshot" class="expanded-image-modal" @click="closeLightbox">
+				<div class="content" @wheel="onWheel">
 					<img
 						:key="lightboxScreenshot.id"
+						class="image"
 						:src="srcFor(lightboxScreenshot)"
-						alt=""
+						:alt="lightboxScreenshot.fileName"
 						draggable="false"
-						class="max-h-full max-w-full select-none rounded-lg object-contain shadow-2xl transition-transform duration-100"
 						:style="{
-							transform: `translate(${panX}px, ${panY}px) scale(${zoom})`,
+							transform: `translate(-50%, -50%) translate(${panX}px, ${panY}px) scale(${zoom})`,
 						}"
 						@click.stop
 						@dblclick="toggleZoom"
@@ -543,21 +485,72 @@ onUnmounted(() => {
 						@pointercancel="onPointerUp"
 					/>
 
-					<button
-						v-if="orderedScreenshots.length > 1"
-						type="button"
-						class="absolute right-4 z-10 flex size-12 cursor-pointer items-center justify-center rounded-full border-0 bg-white/10 text-white transition-colors hover:bg-white/20"
-						:aria-label="formatMessage(messages.next)"
-						@click.stop="showNext"
-					>
-						<ChevronRightIcon class="size-7" />
-					</button>
-
-					<div
-						v-if="isZoomed"
-						class="pointer-events-none absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full bg-black/50 px-3 py-1 text-sm font-medium text-white backdrop-blur"
-					>
-						{{ Math.round(zoom * 100) }}%
+					<div class="floating" @click.stop>
+						<div class="text">
+							<h2>{{ lightboxScreenshot.fileName }}</h2>
+							<p>
+								{{ formatTimestamp(lightboxScreenshot.modified) }}
+								<template v-if="lightboxScreenshot.size">
+									· {{ formatSize(lightboxScreenshot.size) }}
+								</template>
+								<template v-if="orderedScreenshots.length > 1">
+									· {{ (lightboxIndex ?? 0) + 1 }} / {{ orderedScreenshots.length }}
+								</template>
+								<template v-if="isZoomed"> · {{ Math.round(zoom * 100) }}% </template>
+							</p>
+						</div>
+						<div class="controls">
+							<div class="buttons">
+								<ButtonStyled circular>
+									<button
+										v-tooltip="formatMessage(commonMessages.closeButton)"
+										@click="closeLightbox"
+									>
+										<XIcon aria-hidden="true" />
+									</button>
+								</ButtonStyled>
+								<ButtonStyled circular>
+									<button
+										v-tooltip="formatMessage(messages.copy)"
+										@click="copyShot(lightboxScreenshot)"
+									>
+										<ClipboardCopyIcon aria-hidden="true" />
+									</button>
+								</ButtonStyled>
+								<ButtonStyled circular>
+									<button
+										v-tooltip="formatMessage(messages.openFolder)"
+										@click="revealShot(lightboxScreenshot)"
+									>
+										<FolderOpenIcon aria-hidden="true" />
+									</button>
+								</ButtonStyled>
+								<ButtonStyled circular>
+									<button v-tooltip="formatMessage(messages.zoom)" @click="toggleZoom">
+										<ExpandIcon v-if="!isZoomed" aria-hidden="true" />
+										<ContractIcon v-else aria-hidden="true" />
+									</button>
+								</ButtonStyled>
+								<ButtonStyled v-if="orderedScreenshots.length > 1" circular>
+									<button v-tooltip="formatMessage(messages.previous)" @click="showPrevious">
+										<LeftArrowIcon aria-hidden="true" />
+									</button>
+								</ButtonStyled>
+								<ButtonStyled v-if="orderedScreenshots.length > 1" circular>
+									<button v-tooltip="formatMessage(messages.next)" @click="showNext">
+										<RightArrowIcon aria-hidden="true" />
+									</button>
+								</ButtonStyled>
+								<ButtonStyled circular color="red">
+									<button
+										v-tooltip="formatMessage(commonMessages.deleteLabel)"
+										@click="requestDelete(lightboxScreenshot)"
+									>
+										<TrashIcon aria-hidden="true" />
+									</button>
+								</ButtonStyled>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -570,3 +563,162 @@ onUnmounted(() => {
 		</ContextMenu>
 	</div>
 </template>
+
+<!--
+	Grid and viewer deliberately mirror the project gallery
+	(pages/project/Gallery.vue) so screenshots feel like the rest of the app,
+	with the screenshot-only extras — zoom/pan, copy, reveal, delete — folded
+	into the same floating control bar.
+-->
+<style scoped lang="scss">
+.gallery {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+	width: 100%;
+	gap: 1rem;
+}
+
+.gallery-item {
+	padding: 0;
+	overflow: hidden;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+
+	a {
+		cursor: pointer;
+	}
+
+	.gallery-image {
+		width: 100%;
+		aspect-ratio: 2/1;
+		object-fit: cover;
+		object-position: center;
+		display: block;
+	}
+
+	.gallery-body {
+		flex-grow: 1;
+		padding: 1rem 1rem 0.5rem;
+
+		h3 {
+			margin: 0;
+			font-size: 1rem;
+		}
+	}
+
+	.gallery-time {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		padding: 0 1rem 1rem;
+		color: var(--color-secondary);
+		font-size: 0.875rem;
+
+		svg {
+			width: 1rem;
+			height: 1rem;
+			flex-shrink: 0;
+		}
+	}
+}
+
+.expanded-image-modal {
+	position: fixed;
+	z-index: 90;
+	overflow: auto;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.7);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	.content {
+		position: relative;
+		width: calc(100vw - 2 * var(--gap-lg));
+		height: calc(100vh - 2 * var(--gap-lg));
+		overflow: hidden;
+
+		.image {
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			max-width: calc(100vw - 2 * var(--gap-lg));
+			max-height: calc(100vh - 2 * var(--gap-lg));
+			border-radius: var(--radius-lg);
+			user-select: none;
+			transition: transform 0.1s ease-out;
+		}
+
+		.floating {
+			position: absolute;
+			left: 50%;
+			transform: translateX(-50%);
+			bottom: var(--gap-md);
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: var(--gap-md);
+			transition: opacity 0.25s ease-in-out;
+			opacity: 1;
+			padding: 2rem 2rem 0 2rem;
+
+			&:not(&:hover) {
+				opacity: 0.4;
+
+				.text {
+					transform: translateY(2.5rem) scale(0.8);
+					opacity: 0;
+				}
+
+				.controls {
+					transform: translateY(0.25rem) scale(0.9);
+				}
+			}
+
+			.text {
+				display: flex;
+				flex-direction: column;
+				max-width: 40rem;
+				transition:
+					opacity 0.25s ease-in-out,
+					transform 0.25s ease-in-out;
+				text-shadow: 1px 1px 10px #000000d4;
+				margin-bottom: 0.25rem;
+				gap: 0.5rem;
+
+				h2 {
+					color: var(--dark-color-base);
+					font-size: 1.25rem;
+					text-align: center;
+					margin: 0;
+					word-break: break-all;
+				}
+
+				p {
+					color: var(--dark-color-base);
+					text-align: center;
+					margin: 0;
+				}
+			}
+
+			.controls {
+				background-color: var(--color-raised-bg);
+				padding: var(--gap-md);
+				border-radius: var(--radius-md);
+				transition:
+					opacity 0.25s ease-in-out,
+					transform 0.25s ease-in-out;
+			}
+		}
+	}
+}
+
+.buttons {
+	display: flex;
+	gap: 0.5rem;
+}
+</style>

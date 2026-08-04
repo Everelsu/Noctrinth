@@ -58,7 +58,7 @@
 					<div class="flex flex-col gap-2">
 						<ButtonStyled>
 							<FileInput
-								:max-size="262144"
+								:max-size="20971520"
 								:show-icon="true"
 								class="button-like !shadow-none"
 								:prompt="formatMessage(commonMessages.uploadImageButton)"
@@ -169,6 +169,14 @@ const auth = injectAuth()
 const notificationManager = injectNotificationManager()
 const { formatMessage } = useVIntl()
 
+/** Matches the cap Modrinth enforces on `PATCH /user/:id/icon`. */
+const MAX_AVATAR_BYTES = 262144
+/** Generous enough to stay sharp — the server rescales to 96px anyway. */
+const MAX_AVATAR_DIMENSION = 512
+/** Image formats the API will accept an extension for. */
+const UPLOADABLE_EXTENSIONS = new Set(['png', 'jpeg', 'jpg', 'gif', 'webp', 'bmp'])
+const RECOMPRESS_QUALITIES = [0.9, 0.8, 0.7, 0.6, 0.5, 0.4]
+
 const activeUserId = ref<string | null>(null)
 const original = ref<ProfileFields>({ username: '', bio: '' })
 const current = ref<ProfileFields>({ username: '', bio: '' })
@@ -272,6 +280,53 @@ function handleProfileLinkClick(
 	}
 }
 
+function canvasToBlob(canvas: HTMLCanvasElement, quality: number): Promise<Blob | null> {
+	return new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', quality))
+}
+
+/**
+ * Returns the bytes to upload for the picked file.
+ *
+ * Anything already small enough and in a format the API knows goes up as-is.
+ * Everything else is rescaled and re-encoded until it fits, so an ordinary
+ * phone photo can be used as an avatar instead of being rejected — the server
+ * scales the icon down to 96px regardless of what it receives.
+ */
+async function prepareAvatar(file: File): Promise<{ blob: Blob; extension: string }> {
+	const nativeExtension = file.type.split('/').at(-1)?.toLowerCase()
+
+	if (
+		file.size <= MAX_AVATAR_BYTES &&
+		nativeExtension &&
+		UPLOADABLE_EXTENSIONS.has(nativeExtension)
+	) {
+		return { blob: file, extension: nativeExtension }
+	}
+
+	const bitmap = await createImageBitmap(file)
+	try {
+		const scale = Math.min(1, MAX_AVATAR_DIMENSION / Math.max(bitmap.width, bitmap.height))
+		const canvas = document.createElement('canvas')
+		canvas.width = Math.max(1, Math.round(bitmap.width * scale))
+		canvas.height = Math.max(1, Math.round(bitmap.height * scale))
+
+		const context = canvas.getContext('2d')
+		if (!context) throw new Error('Could not prepare the image for upload.')
+		context.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+
+		for (const quality of RECOMPRESS_QUALITIES) {
+			const blob = await canvasToBlob(canvas, quality)
+			if (blob && blob.size <= MAX_AVATAR_BYTES) {
+				return { blob, extension: 'webp' }
+			}
+		}
+
+		throw new Error('The selected image could not be compressed enough to upload.')
+	} finally {
+		bitmap.close()
+	}
+}
+
 async function save(): Promise<void> {
 	const user = auth.user.value
 	if (!user || saving.value) return
@@ -292,19 +347,24 @@ async function save(): Promise<void> {
 		if (pendingAvatarDeletion.value) {
 			await props.deleteAvatar(user.id)
 		} else if (avatarFile.value) {
-			const extension = avatarFile.value.type.split('/').at(-1)
-			if (!extension) throw new Error('The selected image does not have a valid file type.')
-			await props.changeAvatar(user.id, avatarFile.value, extension)
+			const { blob, extension } = await prepareAvatar(avatarFile.value)
+			await props.changeAvatar(user.id, blob, extension)
 		}
 
 		const refreshedUser = await props.getAuthenticatedUser()
 		auth.user.value = refreshedUser
 		syncFromUser(refreshedUser)
-	} catch {
+	} catch (error) {
+		// Carry the underlying reason through: without it every failure —
+		// oversized image, rejected username, dropped connection — looked
+		// identical and left nothing to act on.
+		const reason = error instanceof Error ? error.message : String(error)
 		notificationManager.addNotification({
 			type: 'error',
 			title: formatMessage(messages.saveError),
-			text: formatMessage(messages.saveErrorDescription),
+			text: reason
+				? `${formatMessage(messages.saveErrorDescription)} ${reason}`
+				: formatMessage(messages.saveErrorDescription),
 		})
 	} finally {
 		saving.value = false

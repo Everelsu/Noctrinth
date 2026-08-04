@@ -100,6 +100,10 @@ pub enum CreatePackLocation {
     // Create a pack from a file (such as an .mrpack for installing from a file, or a folder name for importing)
     FromFile {
         path: PathBuf,
+        // Present so a CurseForge modpack zip imported from disk can be
+        // resolved through the CurseForge API. Ignored for .mrpack files.
+        #[serde(default)]
+        curseforge_api_key: Option<String>,
     },
 }
 
@@ -181,14 +185,92 @@ pub async fn get_instance_from_pack(
             }),
             ..Default::default()
         }),
-        CreatePackLocation::FromFile { path } => {
+        CreatePackLocation::FromFile {
+            path,
+            curseforge_api_key,
+        } => {
             let file_name = path
                 .file_stem()
                 .unwrap_or_default()
                 .to_string_lossy()
                 .to_string();
 
-            let is_known_file = if tokio::fs::metadata(&path).await?.len()
+            // Detect what kind of modpack this is so we can fail BEFORE the
+            // frontend creates an empty profile that we'd then have to delete
+            // out from under the user. The two recognised formats:
+            //   - Modrinth .mrpack: contains `modrinth.index.json`
+            //   - CurseForge zip: contains `manifest.json`
+            // Anything else flows through the legacy "unknown_file" warning
+            // path (user gets a confirm dialog before install).
+            let has_mrpack_manifest =
+                crate::pack::install_curseforge::zip_file_has_entry(
+                    &path,
+                    "modrinth.index.json",
+                )
+                .await?;
+            let has_cf_manifest =
+                crate::pack::install_curseforge::zip_file_has_entry(
+                    &path,
+                    "manifest.json",
+                )
+                .await?;
+
+            // CurseForge modpack but no API key → there's no way the install
+            // can succeed. Error here so no profile is created in the first
+            // place — much better than installing-then-deleting.
+            if has_cf_manifest && !has_mrpack_manifest {
+                let valid_key = curseforge_api_key
+                    .as_deref()
+                    .map(|k| !k.trim().is_empty())
+                    .unwrap_or(false);
+                if !valid_key {
+                    return Err(crate::ErrorKind::InputError(
+                        "This is a CurseForge modpack, but no CurseForge API \
+                         key is available. The launcher needs an API key to \
+                         resolve modpack files through CurseForge."
+                            .to_string(),
+                    )
+                    .into());
+                }
+
+                // Preview with the pack's real name, Minecraft version and
+                // loader from the manifest so the creation modal (and the
+                // instance created by the job) shows accurate info instead
+                // of the filename and placeholder defaults.
+                let file_bytes =
+                    bytes::Bytes::from(crate::util::io::read(&path).await?);
+                let meta =
+                    crate::pack::install_curseforge::read_curseforge_pack_meta(
+                        &file_bytes,
+                    )
+                    .await?;
+                return Ok(CreatePackInstance {
+                    name: meta.name.clone(),
+                    game_version: meta.game_version,
+                    modloader: meta.loader,
+                    loader_version: meta.loader_version,
+                    link: Some(InstanceLink::ImportedModpack {
+                        project_id: None,
+                        version_id: None,
+                        name: Some(meta.name),
+                        version_number: meta.version,
+                        filename: path
+                            .file_name()
+                            .map(|x| x.to_string_lossy().to_string()),
+                    }),
+                    unknown_file: false,
+                    ..Default::default()
+                });
+            }
+
+            // Hash-against-Modrinth lookup only for files that aren't an
+            // obvious modpack format — it's the legacy "is this a known
+            // file?" heuristic and incurs a network round-trip. Very large
+            // files are never looked up (matching upstream): treating them as
+            // unknown avoids a pointless hash of a multi-gigabyte archive.
+            let is_known_file = if has_mrpack_manifest {
+                true
+            } else if tokio::fs::metadata(&path).await?.len()
                 <= MAX_LOCAL_FILE_HASH_LOOKUP_SIZE
             {
                 let state = State::get().await?;

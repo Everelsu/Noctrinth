@@ -71,6 +71,10 @@ pub enum FeatureFlag {
     AdvancedFiltersCollapsed,
     AlwaysShowCopyDetails,
     HideInstalledModpacks,
+    FriendsActiveCollapsed,
+    FriendsOnlineCollapsed,
+    FriendsOfflineCollapsed,
+    FriendsPendingCollapsed,
 }
 
 impl Settings {

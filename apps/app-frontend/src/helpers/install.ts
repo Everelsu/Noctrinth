@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
 
+import { CURSEFORGE_API_KEY } from './curseforge-key'
 import { install_job_listener } from './events'
 import type { InstanceLink, InstanceLoader } from './types'
 
@@ -14,9 +15,24 @@ export interface PackLocationVersionId {
 export interface PackLocationFile {
 	type: 'fromFile'
 	path: string
+	/** Lets the backend resolve CurseForge modpack zips imported from disk. */
+	curseforge_api_key?: string | null
 }
 
 export type CreatePackLocation = PackLocationVersionId | PackLocationFile
+
+/**
+ * Build a `fromFile` pack location. Always stamps the CurseForge API key so a
+ * CurseForge modpack zip picked from disk can be resolved by the backend —
+ * without it the preview/install fails even when the key is configured.
+ */
+export function packLocationFromFile(path: string): PackLocationFile {
+	return {
+		type: 'fromFile',
+		path,
+		curseforge_api_key: CURSEFORGE_API_KEY || null,
+	}
+}
 
 export interface InstallModpackPreview {
 	name: string

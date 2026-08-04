@@ -193,17 +193,22 @@ export function useTerminal(options: UseTerminalOptions): UseTerminalReturn {
 		term.options.disableStdin = true
 		term.write('\x1b[?25l')
 
+		// Shortcuts are matched on `e.code` (physical key) rather than `e.key`,
+		// so they work on non-Latin keyboard layouts too — on a Russian layout
+		// Ctrl+C reports `e.key === 'с'` (Cyrillic es), which never matched the
+		// `'c'` check, leaving the terminal to swallow the key and copy nothing.
 		term.attachCustomKeyEventHandler((e) => {
 			if (e.type !== 'keydown') return true
 			const mod = e.ctrlKey || e.metaKey
 			if (!mod) return true
-			const key = e.key.toLowerCase()
-			if (key === 'a') {
+			if (e.code === 'KeyA') {
 				e.preventDefault()
 				term.selectAll()
 				return false
 			}
-			if (key === 'c' || key === 'insert') {
+			// Returning false hands the key to the browser, whose native copy
+			// picks up the selection xterm mirrors into its helper textarea.
+			if (e.code === 'KeyC' || e.code === 'Insert') {
 				return false
 			}
 			return true

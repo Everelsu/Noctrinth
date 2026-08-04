@@ -48,7 +48,6 @@ import {
 	provideNotificationManager,
 	providePageContext,
 	providePopupNotificationManager,
-	TextLogo,
 	useDebugLogger,
 	useFormatBytes,
 	useHostingIntercom,
@@ -65,6 +64,7 @@ import { saveWindowState, StateFlags } from '@tauri-apps/plugin-window-state'
 import { computed, onMounted, onUnmounted, provide, ref, watch } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 
+import NoctrinthTextLogo from '@/assets/noctrinth-text.svg?component'
 import AccountsCard from '@/components/ui/AccountsCard.vue'
 import AppActionBar from '@/components/ui/AppActionBar.vue'
 import Breadcrumbs from '@/components/ui/Breadcrumbs.vue'
@@ -101,7 +101,11 @@ import { debugAnalytics, initAnalytics, trackEvent } from '@/helpers/analytics'
 import { check_reachable, get_default_user } from '@/helpers/auth.js'
 import { get_user, get_version } from '@/helpers/cache.js'
 import { command_listener, notification_listener, warning_listener } from '@/helpers/events.js'
-import { install_create_modpack_instance, install_get_modpack_preview } from '@/helpers/install'
+import {
+	install_create_modpack_instance,
+	install_get_modpack_preview,
+	packLocationFromFile,
+} from '@/helpers/install'
 import { can_current_user_use_shared_instances, get as getInstance, run } from '@/helpers/instance'
 import { get as getCreds, login, logout } from '@/helpers/mr_auth.ts'
 import { mergeUrlQuery, parseModrinthLink } from '@/helpers/project-links.ts'
@@ -1096,7 +1100,7 @@ async function handleCommand(e) {
 	if (e.event === 'RunMRPack') {
 		// RunMRPack should directly install a local mrpack given a path
 		if (e.path.endsWith('.mrpack')) {
-			const location = { type: 'fromFile', path: e.path }
+			const location = packLocationFromFile(e.path)
 			const preview = await install_get_modpack_preview(location).catch(handleError)
 			if (preview?.unknownFile || preview?.externalFilesInModpack.length > 0) {
 				const splitPath = e.path.split(/[\\/]/)
@@ -1684,7 +1688,7 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 		</div>
 		<div data-tauri-drag-region class="app-grid-statusbar bg-bg-raised h-[--top-bar-height] flex">
 			<div data-tauri-drag-region class="flex min-w-0 flex-1 items-center overflow-hidden p-2">
-				<TextLogo class="h-7 w-auto shrink-0 text-contrast pointer-events-none" />
+				<NoctrinthTextLogo class="h-7 w-auto shrink-0 text-contrast pointer-events-none" />
 				<div data-tauri-drag-region class="ml-2 flex shrink-0 items-center gap-2">
 					<ButtonStyled type="outlined" circular>
 						<button

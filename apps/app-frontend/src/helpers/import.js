@@ -15,6 +15,7 @@ import { install_import_instance } from './install'
   - ATLauncher
   - Curseforge
   - PrismLauncher
+  - ModrinthApp
   - Unknown (shouldn't be used, but is used internally if the launcher type isn't recognized)
 
   For each launcher type, we can get a guess of the default path for the launcher, and a list of importable instances
@@ -50,4 +51,14 @@ export async function is_valid_importable_instance(instanceFolder, launcherType)
 /// eg: get_default_launcher_path("MultiMC")
 export async function get_default_launcher_path(launcherType) {
 	return await invoke('plugin:import|get_default_launcher_path', { launcherType })
+}
+
+/// Deletes an already-imported instance from the launcher it came from.
+/// Only supported for ModrinthApp.
+export async function remove_source_instance(launcherType, basePath, instanceFolder) {
+	return await invoke('plugin:import|remove_source_instance', {
+		launcherType,
+		basePath,
+		instanceFolder,
+	})
 }

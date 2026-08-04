@@ -863,6 +863,12 @@
   "creation-flow.modal.import-instance.custom-launcher.name": {
     "defaultMessage": "Custom ({pathName})"
   },
+  "creation-flow.modal.import-instance.delete-source.description": {
+    "defaultMessage": "Deletes each imported instance's files from the other launcher, so they aren't stored twice. Leave this off to keep both copies."
+  },
+  "creation-flow.modal.import-instance.delete-source.label": {
+    "defaultMessage": "Remove from {launcher} after importing"
+  },
   "creation-flow.modal.import-instance.detecting-launcher-instances": {
     "defaultMessage": "Detecting launcher instances..."
   },

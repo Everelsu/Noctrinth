@@ -8,20 +8,29 @@ import {
 	import_instance,
 } from '@/helpers/import.js'
 
+/** Launcher type identifiers understood by the backend, with how they're shown. */
+const LAUNCHERS = [
+	{ name: 'ModrinthApp', displayName: 'Modrinth App', supportsDeletingSource: true },
+	{ name: 'MultiMC' },
+	{ name: 'GDLauncher' },
+	{ name: 'ATLauncher' },
+	{ name: 'Curseforge' },
+	{ name: 'PrismLauncher' },
+] as const
+
 export function setupInstanceImportProvider(notificationManager: AbstractWebNotificationManager) {
 	const { handleError } = notificationManager
 
 	provideInstanceImport({
 		async getDetectedLaunchers() {
-			const launcherNames = ['MultiMC', 'GDLauncher', 'ATLauncher', 'Curseforge', 'PrismLauncher']
 			const launchers = []
-			for (const name of launcherNames) {
+			for (const launcher of LAUNCHERS) {
 				try {
-					const path = await get_default_launcher_path(name)
+					const path = await get_default_launcher_path(launcher.name)
 					if (!path) continue
-					const instances = await get_importable_instances(name, path)
+					const instances = await get_importable_instances(launcher.name, path)
 					if (instances?.length > 0) {
-						launchers.push({ name, path, instances })
+						launchers.push({ ...launcher, path, instances })
 					}
 				} catch {
 					// Skip launchers that fail detection

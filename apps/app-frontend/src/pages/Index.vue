@@ -6,6 +6,7 @@ import dayjs from 'dayjs'
 import { computed, onUnmounted, ref } from 'vue'
 
 import RowDisplay from '@/components/RowDisplay.vue'
+import ModrinthMigrationBanner from '@/components/ui/ModrinthMigrationBanner.vue'
 import RecentWorldsList from '@/components/ui/world/RecentWorldsList.vue'
 import { get_search_results } from '@/helpers/cache.js'
 import { instance_listener } from '@/helpers/events'
@@ -108,6 +109,7 @@ onUnmounted(() => {
 	<div class="p-6 flex flex-col gap-2">
 		<h1 v-if="recentInstances?.length > 0" class="m-0 text-2xl font-extrabold">Welcome back!</h1>
 		<h1 v-else class="m-0 text-2xl font-extrabold">Welcome to Noctrinth!</h1>
+		<ModrinthMigrationBanner class="my-2" />
 		<RecentWorldsList :recent-instances="recentInstances" />
 		<RowDisplay
 			v-if="hasFeaturedProjects"

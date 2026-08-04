@@ -13,6 +13,11 @@ pub enum ContentSourceKind {
     ModrinthHosting,
     ImportedModpack,
     SharedInstance,
+    /// A file installed from CurseForge. The owning content entry stores the
+    /// CurseForge numeric project id and file id in its `project_id` /
+    /// `version_id` columns (as strings), since CurseForge content has no
+    /// Modrinth hash mapping.
+    CurseForge,
 }
 
 impl ContentSourceKind {
@@ -33,6 +38,7 @@ impl ContentSourceKind {
             Self::ModrinthHosting => "modrinth_hosting",
             Self::ImportedModpack => "imported_modpack",
             Self::SharedInstance => "shared_instance",
+            Self::CurseForge => "curseforge",
         }
     }
 
@@ -44,6 +50,7 @@ impl ContentSourceKind {
             "modrinth_hosting" => Ok(Self::ModrinthHosting),
             "imported_modpack" => Ok(Self::ImportedModpack),
             "shared_instance" => Ok(Self::SharedInstance),
+            "curseforge" => Ok(Self::CurseForge),
             other => Err(unknown_value("content source kind", other)),
         }
     }

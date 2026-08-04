@@ -10,7 +10,11 @@ import { getNoctrinthChangelog } from '@/helpers/noctrinth-changelog'
 
 const { formatMessage } = useVIntl()
 
+/** Landing page of the fork's author, linked from the changelog header. */
+const AUTHOR_URL = 'https://everelsu.github.io/RelsevLink/'
+
 const messages = defineMessages({
+	author: { id: 'app.changelog.author', defaultMessage: 'Author' },
 	sourceNoctrinth: { id: 'app.changelog.source.noctrinth', defaultMessage: 'Noctrinth' },
 	sourceModrinth: { id: 'app.changelog.source.modrinth', defaultMessage: 'Modrinth' },
 	modrinthNote: {
@@ -112,13 +116,21 @@ const entries = computed<ChangelogEntry[]>(() =>
 
 <template>
 	<div class="flex flex-col gap-5">
-		<Chips
-			v-model="source"
-			:items="sourceOptions"
-			:format-label="formatSourceLabel"
-			:capitalize="false"
-			never-empty
-		/>
+		<div class="flex flex-wrap items-center justify-between gap-3">
+			<Chips
+				v-model="source"
+				:items="sourceOptions"
+				:format-label="formatSourceLabel"
+				:capitalize="false"
+				never-empty
+			/>
+			<ButtonStyled size="small">
+				<button @click="openUrl(AUTHOR_URL)">
+					{{ formatMessage(messages.author) }}
+					<ExternalIcon aria-hidden="true" />
+				</button>
+			</ButtonStyled>
+		</div>
 
 		<section
 			v-for="(entry, entryIdx) in entries"

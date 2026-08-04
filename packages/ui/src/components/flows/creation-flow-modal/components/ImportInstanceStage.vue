@@ -50,7 +50,9 @@
 							@update:model-value="toggleLauncherAll(launcher, $event)"
 							@click.stop
 						/>
-						<span class="font-semibold text-contrast">{{ launcher.name }}</span>
+						<span class="font-semibold text-contrast">{{
+							launcher.displayName ?? launcher.name
+						}}</span>
 					</button>
 
 					<!-- Instance list (expanded) -->
@@ -71,6 +73,23 @@
 							</template>
 						</div>
 					</Collapsible>
+				</div>
+			</div>
+
+			<div
+				v-if="deletableSourceLaunchers.length > 0"
+				class="flex items-start gap-3 rounded-2xl bg-surface-3 p-3"
+			>
+				<Checkbox v-model="ctx.importDeleteSource.value" class="mt-0.5" />
+				<div class="flex flex-col gap-1">
+					<span class="font-semibold text-contrast">
+						{{
+							formatMessage(messages.deleteSourceLabel, { launcher: deletableSourceLaunchers[0] })
+						}}
+					</span>
+					<span class="text-sm text-secondary">
+						{{ formatMessage(messages.deleteSourceDescription) }}
+					</span>
 				</div>
 			</div>
 
@@ -168,7 +187,28 @@ const messages = defineMessages({
 		id: 'creation-flow.modal.import-instance.custom-launcher.name',
 		defaultMessage: 'Custom ({pathName})',
 	},
+	deleteSourceLabel: {
+		id: 'creation-flow.modal.import-instance.delete-source.label',
+		defaultMessage: 'Remove from {launcher} after importing',
+	},
+	deleteSourceDescription: {
+		id: 'creation-flow.modal.import-instance.delete-source.description',
+		defaultMessage:
+			"Deletes each imported instance's files from the other launcher, so they aren't stored twice. Leave this off to keep both copies.",
+	},
 })
+
+// Launchers among the current selection whose instances can be deleted after
+// importing — the checkbox is pointless unless one is actually selected.
+const deletableSourceLaunchers = computed(() =>
+	ctx.importLaunchers.value
+		.filter(
+			(launcher) =>
+				launcher.supportsDeletingSource &&
+				(ctx.importSelectedInstances.value[launcher.name]?.size ?? 0) > 0,
+		)
+		.map((launcher) => launcher.displayName ?? launcher.name),
+)
 
 // Load detected launchers on mount
 onMounted(async () => {

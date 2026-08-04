@@ -1,53 +1,54 @@
-name: Noctrinth Release
+name: Noctrinth Pre-release
 
-# Builds, signs and publishes Noctrinth desktop bundles to GitHub Releases.
-# The Tauri updater (configured in apps/app/tauri.conf.json) reads the
-# generated `latest.json` from the latest published release.
+# Builds and publishes a Noctrinth pre-release (beta / rc) to GitHub Releases.
+#
+# The difference from noctrinth-release.yml is what happens to the updater:
+# this workflow deliberately does NOT publish `latest.json` to the `updater`
+# branch. That branch is the endpoint every installed copy polls (see
+# apps/app/tauri.conf.json), so writing a beta there would hand the beta to
+# everyone. Pre-releases are install-it-yourself from the release page.
+#
+# Because the version carries a semver pre-release suffix, the ordering works
+# out on its own:
+#   0.17.3  <  0.17.4-beta.1  <  0.17.4
+# so a tester on a beta is offered the stable 0.17.4 as soon as it ships.
 #
 # Release flow:
-#   1. Bump the version in apps/app-frontend/package.json (the single source of
-#      truth — the crate versions and release name are derived from it).
+#   1. Set a pre-release version in apps/app-frontend/package.json — it must
+#      carry a suffix, e.g. `0.17.4-beta.1` or `0.17.4-rc.2`. This is the
+#      single source of truth; the crate versions and the release name are
+#      derived from it.
 #   2. Commit, then push a matching tag, e.g.
-#        git tag v0.17.3 && git push origin v0.17.3
-#      Either `v0.17.3` or `noctrinth-v0.17.3` triggers a release; the tag
-#      name is only a label, the built version always comes from package.json.
-#   3. This workflow builds every OS, creates a DRAFT release, uploads the
-#      bundles + latest.json. Review it, then publish the draft — updates go
-#      live for existing installs once the release is published.
+#        git tag noctrinth-v0.17.4-beta.1 && git push origin noctrinth-v0.17.4-beta.1
+#      Either `v0.17.4-beta.1` or `noctrinth-v0.17.4-beta.1` triggers this
+#      workflow; the tag name is only a label, the built version always comes
+#      from package.json.
+#   3. This workflow builds every OS and creates a DRAFT release flagged as a
+#      pre-release. Review it, then publish.
+#   4. When the stable release is ready, drop the suffix from package.json and
+#      use the Noctrinth Release workflow instead.
 #
-# Note on tags: `git fetch upstream` pulls in Modrinth's own `v*` tags. Those
-# stay local unless you run `git push --tags`; push only the specific release
-# tag (`git push origin v0.17.3`) so an upstream tag never triggers a build.
-# The `noctrinth-v*` pattern is offered as a collision-free alternative.
-#
-# Required repository secrets:
-#   TAURI_SIGNING_PRIVATE_KEY           contents of ~/.tauri/noctrinth-updater.key
-#   TAURI_SIGNING_PRIVATE_KEY_PASSWORD  the key password (empty string if none)
-#   CURSEFORGE_API_KEY                  CurseForge API key; without it importing
-#                                       a CurseForge modpack zip is disabled
+# Required repository secrets: the same set as noctrinth-release.yml.
 
 on:
   push:
     tags:
-      - 'v*'
-      - 'noctrinth-v*'
-      # Semver pre-release tags (`v0.17.4-beta.1`) belong to
-      # noctrinth-prerelease.yml — excluded here so one tag never starts two
-      # builds that would fight over the same GitHub release.
-      - '!v*-*'
-      - '!noctrinth-v*-*'
+      # Only semver pre-release tags — a plain `v0.17.4` belongs to
+      # noctrinth-release.yml.
+      - 'v*-*'
+      - 'noctrinth-v*-*'
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Existing release tag to build (e.g. v0.17.3)'
+        description: 'Existing pre-release tag to build (e.g. v0.17.4-beta.1)'
         required: true
 
 concurrency:
-  group: noctrinth-release-${{ github.ref }}
+  group: noctrinth-prerelease-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  release:
+  prerelease:
     permissions:
       contents: write
 
@@ -147,21 +148,20 @@ jobs:
           printf 'VITE_CURSEFORGE_API_KEY=%s\n' "$CURSEFORGE_API_KEY" \
             > apps/app-frontend/.env.local
 
-      - name: Check the version is a stable one
+      - name: Check the version is a pre-release one
         shell: bash
         run: |
-          # A stable build must not ship a pre-release version: the updater
-          # manifest published by this workflow is what every existing install
-          # follows, so a `-beta` slipping through would push a beta to
-          # everyone. Pre-releases go through noctrinth-prerelease.yml.
+          # Guards the mistake this split invites: tagging `-beta.1` while
+          # package.json still holds a stable version would build and publish a
+          # normal release under a pre-release tag.
           VERSION=$(node -p "require('./apps/app-frontend/package.json').version")
           case "$VERSION" in
-            *-*)
-              echo "::error::apps/app-frontend/package.json is at pre-release version $VERSION. Use the Noctrinth Pre-release workflow, or set a stable version."
+            *-*) echo "Building pre-release version $VERSION" ;;
+            *)
+              echo "::error::apps/app-frontend/package.json is at stable version $VERSION. Give it a pre-release suffix (e.g. $VERSION-beta.1), or use the Noctrinth Release workflow."
               exit 1
               ;;
           esac
-          echo "Building stable version $VERSION"
 
       - name: Sync crate versions from package.json
         shell: bash
@@ -169,8 +169,8 @@ jobs:
           # The app version lives in app-frontend/package.json; mirror it into
           # the Rust crates so the user-agent and crate metadata stay in sync.
           # Reading it here (rather than parsing the git tag) means a tag named
-          # `v0.17.3` — or anything else — can never write an invalid version
-          # like "v0.17.3" into Cargo.toml, which Cargo rejects as non-semver.
+          # `v0.17.4-beta.1` — or anything else — can never write an invalid
+          # version into Cargo.toml, which Cargo rejects as non-semver.
           VERSION=$(node -p "require('./apps/app-frontend/package.json').version")
           echo "Setting crate versions to $VERSION"
           for f in apps/app/Cargo.toml packages/app-lib/Cargo.toml; do
@@ -195,15 +195,15 @@ jobs:
           tagName: ${{ github.event.inputs.tag || github.ref_name }}
           releaseName: 'Noctrinth __VERSION__'
           releaseDraft: true
-          prerelease: false
+          prerelease: true
           args: ${{ matrix.args }}
 
-  # Moves the updater manifest off the release page: `latest.json` is committed
-  # to the `updater` branch and, together with the `.sig` signature files, is
-  # removed from the release so only the actual installers remain visible.
+  # Same presentation pass as the stable workflow — release notes from the
+  # changelog and no updater plumbing left on the release page — except that
+  # `latest.json` is discarded rather than committed to the `updater` branch.
   finalize:
-    name: Publish updater manifest
-    needs: release
+    name: Finalize pre-release
+    needs: prerelease
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -223,47 +223,32 @@ jobs:
           # source the crate versions came from — independent of the tag name.
           VERSION=$(node -p "require('./apps/app-frontend/package.json').version")
 
-          # Pull the matching entry out of noctrinth-changelog.ts. If there
-          # isn't one we leave the auto-generated body alone rather than fail
-          # the whole release pipeline.
           if node scripts/extract-changelog.mjs "$VERSION" RELEASE_BODY.md; then
             echo "Updating release body for $TAG"
-            gh release edit "$TAG" --notes-file RELEASE_BODY.md
           else
-            echo "::warning::No changelog entry for $VERSION — release body left as-is"
+            echo "::warning::No changelog entry for $VERSION — using a placeholder body"
+            printf '%s\n' "Pre-release build \`$VERSION\`." > RELEASE_BODY.md
           fi
 
-      - name: Relocate updater manifest and strip signatures
+          # Testers need to know this build will not arrive by auto-update.
+          # Written with printf rather than a heredoc: a heredoc terminator
+          # cannot be indented, and un-indenting it inside a YAML block scalar
+          # is a parse error.
+          printf '\n---\n\n**This is a pre-release.** It is not served to the auto-updater, so install it manually. Once the matching stable release ships, the app will offer it as a normal update.\n' \
+            >> RELEASE_BODY.md
+
+          gh release edit "$TAG" --notes-file RELEASE_BODY.md --prerelease
+
+      - name: Strip updater manifest and signatures from the release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ github.event.inputs.tag || github.ref_name }}
         run: |
           set -euo pipefail
 
-          # Grab the updater manifest produced by the build jobs.
-          mkdir -p manifest
-          gh release download "$TAG" --pattern latest.json --dir manifest --clobber
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Commit latest.json to the dedicated `updater` branch (orphan branch
-          # holding only the manifest — the Tauri updater endpoint points here).
-          if git ls-remote --exit-code --heads origin updater >/dev/null 2>&1; then
-            git fetch origin updater
-            git checkout updater
-          else
-            git checkout --orphan updater
-            git rm -rf . >/dev/null 2>&1 || true
-          fi
-
-          cp manifest/latest.json latest.json
-          git add latest.json
-          git commit -m "updater: $TAG" || echo "Manifest unchanged"
-          git push origin updater
-
-          # Remove the manifest and signature files from the release page so
-          # only the installers are shown to users.
+          # `latest.json` is intentionally NOT committed to the `updater`
+          # branch here — see the note at the top of this file. Removing it (and
+          # the detached signatures) leaves only the installers on the page.
           gh release view "$TAG" --json assets --jq '.assets[].name' \
             | grep -E '(^latest\.json$|\.sig$)' \
             | while read -r asset; do

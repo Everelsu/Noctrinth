@@ -11,6 +11,7 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
             get_importable_instances,
             is_valid_importable_instance,
             get_default_launcher_path,
+            remove_source_instance,
         ])
         .build()
 }
@@ -37,6 +38,22 @@ pub async fn is_valid_importable_instance(
         import::is_valid_importable_instance(instance_folder, launcher_type)
             .await,
     )
+}
+
+/// Deletes an instance from the launcher it was imported from, once the import
+/// has finished. Only supported for Modrinth App.
+#[tauri::command]
+pub async fn remove_source_instance(
+    launcher_type: ImportLauncherType,
+    base_path: PathBuf,
+    instance_folder: String,
+) -> Result<()> {
+    Ok(import::remove_source_instance(
+        launcher_type,
+        base_path,
+        instance_folder,
+    )
+    .await?)
 }
 
 /// Returns the default path for the given launcher type

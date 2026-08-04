@@ -190,7 +190,9 @@ function handleDocumentPointerDown(event: PointerEvent) {
 }
 
 function handleDocumentKeyDown(event: KeyboardEvent) {
-	if (!event.metaKey || event.key.toLowerCase() !== 'a') return
+	// Ctrl on Windows/Linux as well as Cmd, and matched on the physical key so
+	// a non-Latin layout still triggers it.
+	if (!(event.ctrlKey || event.metaKey) || event.code !== 'KeyA') return
 	const target = event.target as Node | null
 	const active = document.activeElement
 	if (

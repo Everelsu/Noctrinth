@@ -83,6 +83,10 @@ pub async fn should_disable_mouseover() -> bool {
     }
 }
 
+// Handing a path to the OS shell blocks until the file manager has been
+// launched, which on Windows is a visible pause. Neither command reports
+// anything back beyond a log line, so they spawn the work and return
+// immediately rather than making the caller wait on a result it never reads.
 #[tauri::command]
 pub async fn highlight_in_folder<R: Runtime>(
     app: tauri::AppHandle<R>,
@@ -92,9 +96,7 @@ pub async fn highlight_in_folder<R: Runtime>(
         if let Err(e) = app.opener().reveal_item_in_dir(path) {
             tracing::error!("Failed to highlight file in folder: {}", e);
         }
-    })
-    .await
-    .ok();
+    });
 }
 
 #[tauri::command]
@@ -105,9 +107,7 @@ pub async fn open_path<R: Runtime>(app: tauri::AppHandle<R>, path: PathBuf) {
         {
             tracing::error!("Failed to open path: {}", e);
         }
-    })
-    .await
-    .ok();
+    });
 }
 
 #[tauri::command]

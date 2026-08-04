@@ -63,6 +63,7 @@ fn main() {
                         "get_importable_instances",
                         "is_valid_importable_instance",
                         "get_default_launcher_path",
+                        "remove_source_instance",
                     ])
                     .default_permission(
                         DefaultPermissionRule::AllowAllCommands,

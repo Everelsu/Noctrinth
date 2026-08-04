@@ -11,12 +11,13 @@ import type UnknownPackWarningModal from '@/components/ui/install_flow/UnknownPa
 import type ModpackAlreadyInstalledModal from '@/components/ui/modal/ModpackAlreadyInstalledModal.vue'
 import { trackEvent } from '@/helpers/analytics'
 import { get_project_versions, get_search_results } from '@/helpers/cache.js'
-import { import_instance } from '@/helpers/import.js'
+import { import_instance, remove_source_instance } from '@/helpers/import.js'
 import {
-	type CreatePackLocation,
 	install_create_instance,
 	install_create_modpack_instance,
 	install_get_modpack_preview,
+	packLocationFromFile,
+	wait_for_install_job,
 } from '@/helpers/install'
 import { list } from '@/helpers/instance'
 import { get_loader_versions as getLoaderManifest } from '@/helpers/metadata.js'
@@ -45,8 +46,14 @@ export function setupCreationModal(notificationManager: AbstractWebNotificationM
 		return instances?.map((i) => i.name) ?? []
 	}
 
-	provide('showCreationModal', () => {
-		installationModal.value?.show()
+	provide('showCreationModal', async (options?: { importMode?: boolean }) => {
+		await installationModal.value?.show()
+		if (!options?.importMode) return
+
+		const flow = installationModal.value?.ctx
+		if (!flow) return
+		flow.isImportMode.value = true
+		flow.modal.value?.setStage('import-instance')
 	})
 
 	async function proceedWithModpackCreation(
@@ -89,8 +96,22 @@ export function setupCreationModal(notificationManager: AbstractWebNotificationM
 				)) {
 					const launcher = config.importLaunchers.value.find((l) => l.name === launcherName)
 					if (!launcher || instanceSet.size === 0) continue
+					const deleteSource = config.importDeleteSource.value && launcher.supportsDeletingSource
 					for (const name of instanceSet) {
-						await import_instance(launcher.name, launcher.path, name).catch(handleError)
+						const job = await import_instance(launcher.name, launcher.path, name).catch(handleError)
+						if (!deleteSource || !job) continue
+
+						// Importing only enqueues a job that reads from the source folder, so
+						// the original can't be removed until that job has actually finished.
+						const imported = await wait_for_install_job(job.job_id)
+							.then(() => true)
+							.catch((err) => {
+								handleError(err)
+								return false
+							})
+						if (imported) {
+							await remove_source_instance(launcher.name, launcher.path, name).catch(handleError)
+						}
 					}
 				}
 				trackEvent('InstanceCreate', { source: 'CreationModalImport' })
@@ -104,10 +125,7 @@ export function setupCreationModal(notificationManager: AbstractWebNotificationM
 			}
 
 			if (config.modpackFilePath.value) {
-				const location: CreatePackLocation = {
-					type: 'fromFile',
-					path: config.modpackFilePath.value,
-				}
+				const location = packLocationFromFile(config.modpackFilePath.value)
 				const preview = await install_get_modpack_preview(location)
 
 				if (preview.unknownFile || preview.externalFilesInModpack.length > 0) {

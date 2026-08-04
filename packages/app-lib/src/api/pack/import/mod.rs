@@ -21,6 +21,7 @@ pub mod atlauncher;
 pub mod curseforge;
 pub mod gdlauncher;
 pub mod mmc;
+pub mod modrinth;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ImportLauncherType {
@@ -29,9 +30,22 @@ pub enum ImportLauncherType {
     ATLauncher,
     GDLauncher,
     Curseforge,
+    ModrinthApp,
     #[serde(other)]
     Unknown,
 }
+
+/// Every launcher type an unknown path can be probed against, in the order it
+/// is tried.
+const DETECTABLE_LAUNCHER_TYPES: [ImportLauncherType; 6] = [
+    ImportLauncherType::MultiMC,
+    ImportLauncherType::PrismLauncher,
+    ImportLauncherType::ATLauncher,
+    ImportLauncherType::GDLauncher,
+    ImportLauncherType::Curseforge,
+    ImportLauncherType::ModrinthApp,
+];
+
 // impl display
 impl fmt::Display for ImportLauncherType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -41,6 +55,7 @@ impl fmt::Display for ImportLauncherType {
             ImportLauncherType::ATLauncher => write!(f, "ATLauncher"),
             ImportLauncherType::GDLauncher => write!(f, "GDLauncher"),
             ImportLauncherType::Curseforge => write!(f, "Curseforge"),
+            ImportLauncherType::ModrinthApp => write!(f, "ModrinthApp"),
             ImportLauncherType::Unknown => write!(f, "Unknown"),
         }
     }
@@ -51,6 +66,12 @@ pub async fn get_importable_instances(
     launcher_type: ImportLauncherType,
     base_path: PathBuf,
 ) -> crate::Result<Vec<String>> {
+    // Modrinth App keeps its instance metadata in a database rather than in
+    // per-instance files, so its list comes from there instead of a scan.
+    if launcher_type == ImportLauncherType::ModrinthApp {
+        return modrinth::get_modrinth_instances(&base_path).await;
+    }
+
     // Some launchers have a different folder structure for instances
     let instances_subfolder = match launcher_type {
         ImportLauncherType::GDLauncher | ImportLauncherType::ATLauncher => {
@@ -67,15 +88,9 @@ pub async fn get_importable_instances(
         )
         .await
         .unwrap_or_else(|| "instances".to_string()),
+        ImportLauncherType::ModrinthApp => unreachable!("handled above"),
         ImportLauncherType::Unknown => {
-            let types = [
-                ImportLauncherType::MultiMC,
-                ImportLauncherType::PrismLauncher,
-                ImportLauncherType::ATLauncher,
-                ImportLauncherType::GDLauncher,
-                ImportLauncherType::Curseforge,
-            ];
-            for lt in types {
+            for lt in DETECTABLE_LAUNCHER_TYPES {
                 if let Ok(instances) =
                     Box::pin(get_importable_instances(lt, base_path.clone()))
                         .await
@@ -182,16 +197,19 @@ async fn import_instance_inner(
             )
             .await
         }
+        ImportLauncherType::ModrinthApp => {
+            modrinth::import_modrinth(
+                base_path, // path to the Modrinth App data folder
+                instance_folder,
+                instance_id,
+                reporter.clone(),
+                details.clone(),
+            )
+            .await
+        }
         ImportLauncherType::Unknown => {
-            let types = [
-                ImportLauncherType::MultiMC,
-                ImportLauncherType::PrismLauncher,
-                ImportLauncherType::ATLauncher,
-                ImportLauncherType::GDLauncher,
-                ImportLauncherType::Curseforge,
-            ];
             let mut matched = false;
-            for lt in types {
+            for lt in DETECTABLE_LAUNCHER_TYPES {
                 if let Ok(instances) =
                     Box::pin(get_importable_instances(lt, base_path.clone()))
                         .await
@@ -234,6 +252,28 @@ async fn import_instance_inner(
     Ok(())
 }
 
+/// Deletes an already-imported instance from the launcher it came from, for
+/// users migrating rather than trying Noctrinth alongside their old launcher.
+///
+/// Only supported for Modrinth App: deleting from a launcher the user may
+/// still be using is destructive enough that it is offered exactly where the
+/// migration flow asks for it.
+pub async fn remove_source_instance(
+    launcher_type: ImportLauncherType,
+    base_path: PathBuf,
+    instance_folder: String,
+) -> crate::Result<()> {
+    match launcher_type {
+        ImportLauncherType::ModrinthApp => {
+            modrinth::remove_source_instance(&base_path, &instance_folder).await
+        }
+        _ => Err(crate::ErrorKind::InputError(format!(
+            "Deleting the source instance is not supported for {launcher_type}"
+        ))
+        .into()),
+    }
+}
+
 /// Returns the default path for the given launcher type
 /// None if it can't be found or doesn't exist
 pub fn get_default_launcher_path(
@@ -259,6 +299,11 @@ pub fn get_default_launcher_path(
                 return Some(primary);
             }
             Some(dirs::document_dir()?.join("curseforge").join("minecraft"))
+        }
+        // Matches the Tauri identifier upstream builds the Modrinth App with,
+        // which is what `DirectoryInfo` derives its settings directory from.
+        ImportLauncherType::ModrinthApp => {
+            Some(dirs::data_dir()?.join("ModrinthApp"))
         }
         ImportLauncherType::Unknown => None,
     };
@@ -333,6 +378,9 @@ pub async fn is_valid_importable_instance(
         }
         ImportLauncherType::Curseforge => {
             curseforge::is_valid_curseforge(instance_path).await
+        }
+        ImportLauncherType::ModrinthApp => {
+            modrinth::is_valid_modrinth(instance_path).await
         }
         ImportLauncherType::Unknown => false,
     }

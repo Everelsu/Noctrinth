@@ -2,11 +2,10 @@
 
 <div align="center">
 
-[![CI](https://img.shields.io/github/actions/workflow/status/Everelsu/Noctrinth/noctrinth-ci.yml?branch=main&label=CI)](https://github.com/Everelsu/Noctrinth/actions/workflows/noctrinth-ci.yml)
-[![Release](https://img.shields.io/github/v/release/Everelsu/Noctrinth?include_prereleases&label=release)](https://github.com/Everelsu/Noctrinth/releases)
-[![Downloads](https://img.shields.io/github/downloads/Everelsu/Noctrinth/total?label=downloads)](https://github.com/Everelsu/Noctrinth/releases)
-[![License](https://img.shields.io/badge/license-GPL--3.0-blue)](apps/app/LICENSE)
-[![Stars](https://img.shields.io/github/stars/Everelsu/Noctrinth)](https://github.com/Everelsu/Noctrinth/stargazers)
+[![Release](https://img.shields.io/github/v/release/Everelsu/Noctrinth?include_prereleases&style=for-the-badge&logo=github&logoColor=white&label=Release&labelColor=16181c&color=ac51fb)](https://github.com/Everelsu/Noctrinth/releases)
+[![Downloads](https://img.shields.io/github/downloads/Everelsu/Noctrinth/total?style=for-the-badge&logo=github&logoColor=white&label=Downloads&labelColor=16181c&color=ac51fb)](https://github.com/Everelsu/Noctrinth/releases)
+[![License](https://img.shields.io/badge/License-GPL--3.0-ac51fb?style=for-the-badge&logo=gnu&logoColor=white&labelColor=16181c)](apps/app/LICENSE)
+[![Stars](https://img.shields.io/github/stars/Everelsu/Noctrinth?style=for-the-badge&logo=github&logoColor=white&label=Stars&labelColor=16181c&color=ac51fb)](https://github.com/Everelsu/Noctrinth/stargazers)
 
 **Switching launchers? Your instances come with you — one click, nothing left behind.**
 

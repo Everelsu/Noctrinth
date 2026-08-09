@@ -125,7 +125,15 @@
 
 <script setup lang="ts">
 import { CheckIcon, DownloadIcon, XIcon } from '@modrinth/assets'
-import { Avatar, Button, ButtonLink, commonMessages, defineMessages, useVIntl } from '@modrinth/ui'
+import {
+	appDeepLink,
+	Avatar,
+	Button,
+	ButtonLink,
+	commonMessages,
+	defineMessages,
+	useVIntl,
+} from '@modrinth/ui'
 import { computed, nextTick, onUnmounted, ref } from 'vue'
 
 const { formatMessage } = useVIntl()
@@ -192,7 +200,7 @@ let hideTimeout: ReturnType<typeof setTimeout> | null = null
 
 const circumference = 2 * Math.PI * 45
 const strokeDashoffset = computed(() => circumference * (1 - countdownProgress.value))
-const appLink = computed(() => `modrinth://share/${encodeURIComponent(instance.value.inviteId)}`)
+const appLink = computed(() => appDeepLink(`share/${encodeURIComponent(instance.value.inviteId)}`))
 
 function startCountdown() {
 	countdown.value = 3

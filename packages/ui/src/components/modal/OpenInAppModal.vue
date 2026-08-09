@@ -115,6 +115,7 @@ import { commonMessages } from '@modrinth/ui'
 import { computed, nextTick, onUnmounted, ref } from 'vue'
 
 import { Button, ButtonLink } from '#ui/components/base/buttons'
+import { appDeepLink } from '#ui/utils/deep-link'
 
 import { defineMessages, useVIntl } from '../../composables/i18n'
 import { Avatar } from '../base'
@@ -184,7 +185,7 @@ const serverProject = ref<ServerProject>({
 	region: '',
 })
 const appLink = computed(() => {
-	return `modrinth://server/${serverProject.value.slug}`
+	return appDeepLink(`server/${serverProject.value.slug}`)
 })
 
 function startCountdown() {

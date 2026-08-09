@@ -10,10 +10,21 @@ use crate::{
 use url::form_urlencoded;
 use urlencoding::decode;
 
+/// URL scheme this launcher registers with the OS.
+///
+/// Kept in sync with `deep-link.desktop.schemes` in `apps/app/tauri.conf.json`
+/// and `APP_DEEP_LINK_SCHEME` in `packages/ui/src/utils/deep-link.ts`.
+pub const DEEP_LINK_SCHEME: &str = "noctrinth";
+
+/// Modrinth's scheme, still accepted so links written for the upstream app
+/// (older shortcuts, modrinth.com itself) work when Noctrinth is the launcher
+/// the OS hands them to.
+const LEGACY_DEEP_LINK_SCHEME: &str = "modrinth";
+
 /// Handles external functions (such as through URL deep linkage)
 /// Link is extracted value (link) in somewhat URL format, such as
 /// subdomain1/subdomain2
-/// (Does not include modrinth://)
+/// (Does not include the `noctrinth://` prefix)
 pub async fn handle_url(sublink: &str) -> crate::Result<CommandPayload> {
     Ok(match sublink.split_once('/') {
         // /mod/{id}   -    Installs a mod of mod id
@@ -110,14 +121,25 @@ pub async fn handle_url(sublink: &str) -> crate::Result<CommandPayload> {
     })
 }
 
+/// Strips a recognised deep-link scheme, returning the command that follows it.
+///
+/// Schemes are compared case-insensitively: Windows hands the registered scheme
+/// back in whatever case the link was written in.
+fn strip_deep_link_scheme(command_string: &str) -> Option<&str> {
+    let (scheme, rest) = command_string.split_once("://")?;
+    (scheme.eq_ignore_ascii_case(DEEP_LINK_SCHEME)
+        || scheme.eq_ignore_ascii_case(LEGACY_DEEP_LINK_SCHEME))
+    .then_some(rest)
+}
+
 pub async fn parse_command(
     command_string: &str,
 ) -> crate::Result<CommandPayload> {
     tracing::debug!("Parsing external command");
 
-    // modrinth://some-command
+    // noctrinth://some-command
     // This occurs when following a web redirect link
-    if let Some(sublink) = command_string.strip_prefix("modrinth://") {
+    if let Some(sublink) = strip_deep_link_scheme(command_string) {
         Ok(handle_url(sublink).await?)
     } else {
         // We assume anything else is a filepath to an .mrpack file

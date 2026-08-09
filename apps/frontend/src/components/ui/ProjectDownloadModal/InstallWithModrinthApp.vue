@@ -11,7 +11,7 @@
 				type="colored"
 				color="brand"
 				class="!min-h-10 w-fit no-underline"
-				:href="`modrinth://mod/${project.slug}`"
+				:href="appDeepLink(`mod/${project.slug}`)"
 				@click="installWithApp"
 			>
 				<ModrinthIcon aria-hidden="true" />
@@ -39,7 +39,7 @@
 <script setup lang="ts">
 import type { Labrinth } from '@modrinth/api-client'
 import { ModrinthIcon } from '@modrinth/assets'
-import { ButtonLink, defineMessages, useVIntl } from '@modrinth/ui'
+import { appDeepLink, ButtonLink, defineMessages, useVIntl } from '@modrinth/ui'
 import type { DisplayProjectType } from '@modrinth/utils'
 import { ref } from 'vue'
 
@@ -65,11 +65,11 @@ const getModrinthAppAccordion = ref<InstanceType<typeof Accordion> | null>(null)
 const messages = defineMessages({
 	installWithModrinthApp: {
 		id: 'project.download.install-with-app',
-		defaultMessage: 'Install with Modrinth App',
+		defaultMessage: 'Install with App',
 	},
 	dontHaveModrinthApp: {
 		id: 'project.download.no-app',
-		defaultMessage: "Don't have Modrinth App?",
+		defaultMessage: "Don't have the App?",
 	},
 	downloadManually: {
 		id: 'project.download.manually',

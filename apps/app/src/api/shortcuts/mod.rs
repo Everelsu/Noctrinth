@@ -1,6 +1,7 @@
 use crate::api::Result;
 use std::path::{Path, PathBuf};
 use tauri::Runtime;
+use theseus::handler::DEEP_LINK_SCHEME;
 use url::Url;
 
 #[cfg(target_os = "linux")]
@@ -60,8 +61,9 @@ fn instance_launch_url(
     server: Option<String>,
     singleplayer_world: Option<String>,
 ) -> Url {
-    let mut launch_url = Url::parse("modrinth://launch/instance")
-        .expect("static launch URL should parse");
+    let mut launch_url =
+        Url::parse(&format!("{DEEP_LINK_SCHEME}://launch/instance"))
+            .expect("static launch URL should parse");
 
     launch_url
         .path_segments_mut()

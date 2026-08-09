@@ -40,19 +40,15 @@
 				}}.
 			</p>
 			<div class="flex justify-end gap-2">
-				<ButtonStyled type="outlined">
-					<button @click="hide">
-						<XIcon aria-hidden="true" />
-						Cancel
-					</button>
-				</ButtonStyled>
-				<ButtonStyled color="brand">
-					<button :disabled="submitting || !name.trim()" @click="submit">
-						<SpinnerIcon v-if="submitting" class="animate-spin" aria-hidden="true" />
-						<PlusIcon v-else aria-hidden="true" />
-						{{ submitting ? 'Creating...' : 'Create collection' }}
-					</button>
-				</ButtonStyled>
+				<Button type="outlined" @click="hide">
+					<XIcon aria-hidden="true" />
+					Cancel
+				</Button>
+				<Button :disabled="submitting || !name.trim()" type="colored" color="brand" @click="submit">
+					<SpinnerIcon v-if="submitting" class="animate-spin" aria-hidden="true" />
+					<PlusIcon v-else aria-hidden="true" />
+					{{ submitting ? 'Creating...' : 'Create collection' }}
+				</Button>
 			</div>
 		</div>
 	</NewModal>
@@ -60,7 +56,7 @@
 
 <script setup lang="ts">
 import { PlusIcon, SpinnerIcon, XIcon } from '@modrinth/assets'
-import { ButtonStyled, injectNotificationManager, NewModal, StyledInput } from '@modrinth/ui'
+import { Button, injectNotificationManager, NewModal, StyledInput } from '@modrinth/ui'
 import { ref } from 'vue'
 
 import { type Collection, createCollection } from '@/helpers/modrinth-api'

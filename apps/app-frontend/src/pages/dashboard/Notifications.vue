@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { CheckCheckIcon, HistoryIcon } from '@modrinth/assets'
 import {
-	ButtonStyled,
+	Button,
 	Chips,
 	defineMessages,
 	injectNotificationManager,
@@ -236,22 +236,18 @@ function formatType(t: string) {
 					</h2>
 				</div>
 				<template v-if="!showHistory">
-					<ButtonStyled v-if="hasRead">
-						<button @click="toggleHistory">
-							<HistoryIcon />
-							{{ formatMessage(messages.viewHistory) }}
-						</button>
-					</ButtonStyled>
-					<ButtonStyled v-if="paginated.length > 0" color="red">
-						<button @click="readAll">
-							<CheckCheckIcon />
-							{{ formatMessage(messages.markAllRead) }}
-						</button>
-					</ButtonStyled>
+					<Button v-if="hasRead" @click="toggleHistory">
+						<HistoryIcon />
+						{{ formatMessage(messages.viewHistory) }}
+					</Button>
+					<Button v-if="paginated.length > 0" type="colored" color="red" @click="readAll">
+						<CheckCheckIcon />
+						{{ formatMessage(messages.markAllRead) }}
+					</Button>
 				</template>
-				<ButtonStyled v-else>
-					<button @click="toggleHistory">{{ formatMessage(messages.back) }}</button>
-				</ButtonStyled>
+				<Button v-else @click="toggleHistory">
+					{{ formatMessage(messages.back) }}
+				</Button>
 			</div>
 
 			<Chips

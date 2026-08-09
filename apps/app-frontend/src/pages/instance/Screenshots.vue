@@ -16,11 +16,12 @@ import {
 	XIcon,
 } from '@modrinth/assets'
 import {
-	ButtonStyled,
+	Button,
 	Card,
 	commonMessages,
 	ConfirmModal,
 	defineMessages,
+	IconButton,
 	injectNotificationManager,
 	useVIntl,
 } from '@modrinth/ui'
@@ -392,12 +393,10 @@ onUnmounted(() => {
 			<p class="m-0 max-w-md text-secondary">
 				{{ formatMessage(messages.emptyDescription) }}
 			</p>
-			<ButtonStyled>
-				<button @click="openScreenshotsFolder">
-					<FolderOpenIcon />
-					{{ formatMessage(messages.openFolderButton) }}
-				</button>
-			</ButtonStyled>
+			<Button @click="openScreenshotsFolder">
+				<FolderOpenIcon />
+				{{ formatMessage(messages.openFolderButton) }}
+			</Button>
 		</div>
 
 		<template v-else>
@@ -406,32 +405,27 @@ onUnmounted(() => {
 					{{ formatMessage(messages.count, { count: screenshots.length }) }}
 				</span>
 				<div class="flex items-center gap-2">
-					<ButtonStyled>
-						<button
-							v-tooltip="formatMessage(sortAscending ? messages.sortOldest : messages.sortNewest)"
-							@click="sortAscending = !sortAscending"
-						>
-							<SortDescIcon v-if="!sortAscending" />
-							<SortAscIcon v-else />
-							{{ formatMessage(sortAscending ? messages.sortOldest : messages.sortNewest) }}
-						</button>
-					</ButtonStyled>
-					<ButtonStyled>
-						<button @click="openScreenshotsFolder">
-							<FolderOpenIcon />
-							{{ formatMessage(messages.openFolderButton) }}
-						</button>
-					</ButtonStyled>
-					<ButtonStyled circular>
-						<button
-							v-tooltip="formatMessage(messages.refresh)"
-							:disabled="refreshing"
-							@click="loadScreenshots"
-						>
-							<SpinnerIcon v-if="refreshing" class="animate-spin" />
-							<UpdatedIcon v-else />
-						</button>
-					</ButtonStyled>
+					<Button
+						v-tooltip="formatMessage(sortAscending ? messages.sortOldest : messages.sortNewest)"
+						@click="sortAscending = !sortAscending"
+					>
+						<SortDescIcon v-if="!sortAscending" />
+						<SortAscIcon v-else />
+						{{ formatMessage(sortAscending ? messages.sortOldest : messages.sortNewest) }}
+					</Button>
+					<Button @click="openScreenshotsFolder">
+						<FolderOpenIcon />
+						{{ formatMessage(messages.openFolderButton) }}
+					</Button>
+					<IconButton
+						v-tooltip="formatMessage(messages.refresh)"
+						:disabled="refreshing"
+						:label="formatMessage(messages.refresh)"
+						@click="loadScreenshots"
+					>
+						<SpinnerIcon v-if="refreshing" class="animate-spin" />
+						<UpdatedIcon v-else />
+					</IconButton>
 				</div>
 			</div>
 
@@ -501,54 +495,60 @@ onUnmounted(() => {
 						</div>
 						<div class="controls">
 							<div class="buttons">
-								<ButtonStyled circular>
-									<button
-										v-tooltip="formatMessage(commonMessages.closeButton)"
-										@click="closeLightbox"
-									>
-										<XIcon aria-hidden="true" />
-									</button>
-								</ButtonStyled>
-								<ButtonStyled circular>
-									<button
-										v-tooltip="formatMessage(messages.copy)"
-										@click="copyShot(lightboxScreenshot)"
-									>
-										<ClipboardCopyIcon aria-hidden="true" />
-									</button>
-								</ButtonStyled>
-								<ButtonStyled circular>
-									<button
-										v-tooltip="formatMessage(messages.openFolder)"
-										@click="revealShot(lightboxScreenshot)"
-									>
-										<FolderOpenIcon aria-hidden="true" />
-									</button>
-								</ButtonStyled>
-								<ButtonStyled circular>
-									<button v-tooltip="formatMessage(messages.zoom)" @click="toggleZoom">
-										<ExpandIcon v-if="!isZoomed" aria-hidden="true" />
-										<ContractIcon v-else aria-hidden="true" />
-									</button>
-								</ButtonStyled>
-								<ButtonStyled v-if="orderedScreenshots.length > 1" circular>
-									<button v-tooltip="formatMessage(messages.previous)" @click="showPrevious">
-										<LeftArrowIcon aria-hidden="true" />
-									</button>
-								</ButtonStyled>
-								<ButtonStyled v-if="orderedScreenshots.length > 1" circular>
-									<button v-tooltip="formatMessage(messages.next)" @click="showNext">
-										<RightArrowIcon aria-hidden="true" />
-									</button>
-								</ButtonStyled>
-								<ButtonStyled circular color="red">
-									<button
-										v-tooltip="formatMessage(commonMessages.deleteLabel)"
-										@click="requestDelete(lightboxScreenshot)"
-									>
-										<TrashIcon aria-hidden="true" />
-									</button>
-								</ButtonStyled>
+								<IconButton
+									v-tooltip="formatMessage(commonMessages.closeButton)"
+									:label="formatMessage(commonMessages.closeButton)"
+									@click="closeLightbox"
+								>
+									<XIcon aria-hidden="true" />
+								</IconButton>
+								<IconButton
+									v-tooltip="formatMessage(messages.copy)"
+									:label="formatMessage(messages.copy)"
+									@click="copyShot(lightboxScreenshot)"
+								>
+									<ClipboardCopyIcon aria-hidden="true" />
+								</IconButton>
+								<IconButton
+									v-tooltip="formatMessage(messages.openFolder)"
+									:label="formatMessage(messages.openFolder)"
+									@click="revealShot(lightboxScreenshot)"
+								>
+									<FolderOpenIcon aria-hidden="true" />
+								</IconButton>
+								<IconButton
+									v-tooltip="formatMessage(messages.zoom)"
+									:label="formatMessage(messages.zoom)"
+									@click="toggleZoom"
+								>
+									<ExpandIcon v-if="!isZoomed" aria-hidden="true" />
+									<ContractIcon v-else aria-hidden="true" />
+								</IconButton>
+								<IconButton
+									v-if="orderedScreenshots.length > 1"
+									v-tooltip="formatMessage(messages.previous)"
+									:label="formatMessage(messages.previous)"
+									@click="showPrevious"
+								>
+									<LeftArrowIcon aria-hidden="true" />
+								</IconButton>
+								<IconButton
+									v-if="orderedScreenshots.length > 1"
+									v-tooltip="formatMessage(messages.next)"
+									:label="formatMessage(messages.next)"
+									@click="showNext"
+								>
+									<RightArrowIcon aria-hidden="true" />
+								</IconButton>
+								<IconButton
+									v-tooltip="formatMessage(commonMessages.deleteLabel)"
+									type="colored"
+									color="red"
+									:label="formatMessage(commonMessages.deleteLabel)"
+									@click="requestDelete(lightboxScreenshot)"
+								>
+									<TrashIcon aria-hidden="true" />
+								</IconButton>
 							</div>
 						</div>
 					</div>

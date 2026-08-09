@@ -1,7 +1,10 @@
 use crate::state::ElyCredentials;
 use uuid::Uuid;
 
-pub async fn login(username: &str, password: &str) -> crate::Result<ElyCredentials> {
+pub async fn login(
+    username: &str,
+    password: &str,
+) -> crate::Result<ElyCredentials> {
     let state = crate::State::get().await?;
     let creds = ElyCredentials::authenticate(username, password).await?;
     creds.upsert(&state.pool).await?;

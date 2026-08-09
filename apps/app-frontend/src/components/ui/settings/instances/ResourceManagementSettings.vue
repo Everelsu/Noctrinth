@@ -1,8 +1,9 @@
 <script setup>
 import { BoxIcon, FolderOpenIcon, FolderSearchIcon, GlobeIcon, TrashIcon } from '@modrinth/assets'
 import {
-	ButtonStyled,
+	Button,
 	defineMessages,
+	IconButton,
 	injectNotificationManager,
 	Slider,
 	StyledInput,
@@ -196,16 +197,14 @@ async function findLauncherDir() {
 				wrapper-class="w-full"
 			>
 				<template #right>
-					<ButtonStyled circular>
-						<button
-							v-tooltip="formatMessage(messages.browseAppDirectory)"
-							:aria-label="formatMessage(messages.browseAppDirectory)"
-							class="ml-1.5"
-							@click="findLauncherDir"
-						>
-							<FolderSearchIcon aria-hidden="true" />
-						</button>
-					</ButtonStyled>
+					<IconButton
+						v-tooltip="formatMessage(messages.browseAppDirectory)"
+						:label="formatMessage(messages.browseAppDirectory)"
+						class="ml-1.5"
+						@click="findLauncherDir"
+					>
+						<FolderSearchIcon aria-hidden="true" />
+					</IconButton>
 				</template>
 			</StyledInput>
 			<p class="m-0 leading-tight text-secondary">
@@ -248,10 +247,10 @@ async function findLauncherDir() {
 			<h2 class="m-0 text-lg font-semibold text-contrast">
 				{{ formatMessage(messages.appCacheTitle) }}
 			</h2>
-			<button id="purge-cache" class="btn min-w-max" @click="handlePurgeCacheClick">
+			<Button id="purge-cache" class="w-fit" @click="handlePurgeCacheClick">
 				<TrashIcon aria-hidden="true" />
 				{{ formatMessage(messages.purgeCache) }}
-			</button>
+			</Button>
 			<p class="m-0 leading-tight text-secondary">
 				{{ formatMessage(messages.appCacheDescription) }}
 			</p>
@@ -310,10 +309,10 @@ async function findLauncherDir() {
 			<h2 class="mt-0 m-0 text-lg font-semibold text-contrast">
 				{{ formatMessage(messages.appDatabaseBackupsTitle) }}
 			</h2>
-			<button id="open-db-backups-folder" class="btn min-w-max" @click="openDbBackupsFolder">
+			<Button id="open-db-backups-folder" class="w-fit" @click="openDbBackupsFolder">
 				<FolderOpenIcon aria-hidden="true" />
 				{{ formatMessage(messages.openBackupsFolder) }}
-			</button>
+			</Button>
 			<p class="m-0 leading-tight text-secondary">
 				{{ formatMessage(messages.appDatabaseBackupsDescription) }}
 			</p>

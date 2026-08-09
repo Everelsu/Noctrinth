@@ -76,16 +76,13 @@ pub async fn login<R: Runtime>(
 
             if let Some(code) = pairs.get("code") {
                 window.close()?;
-                let val =
-                    minecraft_auth::finish_login(code, flow).await?;
+                let val = minecraft_auth::finish_login(code, flow).await?;
                 return Ok(Some(val));
             }
 
             if let Some(err) = pairs.get("error") {
-                let desc = pairs
-                    .get("error_description")
-                    .cloned()
-                    .unwrap_or_default();
+                let desc =
+                    pairs.get("error_description").cloned().unwrap_or_default();
                 window.close()?;
                 return Err(theseus::ErrorKind::OtherError(format!(
                     "Microsoft sign-in failed: {err} ({desc})"

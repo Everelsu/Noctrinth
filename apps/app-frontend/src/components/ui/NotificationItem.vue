@@ -163,25 +163,19 @@
 				<template
 					v-if="(type === 'team_invite' || type === 'organization_invite') && !notification.read"
 				>
-					<ButtonStyled color="brand">
-						<button @click="onAccept">
-							<CheckIcon />
-							{{ formatMessage(messages.accept) }}
-						</button>
-					</ButtonStyled>
-					<ButtonStyled color="red">
-						<button @click="onDecline">
-							<XIcon />
-							{{ formatMessage(messages.decline) }}
-						</button>
-					</ButtonStyled>
-				</template>
-				<ButtonStyled v-else-if="!notification.read">
-					<button @click="onMarkRead">
+					<Button type="colored" color="brand" @click="onAccept">
 						<CheckIcon />
-						{{ formatMessage(messages.markAsRead) }}
-					</button>
-				</ButtonStyled>
+						{{ formatMessage(messages.accept) }}
+					</Button>
+					<Button type="colored" color="red" @click="onDecline">
+						<XIcon />
+						{{ formatMessage(messages.decline) }}
+					</Button>
+				</template>
+				<Button v-else-if="!notification.read" @click="onMarkRead">
+					<CheckIcon />
+					{{ formatMessage(messages.markAsRead) }}
+				</Button>
 			</div>
 		</div>
 	</div>
@@ -200,7 +194,7 @@ import {
 } from '@modrinth/assets'
 import {
 	Avatar,
-	ButtonStyled,
+	Button,
 	defineMessages,
 	DoubleIcon,
 	injectNotificationManager,

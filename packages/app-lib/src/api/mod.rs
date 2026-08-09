@@ -43,9 +43,10 @@ pub mod prelude {
     pub use crate::{
         State,
         data::*,
+        ely_auth,
         event::CommandPayload,
-        ely_auth, install, instance, jre, metadata, minecraft_auth, mr_auth,
-        pack, process, settings,
+        install, instance, jre, metadata, minecraft_auth, mr_auth, pack,
+        process, settings,
         state::{ReleaseChannel, db_backup::app_db_backup_dir},
         util::{
             io::{IOError, canonicalize},

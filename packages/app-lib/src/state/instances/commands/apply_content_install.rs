@@ -992,19 +992,17 @@ fn infer_project_type(
     let has_at_depth = |suffix: &str| {
         names.iter().any(|name| {
             *name == suffix
-                || name
-                    .split_once('/')
-                    .is_some_and(|(dir, rest)| !dir.is_empty() && rest == suffix)
+                || name.split_once('/').is_some_and(|(dir, rest)| {
+                    !dir.is_empty() && rest == suffix
+                })
         })
     };
     let dir_at_depth = |dir_prefix: &str| {
         names.iter().any(|name| {
             name.starts_with(dir_prefix)
-                || name
-                    .split_once('/')
-                    .is_some_and(|(dir, rest)| {
-                        !dir.is_empty() && rest.starts_with(dir_prefix)
-                    })
+                || name.split_once('/').is_some_and(|(dir, rest)| {
+                    !dir.is_empty() && rest.starts_with(dir_prefix)
+                })
         })
     };
 

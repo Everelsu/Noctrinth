@@ -84,22 +84,20 @@
 			</p>
 
 			<div class="flex justify-end gap-2">
-				<ButtonStyled type="outlined">
-					<button :disabled="loading" @click="hide">
-						<XIcon aria-hidden="true" />
-						{{ formatMessage(messages.cancel) }}
-					</button>
-				</ButtonStyled>
-				<ButtonStyled color="brand">
-					<button
-						:disabled="loading || !username.trim() || !password || (needsTotp && !totp.trim())"
-						@click="submit"
-					>
-						<SpinnerIcon v-if="loading" class="animate-spin" aria-hidden="true" />
-						<LogInIcon v-else aria-hidden="true" />
-						{{ formatMessage(loading ? messages.signingIn : messages.signIn) }}
-					</button>
-				</ButtonStyled>
+				<Button :disabled="loading" type="outlined" @click="hide">
+					<XIcon aria-hidden="true" />
+					{{ formatMessage(messages.cancel) }}
+				</Button>
+				<Button
+					:disabled="loading || !username.trim() || !password || (needsTotp && !totp.trim())"
+					type="colored"
+					color="brand"
+					@click="submit"
+				>
+					<SpinnerIcon v-if="loading" class="animate-spin" aria-hidden="true" />
+					<LogInIcon v-else aria-hidden="true" />
+					{{ formatMessage(loading ? messages.signingIn : messages.signIn) }}
+				</Button>
 			</div>
 		</div>
 	</NewModal>
@@ -107,14 +105,7 @@
 
 <script setup lang="ts">
 import { EyeIcon, EyeOffIcon, LogInIcon, SpinnerIcon, XIcon } from '@modrinth/assets'
-import {
-	Admonition,
-	ButtonStyled,
-	defineMessages,
-	NewModal,
-	StyledInput,
-	useVIntl,
-} from '@modrinth/ui'
+import { Admonition, Button, defineMessages, NewModal, StyledInput, useVIntl } from '@modrinth/ui'
 import { ref } from 'vue'
 
 import { ely_login, type ElyCredentials } from '@/helpers/ely_auth'

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { DownloadIcon, RightArrowIcon, XIcon } from '@modrinth/assets'
-import { ButtonStyled, defineMessages, injectNotificationManager, useVIntl } from '@modrinth/ui'
+import { Button, defineMessages, injectNotificationManager, useVIntl } from '@modrinth/ui'
 import { computed, inject, onMounted, ref } from 'vue'
 
 import {
@@ -114,18 +114,14 @@ function chooseInstances() {
 			{{ formatMessage(messages.description, { count: instances.length }) }}
 		</p>
 		<div class="flex flex-wrap gap-2">
-			<ButtonStyled color="brand">
-				<button :disabled="importing" @click="importAll">
-					<DownloadIcon aria-hidden="true" />
-					{{ formatMessage(importing ? messages.importing : messages.importAll) }}
-				</button>
-			</ButtonStyled>
-			<ButtonStyled>
-				<button :disabled="importing" @click="chooseInstances">
-					{{ formatMessage(messages.choose) }}
-					<RightArrowIcon aria-hidden="true" />
-				</button>
-			</ButtonStyled>
+			<Button :disabled="importing" type="colored" color="brand" @click="importAll">
+				<DownloadIcon aria-hidden="true" />
+				{{ formatMessage(importing ? messages.importing : messages.importAll) }}
+			</Button>
+			<Button :disabled="importing" @click="chooseInstances">
+				{{ formatMessage(messages.choose) }}
+				<RightArrowIcon aria-hidden="true" />
+			</Button>
 		</div>
 	</section>
 </template>

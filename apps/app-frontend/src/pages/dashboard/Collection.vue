@@ -14,7 +14,7 @@ import {
 } from '@modrinth/assets'
 import {
 	Avatar,
-	ButtonStyled,
+	Button,
 	defineMessages,
 	DropdownSelect,
 	type FilterPillOption,
@@ -491,24 +491,18 @@ watch(
 				</template>
 				<template #actions>
 					<PageHeaderActions>
-						<ButtonStyled v-if="isOwner">
-							<button @click="openEdit">
-								<EditIcon />
-								{{ formatMessage(messages.edit) }}
-							</button>
-						</ButtonStyled>
-						<ButtonStyled v-if="isOwner" color="red">
-							<button @click="openDelete">
-								<TrashIcon />
-								{{ formatMessage(messages.delete) }}
-							</button>
-						</ButtonStyled>
-						<ButtonStyled v-if="!isFollowing">
-							<button @click="openOnWeb">
-								<ExternalIcon />
-								{{ formatMessage(messages.openOnWeb) }}
-							</button>
-						</ButtonStyled>
+						<Button v-if="isOwner" @click="openEdit">
+							<EditIcon />
+							{{ formatMessage(messages.edit) }}
+						</Button>
+						<Button v-if="isOwner" type="colored" color="red" @click="openDelete">
+							<TrashIcon />
+							{{ formatMessage(messages.delete) }}
+						</Button>
+						<Button v-if="!isFollowing" @click="openOnWeb">
+							<ExternalIcon />
+							{{ formatMessage(messages.openOnWeb) }}
+						</Button>
 					</PageHeaderActions>
 				</template>
 			</PageHeader>
@@ -571,30 +565,22 @@ watch(
 					:color="p.color"
 				>
 					<template v-if="isFollowing" #actions>
-						<ButtonStyled>
-							<button :disabled="removingId === p.id" @click.stop.prevent="removeProject(p.id)">
-								<HeartIcon />
-								{{
-									formatMessage(
-										removingId === p.id ? messages.unfollowing : messages.unfollowProject,
-									)
-								}}
-							</button>
-						</ButtonStyled>
+						<Button :disabled="removingId === p.id" @click.stop.prevent="removeProject(p.id)">
+							<HeartIcon />
+							{{
+								formatMessage(removingId === p.id ? messages.unfollowing : messages.unfollowProject)
+							}}
+						</Button>
 					</template>
 					<template v-else-if="isOwner" #actions>
-						<ButtonStyled>
-							<button
-								v-tooltip="formatMessage(messages.removeTooltip)"
-								:disabled="removingId === p.id"
-								@click.stop.prevent="removeProject(p.id)"
-							>
-								<XIcon />
-								{{
-									formatMessage(removingId === p.id ? messages.removing : messages.removeProject)
-								}}
-							</button>
-						</ButtonStyled>
+						<Button
+							v-tooltip="formatMessage(messages.removeTooltip)"
+							:disabled="removingId === p.id"
+							@click.stop.prevent="removeProject(p.id)"
+						>
+							<XIcon />
+							{{ formatMessage(removingId === p.id ? messages.removing : messages.removeProject) }}
+						</Button>
 					</template>
 				</ProjectCard>
 			</div>

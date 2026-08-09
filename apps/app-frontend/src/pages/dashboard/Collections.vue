@@ -10,7 +10,7 @@ import {
 } from '@modrinth/assets'
 import {
 	Avatar,
-	ButtonStyled,
+	Button,
 	defineMessages,
 	DropdownSelect,
 	injectNotificationManager,
@@ -172,12 +172,10 @@ function onCreated(collection: Collection) {
 					<span class="font-semibold text-primary">{{ formatMessage(messages.sortBy) }}</span>
 					<span class="font-semibold text-secondary">{{ selected }}</span>
 				</DropdownSelect>
-				<ButtonStyled color="brand">
-					<button class="ml-auto" @click="openCreate">
-						<PlusIcon aria-hidden="true" />
-						{{ formatMessage(messages.createNew) }}
-					</button>
-				</ButtonStyled>
+				<Button class="ml-auto" type="colored" color="brand" @click="openCreate">
+					<PlusIcon aria-hidden="true" />
+					{{ formatMessage(messages.createNew) }}
+				</Button>
 			</div>
 		</div>
 

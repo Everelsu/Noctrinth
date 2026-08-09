@@ -39,7 +39,9 @@ pub async fn get_authlib_injector(
         return Ok(jar_path);
     }
 
-    tracing::info!("Downloading authlib-injector for alternative-account launch");
+    tracing::info!(
+        "Downloading authlib-injector for alternative-account launch"
+    );
 
     // Resolve the latest released artifact.
     let latest = REQWEST_CLIENT

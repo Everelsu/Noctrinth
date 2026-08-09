@@ -50,19 +50,21 @@
 				</RadioButtons>
 			</div>
 			<div class="flex justify-end gap-2">
-				<ButtonStyled>
-					<button class="w-24" @click="hide">
-						<XIcon aria-hidden="true" />
-						Cancel
-					</button>
-				</ButtonStyled>
-				<ButtonStyled color="brand">
-					<button class="w-36" :disabled="saving || !title.trim()" @click="save">
-						<SpinnerIcon v-if="saving" class="animate-spin" aria-hidden="true" />
-						<SaveIcon v-else aria-hidden="true" />
-						{{ saving ? 'Saving...' : 'Save' }}
-					</button>
-				</ButtonStyled>
+				<Button class="w-24" @click="hide">
+					<XIcon aria-hidden="true" />
+					Cancel
+				</Button>
+				<Button
+					class="w-36"
+					:disabled="saving || !title.trim()"
+					type="colored"
+					color="brand"
+					@click="save"
+				>
+					<SpinnerIcon v-if="saving" class="animate-spin" aria-hidden="true" />
+					<SaveIcon v-else aria-hidden="true" />
+					{{ saving ? 'Saving...' : 'Save' }}
+				</Button>
 			</div>
 		</div>
 	</NewModal>
@@ -72,7 +74,7 @@
 import { SaveIcon, SpinnerIcon, XIcon } from '@modrinth/assets'
 import {
 	Avatar,
-	ButtonStyled,
+	Button,
 	injectNotificationManager,
 	NewModal,
 	RadioButtons,

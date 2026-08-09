@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ExternalIcon } from '@modrinth/assets'
 import { getChangelog } from '@modrinth/blog'
-import { ButtonStyled, Chips, defineMessages, useVIntl } from '@modrinth/ui'
+import { Button, Chips, defineMessages, useVIntl } from '@modrinth/ui'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import dayjs from 'dayjs'
 import { computed, ref } from 'vue'
@@ -124,12 +124,10 @@ const entries = computed<ChangelogEntry[]>(() =>
 				:capitalize="false"
 				never-empty
 			/>
-			<ButtonStyled size="small">
-				<button @click="openUrl(AUTHOR_URL)">
-					{{ formatMessage(messages.author) }}
-					<ExternalIcon aria-hidden="true" />
-				</button>
-			</ButtonStyled>
+			<Button size="sm" @click="openUrl(AUTHOR_URL)">
+				{{ formatMessage(messages.author) }}
+				<ExternalIcon aria-hidden="true" />
+			</Button>
 		</div>
 
 		<section
@@ -166,23 +164,19 @@ const entries = computed<ChangelogEntry[]>(() =>
 			<p class="m-0 text-sm text-secondary">
 				{{ formatMessage(messages.modrinthNote) }}
 			</p>
-			<ButtonStyled>
-				<button @click="openUrl('https://modrinth.com/news/changelog?filter=app')">
-					<ExternalIcon />
-					{{ formatMessage(messages.openModrinthChangelog) }}
-				</button>
-			</ButtonStyled>
+			<Button @click="openUrl('https://modrinth.com/news/changelog?filter=app')">
+				<ExternalIcon />
+				{{ formatMessage(messages.openModrinthChangelog) }}
+			</Button>
 		</div>
 		<div v-else class="flex flex-col gap-2">
 			<p class="m-0 text-sm text-secondary">
 				{{ formatMessage(messages.noctrinthNote) }}
 			</p>
-			<ButtonStyled>
-				<button @click="openUrl('https://everelsu.github.io/Noctrinth/')">
-					<ExternalIcon />
-					{{ formatMessage(messages.openNoctrinthChangelog) }}
-				</button>
-			</ButtonStyled>
+			<Button @click="openUrl('https://everelsu.github.io/Noctrinth/')">
+				<ExternalIcon />
+				{{ formatMessage(messages.openNoctrinthChangelog) }}
+			</Button>
 		</div>
 	</div>
 </template>

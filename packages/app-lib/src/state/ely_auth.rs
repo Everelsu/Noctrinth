@@ -1,7 +1,7 @@
 use crate::util::fetch::INSECURE_REQWEST_CLIENT;
-use serde::{Deserialize, Serialize};
-use serde::ser::SerializeStruct;
 use serde::Serializer;
+use serde::ser::SerializeStruct;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Deserialize, Debug, Clone)]
@@ -14,14 +14,20 @@ pub struct ElyCredentials {
 }
 
 impl Serialize for ElyCredentials {
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+    fn serialize<S: Serializer>(
+        &self,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error> {
         let mut s = serializer.serialize_struct("ElyCredentials", 4)?;
-        s.serialize_field("profile", &serde_json::json!({
-            "id": self.uuid,
-            "name": self.username,
-            "skins": [],
-            "capes": []
-        }))?;
+        s.serialize_field(
+            "profile",
+            &serde_json::json!({
+                "id": self.uuid,
+                "name": self.username,
+                "skins": [],
+                "capes": []
+            }),
+        )?;
         s.serialize_field("access_token", &self.access_token)?;
         s.serialize_field("active", &self.active)?;
         s.serialize_field("auth_provider", "ely_by")?;
@@ -61,7 +67,10 @@ struct ElyProfile {
 }
 
 impl ElyCredentials {
-    pub async fn authenticate(username: &str, password: &str) -> crate::Result<Self> {
+    pub async fn authenticate(
+        username: &str,
+        password: &str,
+    ) -> crate::Result<Self> {
         let client_token = Uuid::new_v4().to_string();
 
         let resp = INSECURE_REQWEST_CLIENT
@@ -75,11 +84,18 @@ impl ElyCredentials {
             }))
             .send()
             .await
-            .map_err(|e| crate::ErrorKind::OtherError(format!("Ely.by auth request failed: {e}")))?;
+            .map_err(|e| {
+                crate::ErrorKind::OtherError(format!(
+                    "Ely.by auth request failed: {e}"
+                ))
+            })?;
 
         let status = resp.status();
-        let body = resp.text().await
-            .map_err(|e| crate::ErrorKind::OtherError(format!("Failed to read Ely.by response: {e}")))?;
+        let body = resp.text().await.map_err(|e| {
+            crate::ErrorKind::OtherError(format!(
+                "Failed to read Ely.by response: {e}"
+            ))
+        })?;
 
         if !status.is_success() {
             // Try to extract error message
@@ -87,14 +103,24 @@ impl ElyCredentials {
                 .ok()
                 .and_then(|v| v["errorMessage"].as_str().map(String::from))
                 .unwrap_or_else(|| format!("HTTP {status}"));
-            return Err(crate::ErrorKind::OtherError(format!("Ely.by login failed: {msg}")).into());
+            return Err(crate::ErrorKind::OtherError(format!(
+                "Ely.by login failed: {msg}"
+            ))
+            .into());
         }
 
-        let data: ElyAuthResponse = serde_json::from_str(&body)
-            .map_err(|e| crate::ErrorKind::OtherError(format!("Failed to parse Ely.by auth response: {e}. Body: {body}")))?;
+        let data: ElyAuthResponse =
+            serde_json::from_str(&body).map_err(|e| {
+                crate::ErrorKind::OtherError(format!(
+                    "Failed to parse Ely.by auth response: {e}. Body: {body}"
+                ))
+            })?;
 
-        let uuid = Uuid::parse_str(&data.selected_profile.id)
-            .map_err(|e| crate::ErrorKind::OtherError(format!("Invalid UUID from Ely.by: {e}")))?;
+        let uuid = Uuid::parse_str(&data.selected_profile.id).map_err(|e| {
+            crate::ErrorKind::OtherError(format!(
+                "Invalid UUID from Ely.by: {e}"
+            ))
+        })?;
 
         Ok(Self {
             uuid,
@@ -138,14 +164,24 @@ impl ElyCredentials {
             }))
             .send()
             .await
-            .map_err(|e| crate::ErrorKind::OtherError(format!("Ely.by refresh request failed: {e}")))?;
+            .map_err(|e| {
+                crate::ErrorKind::OtherError(format!(
+                    "Ely.by refresh request failed: {e}"
+                ))
+            })?;
 
         let status = resp.status();
-        let body = resp.text().await
-            .map_err(|e| crate::ErrorKind::OtherError(format!("Failed to read Ely.by refresh response: {e}")))?;
+        let body = resp.text().await.map_err(|e| {
+            crate::ErrorKind::OtherError(format!(
+                "Failed to read Ely.by refresh response: {e}"
+            ))
+        })?;
 
         if status.is_server_error() {
-            return Err(crate::ErrorKind::OtherError(format!("Ely.by token refresh failed: HTTP {status}")).into());
+            return Err(crate::ErrorKind::OtherError(format!(
+                "Ely.by token refresh failed: HTTP {status}"
+            ))
+            .into());
         }
         if !status.is_success() {
             return Ok(ElyRefresh::Rejected);
@@ -157,8 +193,12 @@ impl ElyCredentials {
             access_token: String,
         }
 
-        let data: RefreshResponse = serde_json::from_str(&body)
-            .map_err(|e| crate::ErrorKind::OtherError(format!("Failed to parse Ely.by refresh response: {e}")))?;
+        let data: RefreshResponse =
+            serde_json::from_str(&body).map_err(|e| {
+                crate::ErrorKind::OtherError(format!(
+                    "Failed to parse Ely.by refresh response: {e}"
+                ))
+            })?;
 
         self.access_token = data.access_token;
         Ok(ElyRefresh::Refreshed)
@@ -175,8 +215,11 @@ impl ElyCredentials {
 
         let Some(row) = res else { return Ok(None) };
 
-        let uuid = Uuid::parse_str(&row.uuid)
-            .map_err(|e| crate::ErrorKind::OtherError(format!("Invalid UUID in ely_users: {e}")))?;
+        let uuid = Uuid::parse_str(&row.uuid).map_err(|e| {
+            crate::ErrorKind::OtherError(format!(
+                "Invalid UUID in ely_users: {e}"
+            ))
+        })?;
 
         let mut creds = Self {
             uuid,
@@ -222,7 +265,9 @@ impl ElyCredentials {
 
         let mut result = Vec::new();
         for row in rows {
-            let Ok(uuid) = Uuid::parse_str(&row.uuid) else { continue };
+            let Ok(uuid) = Uuid::parse_str(&row.uuid) else {
+                continue;
+            };
             result.push(Self {
                 uuid,
                 username: row.username,

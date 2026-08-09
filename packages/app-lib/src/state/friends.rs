@@ -337,8 +337,7 @@ impl FriendsSocket {
                                 "Friends socket still unavailable; backing off and suppressing further retry logs."
                             );
                         }
-                        backoff_secs =
-                            (backoff_secs * 2).min(MAX_BACKOFF_SECS);
+                        backoff_secs = (backoff_secs * 2).min(MAX_BACKOFF_SECS);
                     }
                 } else if connected
                     && Utc::now().signed_duration_since(last_ping)

@@ -395,8 +395,7 @@ macro_rules! get_resource_file {
 /// Returns a safe filename — empty input becomes `_` so the caller never
 /// has to special-case it.
 pub fn sanitize_filename(name: &str) -> String {
-    const FORBIDDEN: &[char] =
-        &['<', '>', ':', '"', '/', '\\', '|', '?', '*'];
+    const FORBIDDEN: &[char] = &['<', '>', ':', '"', '/', '\\', '|', '?', '*'];
     let mut out: String = name
         .chars()
         .map(|c| {
@@ -410,7 +409,7 @@ pub fn sanitize_filename(name: &str) -> String {
 
     // Trim trailing dots/spaces — Windows treats `foo.` as `foo` when
     // opening but rejects it when creating, which causes ERROR_INVALID_NAME.
-    while matches!(out.chars().next_back(), Some('.') | Some(' ')) {
+    while matches!(out.chars().next_back(), Some('.' | ' ')) {
         out.pop();
     }
 
@@ -438,7 +437,10 @@ mod sanitize_tests {
 
     #[test]
     fn replaces_windows_reserved() {
-        assert_eq!(sanitize_filename("a<b>c:d\"e/f\\g|h?i*j"), "a_b_c_d_e_f_g_h_i_j");
+        assert_eq!(
+            sanitize_filename("a<b>c:d\"e/f\\g|h?i*j"),
+            "a_b_c_d_e_f_g_h_i_j"
+        );
     }
 
     #[test]

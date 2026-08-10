@@ -37,12 +37,12 @@ import {
 	listInstanceScreenshots,
 	type Screenshot,
 } from '@/helpers/screenshots'
-import type { GameInstance } from '@/helpers/types'
 import { highlightInFolder, openPath } from '@/helpers/utils'
 
-const props = defineProps<{
-	instance: GameInstance
-}>()
+import { injectInstancePage } from './instance-context'
+
+const instancePage = injectInstancePage()
+const instance = computed(() => instancePage.instance.value)
 
 const { formatMessage } = useVIntl()
 const { addNotification, handleError } = injectNotificationManager()
@@ -122,7 +122,7 @@ async function loadScreenshots() {
 	if (initial) loading.value = true
 	else refreshing.value = true
 	try {
-		screenshots.value = await listInstanceScreenshots(props.instance.id)
+		screenshots.value = await listInstanceScreenshots(instance.value.id)
 	} catch (error) {
 		handleError(error as Error)
 	} finally {
@@ -201,7 +201,7 @@ const screenshotsFolder = ref<string | null>(null)
 
 async function resolveScreenshotsFolder() {
 	try {
-		const fullPath = await get_full_path(props.instance.id)
+		const fullPath = await get_full_path(instance.value.id)
 		screenshotsFolder.value = `${fullPath}/screenshots`
 	} catch (error) {
 		handleError(error as Error)

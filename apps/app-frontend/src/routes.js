@@ -203,9 +203,6 @@ export default new createRouter({
 					path: 'screenshots',
 					name: 'InstanceScreenshots',
 					component: Instance.Screenshots,
-					meta: {
-						useRootContext: true,
-					},
 				},
 			],
 		},

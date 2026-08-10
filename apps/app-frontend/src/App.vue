@@ -1646,14 +1646,16 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 					},
 					{
 						id: 'collections',
+						label: formatMessage(messages.accountCollections),
 						action: () => $router.push('/dashboard/collections'),
 					},
 					{
 						id: 'notifications',
+						label: formatMessage(messages.accountNotifications),
 						action: () => $router.push('/dashboard/notifications'),
 					},
 					{
-						divider: true,
+						type: 'divider',
 					},
 					{
 						id: 'sign-out',

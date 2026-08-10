@@ -181,6 +181,22 @@ fn main() {
                 .build(),
         )
         .setup(|app| {
+            // Claim the configured URL schemes on every launch. The installer
+            // registers them once, which leaves two gaps: an existing install
+            // never picks up a scheme added in a later version, and `modrinth://`
+            // is shared with Modrinth App, where whoever registered last wins.
+            // Doing it here means launching Noctrinth is enough to take the
+            // schemes back. macOS registers them from the bundle's Info.plist
+            // and rejects this call, so it is skipped there.
+            #[cfg(not(target_os = "macos"))]
+            {
+                use tauri_plugin_deep_link::DeepLinkExt;
+
+                if let Err(e) = app.deep_link().register_all() {
+                    tracing::warn!("Failed to register deep link schemes: {e}");
+                }
+            }
+
             #[cfg(target_os = "macos")]
             {
                 let payload = macos::deep_link::get_or_init_payload(app);

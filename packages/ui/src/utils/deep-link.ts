@@ -1,14 +1,13 @@
 /**
- * URL scheme the desktop app registers with the OS.
+ * URL scheme our own links use to open the desktop app.
  *
- * Noctrinth registers `noctrinth://` rather than `modrinth://` so it never
- * fights the official Modrinth App for the protocol when both are installed.
- * Every link meant to open the app has to be built from here — a hardcoded
- * `modrinth://` would silently hand the user off to the other launcher, or do
- * nothing at all when it isn't installed.
+ * The app claims both this and `modrinth://` (see `deep-link.desktop.schemes`
+ * in `apps/app/tauri.conf.json`) so that install links on modrinth.com reach it
+ * too. Our own links use the unambiguous one: `modrinth://` is contested, and
+ * with Modrinth App installed the winner is whichever registered last.
  *
- * Kept in sync with `deep-link.desktop.schemes` in `apps/app/tauri.conf.json`
- * and `DEEP_LINK_SCHEME` in `packages/app-lib/src/api/handler.rs`.
+ * Kept in sync with `DEEP_LINK_SCHEME` in
+ * `packages/app-lib/src/api/handler.rs`.
  */
 export const APP_DEEP_LINK_SCHEME = 'noctrinth'
 

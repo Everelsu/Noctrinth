@@ -71,7 +71,8 @@
 		"deep-link": {
 			"desktop": {
 				"schemes": [
-					"noctrinth"
+					"noctrinth",
+					"modrinth"
 				]
 			},
 			"mobile": []

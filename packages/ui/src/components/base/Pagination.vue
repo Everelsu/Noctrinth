@@ -180,18 +180,6 @@ function switchPage(newPage: number) {
 </script>
 
 <style scoped>
-.page-gap-button {
-	background: transparent;
-	border: none;
-	padding: 0.25rem;
-	color: inherit;
-	cursor: pointer;
-	border-radius: 9999px;
-	transition: background-color 120ms ease;
-}
-.page-gap-button:hover {
-	background: var(--color-button-bg);
-}
 .page-number-input {
 	width: 4rem;
 	height: 2rem;

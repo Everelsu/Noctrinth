@@ -255,6 +255,7 @@
 
 <script setup>
 import {
+	BookmarkIcon,
 	CheckIcon,
 	ClipboardCopyIcon,
 	DownloadIcon,

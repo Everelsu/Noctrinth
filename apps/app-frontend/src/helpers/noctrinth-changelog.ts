@@ -31,6 +31,7 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 - Archived projects are marked by a disclosure rather than by their visibility, so an archived project can also be unlisted or private.
 
 ### Fixed
+- The "more options" menu on a project page opened empty. Adding the Follow and Save buttons to that header had dropped an icon import the menu itself still used, so building its list of entries threw and every entry vanished — leaving the bare panel.
 - Adding a local file to an instance keeps working for archives upstream's new content inspection refuses: plain \`.jar\` and \`.litemod\` files carrying no loader metadata, and packs zipped inside a wrapping folder.`,
 	},
 	{

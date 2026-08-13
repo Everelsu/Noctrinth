@@ -21,6 +21,23 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.17.5',
+		date: '2026-08-14T00:00:00+00:00',
+		body: `### Changed
+- Synced with upstream Modrinth (0.17.4 → 0.17.5).
+- An instance's content tab now checks for content updates as soon as you open it, instead of waiting for a cached answer to expire. A freshly published update can still take up to ten minutes to show up.
+- Config files and RPO files are no longer flagged when importing a modpack from outside Modrinth, and the warning about the files that are still flagged explains itself better.
+- Translations were refreshed from upstream's latest Crowdin pull, without putting the Modrinth name back into the places Noctrinth had renamed.
+
+### Fixed
+- Animated GIFs in project descriptions play again.
+- Clicking an entry in an instance's content tab no longer reports "Instance not found".
+- The window close button is the right colour again on Windows and Linux.
+- Download buttons on version pages show the file name and size again.
+- The buttons on the "Minecraft account required" dialog work on Windows.
+- The right sidebar stays open when you collapse a section of the friends list with "Hide right sidebar" on.`,
+	},
+	{
 		version: '0.17.4',
 		date: '2026-08-10T00:00:00+00:00',
 		body: `### Added

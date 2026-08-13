@@ -233,6 +233,7 @@ provideInstallationSettings({
 		() =>
 			isModrinthLinkedModpack.value ||
 			isImportedModpack.value ||
+			instance.value.link?.type === 'server_project' ||
 			isSharedInstanceManagedModpack.value,
 	),
 	isBusy: installationSettingsBusy,

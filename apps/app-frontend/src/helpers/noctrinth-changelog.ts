@@ -21,6 +21,19 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.17.6',
+		date: '2026-08-14T00:00:00+00:00',
+		body: `### Added
+- Synced with upstream Modrinth (0.17.5 → 0.17.6). Projects now carry content disclosures — authors state whether a project contains AI-generated content, ads or sponsorships, paid features, telemetry, derivative content or photosensitivity hazards, and you can filter them out when browsing.
+
+### Changed
+- The "Advanced" group of search filters is now "Advanced exclusions" and holds the new disclosure filters.
+- Archived projects are marked by a disclosure rather than by their visibility, so an archived project can also be unlisted or private.
+
+### Fixed
+- Adding a local file to an instance keeps working for archives upstream's new content inspection refuses: plain \`.jar\` and \`.litemod\` files carrying no loader metadata, and packs zipped inside a wrapping folder.`,
+	},
+	{
 		version: '0.17.5',
 		date: '2026-08-14T00:00:00+00:00',
 		body: `### Changed

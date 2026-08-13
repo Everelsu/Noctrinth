@@ -513,7 +513,19 @@ pub(crate) async fn add_project_bytes(
     let scope = resolve_content_scope(instance_id, None, state).await?;
     let project_type = match project_type {
         Some(project_type) => project_type,
-        None => infer_project_type(file_name, &bytes)?,
+        None => {
+            match super::embedded_content_metadata::infer_project_type_bytes(
+                &bytes,
+            ) {
+                Ok(project_type) => project_type,
+                // Upstream only recognises markers at the archive root, and
+                // rejects an archive carrying none at all. Both shapes turn up
+                // constantly in files users drag in, so fall back rather than
+                // refuse the file outright.
+                Err(error) => infer_project_type_loosely(file_name, &bytes)
+                    .ok_or(error)?,
+            }
+        }
     };
     // Sanitize so a file dragged in from a filesystem with laxer rules (or a
     // network share) can't produce a path Windows refuses to create.
@@ -806,6 +818,37 @@ pub(crate) async fn content_source_kind_for_project_path(
     }))
 }
 
+pub(crate) async fn is_project_locked(
+    instance_id: &str,
+    project_path: &str,
+    state: &State,
+) -> crate::Result<bool> {
+    let scope = resolve_content_scope(instance_id, None, state).await?;
+    content_rows::is_instance_file_locked(
+        &scope.instance.id,
+        project_path,
+        &state.pool,
+    )
+    .await
+}
+
+pub(crate) async fn set_project_locked(
+    instance_id: &str,
+    project_path: &str,
+    locked: bool,
+    state: &State,
+) -> crate::Result<()> {
+    let _content_lock = state.lock_instance_content(instance_id).await;
+    let scope = resolve_content_scope(instance_id, None, state).await?;
+    content_rows::set_instance_file_locked(
+        &scope.instance.id,
+        project_path,
+        locked,
+        &state.pool,
+    )
+    .await
+}
+
 pub(crate) async fn rename_project_companion_file(
     instance_id: &str,
     old_project_path: &str,
@@ -954,73 +997,53 @@ async fn upsert_entry_for_file(
     Ok(())
 }
 
-fn infer_project_type(
+/// Last resort for an archive upstream's inference refused, covering the two
+/// shapes it does not look for. Returns `None` when the file is no more
+/// recognisable to us than it was to upstream.
+fn infer_project_type_loosely(
     file_name: &str,
     bytes: &Bytes,
-) -> crate::Result<ProjectType> {
-    // Extension fallback for archives without any recognisable marker.
-    // Legacy tweaker/coremod jars (the "!mixinbootstrap.jar" kind) often
-    // carry no fabric.mod.json / mods.toml / mcmod.info at all, yet a .jar
-    // dropped into an instance is a mod for every practical purpose —
-    // refusing it entirely is far worse than assuming.
+) -> Option<ProjectType> {
+    // Legacy tweaker/coremod jars (the "!mixinbootstrap.jar" kind) often carry
+    // no fabric.mod.json / mods.toml / mcmod.info at all, yet a .jar dropped
+    // into an instance is a mod for every practical purpose — assuming so
+    // beats refusing the file.
     let lower_name = file_name.to_ascii_lowercase();
     let extension_fallback = (lower_name.ends_with(".jar")
         || lower_name.ends_with(".litemod"))
     .then_some(ProjectType::Mod);
 
     let cursor = std::io::Cursor::new(&**bytes);
-    let Ok(mut archive) = zip::ZipArchive::new(cursor) else {
-        return extension_fallback.ok_or_else(|| {
-            crate::Error::from(crate::ErrorKind::InputError(
-                "Unable to infer project type for input file".to_string(),
-            ))
-        });
+    let Ok(archive) = zip::ZipArchive::new(cursor) else {
+        return extension_fallback;
     };
 
-    if archive.by_name("fabric.mod.json").is_ok()
-        || archive.by_name("quilt.mod.json").is_ok()
-        || archive.by_name("META-INF/neoforge.mods.toml").is_ok()
-        || archive.by_name("META-INF/mods.toml").is_ok()
-        || archive.by_name("mcmod.info").is_ok()
-    {
-        return Ok(ProjectType::Mod);
-    }
-
-    // Root-level pack markers, then packs zipped with a single wrapping
-    // folder ("MyPack/pack.mcmeta") — a very common way users receive them.
+    // Packs zipped with a single wrapping folder ("MyPack/pack.mcmeta") — a
+    // very common way users receive them, and invisible to a root-only check.
     let names: Vec<&str> = archive.file_names().collect();
-    let has_at_depth = |suffix: &str| {
+    let nested = |suffix: &str| {
         names.iter().any(|name| {
-            *name == suffix
-                || name.split_once('/').is_some_and(|(dir, rest)| {
-                    !dir.is_empty() && rest == suffix
-                })
+            name.split_once('/')
+                .is_some_and(|(dir, rest)| !dir.is_empty() && rest == suffix)
         })
     };
-    let dir_at_depth = |dir_prefix: &str| {
+    let nested_dir = |dir_prefix: &str| {
         names.iter().any(|name| {
-            name.starts_with(dir_prefix)
-                || name.split_once('/').is_some_and(|(dir, rest)| {
-                    !dir.is_empty() && rest.starts_with(dir_prefix)
-                })
+            name.split_once('/').is_some_and(|(dir, rest)| {
+                !dir.is_empty() && rest.starts_with(dir_prefix)
+            })
         })
     };
 
-    if has_at_depth("pack.mcmeta") {
-        if dir_at_depth("data/") {
-            Ok(ProjectType::DataPack)
+    if nested("pack.mcmeta") {
+        if nested_dir("data/") {
+            Some(ProjectType::DataPack)
         } else {
-            Ok(ProjectType::ResourcePack)
+            Some(ProjectType::ResourcePack)
         }
-    } else if dir_at_depth("shaders/") {
-        Ok(ProjectType::ShaderPack)
-    } else if let Some(project_type) = extension_fallback {
-        Ok(project_type)
+    } else if nested_dir("shaders/") {
+        Some(ProjectType::ShaderPack)
     } else {
-        Err(crate::ErrorKind::InputError(format!(
-            "Unable to infer project type for \"{file_name}\" — expected a \
-             mod (.jar), resource pack, data pack, or shader pack archive"
-        ))
-        .into())
+        extension_fallback
     }
 }

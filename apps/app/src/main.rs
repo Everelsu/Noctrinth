@@ -363,10 +363,18 @@ fn main() {
                                 );
                                 set_changelog_toast(None);
 
+                                // A bare "Permission denied (os error 13)" tells
+                                // nobody what to do about it — the install
+                                // location is what actually matters here.
+                                let text = match self_update_blocker() {
+                                    Some(reason) => format!("Failed to install update.\n\n{reason}"),
+                                    None => format!("Failed to install update due to an error:\n{e}"),
+                                };
+
                                 DialogBuilder::message()
                                     .set_level(MessageLevel::Error)
                                     .set_title("Update error")
-                                    .set_text(format!("Failed to install update due to an error:\n{e}"))
+                                    .set_text(text)
                                     .alert()
                                     .show()
                                     .unwrap();

@@ -198,6 +198,94 @@ jobs:
           prerelease: false
           args: ${{ matrix.args }}
 
+      - name: Verify Linux bundles declare their bundle type
+        if: matrix.platform == 'ubuntu-22.04'
+        shell: bash
+        run: |
+          set -eo pipefail
+
+          # The updater decides how to install itself from a marker the bundler
+          # patches into each binary. Tauri CLI 2.5 never wrote it, so
+          # `bundle_type()` returned None and *every* Linux install fell through
+          # to rewriting the executable in place — which, for a .deb installed
+          # under /usr, dies as "Permission denied (os error 13)".
+          #
+          # The fix was to move the CLI forward, but the release is built by
+          # tauri-action, which may not use the CLI pinned in package.json.
+          # So assert the marker on the artifacts themselves instead of trusting
+          # a version number: if the toolchain ever regresses, this fails here
+          # rather than in a user's update a release later.
+          UNPATCHED='__TAURI_BUNDLE_TYPE_VAR_UNK'
+          failed=0
+
+          echo "tauri CLI: $(cd apps/app && pnpm exec tauri --version)"
+
+          check() {
+            local label="$1" file="$2" expected="$3"
+            if grep -aq "$expected" "$file"; then
+              echo "  ok: $label declares $expected"
+            elif grep -aq "$UNPATCHED" "$file"; then
+              echo "::error::$label was bundled without a bundle type ($UNPATCHED left in place). Its updater would try to overwrite the installed binary and fail with os error 13."
+              failed=1
+            else
+              echo "::error::$label carries neither $expected nor $UNPATCHED — the marker moved or the binary was stripped; the check needs revisiting."
+              failed=1
+            fi
+          }
+
+          shopt -s nullglob
+          found=0
+
+          for appimage in target/release/bundle/appimage/*.AppImage; do
+            found=1
+            # An AppImage is a compressed squashfs, so the marker is not
+            # greppable in the file itself — unpack it first. `--appimage-extract`
+            # needs no FUSE, which the runner does not have.
+            workdir=$(mktemp -d)
+            chmod +x "$appimage"
+            abs_appimage=$(readlink -f "$appimage")
+            (cd "$workdir" && "$abs_appimage" --appimage-extract >/dev/null)
+            binary=$(find "$workdir/squashfs-root" -type f -executable -print0 \
+              | xargs -0 file --mime-type \
+              | grep -m1 'application/x-\(pie-\)\?executable' \
+              | cut -d: -f1 || true)
+            if [ -z "$binary" ]; then
+              echo "::error::no executable found inside $(basename "$appimage")"
+              failed=1
+            else
+              check "$(basename "$appimage")" "$binary" '__TAURI_BUNDLE_TYPE_VAR_APP'
+            fi
+            rm -rf "$workdir"
+          done
+
+          for deb in target/release/bundle/deb/*.deb; do
+            found=1
+            workdir=$(mktemp -d)
+            dpkg-deb -x "$deb" "$workdir"
+            # The executable name follows productName, so locate it rather than
+            # hard-coding a path that a rename would silently break.
+            # `|| true`: grep -m1 closes the pipe early, and with pipefail the
+            # SIGPIPE upstream would otherwise fail the whole step under set -e.
+            binary=$(find "$workdir" -type f -executable -print0 \
+              | xargs -0 file --mime-type \
+              | grep -m1 'application/x-\(pie-\)\?executable' \
+              | cut -d: -f1 || true)
+            if [ -z "$binary" ]; then
+              echo "::error::no executable found inside $(basename "$deb")"
+              failed=1
+            else
+              check "$(basename "$deb")" "$binary" '__TAURI_BUNDLE_TYPE_VAR_DEB'
+            fi
+            rm -rf "$workdir"
+          done
+
+          if [ "$found" -eq 0 ]; then
+            echo "::error::no Linux bundles found under target/release/bundle — did the bundle output path move?"
+            exit 1
+          fi
+
+          exit "$failed"
+
   # Moves the updater manifest off the release page: `latest.json` is committed
   # to the `updater` branch and, together with the `.sig` signature files, is
   # removed from the release so only the actual installers remain visible.

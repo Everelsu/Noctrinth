@@ -15,6 +15,71 @@ use tokio::time::Instant;
 #[derive(Default)]
 pub struct PendingUpdateData(pub Mutex<Option<(Arc<Update>, Vec<u8>)>>);
 
+/// Why this installation cannot replace itself, if it cannot.
+///
+/// On Linux the updater rewrites the app in place: it renames the running
+/// executable aside and writes the new one over the old path, so it needs write
+/// access to the *directory* holding it, not just the file. A `.deb` or `.rpm`
+/// install puts that under `/usr` or `/opt`, owned by root, and the rename ends
+/// as `Permission denied (os error 13)`.
+///
+/// Package-manager bundles have their own path through `pkexec`, so those are
+/// left alone; the check only covers the rename branch, which is also the
+/// fallback whenever the bundle type could not be determined at all.
+///
+/// Checked before downloading rather than after, so a doomed update doesn't
+/// cost the user the whole download first.
+// `cfg!` rather than `#[cfg]` so the whole body still type-checks on every
+// platform, including from a Windows dev machine.
+pub fn self_update_blocker() -> Option<String> {
+    use tauri::utils::config::BundleType;
+    use tauri::utils::platform::bundle_type;
+
+    // Only the Linux updater rewrites the app in place. Windows re-runs its
+    // installer and macOS swaps the bundle, so neither is answered by this.
+    if !cfg!(target_os = "linux") {
+        return None;
+    }
+
+    // These install through a privilege prompt instead of a rename.
+    if matches!(bundle_type(), Some(BundleType::Deb | BundleType::Rpm)) {
+        return None;
+    }
+
+    // Matches how the updater plugin resolves its target: the AppImage itself
+    // when running as one, otherwise the executable.
+    let target = std::env::var_os("APPIMAGE")
+        .map(std::path::PathBuf::from)
+        .or_else(|| std::env::current_exe().ok())?;
+    let parent = target.parent()?;
+
+    // Probing beats reading mode bits: it accounts for ownership, ACLs and
+    // read-only mounts in one go. The rename needs write access to the
+    // directory, not just to the file.
+    let probe =
+        parent.join(format!(".noctrinth-update-check-{}", std::process::id()));
+    match std::fs::File::create(&probe) {
+        Ok(_) => {
+            let _ = std::fs::remove_file(&probe);
+            None
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::PermissionDenied => {
+            Some(format!(
+                "Noctrinth is installed in {}, which this user cannot write to, \
+                 so it cannot replace itself there.\n\n\
+                 If you installed the .deb, update through your package manager \
+                 or install the new .deb from the releases page. If you are \
+                 running the AppImage, move it somewhere you own — your home \
+                 directory, for example — and update from there.",
+                parent.display()
+            ))
+        }
+        // Anything else (a full disk, a missing directory) is not ours to
+        // diagnose here; let the real install surface it.
+        Err(_) => None,
+    }
+}
+
 // Reimplementation of Update::download mostly, minus the actual download part
 #[tauri::command]
 pub async fn get_update_size<R: Runtime>(
@@ -68,6 +133,14 @@ pub async fn enqueue_update_for_installation<R: Runtime>(
     webview: Webview<R>,
     rid: ResourceId,
 ) -> Result<()> {
+    if let Some(reason) = self_update_blocker() {
+        return Err(Error::Io(std::io::Error::new(
+            std::io::ErrorKind::PermissionDenied,
+            reason,
+        ))
+        .into());
+    }
+
     let pending_data = webview.state::<PendingUpdateData>().inner();
 
     let update = webview.resources_table().get::<Update>(rid)?;

@@ -1,4 +1,5 @@
 use super::content::get_projects;
+use crate::launcher::McOption;
 use crate::server_address::ServerAddress;
 use crate::state::{
     Credentials, ElyCredentials, InstanceLink, ProcessMetadata, Settings, State,
@@ -236,11 +237,23 @@ async fn run_credentials(
         })
         .filter(|hook_command| !hook_command.is_empty());
 
-    let mut mc_set_options: Vec<(String, String)> = vec![];
+    // The shared profile goes first so anything decided for this specific
+    // launch — fullscreen, quick play — still wins on a duplicate key.
+    let mut mc_set_options: Vec<McOption> = settings
+        .shared_game_options
+        .applicable_to(&context.applied_content_set.game_version)
+        .map(|option| McOption {
+            key: option.key.clone(),
+            value: option.value.clone(),
+            only_if_present: option.only_if_present,
+        })
+        .collect();
+
     if let Some(fullscreen) = context.launch_overrides.force_fullscreen {
-        mc_set_options.push(("fullscreen".to_string(), fullscreen.to_string()));
+        mc_set_options
+            .push(McOption::always("fullscreen", fullscreen.to_string()));
     } else if settings.force_fullscreen {
-        mc_set_options.push(("fullscreen".to_string(), "true".to_string()));
+        mc_set_options.push(McOption::always("fullscreen", "true"));
     }
 
     if let Some(project_id) = server_play_project_id(&context.link)

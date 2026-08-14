@@ -11,6 +11,7 @@ import {
 } from '@modrinth/assets'
 import {
 	Accordion,
+	Avatar,
 	DropdownSelect,
 	formatLoader,
 	injectNotificationManager,
@@ -19,13 +20,23 @@ import {
 } from '@modrinth/ui'
 import { useStorage } from '@vueuse/core'
 import dayjs from 'dayjs'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import ContextMenu from '@/components/ui/ContextMenu.vue'
 import Instance from '@/components/ui/Instance.vue'
 import ConfirmDeleteInstanceModal from '@/components/ui/modal/ConfirmDeleteInstanceModal.vue'
+import { useInstanceContentIndex } from '@/composables/instances/use-instance-content-index'
 import { install_duplicate_instance } from '@/helpers/install'
 import { remove } from '@/helpers/instance'
+import {
+	activeToken,
+	applySuggestion,
+	KNOWN_STATES,
+	KNOWN_TYPES,
+	matchInstance,
+	parseQuery,
+	suggestionsFor,
+} from '@/helpers/instance-search'
 
 const { handleError } = injectNotificationManager()
 
@@ -145,6 +156,116 @@ const state = useStorage(
 )
 
 const search = ref('')
+
+const contentIndex = useInstanceContentIndex()
+const parsedQuery = computed(() => parseQuery(search.value))
+
+const instanceIds = computed(() => props.instances.map((instance) => instance.id))
+
+// A lone "@" isn't a term yet, so `needsContent` is false — but it's exactly
+// when the suggestion list needs the index. Load on either signal.
+const wantsContentIndex = computed(
+	() => parsedQuery.value.needsContent || activeToken(search.value).replace(/^-/, '')[0] === '@',
+)
+
+// Only pay for the cross-instance content index once a query actually asks about
+// content — plain name searches stay as cheap as they were before.
+watch(
+	() => [wantsContentIndex.value, instanceIds.value.join(',')],
+	([wanted]) => {
+		if (!wanted) return
+		contentIndex.ensureLoaded(instanceIds.value)
+	},
+	{ immediate: true },
+)
+
+const searchFocused = ref(false)
+
+const suggestions = computed(() => {
+	if (!searchFocused.value) return []
+	// Touch the version so completions appear as the index streams in.
+	void contentIndex.version.value
+	return suggestionsFor(search.value, contentIndex.contentNames(instanceIds.value))
+})
+
+const activeSuggestion = ref(0)
+
+watch(suggestions, () => {
+	activeSuggestion.value = 0
+})
+
+// Closing on focusout would fire before a suggestion's click lands, so the
+// panel's own buttons use mousedown.prevent and only a focus leaving the whole
+// wrapper closes it.
+function onSearchBlur(event) {
+	if (event.currentTarget.contains(event.relatedTarget)) return
+	searchFocused.value = false
+}
+
+function chooseSuggestion(suggestion) {
+	search.value = applySuggestion(search.value, suggestion)
+	searchFocused.value = true
+}
+
+function onSearchKeydown(event) {
+	if (!suggestions.value.length) return
+
+	if (event.key === 'ArrowDown') {
+		event.preventDefault()
+		activeSuggestion.value = (activeSuggestion.value + 1) % suggestions.value.length
+	} else if (event.key === 'ArrowUp') {
+		event.preventDefault()
+		activeSuggestion.value =
+			(activeSuggestion.value - 1 + suggestions.value.length) % suggestions.value.length
+	} else if (event.key === 'Tab' || event.key === 'Enter') {
+		const suggestion = suggestions.value[activeSuggestion.value]
+		if (!suggestion) return
+		event.preventDefault()
+		chooseSuggestion(suggestion)
+	} else if (event.key === 'Escape') {
+		searchFocused.value = false
+	}
+}
+
+const contentPending = computed(
+	() => parsedQuery.value.needsContent && !contentIndex.hasContentFor(instanceIds.value),
+)
+
+const instanceMatches = computed(() => {
+	// Touch the index version so matching re-runs as instances stream in.
+	void contentIndex.version.value
+
+	const query = parsedQuery.value
+	if (query.isEmpty) {
+		return props.instances.map((instance) => ({ instance, contentMatches: [] }))
+	}
+
+	return props.instances
+		.map((instance) => matchInstance(instance, query, contentIndex.contentFor(instance.id)))
+		.filter((match) => match !== null)
+})
+
+const contentMatchesById = computed(() => {
+	const map = new Map()
+	for (const match of instanceMatches.value) {
+		if (match.contentMatches.length) map.set(match.instance.id, match.contentMatches)
+	}
+	return map
+})
+
+const searchHint = computed(() => {
+	const unknown = parsedQuery.value.unknown
+	if (unknown.length) {
+		const terms = unknown.map((token) => token.raw).join(', ')
+		return `Ignoring ${terms} — types are ${KNOWN_TYPES.join(', ')}; states are ${KNOWN_STATES.join(', ')}.`
+	}
+	if (contentPending.value) return 'Searching instance content…'
+	if (!parsedQuery.value.isEmpty && instanceMatches.value.length === 0) {
+		return 'No instances match that search.'
+	}
+	return ''
+})
+
 const collapsedSectionKeys = computed(() => new Set(state.value.collapsedGroups ?? []))
 
 const getSectionKey = (sectionName) => `${state.value.group}:${sectionName}`
@@ -169,9 +290,7 @@ const setSectionCollapsed = (sectionName, collapsed) => {
 const filteredResults = computed(() => {
 	const { group = 'Group', sortBy = 'Name' } = state.value
 
-	const instances = props.instances.filter((instance) => {
-		return instance.name.toLowerCase().includes(search.value.toLowerCase())
-	})
+	const instances = instanceMatches.value.map((match) => match.instance)
 
 	if (sortBy === 'Name') {
 		instances.sort((a, b) => {
@@ -275,14 +394,55 @@ const filteredResults = computed(() => {
 </script>
 <template>
 	<div class="flex gap-2">
-		<StyledInput
-			v-model="search"
-			:icon="SearchIcon"
-			type="text"
-			placeholder="Search"
-			clearable
-			wrapper-class="flex-1"
-		/>
+		<div class="relative flex-1 min-w-0" @focusin="searchFocused = true" @focusout="onSearchBlur">
+			<StyledInput
+				v-model="search"
+				:icon="SearchIcon"
+				type="text"
+				placeholder="Search instances, or type @ # ! to filter"
+				clearable
+				wrapper-class="w-full"
+				@keydown="onSearchKeydown"
+			/>
+			<div
+				v-if="suggestions.length"
+				class="absolute left-0 right-0 top-full z-[60] mt-1 overflow-hidden rounded-xl border border-solid border-surface-5 bg-surface-3 py-1 shadow-xl"
+			>
+				<button
+					v-for="(suggestion, index) in suggestions"
+					:key="suggestion.insert"
+					type="button"
+					class="flex w-full items-center gap-2 border-none bg-transparent px-3 py-2 text-left font-inherit cursor-pointer"
+					:class="index === activeSuggestion ? 'bg-surface-4' : 'hover:bg-surface-4'"
+					@mousedown.prevent="chooseSuggestion(suggestion)"
+					@mouseenter="activeSuggestion = index"
+				>
+					<Avatar
+						v-if="suggestion.kind === 'content'"
+						size="20px"
+						:src="suggestion.iconUrl ?? null"
+						:tint-by="suggestion.label"
+						:alt="suggestion.label"
+						class="shrink-0"
+					/>
+					<span
+						v-else
+						class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-surface-5 text-xs font-bold text-contrast"
+					>
+						{{ suggestion.insert.replace('-', '')[0] }}
+					</span>
+					<span class="min-w-0 flex-1">
+						<span class="block truncate text-sm font-semibold text-contrast">
+							{{ suggestion.label }}
+						</span>
+						<span class="block truncate text-xs text-secondary">{{ suggestion.hint }}</span>
+					</span>
+				</button>
+				<p class="m-0 px-3 pt-1.5 pb-1 text-xs text-secondary">
+					↑↓ to pick · Tab to insert · terms combine, and <code>-</code> flips one around
+				</p>
+			</div>
+		</div>
 		<DropdownSelect
 			v-slot="{ selected }"
 			v-model="state.sortBy"
@@ -306,6 +466,7 @@ const filteredResults = computed(() => {
 			<span class="font-semibold text-secondary">{{ selected }}</span>
 		</DropdownSelect>
 	</div>
+	<p v-if="searchHint" class="m-0 text-sm text-secondary">{{ searchHint }}</p>
 	<Accordion
 		v-for="instanceSection in Array.from(filteredResults, ([key, value]) => ({
 			key,
@@ -327,6 +488,7 @@ const filteredResults = computed(() => {
 				ref="instanceComponents"
 				:key="instance.id + instance.install_stage"
 				:instance="instance"
+				:content-matches="contentMatchesById.get(instance.id)"
 				@contextmenu.prevent.stop="(event) => handleRightClick(event, instance.id)"
 			/>
 		</section>

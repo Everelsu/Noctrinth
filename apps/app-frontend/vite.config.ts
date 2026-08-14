@@ -92,6 +92,10 @@ export default defineConfig({
 	clearScreen: false,
 	// tauri expects a fixed port, fail if that port is not available
 	server: {
+		// Bind IPv4 loopback explicitly. Vite's default host of `localhost` resolves
+		// verbatim on Node >= 17, which on Windows binds `::1` only, while the Tauri
+		// CLI probes `devUrl` over 127.0.0.1 and never sees the server.
+		host: '127.0.0.1',
 		port: 1420,
 		strictPort: true,
 		headers: {

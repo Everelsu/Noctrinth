@@ -5,6 +5,7 @@
  */
 import { invoke } from '@tauri-apps/api/core'
 
+import type { SharedGameOptionsProfile } from '@/helpers/game-options'
 import type { Hooks, MemorySettings, WindowSize } from '@/helpers/types'
 import type { ColorTheme, FeatureFlag } from '@/store/theme.ts'
 
@@ -68,6 +69,9 @@ export type AppSettings = {
 	skipped_update: string | null
 	pending_update_toast_for_version: string | null
 	auto_download_updates: boolean | null
+
+	/** Minecraft `options.txt` values written to every instance at launch. */
+	shared_game_options: SharedGameOptionsProfile
 
 	version: number
 }

@@ -39,6 +39,52 @@ const props = defineProps({
 		type: Boolean,
 		default: false,
 	},
+	// Content that satisfied the grid's search query, surfaced on the card so a
+	// cross-instance search answers "which version, and is it stale" in place.
+	contentMatches: {
+		type: Array,
+		default: () => [],
+	},
+})
+
+// Cards are only ~16rem wide, and mod version strings run long
+// ("mc1.21.1-0.8.12-beta.1-neoforge"). Icons stay a fixed size and can't push
+// the grid wide, so matches read as icons with the detail in their tooltip.
+const MAX_VISIBLE_MATCHES = 5
+
+const visibleContentMatches = computed(() => props.contentMatches.slice(0, MAX_VISIBLE_MATCHES))
+const hiddenContentMatchCount = computed(() =>
+	Math.max(0, props.contentMatches.length - MAX_VISIBLE_MATCHES),
+)
+const outdatedMatchCount = computed(
+	() => props.contentMatches.filter((item) => item.has_update).length,
+)
+
+function contentTitle(item) {
+	return item.project?.title ?? item.embedded_metadata?.name ?? item.file_name
+}
+
+function contentTooltip(item) {
+	const parts = [contentTitle(item)]
+	if (item.version?.version_number) parts.push(item.version.version_number)
+	if (item.has_update) parts.push('· update available')
+	else if (item.enabled === false) parts.push('· disabled here')
+	return parts.join(' ')
+}
+
+/** One line summarising the matches, kept short enough to truncate cleanly. */
+const contentMatchSummary = computed(() => {
+	const matches = props.contentMatches
+	if (!matches.length) return ''
+
+	if (matches.length === 1) {
+		const [item] = matches
+		return item.version?.version_number
+			? `${contentTitle(item)} ${item.version.version_number}`
+			: contentTitle(item)
+	}
+
+	return `${matches.length} matches`
 })
 
 const playing = ref(false)
@@ -273,7 +319,7 @@ onUnmounted(() => unlisten())
 					</IconButton>
 				</div>
 			</div>
-			<div class="flex flex-col gap-1">
+			<div class="flex flex-col gap-1 min-w-0">
 				<p class="m-0 text-md font-bold text-contrast leading-tight line-clamp-1">
 					{{ instance.name }}
 				</p>
@@ -281,6 +327,39 @@ onUnmounted(() => unlisten())
 					<GameIcon class="shrink-0" />
 					<span class="text-sm capitalize">
 						{{ instance.loader }} {{ instance.game_version }}
+					</span>
+				</div>
+				<div v-if="visibleContentMatches.length" class="flex flex-col gap-1 mt-1.5 min-w-0">
+					<div class="flex items-center gap-1 min-w-0">
+						<span
+							v-for="item in visibleContentMatches"
+							:key="item.id"
+							v-tooltip="contentTooltip(item)"
+							class="shrink-0 rounded-md p-[1px] ring-1"
+							:class="
+								item.has_update
+									? 'ring-orange'
+									: item.enabled === false
+										? 'ring-surface-5 opacity-50'
+										: 'ring-transparent'
+							"
+						>
+							<Avatar
+								size="18px"
+								:src="item.project?.icon_url ?? null"
+								:tint-by="item.project?.id ?? item.id"
+								:alt="contentTitle(item)"
+							/>
+						</span>
+						<span v-if="hiddenContentMatchCount" class="shrink-0 text-xs text-secondary">
+							+{{ hiddenContentMatchCount }}
+						</span>
+					</div>
+					<span class="truncate text-xs text-secondary" :title="contentMatchSummary">
+						{{ contentMatchSummary }}
+						<span v-if="outdatedMatchCount" class="font-semibold text-orange">
+							· {{ outdatedMatchCount }} outdated
+						</span>
 					</span>
 				</div>
 			</div>

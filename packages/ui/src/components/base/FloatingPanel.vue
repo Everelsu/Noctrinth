@@ -2,7 +2,7 @@
 import { onClickOutside } from '@vueuse/core'
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 
-import { Button } from '#ui/components/base/buttons'
+import { Button, type ButtonElementHandle } from '#ui/components/base/buttons'
 
 const PANEL_VIEWPORT_MARGIN = 8
 
@@ -29,7 +29,10 @@ const emit = defineEmits<{
 }>()
 
 const isOpen = ref(false)
-const triggerRef = ref<HTMLElement>()
+// `Button` is a component, so the template ref holds its instance rather than a
+// DOM node — read the element off the handle it exposes.
+const triggerButton = ref<ButtonElementHandle | null>(null)
+const triggerRef = computed(() => triggerButton.value?.element ?? null)
 const panelRef = ref<HTMLElement>()
 const rafId = ref<number | null>(null)
 
@@ -251,7 +254,7 @@ defineExpose({
 	<div class="relative inline-block">
 		<Button
 			v-bind="$attrs"
-			ref="triggerRef"
+			ref="triggerButton"
 			:class="buttonClass"
 			:disabled="disabled"
 			:aria-expanded="isOpen"

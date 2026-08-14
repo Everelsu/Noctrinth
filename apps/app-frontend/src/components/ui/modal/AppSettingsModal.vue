@@ -8,6 +8,7 @@ import {
 	NewspaperIcon,
 	PaintbrushIcon,
 	Settings2Icon,
+	SettingsIcon,
 	ShieldIcon,
 	ToggleRightIcon,
 	UserIcon,
@@ -38,6 +39,7 @@ import LanguageSettings from '@/components/ui/settings/display/LanguageSettings.
 import DefaultInstanceSettings from '@/components/ui/settings/instances/DefaultInstanceSettings.vue'
 import JavaSettings from '@/components/ui/settings/instances/JavaSettings.vue'
 import ResourceManagementSettings from '@/components/ui/settings/instances/ResourceManagementSettings.vue'
+import SharedGameOptionsSettings from '@/components/ui/settings/instances/SharedGameOptionsSettings.vue'
 import { get, set } from '@/helpers/settings.ts'
 import {
 	appSettingsModalContextKey,
@@ -147,6 +149,15 @@ const tabs = [
 		category: tabCategories.instances,
 		icon: GameIcon,
 		content: DefaultInstanceSettings,
+	},
+	{
+		name: defineMessage({
+			id: 'app.settings.tabs.shared-game-options',
+			defaultMessage: 'Minecraft options',
+		}),
+		category: tabCategories.instances,
+		icon: SettingsIcon,
+		content: SharedGameOptionsSettings,
 	},
 	{
 		name: defineMessage({

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { BookmarkIcon, CheckIcon, PlusIcon, SearchIcon } from '@modrinth/assets'
-import { FloatingPanel, injectNotificationManager, StyledInput } from '@modrinth/ui'
+import { injectNotificationManager, StyledInput, TeleportPopoutMenu } from '@modrinth/ui'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import CollectionCreateModal from '@/components/ui/modal/CollectionCreateModal.vue'
@@ -23,7 +23,6 @@ const loading = ref(false)
 const signedIn = ref(false)
 const filter = ref('')
 const togglingId = ref<string | null>(null)
-const panel = ref<InstanceType<typeof FloatingPanel>>()
 const createModal = ref<InstanceType<typeof CollectionCreateModal>>()
 
 const containsProject = (c: Collection): boolean => (c.projects || []).includes(props.projectId)
@@ -96,30 +95,27 @@ onMounted(load)
 
 <template>
 	<CollectionCreateModal ref="createModal" @created="onCreated" />
-	<FloatingPanel
-		ref="panel"
-		size="large"
-		circular
-		type="transparent"
+	<TeleportPopoutMenu
+		icon-only
+		type="quiet"
+		size="xl"
 		placement="bottom-end"
-		panel-class="!p-0 min-w-[18rem]"
+		:label="isInAnyCollection ? 'Saved to a collection' : 'Save to collection'"
+		:tooltip="isInAnyCollection ? 'Saved' : 'Save'"
 		@open="load"
 	>
-		<BookmarkIcon
-			v-tooltip="isInAnyCollection ? 'Saved' : 'Save'"
-			:class="{ 'text-brand fill-current': isInAnyCollection }"
-		/>
+		<template #trigger>
+			<BookmarkIcon :class="{ 'text-brand fill-current': isInAnyCollection }" />
+		</template>
 		<template #panel>
 			<div class="picker-panel">
-				<div class="px-3 pt-3">
-					<StyledInput
-						v-model="filter"
-						:icon="SearchIcon"
-						type="text"
-						clearable
-						placeholder="Search..."
-					/>
-				</div>
+				<StyledInput
+					v-model="filter"
+					:icon="SearchIcon"
+					type="text"
+					clearable
+					placeholder="Search..."
+				/>
 				<div class="picker-list">
 					<p v-if="!signedIn" class="hint">Sign in to Modrinth to save projects.</p>
 					<p v-else-if="loading" class="hint">Loading collections...</p>
@@ -141,6 +137,7 @@ onMounted(load)
 						<span class="row-name">{{ c.name }}</span>
 					</button>
 				</div>
+				<hr class="picker-divider" />
 				<div class="picker-footer">
 					<button class="picker-row" @click="openCreate">
 						<span class="check-box" aria-hidden="true"><PlusIcon /></span>
@@ -149,25 +146,24 @@ onMounted(load)
 				</div>
 			</div>
 		</template>
-	</FloatingPanel>
+	</TeleportPopoutMenu>
 </template>
 
 <style lang="scss" scoped>
 .picker-panel {
 	display: flex;
 	flex-direction: column;
-	gap: var(--gap-xs);
-	min-width: 18rem;
-	max-width: 22rem;
-	padding-bottom: var(--gap-xs);
+	gap: var(--gap-sm);
+	width: 18rem;
 }
 
 .picker-list {
 	display: flex;
 	flex-direction: column;
-	max-height: 18rem;
+	max-height: 15rem;
 	overflow-y: auto;
-	padding: var(--gap-xs) var(--gap-xs);
+	// Let row hover states bleed into the panel's own padding.
+	margin: 0 -0.5rem;
 }
 
 .picker-row {
@@ -178,7 +174,7 @@ onMounted(load)
 	border: none;
 	color: var(--color-contrast);
 	font: inherit;
-	padding: 0.5rem 0.75rem;
+	padding: 0.5rem;
 	border-radius: var(--radius-sm);
 	cursor: pointer;
 	text-align: left;
@@ -225,15 +221,21 @@ onMounted(load)
 	}
 }
 
-.picker-footer {
+.picker-divider {
+	border: none;
 	border-top: 1px solid var(--color-divider);
-	padding: var(--gap-xs);
+	// Full-bleed across the panel's 1rem padding.
+	margin: 0 -1rem;
+}
+
+.picker-footer {
+	margin: 0 -0.5rem;
 }
 
 .hint {
 	color: var(--color-secondary);
 	font-size: var(--font-size-sm);
-	padding: 0.5rem 0.75rem;
+	padding: 0.5rem;
 	margin: 0;
 }
 </style>

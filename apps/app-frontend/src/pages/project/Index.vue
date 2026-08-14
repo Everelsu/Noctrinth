@@ -255,7 +255,6 @@
 
 <script setup>
 import {
-	BookmarkIcon,
 	CheckIcon,
 	ClipboardCopyIcon,
 	DownloadIcon,
@@ -337,7 +336,7 @@ import { useTheming } from '@/store/state.js'
 
 dayjs.extend(relativeTime)
 
-const { handleError } = injectNotificationManager()
+const { handleError, addNotification } = injectNotificationManager()
 const { install: installVersion } = injectContentInstall()
 const route = useRoute()
 const router = useRouter()
@@ -383,6 +382,10 @@ const messages = defineMessages({
 	switchVersion: {
 		id: 'app.project.install-button.switch-version',
 		defaultMessage: 'Switch version',
+	},
+	linkCopied: {
+		id: 'app.project.copy-link.copied',
+		defaultMessage: 'Link copied to clipboard',
 	},
 })
 
@@ -644,6 +647,12 @@ const installButtonIconClass = computed(() =>
 )
 const serverProjectHeaderMoreActions = computed(() => [
 	{
+		id: 'copy-link',
+		label: formatMessage(commonMessages.copyLinkButton),
+		icon: ClipboardCopyIcon,
+		action: copyProjectLink,
+	},
+	{
 		id: 'open-in-browser',
 		label: formatMessage(commonMessages.openInModrinthButton),
 		icon: ExternalIcon,
@@ -662,20 +671,10 @@ const serverProjectHeaderMoreActions = computed(() => [
 ])
 const projectHeaderMoreActions = computed(() => [
 	{
-		id: 'follow',
-		label: formatMessage(commonMessages.followButton),
-		icon: HeartIcon,
-		disabled: true,
-		tooltip: 'Coming soon',
-		action: () => {},
-	},
-	{
-		id: 'save',
-		label: formatMessage(commonMessages.saveButton),
-		icon: BookmarkIcon,
-		disabled: true,
-		tooltip: 'Coming soon',
-		action: () => {},
+		id: 'copy-link',
+		label: formatMessage(commonMessages.copyLinkButton),
+		icon: ClipboardCopyIcon,
+		action: copyProjectLink,
 	},
 	{
 		id: 'open-in-browser',
@@ -742,10 +741,29 @@ function handleAddServerToInstance() {
 	showAddServerToInstanceModal(data.value.title, address)
 }
 
-function openProjectInBrowser() {
-	if (!data.value) return
+const projectPageUrl = computed(() => {
+	if (!data.value) return null
 	const type = isServerProject.value ? 'project' : data.value.project_type
-	void openUrl(`https://modrinth.com/${type}/${data.value.slug}`)
+	return `https://modrinth.com/${type}/${data.value.slug}`
+})
+
+function openProjectInBrowser() {
+	if (!projectPageUrl.value) return
+	void openUrl(projectPageUrl.value)
+}
+
+async function copyProjectLink() {
+	if (!projectPageUrl.value) return
+	try {
+		await navigator.clipboard.writeText(projectPageUrl.value)
+		addNotification({
+			title: formatMessage(messages.linkCopied),
+			text: projectPageUrl.value,
+			type: 'success',
+		})
+	} catch (e) {
+		handleError(e)
+	}
 }
 
 function reportProject() {

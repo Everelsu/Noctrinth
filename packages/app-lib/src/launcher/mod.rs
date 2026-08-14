@@ -783,12 +783,73 @@ fn link_project_and_version(
     }
 }
 
+/// A single `options.txt` entry to apply before the game starts.
+#[derive(Debug, Clone)]
+pub struct McOption {
+    pub key: String,
+    pub value: String,
+    /// Skip rather than append when the instance's `options.txt` has no such
+    /// key — see the write loop in [`launch_minecraft`].
+    pub only_if_present: bool,
+}
+
+impl McOption {
+    /// An entry that is always written, creating the key if needed.
+    pub fn always(key: impl Into<String>, value: impl Into<String>) -> Self {
+        Self {
+            key: key.into(),
+            value: value.into(),
+            only_if_present: false,
+        }
+    }
+}
+
+/// Applies `options` to the contents of an `options.txt`, returning the result.
+///
+/// `file_existed` says whether the game has ever written this file. Once it
+/// has, the file lists every option that version knows about, so a missing key
+/// is evidence the option does not exist and [`McOption::only_if_present`]
+/// entries are dropped. Before the first run there is nothing to infer from, so
+/// those entries are written anyway — otherwise a newly created instance would
+/// silently ignore the shared profile, and the game simply discards keys it
+/// doesn't recognise the next time it saves.
+fn merge_mc_options(
+    options_string: &str,
+    options: &[McOption],
+    file_existed: bool,
+) -> crate::Result<String> {
+    let mut options_string = options_string.to_string();
+
+    for McOption {
+        key,
+        value,
+        only_if_present,
+    } in options
+    {
+        let re = Regex::new(&format!(r"(?m)^{}:.*$", regex::escape(key)))?;
+        // check if the regex exists in the file
+        if !re.is_match(&options_string) {
+            if *only_if_present && file_existed {
+                continue;
+            }
+            // The key was not found in the file, so append it
+            write!(&mut options_string, "\n{key}:{value}").unwrap();
+        } else {
+            options_string = re
+                .replace_all(&options_string, &format!("{key}:{value}"))
+                .to_string();
+        }
+    }
+
+    Ok(options_string)
+}
+
 #[tracing::instrument(skip_all)]
 #[allow(clippy::too_many_arguments)]
 pub async fn launch_minecraft(
     java_args: &[String],
     env_args: &[(String, String)],
-    mc_set_options: &[(String, String)],
+    mc_set_options: &[McOption],
     wrapper: &Option<String>,
     memory: &MemorySettings,
     resolution: &WindowSize,
@@ -1075,7 +1136,11 @@ pub async fn launch_minecraft(
     if !mc_set_options.is_empty() {
         let options_path = instance_path.join("options.txt");
 
-        let (mut options_string, input_encoding) = if options_path.exists() {
+        // Whether the game has ever written this file decides how much we can
+        // infer from a key being absent — see the write loop below.
+        let options_file_existed = options_path.exists();
+
+        let (options_string, input_encoding) = if options_file_existed {
             io::read_any_encoding_to_string(&options_path).await?
         } else {
             (String::new(), encoding_rs::UTF_8)
@@ -1095,19 +1160,11 @@ pub async fn launch_minecraft(
             .into());
         }
 
-        for (key, value) in mc_set_options {
-            let re = Regex::new(&format!(r"(?m)^{}:.*$", regex::escape(key)))?;
-            // check if the regex exists in the file
-            if !re.is_match(&options_string) {
-                // The key was not found in the file, so append it
-                write!(&mut options_string, "\n{key}:{value}").unwrap();
-            } else {
-                let replaced_string = re
-                    .replace_all(&options_string, &format!("{key}:{value}"))
-                    .to_string();
-                options_string = replaced_string;
-            }
-        }
+        let options_string = merge_mc_options(
+            &options_string,
+            mc_set_options,
+            options_file_existed,
+        )?;
 
         io::write(&options_path, input_encoding.encode(&options_string).0)
             .await?;
@@ -1190,4 +1247,125 @@ pub async fn launch_minecraft(
             },
         )
         .await
+}
+
+#[cfg(test)]
+mod merge_mc_options_tests {
+    use super::*;
+
+    fn presence_gated(key: &str, value: &str) -> McOption {
+        McOption {
+            key: key.to_string(),
+            value: value.to_string(),
+            only_if_present: true,
+        }
+    }
+
+    #[test]
+    fn overwrites_an_existing_key_in_place() {
+        let existing = "fov:0.0\nguiScale:2";
+        let merged =
+            merge_mc_options(existing, &[presence_gated("fov", "0.5")], true)
+                .unwrap();
+
+        assert_eq!(merged, "fov:0.5\nguiScale:2");
+    }
+
+    #[test]
+    fn leaves_unrelated_keys_alone() {
+        let existing = "fov:0.0\nlang:en_us\nguiScale:2";
+        let merged =
+            merge_mc_options(existing, &[McOption::always("fov", "1.0")], true)
+                .unwrap();
+
+        assert!(merged.contains("lang:en_us"));
+        assert!(merged.contains("guiScale:2"));
+    }
+
+    #[test]
+    fn presence_gated_keys_are_skipped_when_the_file_lacks_them() {
+        let existing = "fov:0.0";
+        let merged = merge_mc_options(
+            existing,
+            &[presence_gated("simulationDistance", "12")],
+            true,
+        )
+        .unwrap();
+
+        assert_eq!(merged, "fov:0.0");
+    }
+
+    #[test]
+    fn presence_gated_keys_are_written_on_a_never_launched_instance() {
+        // The regression behind "settings don't apply in a newly created
+        // instance": there is no options.txt yet, so absence proves nothing.
+        let merged = merge_mc_options(
+            "",
+            &[
+                presence_gated("fov", "0.5"),
+                presence_gated("soundCategory_master", "0.3"),
+            ],
+            false,
+        )
+        .unwrap();
+
+        assert!(merged.contains("fov:0.5"));
+        assert!(merged.contains("soundCategory_master:0.3"));
+    }
+
+    #[test]
+    fn always_entries_are_created_even_on_an_existing_file() {
+        let merged = merge_mc_options(
+            "fov:0.0",
+            &[McOption::always("fullscreen", "true")],
+            true,
+        )
+        .unwrap();
+
+        assert!(merged.contains("fullscreen:true"));
+    }
+
+    #[test]
+    fn later_entries_win_over_earlier_ones() {
+        // run.rs relies on this: the shared profile is seeded first so
+        // per-launch overrides pushed after it take precedence.
+        let merged = merge_mc_options(
+            "fullscreen:false",
+            &[
+                presence_gated("fullscreen", "false"),
+                McOption::always("fullscreen", "true"),
+            ],
+            true,
+        )
+        .unwrap();
+
+        assert_eq!(merged, "fullscreen:true");
+    }
+
+    #[test]
+    fn keys_are_matched_whole_not_as_prefixes() {
+        // `soundCategory_master` must not be rewritten by an entry for
+        // `soundCategory_music`, and vice versa.
+        let existing = "soundCategory_master:1.0\nsoundCategory_music:1.0";
+        let merged = merge_mc_options(
+            existing,
+            &[presence_gated("soundCategory_music", "0.2")],
+            true,
+        )
+        .unwrap();
+
+        assert_eq!(merged, "soundCategory_master:1.0\nsoundCategory_music:0.2");
+    }
+
+    #[test]
+    fn values_with_regex_characters_are_written_literally() {
+        let merged = merge_mc_options(
+            "key_key.attack:key.mouse.left",
+            &[presence_gated("key_key.attack", "key.mouse.right")],
+            true,
+        )
+        .unwrap();
+
+        assert_eq!(merged, "key_key.attack:key.mouse.right");
+    }
 }

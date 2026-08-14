@@ -50,7 +50,99 @@ pub struct Settings {
     /// restart to take effect because reqwest clients are built once.
     pub proxy_url: Option<String>,
 
+    /// Minecraft `options.txt` values applied to every instance at launch.
+    pub shared_game_options: SharedGameOptions,
+
     pub version: usize,
+}
+
+/// A profile of `options.txt` entries shared across all instances.
+///
+/// The launcher already rewrites `options.txt` on launch for `fullscreen`, so
+/// this rides the same path — see [`crate::launcher::launch_minecraft`].
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct SharedGameOptions {
+    pub enabled: bool,
+    pub entries: Vec<SharedGameOption>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct SharedGameOption {
+    /// The `options.txt` key, e.g. `fov` or `key_key.attack`.
+    pub key: String,
+    /// The raw value, already in the game's own encoding (FOV as -1.0..1.0 and
+    /// so on). Encoding lives in the frontend catalogue, not here.
+    pub value: String,
+    /// Only overwrite a key the instance's `options.txt` already has. Keeps the
+    /// profile from introducing keys a given game version doesn't understand.
+    #[serde(default)]
+    pub only_if_present: bool,
+    /// Inclusive lower bound on the Minecraft release this entry applies to,
+    /// e.g. `"1.13"` for the post-flattening key binding format.
+    #[serde(default)]
+    pub min_version: Option<String>,
+    /// Inclusive upper bound, for options a later version removed.
+    #[serde(default)]
+    pub max_version: Option<String>,
+}
+
+/// Parses a Minecraft *release* version (`1.20`, `1.20.1`) into comparable
+/// parts. Snapshots and other non-release names deliberately return `None`.
+fn parse_release_version(version: &str) -> Option<Vec<u32>> {
+    let parts = version
+        .split('.')
+        .map(|part| part.parse::<u32>().ok())
+        .collect::<Option<Vec<_>>>()?;
+
+    if parts.is_empty() { None } else { Some(parts) }
+}
+
+impl SharedGameOption {
+    /// Whether this entry should be written to an instance on `game_version`.
+    ///
+    /// Versions that aren't plain releases (snapshots, April Fools' builds) are
+    /// treated as newer than every bound. In practice the snapshots people run
+    /// in a launcher are current ones, so being permissive there beats dropping
+    /// every version-gated option on them.
+    pub fn applies_to(&self, game_version: &str) -> bool {
+        if self.min_version.is_none() && self.max_version.is_none() {
+            return true;
+        }
+
+        let Some(instance) = parse_release_version(game_version) else {
+            // Unparseable: satisfies lower bounds, fails upper ones.
+            return self.max_version.is_none();
+        };
+
+        if let Some(min) =
+            self.min_version.as_deref().and_then(parse_release_version)
+            && instance < min
+        {
+            return false;
+        }
+
+        if let Some(max) =
+            self.max_version.as_deref().and_then(parse_release_version)
+            && instance > max
+        {
+            return false;
+        }
+
+        true
+    }
+}
+
+impl SharedGameOptions {
+    /// Entries that apply to an instance on `game_version`, in stored order.
+    pub fn applicable_to(
+        &self,
+        game_version: &str,
+    ) -> impl Iterator<Item = &SharedGameOption> {
+        let enabled = self.enabled;
+        self.entries
+            .iter()
+            .filter(move |entry| enabled && entry.applies_to(game_version))
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Eq, Hash, PartialEq)]
@@ -84,10 +176,16 @@ impl Settings {
     pub async fn get(
         exec: impl sqlx::Executor<'_, Database = sqlx::Sqlite> + Copy,
     ) -> crate::Result<Self> {
-        // proxy_url is read with a runtime-checked query so the sqlx offline
-        // cache (.sqlx) does not need regenerating for this fork-only column.
+        // proxy_url and shared_game_options are read with runtime-checked
+        // queries so the sqlx offline cache (.sqlx) does not need regenerating
+        // for these fork-only columns.
         let proxy_url: Option<String> =
             sqlx::query_scalar("SELECT proxy_url FROM settings")
+                .fetch_one(exec)
+                .await?;
+
+        let shared_game_options: Option<String> =
+            sqlx::query_scalar("SELECT shared_game_options FROM settings")
                 .fetch_one(exec)
                 .await?;
 
@@ -163,6 +261,10 @@ impl Settings {
                 .pending_update_toast_for_version,
             auto_download_updates: res.auto_download_updates.map(|x| x == 1),
             proxy_url,
+            shared_game_options: shared_game_options
+                .as_deref()
+                .and_then(|raw| serde_json::from_str(raw).ok())
+                .unwrap_or_default(),
             version: res.version as usize,
         })
     }
@@ -264,9 +366,16 @@ impl Settings {
         .execute(exec)
         .await?;
 
-        // Runtime-checked for the same reason as in `get` — fork-only column.
+        // Runtime-checked for the same reason as in `get` — fork-only columns.
         sqlx::query("UPDATE settings SET proxy_url = $1")
             .bind(&self.proxy_url)
+            .execute(exec)
+            .await?;
+
+        let shared_game_options =
+            serde_json::to_string(&self.shared_game_options)?;
+        sqlx::query("UPDATE settings SET shared_game_options = $1")
+            .bind(&shared_game_options)
             .execute(exec)
             .await?;
 
@@ -343,6 +452,87 @@ impl Settings {
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod shared_game_options_tests {
+    use super::*;
+
+    fn option(min: Option<&str>, max: Option<&str>) -> SharedGameOption {
+        SharedGameOption {
+            key: "fov".to_string(),
+            value: "0.5".to_string(),
+            only_if_present: false,
+            min_version: min.map(str::to_string),
+            max_version: max.map(str::to_string),
+        }
+    }
+
+    #[test]
+    fn unbounded_entries_apply_everywhere() {
+        let entry = option(None, None);
+        assert!(entry.applies_to("1.7.10"));
+        assert!(entry.applies_to("1.21.4"));
+        assert!(entry.applies_to("24w14a"));
+    }
+
+    #[test]
+    fn minimum_version_is_inclusive() {
+        let entry = option(Some("1.13"), None);
+        assert!(!entry.applies_to("1.12.2"));
+        assert!(entry.applies_to("1.13"));
+        assert!(entry.applies_to("1.13.1"));
+        assert!(entry.applies_to("1.21"));
+    }
+
+    #[test]
+    fn maximum_version_is_inclusive() {
+        let entry = option(None, Some("1.16.5"));
+        assert!(entry.applies_to("1.8.9"));
+        assert!(entry.applies_to("1.16.5"));
+        assert!(!entry.applies_to("1.17"));
+    }
+
+    #[test]
+    fn minor_versions_compare_numerically_not_lexically() {
+        // "1.9" must not read as newer than "1.20" the way string ordering would.
+        let entry = option(Some("1.20"), None);
+        assert!(!entry.applies_to("1.9.4"));
+        assert!(entry.applies_to("1.20.1"));
+    }
+
+    #[test]
+    fn shorter_versions_sort_before_their_patches() {
+        let entry = option(Some("1.20.1"), None);
+        assert!(!entry.applies_to("1.20"));
+        assert!(entry.applies_to("1.20.1"));
+        assert!(entry.applies_to("1.20.2"));
+    }
+
+    #[test]
+    fn snapshots_satisfy_lower_bounds_but_not_upper_ones() {
+        assert!(option(Some("1.13"), None).applies_to("24w14a"));
+        assert!(!option(None, Some("1.16.5")).applies_to("24w14a"));
+    }
+
+    #[test]
+    fn disabled_profile_yields_nothing() {
+        let profile = SharedGameOptions {
+            enabled: false,
+            entries: vec![option(None, None)],
+        };
+        assert_eq!(profile.applicable_to("1.20.1").count(), 0);
+    }
+
+    #[test]
+    fn enabled_profile_filters_by_version() {
+        let profile = SharedGameOptions {
+            enabled: true,
+            entries: vec![option(None, None), option(Some("1.13"), None)],
+        };
+        assert_eq!(profile.applicable_to("1.20.1").count(), 2);
+        assert_eq!(profile.applicable_to("1.12.2").count(), 1);
     }
 }
 

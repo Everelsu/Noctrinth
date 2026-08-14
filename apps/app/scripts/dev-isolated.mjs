@@ -177,7 +177,18 @@ console.log(
 
 const child = spawn(
 	'pnpm',
-	['exec', 'tauri', 'dev', '--config', loopbackOverride(port), ...tauriArgs],
+	[
+		'exec',
+		'tauri',
+		'dev',
+		// Keep in step with the plain `dev` script — the frontend's app-event
+		// listeners are gated behind this feature.
+		'--features',
+		'export-app-events',
+		'--config',
+		loopbackOverride(port),
+		...tauriArgs,
+	],
 	{
 		cwd: appDir,
 		stdio: 'inherit',

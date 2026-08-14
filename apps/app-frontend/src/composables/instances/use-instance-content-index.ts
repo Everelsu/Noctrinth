@@ -9,7 +9,7 @@
 import type { ContentItem } from '@modrinth/ui'
 import { computed, readonly, ref } from 'vue'
 
-import { instance_listener } from '@/helpers/events'
+import { useAppEvent } from '@/composables/use-app-event'
 import { get_content_items } from '@/helpers/instance'
 
 /** How many instances to query at once. Each call can touch the network cache. */
@@ -19,20 +19,6 @@ const cache = new Map<string, ContentItem[]>()
 const inFlight = new Map<string, Promise<void>>()
 const version = ref(0)
 const loadingCount = ref(0)
-
-let listenerAttached = false
-
-async function attachListener() {
-	if (listenerAttached) return
-	listenerAttached = true
-
-	// Content changes whenever an instance is edited or removed; drop just that
-	// instance's entry so the next content query re-reads it.
-	await instance_listener((payload: { instance_id?: string }) => {
-		if (!payload?.instance_id) return
-		if (cache.delete(payload.instance_id)) version.value += 1
-	})
-}
 
 async function loadOne(instanceId: string): Promise<void> {
 	try {
@@ -57,7 +43,14 @@ function ensureOne(instanceId: string): Promise<void> {
 }
 
 export function useInstanceContentIndex() {
-	void attachListener()
+	// Content changes whenever an instance is edited or removed; drop just that
+	// instance's entry so the next content query re-reads it. The cache is shared
+	// module-wide but the subscription is per-caller, which `useAppEvent` tears
+	// down with the owning component.
+	useAppEvent('instance', (payload) => {
+		if (!payload?.instance_id) return
+		if (cache.delete(payload.instance_id)) version.value += 1
+	})
 
 	/** Fetches content for any instance not already cached, in small batches. */
 	async function ensureLoaded(instanceIds: string[]): Promise<void> {

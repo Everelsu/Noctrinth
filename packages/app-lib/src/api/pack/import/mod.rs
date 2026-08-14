@@ -24,6 +24,10 @@ pub mod mmc;
 pub mod modrinth;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(
+    feature = "export-ts",
+    derive(ts_rs::TS, postcard_bindgen::PostcardBindings)
+)]
 pub enum ImportLauncherType {
     MultiMC,
     PrismLauncher,

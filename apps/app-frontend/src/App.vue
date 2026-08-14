@@ -90,9 +90,9 @@ import SplashScreen from '@/components/ui/SplashScreen.vue'
 import SurveyPopup from '@/components/ui/SurveyPopup.vue'
 import WindowControls from '@/components/ui/WindowControls.vue'
 import { useCheckDisableMouseover } from '@/composables/macCssFix.js'
+import { useAppEvent } from '@/composables/use-app-event'
 import { config } from '@/config'
 import {
-	ads_consent_listener,
 	hide_ads_window,
 	init_ads_window,
 	perform_ads_consent_action,
@@ -103,7 +103,6 @@ import {
 import { debugAnalytics, initAnalytics, trackEvent } from '@/helpers/analytics'
 import { check_reachable, get_default_user } from '@/helpers/auth.js'
 import { get_user, get_version } from '@/helpers/cache.js'
-import { command_listener, notification_listener, warning_listener } from '@/helpers/events.js'
 import {
 	install_create_modpack_instance,
 	install_get_modpack_preview,
@@ -147,6 +146,7 @@ import {
 } from '@/providers/download-progress.ts'
 import { createServerInstall, provideServerInstall } from '@/providers/server-install'
 import { setupProviders } from '@/providers/setup'
+import { setupAppEventsProvider } from '@/providers/setup/app-events'
 import { setupAuthProvider } from '@/providers/setup/auth'
 import { setupLoadingStateProvider } from '@/providers/setup/loading-state'
 import { useError } from '@/store/error.js'
@@ -162,6 +162,7 @@ import { appSettingsModalOpenProfileKey } from './providers/app-settings-modal'
 const themeStore = useTheming()
 const router = useRouter()
 const route = useRoute()
+const { channel: appEventChannel, events: appEvents } = setupAppEventsProvider()
 const breadcrumbManager = createBreadcrumbManager()
 provideBreadcrumbManager(breadcrumbManager)
 const canNavigateBack = ref(false)
@@ -248,11 +249,22 @@ const notificationManager = new AppNotificationManager()
 provideNotificationManager(notificationManager)
 const { handleError, addNotification } = notificationManager
 
+useAppEvent(
+	'warning',
+	(event) =>
+		addNotification({
+			title: 'Warning',
+			text: event.message,
+			type: 'warning',
+		}),
+	appEvents,
+)
+
 const popupNotificationManager = new AppPopupNotificationManager()
 providePopupNotificationManager(popupNotificationManager)
 const { addPopupNotification } = popupNotificationManager
 let adsConsentPopupId = null
-let unlistenAdsConsent
+useAppEvent('ads_consent_required', handleAdsConsentRequired, appEvents)
 
 const appVersion = getVersion()
 const tauriApiClient = new TauriModrinthClient({
@@ -394,9 +406,10 @@ const authUnreachable = computed(() => {
 
 onMounted(async () => {
 	await useCheckDisableMouseover()
+	// Upstream now delivers consent prompts through `useAppEvent`, so the manual
+	// listener this fork used is gone; the fork's ads-off gate stays.
 	if (ADS_ENABLED) {
 		try {
-			unlistenAdsConsent = await ads_consent_listener(handleAdsConsentRequired)
 			handleAdsConsentRequired(await should_show_ads_consent_popup())
 		} catch (error) {
 			handleError(error)
@@ -420,7 +433,6 @@ onUnmounted(async () => {
 		fullscreenAdsWindowHold = false
 		await release_ads_window_hold().catch(handleError)
 	}
-	await unlistenAdsConsent?.()
 	await unlistenUpdateDownload?.()
 })
 
@@ -637,14 +649,6 @@ async function setupApp() {
 		document.getElementsByTagName('html')[0].classList.add('windows')
 	}
 
-	await warning_listener((e) =>
-		addNotification({
-			title: 'Warning',
-			text: e.message,
-			type: 'warning',
-		}),
-	)
-
 	fetch(`https://api.modrinth.com/appCriticalAnnouncement.json?version=${version}`)
 		.then((response) => response.json())
 		.then((res) => {
@@ -698,7 +702,7 @@ async function setupApp() {
 }
 
 const stateFailed = ref(false)
-initialize_state()
+initialize_state(appEventChannel)
 	.then(() => {
 		setupApp().catch((err) => {
 			stateFailed.value = true
@@ -828,7 +832,7 @@ const errorModal = ref()
 const minecraftAuthErrorModal = ref()
 const minecraftRequiredModal = ref()
 
-const contentInstall = createContentInstall({ router, handleError })
+const contentInstall = createContentInstall({ router, handleError, appEvents })
 provideContentInstall(contentInstall)
 const {
 	instances: contentInstallInstances,
@@ -861,7 +865,12 @@ const {
 	handleIncompatibilityWarningCancel: handleContentInstallIncompatibilityWarningCancel,
 } = contentInstall
 
-const serverInstall = createServerInstall({ router, handleError, popupNotificationManager })
+const serverInstall = createServerInstall({
+	router,
+	handleError,
+	popupNotificationManager,
+	appEvents,
+})
 provideServerInstall(serverInstall)
 const {
 	setInstallToPlayModal: setServerInstallToPlayModal,
@@ -1037,8 +1046,8 @@ onMounted(() => {
 const accounts = ref(null)
 provide('accountsCard', accounts)
 
-command_listener(handleCommand)
-notification_listener(handleLiveNotification)
+useAppEvent('command', handleCommand, appEvents)
+useAppEvent('notification', handleLiveNotification, appEvents)
 
 async function markLiveNotificationRead(notification) {
 	try {
@@ -1469,6 +1478,7 @@ async function downloadUpdate(versionToDownload) {
 				handleError(e)
 			})
 		unlistenUpdateDownload = await subscribeToDownloadProgress(
+			appEvents,
 			appUpdateDownload,
 			versionToDownload.version,
 		)

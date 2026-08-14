@@ -19,7 +19,7 @@ import { ref, watch } from 'vue'
 
 import NoctrinthAppLogo from '@/assets/modrinth_app.svg?component'
 import ProgressBar from '@/components/ui/ProgressBar.vue'
-import { loading_listener } from '@/helpers/events.js'
+import { useAppEvent } from '@/composables/use-app-event'
 
 const doneLoading = ref(false)
 const loadingProgress = ref(0)
@@ -69,13 +69,10 @@ function fakeLoadingIncrease() {
 	}
 }
 
-loading_listener(async (e) => {
+useAppEvent('loading', (e) => {
 	if (e.event.type === 'directory_move') {
 		loadingProgress.value = 100 * (e.fraction ?? 1)
 		message.value = 'Updating app directory...'
-	} else if (e.event.type === 'checking_for_updates') {
-		loadingProgress.value = 100 * (e.fraction ?? 1)
-		message.value = 'Checking for updates...'
 	}
 })
 </script>

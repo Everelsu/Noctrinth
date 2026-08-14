@@ -21,6 +21,22 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.17.7',
+		date: '2026-08-14T00:00:00+00:00',
+		body: `### Added
+- Search across every instance at once from the library. A bare word still matches instance names; \`@sodium\` finds instances that have a mod, \`#shader\` filters by content type, and \`!outdated\` by state. Terms combine, and a leading \`-\` flips one around. Matches are shown on the instance card, so "which version, and is it stale" is answered without opening anything.
+- The search field suggests as you type — the sigils when it's empty, your own installed mods after \`@\`, and the available types and states after \`#\` and \`!\`.
+- A shared Minecraft options profile, under Settings → Minecraft options. Field of view, render distance, volumes, sensitivity and the rest can be set once and written into every instance's \`options.txt\` at launch, with per-option opt-in.
+- "Copy link" in the overflow menu on project pages.
+
+### Changed
+- Synced with upstream Modrinth (0.17.6 → 0.17.7).
+- The Follow and Save entries left the project overflow menu; both already have buttons in the header beside it.
+
+### Fixed
+- The Save-to-collection panel opened pinned to the top-left corner of the window, and its button was the wrong size, after upstream's button refactor moved a template ref onto a component.`,
+	},
+	{
 		version: '0.17.6',
 		date: '2026-08-14T00:00:00+00:00',
 		body: `### Added

@@ -131,6 +131,7 @@ import type { Ref } from 'vue'
 import { computed, onUnmounted, ref } from 'vue'
 
 import ElyLoginModal from '@/components/ui/modal/ElyLoginModal.vue'
+import { useAppEvent } from '@/composables/use-app-event'
 import { trackEvent } from '@/helpers/analytics'
 import {
 	get_default_user,
@@ -147,7 +148,6 @@ import {
 	type ElyCredentials,
 } from '@/helpers/ely_auth'
 import { clearElySkinCache, getElyHeadUrl } from '@/helpers/ely_skins'
-import { process_listener } from '@/helpers/events'
 import { getPlayerHeadUrl } from '@/helpers/rendering/batch-skin-renderer.ts'
 import type { Skin } from '@/helpers/skins'
 import { get_available_skins } from '@/helpers/skins'
@@ -411,7 +411,7 @@ async function logoutAccount(account: AnyCredential) {
 	trackEvent('AccountLogOut')
 }
 
-const unlisten = await process_listener(async (e) => {
+useAppEvent('process', async (e) => {
 	if (e.event === 'launched') {
 		await refreshValues()
 	}
@@ -424,8 +424,9 @@ const unlistenElySkinWindow = await listen('ely-skin-window-closed', () => {
 	void loadElyAccounts()
 })
 
+// The process listener this used to unhook is now `useAppEvent`, which cleans
+// itself up, so only the Ely window listener is left to tear down.
 onUnmounted(() => {
-	unlisten()
 	unlistenElySkinWindow()
 })
 

@@ -104,7 +104,17 @@ export function useSharedInstanceErrors() {
 
 	function notifySharedInstanceError(error: unknown) {
 		if (isSharedInstancesApiError(error)) {
-			notifySharedInstanceConnectionError()
+			// This code covers a dropped connection, a 5xx and a malformed
+			// response alike, and the backend already spells out which one it
+			// was. Showing only "unable to connect" turned a server fault or a
+			// proxy eating an upload into the same dead end, so keep the
+			// headline but pass the detail through.
+			const detail = getErrorMessage(error)
+			addNotification({
+				type: 'error',
+				title: formatMessage(sharedInstanceErrorMessages.networkErrorTitle),
+				text: detail || formatMessage(sharedInstanceErrorMessages.networkErrorText),
+			})
 			return
 		}
 

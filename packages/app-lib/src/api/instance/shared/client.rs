@@ -714,13 +714,13 @@ where
         Ok(body) => body,
         Err(error) if strip_response_url => {
             return Err(crate::ErrorKind::SharedInstancesApiError(
-                error.without_url().to_string(),
+                transport_error_message(error, true),
             )
             .into());
         }
         Err(error) => {
             return Err(crate::ErrorKind::SharedInstancesApiError(
-                error.to_string(),
+                transport_error_message(error, false),
             )
             .into());
         }
@@ -880,9 +880,9 @@ pub(super) async fn send_bytes_request_to_url(
         .send()
         .await
         .map_err(|error| {
-            crate::ErrorKind::SharedInstancesApiError(
-                error.without_url().to_string(),
-            )
+            crate::ErrorKind::SharedInstancesApiError(transport_error_message(
+                error, true,
+            ))
         })?;
 
     if response.status().is_success() {
@@ -974,13 +974,13 @@ async fn send_request_with_auth_and_log_path(
         Ok(response) => response,
         Err(error) if path != log_path => {
             return Err(crate::ErrorKind::SharedInstancesApiError(
-                error.without_url().to_string(),
+                transport_error_message(error, true),
             )
             .into());
         }
         Err(error) => {
             return Err(crate::ErrorKind::SharedInstancesApiError(
-                error.to_string(),
+                transport_error_message(error, false),
             )
             .into());
         }
@@ -1048,6 +1048,43 @@ pub(super) fn service_url(base_url: &str, path: &str) -> String {
 
 pub(super) fn service_base_url() -> &'static str {
     env!("SHARED_INSTANCES_API_BASE_URL").trim_end_matches('/')
+}
+
+/// A transport failure, spelled out.
+///
+/// reqwest's `Display` stops at "error sending request" — the reason a request
+/// died (timed out, connection reset, TLS handshake failed) lives only in its
+/// source chain. Uploads are where this bites: a tunnel or proxy that drops a
+/// long-running body produces a message with nothing actionable in it. Walking
+/// the chain turns that into something a log reader can act on.
+///
+/// `strip_url` mirrors the callers that keep the URL out of the message when
+/// the path is already logged separately.
+pub(super) fn transport_error_message(
+    error: reqwest::Error,
+    strip_url: bool,
+) -> String {
+    use std::error::Error;
+
+    // `without_url` consumes the error, but keeps the source chain intact.
+    let error = if strip_url {
+        error.without_url()
+    } else {
+        error
+    };
+
+    let mut parts = vec![error.to_string()];
+    let mut source = error.source();
+    while let Some(cause) = source {
+        let text = cause.to_string();
+        // reqwest repeats itself down the chain; keep the message readable.
+        if !parts.iter().any(|part| part == &text) {
+            parts.push(text);
+        }
+        source = cause.source();
+    }
+
+    parts.join(": ")
 }
 
 pub(super) fn shared_instances_client(

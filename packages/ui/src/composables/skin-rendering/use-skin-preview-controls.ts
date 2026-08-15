@@ -34,9 +34,11 @@ export function useSkinPreviewControls({
 		const deltaX = event.clientX - previousX.value
 		const deltaY = event.clientY - previousY.value
 		modelRotation.value += deltaX * 0.01
-		// Drag down → see soles, drag up → see crown. Clamp inclusive of ±90°
-		// so user can look straight at top/bottom but not flip past.
-		modelPitch.value = Math.min(MAX_PITCH, Math.max(-MAX_PITCH, modelPitch.value + deltaY * 0.01))
+		// The camera sits on -Z, so a positive rotation.x tips the head AWAY from
+		// it — subtract the drag delta so the model follows the cursor: drag down
+		// → head tips toward you → see crown, drag up → see soles. Clamp inclusive
+		// of ±90° so user can look straight at top/bottom but not flip past.
+		modelPitch.value = Math.min(MAX_PITCH, Math.max(-MAX_PITCH, modelPitch.value - deltaY * 0.01))
 		previousX.value = event.clientX
 		previousY.value = event.clientY
 		hasDragged.value = true

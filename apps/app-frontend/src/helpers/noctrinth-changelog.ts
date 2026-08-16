@@ -21,7 +21,7 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
-		version: '0.17.10-beta.1',
+		version: '0.17.11-beta.1',
 		date: '2026-08-16T00:00:00+00:00',
 		body: `### Added
 - One-click modern Java for 1.7.10. Instances on that version are pinned to Java 8 by Mojang's own manifest and by LWJGL 2; installing [lwjgl3ify](https://github.com/GTNewHorizons/lwjgl3ify) from the instance's Java settings lifts both, bringing the launcher-side version patches and the mod itself in one step, and removing it again puts the instance back as it was.

@@ -237,8 +237,14 @@ impl FriendsSocket {
                                     }
                                 }
                                 Err(e) => {
-                                    tracing::error!(
-                                        "Error handling message from websocket server: {:?}",
+                                    // Usually just the server hanging up — the
+                                    // socket is re-established a second later,
+                                    // and `socket_loop` is what reports a
+                                    // reconnect that keeps failing. Logging
+                                    // every drop as an error made a routine
+                                    // blip look like a fault.
+                                    tracing::warn!(
+                                        "Friends websocket dropped, reconnecting: {:?}",
                                         e
                                     );
                                 }

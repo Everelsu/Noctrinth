@@ -13,8 +13,10 @@ use theseus::data::{
     SharedInstanceAttachment as CoreSharedInstanceAttachment,
     SharedInstanceRole,
 };
-use theseus::instance::InstallProjectWithDependenciesRequest;
 use theseus::instance::QuickPlayType;
+use theseus::instance::{
+    InstallProjectWithDependenciesRequest, ModernJavaStatus,
+};
 use theseus::prelude::*;
 use theseus::server_address::ServerAddress;
 
@@ -35,6 +37,9 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
             instance_get_linked_modpack_info,
             instance_get_linked_modpack_content,
             instance_get_optimal_jre_key,
+            instance_get_modern_java_status,
+            instance_install_modern_java,
+            instance_remove_modern_java,
             instance_get_full_path,
             instance_get_mod_full_path,
             instance_check_installed,
@@ -587,6 +592,27 @@ pub async fn instance_get_optimal_jre_key(
     instance_id: &str,
 ) -> Result<Option<JavaVersion>> {
     Ok(theseus::instance::get_optimal_jre_key(instance_id).await?)
+}
+
+#[tauri::command]
+pub async fn instance_get_modern_java_status(
+    instance_id: &str,
+) -> Result<ModernJavaStatus> {
+    Ok(theseus::instance::get_modern_java_status(instance_id).await?)
+}
+
+#[tauri::command]
+pub async fn instance_install_modern_java(
+    instance_id: &str,
+) -> Result<ModernJavaStatus> {
+    Ok(theseus::instance::install_modern_java(instance_id).await?)
+}
+
+#[tauri::command]
+pub async fn instance_remove_modern_java(
+    instance_id: &str,
+) -> Result<ModernJavaStatus> {
+    Ok(theseus::instance::remove_modern_java(instance_id).await?)
 }
 
 #[tauri::command]

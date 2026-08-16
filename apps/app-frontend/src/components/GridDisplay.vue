@@ -406,14 +406,22 @@ const filteredResults = computed(() => {
 			/>
 			<div
 				v-if="suggestions.length"
+				role="listbox"
+				aria-label="Search filters"
 				class="absolute left-0 right-0 top-full z-[60] mt-1 overflow-hidden rounded-xl border border-solid border-surface-5 bg-surface-3 py-1 shadow-xl"
 			>
 				<button
 					v-for="(suggestion, index) in suggestions"
 					:key="suggestion.insert"
 					type="button"
-					class="flex w-full items-center gap-2 border-none bg-transparent px-3 py-2 text-left font-inherit cursor-pointer"
-					:class="index === activeSuggestion ? 'bg-surface-4' : 'hover:bg-surface-4'"
+					role="option"
+					:aria-selected="index === activeSuggestion"
+					class="relative flex w-full items-center gap-2 border-none bg-transparent py-2 pl-4 pr-3 text-left font-inherit cursor-pointer before:absolute before:left-0 before:top-1 before:bottom-1 before:w-1 before:rounded-r before:content-['']"
+					:class="
+						index === activeSuggestion
+							? 'bg-brand-highlight before:bg-brand'
+							: 'before:bg-transparent hover:bg-surface-4'
+					"
 					@mousedown.prevent="chooseSuggestion(suggestion)"
 					@mouseenter="activeSuggestion = index"
 				>

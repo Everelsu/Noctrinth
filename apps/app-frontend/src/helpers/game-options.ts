@@ -31,8 +31,6 @@ interface GameOptionBase {
 	/** Inclusive bounds, for options whose value format changed. */
 	minVersion?: string
 	maxVersion?: string
-	/** Shown next to the control when the option isn't universally available. */
-	versionNote?: string
 }
 
 export type GameOption = GameOptionBase &
@@ -120,7 +118,6 @@ export const GAME_OPTIONS: GameOption[] = [
 		max: 32,
 		step: 1,
 		unit: ' chunks',
-		versionNote: '1.18+',
 		encode: (value) => String(Math.round(value)),
 		decode: (raw) => Number(raw),
 	},
@@ -201,7 +198,6 @@ export const GAME_OPTIONS: GameOption[] = [
 		],
 		// Before 1.16 this was the boolean `fancyGraphics`, a different key.
 		minVersion: '1.16',
-		versionNote: '1.16+',
 		encode: (value) => value,
 		decode: (raw) => raw,
 	},
@@ -214,7 +210,6 @@ export const GAME_OPTIONS: GameOption[] = [
 		// The key predates 1.13 but held 0/1/2 back then, so writing a boolean
 		// into an older instance would corrupt it. Presence can't catch this.
 		minVersion: '1.13',
-		versionNote: '1.13+',
 		...bool,
 	},
 	{

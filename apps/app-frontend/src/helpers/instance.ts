@@ -171,6 +171,32 @@ export async function get_optimal_jre_key(instanceId: string): Promise<JavaVersi
 	return await invoke('plugin:instance|instance_get_optimal_jre_key', { instanceId })
 }
 
+/**
+ * Whether an instance can run on a modern JVM through lwjgl3ify, and whether
+ * the launcher-side patches for it are currently installed.
+ */
+export interface ModernJavaStatus {
+	supported: boolean
+	unsupported_reason: string | null
+	installed: boolean
+	installed_version: string | null
+	java_major: number | null
+	java_majors: number[]
+	loader_warning: string | null
+}
+
+export async function get_modern_java_status(instanceId: string): Promise<ModernJavaStatus> {
+	return await invoke('plugin:instance|instance_get_modern_java_status', { instanceId })
+}
+
+export async function install_modern_java(instanceId: string): Promise<ModernJavaStatus> {
+	return await invoke('plugin:instance|instance_install_modern_java', { instanceId })
+}
+
+export async function remove_modern_java(instanceId: string): Promise<ModernJavaStatus> {
+	return await invoke('plugin:instance|instance_remove_modern_java', { instanceId })
+}
+
 export async function list(): Promise<GameInstance[]> {
 	return await invoke('plugin:instance|instance_list')
 }

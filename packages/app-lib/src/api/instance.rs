@@ -7,6 +7,7 @@ mod get;
 mod icon;
 mod install;
 mod lifecycle;
+mod modern_java;
 mod paths;
 mod projects;
 mod run;
@@ -30,6 +31,10 @@ pub(crate) use self::icon::{
 pub use self::install::get_optimal_jre_key;
 pub(crate) use self::lifecycle::create;
 pub use self::lifecycle::{edit, remove};
+pub use self::modern_java::{
+    ModernJavaStatus, get_modern_java_status, install_modern_java,
+    remove_modern_java,
+};
 pub use self::paths::{get_full_path, get_mod_full_path};
 pub use self::projects::{
     InstallProjectWithDependenciesRequest, add_project_from_path,

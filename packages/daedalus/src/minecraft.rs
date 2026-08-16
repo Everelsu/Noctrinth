@@ -1,6 +1,6 @@
 use crate::modded::{Processor, SidedDataEntry};
 use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::HashMap;
 
 /// The latest version of the format the model structs deserialize to
@@ -157,7 +157,7 @@ pub enum RuleAction {
     Disallow,
 }
 
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
+#[derive(Serialize, Debug, Eq, PartialEq, Hash, Clone)]
 #[serde(rename_all = "kebab-case")]
 /// An enum representing the different types of operating systems
 pub enum Os {
@@ -177,6 +177,28 @@ pub enum Os {
     LinuxArm32,
     /// The OS is unknown
     Unknown,
+}
+
+impl<'de> Deserialize<'de> for Os {
+    /// Unrecognised platforms deserialize to [`Os::Unknown`] rather than
+    /// failing the whole document. Version patches routinely name platforms the
+    /// launcher does not support — Prism's LWJGL 3 component carries FreeBSD
+    /// rules, for instance — and a rule for an unknown OS simply never matches.
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Ok(match String::deserialize(deserializer)?.as_str() {
+            "osx" => Os::Osx,
+            "osx-arm64" => Os::OsxArm64,
+            "windows" => Os::Windows,
+            "windows-arm64" => Os::WindowsArm64,
+            "linux" => Os::Linux,
+            "linux-arm64" => Os::LinuxArm64,
+            "linux-arm32" => Os::LinuxArm32,
+            _ => Os::Unknown,
+        })
+    }
 }
 
 impl Os {
@@ -325,9 +347,24 @@ pub struct Library {
     #[serde(default = "default_downloadable")]
     /// Whether the library should be downloaded
     pub downloadable: bool,
+    #[serde(
+        rename = "MMC-hint",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    /// MultiMC/Prism hint describing how the library file is provided. The only
+    /// value the launcher acts on is `local`, which means the jar is shipped
+    /// inside the instance's own `libraries` folder rather than downloaded.
+    pub mmc_hint: Option<String>,
 }
 
 impl Library {
+    /// Whether this library's jar is provided by the instance folder instead of
+    /// being downloaded from a maven repository.
+    pub fn is_local(&self) -> bool {
+        self.mmc_hint.as_deref() == Some("local")
+    }
+
     /// Returns the OS key and classifiers for downloading natives, if applicable
     pub fn natives_os_key_and_classifiers(
         &self,

@@ -23,8 +23,13 @@ use uuid::Uuid;
 // Replaces the space separator with a newline character, as to not split the arguments
 const TEMPORARY_REPLACE_CHAR: &str = "\n";
 
+/// Builds the classpath for a launch.
+///
+/// `local_libraries_path` is the instance's own `libraries` folder, which is
+/// where version patches keep the jars they mark with `MMC-hint: local`.
 pub fn get_class_paths(
     libraries_path: &Path,
+    local_libraries_path: &Path,
     libraries: &[Library],
     launcher_class_path: &[&Path],
     java_arch: &str,
@@ -60,6 +65,13 @@ pub fn get_class_paths(
                 return None;
             }
 
+            if library.is_local() {
+                return Some(get_local_lib_path(
+                    local_libraries_path,
+                    &library.name,
+                ));
+            }
+
             Some(get_lib_path(
                 libraries_path,
                 &library.name,
@@ -82,6 +94,27 @@ pub fn get_class_paths_jar<T: AsRef<str>>(
         .collect::<Result<Vec<_>, _>>()?;
 
     Ok(cps.join(classpath_separator(java_arch)))
+}
+
+/// Resolves a library the instance ships itself. MultiMC keeps these flat in
+/// the instance's `libraries` folder, keyed by file name rather than by the
+/// maven tree the shared library cache uses.
+fn get_local_lib_path(
+    local_libraries_path: &Path,
+    lib: &str,
+) -> crate::Result<String> {
+    let path = local_libraries_path
+        .join(crate::launcher::patches::maven_file_name(lib));
+
+    let path = canonicalize(&path).map_err(|err| {
+        crate::ErrorKind::LauncherError(format!(
+            "Could not find instance-local library {lib} at {}: {err}",
+            path.display()
+        ))
+        .as_error()
+    })?;
+
+    Ok(path.to_string_lossy().to_string())
 }
 
 pub fn get_lib_path(

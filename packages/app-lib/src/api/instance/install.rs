@@ -28,7 +28,7 @@ pub async fn get_optimal_jre_key(
         context.applied_content_set.loader_version.as_deref(),
     )
     .await?;
-    let version_info = crate::launcher::download::download_version_info(
+    let mut version_info = crate::launcher::download::download_version_info(
         &state,
         version,
         loader_version.as_ref(),
@@ -38,9 +38,19 @@ pub async fn get_optimal_jre_key(
     )
     .await?;
 
+    let instance_path = state
+        .directories
+        .instances_dir()
+        .join(&context.instance.path);
+    let applied_patches = crate::launcher::patches::patch_version_info(
+        &instance_path,
+        &mut version_info,
+        &context.applied_content_set.game_version,
+    )?;
+
     crate::launcher::get_java_version_from_launch_context(
         &context,
-        &version_info,
+        crate::launcher::required_java_major(&version_info, &applied_patches),
     )
     .await
 }

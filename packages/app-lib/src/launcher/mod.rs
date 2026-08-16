@@ -35,6 +35,7 @@ mod args;
 pub(crate) mod hooks;
 
 pub mod download;
+pub mod patches;
 pub mod quick_play_version;
 
 // All nones -> disallowed
@@ -131,9 +132,26 @@ macro_rules! processor_rules {
     }
 }
 
+/// The Java major version an instance should run on.
+///
+/// A version patch's `compatibleJavaMajors` wins over the runtime Mojang's
+/// manifest asks for, which is what lets a patched 1.7.10 instance run on a
+/// modern JVM instead of being pinned to `jre-legacy`.
+pub fn required_java_major(
+    version_info: &VersionInfo,
+    patches: &patches::AppliedPatches,
+) -> u32 {
+    patches.preferred_java_major().unwrap_or_else(|| {
+        version_info
+            .java_version
+            .as_ref()
+            .map_or(8, |it| it.major_version)
+    })
+}
+
 pub async fn get_java_version_from_launch_context(
     context: &InstanceLaunchContext,
-    version_info: &VersionInfo,
+    java_major: u32,
 ) -> crate::Result<Option<JavaVersion>> {
     if let Some(java) = context.launch_overrides.java_path.as_ref() {
         let java =
@@ -144,14 +162,9 @@ pub async fn get_java_version_from_launch_context(
         }
     }
 
-    let key = version_info
-        .java_version
-        .as_ref()
-        .map_or(8, |it| it.major_version);
-
     let state = State::get().await?;
 
-    let java_version = JavaVersion::get(key, &state.pool).await?;
+    let java_version = JavaVersion::get(java_major, &state.pool).await?;
 
     Ok(java_version)
 }
@@ -240,7 +253,7 @@ pub(crate) async fn resolve_java_for_launch(
         .await?;
     }
 
-    let version_info = download::download_version_info(
+    let mut version_info = download::download_version_info(
         &state,
         version,
         loader_version.as_ref(),
@@ -250,12 +263,16 @@ pub(crate) async fn resolve_java_for_launch(
     )
     .await?;
 
-    let key = version_info
-        .java_version
-        .as_ref()
-        .map_or(8, |it| it.major_version);
+    let instance_path = get_instance_full_path(&context.instance.path).await?;
+    let applied_patches = patches::patch_version_info(
+        &instance_path,
+        &mut version_info,
+        &content_set.game_version,
+    )?;
+
+    let key = required_java_major(&version_info, &applied_patches);
     let (java_path, set_java) = if let Some(java_version) =
-        get_java_version_from_launch_context(context, &version_info).await?
+        get_java_version_from_launch_context(context, key).await?
     {
         (PathBuf::from(java_version.path), false)
     } else {
@@ -430,10 +447,14 @@ pub async fn install_minecraft_with_reporter(
     )
     .await?;
 
-    let key = version_info
-        .java_version
-        .as_ref()
-        .map_or(8, |it| it.major_version);
+    let applied_patches =
+        patches::patch_version_info(
+            &instance_path,
+            &mut version_info,
+            &content_set.game_version,
+        )?;
+
+    let key = required_java_major(&version_info, &applied_patches);
     if let Some(reporter) = &reporter {
         reporter
             .update(
@@ -451,7 +472,7 @@ pub async fn install_minecraft_with_reporter(
             .await?;
     }
     let (java_version, set_java) = if let Some(java_version) =
-        get_java_version_from_launch_context(context, &version_info).await?
+        get_java_version_from_launch_context(context, key).await?
     {
         (std::path::PathBuf::from(java_version.path), false)
     } else {
@@ -941,17 +962,25 @@ pub async fn launch_minecraft(
         }
     }
 
+    let applied_patches = patches::patch_version_info(
+        &instance_path,
+        &mut version_info,
+        &content_set.game_version,
+    )?;
+
     let _ =
         download_log_config(&state, &version_info, None, false, None).await?;
 
-    let java_version =
-        get_java_version_from_launch_context(context, &version_info)
-            .await?
-            .ok_or_else(|| {
-                crate::ErrorKind::LauncherError(
-                    "Missing correct java installation".to_string(),
-                )
-            })?;
+    let java_version = get_java_version_from_launch_context(
+        context,
+        required_java_major(&version_info, &applied_patches),
+    )
+    .await?
+    .ok_or_else(|| {
+        crate::ErrorKind::LauncherError(
+            "Missing correct java installation".to_string(),
+        )
+    })?;
 
     // Test jre version
     let java_version =
@@ -1053,6 +1082,7 @@ pub async fn launch_minecraft(
             &state.directories.log_configs_dir(),
             &args::get_class_paths(
                 &state.directories.libraries_dir(),
+                &patches::local_libraries_dir(&instance_path),
                 version_info.libraries.as_slice(),
                 &[&main_class_path, &client_path],
                 &java_version.architecture,
@@ -1061,7 +1091,14 @@ pub async fn launch_minecraft(
             &main_class_path,
             &version_jar,
             *memory,
-            Vec::from(java_args),
+            // Patch-provided arguments come first so the instance's own Java
+            // arguments still get the last word on any flag they both set.
+            applied_patches
+                .jvm_args
+                .iter()
+                .cloned()
+                .chain(java_args.iter().cloned())
+                .collect(),
             &java_version.architecture,
             &quick_play_type,
             quick_play_version,

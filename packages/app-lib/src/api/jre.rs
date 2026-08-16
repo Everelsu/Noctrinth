@@ -63,6 +63,66 @@ pub async fn auto_install_java(java_version: u32) -> crate::Result<PathBuf> {
     auto_install_java_with_loading(java_version, true).await
 }
 
+/// The URL listing the JRE packages available for a major version here.
+fn java_packages_url(java_version: u32) -> String {
+    format!(
+        "https://api.azul.com/metadata/v1/zulu/packages?arch={}&java_version={}&os={}&archive_type=zip&javafx_bundled=false&java_package_type=jre&page_size=1",
+        std::env::consts::ARCH,
+        java_version,
+        std::env::consts::OS
+    )
+}
+
+/// Narrows a list of Java major versions to the ones that can actually be
+/// installed on this platform.
+///
+/// A major that cannot be resolved is dropped, but one that could not be
+/// checked at all is kept: a failed request means the network is down, not that
+/// the runtime does not exist, and hiding choices over that would be worse than
+/// letting the install report the problem.
+pub async fn filter_installable_java_majors(candidates: &[u32]) -> Vec<u32> {
+    #[derive(Deserialize)]
+    struct Package {}
+
+    let Ok(state) = State::get().await else {
+        return candidates.to_vec();
+    };
+
+    let checks = candidates.iter().map(|&java_version| {
+        let state = state.clone();
+        async move {
+            let packages = fetch_json::<Vec<Package>>(
+                Method::GET,
+                &java_packages_url(java_version),
+                None,
+                None,
+                None,
+                &state.fetch_semaphore,
+                &state.pool,
+            )
+            .await;
+
+            match packages {
+                Ok(packages) => (java_version, !packages.is_empty()),
+                Err(error) => {
+                    tracing::debug!(
+                        "Could not check whether Java {java_version} is available: {error}"
+                    );
+                    (java_version, true)
+                }
+            }
+        }
+    });
+
+    futures::future::join_all(checks)
+        .await
+        .into_iter()
+        .filter_map(|(java_version, available)| {
+            available.then_some(java_version)
+        })
+        .collect()
+}
+
 pub async fn auto_install_java_with_loading(
     java_version: u32,
     show_loading: bool,
@@ -148,12 +208,7 @@ async fn auto_install_java_inner(
         Some(java_step_progress(1)),
     )
     .await?;
-    let metadata_url = format!(
-        "https://api.azul.com/metadata/v1/zulu/packages?arch={}&java_version={}&os={}&archive_type=zip&javafx_bundled=false&java_package_type=jre&page_size=1",
-        std::env::consts::ARCH,
-        java_version,
-        std::env::consts::OS
-    );
+    let metadata_url = java_packages_url(java_version);
     if let Some(reporter) = &reporter {
         reporter
             .set_context(

@@ -94,12 +94,24 @@ function choiceLabel(option: GameOption, value: string): string {
 	return option.choices.find((choice) => choice.value === value)?.label ?? value
 }
 
-/** Human-readable current value, shown when an option is managed. */
-function displayValue(option: GameOption): string {
-	const value = values.value[option.key]
-	if (option.control === 'toggle') return value ? 'On' : 'Off'
-	if (option.control === 'select') return choiceLabel(option, value as string)
-	return `${value}${option.unit ?? ''}`
+/**
+ * The line under an option's name.
+ *
+ * A bare "1.16+" chip beside the label raised more questions than it answered —
+ * a version of what? — so the constraint is spelled out in words instead, next
+ * to whatever else the option has to say.
+ */
+function optionNote(option: GameOption): string {
+	const parts: string[] = []
+	if (option.description) parts.push(option.description)
+	if (option.minVersion && option.maxVersion) {
+		parts.push(`Only applied on Minecraft ${option.minVersion}–${option.maxVersion}.`)
+	} else if (option.minVersion) {
+		parts.push(`Only applied on Minecraft ${option.minVersion} and newer.`)
+	} else if (option.maxVersion) {
+		parts.push(`Only applied on Minecraft ${option.maxVersion} and older.`)
+	}
+	return parts.join(' ')
 }
 </script>
 
@@ -172,7 +184,7 @@ function displayValue(option: GameOption): string {
 			<div
 				v-for="option in optionsForGroup(group.id)"
 				:key="option.key"
-				class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 rounded-lg px-2 py-2 -mx-2 transition-colors"
+				class="grid grid-cols-[minmax(0,1fr)_20rem] items-center gap-4 rounded-lg px-2 py-2.5 -mx-2 transition-colors"
 				:class="managed[option.key] ? 'bg-surface-2' : 'hover:bg-surface-2/50'"
 			>
 				<Checkbox
@@ -181,35 +193,23 @@ function displayValue(option: GameOption): string {
 					:description="`Manage ${option.label} across all instances`"
 				>
 					<span class="flex flex-col gap-0.5 min-w-0">
-						<span class="flex items-center gap-2 min-w-0">
-							<span
-								class="font-semibold truncate"
-								:class="managed[option.key] ? 'text-contrast' : 'text-primary'"
-								:title="option.key"
-							>
-								{{ option.label }}
-							</span>
-							<span
-								v-if="option.versionNote"
-								class="shrink-0 rounded px-1.5 py-0.5 text-[0.65rem] font-semibold bg-surface-4 text-secondary"
-							>
-								{{ option.versionNote }}
-							</span>
+						<span
+							class="font-semibold truncate"
+							:class="managed[option.key] ? 'text-contrast' : 'text-primary'"
+							:title="option.key"
+						>
+							{{ option.label }}
 						</span>
-						<span v-if="option.description" class="text-xs leading-tight text-secondary">
-							{{ option.description }}
+						<span v-if="optionNote(option)" class="text-xs leading-tight text-secondary">
+							{{ optionNote(option) }}
 						</span>
 					</span>
 				</Checkbox>
 
-				<div class="flex items-center gap-2 justify-end">
-					<span
-						v-if="managed[option.key] && option.control !== 'toggle'"
-						class="text-xs font-semibold text-secondary tabular-nums w-16 text-right"
-					>
-						{{ displayValue(option) }}
-					</span>
-
+				<!-- Every control shares one column so toggles, sliders and
+				     dropdowns line up down the page instead of ending wherever
+				     their own width happens to put them. -->
+				<div class="flex items-center gap-2 justify-end min-w-0">
 					<Toggle
 						v-if="option.control === 'toggle'"
 						:id="`value-${option.key}`"
@@ -220,29 +220,32 @@ function displayValue(option: GameOption): string {
 						v-else-if="option.control === 'slider'"
 						:id="`value-${option.key}`"
 						v-model="values[option.key] as number"
-						class="w-[11rem]"
+						class="w-full"
 						:min="option.min"
 						:max="option.max"
 						:step="option.step"
+						:unit="option.unit"
 						:disabled="!managed[option.key]"
 					/>
 					<DropdownSelect
 						v-else
 						v-model="values[option.key] as string"
 						:name="`value-${option.key}`"
-						class="w-[11rem]"
+						class="w-full"
 						:options="choiceValues(option)"
 						:display-name="(value: string) => choiceLabel(option, value)"
 						:disabled="!managed[option.key]"
 					/>
 
+					<!-- Kept in the layout even when it has nothing to do, so the
+					     controls beside it don't shift as values change. -->
 					<IconButton
-						v-tooltip="isDefault(option) ? undefined : 'Reset to the game default'"
+						v-tooltip="'Reset to the game default'"
 						type="quiet"
 						size="sm"
 						label="Reset to default"
 						class="shrink-0"
-						:disabled="!managed[option.key] || isDefault(option)"
+						:class="{ invisible: !managed[option.key] || isDefault(option) }"
 						@click="resetOption(option)"
 					>
 						<UndoIcon />

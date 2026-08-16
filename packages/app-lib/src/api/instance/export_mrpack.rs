@@ -33,6 +33,11 @@ const EXPORT_COPY_BUFFER_SIZE: usize = 256 * 1024;
 const STANDARD_ZIP_FILE_SIZE_ERROR: &str = "Your modpack cannot be exported as it contains a file over the size limit of 4 GB";
 
 const NEVER_EXPORTABLE_PATH_PREFIXES: &[&str] = &[
+    // Version patches and the jars they reference are launcher-side state, not
+    // instance content: they describe how the version is assembled, they are
+    // restored with one click, and the jars run to megabytes apiece.
+    "patches",
+    "libraries",
     "profile.json",
     "modrinth_logs",
     "mods/.connector",

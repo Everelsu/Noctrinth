@@ -688,6 +688,7 @@ async fn fetch(
                             checksums: None,
                             include_in_classpath: false,
                             downloadable: true,
+                            mmc_hint: None,
                         });
 
                         Ok(format!("[{path}]"))

@@ -1465,9 +1465,14 @@ async function downloadUpdate(versionToDownload) {
 			.then(() => {
 				downloading.value = false
 				finishedDownloading.value = true
-				unlistenUpdateDownload?.().then(() => {
-					unlistenUpdateDownload = null
-				})
+				// `AppEvents.on` hands back a plain synchronous unsubscribe, so
+				// there is nothing to await here. Treating it as a promise threw
+				// on the very line that was meant to clean it up, which aborted
+				// the rest of this handler: the listener stayed subscribed, the
+				// update was never marked actionable, and the user got an error
+				// toast for an update that had in fact downloaded fine.
+				unlistenUpdateDownload?.()
+				unlistenUpdateDownload = null
 				console.log('Finished downloading!')
 				markAppUpdateActionable(versionToDownload.version, 'downloaded')
 				scheduleDelayedUpdatePopup()

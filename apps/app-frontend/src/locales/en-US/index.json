@@ -1130,11 +1130,17 @@
   "app.library.instance.stop": {
     "message": "Stop"
   },
+  "app.library.search.hint": {
+    "message": "↑↓ to pick · Tab to insert · terms combine, and - flips one around"
+  },
   "app.library.search.no-results.title": {
     "message": "No instances match your search."
   },
+  "app.library.search.pending": {
+    "message": "Still reading what is installed…"
+  },
   "app.library.search.placeholder": {
-    "message": "Search"
+    "message": "Search instances, or type @ # ! to filter"
   },
   "app.library.selection.aria-label": {
     "message": "Selected instances"

@@ -13,6 +13,7 @@ import {
 	watchEffect,
 } from 'vue'
 
+import { useInstanceContentIndex } from '@/composables/instances/use-instance-content-index'
 import { get_project_v3_many } from '@/helpers/cache.js'
 import { toError } from '@/helpers/errors'
 import { install_duplicate_instance } from '@/helpers/install'
@@ -28,6 +29,14 @@ import {
 	set_group_memberships as setInstanceGroupMemberships,
 	set_group_order as setInstanceGroupOrder,
 } from '@/helpers/instance-groups'
+import {
+	activeToken,
+	applySuggestion,
+	matchInstance,
+	parseQuery,
+	type SearchSuggestion,
+	suggestionsFor,
+} from '@/helpers/instance-search'
 import type { GameInstance } from '@/helpers/types'
 
 export const librarySortOptions = [
@@ -110,6 +119,50 @@ function createLibraryState(instances: Ref<GameInstance[]>) {
 	const { formatMessage } = useVIntl()
 
 	const search = ref('')
+
+	// The library search is a small query language, not a name filter: bare words
+	// match the instance name, while `@name`, `#type` and `!state` ask about the
+	// content inside an instance and `-` negates a term.
+	const contentIndex = useInstanceContentIndex()
+	const parsedQuery = computed(() => parseQuery(search.value))
+	const instanceIds = computed(() => instances.value.map((instance) => instance.id))
+
+	// A lone "@" is not a term yet, but it is exactly when the suggestion list
+	// needs the index. Load on either signal, and never for a plain name search.
+	const wantsContentIndex = computed(
+		() => parsedQuery.value.needsContent || activeToken(search.value).replace(/^-/, '')[0] === '@',
+	)
+	watch(
+		() => [wantsContentIndex.value, instanceIds.value.join(',')] as const,
+		([wanted]) => {
+			if (!wanted) return
+			contentIndex.ensureLoaded(instanceIds.value)
+		},
+		{ immediate: true },
+	)
+
+	const searchFocused = ref(false)
+	const activeSuggestion = ref(0)
+	const suggestions = computed<SearchSuggestion[]>(() => {
+		if (!searchFocused.value) return []
+		// Touch the version so completions appear as the index streams in.
+		void contentIndex.version.value
+		return suggestionsFor(search.value, contentIndex.contentNames(instanceIds.value))
+	})
+	watch(suggestions, () => {
+		activeSuggestion.value = 0
+	})
+
+	// Content terms can only be answered once the index is in, so the caller can
+	// tell the user the result is still provisional.
+	const searchPending = computed(
+		() => parsedQuery.value.needsContent && !contentIndex.hasContentFor(instanceIds.value),
+	)
+
+	function chooseSuggestion(suggestion: SearchSuggestion) {
+		search.value = applySuggestion(search.value, suggestion)
+		searchFocused.value = true
+	}
 	const filters = useStorage<LibraryFilters>(
 		'Instances-grid-filters',
 		{
@@ -320,9 +373,15 @@ function createLibraryState(instances: Ref<GameInstance[]>) {
 	)
 
 	const instanceGroups = computed<InstanceGroup[]>(() => {
-		const visibleInstances = filteredInstances.value.filter((instance) =>
-			instance.name.toLowerCase().includes(search.value.toLowerCase()),
-		)
+		// Touch the index version so matching re-runs as content streams in.
+		void contentIndex.version.value
+		const query = parsedQuery.value
+		const visibleInstances = query.isEmpty
+			? [...filteredInstances.value]
+			: filteredInstances.value.filter(
+					(instance) =>
+						matchInstance(instance, query, contentIndex.contentFor(instance.id)) !== null,
+				)
 
 		switch (displayState.value.sortBy) {
 			case 'Name':
@@ -1146,6 +1205,11 @@ function createLibraryState(instances: Ref<GameInstance[]>) {
 		libraryGroups,
 		libraryGroupsLoaded,
 		search,
+		searchFocused,
+		searchPending,
+		suggestions,
+		activeSuggestion,
+		chooseSuggestion,
 		isSearching,
 		filters,
 		displayState,

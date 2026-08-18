@@ -966,7 +966,7 @@
     "message": "Перезапуск..."
   },
   "app.settings.app-version": {
-    "message": "Modrinth App {version}"
+    "message": "Noctrinth {version}"
   },
   "app.settings.default-instance-options.environment-variables.description": {
     "message": "Переменные среды при запуске игры."
@@ -1054,6 +1054,21 @@
   },
   "app.settings.java-installations.location.title": {
     "message": "Расположение Java {version}"
+  },
+  "app.settings.java.gpu.label": {
+    "message": "Видеоадаптер"
+  },
+  "app.settings.java.gpu.no-preference": {
+    "message": "Предпочтение не задано, поэтому выбирает Windows — на ноутбуке это обычно встроенная графика. Доступны: {adapters}"
+  },
+  "app.settings.java.gpu.on-high-performance": {
+    "message": "Windows будет запускать эту среду на производительном адаптере."
+  },
+  "app.settings.java.gpu.on-named-adapter": {
+    "message": "Windows будет запускать эту среду на {adapter}."
+  },
+  "app.settings.java.gpu.on-power-saving": {
+    "message": "Windows будет запускать эту среду на энергосберегающем адаптере — обычно это встроенная графика, для Minecraft это медленный вариант."
   },
   "app.settings.operating-system.macos": {
     "message": "macOS"

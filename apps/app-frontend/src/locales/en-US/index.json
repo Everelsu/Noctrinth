@@ -1547,6 +1547,21 @@
   "app.settings.java-installations.location.title": {
     "message": "Java {version, number} location"
   },
+  "app.settings.java.gpu.label": {
+    "message": "Graphics adapter"
+  },
+  "app.settings.java.gpu.no-preference": {
+    "message": "No preference is set, so Windows picks — on a laptop that is usually the integrated adapter. Available: {adapters}"
+  },
+  "app.settings.java.gpu.on-high-performance": {
+    "message": "Windows will run this runtime on the high-performance adapter."
+  },
+  "app.settings.java.gpu.on-named-adapter": {
+    "message": "Windows will run this runtime on {adapter}."
+  },
+  "app.settings.java.gpu.on-power-saving": {
+    "message": "Windows will run this runtime on the power-saving adapter — usually the integrated one, which is the slow option for Minecraft."
+  },
   "app.settings.operating-system.macos": {
     "message": "macOS"
   },

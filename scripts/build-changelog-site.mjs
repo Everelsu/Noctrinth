@@ -26,8 +26,10 @@ const OUT_DIR = process.argv[2] ?? 'site'
 const NOCTRINTH_DIR = 'apps/app-frontend/src/changelog'
 const MODRINTH_SRC = 'packages/blog/changelog.ts'
 const LOGO_SRC = 'apps/app/icons/noctrinth.svg'
-/** Screenshots referenced from entries as `/changelog/<file>`. */
+/** Screenshots, referenced from entries as `/changelog/screenshots/<file>`. */
 const SCREENSHOT_DIR = 'apps/app-frontend/src/changelog/screenshots'
+/** Where those land on the site, and the prefix an entry has to use. */
+const SCREENSHOT_PATH = 'changelog/screenshots'
 
 /**
  * Pull every `{ ... body: `...` ... }` object out of a changelog TS source
@@ -96,13 +98,27 @@ function escapeHtml(s) {
 		.replace(/"/g, '&quot;')
 }
 
+/**
+ * Turns an entry's `/changelog/...` reference into one this page can load.
+ *
+ * The site lives under `/<repo>/` on GitHub Pages, so a leading slash would
+ * point at the domain root. Everything is written next to `index.html`, which
+ * makes a relative path the one that works from either place.
+ */
+function siteRelative(url) {
+	return url.startsWith('/') ? url.slice(1) : url
+}
+
 function renderInline(s) {
 	return (
 		escapeHtml(s)
 			.replace(/`([^`]+)`/g, '<code>$1</code>')
 			.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
 			// Images before links: the syntax differs by one leading `!`.
-			.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" loading="lazy">')
+			.replace(
+				/!\[([^\]]*)\]\(([^)]+)\)/g,
+				(_, alt, src) => `<img src="${siteRelative(src)}" alt="${alt}" loading="lazy">`,
+			)
 			.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" rel="noopener">$1</a>')
 	)
 }
@@ -244,6 +260,42 @@ function renderEntry(entry, index) {
 			<div class="entry__body changelog-body">${renderMarkdown(entry.body)}</div>
 		</div>`
 }
+
+/**
+ * Every image an entry points at, checked against what is actually here.
+ *
+ * A screenshot is only visible once the site carries it, so a typo in a path
+ * is invisible until after a deploy. Catching it at build time costs nothing.
+ */
+function checkScreenshots(entries) {
+	const problems = []
+
+	for (const entry of entries) {
+		for (const [, url] of entry.body.matchAll(/!\[[^\]]*\]\(([^)]+)\)/g)) {
+			if (/^https?:\/\//.test(url)) {
+				continue
+			}
+
+			const path = siteRelative(url)
+			if (!path.startsWith(`${SCREENSHOT_PATH}/`)) {
+				problems.push(`${entry.version ?? entry.date}: ${url} is not under /${SCREENSHOT_PATH}/`)
+				continue
+			}
+
+			const file = join(SCREENSHOT_DIR, path.slice(SCREENSHOT_PATH.length + 1))
+			if (!existsSync(file)) {
+				problems.push(`${entry.version ?? entry.date}: ${url} has no file at ${file}`)
+			}
+		}
+	}
+
+	if (problems.length > 0) {
+		console.error(`Changelog screenshots that would not load:\n  ${problems.join('\n  ')}`)
+		process.exit(1)
+	}
+}
+
+checkScreenshots(noctrinth)
 
 const entriesHtml = all.map(renderEntry).join('\n')
 
@@ -594,7 +646,7 @@ writeFileSync(join(OUT_DIR, 'changelog.json'), `${JSON.stringify(FEED)}\n`)
 // Screenshots live on the site rather than inside the installer, so an entry
 // can carry one without every future release paying for it in download size.
 if (existsSync(SCREENSHOT_DIR)) {
-	cpSync(SCREENSHOT_DIR, join(OUT_DIR, 'changelog'), { recursive: true })
+	cpSync(SCREENSHOT_DIR, join(OUT_DIR, SCREENSHOT_PATH), { recursive: true })
 }
 
 console.log(

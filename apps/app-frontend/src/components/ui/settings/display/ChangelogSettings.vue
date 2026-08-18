@@ -128,13 +128,31 @@ const modrinthChangelog = computed<ChangelogEntry[]>(() =>
 		})),
 )
 
+/**
+ * Drops a screenshot that did not load.
+ *
+ * Screenshots are served by the changelog site rather than shipped, so they are
+ * missing while offline, and for an entry describing a version whose site build
+ * has not run yet. An empty space says less than a broken tile does, and the
+ * words are the entry anyway.
+ *
+ * Listened for in the capture phase because an image's `error` does not bubble.
+ */
+function hideUnloadableImage(event: Event): void {
+	const image = event.target
+	if (image instanceof HTMLImageElement) {
+		image.remove()
+	}
+}
+
 const entries = computed<ChangelogEntry[]>(() =>
 	source.value === 'noctrinth' ? noctrinthChangelog.value : modrinthChangelog.value,
 )
 </script>
 
 <template>
-	<div class="flex flex-col gap-5">
+	<!-- Screenshots are served by the site, so one listener up here drops any that did not load. -->
+	<div class="flex flex-col gap-5" @error.capture="hideUnloadableImage">
 		<div class="flex flex-wrap items-center justify-between gap-3">
 			<Chips
 				v-model="source"

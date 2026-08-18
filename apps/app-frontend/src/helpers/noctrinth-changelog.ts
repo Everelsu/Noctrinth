@@ -5,9 +5,9 @@
  * file, so writing one is editing a document instead of editing code. Each
  * needs a `date` in its front matter; the version is the file name.
  *
- * Screenshots go in `src/changelog/screenshots/` and are referenced from the
- * root of the changelog site, for
- * example `![Modern Java](/changelog/modern-java.png)`. They are published with
+ * Screenshots go in `src/changelog/screenshots/` and are referenced by the path
+ * they are published under, for example
+ * `![Modern Java](/changelog/screenshots/modern-java.png)`. They are published with
  * the changelog site and resolved against it at render time, so a screenshot
  * costs the download once for whoever scrolls to it rather than sitting in
  * every installer from then on.

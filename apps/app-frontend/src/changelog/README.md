@@ -45,16 +45,21 @@ An entry earns its place by describing the change the user meets:
 
 ## Screenshots
 
-Drop the image in `screenshots/` next to these entries and reference it from
-the root of the changelog site:
+Drop the image in `screenshots/` next to these entries and reference it by the
+path it is published under, which mirrors this one:
 
 ```markdown
-![Modern Java](/changelog/modern-java.png)
+![Modern Java](/changelog/screenshots/modern-java.png)
 ```
 
 It is published with the changelog site and loaded from there, so it costs the
 download once for whoever scrolls to it instead of riding inside every
-installer. Only paths under `/changelog/` are accepted.
+installer. The site build fails on a path that points nowhere, and only paths
+under `/changelog/` are rendered at all.
+
+A screenshot is visible only once the site carries it: an entry written for an
+unreleased version shows a broken image until the Pages workflow runs on
+`main`. Build the site locally to check it before then.
 
 ## Where it shows up
 

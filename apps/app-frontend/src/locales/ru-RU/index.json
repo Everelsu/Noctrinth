@@ -1362,13 +1362,19 @@
     "message": "Noctrinth v{version} готов к установке! Перезагрузите, чтобы обновить сейчас, или обновление произойдёт автоматически при закрытии Noctrinth."
   },
   "app.update-popup.body.download-complete": {
-    "message": "Скачивание версии Modrinth App {version} завершено. Перезапустите приложение, чтобы обновить его, или оно обновится автоматически после закрытия."
+    "message": "Скачивание Noctrinth v{version} завершено. Перезапустите приложение, чтобы обновить его, или оно обновится автоматически после закрытия."
+  },
+  "app.update-popup.body.downloading": {
+    "message": "Noctrinth v{version} — {downloaded} из {size}"
+  },
+  "app.update-popup.body.downloading-unknown-size": {
+    "message": "Noctrinth v{version} загружается…"
   },
   "app.update-popup.body.linux": {
-    "message": "Доступна версия Modrinth App {version}. Обновите приложение через менеджер пакетов, чтобы получить последние улучшения и исправления!"
+    "message": "Доступна версия Noctrinth {version}. Обновите приложение через менеджер пакетов, чтобы получить последние улучшения и исправления!"
   },
   "app.update-popup.body.metered": {
-    "message": "Версия Modrinth App {version} доступна для скачивания! Используется сеть с лимитным тарифным планом, поэтому скачивание не началось автоматически."
+    "message": "Версия Noctrinth {version} доступна для скачивания! Используется сеть с лимитным тарифным планом, поэтому скачивание не началось автоматически."
   },
   "app.update-popup.changelog": {
     "message": "Список изменений"
@@ -1378,6 +1384,9 @@
   },
   "app.update-popup.download-complete": {
     "message": "Скачивание завершено"
+  },
+  "app.update-popup.downloading": {
+    "message": "Загрузка обновления"
   },
   "app.update-popup.reload": {
     "message": "Перезапустить"

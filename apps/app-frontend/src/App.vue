@@ -1335,6 +1335,18 @@ const updatePopupMessages = defineMessages({
 		id: 'app.update-popup.body.download-complete',
 		defaultMessage: `Noctrinth v{version} has finished downloading. Reload to update now, or automatically when you close Noctrinth.`,
 	},
+	downloading: {
+		id: 'app.update-popup.downloading',
+		defaultMessage: 'Downloading update',
+	},
+	downloadingBody: {
+		id: 'app.update-popup.body.downloading',
+		defaultMessage: 'Noctrinth v{version} — {downloaded} of {size}',
+	},
+	downloadingBodyUnknownSize: {
+		id: 'app.update-popup.body.downloading-unknown-size',
+		defaultMessage: 'Noctrinth v{version} is downloading…',
+	},
 	linuxBody: {
 		id: 'app.update-popup.body.linux',
 		defaultMessage:
@@ -1567,6 +1579,112 @@ async function downloadAvailableUpdate() {
 	return downloadUpdate(availableUpdate.value)
 }
 
+/**
+ * The popup that carries the update download while it runs, if it is still there.
+ *
+ * Kept as a plain id rather than a ref: nothing renders off it, it only points
+ * back at the notification the manager owns.
+ */
+let updateDownloadNotificationId = null
+
+function getUpdateDownloadNotification() {
+	if (updateDownloadNotificationId === null) {
+		return null
+	}
+
+	const notification = popupNotificationManager
+		.getNotifications()
+		.find((candidate) => candidate.id === updateDownloadNotificationId)
+
+	// Dismissed by hand, or cleared with the rest of the stack. Forget it
+	// instead of putting it back on the next progress tick.
+	if (!notification) {
+		updateDownloadNotificationId = null
+		return null
+	}
+
+	return notification.contentType === 'standard' ? notification : null
+}
+
+function updateDownloadFraction() {
+	return Math.min(Math.max(appUpdateDownload.progress.value, 0), 1)
+}
+
+function updateDownloadText(version) {
+	const size = updateSize.value
+
+	// The size is fetched alongside the download rather than before it, so the
+	// first ticks have nothing to count against.
+	if (!size) {
+		return formatMessage(updatePopupMessages.downloadingBodyUnknownSize, { version })
+	}
+
+	return formatMessage(updatePopupMessages.downloadingBody, {
+		version,
+		downloaded: formatBytes(Math.round(updateDownloadFraction() * size)),
+		size: formatBytes(size),
+	})
+}
+
+/**
+ * Shows the update download in the notification stack.
+ *
+ * The update pill only appears once the download has finished, or when a
+ * metered connection stopped it from starting at all, so an update downloading
+ * in the background was invisible until it was already done — including the
+ * bandwidth it was spending. This reports it while it runs, and takes itself
+ * away however the download ends.
+ */
+function showUpdateDownloadNotification(version) {
+	if (getUpdateDownloadNotification()) {
+		return
+	}
+
+	const notification = addPopupNotification({
+		contentType: 'standard',
+		title: formatMessage(updatePopupMessages.downloading),
+		text: updateDownloadText(version),
+		type: 'info',
+		autoCloseMs: null,
+		progress: updateDownloadFraction(),
+		waiting: updateDownloadFraction() <= 0,
+		buttons: [
+			{
+				label: formatMessage(updatePopupMessages.changelog),
+				action: () => openAppUpdateChangelog(),
+				keepOpen: true,
+			},
+		],
+	})
+
+	updateDownloadNotificationId = notification.id
+}
+
+function refreshUpdateDownloadNotification() {
+	const notification = getUpdateDownloadNotification()
+	const version = availableUpdate.value?.version
+	if (!notification || !version) {
+		return
+	}
+
+	notification.text = updateDownloadText(version)
+	notification.progress = updateDownloadFraction()
+	notification.waiting = updateDownloadFraction() <= 0
+}
+
+function removeUpdateDownloadNotification() {
+	if (updateDownloadNotificationId === null) {
+		return
+	}
+
+	popupNotificationManager.removeNotification(updateDownloadNotificationId)
+	updateDownloadNotificationId = null
+}
+
+// The size lands after the download has already started, so it is watched
+// alongside the progress rather than read once.
+watch([appUpdateDownload.progress, updateSize], () => refreshUpdateDownloadNotification())
+
 async function downloadUpdate(versionToDownload) {
 	if (!versionToDownload) {
 		handleError(formatMessage(messages.updateDownloadMissingVersion))
@@ -1580,10 +1698,12 @@ async function downloadUpdate(versionToDownload) {
 
 	console.log(`Downloading update ${versionToDownload.version}`)
 	downloading.value = true
+	showUpdateDownloadNotification(versionToDownload.version)
 
 	try {
 		enqueueUpdateForInstallation(versionToDownload.rid)
 			.then(() => {
+				removeUpdateDownloadNotification()
 				downloading.value = false
 				finishedDownloading.value = true
 				// `AppEvents.on` hands back a plain synchronous unsubscribe, so
@@ -1599,6 +1719,7 @@ async function downloadUpdate(versionToDownload) {
 				scheduleDelayedUpdatePopup()
 			})
 			.catch((e) => {
+				removeUpdateDownloadNotification()
 				downloading.value = false
 				appUpdateDownload.progress.value = 0
 				updateDownloadFailed.value = true
@@ -1610,6 +1731,7 @@ async function downloadUpdate(versionToDownload) {
 			versionToDownload.version,
 		)
 	} catch (e) {
+		removeUpdateDownloadNotification()
 		downloading.value = false
 		appUpdateDownload.progress.value = 0
 		updateDownloadFailed.value = true

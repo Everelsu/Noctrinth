@@ -1862,6 +1862,12 @@
   "app.update-popup.body.download-complete": {
     "message": "Noctrinth v{version} has finished downloading. Reload to update now, or automatically when you close Noctrinth."
   },
+  "app.update-popup.body.downloading": {
+    "message": "Noctrinth v{version} — {downloaded} of {size}"
+  },
+  "app.update-popup.body.downloading-unknown-size": {
+    "message": "Noctrinth v{version} is downloading…"
+  },
   "app.update-popup.body.linux": {
     "message": "Noctrinth v{version} is available. Use your package manager to update for the latest features and fixes!"
   },
@@ -1876,6 +1882,9 @@
   },
   "app.update-popup.download-complete": {
     "message": "Download complete"
+  },
+  "app.update-popup.downloading": {
+    "message": "Downloading update"
   },
   "app.update-popup.reload": {
     "message": "Reload to update"

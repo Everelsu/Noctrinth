@@ -287,22 +287,27 @@ async function reinstallJava() {
 	min-width: 0;
 }
 
+// The path field is full width, so it never shared a line with the buttons
+// anyway — the row-with-space-between it used to be only produced a wrap and
+// left the buttons stranded. Stacking says what actually happens.
 .toggle-setting {
 	display: flex;
-	flex-wrap: wrap;
-	flex-direction: row;
-	justify-content: space-between;
-	align-items: center;
+	flex-direction: column;
+	align-items: stretch;
 	gap: 0.5rem;
 
 	&.compact {
+		flex-direction: row;
 		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
 	}
 }
 
 .installation-buttons {
 	display: flex;
 	flex-direction: row;
+	flex-wrap: wrap;
 	align-items: center;
 	gap: 0.5rem;
 	margin: 0;

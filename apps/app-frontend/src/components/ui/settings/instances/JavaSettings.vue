@@ -1,4 +1,5 @@
 <script setup>
+import { CoffeeIcon } from '@modrinth/assets'
 import { defineMessages, injectNotificationManager, useVIntl } from '@modrinth/ui'
 import { computed, ref } from 'vue'
 
@@ -54,22 +55,29 @@ async function updateJavaVersion(version) {
 }
 </script>
 <template>
-	<div class="flex flex-col gap-6">
+	<div class="flex flex-col gap-4">
 		<div
-			v-for="(javaVersion, index) in shownJavaMajors"
+			v-for="javaVersion in shownJavaMajors"
 			:key="`java-${javaVersion}`"
-			class="flex flex-col gap-2.5"
+			class="flex items-start gap-3 rounded-2xl bg-bg p-4"
 		>
-			<h2 class="m-0 text-lg font-semibold text-contrast" :class="{ 'mt-4': index !== 0 }">
-				{{ formatMessage(messages.javaLocation, { version: javaVersion }) }}
-			</h2>
-			<JavaSelector
-				:id="'java-selector-' + javaVersion"
-				v-model="javaVersions[javaVersion]"
-				:version="javaVersion"
-				@update:model-value="updateJavaVersion"
-			/>
-			<JavaGpuPreference :path="javaVersions[javaVersion]?.path ?? ''" />
+			<div
+				class="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-[1px] border-solid border-button-border bg-button-bg p-2 [&_svg]:h-full [&_svg]:w-full"
+			>
+				<CoffeeIcon />
+			</div>
+			<div class="flex min-w-0 flex-1 flex-col gap-2">
+				<h2 class="m-0 text-lg font-extrabold leading-none text-contrast">
+					{{ formatMessage(messages.javaLocation, { version: javaVersion }) }}
+				</h2>
+				<JavaSelector
+					:id="'java-selector-' + javaVersion"
+					v-model="javaVersions[javaVersion]"
+					:version="javaVersion"
+					@update:model-value="updateJavaVersion"
+				/>
+				<JavaGpuPreference :path="javaVersions[javaVersion]?.path ?? ''" />
+			</div>
 		</div>
 
 		<hr class="my-2 bg-button-border border-none h-[1px]" />

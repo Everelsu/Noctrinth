@@ -1226,8 +1226,14 @@
   "app.settings.game-options.unit.chunks": {
     "message": " чанк."
   },
+  "app.settings.game-options.unit.degrees": {
+    "message": "°"
+  },
   "app.settings.game-options.unit.fps": {
     "message": " кадр/с"
+  },
+  "app.settings.game-options.unit.percent": {
+    "message": "%"
   },
   "app.settings.game-options.versions.changed-meaning": {
     "message": "У нескольких параметров имя осталось прежним, а смысл значения изменился. Такие помечены версией и записываются только туда, где они действительны."

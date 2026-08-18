@@ -18,7 +18,22 @@
  * degrees rather than -1..1, volumes in percent rather than 0..1).
  */
 
-import { defineMessages, type MessageDescriptor } from '@modrinth/ui'
+import { defineMessages } from '@modrinth/ui'
+
+/**
+ * The shape of a translated string in this catalogue.
+ *
+ * Declared here rather than imported. `@modrinth/ui` reaches this project
+ * without type declarations, so its own `OptionMessage` arrives as `any`,
+ * and a plain string in a `label` or a `unit` type-checks perfectly happily —
+ * right up until the screen renders and asks it for an `id`. A local type is
+ * the difference between catching that at build time and finding out from a
+ * broken settings tab.
+ */
+interface OptionMessage {
+	id: string
+	defaultMessage: string
+}
 
 const messages = defineMessages({
 	fovLabel: {
@@ -72,6 +87,14 @@ const messages = defineMessages({
 	unitFps: {
 		id: 'app.settings.game-options.unit.fps',
 		defaultMessage: ' fps',
+	},
+	unitPercent: {
+		id: 'app.settings.game-options.unit.percent',
+		defaultMessage: '%',
+	},
+	unitDegrees: {
+		id: 'app.settings.game-options.unit.degrees',
+		defaultMessage: '°',
 	},
 	maxFpsDescription: {
 		id: 'app.settings.game-options.maxFps.description',
@@ -204,8 +227,8 @@ export type GameOptionGroup = 'video' | 'sound' | 'controls'
 interface GameOptionBase {
 	/** The `options.txt` key. */
 	key: string
-	label: MessageDescriptor
-	description?: MessageDescriptor
+	label: OptionMessage
+	description?: OptionMessage
 	group: GameOptionGroup
 	/** Overwrite only when the instance already has the key. Defaults to true. */
 	onlyIfPresent?: boolean
@@ -228,14 +251,14 @@ export type GameOption = GameOptionBase &
 				min: number
 				max: number
 				step: number
-				unit?: MessageDescriptor
+				unit?: OptionMessage
 				encode: (value: number) => string
 				decode: (raw: string) => number
 		  }
 		| {
 				control: 'select'
 				default: string
-				choices: { value: string; label: MessageDescriptor }[]
+				choices: { value: string; label: OptionMessage }[]
 				encode: (value: string) => string
 				decode: (raw: string) => string
 		  }
@@ -311,7 +334,7 @@ export const GAME_OPTIONS: GameOption[] = [
 		min: 0,
 		max: 100,
 		step: 1,
-		unit: '%',
+		unit: messages.unitPercent,
 		...percent,
 	},
 	{
@@ -412,7 +435,7 @@ export const GAME_OPTIONS: GameOption[] = [
 		min: 0,
 		max: 100,
 		step: 1,
-		unit: '%',
+		unit: messages.unitPercent,
 		...percent,
 	},
 	{
@@ -424,7 +447,7 @@ export const GAME_OPTIONS: GameOption[] = [
 		min: 0,
 		max: 100,
 		step: 1,
-		unit: '%',
+		unit: messages.unitPercent,
 		...percent,
 	},
 	{
@@ -436,7 +459,7 @@ export const GAME_OPTIONS: GameOption[] = [
 		min: 0,
 		max: 100,
 		step: 1,
-		unit: '%',
+		unit: messages.unitPercent,
 		...percent,
 	},
 	{
@@ -448,7 +471,7 @@ export const GAME_OPTIONS: GameOption[] = [
 		min: 0,
 		max: 100,
 		step: 1,
-		unit: '%',
+		unit: messages.unitPercent,
 		...percent,
 	},
 	{
@@ -460,7 +483,7 @@ export const GAME_OPTIONS: GameOption[] = [
 		min: 0,
 		max: 100,
 		step: 1,
-		unit: '%',
+		unit: messages.unitPercent,
 		...percent,
 	},
 	{
@@ -472,7 +495,7 @@ export const GAME_OPTIONS: GameOption[] = [
 		min: 0,
 		max: 100,
 		step: 1,
-		unit: '%',
+		unit: messages.unitPercent,
 		...percent,
 	},
 	{
@@ -484,7 +507,7 @@ export const GAME_OPTIONS: GameOption[] = [
 		min: 0,
 		max: 100,
 		step: 1,
-		unit: '%',
+		unit: messages.unitPercent,
 		...percent,
 	},
 	{
@@ -496,7 +519,7 @@ export const GAME_OPTIONS: GameOption[] = [
 		min: 0,
 		max: 100,
 		step: 1,
-		unit: '%',
+		unit: messages.unitPercent,
 		...percent,
 	},
 	{
@@ -508,7 +531,7 @@ export const GAME_OPTIONS: GameOption[] = [
 		min: 0,
 		max: 100,
 		step: 1,
-		unit: '%',
+		unit: messages.unitPercent,
 		...percent,
 	},
 	{
@@ -520,7 +543,7 @@ export const GAME_OPTIONS: GameOption[] = [
 		min: 0,
 		max: 100,
 		step: 1,
-		unit: '%',
+		unit: messages.unitPercent,
 		...percent,
 	},
 
@@ -534,7 +557,7 @@ export const GAME_OPTIONS: GameOption[] = [
 		min: 0,
 		max: 100,
 		step: 1,
-		unit: '%',
+		unit: messages.unitPercent,
 		description: messages.mouseSensitivityDescription,
 		...percent,
 	},
@@ -572,7 +595,7 @@ export const GAME_OPTIONS: GameOption[] = [
 	},
 ]
 
-export const GAME_OPTION_GROUPS: { id: GameOptionGroup; label: MessageDescriptor }[] = [
+export const GAME_OPTION_GROUPS: { id: GameOptionGroup; label: OptionMessage }[] = [
 	{ id: 'video', label: messages.videoGroup },
 	{ id: 'sound', label: messages.soundGroup },
 	{ id: 'controls', label: messages.controlsGroup },

@@ -1718,8 +1718,14 @@
   "app.settings.game-options.unit.chunks": {
     "message": " chunks"
   },
+  "app.settings.game-options.unit.degrees": {
+    "message": "°"
+  },
   "app.settings.game-options.unit.fps": {
     "message": " fps"
+  },
+  "app.settings.game-options.unit.percent": {
+    "message": "%"
   },
   "app.settings.game-options.versions.changed-meaning": {
     "message": "A few options kept their name but changed what their value means. Those are marked with a version and are only written to versions where they're valid."

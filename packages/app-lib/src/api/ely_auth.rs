@@ -127,17 +127,27 @@ pub async fn list_uploaded_skins(
         urlencoding::encode(username)
     );
 
-    let resp = INSECURE_REQWEST_CLIENT
-        .get(&url)
-        .header("X-Requested-With", "XMLHttpRequest")
-        .header("Accept", "application/json")
-        .send()
-        .await
-        .map_err(|e| {
-            crate::ErrorKind::OtherError(format!(
-                "Failed to list Ely.by skins: {e}"
-            ))
-        })?;
+    let request = || {
+        INSECURE_REQWEST_CLIENT
+            .get(&url)
+            .header("X-Requested-With", "XMLHttpRequest")
+            .header("Accept", "application/json")
+            .send()
+    };
+
+    // The site is slow and sometimes drops a connection outright; a single
+    // retry turns most of those into a normal load.
+    let resp = match request().await {
+        Ok(resp) => resp,
+        Err(first) => {
+            tracing::debug!("Retrying the Ely.by skin listing after: {first}");
+            request().await.map_err(|e| {
+                crate::ErrorKind::OtherError(format!(
+                    "Failed to list Ely.by skins: {e}"
+                ))
+            })?
+        }
+    };
 
     if !resp.status().is_success() {
         return Err(crate::ErrorKind::OtherError(format!(

@@ -19,6 +19,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             ely_get_texture,
             ely_wear_skin,
             ely_upload_skin,
+            ely_remove_skin,
         ])
         .build()
 }
@@ -103,6 +104,23 @@ pub async fn ely_current_skin_url(username: &str) -> Result<Option<String>> {
 fn wear_skin_script(skin_id: u64) -> String {
     format!(
         "fetch('https://ely.by/skins/wear', {{             method: 'POST',             credentials: 'same-origin',             headers: {{                 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',                 'X-Requested-With': 'XMLHttpRequest'             }},             body: 'skinId={skin_id}'         }}).catch(function () {{}});"
+    )
+}
+
+/// Deletes one of the account's skins from the Ely.by catalogue.
+///
+/// `POST /skins/remove/<id>` with an empty body and the site session; nothing
+/// else is required.
+#[tauri::command]
+pub async fn ely_remove_skin<R: Runtime>(
+    app: tauri::AppHandle<R>,
+    skin_id: u64,
+) -> Result<()> {
+    run_in_skin_window(
+        app,
+        format!(
+            "fetch('https://ely.by/skins/remove/{skin_id}', {{                 method: 'POST',                 credentials: 'same-origin',                 headers: {{ 'X-Requested-With': 'XMLHttpRequest' }}             }}).catch(function () {{}});"
+        ),
     )
 }
 

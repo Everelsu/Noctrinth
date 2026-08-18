@@ -214,3 +214,8 @@ export function getElyCatalogueTexture(url: string): Promise<string> {
 export async function uploadElySkin(dataUrl: string): Promise<void> {
 	await invoke('plugin:ely-auth|ely_upload_skin', { dataUrl })
 }
+
+/** Removes one of the account's skins from the Ely.by catalogue. */
+export async function removeElySkin(skinId: number): Promise<void> {
+	await invoke('plugin:ely-auth|ely_remove_skin', { skinId })
+}

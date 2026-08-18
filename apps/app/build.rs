@@ -426,6 +426,7 @@ fn main() {
                         "ely_get_texture",
                         "ely_wear_skin",
                         "ely_upload_skin",
+                        "ely_remove_skin",
                     ])
                     .default_permission(
                         DefaultPermissionRule::AllowAllCommands,

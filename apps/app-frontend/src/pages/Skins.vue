@@ -47,6 +47,7 @@ import {
 	getElyCurrentSkinUrl,
 	getElySkinTexture,
 	listElySkins,
+	removeElySkin,
 	uploadElySkin,
 	wearElySkin,
 } from '@/helpers/ely_skins'
@@ -386,10 +387,36 @@ async function loadElySkins() {
 		// the textures settle, because each call supersedes the last.
 		generateSkinPreviews(elySkinsAsSkins.value, [])
 	} catch (error) {
-		handleError(error)
+		// This runs on every refresh, so a dropped connection must not raise a
+		// notification each time — the grid simply keeps what it had.
+		console.warn('Could not load the Ely.by skin list', error)
 	} finally {
 		elySkinsLoading.value = false
 	}
+}
+
+/**
+ * Waits for Ely.by to actually report the new skin.
+ *
+ * Their site takes its time — uploads and deletions have been observed at four
+ * to eight seconds — so a fixed delay either gives up too early or wastes time.
+ * Polling the cheap textures endpoint answers as soon as it is true.
+ */
+async function waitForElySkin(targetUrl: string | undefined, timeoutMs = 25000) {
+	const username = elyAccount.value?.profile.name
+	if (!username) return false
+
+	const deadline = Date.now() + timeoutMs
+	while (Date.now() < deadline) {
+		await new Promise((resolve) => setTimeout(resolve, 1500))
+		const current = await getElyCurrentSkinUrl(username).catch(() => null)
+		if (current && (!targetUrl || sameTexture(current, targetUrl))) {
+			elyCurrentSkinUrl.value = current
+			return true
+		}
+	}
+
+	return false
 }
 
 /**
@@ -430,23 +457,42 @@ async function onElyUploadChange(event: Event) {
 	if (!file) return
 
 	elyWearingId.value = -1
-	const before = elySkinTexture.value
+	const before = elyCurrentSkinUrl.value
 	try {
 		const bytes = new Uint8Array(await file.arrayBuffer())
 		let binary = ''
 		for (const byte of bytes) binary += String.fromCharCode(byte)
 		await uploadElySkin(`data:image/png;base64,${btoa(binary)}`)
 
-		// Uploading takes a moment on their side, and nothing reports back.
-		await new Promise((resolve) => setTimeout(resolve, 3000))
-		refreshElySkin()
-		await new Promise((resolve) => setTimeout(resolve, 1000))
-		if (elySkinTexture.value === before) {
-			await ely_open_skin_window()
-		} else {
+		// The upload URL is not known ahead of time, so this waits for the worn
+		// skin to become anything other than what it was.
+		const changed = await waitForElySkin(undefined)
+		if (changed && !sameTexture(elyCurrentSkinUrl.value, before)) {
 			elyPendingSkin.value = null
-			void loadElySkins()
+			refreshElySkin()
+		} else {
+			await ely_open_skin_window()
 		}
+	} catch (error) {
+		handleError(error)
+	} finally {
+		elyWearingId.value = null
+	}
+}
+
+/** Deletes a skin from the account's Ely.by catalogue. */
+async function deleteElySkin(skin: Skin) {
+	const id = Number(skin.texture_key.replace('ely:', ''))
+	if (!Number.isFinite(id) || elyWearingId.value !== null) return
+
+	elyWearingId.value = id
+	try {
+		await removeElySkin(id)
+		await new Promise((resolve) => setTimeout(resolve, 3000))
+		if (elyPendingSkin.value?.texture_key === skin.texture_key) {
+			elyPendingSkin.value = null
+		}
+		await loadElySkins()
 	} catch (error) {
 		handleError(error)
 	} finally {
@@ -474,18 +520,16 @@ async function applyElySkin(skin: Skin) {
 	if (!Number.isFinite(id) || elyWearingId.value !== null) return
 
 	elyWearingId.value = id
-	const before = elySkinTexture.value
 	try {
 		await wearElySkin(id)
-		await new Promise((resolve) => setTimeout(resolve, 1200))
-		refreshElySkin()
-		await new Promise((resolve) => setTimeout(resolve, 800))
-		if (elySkinTexture.value === before) {
-			await ely_open_skin_window()
-		} else {
-			const worn = elySkins.value.find((entry) => entry.id === id)
-			elyCurrentSkinUrl.value = worn?.skin_url ?? elyCurrentSkinUrl.value
+		const target = elySkins.value.find((entry) => entry.id === id)?.skin_url
+		if (await waitForElySkin(target)) {
 			elyPendingSkin.value = null
+			refreshElySkin()
+		} else {
+			// Nothing changed in all that time: almost certainly no site
+			// session, so show the window for the user to sign in.
+			await ely_open_skin_window()
 		}
 	} catch (error) {
 		handleError(error)
@@ -1731,6 +1775,7 @@ async function checkUserChanges() {
 					:is-add-skin-button-drag-active="false"
 					:read-only="elyWearingId !== null"
 					@select="requestElySkin"
+					@delete="deleteElySkin"
 					@add-skin="openElyUpload"
 				/>
 			</section>

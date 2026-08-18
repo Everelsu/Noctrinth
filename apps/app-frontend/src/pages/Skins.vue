@@ -47,6 +47,7 @@ import {
 	getElyCurrentSkinUrl,
 	getElySkinTexture,
 	listElySkins,
+	uploadElySkin,
 	wearElySkin,
 } from '@/helpers/ely_skins'
 import type { RenderResult } from '@/helpers/rendering/batch-skin-renderer.ts'
@@ -408,6 +409,50 @@ function requestElySkin(skin: Skin) {
 }
 
 const elyHasPendingChange = computed(() => elyPendingSkin.value !== null)
+
+const elyUploadInput = ref<HTMLInputElement | null>(null)
+
+function openElyUpload() {
+	if (elyWearingId.value !== null) return
+	elyUploadInput.value?.click()
+}
+
+/**
+ * Uploads a local PNG to Ely.by and wears it.
+ *
+ * The catalogue is the only place Ely.by keeps skins, so a new file has to be
+ * uploaded before it can be worn — the site does the same thing.
+ */
+async function onElyUploadChange(event: Event) {
+	const input = event.target as HTMLInputElement
+	const file = input.files?.[0]
+	input.value = ''
+	if (!file) return
+
+	elyWearingId.value = -1
+	const before = elySkinTexture.value
+	try {
+		const bytes = new Uint8Array(await file.arrayBuffer())
+		let binary = ''
+		for (const byte of bytes) binary += String.fromCharCode(byte)
+		await uploadElySkin(`data:image/png;base64,${btoa(binary)}`)
+
+		// Uploading takes a moment on their side, and nothing reports back.
+		await new Promise((resolve) => setTimeout(resolve, 3000))
+		refreshElySkin()
+		await new Promise((resolve) => setTimeout(resolve, 1000))
+		if (elySkinTexture.value === before) {
+			await ely_open_skin_window()
+		} else {
+			elyPendingSkin.value = null
+			void loadElySkins()
+		}
+	} catch (error) {
+		handleError(error)
+	} finally {
+		elyWearingId.value = null
+	}
+}
 
 function resetElySkin() {
 	elyPendingSkin.value = null
@@ -1387,6 +1432,13 @@ async function checkUserChanges() {
 		class="hidden"
 		@change="onAddSkinFileInputChange"
 	/>
+	<input
+		ref="elyUploadInput"
+		type="file"
+		accept="image/png"
+		class="hidden"
+		@change="onElyUploadChange"
+	/>
 	<ConfirmModal
 		ref="deleteSkinModal"
 		:title="formatMessage(messages.deleteSkinTitle)"
@@ -1678,8 +1730,8 @@ async function checkUserChanges() {
 					:is-skin-active="isElySkinActive"
 					:is-add-skin-button-drag-active="false"
 					:read-only="elyWearingId !== null"
-					hide-add-skin
 					@select="requestElySkin"
+					@add-skin="openElyUpload"
 				/>
 			</section>
 		</div>

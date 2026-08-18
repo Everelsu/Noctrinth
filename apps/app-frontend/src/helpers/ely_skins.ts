@@ -203,3 +203,14 @@ export function getElyCatalogueTexture(url: string): Promise<string> {
 	catalogueTextureCache.set(url, promise)
 	return promise
 }
+
+/**
+ * Uploads a PNG to the account's Ely.by catalogue and wears it.
+ *
+ * Runs as two website calls inside the embedded window, where the site session
+ * lives. Like {@link wearElySkin} it cannot report the outcome — reload the
+ * texture to find out.
+ */
+export async function uploadElySkin(dataUrl: string): Promise<void> {
+	await invoke('plugin:ely-auth|ely_upload_skin', { dataUrl })
+}

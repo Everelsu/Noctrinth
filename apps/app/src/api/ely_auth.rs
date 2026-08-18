@@ -18,6 +18,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             ely_current_skin_url,
             ely_get_texture,
             ely_wear_skin,
+            ely_upload_skin,
         ])
         .build()
 }
@@ -105,6 +106,31 @@ fn wear_skin_script(skin_id: u64) -> String {
     )
 }
 
+/// Uploads a PNG to the account's Ely.by catalogue and wears it.
+///
+/// Two website calls in sequence, both needing the site session. `/skins/upload`
+/// takes a multipart body with a `file` field and answers with the new skin's
+/// edit URL, which is where its ID comes from; `/skins/wear` then puts it on.
+/// Chaining them inside one injected script avoids needing a channel back out
+/// of the webview between the two.
+fn upload_skin_script(data_url: &str) -> String {
+    format!(
+        "(async function () {{             try {{                 const blob = await (await fetch('{data_url}')).blob();                 const form = new FormData();                 form.append('file', new File([blob], 'skin.png', {{ type: 'image/png' }}));                 const uploaded = await fetch('https://ely.by/skins/upload', {{                     method: 'POST',                     credentials: 'same-origin',                     headers: {{ 'X-Requested-With': 'XMLHttpRequest' }},                     body: form                 }}).then(function (r) {{ return r.json(); }});                 const marker = '/skins/s';                 const at = String(uploaded.url || '').indexOf(marker);                 if (at < 0) return;                 const id = parseInt(String(uploaded.url).slice(at + marker.length), 10);                 if (!id) return;                 await fetch('https://ely.by/skins/wear', {{                     method: 'POST',                     credentials: 'same-origin',                     headers: {{                         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',                         'X-Requested-With': 'XMLHttpRequest'                     }},                     body: 'skinId=' + id                 }});             }} catch (e) {{}}         }})();"
+    )
+}
+
+/// Uploads a skin file to Ely.by and wears it.
+///
+/// `data_url` is the PNG as a `data:` URL, which is what the injected script
+/// can turn back into a file without touching the filesystem from the webview.
+#[tauri::command]
+pub async fn ely_upload_skin<R: Runtime>(
+    app: tauri::AppHandle<R>,
+    data_url: &str,
+) -> Result<()> {
+    run_in_skin_window(app, upload_skin_script(data_url))
+}
+
 /// Wears one of the account's uploaded skins.
 ///
 /// The skin grid in the app is drawn from a public listing, but actually
@@ -121,8 +147,17 @@ pub async fn ely_wear_skin<R: Runtime>(
     app: tauri::AppHandle<R>,
     skin_id: u64,
 ) -> Result<()> {
+    run_in_skin_window(app, wear_skin_script(skin_id))
+}
+
+/// Runs a script in the embedded Ely.by window, creating it hidden if it is not
+/// open yet and deferring until the page has loaded.
+fn run_in_skin_window<R: Runtime>(
+    app: tauri::AppHandle<R>,
+    script: String,
+) -> Result<()> {
     if let Some(existing) = app.get_webview_window(ELY_SKIN_WINDOW_LABEL) {
-        existing.eval(&wear_skin_script(skin_id)).ok();
+        existing.eval(&script).ok();
         return Ok(());
     }
 
@@ -130,7 +165,6 @@ pub async fn ely_wear_skin<R: Runtime>(
         .parse()
         .expect("static Ely.by URL must parse");
 
-    let script = wear_skin_script(skin_id);
     tauri::WebviewWindowBuilder::new(
         &app,
         ELY_SKIN_WINDOW_LABEL,

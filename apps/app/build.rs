@@ -425,6 +425,7 @@ fn main() {
                         "ely_current_skin_url",
                         "ely_get_texture",
                         "ely_wear_skin",
+                        "ely_upload_skin",
                     ])
                     .default_permission(
                         DefaultPermissionRule::AllowAllCommands,

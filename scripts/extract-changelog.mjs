@@ -1,14 +1,17 @@
 #!/usr/bin/env node
-// Extract a single Noctrinth changelog entry (markdown body) from
-// apps/app-frontend/src/helpers/noctrinth-changelog.ts so the release
-// workflow can use it verbatim as the GitHub release notes.
+// Extract a single Noctrinth changelog entry so the release workflow can use it
+// verbatim as the GitHub release notes.
+//
+// Entries live one per file in apps/app-frontend/src/changelog/<version>.md,
+// with the date in front matter; only the body below it is release notes.
 //
 // Usage:
 //   node scripts/extract-changelog.mjs <version> [output-file]
 //
 // Defaults the output to RELEASE_BODY.md in the current directory.
 
-import { readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 
 const [, , versionArg, outputArg] = process.argv
 
@@ -17,30 +20,22 @@ if (!versionArg) {
 	process.exit(1)
 }
 
-const SOURCE = 'apps/app-frontend/src/helpers/noctrinth-changelog.ts'
+const DIRECTORY = 'apps/app-frontend/src/changelog'
 const output = outputArg ?? 'RELEASE_BODY.md'
+const source = join(DIRECTORY, `${versionArg}.md`)
 
-const src = readFileSync(SOURCE, 'utf-8')
-
-// Find the entry: { version: '<version>', date: '...', body: `<body>` }
-// The body is a template literal — match content up to the first un-escaped
-// backtick. Inside the file backticks are escaped as `\``.
-const versionEscaped = versionArg.replace(/[.\\]/g, (c) => `\\${c}`)
-const re = new RegExp(
-	String.raw`version:\s*['"]` +
-		versionEscaped +
-		String.raw`['"][\s\S]*?body:\s*\x60((?:\\\x60|[^\x60])*)\x60`,
-)
-
-const match = src.match(re)
-if (!match) {
-	console.error(`No changelog entry for version ${versionArg} in ${SOURCE}`)
+if (!existsSync(source)) {
+	console.error(`No changelog entry for version ${versionArg} (looked for ${source})`)
 	process.exit(1)
 }
 
-// Un-escape backticks and dollar-brace placeholders that the TS template
-// literal would have interpolated at runtime.
-const body = match[1].replace(/\\`/g, '`').replace(/\\\$\{/g, '${')
+const raw = readFileSync(source, 'utf-8')
+const body = raw.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, '').trim()
 
-writeFileSync(output, body)
+if (!body) {
+	console.error(`${source} has front matter but no body`)
+	process.exit(1)
+}
+
+writeFileSync(output, `${body}\n`)
 console.log(`Wrote ${body.length} chars of changelog for ${versionArg} → ${output}`)

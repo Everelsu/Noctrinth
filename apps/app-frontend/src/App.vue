@@ -1304,6 +1304,13 @@ const {
 	updateSize,
 	updatesEnabled,
 } = appUpdateState
+/**
+ * Whether the last download attempt for the known update failed.
+ *
+ * Kept here rather than in the shared update state because it only matters to
+ * the retry decision in the check loop.
+ */
+const updateDownloadFailed = ref(false)
 let delayedUpdatePopupTimeout = null
 
 const updatePopupMessages = defineMessages({
@@ -1471,6 +1478,20 @@ async function checkUpdates() {
 		const isExistingUpdate = update.version === availableUpdate.value?.version
 
 		if (isExistingUpdate) {
+			// A release whose assets are not published yet answers the manifest
+			// but 404s the download. That is the normal case for a draft, and
+			// it used to stick: the version was already known, so every later
+			// check took this branch and the download was never attempted
+			// again until the app restarted. Retry it instead.
+			if (updateDownloadFailed.value && !downloading.value && !finishedDownloading.value) {
+				console.log(`Retrying the download of update ${update.version}`)
+				updateDownloadFailed.value = false
+				appUpdateDownload.progress.value = 0
+				availableUpdate.value = update
+				downloadUpdate(update)
+				return
+			}
+
 			console.log('Update is already known')
 			scheduleDelayedUpdatePopup()
 			return
@@ -1479,6 +1500,7 @@ async function checkUpdates() {
 		appUpdateDownload.progress.value = 0
 		finishedDownloading.value = false
 		downloading.value = false
+		updateDownloadFailed.value = false
 		updateSize.value = null
 		availableUpdate.value = update
 
@@ -1497,13 +1519,20 @@ async function checkUpdates() {
 		getUpdateSize(update.rid).then((size) => (updateSize.value = size))
 	}
 
-	await performCheck()
-	setTimeout(
-		() => {
-			checkUpdates()
-		},
-		5 /* min */ * 60 /* sec */ * 1000 /* ms */,
-	)
+	try {
+		await performCheck()
+	} catch (error) {
+		// Losing a check must not lose the schedule with it: an unreachable
+		// manifest used to end the polling until the next launch.
+		console.warn('Update check failed', error)
+	} finally {
+		setTimeout(
+			() => {
+				checkUpdates()
+			},
+			5 /* min */ * 60 /* sec */ * 1000 /* ms */,
+		)
+	}
 }
 
 async function checkLinuxUpdates() {
@@ -1572,6 +1601,7 @@ async function downloadUpdate(versionToDownload) {
 			.catch((e) => {
 				downloading.value = false
 				appUpdateDownload.progress.value = 0
+				updateDownloadFailed.value = true
 				handleError(e)
 			})
 		unlistenUpdateDownload = await subscribeToDownloadProgress(
@@ -1582,6 +1612,7 @@ async function downloadUpdate(versionToDownload) {
 	} catch (e) {
 		downloading.value = false
 		appUpdateDownload.progress.value = 0
+		updateDownloadFailed.value = true
 		handleError(e)
 	}
 }

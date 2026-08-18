@@ -154,32 +154,24 @@ jobs:
           # manifest published by this workflow is what every existing install
           # follows, so a `-beta` slipping through would push a beta to
           # everyone. Pre-releases go through noctrinth-prerelease.yml.
-          VERSION=$(node -p "require('./apps/app-frontend/package.json').version")
+          VERSION=$(tr -d "[:space:]" < VERSION)
           case "$VERSION" in
             *-*)
-              echo "::error::apps/app-frontend/package.json is at pre-release version $VERSION. Use the Noctrinth Pre-release workflow, or set a stable version."
+              echo "::error::VERSION is at pre-release $VERSION. Use the Noctrinth Pre-release workflow, or set a stable version."
               exit 1
               ;;
           esac
           echo "Building stable version $VERSION"
 
-      - name: Sync crate versions from package.json
+      - name: Sync versions from the VERSION file
         shell: bash
         run: |
-          # The app version lives in app-frontend/package.json; mirror it into
-          # the Rust crates so the user-agent and crate metadata stay in sync.
-          # Reading it here (rather than parsing the git tag) means a tag named
-          # `v0.17.3` — or anything else — can never write an invalid version
-          # like "v0.17.3" into Cargo.toml, which Cargo rejects as non-semver.
-          VERSION=$(node -p "require('./apps/app-frontend/package.json').version")
-          echo "Setting crate versions to $VERSION"
-          for f in apps/app/Cargo.toml packages/app-lib/Cargo.toml; do
-            # `sed -i` is not portable (GNU vs BSD/macOS), so write to a temp
-            # file and move it back. The `1,/.../` range limits the change to
-            # the first `version =` line — the [package] version.
-            sed "1,/^version = .*/ s/^version = .*/version = \"$VERSION\"/" "$f" > "$f.tmp"
-            mv "$f.tmp" "$f"
-          done
+          # VERSION at the repo root is the one place a release number is
+          # written by hand; this mirrors it into app-frontend/package.json,
+          # which Tauri reads, and into the Rust crates. Reading it here rather
+          # than parsing the git tag means a tag named `v0.17.3` can never
+          # write a non-semver version into Cargo.toml.
+          node scripts/sync-version.mjs
 
       - name: Install dependencies
         run: pnpm install
@@ -309,7 +301,7 @@ jobs:
           set -euo pipefail
           # Match the changelog entry by the package.json version, the same
           # source the crate versions came from — independent of the tag name.
-          VERSION=$(node -p "require('./apps/app-frontend/package.json').version")
+          VERSION=$(tr -d "[:space:]" < VERSION)
 
           # Pull the matching entry out of noctrinth-changelog.ts. If there
           # isn't one we leave the auto-generated body alone rather than fail

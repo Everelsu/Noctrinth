@@ -3,11 +3,13 @@ import { UndoIcon } from '@modrinth/assets'
 import {
 	Button,
 	Checkbox,
+	defineMessages,
 	DropdownSelect,
 	IconButton,
 	injectNotificationManager,
 	Slider,
 	Toggle,
+	useVIntl,
 } from '@modrinth/ui'
 import { watchDebounced } from '@vueuse/core'
 import { computed, ref } from 'vue'
@@ -23,7 +25,83 @@ import {
 } from '@/helpers/game-options'
 import { get, set } from '@/helpers/settings.ts'
 
+const { formatMessage } = useVIntl()
 const { handleError } = injectNotificationManager()
+
+const messages = defineMessages({
+	title: {
+		id: 'app.settings.game-options.title',
+		defaultMessage: 'Minecraft options',
+	},
+	description: {
+		id: 'app.settings.game-options.description',
+		defaultMessage:
+			"Values you switch on here are written into every instance's options.txt when it launches. Everything else is left exactly as the game saved it.",
+	},
+	profileOff: {
+		id: 'app.settings.game-options.profile-off',
+		defaultMessage: 'Profile is off — nothing is applied',
+	},
+	nothingSelected: {
+		id: 'app.settings.game-options.nothing-selected',
+		defaultMessage: 'Nothing selected yet — tick an option below',
+	},
+	applyingCount: {
+		id: 'app.settings.game-options.applying-count',
+		defaultMessage: 'Applying {managed} of {total} options',
+	},
+	clearAll: {
+		id: 'app.settings.game-options.clear-all',
+		defaultMessage: 'Clear all',
+	},
+	groupOnCount: {
+		id: 'app.settings.game-options.group-on-count',
+		defaultMessage: '{count} on',
+	},
+	versionsSummary: {
+		id: 'app.settings.game-options.versions.summary',
+		defaultMessage: 'How this behaves across game versions',
+	},
+	versionsMissingKeys: {
+		id: 'app.settings.game-options.versions.missing-keys',
+		defaultMessage:
+			"Minecraft writes every option it knows about into options.txt, so an option missing from an instance's file means that version doesn't have it — the launcher leaves it alone instead of inventing it. Nothing to configure, it adapts on its own.",
+	},
+	versionsNeverLaunched: {
+		id: 'app.settings.game-options.versions.never-launched',
+		defaultMessage:
+			"An instance that has never been launched has no file yet, so there is nothing to read. In that case the options are written up front, and the game drops anything it doesn't recognise the first time it saves.",
+	},
+	versionsChangedMeaning: {
+		id: 'app.settings.game-options.versions.changed-meaning',
+		defaultMessage:
+			"A few options kept their name but changed what their value means. Those are marked with a version and are only written to versions where they're valid.",
+	},
+	manageOption: {
+		id: 'app.settings.game-options.manage-option',
+		defaultMessage: 'Manage {option} across all instances',
+	},
+	appliesBetween: {
+		id: 'app.settings.game-options.applies.between',
+		defaultMessage: 'Only applied on Minecraft {min}–{max}.',
+	},
+	appliesFrom: {
+		id: 'app.settings.game-options.applies.from',
+		defaultMessage: 'Only applied on Minecraft {min} and newer.',
+	},
+	appliesUpTo: {
+		id: 'app.settings.game-options.applies.up-to',
+		defaultMessage: 'Only applied on Minecraft {max} and older.',
+	},
+	resetTooltip: {
+		id: 'app.settings.game-options.reset.tooltip',
+		defaultMessage: 'Reset to the game default',
+	},
+	resetLabel: {
+		id: 'app.settings.game-options.reset.label',
+		defaultMessage: 'Reset to default',
+	},
+})
 
 const storedProfile: SharedGameOptionsProfile = (await get()).shared_game_options ?? emptyProfile()
 
@@ -91,7 +169,8 @@ function choiceValues(option: GameOption): string[] {
 
 function choiceLabel(option: GameOption, value: string): string {
 	if (option.control !== 'select') return value
-	return option.choices.find((choice) => choice.value === value)?.label ?? value
+	const choice = option.choices.find((candidate) => candidate.value === value)
+	return choice ? formatMessage(choice.label) : value
 }
 
 /**
@@ -103,13 +182,15 @@ function choiceLabel(option: GameOption, value: string): string {
  */
 function optionNote(option: GameOption): string {
 	const parts: string[] = []
-	if (option.description) parts.push(option.description)
+	if (option.description) parts.push(formatMessage(option.description))
 	if (option.minVersion && option.maxVersion) {
-		parts.push(`Only applied on Minecraft ${option.minVersion}–${option.maxVersion}.`)
+		parts.push(
+			formatMessage(messages.appliesBetween, { min: option.minVersion, max: option.maxVersion }),
+		)
 	} else if (option.minVersion) {
-		parts.push(`Only applied on Minecraft ${option.minVersion} and newer.`)
+		parts.push(formatMessage(messages.appliesFrom, { min: option.minVersion }))
 	} else if (option.maxVersion) {
-		parts.push(`Only applied on Minecraft ${option.maxVersion} and older.`)
+		parts.push(formatMessage(messages.appliesUpTo, { max: option.maxVersion }))
 	}
 	return parts.join(' ')
 }
@@ -120,11 +201,11 @@ function optionNote(option: GameOption): string {
 		<div class="rounded-xl bg-bg-raised p-4 flex flex-col gap-3">
 			<div class="flex items-start justify-between gap-4">
 				<div class="flex flex-col gap-1 min-w-0">
-					<h2 class="m-0 text-lg font-semibold text-contrast">Minecraft options</h2>
+					<h2 class="m-0 text-lg font-semibold text-contrast">
+						{{ formatMessage(messages.title) }}
+					</h2>
 					<p class="m-0 leading-tight text-secondary">
-						Values you switch on here are written into every instance's
-						<code>options.txt</code> when it launches. Everything else is left exactly as the game
-						saved it.
+						{{ formatMessage(messages.description) }}
 					</p>
 				</div>
 				<Toggle id="shared-game-options-enabled" v-model="enabled" class="mt-1 shrink-0" />
@@ -132,40 +213,34 @@ function optionNote(option: GameOption): string {
 
 			<div class="flex items-center justify-between gap-4 flex-wrap">
 				<span class="text-sm font-semibold" :class="enabled ? 'text-brand' : 'text-secondary'">
-					<template v-if="!enabled">Profile is off — nothing is applied</template>
+					<template v-if="!enabled">{{ formatMessage(messages.profileOff) }}</template>
 					<template v-else-if="managedCount === 0">
-						Nothing selected yet — tick an option below
+						{{ formatMessage(messages.nothingSelected) }}
 					</template>
 					<template v-else>
-						Applying {{ managedCount }} of {{ GAME_OPTIONS.length }} options
+						{{
+							formatMessage(messages.applyingCount, {
+								managed: managedCount,
+								total: GAME_OPTIONS.length,
+							})
+						}}
 					</template>
 				</span>
 				<Button v-if="managedCount > 0" type="quiet" size="sm" @click="resetAll">
 					<UndoIcon />
-					Clear all
+					{{ formatMessage(messages.clearAll) }}
 				</Button>
 			</div>
 		</div>
 
 		<details class="rounded-xl bg-bg-raised px-4 py-3">
 			<summary class="cursor-pointer font-semibold text-contrast">
-				How this behaves across game versions
+				{{ formatMessage(messages.versionsSummary) }}
 			</summary>
 			<div class="mt-3 flex flex-col gap-2 text-sm leading-normal text-secondary">
-				<p class="m-0">
-					Minecraft writes every option it knows about into <code>options.txt</code>, so an option
-					missing from an instance's file means that version doesn't have it — the launcher leaves
-					it alone instead of inventing it. Nothing to configure, it adapts on its own.
-				</p>
-				<p class="m-0">
-					An instance that has never been launched has no file yet, so there is nothing to read. In
-					that case the options are written up front, and the game drops anything it doesn't
-					recognise the first time it saves.
-				</p>
-				<p class="m-0">
-					A few options kept their name but changed what their value means. Those are marked with a
-					version and are only written to versions where they're valid.
-				</p>
+				<p class="m-0">{{ formatMessage(messages.versionsMissingKeys) }}</p>
+				<p class="m-0">{{ formatMessage(messages.versionsNeverLaunched) }}</p>
+				<p class="m-0">{{ formatMessage(messages.versionsChangedMeaning) }}</p>
 			</div>
 		</details>
 
@@ -175,9 +250,11 @@ function optionNote(option: GameOption): string {
 			class="rounded-xl bg-bg-raised p-4 flex flex-col gap-1"
 		>
 			<div class="flex items-baseline justify-between gap-3 mb-2">
-				<h3 class="m-0 text-base font-semibold text-contrast">{{ group.label }}</h3>
+				<h3 class="m-0 text-base font-semibold text-contrast">
+					{{ formatMessage(group.label) }}
+				</h3>
 				<span v-if="managedCountFor(group.id)" class="text-xs font-semibold text-brand">
-					{{ managedCountFor(group.id) }} on
+					{{ formatMessage(messages.groupOnCount, { count: managedCountFor(group.id) }) }}
 				</span>
 			</div>
 
@@ -190,7 +267,9 @@ function optionNote(option: GameOption): string {
 				<Checkbox
 					v-model="managed[option.key]"
 					class="min-w-0"
-					:description="`Manage ${option.label} across all instances`"
+					:description="
+						formatMessage(messages.manageOption, { option: formatMessage(option.label) })
+					"
 				>
 					<span class="flex flex-col gap-0.5 min-w-0">
 						<span
@@ -198,7 +277,7 @@ function optionNote(option: GameOption): string {
 							:class="managed[option.key] ? 'text-contrast' : 'text-primary'"
 							:title="option.key"
 						>
-							{{ option.label }}
+							{{ formatMessage(option.label) }}
 						</span>
 						<span v-if="optionNote(option)" class="text-xs leading-tight text-secondary">
 							{{ optionNote(option) }}
@@ -224,7 +303,7 @@ function optionNote(option: GameOption): string {
 						:min="option.min"
 						:max="option.max"
 						:step="option.step"
-						:unit="option.unit"
+						:unit="option.unit ? formatMessage(option.unit) : ''"
 						:disabled="!managed[option.key]"
 					/>
 					<DropdownSelect
@@ -240,10 +319,10 @@ function optionNote(option: GameOption): string {
 					<!-- Kept in the layout even when it has nothing to do, so the
 					     controls beside it don't shift as values change. -->
 					<IconButton
-						v-tooltip="'Reset to the game default'"
+						v-tooltip="formatMessage(messages.resetTooltip)"
 						type="quiet"
 						size="sm"
-						label="Reset to default"
+						:label="formatMessage(messages.resetLabel)"
 						class="shrink-0"
 						:class="{ invisible: !managed[option.key] || isDefault(option) }"
 						@click="resetOption(option)"

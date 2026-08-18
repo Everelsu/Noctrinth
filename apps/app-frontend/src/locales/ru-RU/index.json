@@ -1058,6 +1058,189 @@
   "app.settings.downloading": {
     "message": "Скачивание версии {version}"
   },
+  "app.settings.game-options.ao.label": {
+    "message": "Плавное освещение"
+  },
+  "app.settings.game-options.applies.between": {
+    "message": "Применяется только на Minecraft {min}–{max}."
+  },
+  "app.settings.game-options.applies.from": {
+    "message": "Применяется только на Minecraft {min} и новее."
+  },
+  "app.settings.game-options.applies.up-to": {
+    "message": "Применяется только на Minecraft {max} и старше."
+  },
+  "app.settings.game-options.applying-count": {
+    "message": "Применяется {managed} из {total} параметров"
+  },
+  "app.settings.game-options.autoJump.label": {
+    "message": "Автопрыжок"
+  },
+  "app.settings.game-options.clear-all": {
+    "message": "Снять все"
+  },
+  "app.settings.game-options.description": {
+    "message": "Отмеченные здесь значения записываются в options.txt каждого инстанса при запуске. Всё остальное остаётся таким, каким его сохранила игра."
+  },
+  "app.settings.game-options.enableVsync.label": {
+    "message": "Вертикальная синхронизация"
+  },
+  "app.settings.game-options.entityShadows.label": {
+    "message": "Тени существ"
+  },
+  "app.settings.game-options.fov.label": {
+    "message": "Поле зрения"
+  },
+  "app.settings.game-options.gamma.label": {
+    "message": "Яркость"
+  },
+  "app.settings.game-options.graphicsMode.choice.0": {
+    "message": "Быстрая"
+  },
+  "app.settings.game-options.graphicsMode.choice.1": {
+    "message": "Детальная"
+  },
+  "app.settings.game-options.graphicsMode.choice.2": {
+    "message": "Отличная"
+  },
+  "app.settings.game-options.graphicsMode.label": {
+    "message": "Графика"
+  },
+  "app.settings.game-options.group-on-count": {
+    "message": "{count} вкл."
+  },
+  "app.settings.game-options.group.controls": {
+    "message": "Управление"
+  },
+  "app.settings.game-options.group.sound": {
+    "message": "Звук"
+  },
+  "app.settings.game-options.group.video": {
+    "message": "Видео"
+  },
+  "app.settings.game-options.guiScale.choice.0": {
+    "message": "Авто"
+  },
+  "app.settings.game-options.guiScale.choice.1": {
+    "message": "Мелкий"
+  },
+  "app.settings.game-options.guiScale.choice.2": {
+    "message": "Обычный"
+  },
+  "app.settings.game-options.guiScale.choice.3": {
+    "message": "Крупный"
+  },
+  "app.settings.game-options.guiScale.choice.4": {
+    "message": "Очень крупный"
+  },
+  "app.settings.game-options.guiScale.label": {
+    "message": "Масштаб интерфейса"
+  },
+  "app.settings.game-options.invertYMouse.label": {
+    "message": "Инвертировать мышь"
+  },
+  "app.settings.game-options.manage-option": {
+    "message": "Управлять параметром «{option}» во всех инстансах"
+  },
+  "app.settings.game-options.maxFps.description": {
+    "message": "260 означает «без ограничения», как и ползунок в самой игре."
+  },
+  "app.settings.game-options.maxFps.label": {
+    "message": "Макс. частота кадров"
+  },
+  "app.settings.game-options.mouseSensitivity.description": {
+    "message": "50 % — это игровое «Обычно»."
+  },
+  "app.settings.game-options.mouseSensitivity.label": {
+    "message": "Чувствительность"
+  },
+  "app.settings.game-options.nothing-selected": {
+    "message": "Ничего не выбрано — отметьте параметр ниже"
+  },
+  "app.settings.game-options.particles.choice.0": {
+    "message": "Все"
+  },
+  "app.settings.game-options.particles.choice.1": {
+    "message": "Меньше"
+  },
+  "app.settings.game-options.particles.choice.2": {
+    "message": "Минимум"
+  },
+  "app.settings.game-options.particles.label": {
+    "message": "Частицы"
+  },
+  "app.settings.game-options.profile-off": {
+    "message": "Профиль выключен — ничего не применяется"
+  },
+  "app.settings.game-options.renderDistance.label": {
+    "message": "Дальность прорисовки"
+  },
+  "app.settings.game-options.reset.label": {
+    "message": "Сбросить к значению по умолчанию"
+  },
+  "app.settings.game-options.reset.tooltip": {
+    "message": "Вернуть значение игры по умолчанию"
+  },
+  "app.settings.game-options.simulationDistance.label": {
+    "message": "Дальность симуляции"
+  },
+  "app.settings.game-options.soundCategory_ambient.label": {
+    "message": "Окружение"
+  },
+  "app.settings.game-options.soundCategory_block.label": {
+    "message": "Блоки"
+  },
+  "app.settings.game-options.soundCategory_hostile.label": {
+    "message": "Враждебные существа"
+  },
+  "app.settings.game-options.soundCategory_master.label": {
+    "message": "Общая громкость"
+  },
+  "app.settings.game-options.soundCategory_music.label": {
+    "message": "Музыка"
+  },
+  "app.settings.game-options.soundCategory_neutral.label": {
+    "message": "Дружелюбные существа"
+  },
+  "app.settings.game-options.soundCategory_player.label": {
+    "message": "Игроки"
+  },
+  "app.settings.game-options.soundCategory_record.label": {
+    "message": "Проигрыватель и нотные блоки"
+  },
+  "app.settings.game-options.soundCategory_voice.label": {
+    "message": "Голос и речь"
+  },
+  "app.settings.game-options.soundCategory_weather.label": {
+    "message": "Погода"
+  },
+  "app.settings.game-options.title": {
+    "message": "Настройки Minecraft"
+  },
+  "app.settings.game-options.toggleCrouch.label": {
+    "message": "Красться: переключением"
+  },
+  "app.settings.game-options.toggleSprint.label": {
+    "message": "Бежать: переключением"
+  },
+  "app.settings.game-options.unit.chunks": {
+    "message": " чанк."
+  },
+  "app.settings.game-options.unit.fps": {
+    "message": " кадр/с"
+  },
+  "app.settings.game-options.versions.changed-meaning": {
+    "message": "У нескольких параметров имя осталось прежним, а смысл значения изменился. Такие помечены версией и записываются только туда, где они действительны."
+  },
+  "app.settings.game-options.versions.missing-keys": {
+    "message": "Minecraft записывает в options.txt каждый параметр, который знает, поэтому отсутствие параметра в файле инстанса означает, что в этой версии его нет — лаунчер оставляет всё как есть, а не выдумывает строку. Настраивать ничего не нужно, подстраивается само."
+  },
+  "app.settings.game-options.versions.never-launched": {
+    "message": "У инстанса, который ни разу не запускали, файла ещё нет, и читать нечего. В этом случае параметры записываются заранее, а игра при первом сохранении отбросит те, которых не знает."
+  },
+  "app.settings.game-options.versions.summary": {
+    "message": "Как это работает на разных версиях игры"
+  },
   "app.settings.java-installations.location.title": {
     "message": "Расположение Java {version}"
   },
@@ -1174,6 +1357,9 @@
   },
   "app.settings.tabs.resource-management": {
     "message": "Управление ресурсами"
+  },
+  "app.settings.tabs.shared-game-options": {
+    "message": "Настройки Minecraft"
   },
   "app.sidebar.playing-as": {
     "message": "Текущий аккаунт"

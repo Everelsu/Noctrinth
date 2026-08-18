@@ -18,13 +18,194 @@
  * degrees rather than -1..1, volumes in percent rather than 0..1).
  */
 
+import { defineMessages, type MessageDescriptor } from '@modrinth/ui'
+
+const messages = defineMessages({
+	fovLabel: {
+		id: 'app.settings.game-options.fov.label',
+		defaultMessage: 'Field of view',
+	},
+	renderDistanceLabel: {
+		id: 'app.settings.game-options.renderDistance.label',
+		defaultMessage: 'Render distance',
+	},
+	unitChunks: {
+		id: 'app.settings.game-options.unit.chunks',
+		defaultMessage: ' chunks',
+	},
+	simulationDistanceLabel: {
+		id: 'app.settings.game-options.simulationDistance.label',
+		defaultMessage: 'Simulation distance',
+	},
+	gammaLabel: {
+		id: 'app.settings.game-options.gamma.label',
+		defaultMessage: 'Brightness',
+	},
+	guiScaleLabel: {
+		id: 'app.settings.game-options.guiScale.label',
+		defaultMessage: 'GUI scale',
+	},
+	guiScaleChoice0: {
+		id: 'app.settings.game-options.guiScale.choice.0',
+		defaultMessage: 'Auto',
+	},
+	guiScaleChoice1: {
+		id: 'app.settings.game-options.guiScale.choice.1',
+		defaultMessage: 'Small',
+	},
+	guiScaleChoice2: {
+		id: 'app.settings.game-options.guiScale.choice.2',
+		defaultMessage: 'Normal',
+	},
+	guiScaleChoice3: {
+		id: 'app.settings.game-options.guiScale.choice.3',
+		defaultMessage: 'Large',
+	},
+	guiScaleChoice4: {
+		id: 'app.settings.game-options.guiScale.choice.4',
+		defaultMessage: 'Very large',
+	},
+	maxFpsLabel: {
+		id: 'app.settings.game-options.maxFps.label',
+		defaultMessage: 'Max framerate',
+	},
+	unitFps: {
+		id: 'app.settings.game-options.unit.fps',
+		defaultMessage: ' fps',
+	},
+	maxFpsDescription: {
+		id: 'app.settings.game-options.maxFps.description',
+		defaultMessage: '260 means unlimited, matching the in-game slider.',
+	},
+	enableVsyncLabel: {
+		id: 'app.settings.game-options.enableVsync.label',
+		defaultMessage: 'VSync',
+	},
+	particlesLabel: {
+		id: 'app.settings.game-options.particles.label',
+		defaultMessage: 'Particles',
+	},
+	particlesChoice0: {
+		id: 'app.settings.game-options.particles.choice.0',
+		defaultMessage: 'All',
+	},
+	particlesChoice1: {
+		id: 'app.settings.game-options.particles.choice.1',
+		defaultMessage: 'Decreased',
+	},
+	particlesChoice2: {
+		id: 'app.settings.game-options.particles.choice.2',
+		defaultMessage: 'Minimal',
+	},
+	graphicsModeLabel: {
+		id: 'app.settings.game-options.graphicsMode.label',
+		defaultMessage: 'Graphics',
+	},
+	graphicsModeChoice0: {
+		id: 'app.settings.game-options.graphicsMode.choice.0',
+		defaultMessage: 'Fast',
+	},
+	graphicsModeChoice1: {
+		id: 'app.settings.game-options.graphicsMode.choice.1',
+		defaultMessage: 'Fancy',
+	},
+	graphicsModeChoice2: {
+		id: 'app.settings.game-options.graphicsMode.choice.2',
+		defaultMessage: 'Fabulous',
+	},
+	aoLabel: {
+		id: 'app.settings.game-options.ao.label',
+		defaultMessage: 'Smooth lighting',
+	},
+	entityShadowsLabel: {
+		id: 'app.settings.game-options.entityShadows.label',
+		defaultMessage: 'Entity shadows',
+	},
+	soundCategoryMasterLabel: {
+		id: 'app.settings.game-options.soundCategory_master.label',
+		defaultMessage: 'Master volume',
+	},
+	soundCategoryMusicLabel: {
+		id: 'app.settings.game-options.soundCategory_music.label',
+		defaultMessage: 'Music',
+	},
+	soundCategoryRecordLabel: {
+		id: 'app.settings.game-options.soundCategory_record.label',
+		defaultMessage: 'Jukebox / note blocks',
+	},
+	soundCategoryWeatherLabel: {
+		id: 'app.settings.game-options.soundCategory_weather.label',
+		defaultMessage: 'Weather',
+	},
+	soundCategoryBlockLabel: {
+		id: 'app.settings.game-options.soundCategory_block.label',
+		defaultMessage: 'Blocks',
+	},
+	soundCategoryHostileLabel: {
+		id: 'app.settings.game-options.soundCategory_hostile.label',
+		defaultMessage: 'Hostile creatures',
+	},
+	soundCategoryNeutralLabel: {
+		id: 'app.settings.game-options.soundCategory_neutral.label',
+		defaultMessage: 'Friendly creatures',
+	},
+	soundCategoryPlayerLabel: {
+		id: 'app.settings.game-options.soundCategory_player.label',
+		defaultMessage: 'Players',
+	},
+	soundCategoryAmbientLabel: {
+		id: 'app.settings.game-options.soundCategory_ambient.label',
+		defaultMessage: 'Ambient / environment',
+	},
+	soundCategoryVoiceLabel: {
+		id: 'app.settings.game-options.soundCategory_voice.label',
+		defaultMessage: 'Voice / speech',
+	},
+	mouseSensitivityLabel: {
+		id: 'app.settings.game-options.mouseSensitivity.label',
+		defaultMessage: 'Sensitivity',
+	},
+	mouseSensitivityDescription: {
+		id: 'app.settings.game-options.mouseSensitivity.description',
+		defaultMessage: '50% is the game’s "Normal".',
+	},
+	invertYMouseLabel: {
+		id: 'app.settings.game-options.invertYMouse.label',
+		defaultMessage: 'Invert mouse',
+	},
+	autoJumpLabel: {
+		id: 'app.settings.game-options.autoJump.label',
+		defaultMessage: 'Auto-jump',
+	},
+	toggleCrouchLabel: {
+		id: 'app.settings.game-options.toggleCrouch.label',
+		defaultMessage: 'Sneak: toggle',
+	},
+	toggleSprintLabel: {
+		id: 'app.settings.game-options.toggleSprint.label',
+		defaultMessage: 'Sprint: toggle',
+	},
+	videoGroup: {
+		id: 'app.settings.game-options.group.video',
+		defaultMessage: 'Video',
+	},
+	soundGroup: {
+		id: 'app.settings.game-options.group.sound',
+		defaultMessage: 'Sound',
+	},
+	controlsGroup: {
+		id: 'app.settings.game-options.group.controls',
+		defaultMessage: 'Controls',
+	},
+})
+
 export type GameOptionGroup = 'video' | 'sound' | 'controls'
 
 interface GameOptionBase {
 	/** The `options.txt` key. */
 	key: string
-	label: string
-	description?: string
+	label: MessageDescriptor
+	description?: MessageDescriptor
 	group: GameOptionGroup
 	/** Overwrite only when the instance already has the key. Defaults to true. */
 	onlyIfPresent?: boolean
@@ -47,14 +228,14 @@ export type GameOption = GameOptionBase &
 				min: number
 				max: number
 				step: number
-				unit?: string
+				unit?: MessageDescriptor
 				encode: (value: number) => string
 				decode: (raw: string) => number
 		  }
 		| {
 				control: 'select'
 				default: string
-				choices: { value: string; label: string }[]
+				choices: { value: string; label: MessageDescriptor }[]
 				encode: (value: string) => string
 				decode: (raw: string) => string
 		  }
@@ -84,7 +265,7 @@ export const GAME_OPTIONS: GameOption[] = [
 	// ── Video ──────────────────────────────────────────────────────────────
 	{
 		key: 'fov',
-		label: 'Field of view',
+		label: messages.fovLabel,
 		group: 'video',
 		control: 'slider',
 		default: 70,
@@ -97,33 +278,33 @@ export const GAME_OPTIONS: GameOption[] = [
 	},
 	{
 		key: 'renderDistance',
-		label: 'Render distance',
+		label: messages.renderDistanceLabel,
 		group: 'video',
 		control: 'slider',
 		default: 12,
 		min: 2,
 		max: 32,
 		step: 1,
-		unit: ' chunks',
+		unit: messages.unitChunks,
 		encode: (value) => String(Math.round(value)),
 		decode: (raw) => Number(raw),
 	},
 	{
 		key: 'simulationDistance',
-		label: 'Simulation distance',
+		label: messages.simulationDistanceLabel,
 		group: 'video',
 		control: 'slider',
 		default: 12,
 		min: 5,
 		max: 32,
 		step: 1,
-		unit: ' chunks',
+		unit: messages.unitChunks,
 		encode: (value) => String(Math.round(value)),
 		decode: (raw) => Number(raw),
 	},
 	{
 		key: 'gamma',
-		label: 'Brightness',
+		label: messages.gammaLabel,
 		group: 'video',
 		control: 'slider',
 		default: 50,
@@ -135,37 +316,37 @@ export const GAME_OPTIONS: GameOption[] = [
 	},
 	{
 		key: 'guiScale',
-		label: 'GUI scale',
+		label: messages.guiScaleLabel,
 		group: 'video',
 		control: 'select',
 		default: '0',
 		choices: [
-			{ value: '0', label: 'Auto' },
-			{ value: '1', label: 'Small' },
-			{ value: '2', label: 'Normal' },
-			{ value: '3', label: 'Large' },
-			{ value: '4', label: 'Very large' },
+			{ value: '0', label: messages.guiScaleChoice0 },
+			{ value: '1', label: messages.guiScaleChoice1 },
+			{ value: '2', label: messages.guiScaleChoice2 },
+			{ value: '3', label: messages.guiScaleChoice3 },
+			{ value: '4', label: messages.guiScaleChoice4 },
 		],
 		encode: (value) => value,
 		decode: (raw) => raw,
 	},
 	{
 		key: 'maxFps',
-		label: 'Max framerate',
+		label: messages.maxFpsLabel,
 		group: 'video',
 		control: 'slider',
 		default: 120,
 		min: 10,
 		max: 260,
 		step: 10,
-		unit: ' fps',
-		description: '260 means unlimited, matching the in-game slider.',
+		unit: messages.unitFps,
+		description: messages.maxFpsDescription,
 		encode: (value) => String(Math.round(value)),
 		decode: (raw) => Number(raw),
 	},
 	{
 		key: 'enableVsync',
-		label: 'VSync',
+		label: messages.enableVsyncLabel,
 		group: 'video',
 		control: 'toggle',
 		default: true,
@@ -173,28 +354,28 @@ export const GAME_OPTIONS: GameOption[] = [
 	},
 	{
 		key: 'particles',
-		label: 'Particles',
+		label: messages.particlesLabel,
 		group: 'video',
 		control: 'select',
 		default: '0',
 		choices: [
-			{ value: '0', label: 'All' },
-			{ value: '1', label: 'Decreased' },
-			{ value: '2', label: 'Minimal' },
+			{ value: '0', label: messages.particlesChoice0 },
+			{ value: '1', label: messages.particlesChoice1 },
+			{ value: '2', label: messages.particlesChoice2 },
 		],
 		encode: (value) => value,
 		decode: (raw) => raw,
 	},
 	{
 		key: 'graphicsMode',
-		label: 'Graphics',
+		label: messages.graphicsModeLabel,
 		group: 'video',
 		control: 'select',
 		default: '1',
 		choices: [
-			{ value: '0', label: 'Fast' },
-			{ value: '1', label: 'Fancy' },
-			{ value: '2', label: 'Fabulous' },
+			{ value: '0', label: messages.graphicsModeChoice0 },
+			{ value: '1', label: messages.graphicsModeChoice1 },
+			{ value: '2', label: messages.graphicsModeChoice2 },
 		],
 		// Before 1.16 this was the boolean `fancyGraphics`, a different key.
 		minVersion: '1.16',
@@ -203,7 +384,7 @@ export const GAME_OPTIONS: GameOption[] = [
 	},
 	{
 		key: 'ao',
-		label: 'Smooth lighting',
+		label: messages.aoLabel,
 		group: 'video',
 		control: 'toggle',
 		default: true,
@@ -214,7 +395,7 @@ export const GAME_OPTIONS: GameOption[] = [
 	},
 	{
 		key: 'entityShadows',
-		label: 'Entity shadows',
+		label: messages.entityShadowsLabel,
 		group: 'video',
 		control: 'toggle',
 		default: true,
@@ -224,7 +405,7 @@ export const GAME_OPTIONS: GameOption[] = [
 	// ── Sound ──────────────────────────────────────────────────────────────
 	{
 		key: 'soundCategory_master',
-		label: 'Master volume',
+		label: messages.soundCategoryMasterLabel,
 		group: 'sound',
 		control: 'slider',
 		default: 100,
@@ -236,7 +417,7 @@ export const GAME_OPTIONS: GameOption[] = [
 	},
 	{
 		key: 'soundCategory_music',
-		label: 'Music',
+		label: messages.soundCategoryMusicLabel,
 		group: 'sound',
 		control: 'slider',
 		default: 100,
@@ -248,7 +429,7 @@ export const GAME_OPTIONS: GameOption[] = [
 	},
 	{
 		key: 'soundCategory_record',
-		label: 'Jukebox / note blocks',
+		label: messages.soundCategoryRecordLabel,
 		group: 'sound',
 		control: 'slider',
 		default: 100,
@@ -260,7 +441,7 @@ export const GAME_OPTIONS: GameOption[] = [
 	},
 	{
 		key: 'soundCategory_weather',
-		label: 'Weather',
+		label: messages.soundCategoryWeatherLabel,
 		group: 'sound',
 		control: 'slider',
 		default: 100,
@@ -272,7 +453,7 @@ export const GAME_OPTIONS: GameOption[] = [
 	},
 	{
 		key: 'soundCategory_block',
-		label: 'Blocks',
+		label: messages.soundCategoryBlockLabel,
 		group: 'sound',
 		control: 'slider',
 		default: 100,
@@ -284,7 +465,7 @@ export const GAME_OPTIONS: GameOption[] = [
 	},
 	{
 		key: 'soundCategory_hostile',
-		label: 'Hostile creatures',
+		label: messages.soundCategoryHostileLabel,
 		group: 'sound',
 		control: 'slider',
 		default: 100,
@@ -296,7 +477,7 @@ export const GAME_OPTIONS: GameOption[] = [
 	},
 	{
 		key: 'soundCategory_neutral',
-		label: 'Friendly creatures',
+		label: messages.soundCategoryNeutralLabel,
 		group: 'sound',
 		control: 'slider',
 		default: 100,
@@ -308,7 +489,7 @@ export const GAME_OPTIONS: GameOption[] = [
 	},
 	{
 		key: 'soundCategory_player',
-		label: 'Players',
+		label: messages.soundCategoryPlayerLabel,
 		group: 'sound',
 		control: 'slider',
 		default: 100,
@@ -320,7 +501,7 @@ export const GAME_OPTIONS: GameOption[] = [
 	},
 	{
 		key: 'soundCategory_ambient',
-		label: 'Ambient / environment',
+		label: messages.soundCategoryAmbientLabel,
 		group: 'sound',
 		control: 'slider',
 		default: 100,
@@ -332,7 +513,7 @@ export const GAME_OPTIONS: GameOption[] = [
 	},
 	{
 		key: 'soundCategory_voice',
-		label: 'Voice / speech',
+		label: messages.soundCategoryVoiceLabel,
 		group: 'sound',
 		control: 'slider',
 		default: 100,
@@ -346,7 +527,7 @@ export const GAME_OPTIONS: GameOption[] = [
 	// ── Controls ───────────────────────────────────────────────────────────
 	{
 		key: 'mouseSensitivity',
-		label: 'Sensitivity',
+		label: messages.mouseSensitivityLabel,
 		group: 'controls',
 		control: 'slider',
 		default: 50,
@@ -354,12 +535,12 @@ export const GAME_OPTIONS: GameOption[] = [
 		max: 100,
 		step: 1,
 		unit: '%',
-		description: '50% is the game’s "Normal".',
+		description: messages.mouseSensitivityDescription,
 		...percent,
 	},
 	{
 		key: 'invertYMouse',
-		label: 'Invert mouse',
+		label: messages.invertYMouseLabel,
 		group: 'controls',
 		control: 'toggle',
 		default: false,
@@ -367,7 +548,7 @@ export const GAME_OPTIONS: GameOption[] = [
 	},
 	{
 		key: 'autoJump',
-		label: 'Auto-jump',
+		label: messages.autoJumpLabel,
 		group: 'controls',
 		control: 'toggle',
 		default: false,
@@ -375,7 +556,7 @@ export const GAME_OPTIONS: GameOption[] = [
 	},
 	{
 		key: 'toggleCrouch',
-		label: 'Sneak: toggle',
+		label: messages.toggleCrouchLabel,
 		group: 'controls',
 		control: 'toggle',
 		default: false,
@@ -383,7 +564,7 @@ export const GAME_OPTIONS: GameOption[] = [
 	},
 	{
 		key: 'toggleSprint',
-		label: 'Sprint: toggle',
+		label: messages.toggleSprintLabel,
 		group: 'controls',
 		control: 'toggle',
 		default: false,
@@ -391,10 +572,10 @@ export const GAME_OPTIONS: GameOption[] = [
 	},
 ]
 
-export const GAME_OPTION_GROUPS: { id: GameOptionGroup; label: string }[] = [
-	{ id: 'video', label: 'Video' },
-	{ id: 'sound', label: 'Sound' },
-	{ id: 'controls', label: 'Controls' },
+export const GAME_OPTION_GROUPS: { id: GameOptionGroup; label: MessageDescriptor }[] = [
+	{ id: 'video', label: messages.videoGroup },
+	{ id: 'sound', label: messages.soundGroup },
+	{ id: 'controls', label: messages.controlsGroup },
 ]
 
 export function optionsForGroup(group: GameOptionGroup): GameOption[] {

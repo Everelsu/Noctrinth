@@ -214,3 +214,18 @@ const entries = computed<ChangelogEntry[]>(() =>
 		</div>
 	</div>
 </template>
+<style scoped lang="scss">
+/*
+ * Screenshots arrive at whatever size they were taken, which is wider than this
+ * panel — a window capture on a high-density display more than twice as wide.
+ * Sized to the column and left to keep its own proportions.
+ */
+:deep(.changelog-body img) {
+	display: block;
+	max-width: 100%;
+	height: auto;
+	margin-top: 0.5rem;
+	border: 1px solid var(--color-button-bg);
+	border-radius: var(--radius-md);
+}
+</style>

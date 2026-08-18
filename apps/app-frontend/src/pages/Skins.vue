@@ -362,24 +362,27 @@ async function loadElySkins() {
 		])
 		elySkins.value = items
 		elyCurrentSkinUrl.value = current
+		// The grid can draw as soon as the list is known; waiting for every
+		// texture first is what made opening the page feel slow.
+		elySkinsLoading.value = false
 
-		// Textures have to come through the proxy before they can be baked:
-		// ely.by serves them without CORS headers, and a tainted canvas bakes
-		// to nothing at all.
-		const textures: Record<number, string> = {}
+		// Textures have to come through Rust: ely.by serves them without CORS
+		// headers, and a tainted canvas bakes to nothing at all. They land one
+		// by one so tiles fill in as they arrive.
 		await Promise.all(
 			items.map(async (skin) => {
 				try {
-					textures[skin.id] = await getElyCatalogueTexture(skin.skin_url)
+					const texture = await getElyCatalogueTexture(skin.skin_url)
+					elyTextures.value = { ...elyTextures.value, [skin.id]: texture }
 				} catch {
-					textures[skin.id] = ELY_FALLBACK_SKIN
+					// Leave the placeholder; one bad texture is not worth a notification.
 				}
 			}),
 		)
-		elyTextures.value = textures
 
-		// Same preview pipeline as the Microsoft grid, so the tiles render
-		// identically instead of showing raw texture sheets.
+		// Same preview pipeline as the Microsoft grid, so the tiles end up
+		// rendered rather than showing raw texture sheets. Baked once, after
+		// the textures settle, because each call supersedes the last.
 		generateSkinPreviews(elySkinsAsSkins.value, [])
 	} catch (error) {
 		handleError(error)
@@ -1675,8 +1678,8 @@ async function checkUserChanges() {
 					:is-skin-active="isElySkinActive"
 					:is-add-skin-button-drag-active="false"
 					:read-only="elyWearingId !== null"
+					hide-add-skin
 					@select="requestElySkin"
-					@add-skin="openElySkinPage"
 				/>
 			</section>
 		</div>

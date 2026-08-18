@@ -85,6 +85,8 @@ const props = defineProps<{
 	isSkinActive: (skin: Skin) => boolean
 	isAddSkinButtonDragActive: boolean
 	readOnly?: boolean
+	/** Hides the add tile for sources that have nowhere to add a skin to. */
+	hideAddSkin?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -430,6 +432,7 @@ defineExpose({ getAddSkinButtonElement })
 				>
 					<template #header>
 						<SkinLikeTextButton
+							v-if="!hideAddSkin"
 							ref="addSkinButton"
 							class="aspect-[31/40] w-full min-w-0 box-border rounded-[20px]"
 							dropzone

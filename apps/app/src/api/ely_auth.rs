@@ -183,6 +183,10 @@ fn run_in_skin_window<R: Runtime>(
         .parse()
         .expect("static Ely.by URL must parse");
 
+    // `on_page_load` fires on every navigation this window ever makes, so the
+    // deferred call is armed once. Without this it would fire again the next
+    // time the user opened the window, silently repeating the last request.
+    let pending = std::sync::atomic::AtomicBool::new(true);
     tauri::WebviewWindowBuilder::new(
         &app,
         ELY_SKIN_WINDOW_LABEL,
@@ -193,7 +197,9 @@ fn run_in_skin_window<R: Runtime>(
     .center()
     .visible(false)
     .on_page_load(move |window, _| {
-        window.eval(&script).ok();
+        if pending.swap(false, std::sync::atomic::Ordering::SeqCst) {
+            window.eval(&script).ok();
+        }
     })
     .build()?;
 

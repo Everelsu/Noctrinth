@@ -237,6 +237,15 @@ const messages = defineMessages({
 		defaultMessage:
 			"Skins for Ely.by accounts are managed on the Ely.by website. The button below opens it in a window right here in the app — if you aren't signed in, Ely.by will ask you to log in first. Once you close the window, the preview updates automatically.",
 	},
+	elySignInNeededTitle: {
+		id: 'app.skins.ely.sign-in-needed.title',
+		defaultMessage: 'Ely.by did not accept the change',
+	},
+	elySignInNeededText: {
+		id: 'app.skins.ely.sign-in-needed.text',
+		defaultMessage:
+			'Ely.by needs you signed in on its website for this. Use "Change skin on Ely.by" to sign in, then try again.',
+	},
 	elyMySkinsTitle: {
 		id: 'app.skins.ely.my-skins.title',
 		defaultMessage: 'Your Ely.by skins',
@@ -471,13 +480,28 @@ async function onElyUploadChange(event: Event) {
 			elyPendingSkin.value = null
 			refreshElySkin()
 		} else {
-			await ely_open_skin_window()
+			reportElySignInNeeded()
 		}
 	} catch (error) {
 		handleError(error)
 	} finally {
 		elyWearingId.value = null
 	}
+}
+
+/**
+ * Says the request did not land, without hijacking the screen.
+ *
+ * Ely.by only accepts these calls with a website session, and the launcher has
+ * no way to create one. Opening the site unprompted is worse than saying so:
+ * the button in the header is there for when the user wants it.
+ */
+function reportElySignInNeeded() {
+	addNotification({
+		type: 'error',
+		title: formatMessage(messages.elySignInNeededTitle),
+		text: formatMessage(messages.elySignInNeededText),
+	})
 }
 
 /** Deletes a skin from the account's Ely.by catalogue. */
@@ -527,9 +551,7 @@ async function applyElySkin(skin: Skin) {
 			elyPendingSkin.value = null
 			refreshElySkin()
 		} else {
-			// Nothing changed in all that time: almost certainly no site
-			// session, so show the window for the user to sign in.
-			await ely_open_skin_window()
+			reportElySignInNeeded()
 		}
 	} catch (error) {
 		handleError(error)

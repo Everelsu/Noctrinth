@@ -1697,6 +1697,12 @@
   "app.skins.ely.my-skins.title": {
     "message": "Your Ely.by skins"
   },
+  "app.skins.ely.sign-in-needed.text": {
+    "message": "Ely.by needs you signed in on its website for this. Use \"Change skin on Ely.by\" to sign in, then try again."
+  },
+  "app.skins.ely.sign-in-needed.title": {
+    "message": "Ely.by did not accept the change"
+  },
   "app.skins.modal.add-skin-button": {
     "message": "Add skin"
   },

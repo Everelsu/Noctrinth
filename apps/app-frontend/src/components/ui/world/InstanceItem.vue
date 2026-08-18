@@ -216,7 +216,7 @@ onMounted(() => {
 					"
 					:disabled="instance.quarantined || playing || loading"
 					type="colored"
-					color="green"
+					color="brand"
 					@click="play"
 				>
 					<SpinnerIcon v-if="loading" class="animate-spin" />

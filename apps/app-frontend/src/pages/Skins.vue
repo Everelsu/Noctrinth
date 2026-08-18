@@ -43,6 +43,7 @@ import {
 	ELY_FALLBACK_SKIN,
 	type ElyUploadedSkin,
 	getElyCapeTexture,
+	getElyCatalogueTexture,
 	getElyCurrentSkinUrl,
 	getElySkinTexture,
 	listElySkins,
@@ -234,6 +235,18 @@ const messages = defineMessages({
 		defaultMessage:
 			"Skins for Ely.by accounts are managed on the Ely.by website. The button below opens it in a window right here in the app — if you aren't signed in, Ely.by will ask you to log in first. Once you close the window, the preview updates automatically.",
 	},
+	elyConfirmTitle: {
+		id: 'app.skins.ely.confirm.title',
+		defaultMessage: 'Change your Ely.by skin?',
+	},
+	elyConfirmDescription: {
+		id: 'app.skins.ely.confirm.description',
+		defaultMessage: 'This changes the skin on your Ely.by account, not just here.',
+	},
+	elyConfirmProceed: {
+		id: 'app.skins.ely.confirm.proceed',
+		defaultMessage: 'Change skin',
+	},
 	elyMySkinsTitle: {
 		id: 'app.skins.ely.my-skins.title',
 		defaultMessage: 'Your Ely.by skins',
@@ -314,6 +327,8 @@ const elySkins = ref<ElyUploadedSkin[]>([])
 const elySkinsLoading = ref(false)
 const elyWearingId = ref<number | null>(null)
 const elyCurrentSkinUrl = ref<string | null>(null)
+const elyTextures = ref<Record<number, string>>({})
+const elySkinToConfirm = ref<Skin | null>(null)
 
 /** Ely.by texture URLs come back over either scheme; compare without one. */
 function sameTexture(a: string | null | undefined, b: string | null | undefined) {
@@ -327,7 +342,7 @@ const elySkinsAsSkins = computed<Skin[]>(() =>
 	elySkins.value.map((skin) => ({
 		texture_key: `ely:${skin.id}`,
 		variant: skin.is_slim ? 'SLIM' : 'CLASSIC',
-		texture: skin.skin_url,
+		texture: elyTextures.value[skin.id] ?? ELY_FALLBACK_SKIN,
 		source: 'custom_external',
 		is_equipped: sameTexture(skin.skin_url, elyCurrentSkinUrl.value),
 	})),
@@ -353,6 +368,22 @@ async function loadElySkins() {
 		])
 		elySkins.value = items
 		elyCurrentSkinUrl.value = current
+
+		// Textures have to come through the proxy before they can be baked:
+		// ely.by serves them without CORS headers, and a tainted canvas bakes
+		// to nothing at all.
+		const textures: Record<number, string> = {}
+		await Promise.all(
+			items.map(async (skin) => {
+				try {
+					textures[skin.id] = await getElyCatalogueTexture(skin.skin_url)
+				} catch {
+					textures[skin.id] = ELY_FALLBACK_SKIN
+				}
+			}),
+		)
+		elyTextures.value = textures
+
 		// Same preview pipeline as the Microsoft grid, so the tiles render
 		// identically instead of showing raw texture sheets.
 		generateSkinPreviews(elySkinsAsSkins.value, [])
@@ -370,6 +401,21 @@ async function loadElySkins() {
  * texture is the only evidence. If it did not change, the session is almost
  * certainly missing and the window is opened for the user to sign in.
  */
+const elyConfirmModal = ref()
+
+/** Clicking a tile asks first — wearing it is a request to Ely.by, not a local change. */
+function requestElySkin(skin: Skin) {
+	if (skin.is_equipped || elyWearingId.value !== null) return
+	elySkinToConfirm.value = skin
+	elyConfirmModal.value?.show()
+}
+
+function confirmElySkin() {
+	const skin = elySkinToConfirm.value
+	elySkinToConfirm.value = null
+	if (skin) void applyElySkin(skin)
+}
+
 async function applyElySkin(skin: Skin) {
 	const id = Number(skin.texture_key.replace('ely:', ''))
 	if (!Number.isFinite(id) || elyWearingId.value !== null) return
@@ -384,7 +430,8 @@ async function applyElySkin(skin: Skin) {
 		if (elySkinTexture.value === before) {
 			await ely_open_skin_window()
 		} else {
-			elyCurrentSkinUrl.value = skin.texture
+			const worn = elySkins.value.find((entry) => entry.id === id)
+			elyCurrentSkinUrl.value = worn?.skin_url ?? elyCurrentSkinUrl.value
 		}
 	} catch (error) {
 		handleError(error)
@@ -1339,6 +1386,14 @@ async function checkUserChanges() {
 		@proceed="deleteSkin"
 	/>
 
+	<ConfirmModal
+		ref="elyConfirmModal"
+		:title="formatMessage(messages.elyConfirmTitle)"
+		:description="formatMessage(messages.elyConfirmDescription)"
+		:proceed-label="formatMessage(messages.elyConfirmProceed)"
+		@proceed="confirmElySkin"
+	/>
+
 	<div
 		v-if="!elyAccount"
 		class="skin-layout box-border grow p-4"
@@ -1561,31 +1616,24 @@ async function checkUserChanges() {
 
 		<div class="pt-3 px-3 pb-3">
 			<section class="flex flex-col gap-4 mt-1">
-				<h2 class="text-lg font-bold m-0 text-primary">
-					{{ formatMessage(messages.elySkinsSectionTitle) }}
-				</h2>
-				<div class="bg-bg-raised card-shadow rounded-lg p-5 flex flex-col gap-4 shadow-md max-w-xl">
-					<p class="text-secondary m-0">
-						{{ formatMessage(messages.elySkinsDescription) }}
-					</p>
-					<p v-if="elySkinIsFallback" class="text-secondary m-0">
-						{{ formatMessage(messages.elySkinsDefaultNotice) }}
-					</p>
+				<div class="flex flex-wrap items-center justify-between gap-2">
+					<h2 class="text-lg font-bold m-0 text-primary">
+						{{ formatMessage(messages.elySkinsSectionTitle) }}
+					</h2>
 					<div class="flex flex-wrap gap-2">
-						<Button type="colored" color="brand" @click="openElySkinPage">
-							<ExternalIcon />
-							{{ formatMessage(messages.elySkinsChangeButton) }}
-						</Button>
 						<Button @click="refreshElySkin">
 							<UpdatedIcon />
 							{{ formatMessage(messages.elySkinsRefreshButton) }}
 						</Button>
+						<Button type="colored" color="brand" @click="openElySkinPage">
+							<ExternalIcon />
+							{{ formatMessage(messages.elySkinsChangeButton) }}
+						</Button>
 					</div>
 				</div>
-
-				<h2 class="text-lg font-bold m-0 mt-2 text-primary">
-					{{ formatMessage(messages.elyMySkinsTitle) }}
-				</h2>
+				<p v-if="elySkinIsFallback" class="text-secondary m-0">
+					{{ formatMessage(messages.elySkinsDefaultNotice) }}
+				</p>
 				<p v-if="!elySkinsLoading && !elySkins.length" class="text-secondary m-0">
 					{{ formatMessage(messages.elyMySkinsEmpty) }}
 				</p>
@@ -1598,7 +1646,7 @@ async function checkUserChanges() {
 					:is-skin-active="isElySkinSelected"
 					:is-add-skin-button-drag-active="false"
 					:read-only="elyWearingId !== null"
-					@select="applyElySkin"
+					@select="requestElySkin"
 					@add-skin="openElySkinPage"
 				/>
 			</section>

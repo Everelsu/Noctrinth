@@ -1691,6 +1691,15 @@
   "app.skins.edit-button": {
     "message": "Edit skin"
   },
+  "app.skins.ely.confirm.description": {
+    "message": "This changes the skin on your Ely.by account, not just here."
+  },
+  "app.skins.ely.confirm.proceed": {
+    "message": "Change skin"
+  },
+  "app.skins.ely.confirm.title": {
+    "message": "Change your Ely.by skin?"
+  },
   "app.skins.ely.my-skins.empty": {
     "message": "Nothing uploaded yet. Upload a skin on Ely.by and it will show up here to click on."
   },

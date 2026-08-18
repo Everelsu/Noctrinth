@@ -177,3 +177,24 @@ export async function wearElySkin(skinId: number): Promise<void> {
 export async function getElyCurrentSkinUrl(username: string): Promise<string | null> {
 	return await invoke('plugin:ely-auth|ely_current_skin_url', { username })
 }
+
+const catalogueTextureCache = new Map<string, Promise<string>>()
+
+/**
+ * Resolves a catalogue texture URL to a data: URL.
+ *
+ * The grid bakes previews on a canvas, and ely.by serves textures without CORS
+ * headers, so a direct URL taints the canvas and the tile comes out blank.
+ * Going through the proxy keeps the bytes same-origin.
+ */
+export function getElyCatalogueTexture(url: string): Promise<string> {
+	const cached = catalogueTextureCache.get(url)
+	if (cached) return cached
+
+	const promise = fetchTextureDataUrl(url).catch((error) => {
+		catalogueTextureCache.delete(url)
+		throw error
+	})
+	catalogueTextureCache.set(url, promise)
+	return promise
+}

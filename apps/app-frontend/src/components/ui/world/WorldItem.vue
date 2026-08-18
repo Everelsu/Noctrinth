@@ -375,10 +375,13 @@ const messages = defineMessages({
 						class="motd-renderer font-normal font-minecraft line-clamp-2 text-secondary leading-5"
 						v-html="renderedMotd"
 					/>
-					<div v-else-if="!serverStatus" class="font-normal font-minecraft text-red leading-5">
+					<div
+						v-else-if="!serverStatus"
+						class="font-normal font-minecraft line-clamp-2 text-red leading-5"
+					>
 						{{ formatMessage(messages.cantConnect) }}
 					</div>
-					<div v-else class="font-normal font-minecraft text-secondary leading-5">
+					<div v-else class="font-normal font-minecraft line-clamp-2 text-secondary leading-5">
 						{{ formatMessage(messages.aMinecraftServer) }}
 					</div>
 				</template>

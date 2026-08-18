@@ -465,6 +465,34 @@ async function onElyUploadChange(event: Event) {
 	input.value = ''
 	if (!file) return
 
+	await uploadElySkinFile(file)
+}
+
+const isElyDragActive = ref(false)
+
+function onElyDragOver(event: DragEvent) {
+	event.preventDefault()
+	isElyDragActive.value = elyWearingId.value === null
+}
+
+function onElyDragLeave() {
+	isElyDragActive.value = false
+}
+
+async function onElyDrop(event: DragEvent) {
+	event.preventDefault()
+	isElyDragActive.value = false
+	if (elyWearingId.value !== null) return
+
+	const file = Array.from(event.dataTransfer?.files ?? []).find(
+		(candidate) => candidate.type === 'image/png' || isSkinImagePath(candidate.name),
+	)
+	if (!file) return
+
+	await uploadElySkinFile(file)
+}
+
+async function uploadElySkinFile(file: File) {
 	elyWearingId.value = -1
 	const before = elyCurrentSkinUrl.value
 	try {
@@ -1794,11 +1822,15 @@ async function checkUserChanges() {
 					:get-baked-skin-textures="getBakedSkinTextures"
 					:is-skin-selected="isElySkinSelected"
 					:is-skin-active="isElySkinActive"
-					:is-add-skin-button-drag-active="false"
+					:is-add-skin-button-drag-active="isElyDragActive"
 					:read-only="elyWearingId !== null"
 					@select="requestElySkin"
 					@delete="deleteElySkin"
 					@add-skin="openElyUpload"
+					@add-skin-dragenter="onElyDragOver"
+					@add-skin-dragover="onElyDragOver"
+					@add-skin-dragleave="onElyDragLeave"
+					@add-skin-drop="onElyDrop"
 				/>
 			</section>
 		</div>

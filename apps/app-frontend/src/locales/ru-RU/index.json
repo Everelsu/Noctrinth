@@ -713,6 +713,18 @@
   "app.java-selector.test-installation": {
     "message": "Проверить установку Java"
   },
+  "app.library.search.hint": {
+    "message": "↑↓ — выбрать · Tab — вставить · условия складываются, а - переворачивает любое"
+  },
+  "app.library.search.no-results.title": {
+    "message": "Под запрос ничего не подошло."
+  },
+  "app.library.search.pending": {
+    "message": "Читаю, что установлено…"
+  },
+  "app.library.search.placeholder": {
+    "message": "Поиск по сборкам, или @ # ! для фильтров"
+  },
   "app.migration.modrinth.action.choose": {
     "message": "Выбрать сборки"
   },
@@ -1174,6 +1186,18 @@
   },
   "app.skins.edit-button": {
     "message": "Изменить скин"
+  },
+  "app.skins.ely.my-skins.empty": {
+    "message": "Пока ничего не загружено. Загрузите скин на Ely.by — и он появится здесь."
+  },
+  "app.skins.ely.my-skins.title": {
+    "message": "Ваши скины Ely.by"
+  },
+  "app.skins.ely.sign-in-needed.text": {
+    "message": "Для этого Ely.by нужен вход на самом сайте. Нажмите «Изменить скин на Ely.by», войдите и повторите."
+  },
+  "app.skins.ely.sign-in-needed.title": {
+    "message": "Ely.by не принял изменение"
   },
   "app.skins.modal.add-skin-button": {
     "message": "Добавить скин"
@@ -2077,6 +2101,39 @@
   },
   "instance.settings.tabs.java.java-path-placeholder": {
     "message": "/путь/к/java"
+  },
+  "instance.settings.tabs.java.modern-java": {
+    "message": "Современная Java"
+  },
+  "instance.settings.tabs.java.modern-java-beta": {
+    "message": "Бета"
+  },
+  "instance.settings.tabs.java.modern-java-beta-note": {
+    "message": "Функция новая и мало обкатана. Сделайте резервную копию сборки перед включением и учтите, что моды, рассчитанные на Java 8, могут вести себя странно."
+  },
+  "instance.settings.tabs.java.modern-java-description": {
+    "message": "Minecraft {gameVersion} обычно запускается только на Java 8. {provider} заменяет LWJGL 2 и переделывает Forge, чтобы сборка пошла на современной Java."
+  },
+  "instance.settings.tabs.java.modern-java-install": {
+    "message": "Включить"
+  },
+  "instance.settings.tabs.java.modern-java-installed": {
+    "message": "Включено — {provider} {version}, работает на Java {javaMajor}"
+  },
+  "instance.settings.tabs.java.modern-java-installing": {
+    "message": "Включаю..."
+  },
+  "instance.settings.tabs.java.modern-java-mods-note": {
+    "message": "Отключение убирает патчи лаунчера. Установленные моды останутся в сборке — удалите их во вкладке «Моды», если они больше не нужны."
+  },
+  "instance.settings.tabs.java.modern-java-remove": {
+    "message": "Отключить"
+  },
+  "instance.settings.tabs.java.modern-java-version": {
+    "message": "Версия Java"
+  },
+  "instance.settings.tabs.java.modern-java-version-hint": {
+    "message": "Выбор версии скачает её и закрепит за этой сборкой. Самая младшая обкатана лучше всех; новые поддерживаются, но с модами этой версии Minecraft проверены меньше."
   },
   "instance.settings.tabs.sharing": {
     "message": "Доступ"

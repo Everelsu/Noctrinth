@@ -80,6 +80,11 @@ fn main() {
                         "jre_test_jre",
                         "jre_auto_install_java",
                         "jre_get_max_memory",
+                        "jre_get_gpu_status",
+                        "jre_set_gpu_preference",
+                        "jre_list_installed_runtimes",
+                        "jre_remove_installed_runtime",
+                        "jre_remove_unused_runtimes",
                     ])
                     .default_permission(
                         DefaultPermissionRule::AllowAllCommands,
@@ -317,6 +322,8 @@ fn main() {
                         "block_user",
                         "unblock_user",
                         "get_blocked_users",
+                        "change_user_avatar",
+                        "delete_user_avatar",
                     ])
                     .default_permission(
                         DefaultPermissionRule::AllowAllCommands,

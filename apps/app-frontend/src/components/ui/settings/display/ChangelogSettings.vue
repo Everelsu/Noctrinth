@@ -7,6 +7,7 @@ import dayjs from 'dayjs'
 import { computed, ref } from 'vue'
 
 import { getNoctrinthChangelog } from '@/helpers/noctrinth-changelog'
+import { renderChangelog } from '@/helpers/render-changelog'
 
 const { formatMessage } = useVIntl()
 
@@ -38,7 +39,8 @@ const messages = defineMessages({
 
 interface ChangelogSection {
 	title: string
-	items: string[]
+	/** Rendered markdown, so entries can carry links and screenshots. */
+	html: string
 }
 
 interface ChangelogEntry {
@@ -56,35 +58,39 @@ function formatSourceLabel(option: ChangelogSource): string {
 	return formatMessage(option === 'noctrinth' ? messages.sourceNoctrinth : messages.sourceModrinth)
 }
 
-/** Parses a changelog markdown body into titled sections. */
+const NEWLINE = String.fromCharCode(10)
+
+/**
+ * Splits a changelog body on its section headings and renders each part.
+ *
+ * The split exists only so the headings can be styled; everything under one is
+ * markdown, so an entry can carry links, emphasis and screenshots.
+ */
 function parseBody(body: string): ChangelogSection[] {
-	const sections: ChangelogSection[] = []
-	let current: ChangelogSection | null = null
+	const sections: { title: string; lines: string[] }[] = []
+	let current: { title: string; lines: string[] } | null = null
 
-	for (const rawLine of body.split('\n')) {
-		const line = rawLine.trim()
-		if (!line) continue
-
-		if (line.startsWith('### ')) {
-			current = { title: line.slice(4).trim(), items: [] }
-			sections.push(current)
-			continue
-		}
-		if (line.startsWith('## ')) {
-			current = { title: line.slice(3).trim(), items: [] }
+	for (const line of body.split(NEWLINE)) {
+		const heading = /^\s*#{2,3}\s+(.*)$/.exec(line)
+		if (heading) {
+			current = { title: heading[1].trim(), lines: [] }
 			sections.push(current)
 			continue
 		}
 
 		if (!current) {
-			current = { title: '', items: [] }
+			current = { title: '', lines: [] }
 			sections.push(current)
 		}
-
-		current.items.push(line.replace(/^[-*]\s+/, ''))
+		current.lines.push(line)
 	}
 
 	return sections
+		.map((section) => ({
+			title: section.title,
+			html: renderChangelog(section.lines.join(NEWLINE).trim()),
+		}))
+		.filter((section) => section.title || section.html)
 }
 
 // Noctrinth changelog — pulled from src/helpers/noctrinth-changelog.ts.
@@ -151,11 +157,8 @@ const entries = computed<ChangelogEntry[]>(() =>
 				<h3 v-if="section.title" class="m-0 text-base font-semibold text-brand">
 					{{ section.title }}
 				</h3>
-				<ul class="m-0 pl-5 flex flex-col gap-1">
-					<li v-for="(item, idx) in section.items" :key="idx" class="text-sm text-primary">
-						{{ item }}
-					</li>
-				</ul>
+				<!-- eslint-disable-next-line vue/no-v-html -- ships with the app, sanitised in renderChangelog -->
+				<div class="changelog-body text-sm text-primary" v-html="section.html" />
 			</div>
 		</section>
 

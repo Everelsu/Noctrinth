@@ -205,3 +205,54 @@ pub async fn get_current_skin_url(
 
     Ok(textures.skin.map(|skin| skin.url))
 }
+
+/// Fetches a texture from Ely.by and returns the raw PNG bytes.
+///
+/// The frontend cannot fetch these itself: ely.by is not in the HTTP plugin's
+/// allowlist, and were it added, the images still carry no CORS headers and
+/// would taint the canvas the skin grid bakes previews on.
+///
+/// The URL comes from the frontend, so the host is checked here rather than
+/// trusted — this must not become a general-purpose proxy.
+pub async fn get_texture_bytes(url: &str) -> crate::Result<Vec<u8>> {
+    use crate::util::fetch::INSECURE_REQWEST_CLIENT;
+
+    let parsed = reqwest::Url::parse(url).map_err(|e| {
+        crate::ErrorKind::InputError(format!("Not a texture URL: {e}"))
+    })?;
+
+    let host = parsed.host_str().unwrap_or_default();
+    if host != "ely.by" && !host.ends_with(".ely.by") {
+        return Err(crate::ErrorKind::InputError(format!(
+            "Refusing to fetch a texture from {host}"
+        ))
+        .into());
+    }
+
+    let resp =
+        INSECURE_REQWEST_CLIENT
+            .get(parsed)
+            .send()
+            .await
+            .map_err(|e| {
+                crate::ErrorKind::OtherError(format!(
+                    "Failed to fetch the Ely.by texture: {e}"
+                ))
+            })?;
+
+    if !resp.status().is_success() {
+        return Err(crate::ErrorKind::OtherError(format!(
+            "Ely.by texture not available (HTTP {})",
+            resp.status()
+        ))
+        .into());
+    }
+
+    let bytes = resp.bytes().await.map_err(|e| {
+        crate::ErrorKind::OtherError(format!(
+            "Failed to read the Ely.by texture: {e}"
+        ))
+    })?;
+
+    Ok(bytes.to_vec())
+}

@@ -235,18 +235,6 @@ const messages = defineMessages({
 		defaultMessage:
 			"Skins for Ely.by accounts are managed on the Ely.by website. The button below opens it in a window right here in the app — if you aren't signed in, Ely.by will ask you to log in first. Once you close the window, the preview updates automatically.",
 	},
-	elyConfirmTitle: {
-		id: 'app.skins.ely.confirm.title',
-		defaultMessage: 'Change your Ely.by skin?',
-	},
-	elyConfirmDescription: {
-		id: 'app.skins.ely.confirm.description',
-		defaultMessage: 'This changes the skin on your Ely.by account, not just here.',
-	},
-	elyConfirmProceed: {
-		id: 'app.skins.ely.confirm.proceed',
-		defaultMessage: 'Change skin',
-	},
 	elyMySkinsTitle: {
 		id: 'app.skins.ely.my-skins.title',
 		defaultMessage: 'Your Ely.by skins',
@@ -328,7 +316,7 @@ const elySkinsLoading = ref(false)
 const elyWearingId = ref<number | null>(null)
 const elyCurrentSkinUrl = ref<string | null>(null)
 const elyTextures = ref<Record<number, string>>({})
-const elySkinToConfirm = ref<Skin | null>(null)
+const elyPendingSkin = ref<Skin | null>(null)
 
 /** Ely.by texture URLs come back over either scheme; compare without one. */
 function sameTexture(a: string | null | undefined, b: string | null | undefined) {
@@ -349,6 +337,12 @@ const elySkinsAsSkins = computed<Skin[]>(() =>
 )
 
 function isElySkinSelected(skin: Skin) {
+	return elyPendingSkin.value
+		? elyPendingSkin.value.texture_key === skin.texture_key
+		: skin.is_equipped
+}
+
+function isElySkinActive(skin: Skin) {
 	return skin.is_equipped
 }
 
@@ -401,20 +395,31 @@ async function loadElySkins() {
  * texture is the only evidence. If it did not change, the session is almost
  * certainly missing and the window is opened for the user to sign in.
  */
-const elyConfirmModal = ref()
-
-/** Clicking a tile asks first — wearing it is a request to Ely.by, not a local change. */
+/**
+ * Picking a tile only previews it, the same way the Microsoft flow does.
+ * Nothing reaches Ely.by until Apply, so browsing costs no requests.
+ */
 function requestElySkin(skin: Skin) {
-	if (skin.is_equipped || elyWearingId.value !== null) return
-	elySkinToConfirm.value = skin
-	elyConfirmModal.value?.show()
+	if (elyWearingId.value !== null) return
+	elyPendingSkin.value = skin.is_equipped ? null : skin
 }
 
-function confirmElySkin() {
-	const skin = elySkinToConfirm.value
-	elySkinToConfirm.value = null
+const elyHasPendingChange = computed(() => elyPendingSkin.value !== null)
+
+function resetElySkin() {
+	elyPendingSkin.value = null
+}
+
+function applyPendingElySkin() {
+	const skin = elyPendingSkin.value
 	if (skin) void applyElySkin(skin)
 }
+
+/** The preview shows the pending pick, falling back to what is actually worn. */
+const elyPreviewTexture = computed(
+	() => elyPendingSkin.value?.texture ?? elySkinTexture.value ?? ELY_FALLBACK_SKIN,
+)
+const elyPreviewVariant = computed(() => elyPendingSkin.value?.variant ?? elySkinVariant.value)
 
 async function applyElySkin(skin: Skin) {
 	const id = Number(skin.texture_key.replace('ely:', ''))
@@ -432,6 +437,7 @@ async function applyElySkin(skin: Skin) {
 		} else {
 			const worn = elySkins.value.find((entry) => entry.id === id)
 			elyCurrentSkinUrl.value = worn?.skin_url ?? elyCurrentSkinUrl.value
+			elyPendingSkin.value = null
 		}
 	} catch (error) {
 		handleError(error)
@@ -1386,14 +1392,6 @@ async function checkUserChanges() {
 		@proceed="deleteSkin"
 	/>
 
-	<ConfirmModal
-		ref="elyConfirmModal"
-		:title="formatMessage(messages.elyConfirmTitle)"
-		:description="formatMessage(messages.elyConfirmDescription)"
-		:proceed-label="formatMessage(messages.elyConfirmProceed)"
-		@proceed="confirmElySkin"
-	/>
-
 	<div
 		v-if="!elyAccount"
 		class="skin-layout box-border grow p-4"
@@ -1605,12 +1603,43 @@ async function checkUserChanges() {
 				class="ml-5 mt-4 flex h-[calc(80vh-1rem)] items-center justify-center max-[700px]:h-[calc(50vh-1rem)]"
 			>
 				<SkinPreviewRenderer
-					:texture-src="elySkinTexture || ELY_FALLBACK_SKIN"
-					:variant="elySkinVariant"
+					:texture-src="elyPreviewTexture"
+					:variant="elyPreviewVariant"
 					:cape-src="elyCapeTexture"
 					:nametag="elyAccount.profile.name"
 					:initial-rotation="Math.PI / 8"
-				/>
+				>
+					<template v-if="elyHasPendingChange" #nametag-badge>
+						<div
+							class="flex items-center justify-center gap-1.5 rounded-full border border-solid border-brand-blue bg-bg-blue px-3 py-1 text-base font-semibold leading-6 text-brand-blue"
+						>
+							<EyeIcon class="size-5 shrink-0" />
+							{{ formatMessage(messages.previewingBadge) }}
+						</div>
+					</template>
+					<template #subtitle>
+						<div
+							v-if="elyHasPendingChange"
+							class="flex w-full flex-wrap items-center justify-center gap-1.5"
+						>
+							<Button type="base" size="lg" :disabled="elyWearingId !== null" @click="resetElySkin">
+								<RotateCounterClockwiseIcon />
+								{{ formatMessage(commonMessages.resetButton) }}
+							</Button>
+							<Button
+								type="colored"
+								color="brand"
+								size="lg"
+								:disabled="elyWearingId !== null"
+								@click="applyPendingElySkin"
+							>
+								<SpinnerIcon v-if="elyWearingId !== null" class="animate-spin" />
+								<CheckIcon v-else />
+								{{ formatMessage(messages.applyButton) }}
+							</Button>
+						</div>
+					</template>
+				</SkinPreviewRenderer>
 			</div>
 		</div>
 
@@ -1643,7 +1672,7 @@ async function checkUserChanges() {
 					:default-skin-sections="[]"
 					:get-baked-skin-textures="getBakedSkinTextures"
 					:is-skin-selected="isElySkinSelected"
-					:is-skin-active="isElySkinSelected"
+					:is-skin-active="isElySkinActive"
 					:is-add-skin-button-drag-active="false"
 					:read-only="elyWearingId !== null"
 					@select="requestElySkin"

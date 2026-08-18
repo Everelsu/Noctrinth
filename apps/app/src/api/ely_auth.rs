@@ -16,6 +16,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             ely_open_skin_window,
             ely_list_skins,
             ely_current_skin_url,
+            ely_get_texture,
             ely_wear_skin,
         ])
         .build()
@@ -77,6 +78,13 @@ pub async fn ely_list_skins(
     username: &str,
 ) -> Result<Vec<theseus::ely_auth::ElyUploadedSkin>> {
     Ok(theseus::ely_auth::list_uploaded_skins(username).await?)
+}
+
+/// Fetches an Ely.by texture as raw bytes, for textures the frontend cannot
+/// reach itself.
+#[tauri::command]
+pub async fn ely_get_texture(url: &str) -> Result<Vec<u8>> {
+    Ok(theseus::ely_auth::get_texture_bytes(url).await?)
 }
 
 /// The storage URL of the skin the account currently wears, used to mark the

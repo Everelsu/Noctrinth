@@ -191,10 +191,15 @@ export function getElyCatalogueTexture(url: string): Promise<string> {
 	const cached = catalogueTextureCache.get(url)
 	if (cached) return cached
 
-	const promise = fetchTextureDataUrl(url).catch((error) => {
-		catalogueTextureCache.delete(url)
-		throw error
-	})
+	// Through Rust first: ely.by is not in the HTTP plugin's allowlist, so the
+	// frontend cannot reach it, and its images carry no CORS headers anyway.
+	const promise = invoke<number[]>('plugin:ely-auth|ely_get_texture', { url })
+		.then(bytesToDataUrl)
+		.catch(() => fetchTextureDataUrl(url))
+		.catch((error) => {
+			catalogueTextureCache.delete(url)
+			throw error
+		})
 	catalogueTextureCache.set(url, promise)
 	return promise
 }

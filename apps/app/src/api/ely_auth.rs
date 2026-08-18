@@ -15,6 +15,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             ely_get_skin_texture,
             ely_open_skin_window,
             ely_list_skins,
+            ely_current_skin_url,
             ely_wear_skin,
         ])
         .build()
@@ -76,6 +77,13 @@ pub async fn ely_list_skins(
     username: &str,
 ) -> Result<Vec<theseus::ely_auth::ElyUploadedSkin>> {
     Ok(theseus::ely_auth::list_uploaded_skins(username).await?)
+}
+
+/// The storage URL of the skin the account currently wears, used to mark the
+/// active entry in the grid.
+#[tauri::command]
+pub async fn ely_current_skin_url(username: &str) -> Result<Option<String>> {
+    Ok(theseus::ely_auth::get_current_skin_url(username).await?)
 }
 
 /// The website call that puts a catalogue skin on the signed-in account.

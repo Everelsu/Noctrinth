@@ -155,3 +155,53 @@ pub async fn list_uploaded_skins(
 
     Ok(listing.items)
 }
+
+#[derive(serde::Deserialize)]
+struct ElyTexture {
+    url: String,
+}
+
+#[derive(serde::Deserialize)]
+struct ElyTextures {
+    #[serde(rename = "SKIN")]
+    skin: Option<ElyTexture>,
+}
+
+/// The storage URL of the skin a user is currently wearing.
+///
+/// The listing gives the same URLs, so comparing the two is what marks the
+/// active skin in the grid. Returns `None` when the account wears the default
+/// skin.
+pub async fn get_current_skin_url(
+    username: &str,
+) -> crate::Result<Option<String>> {
+    use crate::util::fetch::INSECURE_REQWEST_CLIENT;
+
+    let url = format!(
+        "https://skinsystem.ely.by/textures/{}",
+        urlencoding::encode(username)
+    );
+
+    let resp = INSECURE_REQWEST_CLIENT
+        .get(&url)
+        .send()
+        .await
+        .map_err(|e| {
+            crate::ErrorKind::OtherError(format!(
+                "Failed to read the current Ely.by skin: {e}"
+            ))
+        })?;
+
+    if !resp.status().is_success() {
+        return Ok(None);
+    }
+
+    let textures: ElyTextures = match resp.json().await {
+        Ok(textures) => textures,
+        // No custom skin: the endpoint answers with something that is not a
+        // texture set, which is not an error worth surfacing.
+        Err(_) => return Ok(None),
+    };
+
+    Ok(textures.skin.map(|skin| skin.url))
+}

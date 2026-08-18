@@ -172,3 +172,8 @@ export async function listElySkins(username: string): Promise<ElyUploadedSkin[]>
 export async function wearElySkin(skinId: number): Promise<void> {
 	await invoke('plugin:ely-auth|ely_wear_skin', { skinId })
 }
+
+/** Storage URL of the skin the account currently wears, if it has a custom one. */
+export async function getElyCurrentSkinUrl(username: string): Promise<string | null> {
+	return await invoke('plugin:ely-auth|ely_current_skin_url', { username })
+}

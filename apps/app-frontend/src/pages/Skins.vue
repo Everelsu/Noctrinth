@@ -43,6 +43,7 @@ import {
 	ELY_FALLBACK_SKIN,
 	type ElyUploadedSkin,
 	getElyCapeTexture,
+	getElyCurrentSkinUrl,
 	getElySkinTexture,
 	listElySkins,
 	wearElySkin,
@@ -312,17 +313,49 @@ const elySkinIsFallback = ref(false)
 const elySkins = ref<ElyUploadedSkin[]>([])
 const elySkinsLoading = ref(false)
 const elyWearingId = ref<number | null>(null)
+const elyCurrentSkinUrl = ref<string | null>(null)
+
+/** Ely.by texture URLs come back over either scheme; compare without one. */
+function sameTexture(a: string | null | undefined, b: string | null | undefined) {
+	if (!a || !b) return false
+	return a.replace(/^https?:/, '') === b.replace(/^https?:/, '')
+}
+
+// Presented through the same grid the Microsoft account uses, so an Ely.by
+// account gets the real skin list rather than a page of buttons.
+const elySkinsAsSkins = computed<Skin[]>(() =>
+	elySkins.value.map((skin) => ({
+		texture_key: `ely:${skin.id}`,
+		variant: skin.is_slim ? 'SLIM' : 'CLASSIC',
+		texture: skin.skin_url,
+		source: 'custom_external',
+		is_equipped: sameTexture(skin.skin_url, elyCurrentSkinUrl.value),
+	})),
+)
+
+function isElySkinSelected(skin: Skin) {
+	return skin.is_equipped
+}
 
 async function loadElySkins() {
 	const username = elyAccount.value?.profile.name
 	if (!username) {
 		elySkins.value = []
+		elyCurrentSkinUrl.value = null
 		return
 	}
 
 	elySkinsLoading.value = true
 	try {
-		elySkins.value = await listElySkins(username)
+		const [items, current] = await Promise.all([
+			listElySkins(username),
+			getElyCurrentSkinUrl(username).catch(() => null),
+		])
+		elySkins.value = items
+		elyCurrentSkinUrl.value = current
+		// Same preview pipeline as the Microsoft grid, so the tiles render
+		// identically instead of showing raw texture sheets.
+		generateSkinPreviews(elySkinsAsSkins.value, [])
 	} catch (error) {
 		handleError(error)
 	} finally {
@@ -337,18 +370,21 @@ async function loadElySkins() {
  * texture is the only evidence. If it did not change, the session is almost
  * certainly missing and the window is opened for the user to sign in.
  */
-async function applyElySkin(skin: ElyUploadedSkin) {
-	if (elyWearingId.value !== null) return
+async function applyElySkin(skin: Skin) {
+	const id = Number(skin.texture_key.replace('ely:', ''))
+	if (!Number.isFinite(id) || elyWearingId.value !== null) return
 
-	elyWearingId.value = skin.id
+	elyWearingId.value = id
 	const before = elySkinTexture.value
 	try {
-		await wearElySkin(skin.id)
+		await wearElySkin(id)
 		await new Promise((resolve) => setTimeout(resolve, 1200))
 		refreshElySkin()
 		await new Promise((resolve) => setTimeout(resolve, 800))
 		if (elySkinTexture.value === before) {
 			await ely_open_skin_window()
+		} else {
+			elyCurrentSkinUrl.value = skin.texture
 		}
 	} catch (error) {
 		handleError(error)
@@ -1553,26 +1589,18 @@ async function checkUserChanges() {
 				<p v-if="!elySkinsLoading && !elySkins.length" class="text-secondary m-0">
 					{{ formatMessage(messages.elyMySkinsEmpty) }}
 				</p>
-				<div v-else class="flex flex-wrap gap-3">
-					<button
-						v-for="skin in elySkins"
-						:key="skin.id"
-						type="button"
-						:disabled="elyWearingId !== null"
-						class="relative w-24 rounded-lg border border-solid border-button-border bg-bg-raised p-2 cursor-pointer transition-transform hover:-translate-y-0.5 disabled:cursor-wait"
-						@click="applyElySkin(skin)"
-					>
-						<img
-							:src="skin.skin_url"
-							:alt="String(skin.id)"
-							class="w-full [image-rendering:pixelated]"
-						/>
-						<SpinnerIcon
-							v-if="elyWearingId === skin.id"
-							class="absolute right-1 top-1 h-4 w-4 animate-spin"
-						/>
-					</button>
-				</div>
+				<VirtualSkinSectionList
+					v-else
+					:saved-skins="elySkinsAsSkins"
+					:default-skin-sections="[]"
+					:get-baked-skin-textures="getBakedSkinTextures"
+					:is-skin-selected="isElySkinSelected"
+					:is-skin-active="isElySkinSelected"
+					:is-add-skin-button-drag-active="false"
+					:read-only="elyWearingId !== null"
+					@select="applyElySkin"
+					@add-skin="openElySkinPage"
+				/>
 			</section>
 		</div>
 	</div>

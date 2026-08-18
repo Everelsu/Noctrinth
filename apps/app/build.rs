@@ -422,6 +422,7 @@ fn main() {
                         "ely_get_skin_texture",
                         "ely_open_skin_window",
                         "ely_list_skins",
+                        "ely_current_skin_url",
                         "ely_wear_skin",
                     ])
                     .default_permission(

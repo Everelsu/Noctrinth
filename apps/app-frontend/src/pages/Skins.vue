@@ -41,8 +41,11 @@ import { ely_open_skin_window } from '@/helpers/ely_auth'
 import {
 	clearElySkinCache,
 	ELY_FALLBACK_SKIN,
+	type ElyUploadedSkin,
 	getElyCapeTexture,
 	getElySkinTexture,
+	listElySkins,
+	wearElySkin,
 } from '@/helpers/ely_skins'
 import type { RenderResult } from '@/helpers/rendering/batch-skin-renderer.ts'
 import {
@@ -230,6 +233,15 @@ const messages = defineMessages({
 		defaultMessage:
 			"Skins for Ely.by accounts are managed on the Ely.by website. The button below opens it in a window right here in the app — if you aren't signed in, Ely.by will ask you to log in first. Once you close the window, the preview updates automatically.",
 	},
+	elyMySkinsTitle: {
+		id: 'app.skins.ely.my-skins.title',
+		defaultMessage: 'Your Ely.by skins',
+	},
+	elyMySkinsEmpty: {
+		id: 'app.skins.ely.my-skins.empty',
+		defaultMessage:
+			'Nothing uploaded yet. Upload a skin on Ely.by and it will show up here to click on.',
+	},
 	elySkinsChangeButton: {
 		id: 'ely-skins.change-button',
 		defaultMessage: 'Change skin on Ely.by',
@@ -294,6 +306,57 @@ const elyCapeTexture = ref<string | undefined>(undefined)
 /** True when the user has no custom skin / fetch failed — Steve is shown. */
 const elySkinIsFallback = ref(false)
 
+// Ely.by has no skin API, but the catalogue listing is public and the ID it
+// returns is exactly what the site's own "wear" call takes. That is enough to
+// draw the account's skins here and put one on without leaving the app.
+const elySkins = ref<ElyUploadedSkin[]>([])
+const elySkinsLoading = ref(false)
+const elyWearingId = ref<number | null>(null)
+
+async function loadElySkins() {
+	const username = elyAccount.value?.profile.name
+	if (!username) {
+		elySkins.value = []
+		return
+	}
+
+	elySkinsLoading.value = true
+	try {
+		elySkins.value = await listElySkins(username)
+	} catch (error) {
+		handleError(error)
+	} finally {
+		elySkinsLoading.value = false
+	}
+}
+
+/**
+ * Wears a skin, then re-reads the texture to see whether it took.
+ *
+ * The website call cannot answer back through the embedded window, so the
+ * texture is the only evidence. If it did not change, the session is almost
+ * certainly missing and the window is opened for the user to sign in.
+ */
+async function applyElySkin(skin: ElyUploadedSkin) {
+	if (elyWearingId.value !== null) return
+
+	elyWearingId.value = skin.id
+	const before = elySkinTexture.value
+	try {
+		await wearElySkin(skin.id)
+		await new Promise((resolve) => setTimeout(resolve, 1200))
+		refreshElySkin()
+		await new Promise((resolve) => setTimeout(resolve, 800))
+		if (elySkinTexture.value === before) {
+			await ely_open_skin_window()
+		}
+	} catch (error) {
+		handleError(error)
+	} finally {
+		elyWearingId.value = null
+	}
+}
+
 // Loads skin + cape + model variant for the active Ely.by account. The
 // preview must never hang on an eternal loading state, so any failure falls
 // back to the bundled Steve texture instead of an empty texture-src (which
@@ -304,6 +367,8 @@ watch(
 	() => [elyAccount.value?.profile.name, elySkinRefresh.value] as const,
 	async ([username]) => {
 		if (!username) return
+
+		void loadElySkins()
 
 		let texture: string
 		let isFallback = false
@@ -1480,6 +1545,33 @@ async function checkUserChanges() {
 							{{ formatMessage(messages.elySkinsRefreshButton) }}
 						</Button>
 					</div>
+				</div>
+
+				<h2 class="text-lg font-bold m-0 mt-2 text-primary">
+					{{ formatMessage(messages.elyMySkinsTitle) }}
+				</h2>
+				<p v-if="!elySkinsLoading && !elySkins.length" class="text-secondary m-0">
+					{{ formatMessage(messages.elyMySkinsEmpty) }}
+				</p>
+				<div v-else class="flex flex-wrap gap-3">
+					<button
+						v-for="skin in elySkins"
+						:key="skin.id"
+						type="button"
+						:disabled="elyWearingId !== null"
+						class="relative w-24 rounded-lg border border-solid border-button-border bg-bg-raised p-2 cursor-pointer transition-transform hover:-translate-y-0.5 disabled:cursor-wait"
+						@click="applyElySkin(skin)"
+					>
+						<img
+							:src="skin.skin_url"
+							:alt="String(skin.id)"
+							class="w-full [image-rendering:pixelated]"
+						/>
+						<SpinnerIcon
+							v-if="elyWearingId === skin.id"
+							class="absolute right-1 top-1 h-4 w-4 animate-spin"
+						/>
+					</button>
 				</div>
 			</section>
 		</div>

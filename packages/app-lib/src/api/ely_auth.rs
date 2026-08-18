@@ -94,3 +94,64 @@ pub async fn get_skin_texture(username: &str) -> crate::Result<Vec<u8>> {
 
     Ok(bytes.to_vec())
 }
+
+/// One skin the user has uploaded to Ely.by's public catalogue.
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
+pub struct ElyUploadedSkin {
+    /// The catalogue ID, which is also what `/skins/wear` takes.
+    pub id: u64,
+    /// Direct URL of the skin texture.
+    pub skin_url: String,
+    /// Whether the skin uses the three-pixel-arm model.
+    pub is_slim: bool,
+}
+
+#[derive(serde::Deserialize)]
+struct ElySkinListing {
+    items: Vec<ElyUploadedSkin>,
+}
+
+/// Lists the skins a user has uploaded to Ely.by.
+///
+/// Ely.by has no skin API, but the website's own listing endpoint is public
+/// and returns exactly what a skin grid needs — including the ID that
+/// `/skins/wear` expects. It is fetched here rather than from the frontend
+/// because ely.by sends no CORS headers.
+pub async fn list_uploaded_skins(
+    username: &str,
+) -> crate::Result<Vec<ElyUploadedSkin>> {
+    use crate::util::fetch::INSECURE_REQWEST_CLIENT;
+
+    let url = format!(
+        "https://ely.by/skins/get?uploader={}",
+        urlencoding::encode(username)
+    );
+
+    let resp = INSECURE_REQWEST_CLIENT
+        .get(&url)
+        .header("X-Requested-With", "XMLHttpRequest")
+        .header("Accept", "application/json")
+        .send()
+        .await
+        .map_err(|e| {
+            crate::ErrorKind::OtherError(format!(
+                "Failed to list Ely.by skins: {e}"
+            ))
+        })?;
+
+    if !resp.status().is_success() {
+        return Err(crate::ErrorKind::OtherError(format!(
+            "Ely.by skin listing failed (HTTP {})",
+            resp.status()
+        ))
+        .into());
+    }
+
+    let listing: ElySkinListing = resp.json().await.map_err(|e| {
+        crate::ErrorKind::OtherError(format!(
+            "Could not read the Ely.by skin listing: {e}"
+        ))
+    })?;
+
+    Ok(listing.items)
+}

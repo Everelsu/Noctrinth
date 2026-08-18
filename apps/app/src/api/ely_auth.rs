@@ -14,6 +14,8 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             ely_set_default_user,
             ely_get_skin_texture,
             ely_open_skin_window,
+            ely_list_skins,
+            ely_wear_skin,
         ])
         .build()
 }
@@ -68,6 +70,68 @@ const ELY_SKIN_WINDOW_CLOSED_EVENT: &str = "ely-skin-window-closed";
 /// exists — so the sign-in inside this webview is the only one there is.
 /// Keeping the webview alive keeps that sign-in, which means the page is
 /// reached logged in on every subsequent open rather than only the first.
+/// Lists the skins the given Ely.by user has uploaded to the public catalogue.
+#[tauri::command]
+pub async fn ely_list_skins(
+    username: &str,
+) -> Result<Vec<theseus::ely_auth::ElyUploadedSkin>> {
+    Ok(theseus::ely_auth::list_uploaded_skins(username).await?)
+}
+
+/// The website call that puts a catalogue skin on the signed-in account.
+///
+/// `/skins/wear` wants nothing but the skin ID and the website session cookie —
+/// there is no CSRF token — so it can be driven from inside the embedded
+/// webview, which is the only place that session exists.
+fn wear_skin_script(skin_id: u64) -> String {
+    format!(
+        "fetch('https://ely.by/skins/wear', {{             method: 'POST',             credentials: 'same-origin',             headers: {{                 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',                 'X-Requested-With': 'XMLHttpRequest'             }},             body: 'skinId={skin_id}'         }}).catch(function () {{}});"
+    )
+}
+
+/// Wears one of the account's uploaded skins.
+///
+/// The skin grid in the app is drawn from a public listing, but actually
+/// putting one on needs the website session. That session lives in the
+/// embedded skin window, so the request is issued from there. When the window
+/// does not exist yet it is created hidden and the call is deferred until the
+/// page has loaded.
+///
+/// Whether it took effect is not reported back: a webview on a remote origin
+/// has no IPC channel to answer through. The caller re-reads the skin texture
+/// instead, which is the same thing the user would look at.
+#[tauri::command]
+pub async fn ely_wear_skin<R: Runtime>(
+    app: tauri::AppHandle<R>,
+    skin_id: u64,
+) -> Result<()> {
+    if let Some(existing) = app.get_webview_window(ELY_SKIN_WINDOW_LABEL) {
+        existing.eval(&wear_skin_script(skin_id)).ok();
+        return Ok(());
+    }
+
+    let url: tauri::Url = "https://ely.by/skins/add"
+        .parse()
+        .expect("static Ely.by URL must parse");
+
+    let script = wear_skin_script(skin_id);
+    tauri::WebviewWindowBuilder::new(
+        &app,
+        ELY_SKIN_WINDOW_LABEL,
+        tauri::WebviewUrl::External(url),
+    )
+    .title("Ely.by — skin")
+    .inner_size(1080.0, 800.0)
+    .center()
+    .visible(false)
+    .on_page_load(move |window, _| {
+        window.eval(&script).ok();
+    })
+    .build()?;
+
+    Ok(())
+}
+
 #[tauri::command]
 pub async fn ely_open_skin_window<R: Runtime>(
     app: tauri::AppHandle<R>,

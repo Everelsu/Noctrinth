@@ -1691,6 +1691,12 @@
   "app.skins.edit-button": {
     "message": "Edit skin"
   },
+  "app.skins.ely.my-skins.empty": {
+    "message": "Nothing uploaded yet. Upload a skin on Ely.by and it will show up here to click on."
+  },
+  "app.skins.ely.my-skins.title": {
+    "message": "Your Ely.by skins"
+  },
   "app.skins.modal.add-skin-button": {
     "message": "Add skin"
   },

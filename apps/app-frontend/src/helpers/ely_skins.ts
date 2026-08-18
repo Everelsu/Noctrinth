@@ -149,3 +149,26 @@ export function clearElySkinCache(): void {
 	capeTextureCache.clear()
 	headCache.clear()
 }
+
+/** A skin the account has uploaded to Ely.by's public catalogue. */
+export interface ElyUploadedSkin {
+	id: number
+	skin_url: string
+	is_slim: boolean
+}
+
+/** Lists the skins an Ely.by account has uploaded. */
+export async function listElySkins(username: string): Promise<ElyUploadedSkin[]> {
+	return await invoke('plugin:ely-auth|ely_list_skins', { username })
+}
+
+/**
+ * Puts one of the account's uploaded skins on.
+ *
+ * Ely.by has no skin API; this drives the website's own `/skins/wear` call from
+ * inside the embedded window, which is where the site session lives. It cannot
+ * report whether it worked — reload the texture to find out.
+ */
+export async function wearElySkin(skinId: number): Promise<void> {
+	await invoke('plugin:ely-auth|ely_wear_skin', { skinId })
+}

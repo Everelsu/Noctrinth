@@ -421,6 +421,8 @@ fn main() {
                         "ely_set_default_user",
                         "ely_get_skin_texture",
                         "ely_open_skin_window",
+                        "ely_list_skins",
+                        "ely_wear_skin",
                     ])
                     .default_permission(
                         DefaultPermissionRule::AllowAllCommands,

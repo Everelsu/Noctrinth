@@ -51,6 +51,10 @@ pub struct Settings {
     /// Minecraft `options.txt` values applied to every instance at launch.
     pub shared_game_options: SharedGameOptions,
 
+    /// Whether the game looks a player's skin up by name when the server sent
+    /// none — see [`crate::launcher::args::UNIVERSAL_SKINS_SOURCE`].
+    pub universal_skins: bool,
+
     pub version: usize,
 }
 
@@ -187,6 +191,11 @@ impl Settings {
                 .fetch_one(exec)
                 .await?;
 
+        let universal_skins: i64 =
+            sqlx::query_scalar("SELECT universal_skins FROM settings")
+                .fetch_one(exec)
+                .await?;
+
         let res = sqlx::query!(
             "
             SELECT
@@ -261,6 +270,7 @@ impl Settings {
                 .as_deref()
                 .and_then(|raw| serde_json::from_str(raw).ok())
                 .unwrap_or_default(),
+            universal_skins: universal_skins == 1,
             version: res.version as usize,
         })
     }
@@ -362,6 +372,11 @@ impl Settings {
         // Runtime-checked for the same reason as in `get` — fork-only columns.
         sqlx::query("UPDATE settings SET proxy_url = $1")
             .bind(&self.proxy_url)
+            .execute(exec)
+            .await?;
+
+        sqlx::query("UPDATE settings SET universal_skins = $1")
+            .bind(i64::from(self.universal_skins))
             .execute(exec)
             .await?;
 

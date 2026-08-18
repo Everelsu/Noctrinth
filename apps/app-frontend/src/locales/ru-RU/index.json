@@ -1025,6 +1025,12 @@
   "app.settings.default-instance-options.pre-launch-hook.title": {
     "message": "Команда перед запуском"
   },
+  "app.settings.default-instance-options.universal-skins.description": {
+    "message": "Серверы в offline-режиме не присылают скины вообще — поэтому там все Стивы. Запрашивать их по нику у Ely.by, который отдаёт скины своих пользователей, а для остальных — скины Mojang. Моды не нужны, а скин, присланный сервером, никогда не подменяется."
+  },
+  "app.settings.default-instance-options.universal-skins.title": {
+    "message": "Скины всех игроков"
+  },
   "app.settings.default-instance-options.width.description": {
     "message": "Ширина окна игры при запуске."
   },

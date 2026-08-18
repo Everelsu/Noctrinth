@@ -1,7 +1,9 @@
 package com.modrinth.theseus.agent;
 
+import com.modrinth.theseus.agent.skins.SkinSource;
 import com.modrinth.theseus.agent.transformers.ClassTransformer;
 import com.modrinth.theseus.agent.transformers.MinecraftTransformer;
+import com.modrinth.theseus.agent.transformers.SessionServiceTransformer;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.lang.instrument.Instrumentation;
@@ -49,6 +51,11 @@ public final class TheseusAgent {
 
         final Map<String, ClassTransformer> transformers = new HashMap<>();
         transformers.put("net/minecraft/client/Minecraft", new MinecraftTransformer());
+        // Only when the launcher asked for it: this one reaches out to a skin
+        // system for players the server said nothing about.
+        if (SkinSource.isEnabled()) {
+            transformers.put(SessionServiceTransformer.TARGET_CLASS, new SessionServiceTransformer());
+        }
 
         instrumentation.addTransformer((loader, className, classBeingRedefined, protectionDomain, classData) -> {
             final ClassTransformer transformer = transformers.get(className);

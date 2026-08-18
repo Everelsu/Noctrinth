@@ -1077,6 +1077,13 @@ pub async fn launch_minecraft(
 
     let rpc_server = RpcServerBuilder::new().launch().await?;
 
+    // Off leaves the game exactly as vanilla has it: whatever textures the
+    // server sent, and Steve for everyone it sent none for.
+    let skin_source = crate::state::Settings::get(&state.pool)
+        .await?
+        .universal_skins
+        .then_some(args::UNIVERSAL_SKINS_SOURCE);
+
     command.args(
         args::get_jvm_arguments(
             args.get(&d::minecraft::ArgumentType::Jvm)
@@ -1111,6 +1118,7 @@ pub async fn launch_minecraft(
                 .as_ref()
                 .and_then(|x| x.get(&LoggingSide::Client)),
             rpc_server.address(),
+            skin_source,
         )?
         .into_iter(),
     );

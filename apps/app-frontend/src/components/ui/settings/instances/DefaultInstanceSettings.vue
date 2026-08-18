@@ -24,6 +24,15 @@ const messages = defineMessages({
 		id: 'app.settings.default-instance-options.fullscreen.description',
 		defaultMessage: 'Start instances in fullscreen by updating their options.txt file.',
 	},
+	universalSkinsTitle: {
+		id: 'app.settings.default-instance-options.universal-skins.title',
+		defaultMessage: 'Skins for every player',
+	},
+	universalSkinsDescription: {
+		id: 'app.settings.default-instance-options.universal-skins.description',
+		defaultMessage:
+			'Servers in offline mode send no skins at all, which is why everyone is Steve there. Look them up by name instead, from Ely.by — which answers for the players registered there and falls back to Mojang for everyone else. Needs no mods, and never replaces a skin the server did send.',
+	},
 	widthTitle: {
 		id: 'app.settings.default-instance-options.width.title',
 		defaultMessage: 'Width',
@@ -192,6 +201,19 @@ watch(
 				</div>
 
 				<Toggle id="fullscreen" v-model="settings.force_fullscreen" />
+			</div>
+
+			<div class="flex items-center justify-between gap-4">
+				<div class="flex flex-col gap-1">
+					<h3 class="m-0 text-lg font-semibold text-contrast">
+						{{ formatMessage(messages.universalSkinsTitle) }}
+					</h3>
+					<p class="m-0 leading-tight">
+						{{ formatMessage(messages.universalSkinsDescription) }}
+					</p>
+				</div>
+
+				<Toggle id="universal-skins" v-model="settings.universal_skins" />
 			</div>
 
 			<div class="flex items-center justify-between gap-4">

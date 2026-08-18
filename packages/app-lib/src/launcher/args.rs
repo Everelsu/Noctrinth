@@ -23,6 +23,17 @@ use uuid::Uuid;
 // Replaces the space separator with a newline character, as to not split the arguments
 const TEMPORARY_REPLACE_CHAR: &str = "\n";
 
+/// Where the game looks a player's skin up when the server sent none.
+///
+/// A server in offline mode hands out profiles without textures, and the client
+/// asks nobody about it, so everyone there is Steve. Given this, the agent in
+/// `theseus.jar` fills those profiles in by name.
+///
+/// Ely.by answers by name, serves its own users' skins, and proxies Mojang's for
+/// names it has never heard of — so one source covers licensed and offline
+/// players alike, rather than picking a side.
+pub const UNIVERSAL_SKINS_SOURCE: &str = "https://skinsystem.ely.by";
+
 /// Builds the classpath for a launch.
 ///
 /// `local_libraries_path` is the instance's own `libraries` folder, which is
@@ -157,6 +168,7 @@ pub fn get_jvm_arguments(
     quick_play_version: QuickPlayVersion,
     log_config: Option<&LoggingConfiguration>,
     ipc_addr: SocketAddr,
+    skin_source: Option<&str>,
 ) -> crate::Result<Vec<String>> {
     let mut parsed_arguments = Vec::new();
 
@@ -233,6 +245,12 @@ pub fn get_jvm_arguments(
             format!("-Dmodrinth.internal.quickPlay.host={host}"),
             format!("-Dmodrinth.internal.quickPlay.port={port}"),
         ]);
+    }
+
+    // Ahead of the instance's own arguments, so anyone who would rather name
+    // their own skin system can still do it with a `-D` of their own.
+    if let Some(source) = skin_source {
+        parsed_arguments.push(format!("-Dnoctrinth.skins.source={source}"));
     }
 
     for arg in custom_args {

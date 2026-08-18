@@ -71,6 +71,12 @@ export type AppSettings = {
 	/** Minecraft `options.txt` values written to every instance at launch. */
 	shared_game_options: SharedGameOptionsProfile
 
+	/**
+	 * Whether the game looks a player's skin up by name when the server sent
+	 * none, which is every player on an offline-mode server.
+	 */
+	universal_skins: boolean
+
 	version: number
 }
 

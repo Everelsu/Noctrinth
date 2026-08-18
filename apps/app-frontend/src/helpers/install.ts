@@ -11,7 +11,7 @@ import type { SharedInstanceUnavailableReason } from '@/generated/app-events/Sha
 import type { AppEvents } from '@/providers/app-events'
 
 import { CURSEFORGE_API_KEY } from './curseforge-key'
-import type { InstanceLink, InstanceLoader } from './types'
+import type { InstanceIconConfig, InstanceLink, InstanceLoader } from './types'
 
 export type {
 	InstallErrorView,
@@ -72,6 +72,7 @@ export interface InstallCreateInstanceRequest {
 	loader: InstanceLoader
 	loaderVersion: string | null
 	iconPath: string | null
+	iconConfig?: InstanceIconConfig | null
 	link?: InstanceLink | null
 }
 

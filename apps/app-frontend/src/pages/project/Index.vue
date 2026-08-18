@@ -109,7 +109,7 @@
 							<TeleportOverflowMenu
 								type="quiet"
 								size="xl"
-								label="More options"
+								:label="formatMessage(messages.moreOptions)"
 								:options="serverProjectHeaderMoreActions"
 							>
 								<MoreVerticalIcon />
@@ -176,7 +176,7 @@
 							<TeleportOverflowMenu
 								type="quiet"
 								size="xl"
-								label="More options"
+								:label="formatMessage(messages.moreOptions)"
 								:options="projectHeaderMoreActions"
 							>
 								<MoreVerticalIcon />
@@ -187,17 +187,17 @@
 				<NavTabs
 					:links="[
 						{
-							label: 'Description',
+							label: formatMessage(messages.descriptionTab),
 							href: projectDescriptionHref,
 						},
 						{
-							label: 'Versions',
+							label: formatMessage(messages.versionsTab),
 							href: versionsHref,
 							subpages: ['version'],
 							shown: projectV3?.minecraft_server == null,
 						},
 						{
-							label: 'Gallery',
+							label: formatMessage(messages.galleryTab),
 							href: projectGalleryHref,
 							shown: data.gallery.length > 0,
 						},
@@ -215,7 +215,7 @@
 					:installed-version="installedVersion"
 				/>
 			</template>
-			<template v-else> Project data couldn't not be loaded. </template>
+			<template v-else>{{ formatMessage(messages.loadError) }}</template>
 		</div>
 		<SelectedProjectsFloatingBar
 			v-if="projectInstallContext"
@@ -292,7 +292,6 @@ import {
 	useVIntl,
 } from '@modrinth/ui'
 import { useQueryClient } from '@tanstack/vue-query'
-import { convertFileSrc } from '@tauri-apps/api/core'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -319,6 +318,7 @@ import {
 import {
 	get as getInstance,
 	get_projects as getInstanceProjects,
+	getInstanceIconUrl,
 	kill,
 	list as listInstances,
 } from '@/helpers/instance'
@@ -367,6 +367,15 @@ const themeStore = useTheming()
 const { formatMessage } = useVIntl()
 
 const messages = defineMessages({
+	moreOptions: { id: 'app.project.more-options', defaultMessage: 'More options' },
+	descriptionTab: { id: 'app.project.tab.description', defaultMessage: 'Description' },
+	versionsTab: { id: 'app.project.tab.versions', defaultMessage: 'Versions' },
+	galleryTab: { id: 'app.project.tab.gallery', defaultMessage: 'Gallery' },
+	loadError: {
+		id: 'app.project.load-error',
+		defaultMessage: 'Project data could not be loaded.',
+	},
+	comingSoon: { id: 'app.project.coming-soon', defaultMessage: 'Coming soon' },
 	backToBrowse: {
 		id: 'app.project.install-context.back-to-browse',
 		defaultMessage: 'Back to discover',
@@ -594,7 +603,7 @@ const projectInstallContext = computed(() => {
 			name: instance.value.name,
 			loader: instance.value.loader,
 			gameVersion: instance.value.game_version,
-			iconSrc: instance.value.icon_path ? convertFileSrc(instance.value.icon_path) : null,
+			iconSrc: getInstanceIconUrl(instance.value.icon_path),
 			backUrl: projectBrowseBackUrl.value,
 			backLabel: projectBackLabel.value,
 			heading: formatMessage(commonMessages.installingContentLabel),

@@ -347,6 +347,12 @@ pub struct Library {
     #[serde(default = "default_downloadable")]
     /// Whether the library should be downloaded
     pub downloadable: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    /// The MultiMC-style component this library belongs to, such as
+    /// `net.minecraft` or `net.minecraftforge`. The launcher fills this in when
+    /// it merges a version so that a version patch can redefine a whole
+    /// component's libraries the way Prism does.
+    pub component: Option<String>,
     #[serde(
         rename = "MMC-hint",
         default,

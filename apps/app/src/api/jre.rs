@@ -15,8 +15,47 @@ pub fn init<R: tauri::Runtime>() -> TauriPlugin<R> {
             jre_test_jre,
             jre_auto_install_java,
             jre_get_max_memory,
+            jre_get_gpu_status,
+            jre_set_gpu_preference,
+            jre_list_installed_runtimes,
+            jre_remove_installed_runtime,
+            jre_remove_unused_runtimes,
         ])
         .build()
+}
+
+/// Every Java runtime the launcher has downloaded, with its size on disk.
+#[tauri::command]
+pub async fn jre_list_installed_runtimes() -> Result<Vec<jre::InstalledRuntime>>
+{
+    Ok(jre::list_installed_runtimes().await?)
+}
+
+#[tauri::command]
+pub async fn jre_remove_installed_runtime(path: PathBuf) -> Result<()> {
+    jre::remove_installed_runtime(path).await?;
+    Ok(())
+}
+
+/// Removes every runtime no Java setting points at. Returns bytes reclaimed.
+#[tauri::command]
+pub async fn jre_remove_unused_runtimes() -> Result<u64> {
+    Ok(jre::remove_unused_runtimes().await?)
+}
+
+/// Which GPU Windows will hand the runtime at `path`, and what is available.
+#[tauri::command]
+pub async fn jre_get_gpu_status(path: PathBuf) -> Result<gpu::JavaGpuStatus> {
+    Ok(gpu::status(&path)?)
+}
+
+#[tauri::command]
+pub async fn jre_set_gpu_preference(
+    path: PathBuf,
+    preference: gpu::GpuPreference,
+) -> Result<gpu::JavaGpuStatus> {
+    gpu::set_preference(&path, preference)?;
+    Ok(gpu::status(&path)?)
 }
 
 #[tauri::command]

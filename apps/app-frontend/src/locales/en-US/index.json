@@ -2135,20 +2135,26 @@
   "instance.settings.tabs.java.modern-java": {
     "message": "Modern Java"
   },
+  "instance.settings.tabs.java.modern-java-beta": {
+    "message": "Beta"
+  },
+  "instance.settings.tabs.java.modern-java-beta-note": {
+    "message": "This is new and not widely tested yet. Back up the instance before enabling it, and expect mods that assume Java 8 to misbehave."
+  },
   "instance.settings.tabs.java.modern-java-description": {
-    "message": "Minecraft {gameVersion} normally only runs on Java 8. lwjgl3ify replaces LWJGL 2 and patches Forge so the instance can run on a current Java release instead."
+    "message": "Minecraft {gameVersion} normally only runs on Java 8. {provider} replaces LWJGL 2 and reworks Forge so the instance can run on a current Java release instead."
   },
   "instance.settings.tabs.java.modern-java-install": {
     "message": "Enable"
   },
   "instance.settings.tabs.java.modern-java-installed": {
-    "message": "Installed — lwjgl3ify {version}, running on Java {javaMajor}"
+    "message": "Installed — {provider} {version}, running on Java {javaMajor}"
   },
   "instance.settings.tabs.java.modern-java-installing": {
     "message": "Enabling..."
   },
   "instance.settings.tabs.java.modern-java-mods-note": {
-    "message": "Disabling removes the launcher patches. The lwjgl3ify and UniMixins mods stay in the instance — remove them from the Mods tab if you no longer want them."
+    "message": "Disabling removes the launcher patches. Any mods it installed stay in the instance — remove them from the Mods tab if you no longer want them."
   },
   "instance.settings.tabs.java.modern-java-remove": {
     "message": "Disable"
@@ -2157,7 +2163,7 @@
     "message": "Java version"
   },
   "instance.settings.tabs.java.modern-java-version-hint": {
-    "message": "Picking a version downloads it and pins it as this instance’s Java installation. The lowest one is the best tested; newer ones are supported but less proven with 1.7.10 mods."
+    "message": "Picking a version downloads it and pins it as this instance’s Java installation. The lowest one is the best tested; newer ones are supported but less proven with mods for this Minecraft version."
   },
   "instance.settings.tabs.sharing": {
     "message": "Sharing"

@@ -2,6 +2,7 @@
 pub mod cache;
 pub mod ely_auth;
 pub mod friends;
+pub mod gpu;
 pub mod handler;
 pub mod instance;
 pub mod jre;
@@ -45,7 +46,7 @@ pub mod prelude {
         data::*,
         ely_auth,
         event::CommandPayload,
-        install, instance, jre, metadata, minecraft_auth, mr_auth, pack,
+        gpu, install, instance, jre, metadata, minecraft_auth, mr_auth, pack,
         process, settings,
         state::{ReleaseChannel, db_backup::app_db_backup_dir},
         util::{

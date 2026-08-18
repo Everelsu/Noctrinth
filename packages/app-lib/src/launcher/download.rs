@@ -457,6 +457,7 @@ pub async fn download_version_info(
     st: &State,
     version: &GameVersion,
     loader: Option<&LoaderVersion>,
+    loader_component: &str,
     force: Option<bool>,
     loading_bar: Option<&LoadingBarId>,
     reporter: Option<&InstallProgressReporter>,
@@ -469,11 +470,28 @@ pub async fn download_version_info(
         .version_dir(&version_id)
         .join(format!("{version_id}.json"));
 
-    let res = if path.exists() && !force.unwrap_or(false) {
-        io::read(path)
-            .err_into::<crate::Error>()
-            .await
-            .and_then(|ref it| Ok(serde_json::from_slice(it)?))
+    // A version cached before the launcher recorded which component each
+    // library came from has to be rebuilt, or a version patch has no way to
+    // tell the game's libraries from the loader's.
+    let cached = if path.exists() && !force.unwrap_or(false) {
+        match io::read(&path).await {
+            Ok(contents) => {
+                serde_json::from_slice::<GameVersionInfo>(&contents)
+                    .ok()
+                    .filter(|info| {
+                        info.libraries
+                            .iter()
+                            .all(|library| library.component.is_some())
+                    })
+            }
+            Err(_) => None,
+        }
+    } else {
+        None
+    };
+
+    let res = if let Some(cached) = cached {
+        Ok::<GameVersionInfo, crate::Error>(cached)
     } else {
         tracing::info!(
             "Downloading version info for version {} from {}",
@@ -493,7 +511,7 @@ pub async fn download_version_info(
                 )
                 .await?;
         }
-        let mut info = fetch_json(
+        let mut info: GameVersionInfo = fetch_json(
             Method::GET,
             &version.url,
             None,
@@ -528,7 +546,34 @@ pub async fn download_version_info(
                 &st.pool,
             )
             .await?;
+
+            // Which component a library belongs to is only knowable here, while
+            // the two sides are still separate. Version patches need it to
+            // redefine a whole component the way Prism does.
+            let vanilla_libraries = info
+                .libraries
+                .iter()
+                .map(|library| library.name.clone())
+                .collect::<std::collections::HashSet<_>>();
+
             info = d::modded::merge_partial_version(partial, info);
+
+            for library in &mut info.libraries {
+                library.component = Some(
+                    if vanilla_libraries.contains(&library.name) {
+                        crate::launcher::patches::VANILLA_COMPONENT
+                    } else {
+                        loader_component
+                    }
+                    .to_string(),
+                );
+            }
+        } else {
+            for library in &mut info.libraries {
+                library.component = Some(
+                    crate::launcher::patches::VANILLA_COMPONENT.to_string(),
+                );
+            }
         }
 
         info.id.clone_from(&version_id);

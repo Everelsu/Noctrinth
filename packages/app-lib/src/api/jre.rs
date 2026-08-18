@@ -12,7 +12,7 @@ use dashmap::DashMap;
 use reqwest::Method;
 use serde::Deserialize;
 use std::future::Future;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::pin::Pin;
 use sysinfo::{MemoryRefreshKind, RefreshKind};
 
@@ -408,12 +408,57 @@ async fn auto_install_java_inner(
             base_path = base_path.join("bin").join(jre::JAVA_BIN)
         }
 
+        carry_gpu_preference_forward(java_version, &base_path).await;
+
         Ok(base_path)
     } else {
         Err(crate::ErrorKind::LauncherError(format!(
                     "No Java Version found for Java version {}, OS {}, and Architecture {}",
                     java_version, std::env::consts::OS, std::env::consts::ARCH,
                 )).into())
+    }
+}
+
+/// Gives a freshly installed runtime the GPU its predecessor was set to.
+///
+/// Windows keys the choice on the executable's full path, and every Java update
+/// lands in a directory named after the new version — so without this, updating
+/// Java silently hands the game back to the integrated GPU, having only ever
+/// been configured once. Best-effort throughout: a launcher that cannot copy a
+/// display preference has no business failing a Java install over it.
+async fn carry_gpu_preference_forward(java_version: u32, new_java_path: &Path) {
+    if !cfg!(target_os = "windows") {
+        return;
+    }
+
+    let Ok(state) = State::get().await else {
+        return;
+    };
+    let Ok(previous) = JavaVersion::get(java_version, &state.pool).await else {
+        return;
+    };
+    let Some(previous) = previous else { return };
+
+    // The same path means nothing moved, so there is nothing to carry.
+    let previous_path = PathBuf::from(&previous.path);
+    if previous_path == new_java_path {
+        return;
+    }
+
+    let preference = match crate::api::gpu::get_preference(&previous_path) {
+        Ok(preference) => preference,
+        Err(error) => {
+            tracing::warn!(
+                "Could not read the previous GPU preference: {error}"
+            );
+            return;
+        }
+    };
+
+    if let Err(error) =
+        crate::api::gpu::inherit_preference(new_java_path, preference)
+    {
+        tracing::warn!("Could not carry the GPU preference forward: {error}");
     }
 }
 
@@ -467,4 +512,246 @@ pub fn default_memory_max_mb() -> u32 {
 // Gets maximum memory in KiB.
 pub async fn get_max_memory() -> crate::Result<u64> {
     Ok(system_memory_bytes() / 1024)
+}
+
+/// A Java runtime the launcher downloaded, as it sits on disk.
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
+pub struct InstalledRuntime {
+    /// The runtime's own directory, and what removal takes.
+    pub path: String,
+    /// The executable inside it, which is what settings point at.
+    pub java_path: String,
+    /// The directory name, e.g. `zulu25.36.15-ca-jre25.0.4-win_x64`.
+    pub name: String,
+    /// Parsed out of the name; `None` when it doesn't follow the usual shape.
+    pub major_version: Option<u32>,
+    pub size_bytes: u64,
+    /// Whether a Java setting currently points at this runtime.
+    pub in_use: bool,
+}
+
+/// Reads the major version out of an Azul directory name.
+///
+/// These arrive as `zulu25.36.15-ca-jre25.0.4-win_x64`, where the part after
+/// `-jre` is the Java version proper — the leading `zulu25.36.15` is Azul's own
+/// build number and only coincidentally starts the same way. Anything that
+/// doesn't match is left unlabelled rather than guessed at.
+fn major_version_from_runtime_name(name: &str) -> Option<u32> {
+    let after_marker = name.split("-jre").nth(1)?;
+    let digits: String = after_marker
+        .chars()
+        .take_while(char::is_ascii_digit)
+        .collect();
+    digits.parse().ok()
+}
+
+async fn directory_size(path: &Path) -> u64 {
+    let mut total = 0;
+    let mut stack = vec![path.to_path_buf()];
+
+    while let Some(dir) = stack.pop() {
+        let Ok(mut entries) = tokio::fs::read_dir(&dir).await else {
+            continue;
+        };
+        while let Ok(Some(entry)) = entries.next_entry().await {
+            let Ok(metadata) = entry.metadata().await else {
+                continue;
+            };
+            if metadata.is_dir() {
+                stack.push(entry.path());
+            } else {
+                total += metadata.len();
+            }
+        }
+    }
+
+    total
+}
+
+/// Every runtime under the launcher's own Java directory.
+///
+/// Nothing prunes these: each update unpacks into a directory named after the
+/// new version and the previous one stays behind forever, so a long-lived
+/// install accumulates a copy of every Java it has ever downloaded.
+pub async fn list_installed_runtimes() -> crate::Result<Vec<InstalledRuntime>> {
+    let state = State::get().await?;
+    let root = state.directories.java_versions_dir();
+
+    let configured = JavaVersion::get_all(&state.pool).await?;
+    let configured_paths: Vec<PathBuf> = configured
+        .iter()
+        .map(|entry| PathBuf::from(&entry.value().path))
+        .collect();
+
+    let mut runtimes = Vec::new();
+    let Ok(mut entries) = tokio::fs::read_dir(&root).await else {
+        return Ok(runtimes);
+    };
+
+    while let Ok(Some(entry)) = entries.next_entry().await {
+        let path = entry.path();
+        if !entry.metadata().await.map(|m| m.is_dir()).unwrap_or(false) {
+            continue;
+        }
+
+        let name = entry.file_name().to_string_lossy().to_string();
+        let java_path = runtime_executable(&path);
+
+        // A configured path can be the executable anywhere inside this
+        // directory, so compare by containment rather than by equality.
+        let in_use = configured_paths
+            .iter()
+            .any(|configured| configured.starts_with(&path));
+
+        runtimes.push(InstalledRuntime {
+            major_version: major_version_from_runtime_name(&name),
+            size_bytes: directory_size(&path).await,
+            java_path: java_path.to_string_lossy().to_string(),
+            path: path.to_string_lossy().to_string(),
+            name,
+            in_use,
+        });
+    }
+
+    // Biggest first: the point of this list is reclaiming space.
+    runtimes.sort_by_key(|runtime| std::cmp::Reverse(runtime.size_bytes));
+    Ok(runtimes)
+}
+
+/// Where the executable lives inside a runtime directory.
+fn runtime_executable(runtime_dir: &Path) -> PathBuf {
+    #[cfg(target_os = "macos")]
+    {
+        runtime_dir
+            .join("Contents")
+            .join("Home")
+            .join("bin")
+            .join("java")
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        runtime_dir.join("bin").join(jre::JAVA_BIN)
+    }
+}
+
+/// Deletes a downloaded runtime.
+///
+/// Guarded twice over, because this removes a directory tree: the path must sit
+/// inside the launcher's own Java directory, and it must not be one a Java
+/// setting still points at. A caller is free to pass anything, and neither the
+/// user's own JDKs nor a runtime in use should ever be reachable from here.
+pub async fn remove_installed_runtime(path: PathBuf) -> crate::Result<()> {
+    let state = State::get().await?;
+    let root = state.directories.java_versions_dir();
+
+    // Resolve both sides before comparing, so `..` cannot walk out.
+    let canonical_root = io::canonicalize(&root)?;
+    let canonical_target = io::canonicalize(&path)?;
+
+    if !canonical_target.starts_with(&canonical_root)
+        || canonical_target == canonical_root
+    {
+        return Err(crate::ErrorKind::InputError(format!(
+            "Refusing to remove {} — it is not a runtime this launcher installed",
+            path.display()
+        ))
+        .into());
+    }
+
+    let configured = JavaVersion::get_all(&state.pool).await?;
+    for entry in &configured {
+        let configured_path = PathBuf::from(&entry.value().path);
+        if io::canonicalize(&configured_path)
+            .map(|resolved| resolved.starts_with(&canonical_target))
+            .unwrap_or(false)
+        {
+            return Err(crate::ErrorKind::InputError(format!(
+                "Java {} is set to use this runtime; point it elsewhere first",
+                entry.key()
+            ))
+            .into());
+        }
+    }
+
+    // Drop the GPU preference too, or the registry keeps an entry for an
+    // executable that no longer exists.
+    let _ = crate::api::gpu::set_preference(
+        &runtime_executable(&canonical_target),
+        crate::api::gpu::GpuPreference::Auto,
+    );
+
+    io::remove_dir_all(&canonical_target).await?;
+    tracing::info!("Removed Java runtime at {}", canonical_target.display());
+
+    Ok(())
+}
+
+/// Deletes every runtime nothing points at, returning the bytes reclaimed.
+pub async fn remove_unused_runtimes() -> crate::Result<u64> {
+    let mut freed = 0;
+
+    for runtime in list_installed_runtimes().await? {
+        if runtime.in_use {
+            continue;
+        }
+        match remove_installed_runtime(PathBuf::from(&runtime.path)).await {
+            Ok(()) => freed += runtime.size_bytes,
+            // One stubborn directory — a file held open, say — should not stop
+            // the rest from being cleared.
+            Err(error) => tracing::warn!(
+                "Could not remove unused runtime {}: {error}",
+                runtime.name
+            ),
+        }
+    }
+
+    Ok(freed)
+}
+
+#[cfg(test)]
+mod runtime_name_tests {
+    use super::major_version_from_runtime_name;
+
+    #[test]
+    fn reads_the_java_version_not_azuls_build_number() {
+        // The leading number is Azul's build; the Java version follows `-jre`.
+        // These two agree for 25 and disagree for 8, which is the whole point.
+        assert_eq!(
+            major_version_from_runtime_name(
+                "zulu25.36.15-ca-jre25.0.4-win_x64"
+            ),
+            Some(25)
+        );
+        assert_eq!(
+            major_version_from_runtime_name(
+                "zulu8.94.0.17-ca-jre8.0.492-win_x64"
+            ),
+            Some(8)
+        );
+        assert_eq!(
+            major_version_from_runtime_name(
+                "zulu17.68.17-ca-jre17.0.20-win_x64"
+            ),
+            Some(17)
+        );
+        assert_eq!(
+            major_version_from_runtime_name(
+                "zulu26.32.13-ca-jre26.0.2-win_x64"
+            ),
+            Some(26)
+        );
+    }
+
+    #[test]
+    fn leaves_unfamiliar_names_unlabelled() {
+        assert_eq!(major_version_from_runtime_name("some-custom-jdk"), None);
+        assert_eq!(major_version_from_runtime_name(""), None);
+        // A JDK rather than a JRE does not carry the `-jre` marker.
+        assert_eq!(
+            major_version_from_runtime_name(
+                "zulu21.50.19-ca-jdk21.0.11-win_x64"
+            ),
+            None
+        );
+    }
 }

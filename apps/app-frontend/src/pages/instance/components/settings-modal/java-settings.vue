@@ -207,14 +207,23 @@ const messages = defineMessages({
 		id: 'instance.settings.tabs.java.modern-java',
 		defaultMessage: 'Modern Java',
 	},
+	modernJavaBeta: {
+		id: 'instance.settings.tabs.java.modern-java-beta',
+		defaultMessage: 'Beta',
+	},
+	modernJavaBetaNote: {
+		id: 'instance.settings.tabs.java.modern-java-beta-note',
+		defaultMessage:
+			'This is new and not widely tested yet. Back up the instance before enabling it, and expect mods that assume Java 8 to misbehave.',
+	},
 	modernJavaDescription: {
 		id: 'instance.settings.tabs.java.modern-java-description',
 		defaultMessage:
-			'Minecraft {gameVersion} normally only runs on Java 8. lwjgl3ify replaces LWJGL 2 and patches Forge so the instance can run on a current Java release instead.',
+			'Minecraft {gameVersion} normally only runs on Java 8. {provider} replaces LWJGL 2 and reworks Forge so the instance can run on a current Java release instead.',
 	},
 	modernJavaInstalled: {
 		id: 'instance.settings.tabs.java.modern-java-installed',
-		defaultMessage: 'Installed — lwjgl3ify {version}, running on Java {javaMajor}',
+		defaultMessage: 'Installed — {provider} {version}, running on Java {javaMajor}',
 	},
 	modernJavaInstall: {
 		id: 'instance.settings.tabs.java.modern-java-install',
@@ -235,12 +244,12 @@ const messages = defineMessages({
 	modernJavaVersionHint: {
 		id: 'instance.settings.tabs.java.modern-java-version-hint',
 		defaultMessage:
-			'Picking a version downloads it and pins it as this instance’s Java installation. The lowest one is the best tested; newer ones are supported but less proven with 1.7.10 mods.',
+			'Picking a version downloads it and pins it as this instance’s Java installation. The lowest one is the best tested; newer ones are supported but less proven with mods for this Minecraft version.',
 	},
 	modernJavaModsNote: {
 		id: 'instance.settings.tabs.java.modern-java-mods-note',
 		defaultMessage:
-			'Disabling removes the launcher patches. The lwjgl3ify and UniMixins mods stay in the instance — remove them from the Mods tab if you no longer want them.',
+			'Disabling removes the launcher patches. Any mods it installed stay in the instance — remove them from the Mods tab if you no longer want them.',
 	},
 	javaInstallation: {
 		id: 'instance.settings.tabs.java.java-installation',
@@ -297,8 +306,13 @@ const messages = defineMessages({
 	<div>
 		<JavaDetectionModal ref="javaDetectionModal" @submit="(val) => (javaPath = val.path)" />
 		<template v-if="modernJava?.supported">
-			<h2 class="m-0 mb-2 text-lg font-extrabold text-contrast block">
+			<h2 class="m-0 mb-2 text-lg font-extrabold text-contrast flex items-center gap-2">
 				{{ formatMessage(messages.modernJava) }}
+				<span
+					class="inline-flex items-center rounded-full border border-solid border-surface-5 bg-surface-4 px-2 py-0.5 text-xs font-semibold text-orange"
+				>
+					{{ formatMessage(messages.modernJavaBeta) }}
+				</span>
 			</h2>
 			<div class="flex gap-3 items-start p-4 bg-bg rounded-2xl mb-4">
 				<div
@@ -311,6 +325,7 @@ const messages = defineMessages({
 						{{
 							formatMessage(messages.modernJavaDescription, {
 								gameVersion: instance.game_version,
+								provider: modernJava.provider_name,
 							})
 						}}
 					</p>
@@ -321,10 +336,14 @@ const messages = defineMessages({
 						<CheckCircleIcon class="h-4 w-4 text-green" />
 						{{
 							formatMessage(messages.modernJavaInstalled, {
+								provider: modernJava.provider_name,
 								version: modernJava.installed_version ?? '?',
 								javaMajor: activeJavaMajor ?? modernJava.java_major ?? '?',
 							})
 						}}
+					</p>
+					<p class="m-0 text-sm text-secondary">
+						{{ formatMessage(messages.modernJavaBetaNote) }}
 					</p>
 					<p
 						v-if="modernJava.loader_warning"

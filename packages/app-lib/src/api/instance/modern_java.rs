@@ -1,11 +1,15 @@
 //! One-click modern-Java support for legacy Minecraft instances.
 //!
-//! Minecraft 1.7.10 is pinned to Java 8 by Mojang's manifest and by LWJGL 2.
-//! [lwjgl3ify](https://github.com/GTNewHorizons/lwjgl3ify) lifts both limits,
-//! and ships its launcher-side half as MultiMC/Prism version patches. This
-//! module installs that half — the patches and the early-classpath jar — into
-//! an instance so the [patch layer](crate::launcher::patches) can pick it up,
-//! and installs the mod half through the normal content pipeline.
+//! Old Minecraft is pinned to Java 8 by Mojang's manifest and by LWJGL 2.
+//! Projects that lift both limits ship their launcher-side half as
+//! MultiMC/Prism version patches, which is what this module installs into an
+//! instance for the [patch layer](crate::launcher::patches) to pick up.
+//!
+//! The two it knows about work in opposite ways, and [`PROVIDERS`] records the
+//! difference. [lwjgl3ify](https://github.com/GTNewHorizons/lwjgl3ify) patches
+//! the stock Forge at load time and needs its mod half installed alongside,
+//! while [Cleanroom](https://github.com/CleanroomMC/Cleanroom) replaces Forge
+//! outright and is nothing but patches.
 
 use crate::launcher::patches;
 use crate::state::{ModLoader, State};
@@ -17,43 +21,88 @@ use serde::{Deserialize, Serialize};
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
 
-/// The Modrinth project the mod half of the support comes from. Its Modrinth
-/// version numbers match the upstream release tags, which is what lets the
-/// patches and the mod be installed at the same version.
-const LWJGL3IFY_PROJECT_ID: &str = "eC4lt4Oy";
-
-/// The only Minecraft version lwjgl3ify supports.
-const SUPPORTED_GAME_VERSION: &str = "1.7.10";
-
-/// The patch that identifies an installed setup, and carries its version.
-const MARKER_PATCH: &str = "me.eigenraven.lwjgl3ify.forgepatches.json";
-
-/// Patch components from the archive that the launcher does not want.
-///
-/// `net.minecraftforge` is a full copy of one specific Forge version's
-/// component, which Prism needs because it has no other source of Forge
-/// metadata. Noctrinth builds Forge from Daedalus instead, already with the
-/// right libraries and the `FMLTweaker` entry, so taking the archive's copy
-/// would pin the wrong Forge and register the tweaker twice. `mmc-pack.json`
-/// only lists the components and has no counterpart here.
-const SKIPPED_ENTRIES: &[&str] = &[BUNDLED_FORGE_COMPONENT, "mmc-pack.json"];
-
-/// The Forge component bundled in the archive. Discarded, but its version says
-/// which Forge the early-classpath jar was built to patch.
-const BUNDLED_FORGE_COMPONENT: &str = "net.minecraftforge.json";
-
 /// Records what was installed, so the state can still be judged after the
 /// instance itself changes underneath it.
 const MARKER_FILE: &str = ".noctrinth-modern-java.json";
 
-/// The patch components this module writes, and therefore the only ones it
-/// removes again.
-const INSTALLED_PATCHES: &[&str] = &[
-    MARKER_PATCH,
-    "me.eigenraven.lwjgl3ify.launchargs.json",
-    "net.minecraft.json",
-    "org.lwjgl3.json",
+/// The Forge component bundled in an archive.
+const FORGE_COMPONENT: &str = "net.minecraftforge.json";
+
+/// Only lists the components; the launcher derives that from the patches.
+const PACK_INDEX: &str = "mmc-pack.json";
+
+/// Where the launcher-side archive and its version number come from.
+#[derive(Debug, Clone, Copy)]
+enum ArchiveSource {
+    /// The mod is on Modrinth and publishes its launcher archive on GitHub
+    /// under the same version number, so the two halves stay in step.
+    ModrinthMod {
+        project_id: &'static str,
+        repo: &'static str,
+        /// `{version}` is replaced with the resolved version.
+        asset: &'static str,
+    },
+    /// The project only publishes GitHub releases.
+    GitHubRelease {
+        repo: &'static str,
+        asset: &'static str,
+    },
+}
+
+/// A way of running one legacy Minecraft version on a modern JVM.
+#[derive(Debug, Clone, Copy)]
+struct Provider {
+    /// The Minecraft version this applies to.
+    game_version: &'static str,
+    /// Shown in the UI.
+    name: &'static str,
+    source: ArchiveSource,
+    /// Whether the archive's Forge component *is* the loader.
+    ///
+    /// lwjgl3ify patches the stock Forge, so its bundled copy of one specific
+    /// Forge version is dropped in favour of the one Daedalus builds — taking
+    /// it would pin the wrong Forge and register `FMLTweaker` twice. Cleanroom
+    /// is a Forge replacement, so its component has to be kept.
+    forge_component_is_loader: bool,
+}
+
+/// Everything the launcher knows how to install, by Minecraft version.
+const PROVIDERS: &[Provider] = &[
+    Provider {
+        game_version: "1.7.10",
+        name: "lwjgl3ify",
+        source: ArchiveSource::ModrinthMod {
+            project_id: "eC4lt4Oy",
+            repo: "GTNewHorizons/lwjgl3ify",
+            asset: "lwjgl3ify-{version}-multimc.zip",
+        },
+        forge_component_is_loader: false,
+    },
+    Provider {
+        game_version: "1.12.2",
+        name: "Cleanroom",
+        source: ArchiveSource::GitHubRelease {
+            repo: "CleanroomMC/Cleanroom",
+            asset: "cleanroom-{version}.zip",
+        },
+        forge_component_is_loader: true,
+    },
 ];
+
+fn provider_for(game_version: &str) -> Option<&'static Provider> {
+    PROVIDERS
+        .iter()
+        .find(|provider| provider.game_version == game_version)
+}
+
+/// The Minecraft versions the launcher can do this for, for error messages.
+fn supported_game_versions() -> String {
+    PROVIDERS
+        .iter()
+        .map(|provider| provider.game_version)
+        .collect::<Vec<_>>()
+        .join(", ")
+}
 
 /// Whether an instance can run on a modern JVM, and whether it already does.
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -64,7 +113,10 @@ pub struct ModernJavaStatus {
     pub unsupported_reason: Option<String>,
     /// Whether modern-Java support is currently installed.
     pub installed: bool,
-    /// The installed lwjgl3ify version, if any.
+    /// What provides the support for this Minecraft version, e.g. `lwjgl3ify`
+    /// or `Cleanroom`.
+    pub provider_name: String,
+    /// The installed version of that provider, if any.
     pub installed_version: Option<String>,
     /// The Java major version the instance will actually launch with.
     pub java_major: Option<u32>,
@@ -77,9 +129,19 @@ pub struct ModernJavaStatus {
 /// What an install recorded about itself, kept beside the instance.
 #[derive(Serialize, Deserialize, Debug, Default)]
 struct InstallMarker {
-    /// The Forge version the early-classpath jar patches.
+    /// Which of the [`PROVIDERS`] was used.
+    #[serde(default)]
+    provider: Option<String>,
+    /// The version of that provider.
+    #[serde(default)]
+    version: Option<String>,
+    /// The Forge version the patches were built against, when the provider
+    /// leaves the loader in place.
     #[serde(default)]
     forge_version: Option<String>,
+    /// The patch files written, so removal takes back exactly those.
+    #[serde(default)]
+    patch_files: Vec<String>,
 }
 
 impl ModernJavaStatus {
@@ -87,6 +149,7 @@ impl ModernJavaStatus {
         Self {
             supported: false,
             unsupported_reason: Some(reason.into()),
+            provider_name: String::new(),
             installed: false,
             installed_version: None,
             java_major: None,
@@ -107,12 +170,13 @@ pub async fn get_modern_java_status(
     })?;
 
     let content_set = &metadata.applied_content_set;
-    if content_set.game_version != SUPPORTED_GAME_VERSION {
+    let Some(provider) = provider_for(&content_set.game_version) else {
         return Ok(ModernJavaStatus::unsupported(format!(
-            "Modern Java support is only available for Minecraft {SUPPORTED_GAME_VERSION}, and this instance runs {}.",
+            "Modern Java support is available for Minecraft {}, and this instance runs {}.",
+            supported_game_versions(),
             content_set.game_version
         )));
-    }
+    };
     if content_set.loader != ModLoader::Forge {
         return Ok(ModernJavaStatus::unsupported(
             "Modern Java support requires the Forge loader.".to_string(),
@@ -121,6 +185,7 @@ pub async fn get_modern_java_status(
 
     let instance_path = instance_dir(&state, &metadata.instance.path);
     let mut status = read_installed_status(&instance_path)?;
+    status.provider_name = provider.name.to_string();
     if !status.installed {
         return Ok(status);
     }
@@ -180,16 +245,23 @@ pub async fn install_modern_java(
         crate::ErrorKind::InputError("Unknown instance".to_string())
     })?;
     let instance_path = instance_dir(&state, &metadata.instance.path);
+    let provider = provider_for(&metadata.applied_content_set.game_version)
+        .ok_or_else(|| {
+            crate::ErrorKind::InputError(
+                "Instance is not supported".to_string(),
+            )
+        })?;
 
-    let version = latest_supported_version(&state).await?;
+    let release = resolve_release(&state, provider).await?;
     tracing::info!(
-        "Installing modern Java support {} into instance {instance_id}",
-        version.version_number
+        "Installing {} {} into instance {instance_id}",
+        provider.name,
+        release.version
     );
 
     let archive = fetch_advanced(
         Method::GET,
-        &multimc_archive_url(&version.version_number),
+        &release.archive_url,
         None,
         None,
         None,
@@ -201,24 +273,33 @@ pub async fn install_modern_java(
     )
     .await?;
 
-    let forge_version = extract_archive(&archive, &instance_path).await?;
+    let extracted = extract_archive(&archive, &instance_path, provider).await?;
     io::write(
         &marker_path(&instance_path),
-        &serde_json::to_vec(&InstallMarker { forge_version })?,
+        &serde_json::to_vec(&InstallMarker {
+            provider: Some(provider.name.to_string()),
+            version: Some(release.version.clone()),
+            forge_version: extracted.forge_version,
+            patch_files: extracted.patch_files,
+        })?,
     )
     .await?;
 
-    // The mod half, with UniMixins pulled in as a declared dependency.
-    super::projects::install_project_with_dependencies(
-        instance_id,
-        super::projects::InstallProjectWithDependenciesRequest {
-            project_id: LWJGL3IFY_PROJECT_ID.to_string(),
-            version_id: Some(version.id),
-            content_type: ContentType::Mod,
-            selected: ResolutionPreferences::default(),
-        },
-    )
-    .await?;
+    // The mod half, where there is one. Cleanroom is the loader itself and has
+    // nothing to install here; lwjgl3ify pulls UniMixins in as a declared
+    // dependency.
+    if let Some(mod_version_id) = release.mod_version_id {
+        super::projects::install_project_with_dependencies(
+            instance_id,
+            super::projects::InstallProjectWithDependenciesRequest {
+                project_id: release.mod_project_id.unwrap_or_default(),
+                version_id: Some(mod_version_id),
+                content_type: ContentType::Mod,
+                selected: ResolutionPreferences::default(),
+            },
+        )
+        .await?;
+    }
 
     let status = get_modern_java_status(instance_id).await?;
     if let Some(java_major) = status.java_major {
@@ -263,7 +344,10 @@ pub async fn remove_modern_java(
     }
 
     let patches_dir = instance_path.join(patches::PATCHES_DIR);
-    for component in INSTALLED_PATCHES {
+    for component in read_marker(&instance_path)
+        .map(|marker| marker.patch_files)
+        .unwrap_or_default()
+    {
         let path = patches_dir.join(component);
         if path.is_file() {
             io::remove_file(&path).await?;
@@ -308,29 +392,14 @@ fn instance_dir(state: &State, instance_path: &str) -> PathBuf {
 
 /// Reads the installed state straight off disk, so a setup copied in by hand
 /// from Prism is reported the same as one this module installed.
+///
+/// A patch set counts as installed when it declares the Java versions it can
+/// run on: that is the whole point of these archives, and it is the one signal
+/// present whether the files came from this module or were dropped in by hand.
 fn read_installed_status(
     instance_path: &Path,
 ) -> crate::Result<ModernJavaStatus> {
-    let marker = instance_path.join(patches::PATCHES_DIR).join(MARKER_PATCH);
-    if !marker.is_file() {
-        return Ok(ModernJavaStatus {
-            supported: true,
-            unsupported_reason: None,
-            installed: false,
-            installed_version: None,
-            java_major: None,
-            java_majors: Vec::new(),
-            loader_warning: None,
-        });
-    }
-
     let loaded = patches::load_instance_patches(instance_path)?;
-    let installed_version = loaded
-        .iter()
-        .find(|patch| {
-            patch.uid.as_deref() == Some("me.eigenraven.lwjgl3ify.forgepatches")
-        })
-        .and_then(|patch| patch.version.clone());
     let mut java_majors = loaded
         .iter()
         .filter_map(|patch| patch.compatible_java_majors.as_ref())
@@ -340,9 +409,36 @@ fn read_installed_status(
     java_majors.sort_unstable();
     java_majors.dedup();
 
+    if java_majors.is_empty() {
+        return Ok(ModernJavaStatus {
+            supported: true,
+            unsupported_reason: None,
+            // Filled in by the caller, which knows the instance's version.
+            provider_name: String::new(),
+            installed: false,
+            installed_version: None,
+            java_major: None,
+            java_majors: Vec::new(),
+            loader_warning: None,
+        });
+    }
+
+    // The recorded version is the provider's own; a hand-copied set has none,
+    // so fall back to the version of the component that carries the runtime
+    // requirement.
+    let installed_version = read_marker(instance_path)
+        .and_then(|marker| marker.version)
+        .or_else(|| {
+            loaded
+                .iter()
+                .find(|patch| patch.compatible_java_majors.is_some())
+                .and_then(|patch| patch.version.clone())
+        });
+
     Ok(ModernJavaStatus {
         supported: true,
         unsupported_reason: None,
+        provider_name: String::new(),
         installed: true,
         installed_version,
         // Without an explicit choice the launcher takes the lowest declared
@@ -354,45 +450,99 @@ fn read_installed_status(
     })
 }
 
+/// A resolved release: which version, where its archive is, and the mod half
+/// to install alongside it if the provider has one.
+struct Release {
+    version: String,
+    archive_url: String,
+    mod_project_id: Option<String>,
+    mod_version_id: Option<String>,
+}
+
 #[derive(Deserialize)]
 struct ModrinthVersion {
     id: String,
     version_number: String,
 }
 
-/// Resolves the newest lwjgl3ify release that targets 1.7.10 on Forge.
-async fn latest_supported_version(
-    state: &State,
-) -> crate::Result<ModrinthVersion> {
-    let url = format!(
-        "{}project/{LWJGL3IFY_PROJECT_ID}/version?game_versions=%5B%22{SUPPORTED_GAME_VERSION}%22%5D&loaders=%5B%22forge%22%5D",
-        env!("MODRINTH_API_URL"),
-    );
-
-    let versions = crate::util::fetch::fetch_json::<Vec<ModrinthVersion>>(
-        Method::GET,
-        &url,
-        None,
-        None,
-        None,
-        &state.api_semaphore,
-        &state.pool,
-    )
-    .await?;
-
-    versions.into_iter().next().ok_or_else(|| {
-        crate::ErrorKind::InputError(
-            "No lwjgl3ify release is available for this instance".to_string(),
-        )
-        .into()
-    })
+#[derive(Deserialize)]
+struct GitHubRelease {
+    tag_name: String,
 }
 
-/// The launcher-side archive lives on the upstream release, not on Modrinth,
-/// but both are published under the same version number.
-fn multimc_archive_url(version: &str) -> String {
+/// Finds the newest release of a provider and where to fetch its archive.
+async fn resolve_release(
+    state: &State,
+    provider: &Provider,
+) -> crate::Result<Release> {
+    match provider.source {
+        ArchiveSource::ModrinthMod {
+            project_id,
+            repo,
+            asset,
+        } => {
+            let url = format!(
+                "{}project/{project_id}/version?game_versions=%5B%22{}%22%5D&loaders=%5B%22forge%22%5D",
+                env!("MODRINTH_API_URL"),
+                provider.game_version,
+            );
+            let versions =
+                crate::util::fetch::fetch_json::<Vec<ModrinthVersion>>(
+                    Method::GET,
+                    &url,
+                    None,
+                    None,
+                    None,
+                    &state.api_semaphore,
+                    &state.pool,
+                )
+                .await?;
+            let version = versions.into_iter().next().ok_or_else(|| {
+                crate::ErrorKind::InputError(format!(
+                    "No {} release is available for this instance",
+                    provider.name
+                ))
+            })?;
+
+            Ok(Release {
+                archive_url: release_asset_url(
+                    repo,
+                    &version.version_number,
+                    asset,
+                ),
+                version: version.version_number,
+                mod_project_id: Some(project_id.to_string()),
+                mod_version_id: Some(version.id),
+            })
+        }
+        ArchiveSource::GitHubRelease { repo, asset } => {
+            let release = crate::util::fetch::fetch_json::<GitHubRelease>(
+                Method::GET,
+                &format!("https://api.github.com/repos/{repo}/releases/latest"),
+                None,
+                None,
+                None,
+                &state.api_semaphore,
+                &state.pool,
+            )
+            .await?;
+
+            Ok(Release {
+                archive_url: release_asset_url(repo, &release.tag_name, asset),
+                version: release.tag_name,
+                mod_project_id: None,
+                mod_version_id: None,
+            })
+        }
+    }
+}
+
+/// The launcher-side archive lives on the upstream GitHub release even when the
+/// mod itself is distributed through Modrinth.
+fn release_asset_url(repo: &str, version: &str, asset: &str) -> String {
     format!(
-        "https://github.com/GTNewHorizons/lwjgl3ify/releases/download/{version}/lwjgl3ify-{version}-multimc.zip"
+        "https://github.com/{repo}/releases/download/{version}/{}",
+        asset.replace("{version}", version)
     )
 }
 
@@ -406,7 +556,8 @@ fn multimc_archive_url(version: &str) -> String {
 async fn extract_archive(
     archive: &[u8],
     instance_path: &Path,
-) -> crate::Result<Option<String>> {
+    provider: &Provider,
+) -> crate::Result<Extracted> {
     let mut archive =
         zip::ZipArchive::new(Cursor::new(archive)).map_err(|error| {
             crate::ErrorKind::InputError(format!(
@@ -414,7 +565,7 @@ async fn extract_archive(
             ))
         })?;
 
-    let mut forge_version = None;
+    let mut extracted = Extracted::default();
 
     for index in 0..archive.len() {
         let mut entry = archive.by_index(index).map_err(|error| {
@@ -433,18 +584,25 @@ async fn extract_archive(
         let mut contents = Vec::with_capacity(entry.size() as usize);
         std::io::copy(&mut entry, &mut contents)?;
 
-        if name.file_name().and_then(|name| name.to_str())
-            == Some(BUNDLED_FORGE_COMPONENT)
+        let file_name = name.file_name().and_then(|name| name.to_str());
+        if file_name == Some(FORGE_COMPONENT)
+            && !provider.forge_component_is_loader
         {
-            forge_version =
+            extracted.forge_version =
                 serde_json::from_slice::<BundledComponent>(&contents)
                     .ok()
                     .and_then(|component| component.version);
         }
 
-        let Some(target) = archive_entry_target(&name) else {
+        let Some(target) = archive_entry_target(&name, provider) else {
             continue;
         };
+
+        if target.starts_with(patches::PATCHES_DIR)
+            && let Some(file_name) = file_name
+        {
+            extracted.patch_files.push(file_name.to_string());
+        }
 
         let path = instance_path.join(target);
         if let Some(parent) = path.parent() {
@@ -453,7 +611,17 @@ async fn extract_archive(
         io::write(&path, &contents).await?;
     }
 
-    Ok(forge_version)
+    Ok(extracted)
+}
+
+/// What unpacking an archive produced, beyond the files themselves.
+#[derive(Default)]
+struct Extracted {
+    /// The Forge version the patches were built against, when the provider
+    /// leaves the loader in place.
+    forge_version: Option<String>,
+    /// The patch file names written.
+    patch_files: Vec<String>,
 }
 
 #[derive(Deserialize)]
@@ -463,9 +631,11 @@ struct BundledComponent {
 
 /// Maps an archive entry to its path inside the instance, or `None` if it
 /// should not be written at all.
-fn archive_entry_target(name: &Path) -> Option<PathBuf> {
+fn archive_entry_target(name: &Path, provider: &Provider) -> Option<PathBuf> {
     let file_name = name.file_name()?.to_str()?;
-    if SKIPPED_ENTRIES.contains(&file_name) {
+    if file_name == PACK_INDEX
+        || (file_name == FORGE_COMPONENT && !provider.forge_component_is_loader)
+    {
         tracing::debug!("Skipping bundled component {file_name}");
         return None;
     }
@@ -485,31 +655,69 @@ fn archive_entry_target(name: &Path) -> Option<PathBuf> {
 mod tests {
     use super::*;
 
-    #[test]
-    fn only_patches_and_libraries_are_extracted() {
-        assert_eq!(
-            archive_entry_target(Path::new("patches/org.lwjgl3.json")),
-            Some(PathBuf::from("patches/org.lwjgl3.json"))
-        );
-        assert_eq!(
-            archive_entry_target(Path::new(
-                "libraries/lwjgl3ify-3.0.31-forgePatches.jar"
-            )),
-            Some(PathBuf::from("libraries/lwjgl3ify-3.0.31-forgePatches.jar"))
-        );
-        assert_eq!(archive_entry_target(Path::new("mmc-pack.json")), None);
-        assert_eq!(archive_entry_target(Path::new("instance.cfg")), None);
+    fn provider(game_version: &str) -> &'static Provider {
+        provider_for(game_version).unwrap()
     }
 
     #[test]
-    fn the_bundled_forge_component_is_left_out() {
+    fn only_patches_and_libraries_are_extracted() {
+        let lwjgl3ify = provider("1.7.10");
+
         assert_eq!(
-            archive_entry_target(Path::new("patches/net.minecraftforge.json")),
+            archive_entry_target(
+                Path::new("patches/org.lwjgl3.json"),
+                lwjgl3ify
+            ),
+            Some(PathBuf::from("patches/org.lwjgl3.json"))
+        );
+        assert_eq!(
+            archive_entry_target(
+                Path::new("libraries/lwjgl3ify-3.0.31-forgePatches.jar"),
+                lwjgl3ify
+            ),
+            Some(PathBuf::from("libraries/lwjgl3ify-3.0.31-forgePatches.jar"))
+        );
+        // Cleanroom's archive is a whole instance; the rest of it is not ours.
+        let cleanroom = provider("1.12.2");
+        assert_eq!(
+            archive_entry_target(Path::new("mmc-pack.json"), cleanroom),
             None
         );
-        // The Minecraft component is kept: it carries compatibleJavaMajors.
         assert_eq!(
-            archive_entry_target(Path::new("patches/net.minecraft.json")),
+            archive_entry_target(Path::new("instance.cfg"), cleanroom),
+            None
+        );
+        assert_eq!(
+            archive_entry_target(Path::new("cleanroom.png"), cleanroom),
+            None
+        );
+    }
+
+    #[test]
+    fn the_forge_component_is_kept_only_when_it_is_the_loader() {
+        // lwjgl3ify patches the stock Forge, so its bundled copy is dropped.
+        assert_eq!(
+            archive_entry_target(
+                Path::new("patches/net.minecraftforge.json"),
+                provider("1.7.10")
+            ),
+            None
+        );
+        // Cleanroom *is* the loader under that component ID, so it stays.
+        assert_eq!(
+            archive_entry_target(
+                Path::new("patches/net.minecraftforge.json"),
+                provider("1.12.2")
+            ),
+            Some(PathBuf::from("patches/net.minecraftforge.json"))
+        );
+        // The Minecraft component is kept either way: it carries
+        // compatibleJavaMajors.
+        assert_eq!(
+            archive_entry_target(
+                Path::new("patches/net.minecraft.json"),
+                provider("1.7.10")
+            ),
             Some(PathBuf::from("patches/net.minecraft.json"))
         );
     }
@@ -518,6 +726,7 @@ mod tests {
         let instance = tempfile::tempdir().unwrap();
         let marker = InstallMarker {
             forge_version: forge_version.map(str::to_string),
+            ..Default::default()
         };
         std::fs::write(
             marker_path(instance.path()),
@@ -556,6 +765,12 @@ mod tests {
 
     #[test]
     fn archive_paths_cannot_escape_the_instance() {
-        assert_eq!(archive_entry_target(Path::new("../../evil.json")), None);
+        assert_eq!(
+            archive_entry_target(
+                Path::new("../../evil.json"),
+                provider("1.7.10")
+            ),
+            None
+        );
     }
 }

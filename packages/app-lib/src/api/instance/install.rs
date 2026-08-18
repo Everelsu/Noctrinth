@@ -32,6 +32,9 @@ pub async fn get_optimal_jre_key(
         &state,
         version,
         loader_version.as_ref(),
+        crate::launcher::patches::loader_component(
+            context.applied_content_set.loader,
+        ),
         None,
         None,
         None,

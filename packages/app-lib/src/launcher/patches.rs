@@ -12,6 +12,7 @@
 //! [`download_version_info`](super::download::download_version_info) caches its
 //! result globally per version ID, while patches belong to a single instance.
 
+use crate::state::ModLoader;
 use daedalus::minecraft::{Argument, ArgumentType, Library, Os, VersionInfo};
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -19,6 +20,25 @@ use std::path::{Path, PathBuf};
 
 /// Folder inside an instance that holds the patch files.
 pub const PATCHES_DIR: &str = "patches";
+
+/// The component the game's own libraries belong to.
+pub const VANILLA_COMPONENT: &str = "net.minecraft";
+
+/// The component ID a mod loader's libraries are recorded under.
+///
+/// These are the identifiers MultiMC and Prism use, so a patch file that
+/// redefines a loader names its component exactly this way.
+pub fn loader_component(loader: ModLoader) -> &'static str {
+    match loader {
+        ModLoader::Vanilla => VANILLA_COMPONENT,
+        // Cleanroom replaces Forge and keeps its component ID, which is how it
+        // installs over a Forge instance.
+        ModLoader::Forge => "net.minecraftforge",
+        ModLoader::NeoForge => "net.neoforged",
+        ModLoader::Fabric => "net.fabricmc.fabric-loader",
+        ModLoader::Quilt => "org.quiltmc.quilt-loader",
+    }
+}
 
 /// Folder inside an instance that holds jars referenced with `MMC-hint: local`.
 pub const LOCAL_LIBRARIES_DIR: &str = "libraries";
@@ -121,6 +141,17 @@ fn conflicting_library_groups(uid: &str) -> &'static [&'static str] {
         }
         "org.lwjgl3" => &["org.lwjgl"],
         _ => &[],
+    }
+}
+
+/// The component a patch replaces by its mere presence.
+///
+/// LWJGL 2 and LWJGL 3 cannot both be on the classpath, so a component that
+/// provides one rules out the other whether or not it says so.
+fn implied_conflict(uid: &str) -> Option<&'static str> {
+    match uid {
+        "org.lwjgl3" => Some("org.lwjgl"),
+        _ => None,
     }
 }
 
@@ -343,8 +374,17 @@ pub fn apply_patches(
     // component its LWJGL 3 patch just declared a conflict with.
     let conflicting_groups = patches
         .iter()
-        .flat_map(|patch| &patch.conflicts)
-        .flat_map(|conflict| conflicting_library_groups(&conflict.uid))
+        .flat_map(|patch| {
+            patch
+                .conflicts
+                .iter()
+                .map(|conflict| conflict.uid.as_str())
+                // Not every archive spells the conflict out. Cleanroom ships an
+                // LWJGL 3 component with no `conflicts` at all and relies on the
+                // launcher knowing that the two LWJGL generations are exclusive.
+                .chain(patch.uid.as_deref().and_then(implied_conflict))
+        })
+        .flat_map(conflicting_library_groups)
         .copied()
         .collect::<Vec<_>>();
     let conflicts = |name: &str| {
@@ -356,6 +396,23 @@ pub fn apply_patches(
     version_info
         .libraries
         .retain(|library| !conflicts(&library.name));
+
+    // A component's `libraries` is its complete list, not an addition to one, so
+    // a patch that redefines a component drops whatever that component
+    // contributed before. This is how Cleanroom takes Forge's place and how it
+    // sheds the vanilla libraries 1.12.2 no longer needs.
+    for patch in patches {
+        let Some(uid) = patch.uid.as_deref() else {
+            continue;
+        };
+        if patch.libraries.is_empty() {
+            continue;
+        }
+
+        version_info
+            .libraries
+            .retain(|library| library.component.as_deref() != Some(uid));
+    }
 
     let mut prepended: Vec<Library> = Vec::new();
     let mut game_args: Vec<String> = Vec::new();
@@ -374,6 +431,7 @@ pub fn apply_patches(
             }
 
             let mut library = library.clone();
+            library.component = patch.uid.clone();
             if library.is_local() {
                 // The jar lives in the instance folder; nothing to fetch.
                 library.downloadable = false;
@@ -537,7 +595,16 @@ mod tests {
             checksums: None,
             include_in_classpath: true,
             downloadable: true,
+            component: Some(VANILLA_COMPONENT.to_string()),
             mmc_hint: None,
+        }
+    }
+
+    /// A library the mod loader contributed rather than the game.
+    fn loader_library(name: &str) -> Library {
+        Library {
+            component: Some("net.minecraftforge".to_string()),
+            ..library(name)
         }
     }
 
@@ -828,7 +895,7 @@ mod tests {
         // while Forge needs the 17 it brings itself. Guava 16 added
         // `Runnables`, which the mixin bootstrap loads.
         let mut version_info =
-            version_with(vec![library("com.google.guava:guava:17.0")]);
+            version_with(vec![loader_library("com.google.guava:guava:17.0")]);
 
         let patches = vec![patch(
             r#"{ "uid": "net.minecraft", "order": -2,
@@ -897,7 +964,63 @@ mod tests {
             .collect();
         assert_eq!(
             names,
-            vec!["org.lwjgl:lwjgl:3.4.2", "com.mojang:netty:1.8.8"]
+            vec!["com.mojang:netty:1.8.8", "org.lwjgl:lwjgl:3.4.2"]
+        );
+    }
+
+    #[test]
+    fn a_component_that_redefines_the_loader_takes_its_place() {
+        // Cleanroom's shape: it keeps the `net.minecraftforge` component ID and
+        // supplies its own libraries and main class, and its LWJGL 3 component
+        // declares no conflict at all — the launcher has to know that one.
+        let mut version_info = version_with(vec![
+            library("org.lwjgl.lwjgl:lwjgl:2.9.4"),
+            library("com.paulscode:codecjorbis:20101023"),
+            loader_library("net.minecraftforge:forge:1.12.2-14.23.5.2860"),
+            loader_library("org.ow2.asm:asm-debug-all:5.2"),
+        ]);
+
+        let patches = vec![
+            patch(
+                r#"{ "uid": "org.lwjgl3", "version": "3.4.1",
+                     "libraries": [{ "name": "org.lwjgl:lwjgl-glfw:3.4.1" }] }"#,
+            ),
+            patch(
+                r#"{ "uid": "net.minecraftforge", "name": "Cleanroom",
+                     "version": "0.6.10-alpha",
+                     "mainClass": "top.outlands.foundation.boot.Foundation",
+                     "+tweakers": ["net.minecraftforge.fml.common.launcher.FMLTweaker"],
+                     "libraries": [{ "name": "top.outlands:foundation:1.0" }] }"#,
+            ),
+        ];
+        version_info.minecraft_arguments = Some("--username x".to_string());
+        apply_patches(&mut version_info, &patches);
+
+        let names: Vec<_> = version_info
+            .libraries
+            .iter()
+            .map(|library| library.name.as_str())
+            .collect();
+        assert_eq!(
+            names,
+            vec![
+                // LWJGL 2 is gone even though nothing declared a conflict.
+                "org.lwjgl:lwjgl-glfw:3.4.1",
+                "top.outlands:foundation:1.0",
+                // The vanilla component was not redefined, so it stays.
+                "com.paulscode:codecjorbis:20101023",
+            ]
+        );
+        assert_eq!(
+            version_info.main_class,
+            "top.outlands.foundation.boot.Foundation"
+        );
+        assert!(
+            version_info
+                .minecraft_arguments
+                .as_deref()
+                .unwrap()
+                .ends_with("--tweakClass net.minecraftforge.fml.common.launcher.FMLTweaker")
         );
     }
 
@@ -905,7 +1028,9 @@ mod tests {
     fn same_coordinate_libraries_are_replaced_in_place() {
         let mut version_info = version_with(vec![
             library("com.mojang:netty:1.8.8"),
-            library("net.minecraftforge:forge:1.7.10-10.13.4.1614:universal"),
+            loader_library(
+                "net.minecraftforge:forge:1.7.10-10.13.4.1614:universal",
+            ),
         ]);
 
         let patches = vec![patch(
@@ -921,7 +1046,7 @@ mod tests {
     #[test]
     fn replacing_a_library_keeps_it_off_the_classpath_if_the_loader_shipped_it()
     {
-        let mut excluded = library("com.google.guava:guava:17.0");
+        let mut excluded = loader_library("com.google.guava:guava:17.0");
         excluded.include_in_classpath = false;
         let mut version_info = version_with(vec![excluded]);
 

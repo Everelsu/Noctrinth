@@ -178,6 +178,7 @@ export async function get_optimal_jre_key(instanceId: string): Promise<JavaVersi
 export interface ModernJavaStatus {
 	supported: boolean
 	unsupported_reason: string | null
+	provider_name: string
 	installed: boolean
 	installed_version: string | null
 	java_major: number | null

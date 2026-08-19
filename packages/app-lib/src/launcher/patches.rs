@@ -771,8 +771,9 @@ mod tests {
         // Written against whatever platform the test is running on rather than
         // against Windows: the answer differs between a developer's machine and
         // CI, and hardcoding one of them fails on the other.
-        let host = host_native_classifier("x86_64")
-            .expect("the platform running the tests should have a native classifier");
+        let host = host_native_classifier("x86_64").expect(
+            "the platform running the tests should have a native classifier",
+        );
 
         assert!(
             !is_foreign_native(
@@ -785,10 +786,14 @@ mod tests {
         // Which leaves every other platform foreign — including the ones that
         // differ only by architecture. All three Windows artifacts carry the
         // same os-only rule, so the architecture has to come out of the name.
-        for classifier in NATIVE_CLASSIFIERS.iter().filter(|entry| **entry != host) {
+        for classifier in
+            NATIVE_CLASSIFIERS.iter().filter(|entry| **entry != host)
+        {
             assert!(
                 is_foreign_native(
-                    &format!("org.lwjgl:lwjgl-freetype-natives-{classifier}:3.4.2"),
+                    &format!(
+                        "org.lwjgl:lwjgl-freetype-natives-{classifier}:3.4.2"
+                    ),
                     "x86_64"
                 ),
                 "a native for {classifier} should be foreign on {host}"

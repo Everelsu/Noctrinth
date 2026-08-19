@@ -295,7 +295,7 @@ export const GAME_OPTIONS: GameOption[] = [
 		min: 30,
 		max: 110,
 		step: 1,
-		unit: '°',
+		unit: messages.unitDegrees,
 		encode: (value) => float((value - FOV_BASE) / FOV_RANGE),
 		decode: (raw) => Math.round(Number(raw) * FOV_RANGE + FOV_BASE),
 	},

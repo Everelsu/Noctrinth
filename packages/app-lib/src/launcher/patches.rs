@@ -754,22 +754,47 @@ mod tests {
         );
     }
 
+    /// Every classifier this launcher knows how to name a native for.
+    const NATIVE_CLASSIFIERS: &[&str] = &[
+        "windows",
+        "windows-x86",
+        "windows-arm64",
+        "linux",
+        "linux-arm64",
+        "linux-arm32",
+        "macos",
+        "macos-arm64",
+    ];
+
     #[test]
     fn native_artifacts_are_matched_against_the_running_platform() {
-        // All three Windows artifacts carry the same os-only rule, so the
-        // architecture has to come out of the artifact name.
-        assert!(!is_foreign_native(
-            "org.lwjgl:lwjgl-freetype-natives-windows:3.4.2",
-            "x86_64"
-        ));
-        assert!(is_foreign_native(
-            "org.lwjgl:lwjgl-freetype-natives-windows-x86:3.4.2",
-            "x86_64"
-        ));
-        assert!(is_foreign_native(
-            "org.lwjgl:lwjgl-freetype-natives-windows-arm64:3.4.2",
-            "x86_64"
-        ));
+        // Written against whatever platform the test is running on rather than
+        // against Windows: the answer differs between a developer's machine and
+        // CI, and hardcoding one of them fails on the other.
+        let host = host_native_classifier("x86_64")
+            .expect("the platform running the tests should have a native classifier");
+
+        assert!(
+            !is_foreign_native(
+                &format!("org.lwjgl:lwjgl-freetype-natives-{host}:3.4.2"),
+                "x86_64"
+            ),
+            "a native for {host} should be kept on {host}"
+        );
+
+        // Which leaves every other platform foreign — including the ones that
+        // differ only by architecture. All three Windows artifacts carry the
+        // same os-only rule, so the architecture has to come out of the name.
+        for classifier in NATIVE_CLASSIFIERS.iter().filter(|entry| **entry != host) {
+            assert!(
+                is_foreign_native(
+                    &format!("org.lwjgl:lwjgl-freetype-natives-{classifier}:3.4.2"),
+                    "x86_64"
+                ),
+                "a native for {classifier} should be foreign on {host}"
+            );
+        }
+
         // Artifacts that are not platform natives are never rejected.
         assert!(!is_foreign_native(
             "org.lwjgl:lwjgl-freetype:3.4.2",

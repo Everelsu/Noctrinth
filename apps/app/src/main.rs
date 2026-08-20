@@ -14,6 +14,52 @@ use theseus::prelude::*;
 mod api;
 mod error;
 
+/// How long the exit path may spend landing a debounced skin change before it
+/// gives up. `app.run`'s callback runs on the window event-loop thread, so this
+/// is the longest the window can stop responding on the way out.
+const EXIT_SKIN_FLUSH_TIMEOUT: std::time::Duration =
+    std::time::Duration::from_secs(5);
+
+/// Routes panics into the session log before the process goes away.
+///
+/// Release builds are `panic = "abort"`, so a panic on any thread — including a
+/// background task nobody is awaiting — takes the whole app down immediately.
+/// The default hook prints to stderr, and the Windows release binary is built
+/// with `windows_subsystem = "windows"`, so it has no stderr to print to. The
+/// result is an app that vanishes leaving nothing in the log but whatever line
+/// happened to be written just before, which says nothing about the cause.
+///
+/// The log layer writes straight to the file with no buffering in front of it,
+/// so a line emitted here reaches disk before `abort`.
+fn install_panic_logger() {
+    let previous_hook = std::panic::take_hook();
+
+    std::panic::set_hook(Box::new(move |info| {
+        let location = info.location().map_or_else(
+            || "an unknown location".to_string(),
+            |location| location.to_string(),
+        );
+
+        // `&str` for `panic!("literal")`, `String` for a formatted message.
+        let payload = info.payload();
+        let message = payload
+            .downcast_ref::<&str>()
+            .copied()
+            .or_else(|| payload.downcast_ref::<String>().map(String::as_str))
+            .unwrap_or("<non-string panic payload>");
+
+        // `strip = true` leaves release backtraces symbol-less, and this only
+        // captures at all when RUST_BACKTRACE is set, but the panic message and
+        // its file:line come from the binary either way.
+        tracing::error!(
+            "Panicked at {location}: {message}\n{}",
+            std::backtrace::Backtrace::capture()
+        );
+
+        previous_hook(info);
+    }));
+}
+
 #[cfg(target_os = "macos")]
 mod macos;
 
@@ -50,18 +96,38 @@ async fn initialize_state(
 #[tracing::instrument(skip_all)]
 #[tauri::command]
 fn show_window(app: tauri::AppHandle) {
-    let win = app.get_window("main").unwrap();
-    if let Err(e) = win.show() {
-        DialogBuilder::message()
+    // The frontend fires this from `onMounted` while its `initialize_state`
+    // call is still in flight, so the two race. Panicking here aborts the whole
+    // process (release builds are `panic = "abort"`) partway through init, and
+    // the resulting log just stops mid-startup with no reason recorded — so
+    // every failure below is reported rather than thrown.
+    let Some(win) = app.get_window("main") else {
+        tracing::error!(
+            "Cannot display application window: there is no window labelled `main`"
+        );
+        return;
+    };
+
+    if let Err(error) = win.show() {
+        tracing::error!("Cannot display application window: {error}");
+
+        if let Err(dialog_error) = DialogBuilder::message()
             .set_level(MessageLevel::Error)
             .set_title("Initialization error")
             .set_text(format!(
-                "Cannot display application window due to an error:\n{e}"
+                "Cannot display application window due to an error:\n{error}"
             ))
             .alert()
             .show()
-            .unwrap();
-        panic!("cannot display application window")
+        {
+            tracing::error!(
+                "Failed to show the initialization error dialog: {dialog_error}"
+            );
+        }
+
+        // The window is what the app is, so there is nothing left to do — but
+        // leave through the normal exit path instead of aborting.
+        app.exit(1);
     } else {
         let _ = win.set_focus();
     }
@@ -139,6 +205,9 @@ fn main() {
     let tauri_context = tauri::generate_context!();
 
     let _log_guard = theseus::start_logger(&tauri_context.config().identifier);
+
+    // Directly after the logger, so the hook has somewhere to write.
+    install_panic_logger();
 
     tracing::info!("Initialized tracing subscriber. Loading Modrinth App!");
 
@@ -303,14 +372,23 @@ fn main() {
                 #[cfg(not(any(feature = "updater", target_os = "macos")))]
                 let _ = app;
 
-                if matches!(&event, tauri::RunEvent::ExitRequested { .. })
-                    && let Err(error) = tauri::async_runtime::block_on(
+                // Blocking here blocks the window event loop, so the flush is
+                // given a deadline: an unreachable skin server used to be able
+                // to park this thread for the rest of the process's life, which
+                // Windows shows as a window that never repaints or closes.
+                if matches!(&event, tauri::RunEvent::ExitRequested { .. }) {
+                    match tauri::async_runtime::block_on(tokio::time::timeout(
+                        EXIT_SKIN_FLUSH_TIMEOUT,
                         theseus::minecraft_skins::flush_pending_skin_change(),
-                    )
-                {
-                    tracing::warn!(
-                        "Failed to flush pending Minecraft skin change before exit: {error}"
-                    );
+                    )) {
+                        Ok(Ok(())) => {}
+                        Ok(Err(error)) => tracing::warn!(
+                            "Failed to flush pending Minecraft skin change before exit: {error}"
+                        ),
+                        Err(_) => tracing::warn!(
+                            "Timed out after {EXIT_SKIN_FLUSH_TIMEOUT:?} flushing the pending Minecraft skin change before exit"
+                        ),
+                    }
                 }
 
                 #[cfg(feature = "updater")]

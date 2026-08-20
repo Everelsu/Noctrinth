@@ -85,6 +85,18 @@ mod png_util;
 
 const SKIN_CHANGE_DEBOUNCE: Duration = Duration::from_secs(10);
 
+/// A failed upload is retried with an exponential backoff starting at
+/// [`SKIN_CHANGE_DEBOUNCE`] and capped here. Without the backoff an account
+/// that simply has no network retries every 10 seconds forever, and every
+/// attempt holds [`SKIN_CHANGE_FLUSH_LOCK`] for as long as the request takes to
+/// time out — which starves anything else waiting on that lock.
+const SKIN_CHANGE_MAX_RETRY_BACKOFF: Duration = Duration::from_secs(320);
+
+/// Consecutive failures after which the pending change is dropped rather than
+/// retried again. Retrying forever kept a dead change queued for the whole
+/// session, so closing the app could block on it indefinitely.
+const SKIN_CHANGE_MAX_ATTEMPTS: u32 = 6;
+
 static PENDING_SKIN_CHANGE: LazyLock<Mutex<PendingSkinChangeState>> =
     LazyLock::new(|| Mutex::new(PendingSkinChangeState::default()));
 static SKIN_CHANGE_FLUSH_LOCK: LazyLock<Mutex<()>> =
@@ -99,6 +111,8 @@ struct PendingSkinChangeState {
 struct PendingSkinChangeEntry {
     change: PendingSkinChange,
     generation: u64,
+    /// Consecutive failed upload attempts, used to back the retries off.
+    attempts: u32,
 }
 
 enum PendingEffectiveSkinChange {
@@ -1056,19 +1070,40 @@ async fn set_pending_skin_change(change: PendingSkinChange) {
             .get(&profile_id)
             .map_or(1, |entry| entry.generation.wrapping_add(1));
 
-        state
-            .pending
-            .insert(profile_id, PendingSkinChangeEntry { change, generation });
+        state.pending.insert(
+            profile_id,
+            PendingSkinChangeEntry {
+                change,
+                generation,
+                attempts: 0,
+            },
+        );
 
         generation
     };
 
-    schedule_pending_skin_change_flush(profile_id, generation);
+    schedule_pending_skin_change_flush(
+        profile_id,
+        generation,
+        SKIN_CHANGE_DEBOUNCE,
+    );
 }
 
-fn schedule_pending_skin_change_flush(profile_id: Uuid, generation: u64) {
+/// Delay before the `attempts`-th retry, doubling from [`SKIN_CHANGE_DEBOUNCE`]
+/// up to [`SKIN_CHANGE_MAX_RETRY_BACKOFF`].
+fn skin_change_retry_delay(attempts: u32) -> Duration {
+    SKIN_CHANGE_DEBOUNCE
+        .saturating_mul(1u32 << attempts.min(5))
+        .min(SKIN_CHANGE_MAX_RETRY_BACKOFF)
+}
+
+fn schedule_pending_skin_change_flush(
+    profile_id: Uuid,
+    generation: u64,
+    delay: Duration,
+) {
     tokio::spawn(async move {
-        tokio::time::sleep(SKIN_CHANGE_DEBOUNCE).await;
+        tokio::time::sleep(delay).await;
 
         if let Err(error) = flush_pending_skin_change_inner(Some(
             PendingSkinChangeFilter::Generation {
@@ -1177,9 +1212,28 @@ async fn flush_pending_skin_change_inner(
         if let Err(error) = execute_pending_skin_change(&entry.change).await {
             let profile_id = entry.change.profile_id();
             let generation = entry.generation;
+            let attempts = entry.attempts.saturating_add(1);
+
+            if attempts >= SKIN_CHANGE_MAX_ATTEMPTS {
+                tracing::warn!(
+                    "Giving up on the pending Minecraft skin change for {profile_id} after {attempts} attempts: {error}"
+                );
+
+                return Err(error);
+            }
+
             let mut state = PENDING_SKIN_CHANGE.lock().await;
-            state.pending.entry(profile_id).or_insert(entry);
-            schedule_pending_skin_change_flush(profile_id, generation);
+            state
+                .pending
+                .entry(profile_id)
+                .or_insert(PendingSkinChangeEntry { attempts, ..entry });
+            drop(state);
+
+            schedule_pending_skin_change_flush(
+                profile_id,
+                generation,
+                skin_change_retry_delay(attempts),
+            );
 
             return Err(error);
         }
@@ -1428,4 +1482,49 @@ async fn sync_cape(
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod skin_change_retry_tests {
+    use super::{
+        SKIN_CHANGE_DEBOUNCE, SKIN_CHANGE_MAX_ATTEMPTS,
+        SKIN_CHANGE_MAX_RETRY_BACKOFF, skin_change_retry_delay,
+    };
+
+    #[test]
+    fn first_retry_waits_longer_than_the_debounce() {
+        assert!(skin_change_retry_delay(1) > SKIN_CHANGE_DEBOUNCE);
+    }
+
+    #[test]
+    fn delay_doubles_until_it_reaches_the_cap() {
+        for attempts in 1..SKIN_CHANGE_MAX_ATTEMPTS {
+            let previous = skin_change_retry_delay(attempts - 1);
+            let current = skin_change_retry_delay(attempts);
+
+            assert!(
+                current >= previous,
+                "attempt {attempts} backed off less than the one before it"
+            );
+            assert!(
+                current <= SKIN_CHANGE_MAX_RETRY_BACKOFF,
+                "attempt {attempts} exceeded the backoff cap"
+            );
+        }
+    }
+
+    // A skin server that is simply unreachable used to be retried every 10
+    // seconds for the rest of the session, which is what let the exit path
+    // block on the flush lock forever.
+    #[test]
+    fn giving_up_takes_minutes_not_seconds() {
+        let total: std::time::Duration = (0..SKIN_CHANGE_MAX_ATTEMPTS)
+            .map(skin_change_retry_delay)
+            .sum();
+
+        assert!(
+            total >= std::time::Duration::from_secs(60),
+            "backoff gives up after only {total:?}"
+        );
+    }
 }

@@ -10,7 +10,7 @@ on:
     paths:
       - 'apps/app-frontend/src/changelog/**'
       - 'packages/blog/changelog.ts'
-      - 'apps/app-frontend/src/assets/noctrinth-icon.svg'
+      - 'apps/app/icons/noctrinth.svg'
       - 'scripts/build-changelog-site.mjs'
       - '.github/workflows/pages.yml'
   workflow_dispatch:

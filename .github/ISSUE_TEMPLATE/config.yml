@@ -1,8 +1,11 @@
 blank_issues_enabled: false
 contact_links:
-  - name: 🫶 Support portal
-    about: Get support using through our support website.
+  - name: 💬 Ask a question
+    about: Not sure it's a bug? Ask in Discussions first. (●'◡'●)
+    url: https://github.com/Everelsu/Noctrinth/discussions
+  - name: 🌙 Bug in the upstream Modrinth App
+    about: For bugs that also affect the original Modrinth App, not specific to Noctrinth. (・_・;)
+    url: https://github.com/modrinth/code/issues
+  - name: 🫶 Modrinth support portal
+    about: For issues with your Modrinth.com account, projects or Modrinth Hosting. (｡•ᴗ•｡)
     url: https://support.modrinth.com
-  - name: 💬 Chat on Discord
-    about: Join our Discord server to chat about Modrinth.
-    url: https://discord.modrinth.com

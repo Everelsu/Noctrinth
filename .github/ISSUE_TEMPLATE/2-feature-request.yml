@@ -1,5 +1,5 @@
 name: 💡 Feature request
-description: Suggest an idea
+description: Suggest an idea for Noctrinth q(≧▽≦q)
 type: 'feature'
 
 body:
@@ -7,28 +7,20 @@ body:
     attributes:
       label: Please confirm the following.
       options:
-        - label: I checked the [existing issues](https://github.com/modrinth/code/issues?q=is%3Aissue) for duplicate feature requests
+        - label: I checked the [existing issues](https://github.com/Everelsu/Noctrinth/issues?q=is%3Aissue) for duplicate feature requests
           required: true
-  - type: dropdown
-    id: projects
-    attributes:
-      label: What parts of Modrinth is your feature request related too?
-      multiple: true
-      options:
-        - Modrinth App
-        - Modrinth.com website
-        - Modrinth Hosting
-        - Modrinth API for developers
+        - label: This is about Noctrinth itself (Ely.by, imports, CurseForge import, etc.), not a general Modrinth App feature that belongs [upstream](https://github.com/modrinth/code/issues)
+          required: true
   - type: textarea
     attributes:
       label: Is your suggested feature related to a problem? Please describe.
-      description: A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+      description: A clear and concise description of what the problem is. Ex. I'm always frustrated when [...] ( ˘ω˘ )
     validations:
       required: false
   - type: textarea
     attributes:
       label: Describe the solution you'd like
-      description: A clear and concise description of what you want to happen.
+      description: A clear and concise description of what you want to happen. ٩(ˊᗜˋ*)و
     validations:
       required: false
   - type: textarea

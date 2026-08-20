@@ -7,15 +7,28 @@
 [![License](https://img.shields.io/badge/License-GPL--3.0-ac51fb?style=for-the-badge&logo=gnu&logoColor=white&labelColor=16181c)](apps/app/LICENSE)
 [![Stars](https://img.shields.io/github/stars/Everelsu/Noctrinth?style=for-the-badge&logo=github&logoColor=white&label=Stars&labelColor=16181c&color=ac51fb)](https://github.com/Everelsu/Noctrinth/stargazers)
 
+**English** · [Русский](README.ru.md)
+
 **Switching launchers? Your instances come with you — one click, nothing left behind.**
 
 🌙 A Modrinth App fork that speaks Ely.by, installs CurseForge packs, and imports your instances from six launchers 🚀
 
-[Changelog](https://everelsu.github.io/Noctrinth/) · [Releases](https://github.com/Everelsu/Noctrinth/releases) · [Issues](https://github.com/Everelsu/Noctrinth/issues) · [Upstream](https://github.com/modrinth/code)
+[Changelog](https://everelsu.github.io/Noctrinth/) · [Releases](https://github.com/Everelsu/Noctrinth/releases) · [Issues](https://github.com/Everelsu/Noctrinth/issues) · [Discussions](https://github.com/Everelsu/Noctrinth/discussions) · [Upstream](https://github.com/modrinth/code)
 
 </div>
 
 ---
+
+## Screenshots
+
+<div align="center">
+<table>
+<tr>
+<td width="50%"><img src=".github/assets/screenshots/library.png" alt="Your instance library, with a live news feed and friends list" width="100%"/><br/><sub>Library — every instance, with an activity feed alongside</sub></td>
+<td width="50%"><img src=".github/assets/screenshots/ely-by-skins.png" alt="Managing an Ely.by skin from inside Noctrinth" width="100%"/><br/><sub>Ely.by skins, managed without leaving the launcher</sub></td>
+</tr>
+</table>
+</div>
 
 ## Why Noctrinth
 

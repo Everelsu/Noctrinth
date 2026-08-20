@@ -1,43 +1,40 @@
-name: 👥 Bug with Modrinth Hosting
-description: For issues with a Modrinth Hosting product.
-labels: [hosting]
+name: 🐛 Bug report
+description: Something in Noctrinth isn't working right. ￣へ￣
+labels: [bug]
 type: 'bug'
 body:
   - type: checkboxes
     attributes:
       label: Please confirm the following.
       options:
-        - label: I checked the [existing issues](https://github.com/modrinth/code/issues?q=is%3Aissue) for duplicate problems
+        - label: I checked the [existing issues](https://github.com/Everelsu/Noctrinth/issues?q=is%3Aissue) for duplicate reports
           required: true
-        - label: I have tried resolving the issue using the [support portal](https://support.modrinth.com)
+        - label: I have ensured my Noctrinth installation is up to date
           required: true
-  - type: dropdown
-    id: issue-location
+        - label: This is a Noctrinth-specific issue, not a bug in the upstream [Modrinth App](https://github.com/modrinth/code/issues) that I should report there instead
+          required: true
+  - type: input
+    id: version
     attributes:
-      label: Is this an issue in the control panel or with the Minecraft server itself?
-      options:
-        - Control panel (on Modrinth.com)
-        - Minecraft server
+      label: What version of Noctrinth are you using?
+      description: Find this in ⚙️ Settings
     validations:
       required: true
   - type: dropdown
-    id: browsers
+    id: oses
     attributes:
-      label: What browsers are you seeing the problem on? (if a panel issue)
+      label: What operating systems are you seeing the problem on?
       multiple: true
       options:
-        - N/A
-        - Chrome (including Arc, Brave, Opera, Vivaldi)
-        - Microsoft Edge
-        - Firefox
-        - Safari
-        - Other (please specify)
+        - Windows
+        - macOS
+        - Linux
   - type: textarea
     attributes:
       label: Describe the bug
-      description: A clear and concise description of what the bug is. Include screenshots if applicable.
+      description: A clear and concise description of what the bug is. Include screenshots if applicable. (´；ω；`)
     validations:
-      required: false
+      required: true
   - type: textarea
     attributes:
       label: Steps to reproduce
@@ -46,7 +43,7 @@ body:
         1. Go to '...'
         2. Click on '...'
         3. Scroll down to '...'
-        4. See error
+        4. See error (╯°□°)╯
     validations:
       required: false
   - type: textarea

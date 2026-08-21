@@ -65,7 +65,6 @@ import { saveWindowState, StateFlags } from '@tauri-apps/plugin-window-state'
 import { computed, onMounted, onUnmounted, provide, ref, watch } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 
-import NoctrinthTextLogo from '@/assets/noctrinth-text.svg?component'
 import AccountsCard from '@/components/ui/AccountsCard.vue'
 import AppActionBar from '@/components/ui/AppActionBar.vue'
 import Breadcrumbs from '@/components/ui/Breadcrumbs.vue'
@@ -85,6 +84,7 @@ import UpdateToPlayModal from '@/components/ui/modal/UpdateToPlayModal.vue'
 import NavButton from '@/components/ui/NavButton.vue'
 import NewIconEditorNotification from '@/components/ui/new-icon-editor-notification/index.vue'
 import { shouldShowNewIconEditorNotification } from '@/components/ui/new-icon-editor-notification/show-notification'
+import NoctrinthLogo from '@/components/ui/NoctrinthLogo.vue'
 import OnboardingChecklist from '@/components/ui/onboarding-checklist/index.vue'
 import PrideFundraiserBanner from '@/components/ui/PrideFundraiserBanner.vue'
 import PromotionWrapper from '@/components/ui/PromotionWrapper.vue'
@@ -94,6 +94,7 @@ import SplashScreen from '@/components/ui/SplashScreen.vue'
 import SurveyPopup from '@/components/ui/SurveyPopup.vue'
 import WindowControls from '@/components/ui/WindowControls.vue'
 import { useCheckDisableMouseover } from '@/composables/macCssFix.js'
+import { setAccentIntensity } from '@/composables/use-accent.ts'
 import { useAppEvent } from '@/composables/use-app-event'
 import { useAppSettings } from '@/composables/use-app-settings.ts'
 import { useError } from '@/composables/use-error.js'
@@ -669,6 +670,7 @@ async function setupApp() {
 		developer_mode,
 		feature_flags,
 		pending_update_toast_for_version,
+		accent_intensity,
 	} = await getSettings()
 
 	// Initialize locale from saved settings
@@ -685,6 +687,7 @@ async function setupApp() {
 
 	appTheme.preferred = theme
 	appTheme.advancedRendering = advanced_rendering
+	setAccentIntensity(accent_intensity)
 	appTheme.syncAcrossDevices = sync_theme_across_devices
 	appSettings.syncBehaviorAcrossDevices = sync_behavior_across_devices
 	appSettings.hideNametagSkinsPage = hide_nametag_skins_page
@@ -2087,7 +2090,7 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 		</div>
 		<div data-tauri-drag-region class="app-grid-statusbar bg-bg-raised h-[--top-bar-height] flex">
 			<div data-tauri-drag-region class="flex min-w-0 flex-1 items-center overflow-hidden p-2">
-				<NoctrinthTextLogo class="h-7 w-auto shrink-0 text-contrast pointer-events-none" />
+				<NoctrinthLogo class="h-7 w-auto shrink-0 text-contrast pointer-events-none" />
 				<div data-tauri-drag-region class="ml-2 flex shrink-0 items-center gap-2">
 					<IconButton
 						type="outlined"

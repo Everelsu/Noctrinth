@@ -2598,7 +2598,7 @@
     "message": "A simplified representation of a Minecraft window, with the Mojang Studios logo in Modrinth green."
   },
   "landing.launcher.modrinth-app-label": {
-    "message": "App"
+    "message": "Modrinth App"
   },
   "landing.launcher.prism-launcher-label": {
     "message": "Prism Launcher"
@@ -2808,22 +2808,22 @@
     "message": "Terms of Use"
   },
   "layout.footer.modrinth-information": {
-    "message": "About"
+    "message": "Modrinth information"
   },
   "layout.footer.open-source": {
-    "message": "This is <github-link>open source</github-link>."
+    "message": "Modrinth is <github-link>open source</github-link>."
   },
   "layout.footer.products": {
     "message": "Products"
   },
   "layout.footer.products.app": {
-    "message": "App"
+    "message": "Modrinth App"
   },
   "layout.footer.products.plus": {
-    "message": "Plus"
+    "message": "Modrinth+"
   },
   "layout.footer.products.servers": {
-    "message": "Hosting"
+    "message": "Modrinth Hosting"
   },
   "layout.footer.resources": {
     "message": "Resources"
@@ -2883,7 +2883,7 @@
     "message": "Discover"
   },
   "layout.nav.get-modrinth-app": {
-    "message": "Get App"
+    "message": "Get Modrinth App"
   },
   "layout.nav.home": {
     "message": "Home"
@@ -2892,10 +2892,10 @@
     "message": "Host a server"
   },
   "layout.nav.modrinth-app": {
-    "message": "App"
+    "message": "Modrinth App"
   },
   "layout.nav.modrinth-home-page": {
-    "message": "Home page"
+    "message": "Modrinth home page"
   },
   "layout.nav.my-servers": {
     "message": "My servers"
@@ -2919,7 +2919,7 @@
     "message": "Search"
   },
   "layout.nav.upgrade-to-modrinth-plus": {
-    "message": "Plus features"
+    "message": "Upgrade to Modrinth+"
   },
   "layout.publish.email-verification-required.description": {
     "message": "You must verify your email before publishing on Modrinth."
@@ -3594,13 +3594,13 @@
     "message": "{title} does not support {gameVersion} for {platform}"
   },
   "project.download.install-with-app": {
-    "message": "Install with App"
+    "message": "Install with Modrinth App"
   },
   "project.download.manually": {
     "message": "Download manually"
   },
   "project.download.no-app": {
-    "message": "Don't have the App?"
+    "message": "Don't have Modrinth App?"
   },
   "project.download.no-game-versions-found": {
     "message": "No game versions found"

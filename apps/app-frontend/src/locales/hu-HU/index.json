@@ -792,7 +792,7 @@
     "message": "Újraindítás..."
   },
   "app.settings.app-version": {
-    "message": "Noctrinth {version}"
+    "message": "Modrinth App {version}"
   },
   "app.settings.default-instance-options.environment-variables.description": {
     "message": "A példány indításakor beállított környezeti változók."
@@ -888,7 +888,7 @@
     "message": "A hirdetések teszik lehetővé a Modrinth működését, és biztosítják a tartalomkészítők juttatásait. Partnereink sütiket tárolhatnak vagy érhetnek el az alkalmazásban a hirdetések személyre szabása és a teljesítmény mérése céljából. Alább leiratkozhatsz erről, illetve beállíthatod a preferenciáidat."
   },
   "app.settings.privacy.discord-rich-presence.description": {
-    "message": "A Noctrinth megjelenítése aktuális tevékenységként a Discordon. Ez nem érinti a modok által a példányokhoz hozzáadott Rich Presence-t. Az alkalmazás újraindítását igényli."
+    "message": "A Modrinth App megjelenítése aktuális tevékenységként a Discordon. Ez nem érinti a modok által a példányokhoz hozzáadott Rich Presence-t. Az alkalmazás újraindítását igényli."
   },
   "app.settings.privacy.discord-rich-presence.title": {
     "message": "Discord Rich Presence"
@@ -933,7 +933,7 @@
     "message": "Alkalmazáskönyvtár tallózása"
   },
   "app.settings.resource-management.app-directory.description": {
-    "message": "A Noctrinth ebben a mappában tárolja a példányokat és az egyéb fájlokat. A módosítások az alkalmazás újraindítása után lépnek érvénybe."
+    "message": "A Modrinth App ebben a mappában tárolja a példányokat és az egyéb fájlokat. A módosítások az alkalmazás újraindítása után lépnek érvénybe."
   },
   "app.settings.resource-management.app-directory.select": {
     "message": "Új alkalmazáskönyvtár kiválasztása"
@@ -1146,13 +1146,13 @@
     "message": "Hali, Modrinth-felhasználó!"
   },
   "app.update-popup.body.download-complete": {
-    "message": "A Noctrinth v{version} letöltése befejeződött. Válaszd a Frissítés lehetőséget a frissítéshez, vagy az alkalmazás bezárásakor automatikusan frissül."
+    "message": "A Modrinth App v{version} letöltése befejeződött. Válaszd a Frissítés lehetőséget a frissítéshez, vagy az alkalmazás bezárásakor automatikusan frissül."
   },
   "app.update-popup.body.linux": {
-    "message": "A Noctrinth v{version} elérhető. A legújabb funkciókért és javításokért frissíts a csomagkezelőddel!"
+    "message": "A Modrinth App v{version} elérhető. A legújabb funkciókért és javításokért frissíts a csomagkezelőddel!"
   },
   "app.update-popup.body.metered": {
-    "message": "A Noctrinth v{version} már elérhető! Mivel korlátozott adatforgalmú hálózaton vagy, nem töltöttük le automatikusan."
+    "message": "A Modrinth App v{version} már elérhető! Mivel korlátozott adatforgalmú hálózaton vagy, nem töltöttük le automatikusan."
   },
   "app.update-popup.changelog": {
     "message": "Változásnapló"

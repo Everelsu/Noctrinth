@@ -1,10 +1,4 @@
 {
-  "app.account.collections": {
-    "message": "Коллекции"
-  },
-  "app.account.notifications": {
-    "message": "Уведомления"
-  },
   "app.action-bar.downloading-java": {
     "message": "Скачивание Java {version}"
   },
@@ -149,17 +143,11 @@
   "app.ads-consent.title": {
     "message": "Конфиденциальность и реклама на Modrinth"
   },
-  "app.appearance-settings.default-landing-page.description": {
-    "message": "Страница, которая открывается при запуске лаунчера."
-  },
   "app.appearance-settings.default-landing-page.home": {
     "message": "Главная"
   },
   "app.appearance-settings.default-landing-page.library": {
     "message": "Библиотека"
-  },
-  "app.appearance-settings.default-landing-page.title": {
-    "message": "Стартовая страница"
   },
   "app.appearance-settings.hide-nametag.description": {
     "message": "Скрывать имя над игроком на странице выбора скина."
@@ -174,7 +162,7 @@
     "message": "Миры на главной"
   },
   "app.appearance-settings.minimize-launcher.description": {
-    "message": "Сворачивать окно лаунчера при запуске Minecraft."
+    "message": "Сворачивать окно Modrinth App при запуске Minecraft."
   },
   "app.appearance-settings.minimize-launcher.title": {
     "message": "Сворачивание приложения"
@@ -259,24 +247,6 @@
   },
   "app.browse.server.installing": {
     "message": "Установка"
-  },
-  "app.changelog.modrinth-note": {
-    "message": "Показаны недавние выпуски. Полный список изменений приложения Modrinth доступен на их сайте."
-  },
-  "app.changelog.noctrinth-note": {
-    "message": "Полный список изменений Noctrinth также доступен онлайн."
-  },
-  "app.changelog.open-modrinth": {
-    "message": "Открыть список изменений Modrinth"
-  },
-  "app.changelog.open-noctrinth": {
-    "message": "Открыть список изменений Noctrinth"
-  },
-  "app.changelog.source.modrinth": {
-    "message": "Modrinth"
-  },
-  "app.changelog.source.noctrinth": {
-    "message": "Noctrinth"
   },
   "app.content-install.no-compatible-versions": {
     "message": "Не найдено доступных версий, совместимых с {compatibilityLabel}. Выберите версию для установки вручную. Зависимости не будут установлены автоматически."
@@ -428,9 +398,6 @@
   "app.instance.mods.project-was-added": {
     "message": "«{name}» добавлен"
   },
-  "app.instance.mods.projects-were-added": {
-    "message": "Добавлено проектов: {count}"
-  },
   "app.instance.mods.share-text": {
     "message": "Что в моей сборке:"
   },
@@ -439,54 +406,6 @@
   },
   "app.instance.mods.successfully-uploaded": {
     "message": "Успешно загружено"
-  },
-  "app.instance.screenshots.copied": {
-    "message": "Скриншот скопирован в буфер обмена"
-  },
-  "app.instance.screenshots.copy": {
-    "message": "Копировать"
-  },
-  "app.instance.screenshots.copy-failed": {
-    "message": "Не удалось скопировать скриншот"
-  },
-  "app.instance.screenshots.count": {
-    "message": "{count, plural, one {# скриншот} other {# скриншотов}}"
-  },
-  "app.instance.screenshots.delete.description": {
-    "message": "Скриншот будет безвозвратно удалён с диска. Это действие нельзя отменить."
-  },
-  "app.instance.screenshots.delete.title": {
-    "message": "Удалить этот скриншот?"
-  },
-  "app.instance.screenshots.empty.description": {
-    "message": "Нажмите F2 во время игры в этой сборке, чтобы сделать скриншот."
-  },
-  "app.instance.screenshots.empty.title": {
-    "message": "Скриншотов пока нет"
-  },
-  "app.instance.screenshots.next": {
-    "message": "Вперёд"
-  },
-  "app.instance.screenshots.open-folder-button": {
-    "message": "Открыть папку"
-  },
-  "app.instance.screenshots.previous": {
-    "message": "Назад"
-  },
-  "app.instance.screenshots.refresh": {
-    "message": "Обновить"
-  },
-  "app.instance.screenshots.reveal": {
-    "message": "Показать в папке"
-  },
-  "app.instance.screenshots.sort-newest": {
-    "message": "Сначала новые"
-  },
-  "app.instance.screenshots.sort-oldest": {
-    "message": "Сначала старые"
-  },
-  "app.instance.screenshots.zoom": {
-    "message": "Масштаб"
   },
   "app.instance.share.empty.description": {
     "message": "Поделитесь сборкой со своими друзьями!"
@@ -647,9 +566,6 @@
   "app.instance.worlds.remove-server-modal.warning-header": {
     "message": "Удаление {name}"
   },
-  "app.instance.worlds.search-worlds-placeholder": {
-    "message": "Поиск среди {count} миров..."
-  },
   "app.java-detection.cancel": {
     "message": "Отмена"
   },
@@ -694,36 +610,6 @@
   },
   "app.java-selector.test-installation": {
     "message": "Проверить установку Java"
-  },
-  "app.library.search.hint": {
-    "message": "↑↓ — выбрать · Tab — вставить · условия складываются, а - переворачивает любое"
-  },
-  "app.library.search.no-results.title": {
-    "message": "Под запрос ничего не подошло."
-  },
-  "app.library.search.pending": {
-    "message": "Читаю, что установлено…"
-  },
-  "app.library.search.placeholder": {
-    "message": "Поиск по сборкам, или @ # ! для фильтров"
-  },
-  "app.migration.modrinth.action.choose": {
-    "message": "Выбрать сборки"
-  },
-  "app.migration.modrinth.action.dismiss": {
-    "message": "Скрыть"
-  },
-  "app.migration.modrinth.action.import-all": {
-    "message": "Перенести все"
-  },
-  "app.migration.modrinth.action.importing": {
-    "message": "Переносим..."
-  },
-  "app.migration.modrinth.description": {
-    "message": "{count, plural, one {Найдена # сборка} few {Найдено # сборки} many {Найдено # сборок} other {Найдено # сборки}} в вашей установке Modrinth App. При переносе они копируются сюда — сам Modrinth App остаётся нетронутым."
-  },
-  "app.migration.modrinth.title": {
-    "message": "Перенесите свои сборки из Modrinth App"
   },
   "app.modal.install-to-play.additional-context": {
     "message": "Дополнительный контекст"
@@ -842,9 +728,6 @@
   "app.nav.home": {
     "message": "Главная"
   },
-  "app.nav.library": {
-    "message": "Библиотека"
-  },
   "app.nav.modrinth-account": {
     "message": "Аккаунт Modrinth"
   },
@@ -865,48 +748,6 @@
   },
   "app.news.view-all": {
     "message": "Посмотреть все новости"
-  },
-  "app.notifications.accept": {
-    "message": "Принять"
-  },
-  "app.notifications.decline": {
-    "message": "Отклонить"
-  },
-  "app.notifications.error.accept": {
-    "message": "Не удалось принять приглашение"
-  },
-  "app.notifications.error.decline": {
-    "message": "Не удалось отклонить приглашение"
-  },
-  "app.notifications.error.mark-read": {
-    "message": "Не удалось отметить уведомление прочитанным"
-  },
-  "app.notifications.invited-to-join": {
-    "message": "пригласил(а) вас присоединиться к <target>{name}</target>."
-  },
-  "app.notifications.mark-as-read": {
-    "message": "Отметить прочитанным"
-  },
-  "app.notifications.moderator-message": {
-    "message": "Ваш проект, <project>{title}</project>, получил {count, plural, one {сообщение} other {сообщения}} от модераторов."
-  },
-  "app.notifications.not-signed-in": {
-    "message": "Вы не вошли в аккаунт"
-  },
-  "app.notifications.project-updated": {
-    "message": "Проект, на который вы подписаны, <project>{title}</project>, был обновлён:"
-  },
-  "app.notifications.read-badge": {
-    "message": "Прочитано"
-  },
-  "app.notifications.received": {
-    "message": "Получено {time}"
-  },
-  "app.notifications.status-changed": {
-    "message": "<project>{title}</project> сменил статус с <strong>{oldStatus}</strong> на <strong>{newStatus}</strong> по решению модераторов."
-  },
-  "app.notifications.version-for": {
-    "message": "для"
   },
   "app.project.install-button.already-installed": {
     "message": "Этот проект уже установлен"
@@ -938,17 +779,11 @@
   "app.quick-instance-switcher.drag-tooltip": {
     "message": "Потяните для изменения размера"
   },
-  "app.resource-settings.proxy.description": {
-    "message": "Направляет весь сетевой трафик лаунчера (Modrinth API и загрузки с CDN) через прокси. Поддерживаются URL вида http://, https://, socks5:// и socks5h://. Полезно, когда Modrinth недоступен в вашем регионе. Оставьте пустым для прямого подключения. (требуется перезапуск приложения)"
-  },
-  "app.resource-settings.proxy.title": {
-    "message": "Прокси"
-  },
   "app.restarting": {
     "message": "Перезапуск..."
   },
   "app.settings.app-version": {
-    "message": "Noctrinth {version}"
+    "message": "Modrinth App {version}"
   },
   "app.settings.default-instance-options.environment-variables.description": {
     "message": "Переменные среды при запуске игры."
@@ -1007,12 +842,6 @@
   "app.settings.default-instance-options.pre-launch-hook.title": {
     "message": "Команда перед запуском"
   },
-  "app.settings.default-instance-options.universal-skins.description": {
-    "message": "Серверы в offline-режиме не присылают скины вообще — поэтому там все Стивы. Запрашивать их по нику у Ely.by, который отдаёт скины своих пользователей, а для остальных — скины Mojang. Моды не нужны, а скин, присланный сервером, никогда не подменяется."
-  },
-  "app.settings.default-instance-options.universal-skins.title": {
-    "message": "Скины всех игроков"
-  },
   "app.settings.default-instance-options.width.description": {
     "message": "Ширина окна игры при запуске."
   },
@@ -1040,212 +869,8 @@
   "app.settings.downloading": {
     "message": "Скачивание версии {version}"
   },
-  "app.settings.game-options.ao.label": {
-    "message": "Плавное освещение"
-  },
-  "app.settings.game-options.applies.between": {
-    "message": "Применяется только на Minecraft {min}–{max}."
-  },
-  "app.settings.game-options.applies.from": {
-    "message": "Применяется только на Minecraft {min} и новее."
-  },
-  "app.settings.game-options.applies.up-to": {
-    "message": "Применяется только на Minecraft {max} и старше."
-  },
-  "app.settings.game-options.applying-count": {
-    "message": "Применяется {managed} из {total} параметров"
-  },
-  "app.settings.game-options.autoJump.label": {
-    "message": "Автопрыжок"
-  },
-  "app.settings.game-options.clear-all": {
-    "message": "Снять все"
-  },
-  "app.settings.game-options.description": {
-    "message": "Отмеченные здесь значения записываются в options.txt каждого инстанса при запуске. Всё остальное остаётся таким, каким его сохранила игра."
-  },
-  "app.settings.game-options.enableVsync.label": {
-    "message": "Вертикальная синхронизация"
-  },
-  "app.settings.game-options.entityShadows.label": {
-    "message": "Тени существ"
-  },
-  "app.settings.game-options.fov.label": {
-    "message": "Поле зрения"
-  },
-  "app.settings.game-options.gamma.label": {
-    "message": "Яркость"
-  },
-  "app.settings.game-options.graphicsMode.choice.0": {
-    "message": "Быстрая"
-  },
-  "app.settings.game-options.graphicsMode.choice.1": {
-    "message": "Детальная"
-  },
-  "app.settings.game-options.graphicsMode.choice.2": {
-    "message": "Отличная"
-  },
-  "app.settings.game-options.graphicsMode.label": {
-    "message": "Графика"
-  },
-  "app.settings.game-options.group-on-count": {
-    "message": "{count} вкл."
-  },
-  "app.settings.game-options.group.controls": {
-    "message": "Управление"
-  },
-  "app.settings.game-options.group.sound": {
-    "message": "Звук"
-  },
-  "app.settings.game-options.group.video": {
-    "message": "Видео"
-  },
-  "app.settings.game-options.guiScale.choice.0": {
-    "message": "Авто"
-  },
-  "app.settings.game-options.guiScale.choice.1": {
-    "message": "Мелкий"
-  },
-  "app.settings.game-options.guiScale.choice.2": {
-    "message": "Обычный"
-  },
-  "app.settings.game-options.guiScale.choice.3": {
-    "message": "Крупный"
-  },
-  "app.settings.game-options.guiScale.choice.4": {
-    "message": "Очень крупный"
-  },
-  "app.settings.game-options.guiScale.label": {
-    "message": "Масштаб интерфейса"
-  },
-  "app.settings.game-options.invertYMouse.label": {
-    "message": "Инвертировать мышь"
-  },
-  "app.settings.game-options.manage-option": {
-    "message": "Управлять параметром «{option}» во всех инстансах"
-  },
-  "app.settings.game-options.maxFps.description": {
-    "message": "260 означает «без ограничения», как и ползунок в самой игре."
-  },
-  "app.settings.game-options.maxFps.label": {
-    "message": "Макс. частота кадров"
-  },
-  "app.settings.game-options.mouseSensitivity.description": {
-    "message": "50 % — это игровое «Обычно»."
-  },
-  "app.settings.game-options.mouseSensitivity.label": {
-    "message": "Чувствительность"
-  },
-  "app.settings.game-options.nothing-selected": {
-    "message": "Ничего не выбрано — отметьте параметр ниже"
-  },
-  "app.settings.game-options.particles.choice.0": {
-    "message": "Все"
-  },
-  "app.settings.game-options.particles.choice.1": {
-    "message": "Меньше"
-  },
-  "app.settings.game-options.particles.choice.2": {
-    "message": "Минимум"
-  },
-  "app.settings.game-options.particles.label": {
-    "message": "Частицы"
-  },
-  "app.settings.game-options.profile-off": {
-    "message": "Профиль выключен — ничего не применяется"
-  },
-  "app.settings.game-options.renderDistance.label": {
-    "message": "Дальность прорисовки"
-  },
-  "app.settings.game-options.reset.label": {
-    "message": "Сбросить к значению по умолчанию"
-  },
-  "app.settings.game-options.reset.tooltip": {
-    "message": "Вернуть значение игры по умолчанию"
-  },
-  "app.settings.game-options.simulationDistance.label": {
-    "message": "Дальность симуляции"
-  },
-  "app.settings.game-options.soundCategory_ambient.label": {
-    "message": "Окружение"
-  },
-  "app.settings.game-options.soundCategory_block.label": {
-    "message": "Блоки"
-  },
-  "app.settings.game-options.soundCategory_hostile.label": {
-    "message": "Враждебные существа"
-  },
-  "app.settings.game-options.soundCategory_master.label": {
-    "message": "Общая громкость"
-  },
-  "app.settings.game-options.soundCategory_music.label": {
-    "message": "Музыка"
-  },
-  "app.settings.game-options.soundCategory_neutral.label": {
-    "message": "Дружелюбные существа"
-  },
-  "app.settings.game-options.soundCategory_player.label": {
-    "message": "Игроки"
-  },
-  "app.settings.game-options.soundCategory_record.label": {
-    "message": "Проигрыватель и нотные блоки"
-  },
-  "app.settings.game-options.soundCategory_voice.label": {
-    "message": "Голос и речь"
-  },
-  "app.settings.game-options.soundCategory_weather.label": {
-    "message": "Погода"
-  },
-  "app.settings.game-options.title": {
-    "message": "Настройки Minecraft"
-  },
-  "app.settings.game-options.toggleCrouch.label": {
-    "message": "Красться: переключением"
-  },
-  "app.settings.game-options.toggleSprint.label": {
-    "message": "Бежать: переключением"
-  },
-  "app.settings.game-options.unit.chunks": {
-    "message": " чанк."
-  },
-  "app.settings.game-options.unit.degrees": {
-    "message": "°"
-  },
-  "app.settings.game-options.unit.fps": {
-    "message": " кадр/с"
-  },
-  "app.settings.game-options.unit.percent": {
-    "message": "%"
-  },
-  "app.settings.game-options.versions.changed-meaning": {
-    "message": "У нескольких параметров имя осталось прежним, а смысл значения изменился. Такие помечены версией и записываются только туда, где они действительны."
-  },
-  "app.settings.game-options.versions.missing-keys": {
-    "message": "Minecraft записывает в options.txt каждый параметр, который знает, поэтому отсутствие параметра в файле инстанса означает, что в этой версии его нет — лаунчер оставляет всё как есть, а не выдумывает строку. Настраивать ничего не нужно, подстраивается само."
-  },
-  "app.settings.game-options.versions.never-launched": {
-    "message": "У инстанса, который ни разу не запускали, файла ещё нет, и читать нечего. В этом случае параметры записываются заранее, а игра при первом сохранении отбросит те, которых не знает."
-  },
-  "app.settings.game-options.versions.summary": {
-    "message": "Как это работает на разных версиях игры"
-  },
   "app.settings.java-installations.location.title": {
     "message": "Расположение Java {version}"
-  },
-  "app.settings.java.gpu.label": {
-    "message": "Видеоадаптер"
-  },
-  "app.settings.java.gpu.no-preference": {
-    "message": "Предпочтение не задано, поэтому выбирает Windows — на ноутбуке это обычно встроенная графика. Доступны: {adapters}"
-  },
-  "app.settings.java.gpu.on-high-performance": {
-    "message": "Windows будет запускать эту среду на производительном адаптере."
-  },
-  "app.settings.java.gpu.on-named-adapter": {
-    "message": "Windows будет запускать эту среду на {adapter}."
-  },
-  "app.settings.java.gpu.on-power-saving": {
-    "message": "Windows будет запускать эту среду на энергосберегающем адаптере — обычно это встроенная графика, для Minecraft это медленный вариант."
   },
   "app.settings.operating-system.macos": {
     "message": "macOS"
@@ -1328,9 +953,6 @@
   "app.settings.tabs.behavior": {
     "message": "Поведение"
   },
-  "app.settings.tabs.changelog": {
-    "message": "Список изменений"
-  },
   "app.settings.tabs.default-instance-options": {
     "message": "Предустановки игры"
   },
@@ -1345,9 +967,6 @@
   },
   "app.settings.tabs.resource-management": {
     "message": "Управление ресурсами"
-  },
-  "app.settings.tabs.shared-game-options": {
-    "message": "Настройки Minecraft"
   },
   "app.sidebar.playing-as": {
     "message": "Текущий аккаунт"
@@ -1381,18 +1000,6 @@
   },
   "app.skins.edit-button": {
     "message": "Изменить скин"
-  },
-  "app.skins.ely.my-skins.empty": {
-    "message": "Пока ничего не загружено. Загрузите скин на Ely.by — и он появится здесь."
-  },
-  "app.skins.ely.my-skins.title": {
-    "message": "Ваши скины Ely.by"
-  },
-  "app.skins.ely.sign-in-needed.text": {
-    "message": "Для этого Ely.by нужен вход на самом сайте. Нажмите «Изменить скин на Ely.by», войдите и повторите."
-  },
-  "app.skins.ely.sign-in-needed.title": {
-    "message": "Ely.by не принял изменение"
   },
   "app.skins.modal.add-skin-button": {
     "message": "Добавить скин"
@@ -1505,15 +1112,6 @@
   "app.skins.sign-in.button": {
     "message": "Войти"
   },
-  "app.skins.sign-in.description": {
-    "message": "Пожалуйста, войдите в свой аккаунт Minecraft, чтобы воспользоваться функциями управления скинами в приложении Modrinth."
-  },
-  "app.skins.sign-in.rinthbot-alt": {
-    "message": "Восторженный Modrinth Bot"
-  },
-  "app.skins.sign-in.title": {
-    "message": "Войдите"
-  },
   "app.skins.title": {
     "message": "Выбор скина"
   },
@@ -1538,23 +1136,14 @@
   "app.survey.title": {
     "message": "Привет, пользователь Modrinth!"
   },
-  "app.update-popup.body": {
-    "message": "Noctrinth v{version} готов к установке! Перезагрузите, чтобы обновить сейчас, или обновление произойдёт автоматически при закрытии Noctrinth."
-  },
   "app.update-popup.body.download-complete": {
-    "message": "Скачивание Noctrinth v{version} завершено. Перезапустите приложение, чтобы обновить его, или оно обновится автоматически после закрытия."
-  },
-  "app.update-popup.body.downloading": {
-    "message": "Noctrinth v{version} — {downloaded} из {size}"
-  },
-  "app.update-popup.body.downloading-unknown-size": {
-    "message": "Noctrinth v{version} загружается…"
+    "message": "Скачивание версии Modrinth App {version} завершено. Перезапустите приложение, чтобы обновить его, или оно обновится автоматически после закрытия."
   },
   "app.update-popup.body.linux": {
-    "message": "Доступна версия Noctrinth {version}. Обновите приложение через менеджер пакетов, чтобы получить последние улучшения и исправления!"
+    "message": "Доступна версия Modrinth App {version}. Обновите приложение через менеджер пакетов, чтобы получить последние улучшения и исправления!"
   },
   "app.update-popup.body.metered": {
-    "message": "Версия Noctrinth {version} доступна для скачивания! Используется сеть с лимитным тарифным планом, поэтому скачивание не началось автоматически."
+    "message": "Версия Modrinth App {version} доступна для скачивания! Используется сеть с лимитным тарифным планом, поэтому скачивание не началось автоматически."
   },
   "app.update-popup.changelog": {
     "message": "Список изменений"
@@ -1564,9 +1153,6 @@
   },
   "app.update-popup.download-complete": {
     "message": "Скачивание завершено"
-  },
-  "app.update-popup.downloading": {
-    "message": "Загрузка обновления"
   },
   "app.update-popup.reload": {
     "message": "Перезапустить"
@@ -1597,186 +1183,6 @@
   },
   "app.world.world-item.offline": {
     "message": "Не в сети"
-  },
-  "app.world.world-item.players-online": {
-    "message": "{count} в игре"
-  },
-  "collection.delete": {
-    "message": "Удалить"
-  },
-  "collection.edit": {
-    "message": "Изменить"
-  },
-  "collection.filter.all": {
-    "message": "Все"
-  },
-  "collection.following.description": {
-    "message": "Автоматически созданная коллекция всех проектов, на которые вы подписаны."
-  },
-  "collection.following.name": {
-    "message": "Отслеживаемые проекты"
-  },
-  "collection.loading": {
-    "message": "Загрузка…"
-  },
-  "collection.no-followed": {
-    "message": "Вы пока ни на кого не подписаны"
-  },
-  "collection.no-matching": {
-    "message": "Нет подходящих проектов"
-  },
-  "collection.no-projects": {
-    "message": "В этой коллекции нет проектов"
-  },
-  "collection.open-on-web": {
-    "message": "Открыть на сайте"
-  },
-  "collection.projects-count.one": {
-    "message": "проект"
-  },
-  "collection.projects-count.other": {
-    "message": "проектов"
-  },
-  "collection.remove-project": {
-    "message": "Убрать проект"
-  },
-  "collection.remove-tooltip": {
-    "message": "Убрать из коллекции"
-  },
-  "collection.removing": {
-    "message": "Удаление…"
-  },
-  "collection.search-placeholder": {
-    "message": "Поиск проектов…"
-  },
-  "collection.sort-by": {
-    "message": "Сортировка: "
-  },
-  "collection.sort-by-name": {
-    "message": "Сортировка"
-  },
-  "collection.sort.downloads": {
-    "message": "По скачиваниям"
-  },
-  "collection.sort.followers": {
-    "message": "По подписчикам"
-  },
-  "collection.sort.name": {
-    "message": "По названию (А-Я)"
-  },
-  "collection.sort.updated": {
-    "message": "По дате обновления"
-  },
-  "collection.status.private": {
-    "message": "Личная"
-  },
-  "collection.status.public": {
-    "message": "Публичная"
-  },
-  "collection.status.rejected": {
-    "message": "Отклонена"
-  },
-  "collection.status.unlisted": {
-    "message": "По ссылке"
-  },
-  "collection.tab.collections": {
-    "message": "Коллекции"
-  },
-  "collection.tab.notifications": {
-    "message": "Уведомления"
-  },
-  "collection.type.datapack": {
-    "message": "Дата-паки"
-  },
-  "collection.type.mod": {
-    "message": "Моды"
-  },
-  "collection.type.modpack": {
-    "message": "Сборки"
-  },
-  "collection.type.plugin": {
-    "message": "Плагины"
-  },
-  "collection.type.resourcepack": {
-    "message": "Ресурспаки"
-  },
-  "collection.type.shader": {
-    "message": "Шейдеры"
-  },
-  "collection.unfollow-project": {
-    "message": "Отписаться от проекта"
-  },
-  "collection.unfollowing": {
-    "message": "Отписываемся…"
-  },
-  "collection.updated-ago": {
-    "message": "Обновлено {time}"
-  },
-  "collections.create-new": {
-    "message": "Создать"
-  },
-  "collections.followed-projects": {
-    "message": "Отслеживаемые проекты"
-  },
-  "collections.followed-projects-desc": {
-    "message": "Автоматически собранная коллекция всех проектов, на которые вы подписаны."
-  },
-  "collections.loading": {
-    "message": "Загрузка коллекций…"
-  },
-  "collections.no-collections": {
-    "message": "У вас пока нет коллекций"
-  },
-  "collections.no-collections-body": {
-    "message": "Создайте свою первую коллекцию на modrinth.com, чтобы начать!"
-  },
-  "collections.no-match": {
-    "message": "Нет коллекций, подходящих под запрос"
-  },
-  "collections.no-match-body": {
-    "message": "Попробуйте изменить фильтры или поисковый запрос."
-  },
-  "collections.projects-count.one": {
-    "message": "проект"
-  },
-  "collections.projects-count.other": {
-    "message": "проектов"
-  },
-  "collections.search-placeholder": {
-    "message": "Поиск коллекций…"
-  },
-  "collections.sign-in-prompt": {
-    "message": "Войдите, чтобы увидеть свои коллекции"
-  },
-  "collections.sign-in-prompt-body": {
-    "message": "Войдите в аккаунт Modrinth, чтобы увидеть здесь свои коллекции."
-  },
-  "collections.sort-by": {
-    "message": "Сортировка: "
-  },
-  "collections.sort-by-name": {
-    "message": "Сортировка"
-  },
-  "collections.sort.created": {
-    "message": "По дате создания"
-  },
-  "collections.sort.name": {
-    "message": "По названию (А-Я)"
-  },
-  "collections.sort.updated": {
-    "message": "По дате обновления"
-  },
-  "collections.status.private": {
-    "message": "Личная"
-  },
-  "collections.status.public": {
-    "message": "Публичная"
-  },
-  "collections.status.rejected": {
-    "message": "Отклонена"
-  },
-  "collections.status.unlisted": {
-    "message": "По ссылке"
   },
   "content.shared-instance.change-version-body": {
     "message": "Изменение версии затрагивает только локальную копию. В будущих обновлениях общего экземпляра она может быть восстановлена ​​или изменена снова."
@@ -1810,81 +1216,6 @@
   },
   "content.shared-instance.warning-header": {
     "message": "Это часть сборки"
-  },
-  "dashboard.tab.collections": {
-    "message": "Коллекции"
-  },
-  "dashboard.tab.notifications": {
-    "message": "Уведомления"
-  },
-  "ely-login.cancel": {
-    "message": "Отмена"
-  },
-  "ely-login.error.generic": {
-    "message": "Не удалось войти. Проверьте учётные данные."
-  },
-  "ely-login.error.network": {
-    "message": "Не удалось подключиться к серверам Ely.by. Проверьте интернет-соединение."
-  },
-  "ely-login.header": {
-    "message": "Вход через Ely.by"
-  },
-  "ely-login.hide-password": {
-    "message": "Скрыть пароль"
-  },
-  "ely-login.no-account": {
-    "message": "Нет аккаунта?"
-  },
-  "ely-login.password-label": {
-    "message": "Пароль"
-  },
-  "ely-login.password-placeholder": {
-    "message": "Введите пароль…"
-  },
-  "ely-login.show-password": {
-    "message": "Показать пароль"
-  },
-  "ely-login.sign-in": {
-    "message": "Войти"
-  },
-  "ely-login.sign-up-link": {
-    "message": "Зарегистрироваться на ely.by"
-  },
-  "ely-login.signing-in": {
-    "message": "Вход…"
-  },
-  "ely-login.totp-hint": {
-    "message": "Этот аккаунт защищён двухфакторной аутентификацией."
-  },
-  "ely-login.totp-label": {
-    "message": "Код двухфакторной аутентификации"
-  },
-  "ely-login.totp-placeholder": {
-    "message": "Введите 6-значный код..."
-  },
-  "ely-login.username-label": {
-    "message": "Имя пользователя или email"
-  },
-  "ely-login.username-placeholder": {
-    "message": "Введите имя пользователя или email Ely.by…"
-  },
-  "ely-skins.change-button": {
-    "message": "Изменить скин на Ely.by"
-  },
-  "ely-skins.default-notice": {
-    "message": "У этого аккаунта нет загруженного скина (или его не удалось загрузить) — показан стандартный скин."
-  },
-  "ely-skins.description": {
-    "message": "Скины для аккаунтов Ely.by управляются на сайте Ely.by. Кнопка ниже откроет его в окне прямо в приложении — если вы не вошли, Ely.by сначала попросит авторизоваться. После закрытия окна превью обновится автоматически."
-  },
-  "ely-skins.page-title": {
-    "message": "Скины"
-  },
-  "ely-skins.refresh-button": {
-    "message": "Обновить превью"
-  },
-  "ely-skins.section-title": {
-    "message": "Скин Ely.by"
   },
   "friends.action.add-friend": {
     "message": "Добавить в друзья"
@@ -2054,9 +1385,6 @@
   "instance.edit-world.title": {
     "message": "Настройка мира"
   },
-  "instance.files.adding-files": {
-    "message": "Добавление файлов ({completed}/{total})"
-  },
   "instance.files.save-as": {
     "message": "Сохранить как..."
   },
@@ -2158,18 +1486,6 @@
   },
   "instance.settings.tabs.general.edit-icon.select": {
     "message": "Выбрать иконку"
-  },
-  "instance.settings.tabs.general.library-groups": {
-    "message": "Группировка"
-  },
-  "instance.settings.tabs.general.library-groups.create": {
-    "message": "Создать новую группу"
-  },
-  "instance.settings.tabs.general.library-groups.description": {
-    "message": "Позволяет организовать сборки по разным разделам в библиотеке."
-  },
-  "instance.settings.tabs.general.library-groups.enter-name": {
-    "message": "Введите название группы"
   },
   "instance.settings.tabs.general.name": {
     "message": "Название"
@@ -2305,39 +1621,6 @@
   },
   "instance.settings.tabs.java.java-path-placeholder": {
     "message": "/путь/к/java"
-  },
-  "instance.settings.tabs.java.modern-java": {
-    "message": "Современная Java"
-  },
-  "instance.settings.tabs.java.modern-java-beta": {
-    "message": "Бета"
-  },
-  "instance.settings.tabs.java.modern-java-beta-note": {
-    "message": "Функция новая и мало обкатана. Сделайте резервную копию сборки перед включением и учтите, что моды, рассчитанные на Java 8, могут вести себя странно."
-  },
-  "instance.settings.tabs.java.modern-java-description": {
-    "message": "Minecraft {gameVersion} обычно запускается только на Java 8. {provider} заменяет LWJGL 2 и переделывает Forge, чтобы сборка пошла на современной Java."
-  },
-  "instance.settings.tabs.java.modern-java-install": {
-    "message": "Включить"
-  },
-  "instance.settings.tabs.java.modern-java-installed": {
-    "message": "Включено — {provider} {version}, работает на Java {javaMajor}"
-  },
-  "instance.settings.tabs.java.modern-java-installing": {
-    "message": "Включаю..."
-  },
-  "instance.settings.tabs.java.modern-java-mods-note": {
-    "message": "Отключение убирает патчи лаунчера. Установленные моды останутся в сборке — удалите их во вкладке «Моды», если они больше не нужны."
-  },
-  "instance.settings.tabs.java.modern-java-remove": {
-    "message": "Отключить"
-  },
-  "instance.settings.tabs.java.modern-java-version": {
-    "message": "Версия Java"
-  },
-  "instance.settings.tabs.java.modern-java-version-hint": {
-    "message": "Выбор версии скачает её и закрепит за этой сборкой. Самая младшая обкатана лучше всех; новые поддерживаются, но с модами этой версии Minecraft проверены меньше."
   },
   "instance.settings.tabs.sharing": {
     "message": "Доступ"
@@ -2477,17 +1760,8 @@
   "minecraft-account.add-account": {
     "message": "Добавить аккаунт"
   },
-  "minecraft-account.add-ely-account": {
-    "message": "Добавить аккаунт Ely.by"
-  },
   "minecraft-account.label": {
     "message": "Аккаунт Minecraft"
-  },
-  "minecraft-account.label-ely-by": {
-    "message": "Аккаунт Ely.by"
-  },
-  "minecraft-account.label-microsoft": {
-    "message": "Аккаунт Microsoft"
   },
   "minecraft-account.not-signed-in": {
     "message": "Вход не выполнен"
@@ -2554,57 +1828,6 @@
   },
   "modal.modrinth-account-required.waiting-for-browser": {
     "message": "Ожидание подтверждения браузера..."
-  },
-  "notifications.back": {
-    "message": "Назад"
-  },
-  "notifications.heading": {
-    "message": "Уведомления"
-  },
-  "notifications.heading-history": {
-    "message": "История уведомлений"
-  },
-  "notifications.history-empty": {
-    "message": "В истории нет уведомлений."
-  },
-  "notifications.loading": {
-    "message": "Загрузка уведомлений…"
-  },
-  "notifications.mark-all-read": {
-    "message": "Прочитать все"
-  },
-  "notifications.sign-in-prompt": {
-    "message": "Войдите, чтобы увидеть уведомления"
-  },
-  "notifications.sign-in-prompt-body": {
-    "message": "Войдите в аккаунт Modrinth, чтобы увидеть здесь свои уведомления."
-  },
-  "notifications.type.all": {
-    "message": "Все"
-  },
-  "notifications.type.moderator-message": {
-    "message": "Сообщения от модераторов"
-  },
-  "notifications.type.organization-invite": {
-    "message": "Приглашения в организации"
-  },
-  "notifications.type.other": {
-    "message": "Прочее"
-  },
-  "notifications.type.project-update": {
-    "message": "Обновления"
-  },
-  "notifications.type.status-change": {
-    "message": "Изменения статуса"
-  },
-  "notifications.type.team-invite": {
-    "message": "Приглашения в команды"
-  },
-  "notifications.unread-empty": {
-    "message": "У вас нет непрочитанных уведомлений."
-  },
-  "notifications.view-history": {
-    "message": "Посмотреть историю"
   },
   "search.filter.locked.instance": {
     "message": "Управляется сборкой"

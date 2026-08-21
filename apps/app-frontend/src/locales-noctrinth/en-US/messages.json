@@ -1,0 +1,764 @@
+{
+  "app.account.collections": {
+    "message": "Collections"
+  },
+  "app.account.notifications": {
+    "message": "Notifications"
+  },
+  "app.changelog.author": {
+    "message": "Author"
+  },
+  "app.changelog.modrinth-note": {
+    "message": "Showing recent releases. The full Modrinth App changelog is available on their website."
+  },
+  "app.changelog.noctrinth-note": {
+    "message": "The full Noctrinth changelog is also available online."
+  },
+  "app.changelog.open-modrinth": {
+    "message": "Open Modrinth changelog"
+  },
+  "app.changelog.open-noctrinth": {
+    "message": "Open Noctrinth changelog"
+  },
+  "app.changelog.source.modrinth": {
+    "message": "Modrinth"
+  },
+  "app.changelog.source.noctrinth": {
+    "message": "Noctrinth"
+  },
+  "app.instance.screenshots.copied": {
+    "message": "Screenshot copied to clipboard"
+  },
+  "app.instance.screenshots.copy": {
+    "message": "Copy image"
+  },
+  "app.instance.screenshots.copy-failed": {
+    "message": "Failed to copy screenshot"
+  },
+  "app.instance.screenshots.count": {
+    "message": "{count, plural, one {# screenshot} other {# screenshots}}"
+  },
+  "app.instance.screenshots.delete.description": {
+    "message": "This will permanently delete the screenshot from disk. This cannot be undone."
+  },
+  "app.instance.screenshots.delete.title": {
+    "message": "Delete this screenshot?"
+  },
+  "app.instance.screenshots.empty.description": {
+    "message": "Press F2 while playing this instance to capture a screenshot."
+  },
+  "app.instance.screenshots.empty.title": {
+    "message": "No screenshots yet"
+  },
+  "app.instance.screenshots.next": {
+    "message": "Next"
+  },
+  "app.instance.screenshots.open-folder-button": {
+    "message": "Open folder"
+  },
+  "app.instance.screenshots.previous": {
+    "message": "Previous"
+  },
+  "app.instance.screenshots.refresh": {
+    "message": "Refresh"
+  },
+  "app.instance.screenshots.reveal": {
+    "message": "Show in folder"
+  },
+  "app.instance.screenshots.sort-newest": {
+    "message": "Newest first"
+  },
+  "app.instance.screenshots.sort-oldest": {
+    "message": "Oldest first"
+  },
+  "app.instance.screenshots.zoom": {
+    "message": "Zoom"
+  },
+  "app.library.search.hint": {
+    "message": "↑↓ to pick · Tab to insert · terms combine, and - flips one around"
+  },
+  "app.library.search.pending": {
+    "message": "Still reading what is installed…"
+  },
+  "app.library.search.placeholder": {
+    "message": "Search instances, or type @ # ! to filter"
+  },
+  "app.migration.modrinth.action.choose": {
+    "message": "Choose instances"
+  },
+  "app.migration.modrinth.action.dismiss": {
+    "message": "Dismiss"
+  },
+  "app.migration.modrinth.action.import-all": {
+    "message": "Import all"
+  },
+  "app.migration.modrinth.action.importing": {
+    "message": "Importing..."
+  },
+  "app.migration.modrinth.description": {
+    "message": "{count, plural, one {# instance was} other {# instances were}} found in your Modrinth App installation. Importing copies them here — your Modrinth App stays untouched."
+  },
+  "app.migration.modrinth.title": {
+    "message": "Bring your instances over from Modrinth App"
+  },
+  "app.notifications.accept": {
+    "message": "Accept"
+  },
+  "app.notifications.decline": {
+    "message": "Decline"
+  },
+  "app.notifications.error.accept": {
+    "message": "Error accepting invite"
+  },
+  "app.notifications.error.decline": {
+    "message": "Error declining invite"
+  },
+  "app.notifications.error.mark-read": {
+    "message": "Error marking notification as read"
+  },
+  "app.notifications.invited-to-join": {
+    "message": "has invited you to join <target>{name}</target>."
+  },
+  "app.notifications.mark-as-read": {
+    "message": "Mark as read"
+  },
+  "app.notifications.moderator-message": {
+    "message": "Your project, <project>{title}</project>, has received {count, plural, one {a message} other {messages}} from the moderators."
+  },
+  "app.notifications.not-signed-in": {
+    "message": "Not signed in"
+  },
+  "app.notifications.project-updated": {
+    "message": "A project you follow, <project>{title}</project>, has been updated:"
+  },
+  "app.notifications.read-badge": {
+    "message": "Read"
+  },
+  "app.notifications.received": {
+    "message": "Received {time}"
+  },
+  "app.notifications.status-changed": {
+    "message": "<project>{title}</project> updated from <strong>{oldStatus}</strong> to <strong>{newStatus}</strong> by the moderators."
+  },
+  "app.notifications.version-for": {
+    "message": "for"
+  },
+  "app.project.copy-link.copied": {
+    "message": "Link copied to clipboard"
+  },
+  "app.resource-settings.proxy.description": {
+    "message": "Routes all launcher network traffic (Modrinth API and CDN downloads) through a proxy. Supports http://, https://, socks5:// and socks5h:// URLs. Useful when Modrinth is not reachable in your region. Leave empty to connect directly. (app restart required to take effect)"
+  },
+  "app.resource-settings.proxy.title": {
+    "message": "Proxy"
+  },
+  "app.settings.app-version": {
+    "message": "Noctrinth {version}"
+  },
+  "app.settings.default-instance-options.universal-skins.description": {
+    "message": "Servers in offline mode send no skins at all, which is why everyone is Steve there. Look them up by name instead, from Ely.by — which answers for the players registered there and falls back to Mojang for everyone else. Needs no mods, and never replaces a skin the server did send."
+  },
+  "app.settings.default-instance-options.universal-skins.title": {
+    "message": "Skins for every player"
+  },
+  "app.settings.game-options.ao.label": {
+    "message": "Smooth lighting"
+  },
+  "app.settings.game-options.applies.between": {
+    "message": "Only applied on Minecraft {min}–{max}."
+  },
+  "app.settings.game-options.applies.from": {
+    "message": "Only applied on Minecraft {min} and newer."
+  },
+  "app.settings.game-options.applies.up-to": {
+    "message": "Only applied on Minecraft {max} and older."
+  },
+  "app.settings.game-options.applying-count": {
+    "message": "Applying {managed} of {total} options"
+  },
+  "app.settings.game-options.autoJump.label": {
+    "message": "Auto-jump"
+  },
+  "app.settings.game-options.clear-all": {
+    "message": "Clear all"
+  },
+  "app.settings.game-options.description": {
+    "message": "Values you switch on here are written into every instance's options.txt when it launches. Everything else is left exactly as the game saved it."
+  },
+  "app.settings.game-options.enableVsync.label": {
+    "message": "VSync"
+  },
+  "app.settings.game-options.entityShadows.label": {
+    "message": "Entity shadows"
+  },
+  "app.settings.game-options.fov.label": {
+    "message": "Field of view"
+  },
+  "app.settings.game-options.gamma.label": {
+    "message": "Brightness"
+  },
+  "app.settings.game-options.graphicsMode.choice.0": {
+    "message": "Fast"
+  },
+  "app.settings.game-options.graphicsMode.choice.1": {
+    "message": "Fancy"
+  },
+  "app.settings.game-options.graphicsMode.choice.2": {
+    "message": "Fabulous"
+  },
+  "app.settings.game-options.graphicsMode.label": {
+    "message": "Graphics"
+  },
+  "app.settings.game-options.group-on-count": {
+    "message": "{count} on"
+  },
+  "app.settings.game-options.group.controls": {
+    "message": "Controls"
+  },
+  "app.settings.game-options.group.sound": {
+    "message": "Sound"
+  },
+  "app.settings.game-options.group.video": {
+    "message": "Video"
+  },
+  "app.settings.game-options.guiScale.choice.0": {
+    "message": "Auto"
+  },
+  "app.settings.game-options.guiScale.choice.1": {
+    "message": "Small"
+  },
+  "app.settings.game-options.guiScale.choice.2": {
+    "message": "Normal"
+  },
+  "app.settings.game-options.guiScale.choice.3": {
+    "message": "Large"
+  },
+  "app.settings.game-options.guiScale.choice.4": {
+    "message": "Very large"
+  },
+  "app.settings.game-options.guiScale.label": {
+    "message": "GUI scale"
+  },
+  "app.settings.game-options.invertYMouse.label": {
+    "message": "Invert mouse"
+  },
+  "app.settings.game-options.manage-option": {
+    "message": "Manage {option} across all instances"
+  },
+  "app.settings.game-options.maxFps.description": {
+    "message": "260 means unlimited, matching the in-game slider."
+  },
+  "app.settings.game-options.maxFps.label": {
+    "message": "Max framerate"
+  },
+  "app.settings.game-options.mouseSensitivity.description": {
+    "message": "50% is the game’s \"Normal\"."
+  },
+  "app.settings.game-options.mouseSensitivity.label": {
+    "message": "Sensitivity"
+  },
+  "app.settings.game-options.nothing-selected": {
+    "message": "Nothing selected yet — tick an option below"
+  },
+  "app.settings.game-options.particles.choice.0": {
+    "message": "All"
+  },
+  "app.settings.game-options.particles.choice.1": {
+    "message": "Decreased"
+  },
+  "app.settings.game-options.particles.choice.2": {
+    "message": "Minimal"
+  },
+  "app.settings.game-options.particles.label": {
+    "message": "Particles"
+  },
+  "app.settings.game-options.profile-off": {
+    "message": "Profile is off — nothing is applied"
+  },
+  "app.settings.game-options.renderDistance.label": {
+    "message": "Render distance"
+  },
+  "app.settings.game-options.reset.label": {
+    "message": "Reset to default"
+  },
+  "app.settings.game-options.reset.tooltip": {
+    "message": "Reset to the game default"
+  },
+  "app.settings.game-options.simulationDistance.label": {
+    "message": "Simulation distance"
+  },
+  "app.settings.game-options.soundCategory_ambient.label": {
+    "message": "Ambient / environment"
+  },
+  "app.settings.game-options.soundCategory_block.label": {
+    "message": "Blocks"
+  },
+  "app.settings.game-options.soundCategory_hostile.label": {
+    "message": "Hostile creatures"
+  },
+  "app.settings.game-options.soundCategory_master.label": {
+    "message": "Master volume"
+  },
+  "app.settings.game-options.soundCategory_music.label": {
+    "message": "Music"
+  },
+  "app.settings.game-options.soundCategory_neutral.label": {
+    "message": "Friendly creatures"
+  },
+  "app.settings.game-options.soundCategory_player.label": {
+    "message": "Players"
+  },
+  "app.settings.game-options.soundCategory_record.label": {
+    "message": "Jukebox / note blocks"
+  },
+  "app.settings.game-options.soundCategory_voice.label": {
+    "message": "Voice / speech"
+  },
+  "app.settings.game-options.soundCategory_weather.label": {
+    "message": "Weather"
+  },
+  "app.settings.game-options.title": {
+    "message": "Minecraft options"
+  },
+  "app.settings.game-options.toggleCrouch.label": {
+    "message": "Sneak: toggle"
+  },
+  "app.settings.game-options.toggleSprint.label": {
+    "message": "Sprint: toggle"
+  },
+  "app.settings.game-options.unit.chunks": {
+    "message": " chunks"
+  },
+  "app.settings.game-options.unit.degrees": {
+    "message": "°"
+  },
+  "app.settings.game-options.unit.fps": {
+    "message": " fps"
+  },
+  "app.settings.game-options.unit.percent": {
+    "message": "%"
+  },
+  "app.settings.game-options.versions.changed-meaning": {
+    "message": "A few options kept their name but changed what their value means. Those are marked with a version and are only written to versions where they're valid."
+  },
+  "app.settings.game-options.versions.missing-keys": {
+    "message": "Minecraft writes every option it knows about into options.txt, so an option missing from an instance's file means that version doesn't have it — the launcher leaves it alone instead of inventing it. Nothing to configure, it adapts on its own."
+  },
+  "app.settings.game-options.versions.never-launched": {
+    "message": "An instance that has never been launched has no file yet, so there is nothing to read. In that case the options are written up front, and the game drops anything it doesn't recognise the first time it saves."
+  },
+  "app.settings.game-options.versions.summary": {
+    "message": "How this behaves across game versions"
+  },
+  "app.settings.java.gpu.label": {
+    "message": "Graphics adapter"
+  },
+  "app.settings.java.gpu.no-preference": {
+    "message": "No preference is set, so Windows picks — on a laptop that is usually the integrated adapter. Available: {adapters}"
+  },
+  "app.settings.java.gpu.on-high-performance": {
+    "message": "Windows will run this runtime on the high-performance adapter."
+  },
+  "app.settings.java.gpu.on-named-adapter": {
+    "message": "Windows will run this runtime on {adapter}."
+  },
+  "app.settings.java.gpu.on-power-saving": {
+    "message": "Windows will run this runtime on the power-saving adapter — usually the integrated one, which is the slow option for Minecraft."
+  },
+  "app.settings.privacy.discord-rich-presence.description": {
+    "message": "Show Noctrinth as your current activity on Discord. This does not affect Rich Presence added to instances by mods. Requires an app restart."
+  },
+  "app.settings.resource-management.app-directory.description": {
+    "message": "Where Noctrinth stores instances and other files. Changes take effect after restarting the app."
+  },
+  "app.settings.tabs.changelog": {
+    "message": "Changelog"
+  },
+  "app.settings.tabs.shared-game-options": {
+    "message": "Minecraft options"
+  },
+  "app.skins.ely.my-skins.empty": {
+    "message": "Nothing uploaded yet. Upload a skin on Ely.by and it will show up here to click on."
+  },
+  "app.skins.ely.my-skins.title": {
+    "message": "Your Ely.by skins"
+  },
+  "app.skins.ely.sign-in-needed.text": {
+    "message": "Ely.by needs you signed in on its website for this. Use \"Change skin on Ely.by\" to sign in, then try again."
+  },
+  "app.skins.ely.sign-in-needed.title": {
+    "message": "Ely.by did not accept the change"
+  },
+  "app.update-popup.body": {
+    "message": "Noctrinth v{version} is ready to install! Reload to update now, or automatically when you close Noctrinth."
+  },
+  "app.update-popup.body.download-complete": {
+    "message": "Noctrinth v{version} has finished downloading. Reload to update now, or automatically when you close Noctrinth."
+  },
+  "app.update-popup.body.downloading": {
+    "message": "Noctrinth v{version} — {downloaded} of {size}"
+  },
+  "app.update-popup.body.downloading-unknown-size": {
+    "message": "Noctrinth v{version} is downloading…"
+  },
+  "app.update-popup.body.linux": {
+    "message": "Noctrinth v{version} is available. Use your package manager to update for the latest features and fixes!"
+  },
+  "app.update-popup.body.metered": {
+    "message": "Noctrinth v{version} is available now! Since you're on a metered network, we didn't automatically download it."
+  },
+  "app.update-popup.downloading": {
+    "message": "Downloading update"
+  },
+  "collection.delete": {
+    "message": "Delete"
+  },
+  "collection.edit": {
+    "message": "Edit"
+  },
+  "collection.filter.all": {
+    "message": "All"
+  },
+  "collection.following.description": {
+    "message": "Auto-generated collection of all the projects you're following."
+  },
+  "collection.following.name": {
+    "message": "Followed projects"
+  },
+  "collection.loading": {
+    "message": "Loading..."
+  },
+  "collection.no-followed": {
+    "message": "You haven't followed any projects yet"
+  },
+  "collection.no-matching": {
+    "message": "No matching projects"
+  },
+  "collection.no-projects": {
+    "message": "No projects in this collection"
+  },
+  "collection.open-on-web": {
+    "message": "Open on web"
+  },
+  "collection.projects-count.one": {
+    "message": "project"
+  },
+  "collection.projects-count.other": {
+    "message": "projects"
+  },
+  "collection.remove-project": {
+    "message": "Remove project"
+  },
+  "collection.remove-tooltip": {
+    "message": "Remove from collection"
+  },
+  "collection.removing": {
+    "message": "Removing..."
+  },
+  "collection.search-placeholder": {
+    "message": "Search projects..."
+  },
+  "collection.sort-by": {
+    "message": "Sort by: "
+  },
+  "collection.sort-by-name": {
+    "message": "Sort by"
+  },
+  "collection.sort.downloads": {
+    "message": "Downloads"
+  },
+  "collection.sort.followers": {
+    "message": "Followers"
+  },
+  "collection.sort.name": {
+    "message": "Name (A-Z)"
+  },
+  "collection.sort.updated": {
+    "message": "Recently updated"
+  },
+  "collection.status.private": {
+    "message": "Private"
+  },
+  "collection.status.public": {
+    "message": "Public"
+  },
+  "collection.status.rejected": {
+    "message": "Rejected"
+  },
+  "collection.status.unlisted": {
+    "message": "Unlisted"
+  },
+  "collection.tab.collections": {
+    "message": "Collections"
+  },
+  "collection.tab.notifications": {
+    "message": "Notifications"
+  },
+  "collection.type.datapack": {
+    "message": "Data packs"
+  },
+  "collection.type.mod": {
+    "message": "Mods"
+  },
+  "collection.type.modpack": {
+    "message": "Modpacks"
+  },
+  "collection.type.plugin": {
+    "message": "Plugins"
+  },
+  "collection.type.resourcepack": {
+    "message": "Resource packs"
+  },
+  "collection.type.shader": {
+    "message": "Shaders"
+  },
+  "collection.unfollow-project": {
+    "message": "Unfollow project"
+  },
+  "collection.unfollowing": {
+    "message": "Unfollowing..."
+  },
+  "collection.updated-ago": {
+    "message": "Updated {time}"
+  },
+  "collections.create-new": {
+    "message": "Create new"
+  },
+  "collections.followed-projects": {
+    "message": "Followed projects"
+  },
+  "collections.followed-projects-desc": {
+    "message": "Auto-generated collection of all the projects you're following."
+  },
+  "collections.loading": {
+    "message": "Loading collections..."
+  },
+  "collections.no-collections": {
+    "message": "You don't have any collections yet"
+  },
+  "collections.no-collections-body": {
+    "message": "Create your first collection on modrinth.com to get started!"
+  },
+  "collections.no-match": {
+    "message": "No collections match your search"
+  },
+  "collections.no-match-body": {
+    "message": "Try adjusting your filters or search terms."
+  },
+  "collections.projects-count.one": {
+    "message": "project"
+  },
+  "collections.projects-count.other": {
+    "message": "projects"
+  },
+  "collections.search-placeholder": {
+    "message": "Search collections..."
+  },
+  "collections.sign-in-prompt": {
+    "message": "Sign in to view your collections"
+  },
+  "collections.sign-in-prompt-body": {
+    "message": "Sign in to your Modrinth account to see your collections here."
+  },
+  "collections.sort-by": {
+    "message": "Sort by: "
+  },
+  "collections.sort-by-name": {
+    "message": "Sort by"
+  },
+  "collections.sort.created": {
+    "message": "Recently Created"
+  },
+  "collections.sort.name": {
+    "message": "Name (A-Z)"
+  },
+  "collections.sort.updated": {
+    "message": "Recently Updated"
+  },
+  "collections.status.private": {
+    "message": "Private"
+  },
+  "collections.status.public": {
+    "message": "Public"
+  },
+  "collections.status.rejected": {
+    "message": "Rejected"
+  },
+  "collections.status.unlisted": {
+    "message": "Unlisted"
+  },
+  "creation-flow.modal.import-instance.delete-source.description": {
+    "defaultMessage": "Deletes each imported instance's files from the other launcher, so they aren't stored twice. Leave this off to keep both copies."
+  },
+  "creation-flow.modal.import-instance.delete-source.label": {
+    "defaultMessage": "Remove from {launcher} after importing"
+  },
+  "dashboard.tab.collections": {
+    "message": "Collections"
+  },
+  "dashboard.tab.notifications": {
+    "message": "Notifications"
+  },
+  "ely-login.cancel": {
+    "message": "Cancel"
+  },
+  "ely-login.error.generic": {
+    "message": "Login failed. Please check your credentials."
+  },
+  "ely-login.error.network": {
+    "message": "Couldn't reach Ely.by servers. Check your internet connection."
+  },
+  "ely-login.header": {
+    "message": "Sign in with Ely.by"
+  },
+  "ely-login.hide-password": {
+    "message": "Hide password"
+  },
+  "ely-login.no-account": {
+    "message": "Don't have an account?"
+  },
+  "ely-login.password-label": {
+    "message": "Password"
+  },
+  "ely-login.password-placeholder": {
+    "message": "Enter your password..."
+  },
+  "ely-login.show-password": {
+    "message": "Show password"
+  },
+  "ely-login.sign-in": {
+    "message": "Sign in"
+  },
+  "ely-login.sign-up-link": {
+    "message": "Sign up at ely.by"
+  },
+  "ely-login.signing-in": {
+    "message": "Signing in..."
+  },
+  "ely-login.totp-hint": {
+    "message": "This account is protected with two-factor authentication."
+  },
+  "ely-login.totp-label": {
+    "message": "Two-factor code"
+  },
+  "ely-login.totp-placeholder": {
+    "message": "Enter the 6-digit code..."
+  },
+  "ely-login.username-label": {
+    "message": "Username or email"
+  },
+  "ely-login.username-placeholder": {
+    "message": "Enter your Ely.by username or email..."
+  },
+  "ely-skins.change-button": {
+    "message": "Change skin on Ely.by"
+  },
+  "ely-skins.default-notice": {
+    "message": "This account has no custom skin uploaded (or it couldn't be loaded), so the default skin is shown."
+  },
+  "ely-skins.description": {
+    "message": "Skins for Ely.by accounts are managed on the Ely.by website. The button below opens it in a window right here in the app — if you aren't signed in, Ely.by will ask you to log in first. Once you close the window, the preview updates automatically."
+  },
+  "ely-skins.page-title": {
+    "message": "Skins"
+  },
+  "ely-skins.refresh-button": {
+    "message": "Refresh preview"
+  },
+  "ely-skins.section-title": {
+    "message": "Ely.by skin"
+  },
+  "instance.settings.tabs.java.modern-java": {
+    "message": "Modern Java"
+  },
+  "instance.settings.tabs.java.modern-java-beta": {
+    "message": "Beta"
+  },
+  "instance.settings.tabs.java.modern-java-beta-note": {
+    "message": "This is new and not widely tested yet. Back up the instance before enabling it, and expect mods that assume Java 8 to misbehave."
+  },
+  "instance.settings.tabs.java.modern-java-description": {
+    "message": "Minecraft {gameVersion} normally only runs on Java 8. {provider} replaces LWJGL 2 and reworks Forge so the instance can run on a current Java release instead."
+  },
+  "instance.settings.tabs.java.modern-java-install": {
+    "message": "Enable"
+  },
+  "instance.settings.tabs.java.modern-java-installed": {
+    "message": "Installed — {provider} {version}, running on Java {javaMajor}"
+  },
+  "instance.settings.tabs.java.modern-java-installing": {
+    "message": "Enabling..."
+  },
+  "instance.settings.tabs.java.modern-java-mods-note": {
+    "message": "Disabling removes the launcher patches. Any mods it installed stay in the instance — remove them from the Mods tab if you no longer want them."
+  },
+  "instance.settings.tabs.java.modern-java-remove": {
+    "message": "Disable"
+  },
+  "instance.settings.tabs.java.modern-java-version": {
+    "message": "Java version"
+  },
+  "instance.settings.tabs.java.modern-java-version-hint": {
+    "message": "Picking a version downloads it and pins it as this instance’s Java installation. The lowest one is the best tested; newer ones are supported but less proven with mods for this Minecraft version."
+  },
+  "minecraft-account.add-ely-account": {
+    "message": "Add Ely.by account"
+  },
+  "minecraft-account.label-ely-by": {
+    "message": "Ely.by account"
+  },
+  "minecraft-account.label-microsoft": {
+    "message": "Microsoft account"
+  },
+  "notifications.back": {
+    "message": "Back"
+  },
+  "notifications.heading": {
+    "message": "Notifications"
+  },
+  "notifications.heading-history": {
+    "message": "Notification history"
+  },
+  "notifications.history-empty": {
+    "message": "No notifications in history."
+  },
+  "notifications.loading": {
+    "message": "Loading notifications..."
+  },
+  "notifications.mark-all-read": {
+    "message": "Mark all as read"
+  },
+  "notifications.sign-in-prompt": {
+    "message": "Sign in to view notifications"
+  },
+  "notifications.sign-in-prompt-body": {
+    "message": "Sign in to your Modrinth account to see your notifications here."
+  },
+  "notifications.type.all": {
+    "message": "All"
+  },
+  "notifications.type.moderator-message": {
+    "message": "Moderator messages"
+  },
+  "notifications.type.organization-invite": {
+    "message": "Organization invites"
+  },
+  "notifications.type.other": {
+    "message": "Other"
+  },
+  "notifications.type.project-update": {
+    "message": "Updates"
+  },
+  "notifications.type.status-change": {
+    "message": "Status changes"
+  },
+  "notifications.type.team-invite": {
+    "message": "Team invites"
+  },
+  "notifications.unread-empty": {
+    "message": "You don't have any unread notifications."
+  },
+  "notifications.view-history": {
+    "message": "View history"
+  }
+}

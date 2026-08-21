@@ -785,12 +785,6 @@
   "creation-flow.modal.import-instance.custom-launcher.name": {
     "defaultMessage": "Пользовательский ({pathName})"
   },
-  "creation-flow.modal.import-instance.delete-source.description": {
-    "defaultMessage": "Удаляет файлы каждой перенесённой сборки из другого лаунчера, чтобы они не хранились дважды. Оставьте выключенным, чтобы сохранить обе копии."
-  },
-  "creation-flow.modal.import-instance.delete-source.label": {
-    "defaultMessage": "Удалить из {launcher} после переноса"
-  },
   "creation-flow.modal.import-instance.detecting-launcher-instances": {
     "defaultMessage": "Поиск сборок лаунчера..."
   },
@@ -1587,16 +1581,16 @@
     "defaultMessage": "{count, plural, one {# байт} few {# байта} many {# байт} other {# байта}}"
   },
   "format.bytes.1": {
-    "defaultMessage": "{count, number} KiB"
+    "defaultMessage": "{count, number} КиБ"
   },
   "format.bytes.2": {
-    "defaultMessage": "{count, number} MiB"
+    "defaultMessage": "{count, number} МиБ"
   },
   "format.bytes.3": {
-    "defaultMessage": "{count, number} GiB"
+    "defaultMessage": "{count, number} ГиБ"
   },
   "format.bytes.4": {
-    "defaultMessage": "{count, number} TiB"
+    "defaultMessage": "{count, number} ТиБ"
   },
   "header.category.category": {
     "defaultMessage": "Категория"

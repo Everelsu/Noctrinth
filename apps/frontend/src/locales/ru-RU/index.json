@@ -2550,7 +2550,7 @@
     "message": "Следите за тем, что нравится"
   },
   "landing.feature.launcher.description": {
-    "message": "Наш открытый API позволяет глубже интегрироваться с Это — используйте <link>наше приложение</link> или сторонние лаунчеры наподобие ATLauncher, MultiMC и Prism Launcher."
+    "message": "Наш открытый API позволяет глубже интегрироваться с Modrinth — используйте <link>наше приложение</link> или сторонние лаунчеры наподобие ATLauncher, MultiMC и Prism Launcher."
   },
   "landing.feature.launcher.heading": {
     "message": "Играйте через свой лаунчер"
@@ -2592,7 +2592,7 @@
     "message": "Упрощённое изображение окна Minecraft с логотипом Mojang Studios в зелёном цвете Modrinth."
   },
   "landing.launcher.modrinth-app-label": {
-    "message": "Приложение"
+    "message": "Modrinth App"
   },
   "landing.launcher.prism-launcher-label": {
     "message": "Prism Launcher"
@@ -2802,22 +2802,22 @@
     "message": "Условия использования"
   },
   "layout.footer.modrinth-information": {
-    "message": "О нас"
+    "message": "Информация о Modrinth"
   },
   "layout.footer.open-source": {
-    "message": "Это — <github-link>открытый проект</github-link>."
+    "message": "Modrinth — <github-link>открытый проект</github-link>."
   },
   "layout.footer.products": {
     "message": "Продукты"
   },
   "layout.footer.products.app": {
-    "message": "Приложение"
+    "message": "Modrinth App"
   },
   "layout.footer.products.plus": {
-    "message": "Plus"
+    "message": "Modrinth+"
   },
   "layout.footer.products.servers": {
-    "message": "Хостинг"
+    "message": "Modrinth Hosting"
   },
   "layout.footer.resources": {
     "message": "Ресурсы"
@@ -2871,7 +2871,7 @@
     "message": "Найти"
   },
   "layout.nav.get-modrinth-app": {
-    "message": "Скачать приложение"
+    "message": "Скачать Modrinth App"
   },
   "layout.nav.home": {
     "message": "Главная"
@@ -2880,10 +2880,10 @@
     "message": "Создать сервер"
   },
   "layout.nav.modrinth-app": {
-    "message": "Приложение"
+    "message": "Modrinth App"
   },
   "layout.nav.modrinth-home-page": {
-    "message": "Главная страница"
+    "message": "Главная страница Modrinth"
   },
   "layout.nav.my-servers": {
     "message": "Мои серверы"
@@ -2907,7 +2907,7 @@
     "message": "Поиск"
   },
   "layout.nav.upgrade-to-modrinth-plus": {
-    "message": "Plus-функции"
+    "message": "Перейти на Modrinth+"
   },
   "layout.publish.email-verification-required.description": {
     "message": "Перед публикацией на Modrinth необходимо подтвердить адрес электронной почты."
@@ -3546,13 +3546,13 @@
     "message": "{title} не поддерживает {gameVersion} на {platform}"
   },
   "project.download.install-with-app": {
-    "message": "Установить через приложение"
+    "message": "Установить в Modrinth App"
   },
   "project.download.manually": {
     "message": "Скачать вручную"
   },
   "project.download.no-app": {
-    "message": "Нет приложения?"
+    "message": "У вас нет Modrinth App?"
   },
   "project.download.no-game-versions-found": {
     "message": "Версии игры не найдены"

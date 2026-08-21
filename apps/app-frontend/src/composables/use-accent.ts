@@ -14,8 +14,13 @@
  * theme's depth and contrast are made of; only the cast over them changes. The
  * same goes for the gradients the right-hand sidebar and the promo cards are
  * painted with, which the fork had written out in purple and which therefore
- * stayed purple whatever the accent was. That half is a setting of its own, for
- * anyone who wants the theme's own backgrounds back.
+ * stayed purple whatever the accent was. That half is a setting of its own —
+ * turned off, those gradients are drawn from the theme's own surfaces rather
+ * than left as the purple they were written as, which is the whole point of
+ * asking for the theme's backgrounds back.
+ *
+ * The loading bar follows the preset either way: it is the accent drawn as a
+ * bar, not a background.
  *
  * `theme` is the default and overrides nothing at all, so a build that has
  * never been touched draws exactly what its theme defines.
@@ -117,11 +122,48 @@ function brandGradients(accent: string, borderAlpha: number): Record<string, str
 	}
 }
 
+/**
+ * The same gradients with the colour taken out of them.
+ *
+ * Turning the tint off has to mean the backgrounds match the theme, and these
+ * do not: they are the fork's own purple, written into the theme by hand, so
+ * leaving them alone would leave a violet sidebar beside a blue accent. Drawn
+ * from the theme's own surfaces instead — the same panel colour as everything
+ * else, which is what "the theme's background" means.
+ */
+function neutralGradients(): Record<string, string> {
+	return {
+		'--brand-gradient-bg': 'linear-gradient(0deg, var(--surface-2) 0%, var(--surface-1-5) 100%)',
+		'--brand-gradient-strong-bg':
+			'linear-gradient(270deg, var(--surface-1-5) 10%, var(--surface-2) 100%)',
+		'--brand-gradient-border': 'var(--color-button-border)',
+		'--brand-gradient-fade-out-color':
+			'linear-gradient(to bottom, rgb(0 0 0 / 0) 0%, var(--surface-2) 80%)',
+	}
+}
+
+/**
+ * The bar that runs along the top of the window while something loads.
+ *
+ * Its far end was a fixed lilac, so the bar left the accent behind halfway
+ * across and finished in purple. It runs from the accent to a lighter cast of
+ * itself on dark themes and a deeper one on light, which is the shape the
+ * theme's own gradient had.
+ */
+function loadingBarGradient(accent: string, active: string): string {
+	const far =
+		active === 'light'
+			? `color-mix(in oklab, rgb(${accent}) 65%, black)`
+			: `color-mix(in oklab, rgb(${accent}) 60%, white)`
+	return `linear-gradient(to right, rgb(${accent}) 0%, ${far} 100%)`
+}
+
 const GRADIENT_VARIABLES = [
 	'--brand-gradient-bg',
 	'--brand-gradient-strong-bg',
 	'--brand-gradient-border',
 	'--brand-gradient-fade-out-color',
+	'--loading-bar-gradient',
 ] as const
 
 const HEX = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i
@@ -229,7 +271,17 @@ function apply(id: string, tint: boolean): void {
 		)
 	}
 
-	if (!tint) return
+	// The loading bar is the accent's own, so it follows the preset whether or
+	// not the backgrounds do.
+	const accent = `${red} ${green} ${blue}`
+	html.style.setProperty('--loading-bar-gradient', loadingBarGradient(accent, theme.active))
+
+	if (!tint) {
+		for (const [variable, value] of Object.entries(neutralGradients())) {
+			html.style.setProperty(variable, value)
+		}
+		return
+	}
 
 	// The surfaces keep their lightness — that is the theme's depth and its
 	// contrast — and are given the preset's hue at a fraction of its strength.
@@ -243,9 +295,7 @@ function apply(id: string, tint: boolean): void {
 	}
 
 	const borderAlpha = alphaOf(styles.getPropertyValue('--brand-gradient-border'))
-	for (const [variable, value] of Object.entries(
-		brandGradients(`${red} ${green} ${blue}`, borderAlpha),
-	)) {
+	for (const [variable, value] of Object.entries(brandGradients(accent, borderAlpha))) {
 		html.style.setProperty(variable, value)
 	}
 }

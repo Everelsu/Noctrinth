@@ -5,6 +5,12 @@
 	"app.account.notifications": {
 		"message": "Уведомления"
 	},
+	"app.appearance-settings.accent-brightness.description": {
+		"message": "Насколько светлым рисуется тот же цвет. Ниже 100% он становится глубже, не меняя оттенка."
+	},
+	"app.appearance-settings.accent-brightness.title": {
+		"message": "Яркость акцента"
+	},
 	"app.appearance-settings.accent-intensity.description": {
 		"message": "Насколько ярко рисуется акцентный цвет темы — от почти серого до более насыщенного, чем в любой теме. 100% — тема без изменений."
 	},

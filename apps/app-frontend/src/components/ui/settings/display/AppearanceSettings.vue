@@ -12,12 +12,15 @@ import {
 import { computed, inject, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import {
-	ACCENT_INTENSITY_DEFAULT,
+	ACCENT_BRIGHTNESS_MAX,
+	ACCENT_BRIGHTNESS_MIN,
+	ACCENT_DEFAULT,
 	ACCENT_INTENSITY_MAX,
 	ACCENT_INTENSITY_MIN,
-	ACCENT_INTENSITY_STEP,
+	ACCENT_STEP,
+	clampAccentBrightness,
 	clampAccentIntensity,
-	setAccentIntensity,
+	setAccent,
 } from '@/composables/use-accent.ts'
 import { type ColorTheme, useTheme } from '@/composables/use-theme.ts'
 import { type AppSettings, get, set } from '@/helpers/settings.ts'
@@ -42,6 +45,15 @@ const messages = defineMessages({
 		defaultMessage:
 			"How strongly the theme's accent colour is drawn, from nearly grey to further out than any theme goes. 100% is the theme as it ships.",
 	},
+	accentBrightnessTitle: {
+		id: 'app.appearance-settings.accent-brightness.title',
+		defaultMessage: 'Accent brightness',
+	},
+	accentBrightnessDescription: {
+		id: 'app.appearance-settings.accent-brightness.description',
+		defaultMessage:
+			'How light that same colour is drawn. Below 100% it deepens without changing hue.',
+	},
 })
 
 type AppearanceSettingsState = {
@@ -50,6 +62,7 @@ type AppearanceSettingsState = {
 	advancedRendering: boolean
 	nativeDecorations: boolean
 	accentIntensity: number
+	accentBrightness: number
 }
 
 function getAppearanceSettingsState(settings: AppSettings): AppearanceSettingsState {
@@ -58,7 +71,8 @@ function getAppearanceSettingsState(settings: AppSettings): AppearanceSettingsSt
 		syncAcrossDevices: settings.sync_theme_across_devices,
 		advancedRendering: settings.advanced_rendering,
 		nativeDecorations: settings.native_decorations,
-		accentIntensity: clampAccentIntensity(settings.accent_intensity ?? ACCENT_INTENSITY_DEFAULT),
+		accentIntensity: clampAccentIntensity(settings.accent_intensity ?? ACCENT_DEFAULT),
+		accentBrightness: clampAccentBrightness(settings.accent_brightness ?? ACCENT_DEFAULT),
 	}
 }
 
@@ -83,6 +97,7 @@ const { saved, current, changes, saving, hasChanges, reset, save } = useSavable(
 			advanced_rendering: value.advancedRendering,
 			native_decorations: value.nativeDecorations,
 			accent_intensity: value.accentIntensity,
+			accent_brightness: value.accentBrightness,
 		}
 
 		await set(nextSettings)
@@ -120,8 +135,8 @@ function setNativeDecorations(enabled: boolean): void {
 // while the slider moves, and closing the tab without saving puts back what was
 // saved — which `useSavable` has already restored into `saved` by then.
 watch(
-	() => current.value.accentIntensity,
-	(value) => setAccentIntensity(value),
+	[() => current.value.accentIntensity, () => current.value.accentBrightness],
+	([intensity, brightness]) => setAccent(intensity, brightness),
 )
 
 watch(
@@ -153,7 +168,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
 	theme.preview = null
-	setAccentIntensity(saved.value.accentIntensity)
+	setAccent(saved.value.accentIntensity, saved.value.accentBrightness)
 	settingsModal?.registerUnsavedChangesController(null)
 })
 
@@ -205,7 +220,27 @@ provideAppearanceSettings({
 			aria-labelledby="accent-intensity-label"
 			:min="ACCENT_INTENSITY_MIN"
 			:max="ACCENT_INTENSITY_MAX"
-			:step="ACCENT_INTENSITY_STEP"
+			:step="ACCENT_STEP"
+			unit="%"
+		/>
+	</div>
+
+	<div class="mt-6 flex flex-col gap-2">
+		<div>
+			<h2 id="accent-brightness-label" class="m-0 text-lg font-semibold text-contrast">
+				{{ formatMessage(messages.accentBrightnessTitle) }}
+			</h2>
+			<p class="m-0 mt-1 text-secondary">
+				{{ formatMessage(messages.accentBrightnessDescription) }}
+			</p>
+		</div>
+		<Slider
+			id="accent-brightness"
+			v-model="current.accentBrightness"
+			aria-labelledby="accent-brightness-label"
+			:min="ACCENT_BRIGHTNESS_MIN"
+			:max="ACCENT_BRIGHTNESS_MAX"
+			:step="ACCENT_STEP"
 			unit="%"
 		/>
 	</div>

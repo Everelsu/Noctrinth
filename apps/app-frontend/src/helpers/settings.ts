@@ -86,6 +86,12 @@ export type AppSettings = {
 	 */
 	accent_intensity: number
 
+	/**
+	 * How light the accent colour is drawn, on the same scale. Below 100 the
+	 * same hue is drawn deeper.
+	 */
+	accent_brightness: number
+
 	version: number
 }
 

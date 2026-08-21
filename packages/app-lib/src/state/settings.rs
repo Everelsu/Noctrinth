@@ -4,8 +4,9 @@ use serde::{Deserialize, Serialize};
 use sqlx::{Pool, Sqlite};
 use std::collections::HashMap;
 
-/// The accent drawn exactly as the theme defines it.
+/// The accent drawn exactly as the theme defines it, in both of its axes.
 pub const DEFAULT_ACCENT_INTENSITY: u16 = 100;
+pub const DEFAULT_ACCENT_BRIGHTNESS: u16 = 100;
 
 // Types
 /// Global Theseus settings
@@ -64,6 +65,10 @@ pub struct Settings {
     /// own. 100 leaves the theme untouched; the interface clamps what it will
     /// set, and reads anything outside that range back as 100.
     pub accent_intensity: u16,
+
+    /// How light the accent colour is drawn, on the same scale — below 100 the
+    /// same hue is drawn deeper.
+    pub accent_brightness: u16,
 
     pub version: usize,
 }
@@ -212,6 +217,11 @@ impl Settings {
                 .fetch_one(exec)
                 .await?;
 
+        let accent_brightness: i64 =
+            sqlx::query_scalar("SELECT accent_brightness FROM settings")
+                .fetch_one(exec)
+                .await?;
+
         let res = sqlx::query!(
             "
             SELECT
@@ -290,6 +300,8 @@ impl Settings {
             universal_skins: universal_skins == 1,
             accent_intensity: u16::try_from(accent_intensity)
                 .unwrap_or(DEFAULT_ACCENT_INTENSITY),
+            accent_brightness: u16::try_from(accent_brightness)
+                .unwrap_or(DEFAULT_ACCENT_BRIGHTNESS),
             sync_theme_across_devices: res.sync_theme_across_devices == 1,
             sync_behavior_across_devices: res.sync_behavior_across_devices == 1,
             version: res.version as usize,
@@ -408,6 +420,11 @@ impl Settings {
 
         sqlx::query("UPDATE settings SET accent_intensity = $1")
             .bind(i64::from(self.accent_intensity))
+            .execute(exec)
+            .await?;
+
+        sqlx::query("UPDATE settings SET accent_brightness = $1")
+            .bind(i64::from(self.accent_brightness))
             .execute(exec)
             .await?;
 

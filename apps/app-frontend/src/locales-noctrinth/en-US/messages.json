@@ -5,6 +5,12 @@
 	"app.account.notifications": {
 		"message": "Notifications"
 	},
+	"app.appearance-settings.accent-brightness.description": {
+		"message": "How light that same colour is drawn. Below 100% it deepens without changing hue."
+	},
+	"app.appearance-settings.accent-brightness.title": {
+		"message": "Accent brightness"
+	},
 	"app.appearance-settings.accent-intensity.description": {
 		"message": "How strongly the theme's accent colour is drawn, from nearly grey to further out than any theme goes. 100% is the theme as it ships."
 	},

@@ -3,7 +3,8 @@
 		<template v-if="page > 1">
 			<ButtonLink
 				v-if="linkFunction"
-				aria-label="Previous Page"
+				v-tooltip="formatMessage(messages.previousPage)"
+				:aria-label="formatMessage(messages.previousPage)"
 				:href="linkFunction(page - 1)"
 				type="quiet"
 				class="!w-9 !px-0 !rounded-full"
@@ -11,7 +12,13 @@
 			>
 				<ChevronLeftIcon aria-hidden="true" />
 			</ButtonLink>
-			<IconButton v-else label="Previous Page" type="quiet" @click="switchPage(page - 1)">
+			<IconButton
+				v-else
+				v-tooltip="formatMessage(messages.previousPage)"
+				:label="formatMessage(messages.previousPage)"
+				type="quiet"
+				@click="switchPage(page - 1)"
+			>
 				<ChevronLeftIcon aria-hidden="true" />
 			</IconButton>
 		</template>
@@ -24,32 +31,35 @@
 			}"
 			class="page-number-container"
 		>
-			<template v-if="item === '-'">
-				<!-- Clickable gap: shows an inline page-number input on click. -->
-				<input
-					v-if="editingGap === index"
-					ref="gapInputRef"
-					v-model="gapInputValue"
+			<form v-if="item === '-'" class="grid place-content-center" @submit.prevent="goToPage">
+				<StyledInput
+					v-if="showPageInput === index"
+					:ref="focusInput"
+					v-model="pageInput"
+					v-tooltip="formatMessage(messages.goToPage)"
 					type="number"
 					:min="1"
-					:max="count"
-					class="page-number-input"
-					:aria-label="`Jump to page (1 to ${count})`"
-					@keydown.enter="submitGap"
-					@keydown.escape="cancelGap"
-					@blur="cancelGap"
+					:max="props.count"
+					placeholder="..."
+					clamp
+					class="w-14"
+					:aria-label="formatMessage(messages.goToPage)"
+					@focusout="showPageInput = undefined"
+					@keydown.escape="showPageInput = undefined"
 				/>
-				<IconButton
-					v-else
-					type="quiet"
-					class="rotate-90"
-					:label="`Jump to page (1 to ${count})`"
-					:title="`Jump to page (1–${count})`"
-					@click="openGap(index)"
-				>
-					<EllipsisVerticalIcon />
-				</IconButton>
-			</template>
+
+				<div v-else class="rotate-90">
+					<button
+						v-tooltip="formatMessage(messages.goToPage)"
+						type="button"
+						:aria-label="formatMessage(messages.goToPage)"
+						class="grid place-content-center"
+						@click="openPageInput(index)"
+					>
+						<EllipsisVerticalIcon aria-hidden="true" />
+					</button>
+				</div>
+			</form>
 			<template v-else>
 				<ButtonLink
 					v-if="linkFunction"
@@ -80,7 +90,8 @@
 		<template v-if="page !== pages[pages.length - 1]">
 			<ButtonLink
 				v-if="linkFunction"
-				aria-label="Next Page"
+				v-tooltip="formatMessage(messages.nextPage)"
+				:aria-label="formatMessage(messages.nextPage)"
 				:href="linkFunction(page + 1)"
 				type="quiet"
 				class="!w-9 !px-0 !rounded-full"
@@ -88,7 +99,13 @@
 			>
 				<ChevronRightIcon aria-hidden="true" />
 			</ButtonLink>
-			<IconButton v-else label="Next Page" type="quiet" @click="switchPage(page + 1)">
+			<IconButton
+				v-else
+				v-tooltip="formatMessage(messages.nextPage)"
+				:label="formatMessage(messages.nextPage)"
+				type="quiet"
+				@click="switchPage(page + 1)"
+			>
 				<ChevronRightIcon aria-hidden="true" />
 			</IconButton>
 		</template>
@@ -96,13 +113,18 @@
 </template>
 <script setup lang="ts">
 import { ChevronLeftIcon, ChevronRightIcon, EllipsisVerticalIcon } from '@modrinth/assets'
-import { computed, nextTick, ref } from 'vue'
+import { type ComponentPublicInstance, computed, ref } from 'vue'
+
+import { defineMessages, useVIntl } from '#ui/composables/i18n.ts'
 
 import { Button, ButtonLink, IconButton } from './buttons'
+import StyledInput from './StyledInput.vue'
 
 const emit = defineEmits<{
 	'switch-page': [page: number]
 }>()
+
+const { formatMessage } = useVIntl()
 
 const props = withDefaults(
 	defineProps<{
@@ -115,31 +137,8 @@ const props = withDefaults(
 		count: 1,
 	},
 )
-
-const editingGap = ref<number | null>(null)
-const gapInputValue = ref<string>('')
-const gapInputRef = ref<HTMLInputElement | null>(null)
-
-function openGap(index: number) {
-	editingGap.value = index
-	gapInputValue.value = ''
-	nextTick(() => gapInputRef.value?.focus())
-}
-
-function submitGap() {
-	const n = Number(gapInputValue.value)
-	if (Number.isFinite(n) && n >= 1 && n <= props.count) {
-		editingGap.value = null
-		switchPage(Math.floor(n))
-	} else {
-		cancelGap()
-	}
-}
-
-function cancelGap() {
-	editingGap.value = null
-	gapInputValue.value = ''
-}
+const showPageInput = ref<number | undefined>(undefined)
+const pageInput = ref<number | undefined>(undefined)
 
 const pages = computed(() => {
 	const pages: ('-' | number)[] = []
@@ -177,31 +176,40 @@ const pages = computed(() => {
 function switchPage(newPage: number) {
 	emit('switch-page', Math.min(Math.max(newPage, 1), props.count))
 }
-</script>
 
-<style scoped>
-.page-number-input {
-	width: 4rem;
-	height: 2rem;
-	padding: 0 0.5rem;
-	border-radius: 9999px;
-	border: 1px solid var(--color-button-bg);
-	background: var(--color-raised-bg);
-	color: var(--color-contrast);
-	text-align: center;
-	font-size: 0.875rem;
-	outline: none;
+function focusInput(element: Element | ComponentPublicInstance | null) {
+	if (element && 'focus' in element) {
+		const styledInput = element as InstanceType<typeof StyledInput>
+		styledInput.focus()
+	}
 }
-.page-number-input:focus {
-	border-color: var(--color-brand);
+
+function openPageInput(index: number) {
+	pageInput.value = undefined
+	showPageInput.value = index
 }
-/* Hide the spin buttons — they crowd the small input. */
-.page-number-input::-webkit-outer-spin-button,
-.page-number-input::-webkit-inner-spin-button {
-	-webkit-appearance: none;
-	margin: 0;
+
+function goToPage() {
+	if (pageInput.value !== undefined && pageInput.value >= 1 && pageInput.value <= props.count) {
+		switchPage(pageInput.value)
+	}
+
+	showPageInput.value = undefined
+	pageInput.value = undefined
 }
-.page-number-input[type='number'] {
-	-moz-appearance: textfield;
-}
-</style>
+
+const messages = defineMessages({
+	goToPage: {
+		id: 'ui.pagination.go-to-page',
+		defaultMessage: 'Go to page',
+	},
+	previousPage: {
+		id: 'ui.pagination.previous-page',
+		defaultMessage: 'Previous page',
+	},
+	nextPage: {
+		id: 'ui.pagination.next-page',
+		defaultMessage: 'Next page',
+	},
+})
+</script>

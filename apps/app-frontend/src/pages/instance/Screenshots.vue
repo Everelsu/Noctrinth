@@ -29,7 +29,7 @@ import { convertFileSrc } from '@tauri-apps/api/core'
 import dayjs from 'dayjs'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
-import ContextMenu from '@/components/ui/ContextMenu.vue'
+import ContextMenu from '@/components/ui/context-menu/index.vue'
 import { get_full_path } from '@/helpers/instance'
 import {
 	copyScreenshotToClipboard,

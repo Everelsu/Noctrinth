@@ -40,16 +40,16 @@ import DefaultInstanceSettings from '@/components/ui/settings/instances/DefaultI
 import JavaSettings from '@/components/ui/settings/instances/JavaSettings.vue'
 import ResourceManagementSettings from '@/components/ui/settings/instances/ResourceManagementSettings.vue'
 import SharedGameOptionsSettings from '@/components/ui/settings/instances/SharedGameOptionsSettings.vue'
+import { useAppSettings } from '@/composables/use-app-settings.ts'
 import { get, set } from '@/helpers/settings.ts'
 import {
 	appSettingsModalContextKey,
 	type UnsavedChangesController,
 } from '@/providers/app-settings-modal'
 import { injectAppUpdateDownloadProgress } from '@/providers/download-progress.ts'
-import { useTheming } from '@/store/state'
 
 // TODO: Apply COMPONENT_STRUCTURE.md here and extract out common setting option components
-const themeStore = useTheming()
+const appSettings = useAppSettings()
 
 const { formatMessage } = useVIntl()
 
@@ -179,7 +179,9 @@ const tabs = [
 	},
 ]
 
-const availableTabs = computed(() => tabs.filter((tab) => !tab.developerOnly || themeStore.devMode))
+const availableTabs = computed(() =>
+	tabs.filter((tab) => !tab.developerOnly || appSettings.devMode),
+)
 
 const modal = ref<InstanceType<typeof TabbedModal> | null>(null)
 const unsavedChangesPopup = ref<{ nudge: () => void } | null>(null)
@@ -192,10 +194,19 @@ const modifiedUnsavedChangesState = computed(
 	() => unsavedChangesController.value?.getModified() ?? emptyUnsavedChangesState,
 )
 const savingUnsavedChanges = computed(() => unsavedChangesController.value?.isSaving() ?? false)
-const hasUnsavedChanges = computed(() => unsavedChangesController.value?.hasChanges() ?? false)
+const hasUnsavedChanges = computed(
+	() =>
+		(unsavedChangesController.value?.hasChanges() ?? false) ||
+		(unsavedChangesController.value?.isSaving() ?? false),
+)
 
 function canLeaveCurrentTab(): boolean {
-	if (!unsavedChangesController.value?.hasChanges()) return true
+	if (
+		!unsavedChangesController.value?.hasChanges() &&
+		!unsavedChangesController.value?.isSaving()
+	) {
+		return true
+	}
 	unsavedChangesPopup.value?.nudge()
 	return false
 }
@@ -255,8 +266,8 @@ function devModeCount() {
 	if (devModeCounter.value > 5) {
 		const selectedTab = modal.value ? availableTabs.value[modal.value.selectedTab] : undefined
 
-		themeStore.devMode = !themeStore.devMode
-		settings.value.developer_mode = !!themeStore.devMode
+		appSettings.devMode = !appSettings.devMode
+		settings.value.developer_mode = !!appSettings.devMode
 		devModeCounter.value = 0
 
 		if (modal.value) {
@@ -320,7 +331,7 @@ const messages = defineMessages({
 						<ProgressBar :progress="progress" />
 					</template>
 				</div>
-				<p v-if="themeStore.devMode" class="text-brand font-semibold m-0 mb-2">
+				<p v-if="appSettings.devMode" class="text-brand font-semibold m-0 mb-2">
 					{{ formatMessage(developerModeEnabled) }}
 				</p>
 				<div class="flex items-center gap-3">
@@ -328,8 +339,8 @@ const messages = defineMessages({
 						:aria-label="formatMessage(messages.developerModeButtonLabel)"
 						class="p-0 m-0 bg-transparent border-none cursor-pointer button-animation"
 						:class="{
-							'text-brand': themeStore.devMode,
-							'text-secondary': !themeStore.devMode,
+							'text-brand': appSettings.devMode,
+							'text-secondary': !appSettings.devMode,
 						}"
 						@click="devModeCount"
 					>

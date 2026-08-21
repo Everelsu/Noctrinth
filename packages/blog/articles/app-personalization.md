@@ -64,7 +64,7 @@ A long standing problem with the instance library is that it’s always been har
 
 To fix this, we’ve introduced an icon editor where you can create your own icon for each instance, or we’ll randomize one for you. When making an icon, you can mix and match different backgrounds and symbols until you land on something that feels right.
 
-We’ve released an initial set of backgrounds and icons, with more to come over time. The initial set features a number of iconic things from some of the most iconic mods:
+We’ve released an initial set of backgrounds and symbols, with more to come over time. A big thanks to the creators of these mods who let us feature items from their content in this first drop!
 
 - Cobblemon
 - Create
@@ -78,7 +78,7 @@ We’ve released an initial set of backgrounds and icons, with more to come over
 - Botania
 - Blåhaj
 
-![The updated instance creation menu, with a search bar to browse for content and four options to create a custom instance, go to the full discover page, upload a .mrpack, or import from another launcher.](./instance-creation.webp)
+![The new icon editor, where you can select a background color and a symbol of iconic modded and vanilla blocks and items to combine together into a new icon for your instance.](./icon-editor.webp)
 
 ## Onboarding
 

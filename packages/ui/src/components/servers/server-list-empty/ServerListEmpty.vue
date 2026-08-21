@@ -174,6 +174,12 @@ const features = computed(() => [
 
 <style scoped>
 .feature-icon {
+	/* Upstream tints these from the green ramp, which is its brand. Mixed from
+	   the accent instead, so the tile follows the theme rather than sitting in
+	   Modrinth green on a purple page. */
+	--feature-icon-deep: color-mix(in oklab, var(--color-brand) 22%, #000);
+	--feature-icon-lift: color-mix(in oklab, var(--color-brand) 55%, #000);
+
 	border-color: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
 	box-shadow:
 		0 0 0 1px color-mix(in srgb, var(--color-brand) 30%, var(--surface-1)),
@@ -182,19 +188,19 @@ const features = computed(() => [
 }
 
 .feature-icon-gradient {
-	background: linear-gradient(180deg, var(--color-green-800) 0%, var(--color-green-950) 100%);
+	background: linear-gradient(180deg, var(--feature-icon-lift) 0%, var(--feature-icon-deep) 100%);
 	opacity: 0.5;
 }
 
 .feature-icon-shade {
 	background: linear-gradient(
 		-14deg,
-		color-mix(in srgb, var(--color-green-950) 37%, transparent) 8%,
+		color-mix(in srgb, var(--feature-icon-deep) 37%, transparent) 8%,
 		transparent 86%
 	);
 }
 
 .feature-icon-glyph {
-	filter: drop-shadow(0 1px 1px color-mix(in srgb, var(--color-green-950) 12%, transparent));
+	filter: drop-shadow(0 1px 1px color-mix(in srgb, var(--feature-icon-deep) 12%, transparent));
 }
 </style>

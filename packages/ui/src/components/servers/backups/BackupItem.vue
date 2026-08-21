@@ -89,7 +89,7 @@ const backupIcon = computed(() => {
 })
 
 const itemBorderClass = computed(() => {
-	if (props.selected) return 'border-brand-green'
+	if (props.selected) return 'border-brand'
 	if (props.highlighted) return 'border-purple backup-item-highlighted'
 	return 'border-transparent'
 })

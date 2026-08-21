@@ -4,9 +4,8 @@ use serde::{Deserialize, Serialize};
 use sqlx::{Pool, Sqlite};
 use std::collections::HashMap;
 
-/// The accent drawn exactly as the theme defines it, in both of its axes.
-pub const DEFAULT_ACCENT_INTENSITY: u16 = 100;
-pub const DEFAULT_ACCENT_BRIGHTNESS: u16 = 100;
+/// The preset that leaves the theme's own accent alone.
+pub const DEFAULT_ACCENT_PRESET: &str = "theme";
 
 // Types
 /// Global Theseus settings
@@ -61,14 +60,10 @@ pub struct Settings {
     /// none — see [`crate::launcher::args::UNIVERSAL_SKINS_SOURCE`].
     pub universal_skins: bool,
 
-    /// How vivid the accent colour is drawn, as a percentage of the theme's
-    /// own. 100 leaves the theme untouched; the interface clamps what it will
-    /// set, and reads anything outside that range back as 100.
-    pub accent_intensity: u16,
-
-    /// How light the accent colour is drawn, on the same scale — below 100 the
-    /// same hue is drawn deeper.
-    pub accent_brightness: u16,
+    /// Which accent the interface paints with: the id of one of its presets,
+    /// or `theme` for whatever the theme itself defines. The interface owns the
+    /// list, and falls back to the theme's own for an id it does not know.
+    pub accent_preset: String,
 
     pub version: usize,
 }
@@ -212,13 +207,8 @@ impl Settings {
                 .fetch_one(exec)
                 .await?;
 
-        let accent_intensity: i64 =
-            sqlx::query_scalar("SELECT accent_intensity FROM settings")
-                .fetch_one(exec)
-                .await?;
-
-        let accent_brightness: i64 =
-            sqlx::query_scalar("SELECT accent_brightness FROM settings")
+        let accent_preset: Option<String> =
+            sqlx::query_scalar("SELECT accent_preset FROM settings")
                 .fetch_one(exec)
                 .await?;
 
@@ -298,10 +288,8 @@ impl Settings {
                 .and_then(|raw| serde_json::from_str(raw).ok())
                 .unwrap_or_default(),
             universal_skins: universal_skins == 1,
-            accent_intensity: u16::try_from(accent_intensity)
-                .unwrap_or(DEFAULT_ACCENT_INTENSITY),
-            accent_brightness: u16::try_from(accent_brightness)
-                .unwrap_or(DEFAULT_ACCENT_BRIGHTNESS),
+            accent_preset: accent_preset
+                .unwrap_or_else(|| DEFAULT_ACCENT_PRESET.to_string()),
             sync_theme_across_devices: res.sync_theme_across_devices == 1,
             sync_behavior_across_devices: res.sync_behavior_across_devices == 1,
             version: res.version as usize,
@@ -418,13 +406,8 @@ impl Settings {
             .execute(exec)
             .await?;
 
-        sqlx::query("UPDATE settings SET accent_intensity = $1")
-            .bind(i64::from(self.accent_intensity))
-            .execute(exec)
-            .await?;
-
-        sqlx::query("UPDATE settings SET accent_brightness = $1")
-            .bind(i64::from(self.accent_brightness))
+        sqlx::query("UPDATE settings SET accent_preset = $1")
+            .bind(&self.accent_preset)
             .execute(exec)
             .await?;
 

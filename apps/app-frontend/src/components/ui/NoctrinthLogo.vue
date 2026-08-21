@@ -2,12 +2,18 @@
 /**
  * The wordmark in the title bar, which says when the app is busy.
  *
- * The launcher already counts what it is waiting on — route changes and
- * suspended pages both hold a loading token — but the only thing that read that
- * count was a bar the app keeps switched off, so a page that took a moment
- * looked like a click that had not registered. The mark is on screen at all
- * times and costs no layout, so it says it instead: the knot turns, and a light
- * in the accent colour sweeps across the lettering.
+ * Two different things are worth saying, so the mark says them differently.
+ *
+ * The knot turns whenever the launcher is doing something: a download or an
+ * install — a mod arriving, a pack unpacking, Minecraft itself coming down —
+ * which runs for as long as that work does, and a page load, which the launcher
+ * has always counted and never shown. The only thing reading that count was a
+ * progress bar the app keeps switched off, so a page that took a moment looked
+ * like a click that had not registered. Page loads finish in tens of
+ * milliseconds, so those are held for one full turn once they start.
+ *
+ * A light sweeps across the lettering at the same time, so the whole mark says
+ * it rather than only the symbol.
  *
  * The sweep is a gradient masked by the wordmark itself, so it lights the
  * glyphs rather than the box around them, and needs no second copy of the
@@ -18,18 +24,20 @@ import { injectLoadingState } from '@modrinth/ui'
 import { onBeforeUnmount, ref, watch } from 'vue'
 
 import NoctrinthTextLogo from '@/assets/noctrinth-text.svg?component'
+import { useAppBusy } from '@/composables/use-app-busy'
 
 /**
- * How long the animation stays up once it has started.
+ * How long the sweep stays up once it has started.
  *
- * Most loads here finish in tens of milliseconds — fast enough that an
- * animation tied straight to the token would flicker, or never be seen at all,
- * which is what "is it even doing anything?" looks like from the outside. One
- * full turn is the smallest amount that reads as a turn.
+ * Page loads here finish in tens of milliseconds — fast enough that a sweep
+ * tied straight to the token would flicker, or never be seen at all, which is
+ * what "is it even doing anything?" looks like from the outside. One full pass
+ * is the smallest amount that reads as movement.
  */
 const MINIMUM_VISIBLE_MS = 1200
 
 const loading = injectLoadingState()
+const working = useAppBusy()
 const active = ref(false)
 
 let startedAt = 0
@@ -73,7 +81,7 @@ onBeforeUnmount(clearStopTimer)
 </script>
 
 <template>
-	<span class="noctrinth-logo" :class="{ 'is-loading': active }">
+	<span class="noctrinth-logo" :class="{ 'is-loading': active, 'is-working': working }">
 		<NoctrinthTextLogo class="noctrinth-logo__mark" />
 		<span class="noctrinth-logo__sweep" aria-hidden="true" />
 	</span>
@@ -102,7 +110,13 @@ onBeforeUnmount(clearStopTimer)
 	transform-origin: 273px 273px;
 }
 
-.noctrinth-logo.is-loading .noctrinth-logo__mark :deep(path:not(:first-child)) {
+/*
+ * The knot turns for both: a download runs it for as long as the download
+ * takes, a page load for the one turn it is held for. One duration, so the two
+ * are the same movement rather than two speeds of it.
+ */
+.noctrinth-logo.is-loading .noctrinth-logo__mark :deep(path:not(:first-child)),
+.noctrinth-logo.is-working .noctrinth-logo__mark :deep(path:not(:first-child)) {
 	animation: noctrinth-logo-turn 1.2s cubic-bezier(0.65, 0.05, 0.36, 1) infinite;
 }
 
@@ -133,7 +147,8 @@ onBeforeUnmount(clearStopTimer)
 	-webkit-mask-position: left center;
 }
 
-.noctrinth-logo.is-loading .noctrinth-logo__sweep {
+.noctrinth-logo.is-loading .noctrinth-logo__sweep,
+.noctrinth-logo.is-working .noctrinth-logo__sweep {
 	opacity: 1;
 	animation: noctrinth-logo-sweep 1.2s ease-in-out infinite;
 }
@@ -162,11 +177,13 @@ onBeforeUnmount(clearStopTimer)
  * something is happening, once, without moving.
  */
 @media (prefers-reduced-motion: reduce) {
-	.noctrinth-logo.is-loading .noctrinth-logo__mark :deep(path:not(:first-child)) {
+	.noctrinth-logo.is-loading .noctrinth-logo__mark :deep(path:not(:first-child)),
+	.noctrinth-logo.is-working .noctrinth-logo__mark :deep(path:not(:first-child)) {
 		animation: none;
 	}
 
-	.noctrinth-logo.is-loading .noctrinth-logo__sweep {
+	.noctrinth-logo.is-loading .noctrinth-logo__sweep,
+	.noctrinth-logo.is-working .noctrinth-logo__sweep {
 		animation: none;
 		background-position: 50% 0;
 		opacity: 0.6;

@@ -5,17 +5,38 @@
 	"app.account.notifications": {
 		"message": "Уведомления"
 	},
-	"app.appearance-settings.accent-brightness.description": {
-		"message": "Насколько светлым рисуется тот же цвет. Ниже 100% он становится глубже, не меняя оттенка."
+	"app.appearance-settings.accent.amethyst": {
+		"message": "Аметист"
 	},
-	"app.appearance-settings.accent-brightness.title": {
-		"message": "Яркость акцента"
+	"app.appearance-settings.accent.description": {
+		"message": "Цвет, которым подсвечен интерфейс. На светлых темах каждый рисуется глубже, на тёмных — ярче."
 	},
-	"app.appearance-settings.accent-intensity.description": {
-		"message": "Насколько ярко рисуется акцентный цвет темы — от почти серого до более насыщенного, чем в любой теме. 100% — тема без изменений."
+	"app.appearance-settings.accent.ember": {
+		"message": "Уголь"
 	},
-	"app.appearance-settings.accent-intensity.title": {
-		"message": "Насыщенность акцента"
+	"app.appearance-settings.accent.glacier": {
+		"message": "Ледник"
+	},
+	"app.appearance-settings.accent.lantern": {
+		"message": "Фонарь"
+	},
+	"app.appearance-settings.accent.midnight": {
+		"message": "Полночь"
+	},
+	"app.appearance-settings.accent.nightshade": {
+		"message": "Паслён"
+	},
+	"app.appearance-settings.accent.rose": {
+		"message": "Роза"
+	},
+	"app.appearance-settings.accent.theme": {
+		"message": "Тема"
+	},
+	"app.appearance-settings.accent.title": {
+		"message": "Цвет акцента"
+	},
+	"app.appearance-settings.accent.verdant": {
+		"message": "Зелень"
 	},
 	"app.appearance-settings.minimize-launcher.description": {
 		"message": "Сворачивать окно лаунчера при запуске Minecraft."

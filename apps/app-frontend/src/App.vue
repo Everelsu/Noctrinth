@@ -94,7 +94,7 @@ import SplashScreen from '@/components/ui/SplashScreen.vue'
 import SurveyPopup from '@/components/ui/SurveyPopup.vue'
 import WindowControls from '@/components/ui/WindowControls.vue'
 import { useCheckDisableMouseover } from '@/composables/macCssFix.js'
-import { setAccent } from '@/composables/use-accent.ts'
+import { setAccentPreset } from '@/composables/use-accent.ts'
 import { useAppEvent } from '@/composables/use-app-event'
 import { useAppSettings } from '@/composables/use-app-settings.ts'
 import { useError } from '@/composables/use-error.js'
@@ -670,8 +670,7 @@ async function setupApp() {
 		developer_mode,
 		feature_flags,
 		pending_update_toast_for_version,
-		accent_intensity,
-		accent_brightness,
+		accent_preset,
 	} = await getSettings()
 
 	// Initialize locale from saved settings
@@ -688,7 +687,7 @@ async function setupApp() {
 
 	appTheme.preferred = theme
 	appTheme.advancedRendering = advanced_rendering
-	setAccent(accent_intensity, accent_brightness)
+	setAccentPreset(accent_preset)
 	appTheme.syncAcrossDevices = sync_theme_across_devices
 	appSettings.syncBehaviorAcrossDevices = sync_behavior_across_devices
 	appSettings.hideNametagSkinsPage = hide_nametag_skins_page

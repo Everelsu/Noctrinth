@@ -1,26 +1,23 @@
 <script setup lang="ts">
+import { CheckIcon } from '@modrinth/assets'
 import {
 	AppearanceSettingsLayout,
 	defineMessages,
 	injectAuth,
 	injectUserPreferences,
 	provideAppearanceSettings,
-	Slider,
 	useSavable,
 	useVIntl,
 } from '@modrinth/ui'
 import { computed, inject, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import {
-	ACCENT_BRIGHTNESS_MAX,
-	ACCENT_BRIGHTNESS_MIN,
-	ACCENT_DEFAULT,
-	ACCENT_INTENSITY_MAX,
-	ACCENT_INTENSITY_MIN,
-	ACCENT_STEP,
-	clampAccentBrightness,
-	clampAccentIntensity,
-	setAccent,
+	ACCENT_PRESETS,
+	accentColorFor,
+	type AccentPreset,
+	DEFAULT_ACCENT_PRESET,
+	findAccentPreset,
+	setAccentPreset,
 } from '@/composables/use-accent.ts'
 import { type ColorTheme, useTheme } from '@/composables/use-theme.ts'
 import { type AppSettings, get, set } from '@/helpers/settings.ts'
@@ -36,33 +33,42 @@ const settings = ref(await get())
 const { formatMessage } = useVIntl()
 
 const messages = defineMessages({
-	accentIntensityTitle: {
-		id: 'app.appearance-settings.accent-intensity.title',
-		defaultMessage: 'Accent intensity',
+	accentTitle: {
+		id: 'app.appearance-settings.accent.title',
+		defaultMessage: 'Accent colour',
 	},
-	accentIntensityDescription: {
-		id: 'app.appearance-settings.accent-intensity.description',
+	accentDescription: {
+		id: 'app.appearance-settings.accent.description',
 		defaultMessage:
-			"How strongly the theme's accent colour is drawn, from nearly grey to further out than any theme goes. 100% is the theme as it ships.",
-	},
-	accentBrightnessTitle: {
-		id: 'app.appearance-settings.accent-brightness.title',
-		defaultMessage: 'Accent brightness',
-	},
-	accentBrightnessDescription: {
-		id: 'app.appearance-settings.accent-brightness.description',
-		defaultMessage:
-			'How light that same colour is drawn. Below 100% it deepens without changing hue.',
+			'The colour the interface is picked out in. Each one is drawn deeper on light themes and brighter on dark ones.',
 	},
 })
+
+// Names live in their own map so each preset carries a message id of its own,
+// rather than being labelled by whatever its list entry happens to say.
+const presetNames = defineMessages({
+	theme: { id: 'app.appearance-settings.accent.theme', defaultMessage: 'Theme' },
+	amethyst: { id: 'app.appearance-settings.accent.amethyst', defaultMessage: 'Amethyst' },
+	nightshade: { id: 'app.appearance-settings.accent.nightshade', defaultMessage: 'Nightshade' },
+	midnight: { id: 'app.appearance-settings.accent.midnight', defaultMessage: 'Midnight' },
+	glacier: { id: 'app.appearance-settings.accent.glacier', defaultMessage: 'Glacier' },
+	verdant: { id: 'app.appearance-settings.accent.verdant', defaultMessage: 'Verdant' },
+	lantern: { id: 'app.appearance-settings.accent.lantern', defaultMessage: 'Lantern' },
+	ember: { id: 'app.appearance-settings.accent.ember', defaultMessage: 'Ember' },
+	rose: { id: 'app.appearance-settings.accent.rose', defaultMessage: 'Rose' },
+})
+
+function presetName(preset: AccentPreset): string {
+	const message = presetNames[preset.id as keyof typeof presetNames]
+	return message ? formatMessage(message) : preset.name
+}
 
 type AppearanceSettingsState = {
 	theme: ColorTheme
 	syncAcrossDevices: boolean
 	advancedRendering: boolean
 	nativeDecorations: boolean
-	accentIntensity: number
-	accentBrightness: number
+	accentPreset: string
 }
 
 function getAppearanceSettingsState(settings: AppSettings): AppearanceSettingsState {
@@ -71,8 +77,7 @@ function getAppearanceSettingsState(settings: AppSettings): AppearanceSettingsSt
 		syncAcrossDevices: settings.sync_theme_across_devices,
 		advancedRendering: settings.advanced_rendering,
 		nativeDecorations: settings.native_decorations,
-		accentIntensity: clampAccentIntensity(settings.accent_intensity ?? ACCENT_DEFAULT),
-		accentBrightness: clampAccentBrightness(settings.accent_brightness ?? ACCENT_DEFAULT),
+		accentPreset: findAccentPreset(settings.accent_preset)?.id ?? DEFAULT_ACCENT_PRESET,
 	}
 }
 
@@ -96,8 +101,7 @@ const { saved, current, changes, saving, hasChanges, reset, save } = useSavable(
 			sync_theme_across_devices: value.syncAcrossDevices,
 			advanced_rendering: value.advancedRendering,
 			native_decorations: value.nativeDecorations,
-			accent_intensity: value.accentIntensity,
-			accent_brightness: value.accentBrightness,
+			accent_preset: value.accentPreset,
 		}
 
 		await set(nextSettings)
@@ -135,8 +139,8 @@ function setNativeDecorations(enabled: boolean): void {
 // while the slider moves, and closing the tab without saving puts back what was
 // saved — which `useSavable` has already restored into `saved` by then.
 watch(
-	[() => current.value.accentIntensity, () => current.value.accentBrightness],
-	([intensity, brightness]) => setAccent(intensity, brightness),
+	() => current.value.accentPreset,
+	(id) => setAccentPreset(id),
 )
 
 watch(
@@ -168,7 +172,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
 	theme.preview = null
-	setAccent(saved.value.accentIntensity, saved.value.accentBrightness)
+	setAccentPreset(saved.value.accentPreset)
 	settingsModal?.registerUnsavedChangesController(null)
 })
 
@@ -204,44 +208,59 @@ provideAppearanceSettings({
 	<AppearanceSettingsLayout />
 
 	<!-- Noctrinth's own: the shared layout has no notion of an accent that can
-	     be turned up or down, so the row is added here rather than to it. -->
-	<div class="mt-6 flex flex-col gap-2">
+	     be chosen, so the picker is added here rather than to it. -->
+	<div class="mt-6 flex flex-col gap-3">
 		<div>
-			<h2 id="accent-intensity-label" class="m-0 text-lg font-semibold text-contrast">
-				{{ formatMessage(messages.accentIntensityTitle) }}
+			<h2 class="m-0 text-lg font-semibold text-contrast">
+				{{ formatMessage(messages.accentTitle) }}
 			</h2>
 			<p class="m-0 mt-1 text-secondary">
-				{{ formatMessage(messages.accentIntensityDescription) }}
+				{{ formatMessage(messages.accentDescription) }}
 			</p>
 		</div>
-		<Slider
-			id="accent-intensity"
-			v-model="current.accentIntensity"
-			aria-labelledby="accent-intensity-label"
-			:min="ACCENT_INTENSITY_MIN"
-			:max="ACCENT_INTENSITY_MAX"
-			:step="ACCENT_STEP"
-			unit="%"
-		/>
-	</div>
-
-	<div class="mt-6 flex flex-col gap-2">
-		<div>
-			<h2 id="accent-brightness-label" class="m-0 text-lg font-semibold text-contrast">
-				{{ formatMessage(messages.accentBrightnessTitle) }}
-			</h2>
-			<p class="m-0 mt-1 text-secondary">
-				{{ formatMessage(messages.accentBrightnessDescription) }}
-			</p>
+		<div class="grid grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-2">
+			<button
+				v-for="preset in ACCENT_PRESETS"
+				:key="preset.id"
+				type="button"
+				class="accent-option flex items-center gap-3 rounded-xl border border-solid border-button-border bg-button-bg p-3 text-left"
+				:class="{ 'accent-option--selected': current.accentPreset === preset.id }"
+				:style="{ '--accent-swatch': accentColorFor(preset, theme.active) }"
+				:aria-pressed="current.accentPreset === preset.id"
+				@click="current.accentPreset = preset.id"
+			>
+				<span class="accent-option__swatch" aria-hidden="true">
+					<CheckIcon v-if="current.accentPreset === preset.id" class="size-4 text-contrast" />
+				</span>
+				<span class="truncate font-medium text-contrast">{{ presetName(preset) }}</span>
+			</button>
 		</div>
-		<Slider
-			id="accent-brightness"
-			v-model="current.accentBrightness"
-			aria-labelledby="accent-brightness-label"
-			:min="ACCENT_BRIGHTNESS_MIN"
-			:max="ACCENT_BRIGHTNESS_MAX"
-			:step="ACCENT_STEP"
-			unit="%"
-		/>
 	</div>
 </template>
+
+<style scoped>
+.accent-option {
+	transition:
+		border-color 150ms ease,
+		box-shadow 150ms ease;
+}
+
+.accent-option:hover {
+	border-color: var(--accent-swatch);
+}
+
+.accent-option--selected {
+	border-color: var(--accent-swatch);
+	box-shadow: 0 0 0 1px var(--accent-swatch);
+}
+
+.accent-option__swatch {
+	display: grid;
+	place-items: center;
+	width: 1.75rem;
+	height: 1.75rem;
+	flex-shrink: 0;
+	border-radius: 999px;
+	background: var(--accent-swatch);
+}
+</style>

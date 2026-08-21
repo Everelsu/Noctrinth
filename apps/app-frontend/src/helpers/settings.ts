@@ -81,16 +81,10 @@ export type AppSettings = {
 	universal_skins: boolean
 
 	/**
-	 * How vivid the accent colour is drawn, as a percentage of the theme's own.
-	 * 100 is the theme exactly as it ships.
+	 * Which accent the interface paints with: the id of one of its presets, or
+	 * `theme` for whatever the theme itself defines.
 	 */
-	accent_intensity: number
-
-	/**
-	 * How light the accent colour is drawn, on the same scale. Below 100 the
-	 * same hue is drawn deeper.
-	 */
-	accent_brightness: number
+	accent_preset: string
 
 	version: number
 }

@@ -5,17 +5,38 @@
 	"app.account.notifications": {
 		"message": "Notifications"
 	},
-	"app.appearance-settings.accent-brightness.description": {
-		"message": "How light that same colour is drawn. Below 100% it deepens without changing hue."
+	"app.appearance-settings.accent.amethyst": {
+		"message": "Amethyst"
 	},
-	"app.appearance-settings.accent-brightness.title": {
-		"message": "Accent brightness"
+	"app.appearance-settings.accent.description": {
+		"message": "The colour the interface is picked out in. Each one is drawn deeper on light themes and brighter on dark ones."
 	},
-	"app.appearance-settings.accent-intensity.description": {
-		"message": "How strongly the theme's accent colour is drawn, from nearly grey to further out than any theme goes. 100% is the theme as it ships."
+	"app.appearance-settings.accent.ember": {
+		"message": "Ember"
 	},
-	"app.appearance-settings.accent-intensity.title": {
-		"message": "Accent intensity"
+	"app.appearance-settings.accent.glacier": {
+		"message": "Glacier"
+	},
+	"app.appearance-settings.accent.lantern": {
+		"message": "Lantern"
+	},
+	"app.appearance-settings.accent.midnight": {
+		"message": "Midnight"
+	},
+	"app.appearance-settings.accent.nightshade": {
+		"message": "Nightshade"
+	},
+	"app.appearance-settings.accent.rose": {
+		"message": "Rose"
+	},
+	"app.appearance-settings.accent.theme": {
+		"message": "Theme"
+	},
+	"app.appearance-settings.accent.title": {
+		"message": "Accent colour"
+	},
+	"app.appearance-settings.accent.verdant": {
+		"message": "Verdant"
 	},
 	"app.changelog.author": {
 		"message": "Author"

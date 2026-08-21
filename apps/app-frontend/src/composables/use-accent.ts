@@ -120,19 +120,30 @@ const SURFACE_TINT = 0.016
  * backgrounds, and a fade that has to stay opaque, so it is mixed into the page
  * background rather than laid over it.
  */
+/**
+ * The accent as something to lay *under* content, rather than on it.
+ *
+ * The theme writes these washes as dark purples — the dimmer behind a dialog is
+ * `rgba(80, 35, 130, 0.45)`, not the accent itself — because their job is to
+ * take light out of what is behind them. Built from the accent as it comes,
+ * a bright preset such as Lantern brightens the window instead of dimming it,
+ * and everything under the wash loses its contrast. Each one is therefore mixed
+ * toward black by the same amount the theme's own value was, keeping its alpha.
+ */
+function wash(accent: string, strength: number, alpha: number): string {
+	return `color-mix(in oklab, rgb(${accent} / ${alpha}) ${strength}%, rgb(0 0 0 / ${alpha}))`
+}
+
 function brandGradients(accent: string, borderAlpha: number): Record<string, string> {
 	return {
-		'--brand-gradient-bg': `linear-gradient(0deg, rgb(${accent} / 0.2) 0%, rgb(${accent} / 0.1) 100%)`,
+		'--brand-gradient-bg': `linear-gradient(0deg, ${wash(accent, 25, 0.2)} 0%, ${wash(accent, 55, 0.1)} 100%)`,
 		'--brand-gradient-strong-bg': `linear-gradient(270deg, color-mix(in oklab, var(--color-bg) 88%, rgb(${accent})) 10%, color-mix(in oklab, var(--color-bg) 80%, rgb(${accent})) 100%)`,
 		'--brand-gradient-border': `rgb(${accent} / ${borderAlpha})`,
 		'--brand-gradient-fade-out-color': `linear-gradient(to bottom, rgb(${accent} / 0) 0%, color-mix(in oklab, var(--color-bg) 86%, rgb(${accent})) 80%)`,
-		// What a dialog dims the window with. The theme writes it as purple, so
-		// it stayed purple behind a blue dialog; the wash at the top is the
-		// accent, and the bottom is the same accent taken most of the way to
-		// black, which is what it always was.
-		'--modal-overlay-standard': `linear-gradient(to bottom, rgb(${accent} / 0.45) 0%, color-mix(in oklab, rgb(${accent} / 0.95) 12%, rgb(0 0 0 / 0.95)) 100%)`,
+		// What a dialog dims the window with.
+		'--modal-overlay-standard': `linear-gradient(to bottom, ${wash(accent, 50, 0.45)} 0%, ${wash(accent, 12, 0.95)} 100%)`,
 		// The wash over the splash screen, which the theme also writes in purple.
-		'--splash-wash': `linear-gradient(180deg, rgb(${accent} / 0.15) 0%, color-mix(in oklab, rgb(${accent} / 0.3) 25%, rgb(0 0 0 / 0.3)) 97.29%)`,
+		'--splash-wash': `linear-gradient(180deg, ${wash(accent, 55, 0.15)} 0%, ${wash(accent, 20, 0.3)} 97.29%)`,
 	}
 }
 

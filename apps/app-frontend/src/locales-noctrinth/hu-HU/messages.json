@@ -1,20 +1,20 @@
 {
-  "app.settings.app-version": {
-    "message": "Noctrinth {version}"
-  },
-  "app.settings.privacy.discord-rich-presence.description": {
-    "message": "A Noctrinth megjelenítése aktuális tevékenységként a Discordon. Ez nem érinti a modok által a példányokhoz hozzáadott Rich Presence-t. Az alkalmazás újraindítását igényli."
-  },
-  "app.settings.resource-management.app-directory.description": {
-    "message": "A Noctrinth ebben a mappában tárolja a példányokat és az egyéb fájlokat. A módosítások az alkalmazás újraindítása után lépnek érvénybe."
-  },
-  "app.update-popup.body.download-complete": {
-    "message": "A Noctrinth v{version} letöltése befejeződött. Válaszd a Frissítés lehetőséget a frissítéshez, vagy az alkalmazás bezárásakor automatikusan frissül."
-  },
-  "app.update-popup.body.linux": {
-    "message": "A Noctrinth v{version} elérhető. A legújabb funkciókért és javításokért frissíts a csomagkezelőddel!"
-  },
-  "app.update-popup.body.metered": {
-    "message": "A Noctrinth v{version} már elérhető! Mivel korlátozott adatforgalmú hálózaton vagy, nem töltöttük le automatikusan."
-  }
+	"app.settings.app-version": {
+		"message": "Noctrinth {version}"
+	},
+	"app.settings.privacy.discord-rich-presence.description": {
+		"message": "A Noctrinth megjelenítése aktuális tevékenységként a Discordon. Ez nem érinti a modok által a példányokhoz hozzáadott Rich Presence-t. Az alkalmazás újraindítását igényli."
+	},
+	"app.settings.resource-management.app-directory.description": {
+		"message": "A Noctrinth ebben a mappában tárolja a példányokat és az egyéb fájlokat. A módosítások az alkalmazás újraindítása után lépnek érvénybe."
+	},
+	"app.update-popup.body.download-complete": {
+		"message": "A Noctrinth v{version} letöltése befejeződött. Válaszd a Frissítés lehetőséget a frissítéshez, vagy az alkalmazás bezárásakor automatikusan frissül."
+	},
+	"app.update-popup.body.linux": {
+		"message": "A Noctrinth v{version} elérhető. A legújabb funkciókért és javításokért frissíts a csomagkezelőddel!"
+	},
+	"app.update-popup.body.metered": {
+		"message": "A Noctrinth v{version} már elérhető! Mivel korlátozott adatforgalmú hálózaton vagy, nem töltöttük le automatikusan."
+	}
 }

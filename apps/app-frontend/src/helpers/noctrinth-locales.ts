@@ -18,8 +18,8 @@
  *   upstream catalogue has nothing. When a translation does land upstream, it
  *   is the one that shows, without anything here needing to be deleted.
  */
-import { transformCrowdinMessages } from '@modrinth/ui'
 import type { CrowdinMessages } from '@modrinth/ui'
+import { transformCrowdinMessages } from '@modrinth/ui'
 
 export type LocaleModules = Record<string, { default: CrowdinMessages }>
 

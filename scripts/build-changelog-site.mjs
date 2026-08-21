@@ -10,20 +10,12 @@
 //   node scripts/build-changelog-site.mjs [output-dir]
 //   Defaults to ./site
 
-import {
-	copyFileSync,
-	cpSync,
-	existsSync,
-	mkdirSync,
-	readdirSync,
-	readFileSync,
-	writeFileSync,
-} from 'node:fs'
+import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
 const OUT_DIR = process.argv[2] ?? 'site'
-/** One markdown file per release, named after the version. */
-const NOCTRINTH_DIR = 'apps/app-frontend/src/changelog'
+/** Both changelogs are read straight out of their source files. */
+const NOCTRINTH_SRC = 'apps/app-frontend/src/helpers/noctrinth-changelog.ts'
 const MODRINTH_SRC = 'packages/blog/changelog.ts'
 const LOGO_SRC = 'apps/app/icons/noctrinth.svg'
 /** Screenshots, referenced from entries as `/changelog/screenshots/<file>`. */
@@ -50,35 +42,10 @@ function parseEntries(src) {
 	return entries
 }
 
-const FRONT_MATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/
-
-/**
- * Read one release from `src/changelog/<version>.md`: the version is the file
- * name, the date comes from the front matter, everything after it is the body.
- */
-function readMarkdownEntry(dir, file) {
-	const raw = readFileSync(join(dir, file), 'utf-8')
-	const match = FRONT_MATTER.exec(raw)
-	const date = match ? /^date:\s*(.+)$/m.exec(match[1])?.[1]?.trim() : undefined
-
-	if (!date) {
-		console.warn(`Skipping ${file}: no date in its front matter`)
-		return null
-	}
-
-	return {
-		version: file.replace(/\.md$/, ''),
-		date,
-		body: raw.slice(match[0].length).trim(),
-	}
-}
-
-const noctrinth = readdirSync(NOCTRINTH_DIR)
-	// Entries are named after their version; the folder's README is not one.
-	.filter((file) => file.endsWith('.md') && /^[0-9]/.test(file))
-	.map((file) => readMarkdownEntry(NOCTRINTH_DIR, file))
-	.filter((entry) => entry !== null)
-	.map((entry) => ({ ...entry, source: 'noctrinth' }))
+const noctrinth = parseEntries(readFileSync(NOCTRINTH_SRC, 'utf-8')).map((entry) => ({
+	...entry,
+	source: 'noctrinth',
+}))
 const modrinth = parseEntries(readFileSync(MODRINTH_SRC, 'utf-8'))
 	.filter((e) => e.product === 'app')
 	.map((e) => ({ ...e, source: 'modrinth' }))
@@ -632,23 +599,10 @@ mkdirSync(OUT_DIR, { recursive: true })
 writeFileSync(join(OUT_DIR, 'index.html'), HTML)
 copyFileSync(LOGO_SRC, join(OUT_DIR, 'logo.svg'))
 
-// The same entries as data, for the app to fetch instead of shipping them.
-// Only the fork's own: upstream's are already bundled through @modrinth/blog.
-const FEED = {
-	generated: new Date().toISOString(),
-	entries: noctrinth
-		.slice()
-		.sort((a, b) => new Date(b.date) - new Date(a.date))
-		.map(({ version, date, body }) => ({ version, date, body })),
-}
-writeFileSync(join(OUT_DIR, 'changelog.json'), `${JSON.stringify(FEED)}\n`)
-
 // Screenshots live on the site rather than inside the installer, so an entry
 // can carry one without every future release paying for it in download size.
 if (existsSync(SCREENSHOT_DIR)) {
 	cpSync(SCREENSHOT_DIR, join(OUT_DIR, SCREENSHOT_PATH), { recursive: true })
 }
 
-console.log(
-	`Wrote ${all.length} entries (${FEED.entries.length} Noctrinth) → ${OUT_DIR}/index.html + changelog.json`,
-)
+console.log(`Wrote ${all.length} entries (${noctrinth.length} Noctrinth) → ${OUT_DIR}/index.html`)

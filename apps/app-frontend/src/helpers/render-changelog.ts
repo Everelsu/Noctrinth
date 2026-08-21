@@ -6,10 +6,10 @@
  * and pushes everything else through an external proxy — which would route the
  * changelog's own screenshots through a third party, or drop them.
  *
- * Entries are either bundled with the app or fetched from the changelog site,
- * so the guard is that a stray tag cannot do anything: images must be under
- * `/changelog/` — which resolves to the site, since screenshots are published
- * there rather than shipped — and links must be http(s).
+ * Entries ship with the app, so the guard is only that a stray tag cannot do
+ * anything on its own: images must be under `/changelog/` — which resolves to
+ * the site, since screenshots are published there rather than shipped — and
+ * links must be http(s).
  */
 import { md } from '@modrinth/utils'
 import { FilterXSS } from 'xss'

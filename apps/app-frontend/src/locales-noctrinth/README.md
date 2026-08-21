@@ -8,10 +8,10 @@ over upstream's at startup — see `../helpers/noctrinth-locales.ts`.
 
 Each locale has up to two files, differing only in who wins:
 
-| File            | Holds                                                          | Wins over upstream |
-| --------------- | -------------------------------------------------------------- | ------------------ |
-| `messages.json` | The fork's own strings, and upstream strings Noctrinth words differently (its own name, mostly) | yes |
-| `fallback.json` | Translations of *upstream's* strings for a locale Crowdin hasn't finished | no — only used where upstream has nothing |
+| File            | Holds                                                                                           | Wins over upstream                        |
+| --------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| `messages.json` | The fork's own strings, and upstream strings Noctrinth words differently (its own name, mostly) | yes                                       |
+| `fallback.json` | Translations of _upstream's_ strings for a locale Crowdin hasn't finished                       | no — only used where upstream has nothing |
 
 So a string only ever needs writing once: put a Noctrinth string in
 `messages.json`, and a translation that stands in for a missing upstream one in

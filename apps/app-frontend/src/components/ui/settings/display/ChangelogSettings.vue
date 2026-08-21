@@ -4,9 +4,9 @@ import { getChangelog } from '@modrinth/blog'
 import { Button, Chips, defineMessages, useVIntl } from '@modrinth/ui'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import dayjs from 'dayjs'
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 
-import { getNoctrinthChangelog, refreshNoctrinthChangelog } from '@/helpers/noctrinth-changelog'
+import { NOCTRINTH_CHANGELOG } from '@/helpers/noctrinth-changelog'
 import { renderChangelog } from '@/helpers/render-changelog'
 
 const { formatMessage } = useVIntl()
@@ -93,22 +93,10 @@ function parseBody(body: string): ChangelogSection[] {
 		.filter((section) => section.title || section.html)
 }
 
-// Noctrinth changelog — the copy bundled with this build, replaced when the
-// changelog site answers with a newer one.
-const noctrinthEntries = ref(getNoctrinthChangelog())
-
-// The bundled entries are on screen already, so this only fills in what has
-// been written since this build; offline it quietly does nothing.
-onMounted(() => {
-	void refreshNoctrinthChangelog().then((changed) => {
-		if (changed) {
-			noctrinthEntries.value = getNoctrinthChangelog()
-		}
-	})
-})
-
+// Noctrinth changelog — written in helpers/noctrinth-changelog.ts and shipped
+// with the build, the same way upstream's is.
 const noctrinthChangelog = computed<ChangelogEntry[]>(() =>
-	noctrinthEntries.value.map((entry) => ({
+	NOCTRINTH_CHANGELOG.map((entry) => ({
 		version: entry.version,
 		date: dayjs(entry.date).format('MMM D, YYYY'),
 		sections: parseBody(entry.body),

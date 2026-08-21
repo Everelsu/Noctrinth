@@ -1,14 +1,15 @@
 name: Deploy Changelog Site
 
-# Builds the static changelog page from src/changelog/*.md +
-# packages/blog/changelog.ts and publishes it to GitHub Pages, along with
-# changelog.json — the feed the app fetches — and the entry screenshots.
+# Builds the static changelog page from the app's own changelog and upstream's
+# (packages/blog/changelog.ts) and publishes it to GitHub Pages, along with the
+# screenshots the entries reference.
 
 on:
   push:
     branches: [main]
     paths:
-      - 'apps/app-frontend/src/changelog/**'
+      - 'apps/app-frontend/src/helpers/noctrinth-changelog.ts'
+      - 'apps/app-frontend/src/changelog/screenshots/**'
       - 'packages/blog/changelog.ts'
       - 'apps/app/icons/noctrinth.svg'
       - 'scripts/build-changelog-site.mjs'

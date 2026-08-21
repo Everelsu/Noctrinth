@@ -1,7 +1,7 @@
 # Changelog screenshots
 
-Images referenced from the entries next to this folder. The reference is the
-published path, which mirrors this one:
+Images referenced from the entries in `../../helpers/noctrinth-changelog.ts`.
+The reference is the published path, which mirrors this folder:
 
 ```markdown
 ![Modern Java](/changelog/screenshots/modern-java.png)

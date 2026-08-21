@@ -1,47 +1,47 @@
 {
-  "app.appearance-settings.default-landing-page.description": {
-    "message": "Страница, которая открывается при запуске лаунчера."
-  },
-  "app.appearance-settings.default-landing-page.title": {
-    "message": "Стартовая страница"
-  },
-  "app.instance.mods.projects-were-added": {
-    "message": "Добавлено проектов: {count}"
-  },
-  "app.instance.worlds.search-worlds-placeholder": {
-    "message": "Поиск среди {count} миров..."
-  },
-  "app.library.search.no-results.title": {
-    "message": "Под запрос ничего не подошло."
-  },
-  "app.nav.library": {
-    "message": "Библиотека"
-  },
-  "app.skins.sign-in.description": {
-    "message": "Пожалуйста, войдите в свой аккаунт Minecraft, чтобы воспользоваться функциями управления скинами в приложении Modrinth."
-  },
-  "app.skins.sign-in.rinthbot-alt": {
-    "message": "Восторженный Modrinth Bot"
-  },
-  "app.skins.sign-in.title": {
-    "message": "Войдите"
-  },
-  "app.world.world-item.players-online": {
-    "message": "{count} в игре"
-  },
-  "instance.files.adding-files": {
-    "message": "Добавление файлов ({completed}/{total})"
-  },
-  "instance.settings.tabs.general.library-groups": {
-    "message": "Группировка"
-  },
-  "instance.settings.tabs.general.library-groups.create": {
-    "message": "Создать новую группу"
-  },
-  "instance.settings.tabs.general.library-groups.description": {
-    "message": "Позволяет организовать сборки по разным разделам в библиотеке."
-  },
-  "instance.settings.tabs.general.library-groups.enter-name": {
-    "message": "Введите название группы"
-  }
+	"app.appearance-settings.default-landing-page.description": {
+		"message": "Страница, которая открывается при запуске лаунчера."
+	},
+	"app.appearance-settings.default-landing-page.title": {
+		"message": "Стартовая страница"
+	},
+	"app.instance.mods.projects-were-added": {
+		"message": "Добавлено проектов: {count}"
+	},
+	"app.instance.worlds.search-worlds-placeholder": {
+		"message": "Поиск среди {count} миров..."
+	},
+	"app.library.search.no-results.title": {
+		"message": "Под запрос ничего не подошло."
+	},
+	"app.nav.library": {
+		"message": "Библиотека"
+	},
+	"app.skins.sign-in.description": {
+		"message": "Пожалуйста, войдите в свой аккаунт Minecraft, чтобы воспользоваться функциями управления скинами в приложении Modrinth."
+	},
+	"app.skins.sign-in.rinthbot-alt": {
+		"message": "Восторженный Modrinth Bot"
+	},
+	"app.skins.sign-in.title": {
+		"message": "Войдите"
+	},
+	"app.world.world-item.players-online": {
+		"message": "{count} в игре"
+	},
+	"instance.files.adding-files": {
+		"message": "Добавление файлов ({completed}/{total})"
+	},
+	"instance.settings.tabs.general.library-groups": {
+		"message": "Группировка"
+	},
+	"instance.settings.tabs.general.library-groups.create": {
+		"message": "Создать новую группу"
+	},
+	"instance.settings.tabs.general.library-groups.description": {
+		"message": "Позволяет организовать сборки по разным разделам в библиотеке."
+	},
+	"instance.settings.tabs.general.library-groups.enter-name": {
+		"message": "Введите название группы"
+	}
 }

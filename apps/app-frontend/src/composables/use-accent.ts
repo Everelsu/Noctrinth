@@ -26,7 +26,10 @@
  *
  * The overrides are written onto the document element as inline custom
  * properties, which beat every theme stylesheet without editing one, and are
- * recomputed when the theme changes.
+ * recomputed when the theme changes. The choice is also mirrored into local
+ * storage, because the settings it really lives in are read from the database a
+ * moment after the window opens — long enough for the splash screen to come up
+ * in the wrong colour, which is exactly the flash this is meant to avoid.
  */
 import { computed, ref, watch } from 'vue'
 
@@ -71,6 +74,11 @@ export const ACCENT_PRESETS: AccentPreset[] = [
  * gave it, so a highlight stays a highlight and a shadow stays a shadow.
  */
 const ACCENT_VARIABLES = [
+	// The accent on its own, under a name no theme block declares. Anything
+	// carrying a theme class of its own — the splash screen does — re-declares
+	// every colour the theme defines on itself, which would drop the accent
+	// chosen for the window; such a place can reach for this instead.
+	'--noctrinth-accent',
 	'--color-brand',
 	'--color-brand-highlight',
 	'--color-brand-shadow',
@@ -123,6 +131,8 @@ function brandGradients(accent: string, borderAlpha: number): Record<string, str
 		// accent, and the bottom is the same accent taken most of the way to
 		// black, which is what it always was.
 		'--modal-overlay-standard': `linear-gradient(to bottom, rgb(${accent} / 0.45) 0%, color-mix(in oklab, rgb(${accent} / 0.95) 12%, rgb(0 0 0 / 0.95)) 100%)`,
+		// The wash over the splash screen, which the theme also writes in purple.
+		'--splash-wash': `linear-gradient(180deg, rgb(${accent} / 0.15) 0%, color-mix(in oklab, rgb(${accent} / 0.3) 25%, rgb(0 0 0 / 0.3)) 97.29%)`,
 	}
 }
 
@@ -149,6 +159,7 @@ const GRADIENT_VARIABLES = [
 	'--brand-gradient-fade-out-color',
 	'--modal-overlay-standard',
 	'--loading-bar-gradient',
+	'--splash-wash',
 ] as const
 
 const HEX = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i
@@ -221,8 +232,42 @@ export function findAccentPreset(id: string): AccentPreset | undefined {
 	return ACCENT_PRESETS.find((preset) => preset.id === id)
 }
 
-const presetId = ref(DEFAULT_ACCENT_PRESET)
-const tintBackground = ref(true)
+/**
+ * What was chosen last time, read before anything is drawn.
+ *
+ * The database is the real home of both of these; this is only so the window
+ * opens in the right colour rather than repainting itself once the settings
+ * arrive.
+ */
+const CACHE_KEY = 'noctrinth-accent'
+
+function readCache(): { preset: string; tint: boolean } {
+	try {
+		const raw = localStorage.getItem(CACHE_KEY)
+		const cached = raw ? (JSON.parse(raw) as { preset?: unknown; tint?: unknown }) : null
+		return {
+			preset:
+				typeof cached?.preset === 'string' && findAccentPreset(cached.preset)
+					? cached.preset
+					: DEFAULT_ACCENT_PRESET,
+			tint: cached?.tint !== false,
+		}
+	} catch {
+		return { preset: DEFAULT_ACCENT_PRESET, tint: true }
+	}
+}
+
+function writeCache(preset: string, tint: boolean): void {
+	try {
+		localStorage.setItem(CACHE_KEY, JSON.stringify({ preset, tint }))
+	} catch (error) {
+		console.warn('Failed to remember the accent for the next launch:', error)
+	}
+}
+
+const cached = readCache()
+const presetId = ref(cached.preset)
+const tintBackground = ref(cached.tint)
 const theme = useTheme()
 
 /** The colour a preset is drawn in under the theme currently on screen. */
@@ -283,9 +328,24 @@ function apply(id: string, tint: boolean): void {
 
 // Each theme carries its own alphas, and a preset is drawn differently on light
 // than on dark, so the override is recomputed rather than kept.
-watch([presetId, tintBackground, () => theme.active], ([id, tint]) => apply(id, tint), {
-	immediate: true,
-})
+watch(
+	[presetId, tintBackground, () => theme.active],
+	([id, tint]) => {
+		apply(id, tint)
+		writeCache(id, tint)
+
+		// The window's own icon is the last purple thing left when the app is not
+		// purple any more. Loaded lazily: it is the one part of this that talks to
+		// the window, and nothing waits on it.
+		const preset = findAccentPreset(id)
+		if (preset) {
+			void import('@/helpers/noctrinth-window-icon').then(({ paintWindowIcon }) =>
+				paintWindowIcon(accentColorFor(preset)),
+			)
+		}
+	},
+	{ immediate: true },
+)
 
 export function useAccentPreset() {
 	return {

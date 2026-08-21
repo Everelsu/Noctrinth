@@ -84,6 +84,18 @@ useAppEvent('loading', (e) => {
 	z-index: 10000;
 }
 
+/*
+ * The `dark` class on this element matches the theme's own selector, so the
+ * whole dark palette is re-declared here — including the brand colour, which
+ * would beat the accent set on the document and leave the mark and the bar
+ * purple on a window that is not. Taken back from the accent's own variable,
+ * with the theme's purple as the fallback for the preset that keeps it.
+ */
+.splash-screen.dark {
+	--color-purple: var(--noctrinth-accent, var(--color-purple-400));
+	--color-brand: var(--color-purple);
+}
+
 .splash-fade-leave-active {
 	transition: opacity 0.3s ease-in-out;
 }
@@ -120,8 +132,13 @@ useAppEvent('loading', (e) => {
 	position: absolute;
 	height: 100vh;
 	width: 100vw;
+	// Named so the accent preset can repaint it; the fallback is the theme's own,
+	// which is where the purple came from.
 	background:
-		linear-gradient(180deg, rgba(110, 45, 180, 0.15) 0%, rgba(20, 12, 35, 0.3) 97.29%),
+		var(
+			--splash-wash,
+			linear-gradient(180deg, rgba(110, 45, 180, 0.15) 0%, rgba(20, 12, 35, 0.3) 97.29%)
+		),
 		linear-gradient(0deg, rgba(22, 24, 28, 0.64), rgba(22, 24, 28, 0.64));
 	z-index: 9997;
 }

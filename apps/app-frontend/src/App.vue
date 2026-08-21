@@ -1941,12 +1941,15 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 		</Suspense>
 		<Suspense>
 			<ModrinthAccountRequiredModal ref="modrinthLoginModal" :request-auth="requestModrinthAuth" />
-			<MinecraftAccountProviderModal
-				ref="accountProviderModal"
-				@microsoft="accounts?.login()"
-				@ely="accounts?.showElyLogin()"
-			/>
 		</Suspense>
+		<!-- Outside the Suspense above: its default slot takes one root, and a
+		     second sibling left both without a usable ref — which is every way
+		     into signing in on a first launch. -->
+		<MinecraftAccountProviderModal
+			ref="accountProviderModal"
+			@microsoft="accounts?.login()"
+			@ely="accounts?.showElyLogin()"
+		/>
 		<CreationFlowModal
 			ref="installationModal"
 			type="instance"

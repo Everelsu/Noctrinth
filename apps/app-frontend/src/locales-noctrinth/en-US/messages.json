@@ -5,6 +5,12 @@
 	"app.account.notifications": {
 		"message": "Notifications"
 	},
+	"app.appearance-settings.accent-tint.description": {
+		"message": "Gives the backgrounds, panels and the sidebar the same hue, faintly. Turn this off to keep the backgrounds the theme paints."
+	},
+	"app.appearance-settings.accent-tint.title": {
+		"message": "Tint the background too"
+	},
 	"app.appearance-settings.accent.amethyst": {
 		"message": "Amethyst"
 	},

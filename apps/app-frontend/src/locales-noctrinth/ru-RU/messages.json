@@ -5,6 +5,12 @@
 	"app.account.notifications": {
 		"message": "Уведомления"
 	},
+	"app.appearance-settings.accent-tint.description": {
+		"message": "Слегка подкрашивает тем же оттенком фон, панели и правую боковую панель. Выключите, чтобы оставить фон таким, каким его рисует тема."
+	},
+	"app.appearance-settings.accent-tint.title": {
+		"message": "Красить и фон"
+	},
 	"app.appearance-settings.accent.amethyst": {
 		"message": "Аметист"
 	},

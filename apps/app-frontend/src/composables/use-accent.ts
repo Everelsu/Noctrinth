@@ -7,11 +7,15 @@
  * values, one for light backgrounds and one for dark, because a purple that
  * reads on near-black is not the one that reads on white.
  *
- * A preset colours more than the accent: the surfaces the app is built out of —
- * its background, its panels, its buttons — are given the same hue at a fraction
+ * A preset can colour more than the accent: the surfaces the app is built out
+ * of — its background, its panels, its buttons — take the same hue at a fraction
  * of the strength, so picking Ember gives a warm dark app rather than a violet
  * one with orange buttons. They keep their own lightness, which is what the
- * theme's depth and contrast are made of; only the cast over them changes.
+ * theme's depth and contrast are made of; only the cast over them changes. The
+ * same goes for the gradients the right-hand sidebar and the promo cards are
+ * painted with, which the fork had written out in purple and which therefore
+ * stayed purple whatever the accent was. That half is a setting of its own, for
+ * anyone who wants the theme's own backgrounds back.
  *
  * `theme` is the default and overrides nothing at all, so a build that has
  * never been touched draws exactly what its theme defines.
@@ -95,6 +99,31 @@ const SURFACE_VARIABLES = [
  */
 const SURFACE_TINT = 0.016
 
+/**
+ * The gradients the fork paints its sidebar and promo cards with.
+ *
+ * These were written out as purple in the theme, so they stayed purple no
+ * matter what the accent was — the one part of the window that never followed
+ * it. Rebuilt from the preset at the same weights: a wash at low alpha for the
+ * backgrounds, and a fade that has to stay opaque, so it is mixed into the page
+ * background rather than laid over it.
+ */
+function brandGradients(accent: string, borderAlpha: number): Record<string, string> {
+	return {
+		'--brand-gradient-bg': `linear-gradient(0deg, rgb(${accent} / 0.2) 0%, rgb(${accent} / 0.1) 100%)`,
+		'--brand-gradient-strong-bg': `linear-gradient(270deg, color-mix(in oklab, var(--color-bg) 88%, rgb(${accent})) 10%, color-mix(in oklab, var(--color-bg) 80%, rgb(${accent})) 100%)`,
+		'--brand-gradient-border': `rgb(${accent} / ${borderAlpha})`,
+		'--brand-gradient-fade-out-color': `linear-gradient(to bottom, rgb(${accent} / 0) 0%, color-mix(in oklab, var(--color-bg) 86%, rgb(${accent})) 80%)`,
+	}
+}
+
+const GRADIENT_VARIABLES = [
+	'--brand-gradient-bg',
+	'--brand-gradient-strong-bg',
+	'--brand-gradient-border',
+	'--brand-gradient-fade-out-color',
+] as const
+
 const HEX = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i
 const RGB = /^rgba?\(([^)]+)\)$/i
 
@@ -166,6 +195,7 @@ export function findAccentPreset(id: string): AccentPreset | undefined {
 }
 
 const presetId = ref(DEFAULT_ACCENT_PRESET)
+const tintBackground = ref(true)
 const theme = useTheme()
 
 /** The colour a preset is drawn in under the theme currently on screen. */
@@ -173,12 +203,12 @@ export function accentColorFor(preset: AccentPreset, active: string = theme.acti
 	return active === 'light' ? preset.light : preset.dark
 }
 
-function apply(id: string): void {
+function apply(id: string, tint: boolean): void {
 	const html = document.documentElement
 
 	// Cleared first, so what is read back is the theme's own colour and not the
 	// last thing this wrote. Also the whole of the work for `theme`.
-	for (const variable of [...ACCENT_VARIABLES, ...SURFACE_VARIABLES]) {
+	for (const variable of [...ACCENT_VARIABLES, ...SURFACE_VARIABLES, ...GRADIENT_VARIABLES]) {
 		html.style.removeProperty(variable)
 	}
 
@@ -199,6 +229,8 @@ function apply(id: string): void {
 		)
 	}
 
+	if (!tint) return
+
 	// The surfaces keep their lightness — that is the theme's depth and its
 	// contrast — and are given the preset's hue at a fraction of its strength.
 	const hue = round(hueOf(rgb), 2)
@@ -209,20 +241,31 @@ function apply(id: string): void {
 		const lightness = lightnessOf(surface)
 		html.style.setProperty(variable, `oklch(${round(lightness, 4)} ${SURFACE_TINT} ${hue})`)
 	}
+
+	const borderAlpha = alphaOf(styles.getPropertyValue('--brand-gradient-border'))
+	for (const [variable, value] of Object.entries(
+		brandGradients(`${red} ${green} ${blue}`, borderAlpha),
+	)) {
+		html.style.setProperty(variable, value)
+	}
 }
 
 // Each theme carries its own alphas, and a preset is drawn differently on light
 // than on dark, so the override is recomputed rather than kept.
-watch([presetId, () => theme.active], ([id]) => apply(id), { immediate: true })
+watch([presetId, tintBackground, () => theme.active], ([id, tint]) => apply(id, tint), {
+	immediate: true,
+})
 
 export function useAccentPreset() {
 	return {
 		id: presetId,
+		tintBackground,
 		preset: computed(() => findAccentPreset(presetId.value) ?? ACCENT_PRESETS[0]),
 	}
 }
 
 /** Sets the accent without going through the settings tab — used at startup. */
-export function setAccentPreset(id: string | null | undefined): void {
+export function setAccentPreset(id: string | null | undefined, tint = true): void {
 	presetId.value = id && findAccentPreset(id) ? id : DEFAULT_ACCENT_PRESET
+	tintBackground.value = tint
 }

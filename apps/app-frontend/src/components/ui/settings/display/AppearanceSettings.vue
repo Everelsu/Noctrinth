@@ -6,6 +6,7 @@ import {
 	injectAuth,
 	injectUserPreferences,
 	provideAppearanceSettings,
+	Toggle,
 	useSavable,
 	useVIntl,
 } from '@modrinth/ui'
@@ -42,6 +43,15 @@ const messages = defineMessages({
 		defaultMessage:
 			'The colour the interface is picked out in. Each one is drawn deeper on light themes and brighter on dark ones.',
 	},
+	accentTintTitle: {
+		id: 'app.appearance-settings.accent-tint.title',
+		defaultMessage: 'Tint the background too',
+	},
+	accentTintDescription: {
+		id: 'app.appearance-settings.accent-tint.description',
+		defaultMessage:
+			'Gives the backgrounds, panels and the sidebar the same hue, faintly. Turn this off to keep the backgrounds the theme paints.',
+	},
 })
 
 // Names live in their own map so each preset carries a message id of its own,
@@ -69,6 +79,7 @@ type AppearanceSettingsState = {
 	advancedRendering: boolean
 	nativeDecorations: boolean
 	accentPreset: string
+	accentTintBackground: boolean
 }
 
 function getAppearanceSettingsState(settings: AppSettings): AppearanceSettingsState {
@@ -78,6 +89,7 @@ function getAppearanceSettingsState(settings: AppSettings): AppearanceSettingsSt
 		advancedRendering: settings.advanced_rendering,
 		nativeDecorations: settings.native_decorations,
 		accentPreset: findAccentPreset(settings.accent_preset)?.id ?? DEFAULT_ACCENT_PRESET,
+		accentTintBackground: settings.accent_tint_background ?? true,
 	}
 }
 
@@ -102,6 +114,7 @@ const { saved, current, changes, saving, hasChanges, reset, save } = useSavable(
 			advanced_rendering: value.advancedRendering,
 			native_decorations: value.nativeDecorations,
 			accent_preset: value.accentPreset,
+			accent_tint_background: value.accentTintBackground,
 		}
 
 		await set(nextSettings)
@@ -138,9 +151,8 @@ function setNativeDecorations(enabled: boolean): void {
 // The accent is previewed the same way the theme is: the whole app recolours
 // while the slider moves, and closing the tab without saving puts back what was
 // saved — which `useSavable` has already restored into `saved` by then.
-watch(
-	() => current.value.accentPreset,
-	(id) => setAccentPreset(id),
+watch([() => current.value.accentPreset, () => current.value.accentTintBackground], ([id, tint]) =>
+	setAccentPreset(id, tint),
 )
 
 watch(
@@ -172,7 +184,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
 	theme.preview = null
-	setAccentPreset(saved.value.accentPreset)
+	setAccentPreset(saved.value.accentPreset, saved.value.accentTintBackground)
 	settingsModal?.registerUnsavedChangesController(null)
 })
 
@@ -234,6 +246,23 @@ provideAppearanceSettings({
 				</span>
 				<span class="truncate font-medium text-contrast">{{ presetName(preset) }}</span>
 			</button>
+		</div>
+
+		<div class="mt-3 flex items-center justify-between gap-4">
+			<div class="min-w-0">
+				<h3 id="accent-tint-label" class="m-0 text-lg font-semibold text-contrast">
+					{{ formatMessage(messages.accentTintTitle) }}
+				</h3>
+				<p class="m-0 mt-1 text-secondary">
+					{{ formatMessage(messages.accentTintDescription) }}
+				</p>
+			</div>
+			<Toggle
+				id="accent-tint"
+				v-model="current.accentTintBackground"
+				aria-labelledby="accent-tint-label"
+				:disabled="current.accentPreset === DEFAULT_ACCENT_PRESET"
+			/>
 		</div>
 	</div>
 </template>

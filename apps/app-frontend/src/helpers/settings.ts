@@ -86,6 +86,9 @@ export type AppSettings = {
 	 */
 	accent_preset: string
 
+	/** Whether that preset also tints the backgrounds it is drawn on. */
+	accent_tint_background: boolean
+
 	version: number
 }
 

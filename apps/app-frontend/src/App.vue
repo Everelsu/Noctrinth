@@ -671,6 +671,7 @@ async function setupApp() {
 		feature_flags,
 		pending_update_toast_for_version,
 		accent_preset,
+		accent_tint_background,
 	} = await getSettings()
 
 	// Initialize locale from saved settings
@@ -687,7 +688,7 @@ async function setupApp() {
 
 	appTheme.preferred = theme
 	appTheme.advancedRendering = advanced_rendering
-	setAccentPreset(accent_preset)
+	setAccentPreset(accent_preset, accent_tint_background)
 	appTheme.syncAcrossDevices = sync_theme_across_devices
 	appSettings.syncBehaviorAcrossDevices = sync_behavior_across_devices
 	appSettings.hideNametagSkinsPage = hide_nametag_skins_page

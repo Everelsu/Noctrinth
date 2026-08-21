@@ -173,35 +173,70 @@ const GRADIENT_VARIABLES = [
 	'--splash-wash',
 ] as const
 
-const HEX = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i
+const HEX = /^#([0-9a-f]{3,8})$/i
 const RGB = /^rgba?\(([^)]+)\)$/i
 
-function parseHex(value: string): [number, number, number] | null {
-	const hex = HEX.exec(value.trim())
-	if (!hex) return null
+interface ParsedColor {
+	rgb: [number, number, number]
+	alpha: number
+}
 
-	const digits =
-		hex[1].length === 3
-			? hex[1]
+/**
+ * Reads a colour the way a theme might have written it — or been minified into.
+ *
+ * The four- and eight-digit hex forms matter more than they look: the release
+ * build's minifier rewrites `rgba(199, 138, 255, 0.25)` as `#c78aff40`, so a
+ * parser that only knew `rgb()` read every translucent variable as opaque and
+ * repainted it solid. That is invisible in development, where the stylesheet is
+ * not minified, and turned the selected tab, the badges and the sidebar's
+ * divider into solid blocks of accent in a packaged build.
+ */
+function parseColor(value: string): ParsedColor | null {
+	const text = value.trim()
+
+	const hex = HEX.exec(text)
+	if (hex) {
+		const digits = hex[1]
+		const short = digits.length <= 4
+		const expanded = short
+			? digits
 					.split('')
 					.map((digit) => digit + digit)
 					.join('')
-			: hex[1]
-	const number = Number.parseInt(digits, 16)
-	return [(number >> 16) & 255, (number >> 8) & 255, number & 255]
+			: digits
+		if (expanded.length !== 6 && expanded.length !== 8) return null
+
+		const number = Number.parseInt(expanded.slice(0, 6), 16)
+		const alpha = expanded.length === 8 ? Number.parseInt(expanded.slice(6, 8), 16) / 255 : 1
+		return {
+			rgb: [(number >> 16) & 255, (number >> 8) & 255, number & 255],
+			alpha,
+		}
+	}
+
+	const rgb = RGB.exec(text)
+	if (rgb) {
+		const parts = rgb[1]
+			.split(/[\s,/]+/)
+			.filter(Boolean)
+			.map(Number)
+		if (parts.length < 3 || parts.slice(0, 3).some(Number.isNaN)) return null
+		return {
+			rgb: [parts[0], parts[1], parts[2]],
+			alpha: Number.isFinite(parts[3]) ? parts[3] : 1,
+		}
+	}
+
+	return null
+}
+
+function parseHex(value: string): [number, number, number] | null {
+	return parseColor(value)?.rgb ?? null
 }
 
 /** The alpha a theme gave a variable, so repainting it does not flatten it. */
 function alphaOf(value: string): number {
-	const rgb = RGB.exec(value.trim())
-	if (!rgb) return 1
-
-	const parts = rgb[1]
-		.split(/[\s,/]+/)
-		.filter(Boolean)
-		.map(Number)
-	const alpha = parts[3]
-	return Number.isFinite(alpha) ? alpha : 1
+	return parseColor(value)?.alpha ?? 1
 }
 
 function toLinear(channel: number): number {

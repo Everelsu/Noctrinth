@@ -1,13 +1,24 @@
 <script setup lang="ts">
 import {
 	AppearanceSettingsLayout,
+	defineMessages,
 	injectAuth,
 	injectUserPreferences,
 	provideAppearanceSettings,
+	Slider,
 	useSavable,
+	useVIntl,
 } from '@modrinth/ui'
 import { computed, inject, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
+import {
+	ACCENT_INTENSITY_DEFAULT,
+	ACCENT_INTENSITY_MAX,
+	ACCENT_INTENSITY_MIN,
+	ACCENT_INTENSITY_STEP,
+	clampAccentIntensity,
+	setAccentIntensity,
+} from '@/composables/use-accent.ts'
 import { type ColorTheme, useTheme } from '@/composables/use-theme.ts'
 import { type AppSettings, get, set } from '@/helpers/settings.ts'
 import { getOS } from '@/helpers/utils'
@@ -19,12 +30,26 @@ const { updatePreferences } = injectUserPreferences()
 const settingsModal = inject(appSettingsModalContextKey, null)
 const os = await getOS()
 const settings = ref(await get())
+const { formatMessage } = useVIntl()
+
+const messages = defineMessages({
+	accentIntensityTitle: {
+		id: 'app.appearance-settings.accent-intensity.title',
+		defaultMessage: 'Accent intensity',
+	},
+	accentIntensityDescription: {
+		id: 'app.appearance-settings.accent-intensity.description',
+		defaultMessage:
+			"How strongly the theme's accent colour is drawn, from nearly grey to further out than any theme goes. 100% is the theme as it ships.",
+	},
+})
 
 type AppearanceSettingsState = {
 	theme: ColorTheme
 	syncAcrossDevices: boolean
 	advancedRendering: boolean
 	nativeDecorations: boolean
+	accentIntensity: number
 }
 
 function getAppearanceSettingsState(settings: AppSettings): AppearanceSettingsState {
@@ -33,6 +58,7 @@ function getAppearanceSettingsState(settings: AppSettings): AppearanceSettingsSt
 		syncAcrossDevices: settings.sync_theme_across_devices,
 		advancedRendering: settings.advanced_rendering,
 		nativeDecorations: settings.native_decorations,
+		accentIntensity: clampAccentIntensity(settings.accent_intensity ?? ACCENT_INTENSITY_DEFAULT),
 	}
 }
 
@@ -56,6 +82,7 @@ const { saved, current, changes, saving, hasChanges, reset, save } = useSavable(
 			sync_theme_across_devices: value.syncAcrossDevices,
 			advanced_rendering: value.advancedRendering,
 			native_decorations: value.nativeDecorations,
+			accent_intensity: value.accentIntensity,
 		}
 
 		await set(nextSettings)
@@ -89,6 +116,14 @@ function setNativeDecorations(enabled: boolean): void {
 	current.value.nativeDecorations = enabled
 }
 
+// The accent is previewed the same way the theme is: the whole app recolours
+// while the slider moves, and closing the tab without saving puts back what was
+// saved — which `useSavable` has already restored into `saved` by then.
+watch(
+	() => current.value.accentIntensity,
+	(value) => setAccentIntensity(value),
+)
+
 watch(
 	[() => current.value.theme, () => saved.value.theme],
 	([selectedTheme, savedTheme]) => {
@@ -118,6 +153,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
 	theme.preview = null
+	setAccentIntensity(saved.value.accentIntensity)
 	settingsModal?.registerUnsavedChangesController(null)
 })
 
@@ -151,4 +187,26 @@ provideAppearanceSettings({
 
 <template>
 	<AppearanceSettingsLayout />
+
+	<!-- Noctrinth's own: the shared layout has no notion of an accent that can
+	     be turned up or down, so the row is added here rather than to it. -->
+	<div class="mt-6 flex flex-col gap-2">
+		<div>
+			<h2 id="accent-intensity-label" class="m-0 text-lg font-semibold text-contrast">
+				{{ formatMessage(messages.accentIntensityTitle) }}
+			</h2>
+			<p class="m-0 mt-1 text-secondary">
+				{{ formatMessage(messages.accentIntensityDescription) }}
+			</p>
+		</div>
+		<Slider
+			id="accent-intensity"
+			v-model="current.accentIntensity"
+			aria-labelledby="accent-intensity-label"
+			:min="ACCENT_INTENSITY_MIN"
+			:max="ACCENT_INTENSITY_MAX"
+			:step="ACCENT_INTENSITY_STEP"
+			unit="%"
+		/>
+	</div>
 </template>

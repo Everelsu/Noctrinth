@@ -4,6 +4,9 @@ use serde::{Deserialize, Serialize};
 use sqlx::{Pool, Sqlite};
 use std::collections::HashMap;
 
+/// The accent drawn exactly as the theme defines it.
+pub const DEFAULT_ACCENT_INTENSITY: u16 = 100;
+
 // Types
 /// Global Theseus settings
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -56,6 +59,11 @@ pub struct Settings {
     /// Whether the game looks a player's skin up by name when the server sent
     /// none — see [`crate::launcher::args::UNIVERSAL_SKINS_SOURCE`].
     pub universal_skins: bool,
+
+    /// How vivid the accent colour is drawn, as a percentage of the theme's
+    /// own. 100 leaves the theme untouched; the interface clamps what it will
+    /// set, and reads anything outside that range back as 100.
+    pub accent_intensity: u16,
 
     pub version: usize,
 }
@@ -199,6 +207,11 @@ impl Settings {
                 .fetch_one(exec)
                 .await?;
 
+        let accent_intensity: i64 =
+            sqlx::query_scalar("SELECT accent_intensity FROM settings")
+                .fetch_one(exec)
+                .await?;
+
         let res = sqlx::query!(
             "
             SELECT
@@ -275,6 +288,8 @@ impl Settings {
                 .and_then(|raw| serde_json::from_str(raw).ok())
                 .unwrap_or_default(),
             universal_skins: universal_skins == 1,
+            accent_intensity: u16::try_from(accent_intensity)
+                .unwrap_or(DEFAULT_ACCENT_INTENSITY),
             sync_theme_across_devices: res.sync_theme_across_devices == 1,
             sync_behavior_across_devices: res.sync_behavior_across_devices == 1,
             version: res.version as usize,
@@ -388,6 +403,11 @@ impl Settings {
 
         sqlx::query("UPDATE settings SET universal_skins = $1")
             .bind(i64::from(self.universal_skins))
+            .execute(exec)
+            .await?;
+
+        sqlx::query("UPDATE settings SET accent_intensity = $1")
+            .bind(i64::from(self.accent_intensity))
             .execute(exec)
             .await?;
 

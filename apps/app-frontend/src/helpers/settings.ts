@@ -80,6 +80,12 @@ export type AppSettings = {
 	 */
 	universal_skins: boolean
 
+	/**
+	 * How vivid the accent colour is drawn, as a percentage of the theme's own.
+	 * 100 is the theme exactly as it ships.
+	 */
+	accent_intensity: number
+
 	version: number
 }
 

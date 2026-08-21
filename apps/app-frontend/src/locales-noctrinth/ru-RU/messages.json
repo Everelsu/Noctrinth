@@ -5,6 +5,12 @@
 	"app.account.notifications": {
 		"message": "Уведомления"
 	},
+	"app.appearance-settings.accent-intensity.description": {
+		"message": "Насколько ярко рисуется акцентный цвет темы — от почти серого до более насыщенного, чем в любой теме. 100% — тема без изменений."
+	},
+	"app.appearance-settings.accent-intensity.title": {
+		"message": "Насыщенность акцента"
+	},
 	"app.appearance-settings.minimize-launcher.description": {
 		"message": "Сворачивать окно лаунчера при запуске Minecraft."
 	},

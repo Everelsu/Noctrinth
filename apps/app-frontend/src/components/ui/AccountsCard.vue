@@ -296,6 +296,9 @@ defineExpose({
 	setEquippedSkin,
 	setLoginDisabled,
 	login,
+	// So anything offering a choice of account — the getting started checklist,
+	// for one — can open the Ely.by dialog this card owns.
+	showElyLogin: () => elyLoginModal.value?.show(),
 	loginDisabled,
 	selectedAccount,
 })

@@ -8,6 +8,18 @@ pub async fn login(
     let state = crate::State::get().await?;
     let creds = ElyCredentials::authenticate(username, password).await?;
     creds.upsert(&state.pool).await?;
+
+    // The checklist's "sign in to Minecraft" step is about having an account to
+    // play with, and an Ely.by account is one — only the Microsoft flow marked
+    // it, so signing in here left the step outstanding forever.
+    if let Err(error) =
+        crate::onboarding_checklist::mark_logged_into_minecraft().await
+    {
+        tracing::warn!(
+            "Failed to mark Ely.by login in onboarding checklist: {error}"
+        );
+    }
+
     Ok(creds)
 }
 

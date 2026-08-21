@@ -1,4 +1,22 @@
 {
+	"app.account-provider.description": {
+		"message": "Which account do you play with?"
+	},
+	"app.account-provider.ely": {
+		"message": "Ely.by account"
+	},
+	"app.account-provider.ely-hint": {
+		"message": "Plays on servers that accept Ely.by."
+	},
+	"app.account-provider.header": {
+		"message": "Add an account"
+	},
+	"app.account-provider.microsoft": {
+		"message": "Microsoft account"
+	},
+	"app.account-provider.microsoft-hint": {
+		"message": "A Minecraft account bought from Mojang."
+	},
 	"app.account.collections": {
 		"message": "Collections"
 	},
@@ -448,6 +466,9 @@
 	},
 	"app.update-popup.downloading": {
 		"message": "Downloading update"
+	},
+	"app.welcome-screen.title": {
+		"message": "Welcome to Noctrinth"
 	},
 	"collection.delete": {
 		"message": "Delete"

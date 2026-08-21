@@ -42,14 +42,17 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 - A toggle beside the presets that tints the app's backgrounds and panels with the chosen colour.
 - The splash screen and the window icon are drawn in the chosen accent.
 - The wordmark in the title bar turns and sweeps while a download, an install or a page load is running.
+- Signing in to Minecraft from the getting started checklist asks which account to add: Microsoft or Ely.by.
 
 ### Changed
+- The empty home screen says Noctrinth and shows the fork's own mark in the accent colour, instead of Modrinth's name and icon.
 - Synced with upstream Modrinth (0.18.0 → 0.18.2): the pagination ellipsis jumps to a page, compact mode for instances in the library, a drag handle to resize "Jump in", icon editing from an instance's context menu, sorting by loader and game version, appearance and behaviour settings synced across devices, depends-on and included-content search filters, and fixes for installed state, "Jump in" cards, tab bars, a Discover memory leak and \`.mrpack\` exports.
 - Noctrinth's translations moved to \`src/locales-noctrinth/\` and are applied over upstream's catalogues instead of being edited into them.
 - The changelog is one file again; screenshots are still published with the changelog site rather than shipped in the installer.
 - The in-app changelog is no longer fetched or cached at runtime — it is the one the build shipped with.
 
 ### Fixed
+- Signing in with an Ely.by account left the checklist's "Sign in to Minecraft" step outstanding.
 - Closing the app panicked with "there is no reactor running" instead of exiting.
 - DNS failures on Windows were logged as errors on every background poll.
 - The right-hand sidebar, promo cards, dialog dimmer and the far end of the loading bar stayed purple whatever accent was chosen.

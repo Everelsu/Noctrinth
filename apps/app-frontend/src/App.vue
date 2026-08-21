@@ -78,6 +78,7 @@ import MinecraftAuthErrorModal from '@/components/ui/minecraft-auth-error-modal/
 import MinecraftRequiredModal from '@/components/ui/minecraft-required-modal/MinecraftRequiredModal.vue'
 import AppSettingsModal from '@/components/ui/modal/AppSettingsModal.vue'
 import InstallToPlayModal from '@/components/ui/modal/InstallToPlayModal.vue'
+import MinecraftAccountProviderModal from '@/components/ui/modal/MinecraftAccountProviderModal.vue'
 import ModpackAlreadyInstalledModal from '@/components/ui/modal/ModpackAlreadyInstalledModal.vue'
 import ModrinthAccountRequiredModal from '@/components/ui/modal/ModrinthAccountRequiredModal.vue'
 import UpdateToPlayModal from '@/components/ui/modal/UpdateToPlayModal.vue'
@@ -1217,6 +1218,7 @@ onMounted(() => {
 })
 
 const accounts = ref(null)
+const accountProviderModal = ref(null)
 provide('accountsCard', accounts)
 
 useAppEvent('command', handleCommand, appEvents)
@@ -1939,6 +1941,11 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 		</Suspense>
 		<Suspense>
 			<ModrinthAccountRequiredModal ref="modrinthLoginModal" :request-auth="requestModrinthAuth" />
+			<MinecraftAccountProviderModal
+				ref="accountProviderModal"
+				@microsoft="accounts?.login()"
+				@ely="accounts?.showElyLogin()"
+			/>
 		</Suspense>
 		<CreationFlowModal
 			ref="installationModal"
@@ -2215,7 +2222,7 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 			>
 				<OnboardingChecklist
 					@create-instance="installationModal?.show()"
-					@login-minecraft="accounts?.login()"
+					@login-minecraft="accountProviderModal?.show()"
 					@login-modrinth="signIn"
 				/>
 				<div id="sidebar-teleport-target" class="sidebar-teleport-content"></div>

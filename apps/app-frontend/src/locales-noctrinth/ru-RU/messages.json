@@ -1,4 +1,22 @@
 {
+	"app.account-provider.description": {
+		"message": "С какого аккаунта вы играете?"
+	},
+	"app.account-provider.ely": {
+		"message": "Аккаунт Ely.by"
+	},
+	"app.account-provider.ely-hint": {
+		"message": "Для серверов, которые принимают Ely.by."
+	},
+	"app.account-provider.header": {
+		"message": "Добавить аккаунт"
+	},
+	"app.account-provider.microsoft": {
+		"message": "Аккаунт Microsoft"
+	},
+	"app.account-provider.microsoft-hint": {
+		"message": "Лицензия Minecraft, купленная у Mojang."
+	},
 	"app.account.collections": {
 		"message": "Коллекции"
 	},
@@ -445,6 +463,9 @@
 	},
 	"app.update-popup.downloading": {
 		"message": "Загрузка обновления"
+	},
+	"app.welcome-screen.title": {
+		"message": "Добро пожаловать в Noctrinth"
 	},
 	"collection.delete": {
 		"message": "Удалить"

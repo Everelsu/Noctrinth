@@ -50,7 +50,7 @@ const messages = defineMessages({
 	accentTintDescription: {
 		id: 'app.appearance-settings.accent-tint.description',
 		defaultMessage:
-			'Gives the backgrounds, panels and the sidebar the same hue, faintly. Turn this off to keep the backgrounds the theme paints.',
+			"Gives the app's greys — its backgrounds and its panels — a faint cast of the same colour. The accent, the sidebar and the loading bar follow the preset either way.",
 	},
 })
 

@@ -6,7 +6,7 @@
 		"message": "Notifications"
 	},
 	"app.appearance-settings.accent-tint.description": {
-		"message": "Gives the backgrounds, panels and the sidebar the same hue, faintly. Turn this off to keep the backgrounds the theme paints."
+		"message": "Gives the app's greys — its backgrounds and its panels — a faint cast of the same colour. The accent, the sidebar and the loading bar follow the preset either way."
 	},
 	"app.appearance-settings.accent-tint.title": {
 		"message": "Tint the background too"

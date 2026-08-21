@@ -12,15 +12,14 @@
  * of the strength, so picking Ember gives a warm dark app rather than a violet
  * one with orange buttons. They keep their own lightness, which is what the
  * theme's depth and contrast are made of; only the cast over them changes. The
- * same goes for the gradients the right-hand sidebar and the promo cards are
- * painted with, which the fork had written out in purple and which therefore
- * stayed purple whatever the accent was. That half is a setting of its own —
- * turned off, those gradients are drawn from the theme's own surfaces rather
- * than left as the purple they were written as, which is the whole point of
- * asking for the theme's backgrounds back.
+ * That part is a setting of its own, for anyone who would rather keep the
+ * theme's own greys.
  *
- * The loading bar follows the preset either way: it is the accent drawn as a
- * bar, not a background.
+ * Anything the theme already painted in the brand colour follows the preset
+ * regardless of that setting — the right-hand sidebar, the promo cards, the
+ * dimmer behind a dialog, the loading bar. All four were written out in purple
+ * by hand, which is why they used to stay purple behind a blue accent; they
+ * were the brand's before and they are the brand's now.
  *
  * `theme` is the default and overrides nothing at all, so a build that has
  * never been touched draws exactly what its theme defines.
@@ -119,26 +118,11 @@ function brandGradients(accent: string, borderAlpha: number): Record<string, str
 		'--brand-gradient-strong-bg': `linear-gradient(270deg, color-mix(in oklab, var(--color-bg) 88%, rgb(${accent})) 10%, color-mix(in oklab, var(--color-bg) 80%, rgb(${accent})) 100%)`,
 		'--brand-gradient-border': `rgb(${accent} / ${borderAlpha})`,
 		'--brand-gradient-fade-out-color': `linear-gradient(to bottom, rgb(${accent} / 0) 0%, color-mix(in oklab, var(--color-bg) 86%, rgb(${accent})) 80%)`,
-	}
-}
-
-/**
- * The same gradients with the colour taken out of them.
- *
- * Turning the tint off has to mean the backgrounds match the theme, and these
- * do not: they are the fork's own purple, written into the theme by hand, so
- * leaving them alone would leave a violet sidebar beside a blue accent. Drawn
- * from the theme's own surfaces instead — the same panel colour as everything
- * else, which is what "the theme's background" means.
- */
-function neutralGradients(): Record<string, string> {
-	return {
-		'--brand-gradient-bg': 'linear-gradient(0deg, var(--surface-2) 0%, var(--surface-1-5) 100%)',
-		'--brand-gradient-strong-bg':
-			'linear-gradient(270deg, var(--surface-1-5) 10%, var(--surface-2) 100%)',
-		'--brand-gradient-border': 'var(--color-button-border)',
-		'--brand-gradient-fade-out-color':
-			'linear-gradient(to bottom, rgb(0 0 0 / 0) 0%, var(--surface-2) 80%)',
+		// What a dialog dims the window with. The theme writes it as purple, so
+		// it stayed purple behind a blue dialog; the wash at the top is the
+		// accent, and the bottom is the same accent taken most of the way to
+		// black, which is what it always was.
+		'--modal-overlay-standard': `linear-gradient(to bottom, rgb(${accent} / 0.45) 0%, color-mix(in oklab, rgb(${accent} / 0.95) 12%, rgb(0 0 0 / 0.95)) 100%)`,
 	}
 }
 
@@ -163,6 +147,7 @@ const GRADIENT_VARIABLES = [
 	'--brand-gradient-strong-bg',
 	'--brand-gradient-border',
 	'--brand-gradient-fade-out-color',
+	'--modal-overlay-standard',
 	'--loading-bar-gradient',
 ] as const
 
@@ -271,17 +256,18 @@ function apply(id: string, tint: boolean): void {
 		)
 	}
 
-	// The loading bar is the accent's own, so it follows the preset whether or
-	// not the backgrounds do.
+	// Everything the theme already painted in the brand colour — the right-hand
+	// sidebar, the promo cards, the dialog dimmer, the loading bar — follows the
+	// preset whether or not the greys do. It was the brand's before; it is the
+	// brand's now.
 	const accent = `${red} ${green} ${blue}`
+	const borderAlpha = alphaOf(styles.getPropertyValue('--brand-gradient-border'))
+	for (const [variable, value] of Object.entries(brandGradients(accent, borderAlpha))) {
+		html.style.setProperty(variable, value)
+	}
 	html.style.setProperty('--loading-bar-gradient', loadingBarGradient(accent, theme.active))
 
-	if (!tint) {
-		for (const [variable, value] of Object.entries(neutralGradients())) {
-			html.style.setProperty(variable, value)
-		}
-		return
-	}
+	if (!tint) return
 
 	// The surfaces keep their lightness — that is the theme's depth and its
 	// contrast — and are given the preset's hue at a fraction of its strength.
@@ -292,11 +278,6 @@ function apply(id: string, tint: boolean): void {
 
 		const lightness = lightnessOf(surface)
 		html.style.setProperty(variable, `oklch(${round(lightness, 4)} ${SURFACE_TINT} ${hue})`)
-	}
-
-	const borderAlpha = alphaOf(styles.getPropertyValue('--brand-gradient-border'))
-	for (const [variable, value] of Object.entries(brandGradients(accent, borderAlpha))) {
-		html.style.setProperty(variable, value)
 	}
 }
 

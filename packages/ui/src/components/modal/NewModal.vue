@@ -456,7 +456,11 @@ defineOptions({
 
 	// Fade variants
 	&.standard {
-		background: linear-gradient(to bottom, rgba(80, 35, 130, 0.45) 0%, rgba(14, 10, 22, 0.95) 100%);
+		// Named so the accent preset can repaint it; the fallback is the theme's.
+		background: var(
+			--modal-overlay-standard,
+			linear-gradient(to bottom, rgba(80, 35, 130, 0.45) 0%, rgba(14, 10, 22, 0.95) 100%)
+		);
 	}
 
 	&.warning {

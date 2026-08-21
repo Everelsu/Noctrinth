@@ -377,10 +377,18 @@ fn main() {
                 // to park this thread for the rest of the process's life, which
                 // Windows shows as a window that never repaints or closes.
                 if matches!(&event, tauri::RunEvent::ExitRequested { .. }) {
-                    match tauri::async_runtime::block_on(tokio::time::timeout(
-                        EXIT_SKIN_FLUSH_TIMEOUT,
-                        theseus::minecraft_skins::flush_pending_skin_change(),
-                    )) {
+                    // The timeout is built inside the block rather than passed
+                    // into it: a Tokio timer can only be created from within a
+                    // runtime, and this event arrives on the window event loop,
+                    // which is not one. Built outside, closing the app panicked
+                    // with "there is no reactor running".
+                    match tauri::async_runtime::block_on(async {
+                        tokio::time::timeout(
+                            EXIT_SKIN_FLUSH_TIMEOUT,
+                            theseus::minecraft_skins::flush_pending_skin_change(),
+                        )
+                        .await
+                    }) {
                         Ok(Ok(())) => {}
                         Ok(Err(error)) => tracing::warn!(
                             "Failed to flush pending Minecraft skin change before exit: {error}"

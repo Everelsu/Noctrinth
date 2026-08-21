@@ -123,3 +123,9 @@ jobs:
 
       - name: Run app-lib unit tests
         run: cargo test -p theseus
+
+      # The app crate carries a few of its own — how an error is classified on
+      # its way to the interface, for one — and the check above already builds
+      # its test target, so running them costs a link and nothing else.
+      - name: Run app unit tests
+        run: cargo test -p theseus_gui

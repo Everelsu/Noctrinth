@@ -20,6 +20,7 @@ pub mod shortcuts;
 pub mod tags;
 pub mod users;
 pub mod utils;
+pub mod window_icon;
 
 pub mod ads;
 #[cfg(target_os = "macos")]

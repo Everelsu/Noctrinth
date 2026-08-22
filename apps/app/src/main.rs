@@ -344,6 +344,7 @@ fn main() {
         .plugin(api::tags::init())
         .plugin(api::users::init())
         .plugin(api::utils::init())
+        .plugin(api::window_icon::init())
         .plugin(api::cache::init())
         .plugin(api::files::init())
         .plugin(api::ads::init())

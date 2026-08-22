@@ -114,6 +114,7 @@
 		"ads:default",
 		"friends:default",
 		"worlds:default",
-		"ely-auth:default"
+		"ely-auth:default",
+		"window-icon:default"
 	]
 }

@@ -8,9 +8,14 @@
  * is wanted: the SVG is recoloured as text, rasterised through a canvas, and
  * handed to the window as raw pixels.
  *
+ * Windows keeps two icons per window — a small one for the window itself and a
+ * big one for the taskbar and Alt-Tab — and only the small one is Tauri's to
+ * set, so a command of the fork's own copies it across afterwards.
+ *
  * Failures are silent by design. An icon is not worth an error dialog, and the
  * one the app was installed with is already on screen if this does not land.
  */
+import { invoke } from '@tauri-apps/api/core'
 import { Image } from '@tauri-apps/api/image'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 
@@ -72,6 +77,11 @@ export async function paintWindowIcon(color: string): Promise<void> {
 		const icon = await Image.new(rgba, pixels.width, pixels.height)
 		await getCurrentWindow().setIcon(icon)
 		await icon.close()
+
+		// Windows keeps a second icon for the taskbar and Alt-Tab, and setIcon
+		// does not touch it — so without this the taskbar keeps the icon built
+		// into the executable. A no-op on every other platform.
+		await invoke('plugin:window-icon|sync_taskbar_icon')
 	} catch (error) {
 		lastPainted = null
 		console.warn('Failed to paint the window icon in the accent colour:', error)

@@ -352,6 +352,14 @@ fn main() {
                     ),
             )
             .plugin(
+                "window-icon",
+                InlinedPlugin::new()
+                    .commands(&["sync_taskbar_icon"])
+                    .default_permission(
+                        DefaultPermissionRule::AllowAllCommands,
+                    ),
+            )
+            .plugin(
                 "ads",
                 InlinedPlugin::new()
                     .commands(&[

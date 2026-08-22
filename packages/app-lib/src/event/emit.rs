@@ -158,7 +158,8 @@ pub fn emit_loading(
 pub async fn emit_warning(message: &str) -> crate::Result<()> {
     #[cfg(feature = "tauri")]
     {
-        let event_state = crate::EventState::get();
+        // Reached from the same deep link parsing as `emit_command`.
+        let event_state = crate::EventState::get_initialized().await?;
         event_state.send(AppEvent::Warning(WarningPayload {
             message: message.to_string(),
         }))?;
@@ -186,7 +187,9 @@ pub async fn emit_command(command: CommandPayload) -> crate::Result<()> {
     tracing::debug!("Command: {}", serde_json::to_string(&command)?);
     #[cfg(feature = "tauri")]
     {
-        let event_state = crate::EventState::get();
+        // A deep link, or a second launch handing its arguments over, arrives
+        // whenever the OS says so — including before the app has initialised.
+        let event_state = crate::EventState::get_initialized().await?;
         event_state.send(AppEvent::Command(command))?;
 
         if let Some(window) = event_state.app.get_window("main") {

@@ -52,6 +52,7 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 - The in-app changelog is no longer fetched or cached at runtime — it is the one the build shipped with.
 
 ### Fixed
+- The launcher could die on a cold start with "should be initialized when used", and open fine the next time.
 - Signing in with an Ely.by account left the checklist's "Sign in to Minecraft" step outstanding.
 - Closing the app panicked with "there is no reactor running" instead of exiting.
 - DNS failures on Windows were logged as errors on every background poll.

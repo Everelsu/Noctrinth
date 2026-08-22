@@ -67,6 +67,45 @@ impl EventState {
             .clone()
     }
 
+    /// How long a caller waits for the event state before giving up on it.
+    const INITIALIZATION_TIMEOUT: std::time::Duration =
+        std::time::Duration::from_secs(30);
+
+    /// Waits for the event state rather than insisting it is already there.
+    ///
+    /// The webview can call a command the moment it loads, which is before
+    /// `initialize_state` has had a chance to run — the launcher's own
+    /// `State::get` waits that out for exactly this reason. Here it panicked
+    /// instead, and a panic takes the whole process with it in a release build:
+    /// a launcher that died on a cold start and worked when opened again.
+    ///
+    /// Bounded, unlike `State::get`, because the callers are commands the
+    /// interface is waiting on: an error it can report beats a call that never
+    /// returns.
+    pub async fn get_initialized() -> crate::Result<Arc<Self>> {
+        if let Some(state) = EVENT_STATE.get() {
+            return Ok(state.clone());
+        }
+
+        tracing::debug!(
+            "Event state requested before initialization finished; waiting for it"
+        );
+
+        let poll = std::time::Duration::from_millis(50);
+        let deadline = std::time::Instant::now() + Self::INITIALIZATION_TIMEOUT;
+        while std::time::Instant::now() < deadline {
+            tokio::time::sleep(poll).await;
+            if let Some(state) = EVENT_STATE.get() {
+                return Ok(state.clone());
+            }
+        }
+
+        Err(crate::ErrorKind::OtherError(
+            "The app event state was never initialized".to_string(),
+        )
+        .into())
+    }
+
     #[cfg(feature = "tauri")]
     pub fn send(&self, event: AppEvent) -> crate::Result<()> {
         let payload =
@@ -81,7 +120,7 @@ impl EventState {
     // Values provided should not be used directly, as they are clones and are not guaranteed to be up-to-date
     pub async fn list_progress_bars() -> crate::Result<DashMap<Uuid, LoadingBar>>
     {
-        let value = Self::get();
+        let value = Self::get_initialized().await?;
         Ok(value.loading_bars.clone())
     }
 
@@ -89,7 +128,7 @@ impl EventState {
     pub async fn get_main_window() -> crate::Result<Option<tauri::WebviewWindow>>
     {
         use tauri::Manager;
-        let value = Self::get();
+        let value = Self::get_initialized().await?;
         Ok(value.app.get_webview_window("main"))
     }
 }

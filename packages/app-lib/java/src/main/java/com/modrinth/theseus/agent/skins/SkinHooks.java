@@ -42,10 +42,7 @@ public final class SkinHooks {
                 return result;
             }
 
-            final ClassLoader loader = profile.getClass().getClassLoader();
-            final Object filled =
-                    result instanceof Map ? buildMap(loader, textures) : buildTexturesObject(result, loader, textures);
-
+            final Object filled = build(result == null ? null : result.getClass(), profile, textures);
             if (filled != null) {
                 SkinSource.debug("Filled in textures for " + name);
                 return filled;
@@ -56,6 +53,62 @@ public final class SkinHooks {
         }
 
         return result;
+    }
+
+    /**
+     * Stands in for textures authlib refused to hand over.
+     *
+     * <p>A profile carrying textures signed by an account system this client does not have the key
+     * for — an Ely.by player seen by a licensed one, or the other way about — does not come back
+     * empty: {@code getTextures} throws, and the game reads that as no skin at all. The player is
+     * no less real for it, so they get the same lookup by name as one the server said nothing
+     * about.
+     *
+     * <p>{@code expected} is the type the call site is going to cast this to, which is all there is
+     * to go on when the failure left no instance to copy the shape from. Nothing to offer means the
+     * original failure is passed on exactly as it was thrown.
+     */
+    public static Object recoverTextures(Throwable failure, Object profile, Class<?> expected) {
+        try {
+            if (SkinSource.isEnabled() && profile != null) {
+                final String name = profileName(profile);
+                final Map<String, SkinSource.Texture> textures = SkinSource.lookup(name);
+
+                final Object filled = textures.isEmpty() ? null : build(expected, profile, textures);
+                if (filled != null) {
+                    SkinSource.debug("Filled in textures for " + name + " after " + failure);
+                    return filled;
+                }
+            }
+        } catch (Throwable t) {
+            SkinSource.debug("Failed to fill in textures after " + failure + ": " + t);
+        }
+
+        throw sneakyThrow(failure);
+    }
+
+    /** Builds whichever shape of the API {@code shape} belongs to, or null for neither. */
+    private static Object build(Class<?> shape, Object profile, Map<String, SkinSource.Texture> textures)
+            throws Exception {
+        if (shape == null) {
+            return null;
+        }
+
+        final ClassLoader loader = profile.getClass().getClassLoader();
+        return shape.isAssignableFrom(HashMap.class)
+                ? buildMap(loader, textures)
+                : buildTexturesObject(shape, loader, textures);
+    }
+
+    /**
+     * Throws what it is given, whatever it is.
+     *
+     * <p>The declared throws is erased, so the compiler lets a checked exception through without
+     * this method having to admit to it — which is what passing a failure on untouched needs.
+     */
+    @SuppressWarnings("unchecked")
+    private static <T extends Throwable> RuntimeException sneakyThrow(Throwable failure) throws T {
+        throw (T) failure;
     }
 
     private static boolean hasTextures(Object result) throws Exception {
@@ -115,19 +168,15 @@ public final class SkinHooks {
     /**
      * The 1.20.2+ shape: a record of skin, cape, elytra and a signature state.
      *
-     * <p>Built from the instance authlib was already returning rather than from a class name, so
-     * the record it hands back is the one that class expects, and the components are filled in
-     * their declared order — which for a record's canonical constructor is the order they are
-     * written in.
+     * <p>Built from the class authlib itself deals in — the one it was returning, or the one the
+     * call site is about to cast to — so the record it hands back is the one that class expects,
+     * and the components are filled in their declared order, which for a record's canonical
+     * constructor is the order they are written in.
      */
     private static Object buildTexturesObject(
-            Object result, ClassLoader loader, Map<String, SkinSource.Texture> textures) throws Exception {
-        if (result == null) {
-            return null;
-        }
-
+            Class<?> texturesClass, ClassLoader loader, Map<String, SkinSource.Texture> textures) throws Exception {
         Constructor<?> canonical = null;
-        for (final Constructor<?> candidate : result.getClass().getDeclaredConstructors()) {
+        for (final Constructor<?> candidate : texturesClass.getDeclaredConstructors()) {
             if (canonical == null || candidate.getParameterTypes().length > canonical.getParameterTypes().length) {
                 canonical = candidate;
             }

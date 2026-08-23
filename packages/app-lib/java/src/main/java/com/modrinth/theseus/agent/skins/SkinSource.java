@@ -34,7 +34,7 @@ public final class SkinSource {
     private static final String SOURCE_PROPERTY = "noctrinth.skins.source";
     private static final String DEBUG_PROPERTY = "modrinth.debugAgent";
 
-    /** Minecraft's own limits: at most 16 characters, and only these. */
+    /** Minecraft's own limit on how long a name can be. */
     private static final int MAX_NAME_LENGTH = 16;
 
     private static final int CONNECT_TIMEOUT_MS = 4000;
@@ -181,8 +181,11 @@ public final class SkinSource {
     /**
      * Whether this is worth spending a request on.
      *
-     * <p>Anything a vanilla server can hand out fits; the check exists so that names carrying
-     * slashes or other surprises never reach the skin system.
+     * <p>Anything a server can hand out fits. Mojang's own names are letters, digits and
+     * underscores, but an offline server hands out whatever it was given and account systems of
+     * their own are looser — Ely.by allows a dash, among others — so the only names turned away
+     * here are the ones that could not be asked about safely: empty, over-long, or carrying a path
+     * separator or a control character.
      */
     private static boolean isPlausibleName(String username) {
         if (username == null || username.isEmpty() || username.length() > MAX_NAME_LENGTH) {
@@ -191,9 +194,7 @@ public final class SkinSource {
 
         for (int i = 0; i < username.length(); i++) {
             final char c = username.charAt(i);
-            final boolean allowed =
-                    (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_';
-            if (!allowed) {
+            if (c < ' ' || c == 127 || c == '/' || c == '\\' || Character.isWhitespace(c)) {
                 return false;
             }
         }

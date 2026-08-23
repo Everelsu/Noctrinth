@@ -1,6 +1,7 @@
 package com.mojang.authlib.yggdrasil;
 
 import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.minecraft.InsecureTextureException;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftProfileTextures;
 import java.util.HashMap;
@@ -15,6 +16,12 @@ public class YggdrasilMinecraftSessionService {
 
     public Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> getTextures(
             GameProfile profile, boolean requireSecure) {
+        // What authlib does with a signature it cannot check: it throws rather
+        // than returning, which is the whole reason the wrapper catches.
+        if (requireSecure && profile.hasUnverifiableTextures()) {
+            throw new InsecureTextureException("Textures payload has been tampered with (signature invalid)");
+        }
+
         final Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> textures = new HashMap<>();
         if (profile.hasSignedTextures()) {
             textures.put(MinecraftProfileTexture.Type.SKIN, new MinecraftProfileTexture(SERVER_SKIN, null));

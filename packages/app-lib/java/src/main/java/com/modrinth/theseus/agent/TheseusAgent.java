@@ -54,7 +54,9 @@ public final class TheseusAgent {
         // Only when the launcher asked for it: this one reaches out to a skin
         // system for players the server said nothing about.
         if (SkinSource.isEnabled()) {
-            transformers.put(SessionServiceTransformer.TARGET_CLASS, new SessionServiceTransformer());
+            final SessionServiceTransformer sessionService = new SessionServiceTransformer();
+            transformers.put(SessionServiceTransformer.YGGDRASIL_CLASS, sessionService);
+            transformers.put(SessionServiceTransformer.SESSION_SERVICE_CLASS, sessionService);
         }
 
         instrumentation.addTransformer((loader, className, classBeingRedefined, protectionDomain, classData) -> {

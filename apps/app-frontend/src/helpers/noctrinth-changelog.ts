@@ -58,7 +58,11 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 - DNS failures on Windows were logged as errors on every background poll.
 - The right-hand sidebar, promo cards, dialog dimmer and the far end of the loading bar stayed purple whatever accent was chosen.
 - The empty-server page's tiles and selected backups on the hosting page were drawn in Modrinth green.
-- The launcher refused to start after the sync: upstream and Noctrinth had both shipped a migration numbered 20260818120000. Upstream's is renumbered, and a duplicate version now fails at startup naming both files, and in CI.`,
+- The launcher refused to start after the sync: upstream and Noctrinth had both shipped a migration numbered 20260818120000. Upstream's is renumbered, and a duplicate version now fails at startup naming both files, and in CI.
+- Players signed in with a different account system than yours — an Ely.by player seen from a licensed client, or the other way about — stayed Steve on offline-mode servers.
+- The by-name skin lookup did nothing at all on Minecraft 1.20.2 and newer, where the game asks for textures somewhere else.
+- Names an offline server can hand out but Mojang would not issue, such as one with a dash in it, were never looked up.
+- The app's icon files still carried the old mark, so the installer, the taskbar and the dock showed it.`,
 	},
 	{
 		version: '0.18.0',

@@ -61,6 +61,8 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 - The launcher refused to start after the sync: upstream and Noctrinth had both shipped a migration numbered 20260818120000. Upstream's is renumbered, and a duplicate version now fails at startup naming both files, and in CI.
 - Players signed in with a different account system than yours — an Ely.by player seen from a licensed client, or the other way about — stayed Steve on offline-mode servers.
 - The by-name skin lookup did nothing at all on Minecraft 1.20.2 and newer, where the game asks for textures somewhere else.
+- Licensed players stayed Steve whenever Ely.by's proxy to Mojang did not answer, which is often; Mojang is now asked directly for the names Ely.by has never heard of.
+- A player who changed their skin and rejoined kept the old one for another ten minutes. A skin is now remembered for fifteen seconds.
 - Names an offline server can hand out but Mojang would not issue, such as one with a dash in it, were never looked up.
 - The app's icon files still carried the old mark, so the installer, the taskbar and the dock showed it.`,
 	},

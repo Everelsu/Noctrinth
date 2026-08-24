@@ -8,7 +8,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Looks a player's textures up by name, for players the server did not supply any for.
@@ -32,19 +37,33 @@ public final class SkinSource {
     private static final int MAX_NAME_LENGTH = 16;
 
     /**
-     * How long an answer is reused.
+     * How long an answer is current for.
      *
      * <p>Short, because changing a skin and rejoining to see it is how everyone does it, and an
-     * answer older than that is the only thing standing in the way. It costs little: the game asks
-     * when a player comes into view, not while they are in it, so this bounds how stale a skin can
-     * be far more than it bounds how often anyone is asked.
-     *
-     * <p>A miss is remembered for longer. Whoever this is has no skin anywhere right now, and the
-     * lookup that found nothing is the expensive one to repeat.
+     * answer older than that is the only thing standing in the way. Going stale is not the same as
+     * being useless, though — see {@link #KEEP_MS}.
      */
-    private static final long HIT_TTL_MS = 15 * 1000L;
+    private static final long FRESH_MS = 15 * 1000L;
 
-    private static final long MISS_TTL_MS = 60 * 1000L;
+    /**
+     * The same, for a name nothing had a skin for.
+     *
+     * <p>Longer: whoever this is has no skin anywhere right now, and the lookup that found nothing
+     * is the expensive one to repeat.
+     */
+    private static final long FRESH_MISS_MS = 60 * 1000L;
+
+    /**
+     * How long a stale answer is still worth handing over.
+     *
+     * <p>The game asks when a player comes into view, and it asks on the thread that is waiting to
+     * draw them — two threads for the whole game on the older versions. Making it wait on the
+     * network is what puts Steve on screen for a second every time somebody walks back into
+     * render distance, or every time a death drops the world and every player in it. So anything
+     * remembered is handed over at once and looked at again behind the game's back: the skin on
+     * screen is at worst one sighting out of date, and there is no pause before it appears.
+     */
+    private static final long KEEP_MS = 30 * 60 * 1000L;
 
     /** A bound on the cache, so a busy server cannot grow it without end. */
     private static final int MAX_CACHED_NAMES = 512;
@@ -53,6 +72,29 @@ public final class SkinSource {
     private static final boolean DEBUG = Boolean.getBoolean(DEBUG_PROPERTY);
 
     private static final Map<String, CachedTextures> CACHE = new ConcurrentHashMap<>();
+
+    /** Names a refresh is already running for, so a crowd cannot ask twice over. */
+    private static final Set<String> IN_FLIGHT = ConcurrentHashMap.newKeySet();
+
+    /**
+     * Where the looking-again happens.
+     *
+     * <p>Daemon threads, because none of this is worth holding the game open at the end; a bounded
+     * queue and a silent discard, because a refresh that cannot be run right now is one the next
+     * sighting will ask for again anyway.
+     */
+    private static final Executor REFRESHERS = new ThreadPoolExecutor(
+            0,
+            2,
+            30L,
+            TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(64),
+            runnable -> {
+                final Thread thread = new Thread(runnable, "noctrinth-skins");
+                thread.setDaemon(true);
+                return thread;
+            },
+            new ThreadPoolExecutor.DiscardPolicy());
 
     private SkinSource() {}
 
@@ -79,10 +121,35 @@ public final class SkinSource {
 
         final long now = System.currentTimeMillis();
         final CachedTextures cached = CACHE.get(username);
-        if (cached != null && cached.expiresAt > now) {
+        if (cached != null && cached.usableUntil > now) {
+            if (cached.freshUntil <= now) {
+                // Old enough to be worth another look, not old enough to make
+                // anyone wait for it.
+                refreshLater(username);
+            }
             return cached.textures;
         }
 
+        return fetch(username);
+    }
+
+    /**
+     * Looks a name up before anything asks about it.
+     *
+     * <p>The launcher names the player who is signing in, and their own skin is the one the game
+     * wants first and most visibly — their arm is on screen the moment they spawn. Warming it here
+     * means that first sighting is not the one that has to wait.
+     */
+    public static void prefetch(String username) {
+        if (SOURCES.isEmpty() || !isPlausibleName(username)) {
+            return;
+        }
+
+        refreshLater(username);
+    }
+
+    /** Asks every source in turn, and remembers whatever the first one to know answered. */
+    private static Map<String, Texture> fetch(String username) {
         Map<String, Texture> textures = Collections.emptyMap();
         for (final Source source : SOURCES) {
             try {
@@ -99,8 +166,28 @@ public final class SkinSource {
             }
         }
 
-        store(username, textures, now);
+        store(username, textures, System.currentTimeMillis());
         return textures;
+    }
+
+    private static void refreshLater(String username) {
+        if (!IN_FLIGHT.add(username)) {
+            // Somebody is already on it.
+            return;
+        }
+
+        try {
+            REFRESHERS.execute(() -> {
+                try {
+                    fetch(username);
+                } finally {
+                    IN_FLIGHT.remove(username);
+                }
+            });
+        } catch (Throwable t) {
+            IN_FLIGHT.remove(username);
+            debug("Could not look " + username + " up in the background: " + t);
+        }
     }
 
     /**
@@ -144,13 +231,15 @@ public final class SkinSource {
 
     private static void store(String username, Map<String, Texture> textures, long now) {
         if (CACHE.size() >= MAX_CACHED_NAMES) {
-            CACHE.values().removeIf(entry -> entry.expiresAt <= now);
+            CACHE.values().removeIf(entry -> entry.usableUntil <= now);
             if (CACHE.size() >= MAX_CACHED_NAMES) {
                 CACHE.clear();
             }
         }
 
-        CACHE.put(username, new CachedTextures(textures, now + (textures.isEmpty() ? MISS_TTL_MS : HIT_TTL_MS)));
+        CACHE.put(
+                username,
+                new CachedTextures(textures, now + (textures.isEmpty() ? FRESH_MISS_MS : FRESH_MS), now + KEEP_MS));
     }
 
     /**
@@ -219,11 +308,16 @@ public final class SkinSource {
 
     private static final class CachedTextures {
         final Map<String, Texture> textures;
-        final long expiresAt;
 
-        CachedTextures(Map<String, Texture> textures, long expiresAt) {
+        /** Until when this is the answer, and until when it is still an answer. */
+        final long freshUntil;
+
+        final long usableUntil;
+
+        CachedTextures(Map<String, Texture> textures, long freshUntil, long usableUntil) {
             this.textures = textures;
-            this.expiresAt = expiresAt;
+            this.freshUntil = freshUntil;
+            this.usableUntil = usableUntil;
         }
     }
 }

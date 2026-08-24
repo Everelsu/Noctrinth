@@ -170,6 +170,7 @@ pub fn get_jvm_arguments(
     log_config: Option<&LoggingConfiguration>,
     ipc_addr: SocketAddr,
     skin_source: Option<&str>,
+    player_name: &str,
 ) -> crate::Result<Vec<String>> {
     let mut parsed_arguments = Vec::new();
 
@@ -252,6 +253,9 @@ pub fn get_jvm_arguments(
     // their own skin system can still do it with a `-D` of their own.
     if let Some(source) = skin_source {
         parsed_arguments.push(format!("-Dnoctrinth.skins.source={source}"));
+        // Whose skin the game will want first: their own arm is on screen the
+        // moment they spawn, so the agent looks it up before anything asks.
+        parsed_arguments.push(format!("-Dnoctrinth.skins.self={player_name}"));
     }
 
     for arg in custom_args {

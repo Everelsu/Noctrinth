@@ -7,6 +7,7 @@ import java.nio.charset.Charset;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Mojang's own answer for a name, for the players a skin system does not have.
@@ -24,6 +25,13 @@ final class MojangSource implements SkinSource.Source {
     private static final String PROFILES_URL = "https://api.mojang.com/users/profiles/minecraft/";
     private static final String SESSION_URL = "https://sessionserver.mojang.com/session/minecraft/profile/";
 
+    /** How long a name is taken to still belong to the same account. */
+    private static final long ID_TTL_MS = 30 * 60 * 1000L;
+
+    private static final int MAX_CACHED_IDS = 512;
+
+    private static final Map<String, CachedId> IDS = new ConcurrentHashMap<>();
+
     private final String profilesUrl;
     private final String sessionUrl;
 
@@ -39,7 +47,7 @@ final class MojangSource implements SkinSource.Source {
 
     @Override
     public Map<String, SkinSource.Texture> textures(String username) throws Exception {
-        final String id = string(Http.getJson(profilesUrl + Http.encode(username)), "id");
+        final String id = id(username);
         if (id == null) {
             return Collections.emptyMap();
         }
@@ -59,6 +67,34 @@ final class MojangSource implements SkinSource.Source {
         }
 
         return SkinSource.readTextures(payload.getAsJsonObject().get("textures"));
+    }
+
+    /**
+     * The id behind a name, from memory where possible.
+     *
+     * <p>Every skin here costs two requests, and the first of them answers with something that
+     * hardly ever changes. Remembering it means a skin that is looked at again — which is what
+     * happens every time somebody walks back into view — costs one.
+     */
+    private String id(String username) throws Exception {
+        final long now = System.currentTimeMillis();
+        final CachedId cached = IDS.get(username);
+        if (cached != null && cached.expiresAt > now) {
+            return cached.id;
+        }
+
+        final String id = string(Http.getJson(profilesUrl + Http.encode(username)), "id");
+        if (id != null) {
+            if (IDS.size() >= MAX_CACHED_IDS) {
+                IDS.values().removeIf(entry -> entry.expiresAt <= now);
+                if (IDS.size() >= MAX_CACHED_IDS) {
+                    IDS.clear();
+                }
+            }
+            IDS.put(username, new CachedId(id, now + ID_TTL_MS));
+        }
+
+        return id;
     }
 
     /** The value of the {@code textures} property, or null if the profile carries none. */
@@ -94,5 +130,15 @@ final class MojangSource implements SkinSource.Source {
     @Override
     public String toString() {
         return NAME;
+    }
+
+    private static final class CachedId {
+        final String id;
+        final long expiresAt;
+
+        CachedId(String id, long expiresAt) {
+            this.id = id;
+            this.expiresAt = expiresAt;
+        }
     }
 }

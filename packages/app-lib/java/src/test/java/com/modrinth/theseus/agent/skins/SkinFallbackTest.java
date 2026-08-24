@@ -1,6 +1,7 @@
 package com.modrinth.theseus.agent.skins;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -11,6 +12,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.InsecureTextureException;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftProfileTextures;
+import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.yggdrasil.YggdrasilMinecraftSessionService;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -196,6 +198,61 @@ class SkinFallbackTest {
                 YggdrasilMinecraftSessionService.SERVER_SKIN, textures.skin().getUrl());
     }
 
+    /**
+     * How the client has asked since 1.20.2: for the profile's textures property, and then for
+     * what is inside it. A profile from an offline server has no property at all, and without one
+     * there is nothing to unpack and nowhere for a lookup to happen.
+     */
+    @Test
+    void fillsInTexturesTheWayTheClientAsksForThemNow() throws Exception {
+        final Object packed = getPackedTextures(new GameProfile("Offline_Four", false));
+        assertNotNull(packed, "a profile carrying no property should have been given one to unpack");
+
+        final MinecraftProfileTextures textures = unpackTextures(packed);
+
+        assertNotNull(textures.skin(), "unpacking should have gone looking for a skin");
+        assertEquals(LOOKED_UP_SKIN, textures.skin().getUrl());
+    }
+
+    /**
+     * Textures authlib will not unpack — signed by the wrong key, or hosted somewhere it does not
+     * allow, which is every Ely.by skin as a licensed client sees it.
+     */
+    @Test
+    void fillsInTexturesAuthlibWouldNotUnpack() throws Exception {
+        final Object packed = getPackedTextures(GameProfile.unverifiable("Insecure_Two"));
+        final MinecraftProfileTextures textures = unpackTextures(packed);
+
+        assertNotNull(textures.skin(), "textures that were refused should have been replaced");
+        assertEquals(LOOKED_UP_SKIN, textures.skin().getUrl());
+    }
+
+    @Test
+    void leavesUnpackedTexturesAloneWhenAuthlibAcceptedThem() throws Exception {
+        final Object packed = getPackedTextures(new GameProfile("Signed_Four", true));
+
+        assertEquals(
+                YggdrasilMinecraftSessionService.SERVER_SKIN,
+                unpackTextures(packed).skin().getUrl(),
+                "a skin authlib was happy with must not be second-guessed");
+    }
+
+    /** The launcher names the player before the game starts, so their own skin is never the slow one. */
+    @Test
+    void warmsANameBeforeAnythingAsksAboutIt() throws Exception {
+        SkinSource.prefetch("Warmed_One");
+
+        // It happens off the caller's thread, which is the whole point of it.
+        for (int i = 0; i < 200 && !requestedPaths.contains("/textures/Warmed_One"); i++) {
+            Thread.sleep(20);
+        }
+        assertTrue(requestedPaths.contains("/textures/Warmed_One"), "the name should have been looked up on its own");
+
+        final int asked = countRequests("/textures/Warmed_One");
+        assertFalse(SkinSource.lookup("Warmed_One").isEmpty(), "the answer should have been waiting");
+        assertEquals(asked, countRequests("/textures/Warmed_One"), "and it should not have been asked for again");
+    }
+
     @Test
     void asksAboutEachNameOnlyOnce() throws Exception {
         getTextures(new GameProfile("Cached_One", false), true);
@@ -219,6 +276,17 @@ class SkinFallbackTest {
 
     private static Object getTextures(GameProfile profile) throws Exception {
         return service.getClass().getMethod("getTextures", GameProfile.class).invoke(service, profile);
+    }
+
+    private static Object getPackedTextures(GameProfile profile) throws Exception {
+        return service.getClass()
+                .getMethod("getPackedTextures", GameProfile.class)
+                .invoke(service, profile);
+    }
+
+    private static MinecraftProfileTextures unpackTextures(Object property) throws Exception {
+        return (MinecraftProfileTextures)
+                service.getClass().getMethod("unpackTextures", Property.class).invoke(service, property);
     }
 
     private static int countRequests(String path) {

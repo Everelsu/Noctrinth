@@ -1,22 +1,32 @@
 package com.modrinth.theseus.agent.skins;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * The code {@link com.modrinth.theseus.agent.transformers.SessionServiceTransformer} calls from the
- * end of authlib's {@code getTextures}.
+ * end of the authlib methods a skin can go missing in.
  *
  * <p>Everything here is reflective on purpose. The agent is compiled against nothing from the game,
  * and authlib has changed this corner more than once: what used to be a {@code Map} keyed by
- * texture type is a {@code MinecraftProfileTextures} record from 1.20.2 on. Both shapes arrive here
+ * texture type is a {@code MinecraftProfileTextures} record from 1.20.2 on, and the client that
+ * used to ask for textures now asks for the property they are packed in. Every shape arrives here
  * as {@code Object}, and whichever one came in is the one that goes back out.
  */
 public final class SkinHooks {
     private static final String TEXTURE_CLASS = "com.mojang.authlib.minecraft.MinecraftProfileTexture";
     private static final String TEXTURE_TYPE_CLASS = TEXTURE_CLASS + "$Type";
+    private static final String PROPERTY_CLASS = "com.mojang.authlib.properties.Property";
+
+    /** What a packed textures payload calls the player it is for. */
+    private static final String PROFILE_NAME = "profileName";
 
     /** The signature state to claim for textures we resolved ourselves. */
     private static final String UNSIGNED_CONSTANT = "UNSIGNED";
@@ -42,7 +52,7 @@ public final class SkinHooks {
                 return result;
             }
 
-            final Object filled = build(result == null ? null : result.getClass(), profile, textures);
+            final Object filled = build(result == null ? null : result.getClass(), loaderOf(profile), textures);
             if (filled != null) {
                 SkinSource.debug("Filled in textures for " + name);
                 return filled;
@@ -74,7 +84,7 @@ public final class SkinHooks {
                 final String name = profileName(profile);
                 final Map<String, SkinSource.Texture> textures = SkinSource.lookup(name);
 
-                final Object filled = textures.isEmpty() ? null : build(expected, profile, textures);
+                final Object filled = textures.isEmpty() ? null : build(expected, loaderOf(profile), textures);
                 if (filled != null) {
                     SkinSource.debug("Filled in textures for " + name + " after " + failure);
                     return filled;
@@ -87,14 +97,166 @@ public final class SkinHooks {
         throw sneakyThrow(failure);
     }
 
+    /**
+     * Gives the client a textures property to unpack for a profile that arrived without one.
+     *
+     * <p>From 1.20.2 the client asks for the property first and only unpacks it if there was one,
+     * so a profile from an offline server — no property at all — never reaches {@link
+     * #unpackTextures}, which is where a lookup belongs. This puts an empty one in its way instead,
+     * naming the player it is for, and no lookup happens here: this is called while the client is
+     * deciding what to draw, and the unpacking is what runs off the main thread.
+     */
+    public static Object packTextures(Object result, Object profile) {
+        try {
+            if (result != null || !SkinSource.isEnabled() || profile == null) {
+                return result;
+            }
+
+            final String name = profileName(profile);
+            if (name == null) {
+                return result;
+            }
+
+            final Object property = buildProperty(loaderOf(profile), name);
+            if (property != null) {
+                return property;
+            }
+        } catch (Throwable t) {
+            SkinSource.debug("Failed to stand in for a missing textures property: " + t);
+        }
+
+        return result;
+    }
+
+    /**
+     * Fills in textures the property did not yield.
+     *
+     * <p>Which covers more than the empty property {@link #packTextures} makes: authlib drops
+     * textures whose signature it cannot check and textures hosted anywhere but Mojang's own
+     * domains, so an Ely.by player's skin arrives here as nothing at all on a licensed client. The
+     * name is read back out of the property, which carries it whether the payload came from a
+     * server or from us.
+     */
+    public static Object unpackTextures(Object result, Object property) {
+        try {
+            if (!SkinSource.isEnabled() || result == null || hasTextures(result)) {
+                return result;
+            }
+
+            final String name = payloadName(propertyValue(property));
+            if (name == null) {
+                return result;
+            }
+
+            final Map<String, SkinSource.Texture> textures = SkinSource.lookup(name);
+            final Object filled = textures.isEmpty() ? null : build(result.getClass(), loaderOf(result), textures);
+            if (filled != null) {
+                SkinSource.debug("Filled in textures for " + name);
+                return filled;
+            }
+        } catch (Throwable t) {
+            SkinSource.debug("Failed to fill in unpacked textures: " + t);
+        }
+
+        return result;
+    }
+
+    /** An empty textures property naming the player it stands for. */
+    private static Object buildProperty(ClassLoader loader, String name) throws Exception {
+        final Class<?> propertyClass = Class.forName(PROPERTY_CLASS, false, loader);
+
+        Constructor<?> canonical = null;
+        for (final Constructor<?> candidate : propertyClass.getDeclaredConstructors()) {
+            final Class<?>[] parameters = candidate.getParameterTypes();
+            if (parameters.length < 2 || parameters.length > 3) {
+                continue;
+            }
+
+            boolean strings = true;
+            for (final Class<?> parameter : parameters) {
+                strings &= parameter == String.class;
+            }
+
+            // The shortest one that takes only strings: name and value, without a
+            // signature there is nothing to put in.
+            if (strings && (canonical == null || parameters.length < canonical.getParameterTypes().length)) {
+                canonical = candidate;
+            }
+        }
+
+        if (canonical == null) {
+            return null;
+        }
+
+        final Object[] arguments = new Object[canonical.getParameterTypes().length];
+        arguments[0] = "textures";
+        arguments[1] = emptyPayload(name);
+
+        canonical.setAccessible(true);
+        return canonical.newInstance(arguments);
+    }
+
+    /** The payload a server would have sent, with the textures left out. */
+    private static String emptyPayload(String name) {
+        final JsonObject payload = new JsonObject();
+        payload.addProperty(PROFILE_NAME, name);
+        payload.add("textures", new JsonObject());
+
+        return Base64.getEncoder().encodeToString(payload.toString().getBytes(StandardCharsets.UTF_8));
+    }
+
+    /** The {@code value} of a property, whichever accessor this authlib gave it. */
+    private static String propertyValue(Object property) {
+        if (property == null) {
+            return null;
+        }
+
+        for (final String accessor : new String[] {"value", "getValue"}) {
+            try {
+                final Object value = property.getClass().getMethod(accessor).invoke(property);
+                if (value instanceof String) {
+                    return (String) value;
+                }
+            } catch (Throwable ignored) {
+                // Try the next one.
+            }
+        }
+
+        return null;
+    }
+
+    /** The name a packed textures payload was made for. */
+    private static String payloadName(String packed) {
+        if (packed == null) {
+            return null;
+        }
+
+        try {
+            final String decoded = new String(Base64.getDecoder().decode(packed), StandardCharsets.UTF_8);
+            final JsonElement payload = JsonParser.parseString(decoded);
+            if (payload == null || !payload.isJsonObject()) {
+                return null;
+            }
+
+            final JsonElement name = payload.getAsJsonObject().get(PROFILE_NAME);
+            return name != null && name.isJsonPrimitive() ? name.getAsString() : null;
+        } catch (Throwable t) {
+            // Not a payload, then; there is no name to be had.
+            return null;
+        }
+    }
+
+    private static ClassLoader loaderOf(Object object) {
+        return object.getClass().getClassLoader();
+    }
+
     /** Builds whichever shape of the API {@code shape} belongs to, or null for neither. */
-    private static Object build(Class<?> shape, Object profile, Map<String, SkinSource.Texture> textures)
+    private static Object build(Class<?> shape, ClassLoader loader, Map<String, SkinSource.Texture> textures)
             throws Exception {
         if (shape == null) {
             return null;
         }
 
-        final ClassLoader loader = profile.getClass().getClassLoader();
         return shape.isAssignableFrom(HashMap.class)
                 ? buildMap(loader, textures)
                 : buildTexturesObject(shape, loader, textures);

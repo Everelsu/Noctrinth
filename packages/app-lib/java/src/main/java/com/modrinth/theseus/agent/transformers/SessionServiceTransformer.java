@@ -30,67 +30,113 @@ import org.objectweb.asm.tree.VarInsnNode;
  * Wrapping rather than rewriting the body also keeps the original's stack map frames out of it —
  * the only frame here is the one on the handler, and this writes it itself.
  *
- * <p>Both homes {@code getTextures} has had are covered. It was a method on the Yggdrasil service
- * until 1.20.2, and a default method on the {@code MinecraftSessionService} interface after it.
+ * <p>Every way the game has asked is covered. {@code getTextures} was a method on the Yggdrasil
+ * service until 1.20.2 and a default method on the {@code MinecraftSessionService} interface after
+ * it — and from 1.20.2 the client stopped calling it at all, asking instead for the profile's
+ * textures property and then for the textures inside it, which is why those two are wrapped as
+ * well.
  */
 public final class SessionServiceTransformer extends ClassNodeTransformer {
     /** Where {@code getTextures} lived up to 1.20.1. */
     public static final String YGGDRASIL_CLASS = "com/mojang/authlib/yggdrasil/YggdrasilMinecraftSessionService";
 
-    /** Where it lives from 1.20.2 on, as a default method. */
+    /** Where it lives from 1.20.2 on, as a default method nothing in the game calls any more. */
     public static final String SESSION_SERVICE_CLASS = "com/mojang/authlib/minecraft/MinecraftSessionService";
 
-    private static final String METHOD_NAME = "getTextures";
-
-    /** What the original is renamed to. The {@code $} keeps it out of a second pass. */
-    private static final String WRAPPED_NAME = METHOD_NAME + "$noctrinthOriginal";
-
     private static final String GAME_PROFILE = "Lcom/mojang/authlib/GameProfile;";
+    private static final String PROPERTY = "Lcom/mojang/authlib/properties/Property;";
     private static final String THROWABLE = "java/lang/Throwable";
     private static final String HOOKS_CLASS = "com/modrinth/theseus/agent/skins/SkinHooks";
 
-    private static final String FILL_HOOK = "fillTextures";
-    private static final String FILL_DESC = "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;";
+    private static final String HOOK_DESC = "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;";
     private static final String RECOVER_HOOK = "recoverTextures";
     private static final String RECOVER_DESC =
             "(Ljava/lang/Throwable;Ljava/lang/Object;Ljava/lang/Class;)Ljava/lang/Object;";
+
+    /**
+     * What to wrap, and with what.
+     *
+     * <p>{@code getTextures} is the whole story up to 1.20.1. From 1.20.2 the client stopped
+     * calling it and asks the two halves it is made of instead — the profile's textures property,
+     * and the textures inside that property — so both of those are wrapped too. The hook is handed
+     * whatever the method returned and the method's first argument, which is the profile in two
+     * cases and the property in the third.
+     */
+    private static final Wrap[] WRAPS = {
+        new Wrap("getTextures", GAME_PROFILE, "fillTextures", true),
+        new Wrap("getPackedTextures", GAME_PROFILE, "packTextures", false),
+        new Wrap("unpackTextures", PROPERTY, "unpackTextures", false),
+    };
+
+    /** One method to wrap. */
+    private static final class Wrap {
+        final String method;
+        final String firstArgument;
+        final String hook;
+
+        /** Whether a throw is worth a lookup of its own, or is only ever passed on. */
+        final boolean recovers;
+
+        Wrap(String method, String firstArgument, String hook, boolean recovers) {
+            this.method = method;
+            this.firstArgument = firstArgument;
+            this.hook = hook;
+            this.recovers = recovers;
+        }
+
+        /** What the original is renamed to. The {@code $} keeps it out of a second pass. */
+        String wrappedName() {
+            return method + "$noctrinthOriginal";
+        }
+    }
 
     @Override
     protected boolean transform(ClassNode classNode) {
         boolean transformed = false;
 
         for (final MethodNode method : new ArrayList<>(classNode.methods)) {
-            if (!METHOD_NAME.equals(method.name)) {
-                continue;
-            }
-
-            // An abstract declaration has no body to wrap, and whoever implements
-            // it is where the wrapping has to happen instead.
-            if ((method.access & (Opcodes.ACC_ABSTRACT | Opcodes.ACC_STATIC)) != 0) {
-                continue;
-            }
-
-            final Type[] arguments = Type.getArgumentTypes(method.desc);
-            if (arguments.length == 0 || !GAME_PROFILE.equals(arguments[0].getDescriptor())) {
-                continue;
-            }
-
-            final Type returnType = Type.getReturnType(method.desc);
-            if (returnType.getSort() != Type.OBJECT) {
+            final Wrap wrap = wrapFor(method);
+            if (wrap == null) {
                 continue;
             }
 
             // Already ours: this is the wrapper, from a pass that has been here
             // before. Wrapping it again would only add a hop.
-            if (declares(classNode, WRAPPED_NAME, method.desc)) {
+            if (declares(classNode, wrap.wrappedName(), method.desc)) {
                 continue;
             }
 
-            wrap(classNode, method, arguments, returnType);
+            wrap(classNode, wrap, method, Type.getArgumentTypes(method.desc), Type.getReturnType(method.desc));
             transformed = true;
         }
 
         return transformed;
+    }
+
+    /** The wrap this method is one of, or null if it is not one of them. */
+    private static Wrap wrapFor(MethodNode method) {
+        // An abstract declaration has no body to wrap, and whoever implements it
+        // is where the wrapping has to happen instead.
+        if ((method.access & (Opcodes.ACC_ABSTRACT | Opcodes.ACC_STATIC)) != 0) {
+            return null;
+        }
+
+        if (Type.getReturnType(method.desc).getSort() != Type.OBJECT) {
+            return null;
+        }
+
+        final Type[] arguments = Type.getArgumentTypes(method.desc);
+        if (arguments.length == 0) {
+            return null;
+        }
+
+        for (final Wrap wrap : WRAPS) {
+            if (wrap.method.equals(method.name) && wrap.firstArgument.equals(arguments[0].getDescriptor())) {
+                return wrap;
+            }
+        }
+
+        return null;
     }
 
     private static boolean declares(ClassNode classNode, String name, String desc) {
@@ -103,7 +149,7 @@ public final class SessionServiceTransformer extends ClassNodeTransformer {
         return false;
     }
 
-    private void wrap(ClassNode classNode, MethodNode original, Type[] arguments, Type returnType) {
+    private void wrap(ClassNode classNode, Wrap what, MethodNode original, Type[] arguments, Type returnType) {
         final boolean isInterface = (classNode.access & Opcodes.ACC_INTERFACE) != 0;
         final MethodNode wrapper = new MethodNode(
                 Opcodes.ASM9,
@@ -113,13 +159,15 @@ public final class SessionServiceTransformer extends ClassNodeTransformer {
                 original.signature,
                 original.exceptions.toArray(new String[0]));
 
-        original.name = WRAPPED_NAME;
+        original.name = what.wrappedName();
         original.access |= Opcodes.ACC_SYNTHETIC;
 
         final LabelNode start = new LabelNode();
         final LabelNode end = new LabelNode();
-        final LabelNode handler = new LabelNode();
-        wrapper.tryCatchBlocks.add(new TryCatchBlockNode(start, end, handler, THROWABLE));
+        final LabelNode handler = what.recovers ? new LabelNode() : null;
+        if (handler != null) {
+            wrapper.tryCatchBlocks.add(new TryCatchBlockNode(start, end, handler, THROWABLE));
+        }
 
         final InsnList code = wrapper.instructions;
         code.add(start);
@@ -134,30 +182,33 @@ public final class SessionServiceTransformer extends ClassNodeTransformer {
         code.add(new MethodInsnNode(
                 isInterface ? Opcodes.INVOKEINTERFACE : Opcodes.INVOKEVIRTUAL,
                 classNode.name,
-                WRAPPED_NAME,
+                what.wrappedName(),
                 original.desc,
                 isInterface));
 
-        // What it answered, together with the profile it answered for.
+        // What it answered, together with what it was asked about: the profile,
+        // or the property the textures were meant to be inside.
         code.add(new VarInsnNode(Opcodes.ALOAD, 1));
-        code.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HOOKS_CLASS, FILL_HOOK, FILL_DESC, false));
+        code.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HOOKS_CLASS, what.hook, HOOK_DESC, false));
         code.add(new TypeInsnNode(Opcodes.CHECKCAST, returnType.getInternalName()));
         code.add(end);
         code.add(new InsnNode(Opcodes.ARETURN));
 
-        code.add(handler);
-        if (needsStackMap(classNode)) {
-            // Nothing in the wrapper writes to a local, so the handler sees exactly
-            // what the method was called with.
-            code.add(new FrameNode(
-                    Opcodes.F_FULL, slot, entryLocals(classNode, arguments, slot), 1, new Object[] {THROWABLE}));
+        if (handler != null) {
+            code.add(handler);
+            if (needsStackMap(classNode)) {
+                // Nothing in the wrapper writes to a local, so the handler sees
+                // exactly what the method was called with.
+                code.add(new FrameNode(
+                        Opcodes.F_FULL, slot, entryLocals(classNode, arguments, slot), 1, new Object[] {THROWABLE}));
+            }
+            code.add(new VarInsnNode(Opcodes.ALOAD, 1));
+            // The shape to build, for a failure that left us nothing to copy it from.
+            code.add(new LdcInsnNode(returnType));
+            code.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HOOKS_CLASS, RECOVER_HOOK, RECOVER_DESC, false));
+            code.add(new TypeInsnNode(Opcodes.CHECKCAST, returnType.getInternalName()));
+            code.add(new InsnNode(Opcodes.ARETURN));
         }
-        code.add(new VarInsnNode(Opcodes.ALOAD, 1));
-        // The shape to build, for a failure that left us nothing to copy it from.
-        code.add(new LdcInsnNode(returnType));
-        code.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HOOKS_CLASS, RECOVER_HOOK, RECOVER_DESC, false));
-        code.add(new TypeInsnNode(Opcodes.CHECKCAST, returnType.getInternalName()));
-        code.add(new InsnNode(Opcodes.ARETURN));
 
         // Recomputed on the way out; these only have to be legal.
         wrapper.maxLocals = slot;

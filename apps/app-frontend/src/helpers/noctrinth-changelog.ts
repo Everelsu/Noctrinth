@@ -60,9 +60,13 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 - The empty-server page's tiles and selected backups on the hosting page were drawn in Modrinth green.
 - The launcher refused to start after the sync: upstream and Noctrinth had both shipped a migration numbered 20260818120000. Upstream's is renumbered, and a duplicate version now fails at startup naming both files, and in CI.
 - Players signed in with a different account system than yours — an Ely.by player seen from a licensed client, or the other way about — stayed Steve on offline-mode servers.
-- The by-name skin lookup did nothing at all on Minecraft 1.20.2 and newer, where the game asks for textures somewhere else.
+- The by-name skin lookup did nothing at all on Minecraft 1.20.2 and newer, where the game no longer asks for a profile's textures but for the property they are packed in.
+- On those versions an Ely.by skin was dropped even when the server did send it, because the game keeps a list of the domains a skin may be hosted on and Ely.by is not on it.
 - Licensed players stayed Steve whenever Ely.by's proxy to Mojang did not answer, which is often; Mojang is now asked directly for the names Ely.by has never heard of.
-- A player who changed their skin and rejoined kept the old one for another ten minutes. A skin is now remembered for fifteen seconds.
+- A player who changed their skin and rejoined kept the old one for another ten minutes. A skin is now current for fifteen seconds, and looked at again in the background after that.
+- Everyone came back as Steve for a moment whenever they walked back into view, and everyone at once after a death, while the game waited on a fresh lookup. A skin already known is now handed over immediately.
+- The player's own arm was Steve's for the first moment after spawning: their own skin is now looked up while the game is still starting.
+- A licensed player's skin cost two requests to Mojang every time it was looked at; the id behind the name is now remembered.
 - Names an offline server can hand out but Mojang would not issue, such as one with a dash in it, were never looked up.
 - The app's icon files still carried the old mark, so the installer, the taskbar and the dock showed it.`,
 	},

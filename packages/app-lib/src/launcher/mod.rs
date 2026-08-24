@@ -1119,6 +1119,7 @@ pub async fn launch_minecraft(
                 .and_then(|x| x.get(&LoggingSide::Client)),
             rpc_server.address(),
             skin_source,
+            &credentials.offline_profile.name,
         )?
         .into_iter(),
     );

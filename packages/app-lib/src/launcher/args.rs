@@ -29,10 +29,11 @@ const TEMPORARY_REPLACE_CHAR: &str = "\n";
 /// asks nobody about it, so everyone there is Steve. Given this, the agent in
 /// `theseus.jar` fills those profiles in by name.
 ///
-/// Ely.by answers by name, serves its own users' skins, and proxies Mojang's for
-/// names it has never heard of — so one source covers licensed and offline
-/// players alike, rather than picking a side.
-pub const UNIVERSAL_SKINS_SOURCE: &str = "https://skinsystem.ely.by";
+/// Ely.by answers by name and serves its own users' skins, and Mojang stands
+/// behind it for the licensed players it has never heard of. Ely.by proxies
+/// Mojang itself, but not reliably enough to be the only way there — a licensed
+/// player is exactly who is missing when that proxy is having a bad day.
+pub const UNIVERSAL_SKINS_SOURCE: &str = "https://skinsystem.ely.by,mojang";
 
 /// Builds the classpath for a launch.
 ///

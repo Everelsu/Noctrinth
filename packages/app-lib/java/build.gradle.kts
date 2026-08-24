@@ -52,6 +52,12 @@ tasks.shadowJar {
 
 tasks.named<Test>("test") {
     useJUnitPlatform()
+
+    // The agent reads its configuration from system properties once, when its
+    // classes are first touched, so a class that has already been initialised by
+    // one test would carry that into the next. A JVM per test class keeps each
+    // one's setup its own.
+    forkEvery = 1
 }
 
 tasks.withType<AbstractArchiveTask>().configureEach {

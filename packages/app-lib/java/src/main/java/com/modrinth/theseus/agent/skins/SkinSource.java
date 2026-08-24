@@ -2,14 +2,6 @@ package com.modrinth.theseus.agent.skins;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -23,12 +15,14 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <p>Servers running in offline mode hand out profiles with no {@code textures} property at all, so
  * every player renders as Steve no matter whose account they are on. The launcher points this at a
- * skin system that answers by name — Ely.by by default, which serves its own users' skins and
- * proxies Mojang's for everyone else, so one lookup covers licensed and offline players alike.
+ * skin system that answers by name — Ely.by by default, which serves its own users' skins — with
+ * Mojang itself behind it for the licensed players Ely.by has never heard of.
  *
- * <p>Disabled unless the launcher sets {@code noctrinth.skins.source}. Its value is a base URL, or
- * several separated by commas: they are asked in the order given and the first one that has heard
- * of the player wins, which is how a private skin server can sit in front of the public one.
+ * <p>Disabled unless the launcher sets {@code noctrinth.skins.source}. Its value is a list
+ * separated by commas: the base URL of anything serving {@code /textures/{name}}, or the word
+ * {@code mojang} for Mojang's own name lookup. They are asked in the order given and the first one
+ * that has heard of the player wins, which is how a private skin server can sit in front of the
+ * public one.
  */
 public final class SkinSource {
     private static final String SOURCE_PROPERTY = "noctrinth.skins.source";
@@ -37,24 +31,25 @@ public final class SkinSource {
     /** Minecraft's own limit on how long a name can be. */
     private static final int MAX_NAME_LENGTH = 16;
 
-    private static final int CONNECT_TIMEOUT_MS = 4000;
-    private static final int READ_TIMEOUT_MS = 4000;
-
     /**
      * How long an answer is reused.
      *
-     * <p>A miss is remembered too, and for much less time: whoever the server sent us has no skin
-     * anywhere right now, and asking again for every frame they are on screen would be worse than
-     * being wrong for two minutes.
+     * <p>Short, because changing a skin and rejoining to see it is how everyone does it, and an
+     * answer older than that is the only thing standing in the way. It costs little: the game asks
+     * when a player comes into view, not while they are in it, so this bounds how stale a skin can
+     * be far more than it bounds how often anyone is asked.
+     *
+     * <p>A miss is remembered for longer. Whoever this is has no skin anywhere right now, and the
+     * lookup that found nothing is the expensive one to repeat.
      */
-    private static final long HIT_TTL_MS = 10 * 60 * 1000L;
+    private static final long HIT_TTL_MS = 15 * 1000L;
 
-    private static final long MISS_TTL_MS = 2 * 60 * 1000L;
+    private static final long MISS_TTL_MS = 60 * 1000L;
 
     /** A bound on the cache, so a busy server cannot grow it without end. */
     private static final int MAX_CACHED_NAMES = 512;
 
-    private static final List<String> BASE_URLS = readBaseUrls();
+    private static final List<Source> SOURCES = parseSources(System.getProperty(SOURCE_PROPERTY));
     private static final boolean DEBUG = Boolean.getBoolean(DEBUG_PROPERTY);
 
     private static final Map<String, CachedTextures> CACHE = new ConcurrentHashMap<>();
@@ -62,7 +57,13 @@ public final class SkinSource {
     private SkinSource() {}
 
     public static boolean isEnabled() {
-        return !BASE_URLS.isEmpty();
+        return !SOURCES.isEmpty();
+    }
+
+    /** Somewhere textures can be asked for by name. */
+    interface Source {
+        /** What this source has for the name, or an empty map if it has never heard of them. */
+        Map<String, Texture> textures(String username) throws Exception;
     }
 
     /**
@@ -72,7 +73,7 @@ public final class SkinSource {
      * map and the caller leaves the profile as it was.
      */
     public static Map<String, Texture> lookup(String username) {
-        if (BASE_URLS.isEmpty() || !isPlausibleName(username)) {
+        if (SOURCES.isEmpty() || !isPlausibleName(username)) {
             return Collections.emptyMap();
         }
 
@@ -83,13 +84,13 @@ public final class SkinSource {
         }
 
         Map<String, Texture> textures = Collections.emptyMap();
-        for (final String baseUrl : BASE_URLS) {
+        for (final Source source : SOURCES) {
             try {
-                textures = fetch(baseUrl, username);
+                textures = source.textures(username);
             } catch (Throwable t) {
                 // A skin is not worth interrupting the game over, whatever went
                 // wrong; the next source may still know them.
-                debug("Failed to look up textures for " + username + " at " + baseUrl + ": " + t);
+                debug("Failed to look up textures for " + username + " at " + source + ": " + t);
                 textures = Collections.emptyMap();
             }
 
@@ -102,37 +103,11 @@ public final class SkinSource {
         return textures;
     }
 
-    private static Map<String, Texture> fetch(String baseUrl, String username) throws Exception {
-        final URL url = new URL(baseUrl + "/textures/" + URLEncoder.encode(username, "UTF-8"));
-        final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
-        connection.setReadTimeout(READ_TIMEOUT_MS);
-        connection.setRequestProperty("Accept", "application/json");
-        connection.setRequestProperty("User-Agent", "Noctrinth");
-
-        try {
-            final int status = connection.getResponseCode();
-            // 204 is how Ely.by says "no such player", and any other non-200 is
-            // not something we can read either.
-            if (status != HttpURLConnection.HTTP_OK) {
-                debug("Skin system answered " + status + " for " + username);
-                return Collections.emptyMap();
-            }
-
-            try (InputStream stream = connection.getInputStream();
-                    Reader reader = new InputStreamReader(stream, Charset.forName("UTF-8"))) {
-                return parse(JsonParser.parseReader(reader));
-            }
-        } finally {
-            connection.disconnect();
-        }
-    }
-
     /**
      * Reads the {@code {"SKIN": {"url": ..., "metadata": {...}}}} shape Mojang's own profile
      * endpoint uses, which the skin systems answering by name mirror.
      */
-    private static Map<String, Texture> parse(JsonElement payload) {
+    static Map<String, Texture> readTextures(JsonElement payload) {
         if (payload == null || !payload.isJsonObject()) {
             return Collections.emptyMap();
         }
@@ -202,24 +177,27 @@ public final class SkinSource {
         return true;
     }
 
-    private static List<String> readBaseUrls() {
-        final String configured = System.getProperty(SOURCE_PROPERTY);
+    /** Reads the sources out of what the launcher passed, in the order it listed them. */
+    static List<Source> parseSources(String configured) {
         if (configured == null || configured.trim().isEmpty()) {
             return Collections.emptyList();
         }
 
-        final List<String> urls = new ArrayList<>();
-        for (String base : configured.split(",")) {
-            base = base.trim();
-            while (base.endsWith("/")) {
-                base = base.substring(0, base.length() - 1);
+        final List<Source> sources = new ArrayList<>();
+        for (String entry : configured.split(",")) {
+            entry = entry.trim();
+            while (entry.endsWith("/")) {
+                entry = entry.substring(0, entry.length() - 1);
             }
-            if (!base.isEmpty()) {
-                urls.add(base);
+
+            if (entry.isEmpty()) {
+                continue;
             }
+
+            sources.add(MojangSource.NAME.equalsIgnoreCase(entry) ? new MojangSource() : new SkinSystemSource(entry));
         }
 
-        return Collections.unmodifiableList(urls);
+        return Collections.unmodifiableList(sources);
     }
 
     static void debug(String message) {

@@ -13,34 +13,17 @@
 import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
+import { NOCTRINTH_CHANGELOG_SRC, parseEntries } from './lib/changelog-entries.mjs'
+
 const OUT_DIR = process.argv[2] ?? 'site'
 /** Both changelogs are read straight out of their source files. */
-const NOCTRINTH_SRC = 'apps/app-frontend/src/helpers/noctrinth-changelog.ts'
+const NOCTRINTH_SRC = NOCTRINTH_CHANGELOG_SRC
 const MODRINTH_SRC = 'packages/blog/changelog.ts'
 const LOGO_SRC = 'apps/app/icons/noctrinth.svg'
 /** Screenshots, referenced from entries as `/changelog/screenshots/<file>`. */
 const SCREENSHOT_DIR = 'apps/app-frontend/src/changelog/screenshots'
 /** Where those land on the site, and the prefix an entry has to use. */
 const SCREENSHOT_PATH = 'changelog/screenshots'
-
-/**
- * Pull every `{ ... body: `...` ... }` object out of a changelog TS source
- * and read the fields we care about with separate per-field regexes.
- */
-function parseEntries(src) {
-	const entries = []
-	const entryRe = /\{((?:[^{}]|\{[^{}]*\})*?body:\s*`((?:\\`|[^`])*)`[^}]*)\}/g
-	let m
-	while ((m = entryRe.exec(src)) !== null) {
-		const block = m[1]
-		const body = m[2].replace(/\\`/g, '`').replace(/\\\$\{/g, '${')
-		const version = block.match(/version:\s*['"`]([^'"`]+)['"`]/)?.[1]
-		const date = block.match(/date:\s*['"`]([^'"`]+)['"`]/)?.[1]
-		const product = block.match(/product:\s*['"`]([^'"`]+)['"`]/)?.[1]
-		entries.push({ version, date, body, product })
-	}
-	return entries
-}
 
 const noctrinth = parseEntries(readFileSync(NOCTRINTH_SRC, 'utf-8')).map((entry) => ({
 	...entry,

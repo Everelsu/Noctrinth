@@ -154,7 +154,10 @@ jobs:
           # Guards the mistake this split invites: tagging `-beta.1` while
           # package.json still holds a stable version would build and publish a
           # normal release under a pre-release tag.
+          # VERSION may carry the build number of a rebuild after a `+`; the
+          # release number is the part in front of it.
           VERSION=$(tr -d "[:space:]" < VERSION)
+          VERSION=${VERSION%%+*}
           case "$VERSION" in
             *-*) echo "Building pre-release version $VERSION" ;;
             *)
@@ -213,7 +216,10 @@ jobs:
           set -euo pipefail
           # Match the changelog entry by the package.json version, the same
           # source the crate versions came from — independent of the tag name.
+          # VERSION may carry the build number of a rebuild after a `+`; the
+          # release number is the part in front of it.
           VERSION=$(tr -d "[:space:]" < VERSION)
+          VERSION=${VERSION%%+*}
 
           if node scripts/extract-changelog.mjs "$VERSION" RELEASE_BODY.md; then
             echo "Updating release body for $TAG"

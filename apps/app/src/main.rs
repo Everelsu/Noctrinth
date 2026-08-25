@@ -179,6 +179,36 @@ async fn set_restart_after_pending_update(
 
 // if Tauri app is called with arguments, then those arguments will be treated as commands
 // ie: deep links or filepaths for .mrpacks
+/// Which build of this version this is, baked in at compile time.
+///
+/// It comes from the build number VERSION carries after a `+`, as semver build
+/// metadata: zero for a version as it first went out, and one more for every
+/// rebuild published under that same number.
+#[cfg(feature = "updater")]
+fn noctrinth_patch() -> u32 {
+    env!("NOCTRINTH_PATCH").trim().parse().unwrap_or(0)
+}
+
+/// The same number, as the updater manifest gives it.
+///
+/// It rides in the manifest's notes, which the app itself never shows — the
+/// changelog it displays is the one it shipped with. Anything else, including
+/// a manifest from before this existed, counts as the version's first build.
+#[cfg(feature = "updater")]
+fn manifest_patch(notes: Option<&str>) -> u32 {
+    const MARKER: &str = "noctrinth-patch:";
+
+    notes
+        .and_then(|notes| notes.split(MARKER).nth(1))
+        .map(|rest| rest.trim_start())
+        .and_then(|rest| {
+            let digits: String =
+                rest.chars().take_while(char::is_ascii_digit).collect();
+            digits.parse().ok()
+        })
+        .unwrap_or(0)
+}
+
 fn main() {
     #[cfg(feature = "export-app-events")]
     theseus::export_app_event_bindings(
@@ -224,6 +254,17 @@ fn main() {
                     HeaderValue::from_str(&launcher_user_agent()).unwrap(),
                 )
                 .unwrap()
+                .default_version_comparator(|current, release| {
+                    if release.version != current {
+                        return release.version > current;
+                    }
+
+                    // The same version, rebuilt: a micropatch. Which of the two
+                    // is newer is the number the release carries, not its date
+                    // — a manifest is written minutes after the binaries it
+                    // describes, and a build must never offer itself an update.
+                    manifest_patch(release.notes.as_deref()) > noctrinth_patch()
+                })
                 .build(),
         );
     }

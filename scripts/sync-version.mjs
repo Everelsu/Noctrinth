@@ -7,6 +7,12 @@
  * crates carry their own, so this copies it into both rather than asking
  * anyone to remember three files.
  *
+ * It may carry a build number after a `+`, as semver build metadata: `0.18.2+1`
+ * is the second build published under the number 0.18.2, which is how a release
+ * is patched without moving a version that is upstream's to set. Only the
+ * release number is copied onward — a build number is not something a crate or
+ * a package.json has any use for. See PATCH handling in apps/app/build.rs.
+ *
  * Run with `--check` to verify they already agree without writing anything,
  * which is what CI uses to catch a hand-edited package.json.
  */
@@ -17,11 +23,14 @@ import { fileURLToPath } from 'node:url'
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const checkOnly = process.argv.includes('--check')
 
-const version = readFileSync(join(root, 'VERSION'), 'utf8').trim()
-if (!/^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/.test(version)) {
-	console.error(`VERSION does not hold a semver version: ${JSON.stringify(version)}`)
+const declared = readFileSync(join(root, 'VERSION'), 'utf8').trim()
+if (!/^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?(\+\d+)?$/.test(declared)) {
+	console.error(`VERSION does not hold a semver version: ${JSON.stringify(declared)}`)
 	process.exit(1)
 }
+
+/** The release number, and which build of it this is. */
+const [version, build = '0'] = declared.split('+')
 
 const mismatches = []
 
@@ -67,4 +76,8 @@ if (mismatches.length) {
 	process.exit(1)
 }
 
-if (checkOnly) console.log(`Everything is at ${version}`)
+if (checkOnly) {
+	console.log(
+		build === '0' ? `Everything is at ${version}` : `Everything is at ${version}, build ${build}`,
+	)
+}

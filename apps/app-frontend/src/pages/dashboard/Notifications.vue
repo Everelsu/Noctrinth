@@ -226,10 +226,10 @@ function formatType(t: string) {
 
 <template>
 	<div>
-		<section class="universal-card">
+		<section class="flex flex-col gap-4">
 			<div class="header__row">
 				<div class="header__title">
-					<h2 class="text-2xl">
+					<h2 class="m-0 text-2xl text-contrast">
 						{{
 							formatMessage(showHistory ? messages.headingHistory : messages.headingNotifications)
 						}}
@@ -258,30 +258,32 @@ function formatType(t: string) {
 				:capitalize="false"
 			/>
 
-			<div v-if="!signedIn" class="py-12 text-center">
-				<p class="mt-4 text-lg font-medium text-contrast">
+			<div v-if="!signedIn" class="empty-state">
+				<p class="m-0 text-lg font-medium text-contrast">
 					{{ formatMessage(messages.signInPrompt) }}
 				</p>
-				<p class="text-sm text-secondary">
+				<p class="m-0 text-sm text-secondary">
 					{{ formatMessage(messages.signInPromptBody) }}
 				</p>
 			</div>
 
-			<template v-else-if="paginated.length > 0">
+			<div v-else-if="paginated.length > 0" class="flex flex-col gap-3">
 				<NotificationItem
 					v-for="n in paginated"
 					:key="n.id"
 					:notification="n"
-					class="universal-card recessed"
+					class="notification"
 					@read="onRead"
 					@remove="onRemove"
 					@update:notification="load"
 				/>
-			</template>
+			</div>
 
-			<p v-else>
-				{{ formatMessage(showHistory ? messages.historyEmpty : messages.unreadEmpty) }}
-			</p>
+			<div v-else class="empty-state">
+				<p class="m-0 text-sm text-secondary">
+					{{ formatMessage(showHistory ? messages.historyEmpty : messages.unreadEmpty) }}
+				</p>
+			</div>
 
 			<div v-if="pages > 1" class="flex justify-end">
 				<Pagination :page="page" :count="pages" @switch-page="changePage" />
@@ -291,30 +293,22 @@ function formatType(t: string) {
 </template>
 
 <style lang="scss" scoped>
-.universal-card {
+/* Cards on the page rather than a page inside a card: the same surfaces, radii
+   and spacing as everywhere else in the launcher, which this page had been left
+   behind by. */
+
+.notification {
 	padding: var(--gap-lg);
+	border-radius: var(--radius-xl);
 	background-color: var(--color-bg-raised);
-	border-radius: var(--radius-lg);
-	margin-bottom: var(--gap-md);
-
-	h2 {
-		margin: 0;
-		color: var(--color-contrast);
-	}
-
-	&.recessed {
-		background-color: var(--color-bg-raised);
-		box-shadow: none;
-		padding: var(--gap-md);
-		border: 1px solid var(--color-button-border);
-	}
+	border: none;
+	box-shadow: none;
 }
 
 .header__row {
 	display: flex;
 	align-items: center;
 	gap: var(--gap-sm);
-	margin-bottom: var(--gap-md);
 	flex-wrap: wrap;
 }
 
@@ -325,5 +319,17 @@ function formatType(t: string) {
 	h2 {
 		margin: 0;
 	}
+}
+
+.empty-state {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: var(--gap-sm);
+	padding: 4rem var(--gap-lg);
+	border-radius: var(--radius-xl);
+	background-color: var(--color-bg-raised);
+	text-align: center;
 }
 </style>

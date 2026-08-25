@@ -148,17 +148,17 @@ function onCreated(collection: Collection) {
 </script>
 
 <template>
-	<div class="universal-card">
+	<div class="flex flex-col gap-4">
 		<CollectionCreateModal ref="createModal" @created="onCreated" />
-		<div class="mb-3 flex flex-col gap-3">
+		<div class="flex flex-col gap-3 sm:flex-row sm:items-center">
 			<StyledInput
 				v-model="filterQuery"
 				:icon="SearchIcon"
 				type="text"
 				clearable
 				:placeholder="formatMessage(messages.searchPlaceholder)"
-				wrapper-class="w-full"
-				input-class="!h-12"
+				wrapper-class="w-full sm:flex-1"
+				input-class="!h-10"
 			/>
 			<div class="flex flex-wrap items-center gap-2">
 				<DropdownSelect
@@ -172,46 +172,35 @@ function onCreated(collection: Collection) {
 					<span class="font-semibold text-primary">{{ formatMessage(messages.sortBy) }}</span>
 					<span class="font-semibold text-secondary">{{ selected }}</span>
 				</DropdownSelect>
-				<Button class="ml-auto" type="colored" color="brand" @click="openCreate">
+				<Button type="colored" color="brand" @click="openCreate">
 					<PlusIcon aria-hidden="true" />
 					{{ formatMessage(messages.createNew) }}
 				</Button>
 			</div>
 		</div>
 
-		<div v-if="!signedIn" class="empty-state-container">
-			<div class="py-12 text-center">
-				<BoxIcon class="mx-auto h-12 w-12 text-secondary opacity-50" aria-hidden="true" />
-				<p class="mt-4 text-lg font-medium text-contrast">
-					{{ formatMessage(messages.signInPrompt) }}
-				</p>
-				<p class="text-sm text-secondary">
-					{{ formatMessage(messages.signInPromptBody) }}
-				</p>
-			</div>
+		<div v-if="!signedIn" class="empty-state">
+			<BoxIcon class="h-10 w-10 text-secondary opacity-50" aria-hidden="true" />
+			<p class="m-0 text-lg font-medium text-contrast">
+				{{ formatMessage(messages.signInPrompt) }}
+			</p>
+			<p class="m-0 text-sm text-secondary">
+				{{ formatMessage(messages.signInPromptBody) }}
+			</p>
 		</div>
 
-		<div
-			v-else-if="orderedCollections.length === 0 && !showFollowingCard"
-			class="empty-state-container"
-		>
-			<div class="py-12 text-center">
-				<BoxIcon class="mx-auto h-12 w-12 text-secondary opacity-50" aria-hidden="true" />
-				<p class="mt-4 text-lg font-medium text-contrast">
-					{{ formatMessage(filterQuery ? messages.noMatch : messages.noCollections) }}
-				</p>
-				<p class="text-sm text-secondary">
-					{{ formatMessage(filterQuery ? messages.noMatchBody : messages.noCollectionsBody) }}
-				</p>
-			</div>
+		<div v-else-if="orderedCollections.length === 0 && !showFollowingCard" class="empty-state">
+			<BoxIcon class="h-10 w-10 text-secondary opacity-50" aria-hidden="true" />
+			<p class="m-0 text-lg font-medium text-contrast">
+				{{ formatMessage(filterQuery ? messages.noMatch : messages.noCollections) }}
+			</p>
+			<p class="m-0 text-sm text-secondary">
+				{{ formatMessage(filterQuery ? messages.noMatchBody : messages.noCollectionsBody) }}
+			</p>
 		</div>
 
 		<div v-else class="collections-grid">
-			<button
-				v-if="showFollowingCard"
-				class="universal-card recessed collection"
-				@click="openFollowing"
-			>
+			<button v-if="showFollowingCard" class="collection" @click="openFollowing">
 				<Avatar src="https://cdn.modrinth.com/follow-collection.png" size="64px" />
 				<div class="details">
 					<span class="title">{{ formatMessage(messages.followedProjects) }}</span>
@@ -238,7 +227,7 @@ function onCreated(collection: Collection) {
 			<button
 				v-for="collection in orderedCollections"
 				:key="collection.id"
-				class="universal-card recessed collection"
+				class="collection"
 				@click="openCollection(collection.id)"
 			>
 				<Avatar :src="collection.icon_url" size="64px" />
@@ -285,99 +274,95 @@ function onCreated(collection: Collection) {
 </template>
 
 <style lang="scss" scoped>
-.universal-card {
-	padding: var(--gap-lg);
-	background-color: var(--color-bg-raised);
-	border-radius: var(--radius-lg);
-	margin-bottom: var(--gap-md);
-
-	h2 {
-		margin: 0 0 var(--gap-md) 0;
-		color: var(--color-contrast);
-	}
-
-	&.recessed {
-		background-color: var(--color-bg);
-		box-shadow: none;
-	}
-}
+/* The page is a column of cards now, in the surfaces and radii the rest of the
+   app is built from — it used to be one big raised box with a grid inside it,
+   which is why it read as a page from an older version of the launcher. */
 
 .collections-grid {
 	display: grid;
-	grid-template-columns: repeat(2, 1fr);
+	grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
 	gap: var(--gap-md);
+}
 
-	@media screen and (max-width: 800px) {
-		grid-template-columns: repeat(1, 1fr);
+.collection {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: var(--gap-md);
+	padding: var(--gap-lg);
+	border: none;
+	border-radius: var(--radius-xl);
+	background-color: var(--color-bg-raised);
+	text-align: left;
+	font: inherit;
+	color: inherit;
+	cursor: pointer;
+	transition:
+		background-color 0.15s ease,
+		outline-color 0.15s ease;
+	outline: 2px solid transparent;
+	outline-offset: -2px;
+
+	&:hover,
+	&:focus-visible {
+		background-color: var(--color-button-bg);
+		outline-color: var(--color-brand);
 	}
 
-	.collection {
-		display: grid;
-		grid-template-columns: auto 1fr;
+	.details {
+		display: flex;
+		flex-direction: column;
+		gap: var(--gap-xs);
+		min-width: 0;
+	}
+
+	.title {
+		color: var(--color-contrast);
+		font-weight: 600;
+		font-size: var(--font-size-md);
+	}
+
+	.description {
+		color: var(--color-secondary);
+		font-size: var(--font-size-sm);
+		word-break: break-word;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	.stat-bar {
+		display: flex;
+		align-items: center;
 		gap: var(--gap-md);
-		margin-bottom: 0;
-		border: none;
-		text-align: left;
-		font: inherit;
-		color: inherit;
-		cursor: pointer;
-		transition: outline-color 0.15s ease;
-		outline: 2px solid transparent;
-		outline-offset: -2px;
+		margin-top: var(--gap-xs);
+		flex-wrap: wrap;
+	}
 
-		&:hover {
-			outline-color: var(--color-brand);
-		}
+	.stats {
+		display: flex;
+		align-items: center;
+		gap: var(--gap-xs);
+		color: var(--color-secondary);
+		font-size: var(--font-size-sm);
 
-		.details {
-			display: flex;
-			flex-direction: column;
-			gap: var(--gap-sm);
-			min-width: 0;
-
-			.title {
-				color: var(--color-contrast);
-				font-weight: 600;
-				font-size: var(--font-size-md);
-			}
-
-			.description {
-				color: var(--color-secondary);
-				font-size: var(--font-size-sm);
-				word-break: break-word;
-				display: -webkit-box;
-				-webkit-line-clamp: 2;
-				-webkit-box-orient: vertical;
-				overflow: hidden;
-			}
-
-			.stat-bar {
-				display: flex;
-				align-items: center;
-				gap: var(--gap-md);
-				margin-top: auto;
-				flex-wrap: wrap;
-			}
-
-			.stats {
-				display: flex;
-				align-items: center;
-				gap: var(--gap-xs);
-				color: var(--color-secondary);
-				font-size: var(--font-size-sm);
-
-				svg {
-					color: var(--color-secondary);
-					width: 1rem;
-					height: 1rem;
-				}
-			}
+		svg {
+			color: var(--color-secondary);
+			width: 1rem;
+			height: 1rem;
 		}
 	}
 }
 
-.empty-state-container {
+.empty-state {
 	display: flex;
+	flex-direction: column;
+	align-items: center;
 	justify-content: center;
+	gap: var(--gap-sm);
+	padding: 4rem var(--gap-lg);
+	border-radius: var(--radius-xl);
+	background-color: var(--color-bg-raised);
+	text-align: center;
 }
 </style>

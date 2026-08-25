@@ -7,6 +7,26 @@ fn main() {
     // version is bumped. Rebuild the crate when that package.json changes.
     println!("cargo:rerun-if-changed=../app-frontend/package.json");
 
+    // Which build of this version this is.
+    //
+    // A release can be rebuilt under the number it already went out as — a
+    // micropatch, when the version itself may not move (it is upstream's to
+    // set). Nothing about the version tells those builds apart, so VERSION
+    // carries a build number after a `+`, as semver build metadata: `0.18.2+1`
+    // is the second build of 0.18.2. The updater compares it against the one in
+    // the manifest; see `noctrinth_patch` in main.rs.
+    println!("cargo:rerun-if-changed=../../VERSION");
+    let patch = std::fs::read_to_string("../../VERSION")
+        .ok()
+        .and_then(|version| {
+            version
+                .trim()
+                .split_once('+')
+                .map(|(_, build)| build.to_string())
+        })
+        .unwrap_or_else(|| "0".to_string());
+    println!("cargo:rustc-env=NOCTRINTH_PATCH={patch}");
+
     // Sadly, there is no better way to do it right now
     // You could try parsing source code here and detecting #[tauri::command]
     // But I think it's not worth it

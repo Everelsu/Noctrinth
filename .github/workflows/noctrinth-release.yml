@@ -15,6 +15,20 @@ name: Noctrinth Release
 #      bundles + latest.json. Review it, then publish the draft — updates go
 #      live for existing installs once the release is published.
 #
+# Micropatches:
+#   A version that is already out sometimes needs fixing under the number it
+#   went out as, because the number is upstream's to set and not this fork's to
+#   invent. To ship one:
+#     1. Add a build number to VERSION after a `+`, as semver build metadata:
+#        `0.18.2` -> `0.18.2+1`, then `+2`, and so on. It goes away on its own
+#        when the version moves, since the whole line is rewritten then.
+#     2. Commit, then run this workflow by hand ("Run workflow") with the
+#        release's existing tag and Micropatch ticked.
+#   The bundles on that release are replaced one by one as each build finishes,
+#   and the manifest is stamped with the new build number, which is what makes
+#   installs already on that version take the update — the version alone cannot
+#   tell two builds of it apart. See `manifest_patch` in apps/app/src/main.rs.
+#
 # Note on tags: `git fetch upstream` pulls in Modrinth's own `v*` tags. Those
 # stay local unless you run `git push --tags`; push only the specific release
 # tag (`git push origin v0.17.3`) so an upstream tag never triggers a build.
@@ -41,6 +55,10 @@ on:
       tag:
         description: 'Existing release tag to build (e.g. v0.17.3)'
         required: true
+      micropatch:
+        description: 'Rebuild an already published release under the same version (add a +build to VERSION first)'
+        type: boolean
+        default: false
 
 concurrency:
   group: noctrinth-release-${{ github.ref }}
@@ -154,7 +172,10 @@ jobs:
           # manifest published by this workflow is what every existing install
           # follows, so a `-beta` slipping through would push a beta to
           # everyone. Pre-releases go through noctrinth-prerelease.yml.
+          # VERSION may carry the build number of a rebuild after a `+`; the
+          # release number is the part in front of it.
           VERSION=$(tr -d "[:space:]" < VERSION)
+          VERSION=${VERSION%%+*}
           case "$VERSION" in
             *-*)
               echo "::error::VERSION is at pre-release $VERSION. Use the Noctrinth Pre-release workflow, or set a stable version."
@@ -186,7 +207,10 @@ jobs:
           projectPath: apps/app
           tagName: ${{ github.event.inputs.tag || github.ref_name }}
           releaseName: 'Noctrinth __VERSION__'
-          releaseDraft: true
+          # A micropatch goes onto a release that is already out, so there is
+          # nothing to draft and review: the files on it are replaced one by one
+          # as each build finishes.
+          releaseDraft: ${{ github.event.inputs.micropatch != 'true' }}
           prerelease: false
           args: ${{ matrix.args }}
 
@@ -301,7 +325,10 @@ jobs:
           set -euo pipefail
           # Match the changelog entry by the package.json version, the same
           # source the crate versions came from — independent of the tag name.
+          # VERSION may carry the build number of a rebuild after a `+`; the
+          # release number is the part in front of it.
           VERSION=$(tr -d "[:space:]" < VERSION)
+          VERSION=${VERSION%%+*}
 
           # Pull the matching entry out of noctrinth-changelog.ts. If there
           # isn't one we leave the auto-generated body alone rather than fail
@@ -327,6 +354,15 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+          # Which build of this version this is: the part of VERSION after a
+          # `+`, and 0 when it has none. Read before switching branches — the
+          # `updater` branch holds nothing but the manifest.
+          DECLARED=$(tr -d "[:space:]" < VERSION)
+          case "$DECLARED" in
+            *+*) PATCH=${DECLARED#*+} ;;
+            *) PATCH=0 ;;
+          esac
+
           # Commit latest.json to the dedicated `updater` branch (orphan branch
           # holding only the manifest — the Tauri updater endpoint points here).
           if git ls-remote --exit-code --heads origin updater >/dev/null 2>&1; then
@@ -337,7 +373,13 @@ jobs:
             git rm -rf . >/dev/null 2>&1 || true
           fi
 
-          cp manifest/latest.json latest.json
+          # Stamp the build number into the manifest's notes, which the app
+          # never displays — its changelog is the one it shipped with. It is
+          # what tells two builds of one version apart, so that a rebuild
+          # published under a number that is already out still reaches the
+          # installs that have it. See `manifest_patch` in apps/app/src/main.rs.
+          jq --arg notes "noctrinth-patch:${PATCH:-0}" '.notes = $notes' manifest/latest.json > latest.json
+          echo "Manifest for $TAG marked as build ${PATCH:-0}"
           git add latest.json
           git commit -m "updater: $TAG" || echo "Manifest unchanged"
           git push origin updater

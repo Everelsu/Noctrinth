@@ -24,6 +24,26 @@ pub async fn run(
     instance_id: &str,
     quick_play_type: QuickPlayType,
 ) -> crate::Result<ProcessMetadata> {
+    run_inner(instance_id, quick_play_type, false).await
+}
+
+/// Runs an instance that may already be running, as a second copy of it.
+///
+/// Whoever asks for this has one open and wants another — on another account,
+/// most of the time — so the refusal that keeps a double click from launching
+/// twice is the one thing that has to be out of the way.
+pub async fn run_additional(
+    instance_id: &str,
+    quick_play_type: QuickPlayType,
+) -> crate::Result<ProcessMetadata> {
+    run_inner(instance_id, quick_play_type, true).await
+}
+
+async fn run_inner(
+    instance_id: &str,
+    quick_play_type: QuickPlayType,
+    additional: bool,
+) -> crate::Result<ProcessMetadata> {
     let state = State::get().await?;
     if crate::state::instances::adapters::sqlite::instance_rows::is_instance_quarantined(
         instance_id,
@@ -51,6 +71,7 @@ pub async fn run(
             &default_account,
             false,
             quick_play_type,
+            additional,
         )
         .await;
     }
@@ -64,6 +85,7 @@ pub async fn run(
             &credentials,
             true,
             quick_play_type,
+            additional,
         )
         .await;
     }
@@ -79,6 +101,7 @@ async fn run_credentials(
     credentials: &Credentials,
     elyby: bool,
     quick_play_type: QuickPlayType,
+    additional: bool,
 ) -> crate::Result<ProcessMetadata> {
     let state = State::get().await?;
     let settings = Settings::get(&state.pool).await?;
@@ -318,6 +341,7 @@ async fn run_credentials(
         post_exit_hook,
         &context,
         quick_play_type,
+        additional,
     )
     .await
 }

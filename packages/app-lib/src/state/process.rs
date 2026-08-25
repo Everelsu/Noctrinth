@@ -47,37 +47,82 @@ impl LogRingBuffer {
     fn get_all(&self) -> Vec<String> {
         self.lines.iter().cloned().collect()
     }
-
-    fn clear(&mut self) {
-        self.lines.clear();
-    }
 }
 
+/// Live output, kept for each copy of an instance separately.
+///
+/// One instance can be running twice, and two games writing into one buffer is
+/// a log nobody can read. Keyed by the process, therefore, with the newest one
+/// of each instance remembered below so that a page which knows only the
+/// instance still has something to show — a log outlives the game that wrote
+/// it, and is worth reading after it has closed.
 static LOG_BUFFERS: LazyLock<DashMap<String, LogRingBuffer>> =
     LazyLock::new(DashMap::new);
 
-pub fn push_log_line(instance_id: &str, line: String) {
+static INSTANCE_PROCESSES: LazyLock<DashMap<String, Vec<String>>> =
+    LazyLock::new(DashMap::new);
+
+pub fn push_log_line(process_uuid: &str, line: String) {
     LOG_BUFFERS
-        .entry(instance_id.to_string())
+        .entry(process_uuid.to_string())
         .or_insert_with(LogRingBuffer::new)
         .push(line);
 }
 
-pub fn get_log_buffer(instance_id: &str) -> Vec<String> {
+pub fn get_log_buffer(process_uuid: &str) -> Vec<String> {
     LOG_BUFFERS
-        .get(instance_id)
+        .get(process_uuid)
         .map(|buf| buf.get_all())
         .unwrap_or_default()
 }
 
-pub fn clear_log_buffer(instance_id: &str) {
-    if let Some(mut buf) = LOG_BUFFERS.get_mut(instance_id) {
-        buf.clear();
+/// The live output of the copy of this instance that started last.
+pub fn get_instance_log_buffer(instance_id: &str) -> Vec<String> {
+    INSTANCE_PROCESSES
+        .get(instance_id)
+        .and_then(|uuids| uuids.last().map(|uuid| get_log_buffer(uuid)))
+        .unwrap_or_default()
+}
+
+pub fn remove_log_buffer(process_uuid: &str) {
+    LOG_BUFFERS.remove(process_uuid);
+}
+
+/// Forgets the live output of every copy of an instance.
+pub fn remove_instance_log_buffers(instance_id: &str) {
+    if let Some((_, uuids)) = INSTANCE_PROCESSES.remove(instance_id) {
+        for uuid in uuids {
+            remove_log_buffer(&uuid);
+        }
     }
 }
 
-pub fn remove_log_buffer(instance_id: &str) {
-    LOG_BUFFERS.remove(instance_id);
+/// Takes note of a copy that has just started.
+///
+/// A launch that is not a second copy is a fresh start, and what the last one
+/// said goes with it — which is what starting the game has always done to the
+/// live log. A second copy joins whatever is already there instead: the game
+/// that wrote it is still running and still being read.
+pub fn note_new_process(
+    instance_id: &str,
+    process_uuid: &str,
+    additional: bool,
+) {
+    if additional {
+        INSTANCE_PROCESSES
+            .entry(instance_id.to_string())
+            .or_default()
+            .push(process_uuid.to_string());
+        return;
+    }
+
+    if let Some(previous) = INSTANCE_PROCESSES
+        .insert(instance_id.to_string(), vec![process_uuid.to_string()])
+    {
+        for uuid in previous {
+            remove_log_buffer(&uuid);
+        }
+    }
 }
 
 pub struct ProcessManager {
@@ -103,6 +148,10 @@ impl ProcessManager {
         instance_id: &str,
         instance_path: &str,
         instance_name: &str,
+        account_name: &str,
+        // Whether this instance is already running and this is a second copy of
+        // it, whose log joins the one already being written.
+        additional: bool,
         mut mc_command: Command,
         post_exit_command: Option<String>,
         post_exit_env_vars: Vec<(String, String)>,
@@ -131,6 +180,7 @@ impl ProcessManager {
                 instance_id: instance_id.to_string(),
                 instance_path: instance_path.to_string(),
                 instance_name: instance_name.to_string(),
+                account_name: account_name.to_string(),
             },
             child: mc_proc,
             rpc_server,
@@ -155,13 +205,18 @@ impl ProcessManager {
 
         let log_path = logs_folder.join(LAUNCHER_LOG_PATH);
 
-        clear_log_buffer(instance_id);
+        // An instance has one log file, so a second copy of it joins the one
+        // already being written rather than starting it over: the copy running
+        // now is still writing there, and that log is not this one's to throw
+        // away. Its live output, on the other hand, is its own.
+        note_new_process(instance_id, &metadata.uuid.to_string(), additional);
 
         {
             let mut log_file = OpenOptions::new()
                 .write(true)
                 .create(true)
-                .truncate(true)
+                .append(additional)
+                .truncate(!additional)
                 .open(&log_path)
                 .map_err(|e| IOError::with_path(e, &log_path))?;
 
@@ -175,6 +230,15 @@ impl ProcessManager {
             .map_err(|e| IOError::with_path(e, &log_path))?;
             writeln!(log_file, "# Instance: {instance_path} \n")
                 .map_err(|e| IOError::with_path(e, &log_path))?;
+            if additional {
+                // Two games write here from now on, and whose line is whose is
+                // otherwise anybody's guess.
+                writeln!(
+                    log_file,
+                    "# A second copy, signed in as {account_name}"
+                )
+                .map_err(|e| IOError::with_path(e, &log_path))?;
+            }
             writeln!(log_file).map_err(|e| IOError::with_path(e, &log_path))?;
         }
 
@@ -183,10 +247,12 @@ impl ProcessManager {
 
             let instance_id = metadata.instance_id.clone();
             let instance_path = metadata.instance_path.clone();
+            let process_uuid = metadata.uuid.to_string();
             tokio::spawn(async move {
                 Process::process_output(
                     &instance_id,
                     &instance_path,
+                    &process_uuid,
                     stdout,
                     log_path_clone,
                     xml_logging,
@@ -200,10 +266,12 @@ impl ProcessManager {
 
             let instance_id = metadata.instance_id.clone();
             let instance_path = metadata.instance_path.clone();
+            let process_uuid = metadata.uuid.to_string();
             tokio::spawn(async move {
                 Process::process_output(
                     &instance_id,
                     &instance_path,
+                    &process_uuid,
                     stderr,
                     log_path_clone,
                     xml_logging,
@@ -285,6 +353,11 @@ pub struct ProcessMetadata {
     pub instance_id: String,
     pub instance_path: String,
     pub instance_name: String,
+    /// Who the game was started as.
+    ///
+    /// One instance can be running more than once, on a different account each
+    /// time, and then the name is the only thing telling the two apart.
+    pub account_name: String,
     pub start_time: DateTime<Utc>,
 }
 
@@ -314,6 +387,7 @@ impl Process {
     async fn process_output<R>(
         instance_id: &str,
         _instance_path: &str,
+        process_uuid: &str,
         reader: R,
         log_path: impl AsRef<Path>,
         xml_logging: bool,
@@ -440,6 +514,7 @@ impl Process {
 
                                 Self::emit_log4j_event(
                                     instance_id,
+                                    process_uuid,
                                     &current_event,
                                 );
                             }
@@ -484,6 +559,7 @@ impl Process {
 
                                     Self::emit_log4j_event(
                                         instance_id,
+                                        process_uuid,
                                         &current_event,
                                     );
                                 }
@@ -510,7 +586,11 @@ impl Process {
                                     e
                                 );
                             }
-                            Self::emit_legacy_log(instance_id, &text);
+                            Self::emit_legacy_log(
+                                instance_id,
+                                process_uuid,
+                                &text,
+                            );
                         }
                     }
                     Ok(Event::CData(e)) => {
@@ -537,7 +617,11 @@ impl Process {
                     if let Err(e) = Self::append_to_log_file(&log_path, &line) {
                         tracing::warn!("Failed to write to log file: {}", e);
                     }
-                    Self::emit_legacy_log(instance_id, line.trim_ascii_end());
+                    Self::emit_legacy_log(
+                        instance_id,
+                        process_uuid,
+                        line.trim_ascii_end(),
+                    );
                     if let Err(e) = Self::maybe_handle_old_server_join_logging(
                         instance_id,
                         line.trim_ascii_end(),
@@ -596,13 +680,17 @@ impl Process {
         ))
     }
 
-    fn emit_log4j_event(instance_id: &str, event: &Log4jEvent) {
+    fn emit_log4j_event(
+        instance_id: &str,
+        process_uuid: &str,
+        event: &Log4jEvent,
+    ) {
         if let Some(formatted) = Self::format_log4j_entry(event) {
-            push_log_line(instance_id, formatted.trim_end().to_string());
+            push_log_line(process_uuid, formatted.trim_end().to_string());
         }
         if let Some(ref throwable) = event.throwable {
             for line in throwable.lines().filter(|l| !l.is_empty()) {
-                push_log_line(instance_id, line.to_string());
+                push_log_line(process_uuid, line.to_string());
             }
         }
 
@@ -611,23 +699,25 @@ impl Process {
             let event_state = crate::EventState::get();
             let _ = event_state.send(crate::event::AppEvent::Log(LogPayload {
                 instance_id: instance_id.to_string(),
+                process_uuid: process_uuid.to_string(),
                 event: LogEvent::Log4j(event.clone()),
             }));
         }
         #[cfg(not(feature = "tauri"))]
         {
-            let _ = (instance_id, event);
+            let _ = (instance_id, process_uuid, event);
         }
     }
 
-    fn emit_legacy_log(instance_id: &str, message: &str) {
-        push_log_line(instance_id, message.to_string());
+    fn emit_legacy_log(instance_id: &str, process_uuid: &str, message: &str) {
+        push_log_line(process_uuid, message.to_string());
 
         #[cfg(feature = "tauri")]
         {
             let event_state = crate::EventState::get();
             let _ = event_state.send(crate::event::AppEvent::Log(LogPayload {
                 instance_id: instance_id.to_string(),
+                process_uuid: process_uuid.to_string(),
                 event: LogEvent::Legacy {
                     message: message.to_string(),
                 },
@@ -635,7 +725,7 @@ impl Process {
         }
         #[cfg(not(feature = "tauri"))]
         {
-            let _ = (instance_id, message);
+            let _ = (instance_id, process_uuid, message);
         }
     }
 

@@ -54,7 +54,8 @@ pub use self::projects::{
     update_managed_modrinth_version, update_project,
 };
 pub use self::run::{
-    QuickPlayType, kill, run, try_update_playtime_by_instance_id,
+    QuickPlayType, kill, run, run_additional,
+    try_update_playtime_by_instance_id,
 };
 pub(crate) use self::shared::{
     CONFIG_BUNDLE_FILE_TYPE, CONFIG_DIRECTORY, CONFIG_FILE_EXTENSIONS,

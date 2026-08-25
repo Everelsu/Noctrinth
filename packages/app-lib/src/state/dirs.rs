@@ -13,6 +13,8 @@ pub const CACHES_FOLDER_NAME: &str = "caches";
 pub const LAUNCHER_LOGS_FOLDER_NAME: &str = "launcher_logs";
 pub const INSTANCES_FOLDER_NAME: &str = "profiles";
 pub const METADATA_FOLDER_NAME: &str = "meta";
+/// Where a player can drop a `.png` to give somebody a skin by hand.
+pub const PLAYER_SKINS_FOLDER_NAME: &str = "player_skins";
 
 #[derive(Debug)]
 pub struct DirectoryInfo {
@@ -184,6 +186,16 @@ impl DirectoryInfo {
     #[inline]
     pub fn caches_dir(&self) -> PathBuf {
         self.config_dir.join(CACHES_FOLDER_NAME)
+    }
+
+    /// Skins put there by hand, for players no skin system knows.
+    ///
+    /// One `.png` per player, named after them. It is the launcher's, not an
+    /// instance's, because whose skin somebody has does not change between one
+    /// instance and the next.
+    #[inline]
+    pub fn player_skins_dir(&self) -> PathBuf {
+        self.config_dir.join(PLAYER_SKINS_FOLDER_NAME)
     }
 
     /// Get path from environment variable

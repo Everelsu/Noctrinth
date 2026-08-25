@@ -473,8 +473,20 @@ pub async fn delete_logs_by_filename(
 pub async fn get_live_log_buffer(
     instance_id: &str,
 ) -> crate::Result<CensoredString> {
+    censor_lines(crate::state::get_instance_log_buffer(instance_id)).await
+}
+
+/// The live output of one copy of an instance, for a page showing each copy of
+/// it on its own.
+#[tracing::instrument]
+pub async fn get_live_log_buffer_for_process(
+    process_uuid: &str,
+) -> crate::Result<CensoredString> {
+    censor_lines(crate::state::get_log_buffer(process_uuid)).await
+}
+
+async fn censor_lines(lines: Vec<String>) -> crate::Result<CensoredString> {
     let state = State::get().await?;
-    let lines = crate::state::get_log_buffer(instance_id);
     let joined = lines.join("\n");
     let compacted = compact_duplicate_lines(&joined);
 
@@ -488,7 +500,12 @@ pub async fn get_live_log_buffer(
 }
 
 pub fn clear_live_log_buffer(instance_id: &str) {
-    crate::state::remove_log_buffer(instance_id);
+    crate::state::remove_instance_log_buffers(instance_id);
+}
+
+/// Forgets the live output of one copy of an instance.
+pub fn clear_live_log_buffer_for_process(process_uuid: &str) {
+    crate::state::remove_log_buffer(process_uuid);
 }
 
 #[tracing::instrument]

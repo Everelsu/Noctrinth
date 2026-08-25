@@ -857,12 +857,20 @@ pub async fn instance_get_pack_export_candidates(
 pub async fn instance_run(
     instance_id: &str,
     server_address: Option<String>,
+    additional: Option<bool>,
 ) -> Result<ProcessMetadata> {
     let quick_play = match server_address {
         Some(addr) => QuickPlayType::Server(ServerAddress::Unresolved(addr)),
         None => QuickPlayType::None,
     };
-    Ok(theseus::instance::run(instance_id, quick_play).await?)
+
+    // A second copy of an instance that is already running is something to ask
+    // for, so that a double-clicked play button is still only one game.
+    Ok(if additional.unwrap_or(false) {
+        theseus::instance::run_additional(instance_id, quick_play).await?
+    } else {
+        theseus::instance::run(instance_id, quick_play).await?
+    })
 }
 
 #[tauri::command]

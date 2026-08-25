@@ -402,11 +402,15 @@ export async function get_pack_export_candidates(
 
 // Run Minecraft using an instance
 // Returns PID of child
+//
+// `additional` asks for a second copy of an instance that is already running,
+// which is otherwise refused so that a double-clicked play button is one game.
 export async function run(
 	instanceId: string,
 	serverAddress: string | null = null,
+	additional = false,
 ): Promise<unknown> {
-	return await invoke('plugin:instance|instance_run', { instanceId, serverAddress })
+	return await invoke('plugin:instance|instance_run', { instanceId, serverAddress, additional })
 }
 
 export async function kill(instanceId: string): Promise<void> {

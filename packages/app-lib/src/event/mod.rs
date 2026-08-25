@@ -596,6 +596,11 @@ mod log_types {
     #[serde_binhum::serde_binhum]
     pub struct LogPayload {
         pub instance_id: String,
+        /// Which copy of the instance said this.
+        ///
+        /// One instance can be running more than once, and each copy has a log
+        /// of its own to be read on its own.
+        pub process_uuid: String,
         #[serde(flatten)]
         #[cfg_attr(feature = "export-ts", ts(flatten))]
         pub event: LogEvent,

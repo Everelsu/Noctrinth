@@ -138,6 +138,19 @@
 					formatMessage(messages.starting)
 				}}</Button>
 
+				<!-- Outside the chain above, so that it stands beside Stop rather than instead of it. -->
+				<IconButton
+					v-if="playing && !isInstalling"
+					v-tooltip="formatMessage(messages.playAgain)"
+					size="xl"
+					:label="formatMessage(messages.playAgain)"
+					native-type="button"
+					:disabled="loading"
+					@click="emit('playAgain')"
+				>
+					<PlayIcon />
+				</IconButton>
+
 				<IconButton
 					v-tooltip="formatMessage(messages.instanceSettings)"
 					size="xl"
@@ -250,6 +263,10 @@ const messages = defineMessages({
 		id: 'instance.action.stopping',
 		defaultMessage: 'Stopping...',
 	},
+	playAgain: {
+		id: 'instance.action.play-again',
+		defaultMessage: 'Launch another copy',
+	},
 	sharedInstanceTooltip: {
 		id: 'instance.shared-instance.tooltip',
 		defaultMessage: "This instance's content is being managed by someone else.",
@@ -296,6 +313,7 @@ const emit = defineEmits<{
 	repair: []
 	stop: []
 	play: []
+	playAgain: []
 	playServer: []
 	settings: []
 	openFolder: []

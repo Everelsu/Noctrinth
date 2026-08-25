@@ -2,6 +2,12 @@ package com.modrinth.theseus.agent.skins;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -10,10 +16,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Looks a player's textures up by name, for players the server did not supply any for.
@@ -31,6 +39,8 @@ import java.util.concurrent.TimeUnit;
  */
 public final class SkinSource {
     private static final String SOURCE_PROPERTY = "noctrinth.skins.source";
+    private static final String LOCAL_PROPERTY = "noctrinth.skins.local";
+    private static final String CACHE_PROPERTY = "noctrinth.skins.cache";
     private static final String DEBUG_PROPERTY = "modrinth.debugAgent";
 
     /** Minecraft's own limit on how long a name can be. */
@@ -65,8 +75,29 @@ public final class SkinSource {
      */
     private static final long KEEP_MS = 30 * 60 * 1000L;
 
+    /**
+     * The longest the game is ever made to wait on a name nothing is known about.
+     *
+     * <p>Each source has its own timeouts, and a bad minute on the network can put them end to end:
+     * a source that will not connect, then one that will not answer, is ten seconds of a frozen
+     * frame on the older versions. Past this the lookup is left running on its own and the player
+     * is Steve for one sighting — by the next one the answer is in.
+     */
+    private static final long FIRST_WAIT_MS = 5 * 1000L;
+
     /** A bound on the cache, so a busy server cannot grow it without end. */
     private static final int MAX_CACHED_NAMES = 512;
+
+    /**
+     * How old an answer written to disk may be and still be worth reading back.
+     *
+     * <p>Generous, because reading one is what makes the first sighting of a session instant, and
+     * it is only ever handed over as something to look at again — never as the last word.
+     */
+    private static final long DISK_TTL_MS = 24 * 60 * 60 * 1000L;
+
+    /** How often the file on disk is rewritten while the game is running. */
+    private static final long SAVE_EVERY_MS = 60 * 1000L;
 
     private static final List<Source> SOURCES = parseSources(System.getProperty(SOURCE_PROPERTY));
     private static final boolean DEBUG = Boolean.getBoolean(DEBUG_PROPERTY);
@@ -83,9 +114,9 @@ public final class SkinSource {
      * queue and a silent discard, because a refresh that cannot be run right now is one the next
      * sighting will ask for again anyway.
      */
-    private static final Executor REFRESHERS = new ThreadPoolExecutor(
+    private static final ExecutorService REFRESHERS = new ThreadPoolExecutor(
             0,
-            2,
+            4,
             30L,
             TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(64),
@@ -94,7 +125,20 @@ public final class SkinSource {
                 thread.setDaemon(true);
                 return thread;
             },
-            new ThreadPoolExecutor.DiscardPolicy());
+            // Refused rather than dropped, so whoever asked knows to do it itself.
+            new ThreadPoolExecutor.AbortPolicy());
+
+    /** When the file on disk was last written, and whether it is behind what is in memory. */
+    private static volatile long lastSaved;
+
+    private static volatile boolean dirty;
+
+    static {
+        restore();
+        if (cacheFile() != null) {
+            Runtime.getRuntime().addShutdownHook(new Thread(SkinSource::save, "noctrinth-skins-save"));
+        }
+    }
 
     private SkinSource() {}
 
@@ -130,7 +174,33 @@ public final class SkinSource {
             return cached.textures;
         }
 
-        return fetch(username);
+        return fetchWithin(username);
+    }
+
+    /**
+     * Asks about a name nobody has asked about before, without letting the game wait for ever.
+     *
+     * <p>The work runs on this class's own threads rather than the caller's, so that giving up on
+     * it is possible at all: what is abandoned here still finishes, and is still written down.
+     */
+    private static Map<String, Texture> fetchWithin(String username) {
+        final FutureTask<Map<String, Texture>> task = new FutureTask<>(() -> fetch(username));
+        try {
+            REFRESHERS.execute(task);
+        } catch (Throwable rejected) {
+            // Every thread is busy; there is nowhere to run this but here.
+            task.run();
+        }
+
+        try {
+            return task.get(FIRST_WAIT_MS, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException slow) {
+            debug("Gave up waiting on " + username + "; the lookup is still going");
+        } catch (Throwable t) {
+            debug("Failed to look up " + username + ": " + t);
+        }
+
+        return Collections.emptyMap();
     }
 
     /**
@@ -180,6 +250,11 @@ public final class SkinSource {
             REFRESHERS.execute(() -> {
                 try {
                     fetch(username);
+                    // On this thread rather than the game's, and rarely: whoever
+                    // else is asking is waiting to draw somebody.
+                    if (dirty && System.currentTimeMillis() - lastSaved > SAVE_EVERY_MS) {
+                        save();
+                    }
                 } finally {
                     IN_FLIGHT.remove(username);
                 }
@@ -239,7 +314,128 @@ public final class SkinSource {
 
         CACHE.put(
                 username,
-                new CachedTextures(textures, now + (textures.isEmpty() ? FRESH_MISS_MS : FRESH_MS), now + KEEP_MS));
+                new CachedTextures(
+                        textures, now, now + (textures.isEmpty() ? FRESH_MISS_MS : FRESH_MS), now + KEEP_MS));
+
+        if (!textures.isEmpty()) {
+            dirty = true;
+        }
+    }
+
+    private static Path cacheFile() {
+        final String configured = System.getProperty(CACHE_PROPERTY);
+        return configured == null || configured.trim().isEmpty() ? null : Paths.get(configured.trim());
+    }
+
+    /**
+     * Reads back what the last run knew.
+     *
+     * <p>Everything read is stale on arrival, by design: it goes on screen the moment somebody is
+     * looked at and is checked again behind the game's back. That is the difference between a
+     * session that starts with everyone as Steve for a second and one that does not.
+     */
+    private static void restore() {
+        final Path file = cacheFile();
+        if (file == null) {
+            return;
+        }
+
+        try {
+            if (!Files.isRegularFile(file)) {
+                return;
+            }
+
+            final JsonElement root =
+                    JsonParser.parseString(new String(Files.readAllBytes(file), StandardCharsets.UTF_8));
+            if (root == null || !root.isJsonObject()) {
+                return;
+            }
+
+            final long now = System.currentTimeMillis();
+            for (final Map.Entry<String, JsonElement> entry :
+                    root.getAsJsonObject().entrySet()) {
+                if (!entry.getValue().isJsonObject()) {
+                    continue;
+                }
+
+                final JsonObject remembered = entry.getValue().getAsJsonObject();
+                final JsonElement savedAt = remembered.get("savedAt");
+                if (savedAt == null || !savedAt.isJsonPrimitive() || now - savedAt.getAsLong() > DISK_TTL_MS) {
+                    continue;
+                }
+
+                final Map<String, Texture> textures = readTextures(remembered.get("textures"));
+                if (!textures.isEmpty()) {
+                    CACHE.put(entry.getKey(), new CachedTextures(textures, savedAt.getAsLong(), 0L, now + KEEP_MS));
+                }
+            }
+
+            debug("Remembered " + CACHE.size() + " skins from the last run");
+        } catch (Throwable t) {
+            debug("Could not read back what was remembered: " + t);
+        }
+    }
+
+    /** Writes what is worth remembering, whole, over what was there. */
+    private static synchronized void save() {
+        final Path file = cacheFile();
+        if (file == null) {
+            return;
+        }
+
+        try {
+            final JsonObject root = new JsonObject();
+            for (final Map.Entry<String, CachedTextures> entry : CACHE.entrySet()) {
+                // A name nothing had a skin for is not worth carrying over: it
+                // costs a lookup either way, and it may not be true tomorrow.
+                if (entry.getValue().textures.isEmpty()) {
+                    continue;
+                }
+
+                final JsonObject remembered = new JsonObject();
+                remembered.addProperty("savedAt", entry.getValue().savedAt);
+                remembered.add("textures", asJson(entry.getValue().textures));
+                root.add(entry.getKey(), remembered);
+            }
+
+            final Path parent = file.getParent();
+            if (parent != null) {
+                Files.createDirectories(parent);
+            }
+
+            // Through a temporary file, so a game that dies mid-write leaves the
+            // last good one behind rather than half of this one.
+            final Path partial = file.resolveSibling(file.getFileName() + ".part");
+            Files.write(partial, root.toString().getBytes(StandardCharsets.UTF_8));
+            Files.move(partial, file, StandardCopyOption.REPLACE_EXISTING);
+
+            lastSaved = System.currentTimeMillis();
+            dirty = false;
+        } catch (Throwable t) {
+            debug("Could not write down what was looked up: " + t);
+        }
+    }
+
+    /** The same shape that is read back, and the one the skin systems answer in. */
+    private static JsonObject asJson(Map<String, Texture> textures) {
+        final JsonObject json = new JsonObject();
+        for (final Map.Entry<String, Texture> entry : textures.entrySet()) {
+            final JsonObject texture = new JsonObject();
+            texture.addProperty("url", entry.getValue().url);
+
+            if (!entry.getValue().metadata.isEmpty()) {
+                final JsonObject metadata = new JsonObject();
+                for (final Map.Entry<String, String> value :
+                        entry.getValue().metadata.entrySet()) {
+                    metadata.addProperty(value.getKey(), value.getValue());
+                }
+                texture.add("metadata", metadata);
+            }
+
+            json.add(entry.getKey(), texture);
+        }
+
+        return json;
     }
 
     /**
@@ -266,13 +462,24 @@ public final class SkinSource {
         return true;
     }
 
-    /** Reads the sources out of what the launcher passed, in the order it listed them. */
+    /**
+     * Reads the sources out of what the launcher passed, in the order it listed them.
+     *
+     * <p>The folder of skins put there by hand comes before all of them, so that dropping a file
+     * in it settles the matter for that player whatever any skin system has to say.
+     */
     static List<Source> parseSources(String configured) {
-        if (configured == null || configured.trim().isEmpty()) {
-            return Collections.emptyList();
+        final List<Source> sources = new ArrayList<>();
+
+        final String local = System.getProperty(LOCAL_PROPERTY);
+        if (local != null && !local.trim().isEmpty()) {
+            sources.add(new LocalSource(Paths.get(local.trim())));
         }
 
-        final List<Source> sources = new ArrayList<>();
+        if (configured == null || configured.trim().isEmpty()) {
+            return Collections.unmodifiableList(sources);
+        }
+
         for (String entry : configured.split(",")) {
             entry = entry.trim();
             while (entry.endsWith("/")) {
@@ -309,13 +516,17 @@ public final class SkinSource {
     private static final class CachedTextures {
         final Map<String, Texture> textures;
 
+        /** When this was looked up, which is what goes on disk and ages it there. */
+        final long savedAt;
+
         /** Until when this is the answer, and until when it is still an answer. */
         final long freshUntil;
 
         final long usableUntil;
 
-        CachedTextures(Map<String, Texture> textures, long freshUntil, long usableUntil) {
+        CachedTextures(Map<String, Texture> textures, long savedAt, long freshUntil, long usableUntil) {
             this.textures = textures;
+            this.savedAt = savedAt;
             this.freshUntil = freshUntil;
             this.usableUntil = usableUntil;
         }

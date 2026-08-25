@@ -46,6 +46,7 @@
 				@repair="() => repairInstance()"
 				@stop="() => stopInstance('InstancePage')"
 				@play="() => startInstance('InstancePage')"
+				@play-again="() => launchAnotherCopy('InstancePage')"
 				@play-server="() => handlePlayServer()"
 				@settings="() => settingsModal?.show()"
 				@open-folder="() => instance && showInstanceInFolder(instance.id)"
@@ -639,6 +640,35 @@ const startInstance = async (context: string) => {
 	}
 
 	await launchInstance(context)
+}
+
+/**
+ * Launches an instance that is already running a second time.
+ *
+ * <p>Which is worth doing on a second account, and is the only reason to: the
+ * account the game starts as is whichever one is signed in now, so switching
+ * between two of them and pressing this is how somebody ends up in the same
+ * world twice.
+ */
+const launchAnotherCopy = async (context: string) => {
+	const currentInstance = instance.value
+	if (!currentInstance || currentInstance.quarantined) return
+	if (loading.value || !playing.value) return
+
+	loading.value = true
+	try {
+		await run(currentInstance.id, null, true)
+		await processesQuery.refetch()
+	} catch (err) {
+		handleSevereError(err, { instanceId: currentInstance.id })
+	}
+	loading.value = false
+
+	trackEvent('InstanceStart', {
+		loader: currentInstance.loader,
+		game_version: currentInstance.game_version,
+		source: context,
+	})
 }
 
 const stopInstance = async (context: string) => {

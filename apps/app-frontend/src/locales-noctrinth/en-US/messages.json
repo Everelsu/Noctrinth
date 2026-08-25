@@ -728,6 +728,15 @@
 	"ely-skins.section-title": {
 		"message": "Ely.by skin"
 	},
+	"instance.action.play-again": {
+		"message": "Launch another copy"
+	},
+	"instance.console.copy-started-at": {
+		"message": "started {time}"
+	},
+	"instance.console.copy-unknown-account": {
+		"message": "Unknown account"
+	},
 	"instance.settings.tabs.java.modern-java": {
 		"message": "Modern Java"
 	},

@@ -881,6 +881,9 @@ pub async fn launch_minecraft(
     post_exit_hook: Option<String>,
     context: &InstanceLaunchContext,
     mut quick_play_type: QuickPlayType,
+    // Whether this is a second copy of an instance that is already running,
+    // asked for on purpose.
+    additional: bool,
 ) -> crate::Result<ProcessMetadata> {
     let instance = &context.instance;
     let content_set = &context.applied_content_set;
@@ -1021,13 +1024,20 @@ pub async fn launch_minecraft(
 
     // Check if instance has a running process, and reject running the command if it does
     // Done late so a quick double call doesn't launch two instances
-    let existing_processes = process::get_by_instance_id(&instance.id).await?;
-    if let Some(process) = existing_processes.first() {
-        return Err(crate::ErrorKind::LauncherError(format!(
-            "Instance {} is already running as process {}",
-            instance.id, process.uuid
-        ))
-        .as_error());
+    //
+    // Unless a second copy is what was asked for: one instance on two accounts
+    // at once is a thing people do, and only the caller knows which of the two
+    // this is.
+    if !additional {
+        let existing_processes =
+            process::get_by_instance_id(&instance.id).await?;
+        if let Some(process) = existing_processes.first() {
+            return Err(crate::ErrorKind::LauncherError(format!(
+                "Instance {} is already running as process {}",
+                instance.id, process.uuid
+            ))
+            .as_error());
+        }
     }
 
     let natives_dir = state.directories.version_natives_dir(&version_jar);
@@ -1079,10 +1089,24 @@ pub async fn launch_minecraft(
 
     // Off leaves the game exactly as vanilla has it: whatever textures the
     // server sent, and Steve for everyone it sent none for.
-    let skin_source = crate::state::Settings::get(&state.pool)
+    let skins = if crate::state::Settings::get(&state.pool)
         .await?
         .universal_skins
-        .then_some(args::UNIVERSAL_SKINS_SOURCE);
+    {
+        let local_dir = state.directories.player_skins_dir();
+        // Made whether or not anything is in it, so that whoever goes looking
+        // for somewhere to put a skin finds it already there.
+        io::create_dir_all(&local_dir).await?;
+
+        Some(args::SkinLookup {
+            sources: args::UNIVERSAL_SKINS_SOURCE,
+            player_name: &credentials.offline_profile.name,
+            local_dir,
+            cache_file: state.directories.caches_dir().join("skins.json"),
+        })
+    } else {
+        None
+    };
 
     command.args(
         args::get_jvm_arguments(
@@ -1118,8 +1142,7 @@ pub async fn launch_minecraft(
                 .as_ref()
                 .and_then(|x| x.get(&LoggingSide::Client)),
             rpc_server.address(),
-            skin_source,
-            &credentials.offline_profile.name,
+            skins.as_ref(),
         )?
         .into_iter(),
     );
@@ -1259,6 +1282,8 @@ pub async fn launch_minecraft(
             &instance.id,
             &instance.path,
             &instance.name,
+            &credentials.offline_profile.name,
+            additional,
             command,
             post_exit_hook,
             env_args,

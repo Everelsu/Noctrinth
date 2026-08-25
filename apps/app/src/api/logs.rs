@@ -22,7 +22,9 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
             logs_delete_logs_by_filename,
             logs_get_latest_log_cursor,
             logs_get_live_log_buffer,
+            logs_get_live_log_buffer_for_process,
             logs_clear_live_log_buffer,
+            logs_clear_live_log_buffer_for_process,
         ])
         .build()
 }
@@ -91,9 +93,26 @@ pub async fn logs_get_live_log_buffer(
     Ok(logs::get_live_log_buffer(instance_id).await?)
 }
 
+/// Get the live log buffer of one copy of an instance.
+#[tauri::command]
+pub async fn logs_get_live_log_buffer_for_process(
+    process_uuid: &str,
+) -> Result<CensoredString> {
+    Ok(logs::get_live_log_buffer_for_process(process_uuid).await?)
+}
+
 /// Clear the live log buffer for an instance.
 #[tauri::command]
 pub async fn logs_clear_live_log_buffer(instance_id: &str) -> Result<()> {
     logs::clear_live_log_buffer(instance_id);
+    Ok(())
+}
+
+/// Clear the live log buffer of one copy of an instance.
+#[tauri::command]
+pub async fn logs_clear_live_log_buffer_for_process(
+    process_uuid: &str,
+) -> Result<()> {
+    logs::clear_live_log_buffer_for_process(process_uuid);
     Ok(())
 }

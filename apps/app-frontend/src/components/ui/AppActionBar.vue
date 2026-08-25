@@ -75,9 +75,17 @@
 										@click="selectProcess(process)"
 									>
 										<OnlineIndicatorIcon />
-										<span class="mr-auto text-contrast flex items-center gap-2">
-											{{ process.instance.name }}
-											<StarIcon v-if="process.uuid === selectedProcess.uuid" class="text-orange" />
+										<span class="mr-auto flex flex-col items-start">
+											<span class="text-contrast flex items-center gap-2">
+												{{ process.instance.name }}
+												<StarIcon
+													v-if="process.uuid === selectedProcess.uuid"
+													class="text-orange"
+												/>
+											</span>
+											<span v-if="process.account_name" class="text-xs text-secondary">
+												{{ process.account_name }}
+											</span>
 										</span>
 									</button>
 									<button
@@ -168,6 +176,7 @@ const showInstances = ref(false)
 interface RunningProcess {
 	uuid: string
 	instance_id: string
+	account_name: string
 	instance: GameInstance
 }
 
@@ -256,7 +265,7 @@ const refresh = async () => {
 	const processes = ((await getRunningProcesses().catch((error) => {
 		handleError(error)
 		return []
-	})) ?? []) as Array<{ uuid: string; instance_id: string }>
+	})) ?? []) as Array<{ uuid: string; instance_id: string; account_name: string }>
 	const instanceIds = processes.map((process) => process.instance_id)
 	const instances: GameInstance[] = await getInstances(instanceIds).catch((error) => {
 		handleError(error)

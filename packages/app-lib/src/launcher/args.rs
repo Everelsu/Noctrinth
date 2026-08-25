@@ -17,7 +17,10 @@ use dunce::canonicalize;
 use itertools::Itertools;
 use std::io::{BufRead, BufReader, ErrorKind};
 use std::net::SocketAddr;
-use std::{collections::HashMap, path::Path};
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+};
 use uuid::Uuid;
 
 // Replaces the space separator with a newline character, as to not split the arguments
@@ -34,6 +37,23 @@ const TEMPORARY_REPLACE_CHAR: &str = "\n";
 /// Mojang itself, but not reliably enough to be the only way there — a licensed
 /// player is exactly who is missing when that proxy is having a bad day.
 pub const UNIVERSAL_SKINS_SOURCE: &str = "https://skinsystem.ely.by,mojang";
+
+/// Everything the agent in `theseus.jar` needs to look a skin up.
+///
+/// Passed only when the feature is on, so its absence is what turns the agent
+/// off — the game is then left exactly as vanilla has it.
+pub struct SkinLookup<'a> {
+    /// Where to ask, in order. See [`UNIVERSAL_SKINS_SOURCE`].
+    pub sources: &'a str,
+    /// Whose skin the game will want first, so it can be had before it is asked
+    /// for: the player's own arm is on screen the moment they spawn.
+    pub player_name: &'a str,
+    /// Skins put there by hand, asked before anything on the network.
+    pub local_dir: PathBuf,
+    /// Where answers are kept between runs, so a session does not start by
+    /// looking everyone up again.
+    pub cache_file: PathBuf,
+}
 
 /// Builds the classpath for a launch.
 ///
@@ -169,8 +189,7 @@ pub fn get_jvm_arguments(
     quick_play_version: QuickPlayVersion,
     log_config: Option<&LoggingConfiguration>,
     ipc_addr: SocketAddr,
-    skin_source: Option<&str>,
-    player_name: &str,
+    skins: Option<&SkinLookup<'_>>,
 ) -> crate::Result<Vec<String>> {
     let mut parsed_arguments = Vec::new();
 
@@ -251,11 +270,13 @@ pub fn get_jvm_arguments(
 
     // Ahead of the instance's own arguments, so anyone who would rather name
     // their own skin system can still do it with a `-D` of their own.
-    if let Some(source) = skin_source {
-        parsed_arguments.push(format!("-Dnoctrinth.skins.source={source}"));
-        // Whose skin the game will want first: their own arm is on screen the
-        // moment they spawn, so the agent looks it up before anything asks.
-        parsed_arguments.push(format!("-Dnoctrinth.skins.self={player_name}"));
+    if let Some(skins) = skins {
+        parsed_arguments.extend_from_slice(&[
+            format!("-Dnoctrinth.skins.source={}", skins.sources),
+            format!("-Dnoctrinth.skins.self={}", skins.player_name),
+            format!("-Dnoctrinth.skins.local={}", skins.local_dir.display()),
+            format!("-Dnoctrinth.skins.cache={}", skins.cache_file.display()),
+        ]);
     }
 
     for arg in custom_args {

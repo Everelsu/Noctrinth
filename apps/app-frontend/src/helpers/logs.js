@@ -68,7 +68,18 @@ export async function get_live_log_buffer(instanceId) {
 	return await invoke('plugin:logs|logs_get_live_log_buffer', { instanceId })
 }
 
+/// Get the buffered live log lines of one copy of an instance
+/// One instance can be running more than once, and each copy has its own log.
+export async function get_live_log_buffer_for_process(processUuid) {
+	return await invoke('plugin:logs|logs_get_live_log_buffer_for_process', { processUuid })
+}
+
 /// Clear the live log buffer for an instance on the Rust side
 export async function clear_log_buffer(instanceId) {
 	return await invoke('plugin:logs|logs_clear_live_log_buffer', { instanceId })
+}
+
+/// Clear the live log buffer of one copy of an instance
+export async function clear_log_buffer_for_process(processUuid) {
+	return await invoke('plugin:logs|logs_clear_live_log_buffer_for_process', { processUuid })
 }

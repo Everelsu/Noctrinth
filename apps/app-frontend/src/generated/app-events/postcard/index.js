@@ -471,6 +471,7 @@ function deserialize_LOG_EVENT(d) {
 function deserialize_LOG_PAYLOAD(d) {
     return {
         instance_id: d.deserialize_string(),
+        process_uuid: d.deserialize_string(),
         event: deserialize_LOG_EVENT(d)
     };
 }

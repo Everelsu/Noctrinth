@@ -122,7 +122,7 @@ function normalizeLogPayload(value: unknown): WireObject {
 		event.timestamp_millis = number(event.timestamp_millis)
 	}
 
-	return { instance_id: payload.instance_id, ...event }
+	return { instance_id: payload.instance_id, process_uuid: payload.process_uuid, ...event }
 }
 
 function normalizeInstallProgress(value: unknown): WireObject {

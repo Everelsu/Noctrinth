@@ -1,6 +1,14 @@
 <template>
 	<div class="flex flex-col gap-4 h-full">
-		<ConsolePageLayout />
+		<!--
+			One console is two games talking over each other once an instance is
+			running twice, so each copy gets its own. One copy, or none, is the page
+			as it has always been: the live log alongside every log kept on disk.
+		-->
+		<div v-if="runningCopies.length > 1" class="flex min-h-0 flex-1 gap-4">
+			<NoctrinthProcessConsole v-for="copy in runningCopies" :key="copy.uuid" :process="copy" />
+		</div>
+		<ConsolePageLayout v-else />
 	</div>
 </template>
 
@@ -14,12 +22,13 @@ import {
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref, shallowRef, triggerRef, watch, watchEffect } from 'vue'
 
+import NoctrinthProcessConsole from '@/components/ui/NoctrinthProcessConsole.vue'
 import { useAppEvent } from '@/composables/use-app-event'
 import { useInstanceConsole } from '@/composables/useInstanceConsole'
 import { delete_logs_by_filename, get_output_by_filename } from '@/helpers/logs.js'
 
 import { injectInstancePage } from '../instance-context'
-import { instanceKeys } from '../query-options'
+import { instanceKeys, instanceProcessesQueryOptions } from '../query-options'
 
 const client = injectModrinthClient()
 const { handleError } = injectNotificationManager()
@@ -82,6 +91,22 @@ watch(
 watch(historicalLogsQuery.error, (error) => {
 	if (error) handleError(error)
 })
+
+// The copies of this instance that are running, which is what decides whether
+// this page shows one console or one per copy.
+const processesQuery = useQuery(
+	computed(() => ({
+		...instanceProcessesQueryOptions(instanceId.value),
+		enabled: !!instanceId.value,
+	})),
+)
+// Oldest first, so the panes keep their places instead of swapping about
+// whenever the list is fetched again.
+const runningCopies = computed(() =>
+	[...(processesQuery.data.value ?? [])].sort((a, b) =>
+		String(a.start_time ?? '').localeCompare(String(b.start_time ?? '')),
+	),
+)
 
 const selectedLogIndex = ref(0)
 const isLive = computed(() => selectedLogIndex.value === 0)
@@ -194,6 +219,13 @@ if (!instancePage.playing.value) {
 useAppEvent('log', (payload) => {
 	if (payload.instance_id !== instanceId.value) return
 
+	// While an instance is running twice, every copy has a console of its own and
+	// this one is not shown. It follows the copy that started last, which is the
+	// one the buffer behind it holds, so that it is coherent the moment the other
+	// copies stop and the page comes back to a single console.
+	const newest = runningCopies.value[runningCopies.value.length - 1]
+	if (newest && payload.process_uuid && payload.process_uuid !== newest.uuid) return
+
 	if (payload.type === 'log4j') {
 		liveConsole.addLog4jEvent(payload)
 	} else if (payload.type === 'legacy') {
@@ -203,6 +235,8 @@ useAppEvent('log', (payload) => {
 
 useAppEvent('process', async (e) => {
 	if (e.instance_id !== instanceId.value) return
+	// A copy starting or stopping is what adds or takes away a console.
+	void processesQuery.refetch()
 	if (e.event === 'launched') {
 		liveConsole.clear()
 		invalidate()

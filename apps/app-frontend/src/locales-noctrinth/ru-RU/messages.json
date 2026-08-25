@@ -737,6 +737,15 @@
 	"format.bytes.4": {
 		"defaultMessage": "{count, number} TiB"
 	},
+	"instance.action.play-again": {
+		"message": "Запустить ещё одну копию"
+	},
+	"instance.console.copy-started-at": {
+		"message": "запущена в {time}"
+	},
+	"instance.console.copy-unknown-account": {
+		"message": "Неизвестный аккаунт"
+	},
 	"instance.settings.tabs.java.modern-java": {
 		"message": "Современная Java"
 	},

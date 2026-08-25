@@ -1,6 +1,12 @@
 import { createConsoleState } from '@modrinth/ui'
 
-import { clear_log_buffer, get_live_log_buffer, get_logs } from '@/helpers/logs'
+import {
+	clear_log_buffer,
+	clear_log_buffer_for_process,
+	get_live_log_buffer,
+	get_live_log_buffer_for_process,
+	get_logs,
+} from '@/helpers/logs'
 
 type ConsoleState = ReturnType<typeof createConsoleState>
 
@@ -82,6 +88,44 @@ async function clearLive(instanceId: string): Promise<void> {
 async function destroy(instanceId: string): Promise<void> {
 	instances.delete(instanceId)
 	await clear_log_buffer(instanceId).catch(() => {})
+}
+
+/**
+ * The live console of one copy of an instance.
+ *
+ * An instance can be running twice, and the two have nothing to do with each
+ * other: separate output, separate buffer, separate everything but the folder
+ * they were started from.
+ */
+const processConsoles = new Map<string, ConsoleState>()
+
+function getOrCreateProcess(processUuid: string): ConsoleState {
+	let console = processConsoles.get(processUuid)
+	if (!console) {
+		console = createConsoleState()
+		processConsoles.set(processUuid, console)
+	}
+	return console
+}
+
+export function useProcessConsole(processUuid: string) {
+	const console = getOrCreateProcess(processUuid)
+
+	return {
+		console,
+		hydrate: async () => {
+			if (console.output.value.length > 0) return
+			const buffer = await get_live_log_buffer_for_process(processUuid)
+			if (buffer) console.addLegacyLog(buffer)
+		},
+		clear: async () => {
+			console.clear()
+			await clear_log_buffer_for_process(processUuid).catch(() => {})
+		},
+		forget: () => {
+			processConsoles.delete(processUuid)
+		},
+	}
 }
 
 export function useInstanceConsole(instanceId: string) {

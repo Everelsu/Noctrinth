@@ -30,6 +30,18 @@ const messages = defineMessages({
 		defaultMessage:
 			'No preference is set, so Windows picks — on a laptop that is usually the integrated adapter. Available: {adapters}',
 	},
+	choiceAuto: {
+		id: 'app.settings.java.gpu.choice.auto',
+		defaultMessage: 'Let Windows decide',
+	},
+	choiceHighPerformance: {
+		id: 'app.settings.java.gpu.choice.high-performance',
+		defaultMessage: 'High performance',
+	},
+	choicePowerSaving: {
+		id: 'app.settings.java.gpu.choice.power-saving',
+		defaultMessage: 'Power saving',
+	},
 })
 
 const props = defineProps({
@@ -46,13 +58,16 @@ const saving = ref(false)
 // The wording follows Windows' own graphics settings, because that is the other
 // place this same value can be changed and the two should not disagree.
 const CHOICES = [
-	{ value: 'auto', label: 'Let Windows decide' },
-	{ value: 'high_performance', label: 'High performance' },
-	{ value: 'power_saving', label: 'Power saving' },
+	{ value: 'auto', label: messages.choiceAuto },
+	{ value: 'high_performance', label: messages.choiceHighPerformance },
+	{ value: 'power_saving', label: messages.choicePowerSaving },
 ]
 
 const choiceValues = CHOICES.map((choice) => choice.value)
-const choiceLabel = (value) => CHOICES.find((c) => c.value === value)?.label ?? value
+const choiceLabel = (value) => {
+	const choice = CHOICES.find((c) => c.value === value)
+	return choice ? formatMessage(choice.label) : value
+}
 
 async function refresh() {
 	if (!props.path) {

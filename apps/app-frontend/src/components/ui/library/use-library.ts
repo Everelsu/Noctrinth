@@ -1,5 +1,5 @@
 import type { Labrinth } from '@modrinth/api-client'
-import { formatLoader, injectNotificationManager, useVIntl } from '@modrinth/ui'
+import { defineMessages, formatLoader, injectNotificationManager, useVIntl } from '@modrinth/ui'
 import { open as openDialog } from '@tauri-apps/plugin-dialog'
 import { useEventListener, useStorage } from '@vueuse/core'
 import dayjs from 'dayjs'
@@ -60,11 +60,13 @@ export const libraryGroupOptions = [
 	{ value: 'None', label: 'No grouping' },
 ] as const
 
-const libraryInstanceTypeLabels = {
-	custom: 'Custom',
-	modpack: 'Modpack',
-	server: 'Server',
-} as const
+// Headings for the "Instance type" grouping, so they read the same as the
+// filter chips that carry these ids elsewhere in the library.
+const libraryInstanceTypeLabels = defineMessages({
+	custom: { id: 'app.library.filter.instance-type.custom', defaultMessage: 'Custom' },
+	modpack: { id: 'app.library.filter.instance-type.modpack', defaultMessage: 'Modpack' },
+	server: { id: 'app.library.filter.instance-type.server', defaultMessage: 'Server' },
+})
 
 const libraryLoaderPriority: Record<string, number> = {
 	fabric: 0,
@@ -156,7 +158,9 @@ function createLibraryState(instances: Ref<GameInstance[]>) {
 		if (!searchFocused.value) return []
 		// Touch the version so completions appear as the index streams in.
 		void contentIndex.version.value
-		return suggestionsFor(search.value, contentIndex.contentNames(instanceIds.value))
+		return suggestionsFor(search.value, contentIndex.contentNames(instanceIds.value), 8, (m) =>
+			formatMessage(m),
+		)
 	})
 	watch(suggestions, () => {
 		activeSuggestion.value = 0
@@ -471,7 +475,7 @@ function createLibraryState(instances: Ref<GameInstance[]>) {
 						const instanceType = getInstanceType(instance)
 						addToGroup(
 							`Instance type:${instanceType}`,
-							libraryInstanceTypeLabels[instanceType],
+							formatMessage(libraryInstanceTypeLabels[instanceType]),
 							instance,
 						)
 					}

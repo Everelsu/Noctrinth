@@ -1,6 +1,13 @@
 <script setup>
 import { TrashIcon } from '@modrinth/assets'
-import { Button, IconButton, injectNotificationManager, useFormatBytes } from '@modrinth/ui'
+import {
+	Button,
+	defineMessages,
+	IconButton,
+	injectNotificationManager,
+	useFormatBytes,
+	useVIntl,
+} from '@modrinth/ui'
 import { computed, ref } from 'vue'
 
 import {
@@ -11,6 +18,47 @@ import {
 
 const { handleError, addNotification } = injectNotificationManager()
 const formatBytes = useFormatBytes()
+const { formatMessage } = useVIntl()
+
+const messages = defineMessages({
+	title: {
+		id: 'app.settings.java.runtimes.title',
+		defaultMessage: 'Downloaded runtimes',
+	},
+	description: {
+		id: 'app.settings.java.runtimes.description',
+		defaultMessage:
+			'Java the launcher downloaded for you, {size} in total. Updating Java leaves the previous copy behind, so these build up over time.',
+	},
+	removeUnused: {
+		id: 'app.settings.java.runtimes.remove-unused',
+		defaultMessage: 'Remove {count} unused ({size})',
+	},
+	inUse: {
+		id: 'app.settings.java.runtimes.in-use',
+		defaultMessage: 'In use',
+	},
+	inUseTooltip: {
+		id: 'app.settings.java.runtimes.in-use-tooltip',
+		defaultMessage: 'A Java setting points at this one — change it first',
+	},
+	deleteTooltip: {
+		id: 'app.settings.java.runtimes.delete-tooltip',
+		defaultMessage: 'Delete this runtime',
+	},
+	deleteLabel: {
+		id: 'app.settings.java.runtimes.delete-label',
+		defaultMessage: 'Delete runtime',
+	},
+	removedTitle: {
+		id: 'app.settings.java.runtimes.removed-title',
+		defaultMessage: 'Runtimes removed',
+	},
+	removedText: {
+		id: 'app.settings.java.runtimes.removed-text',
+		defaultMessage: 'Reclaimed {size}.',
+	},
+})
 
 const emit = defineEmits(['changed'])
 
@@ -58,8 +106,8 @@ async function removeUnused() {
 		await refresh()
 		emit('changed')
 		addNotification({
-			title: 'Runtimes removed',
-			text: `Reclaimed ${formatBytes(freed)}.`,
+			title: formatMessage(messages.removedTitle),
+			text: formatMessage(messages.removedText, { size: formatBytes(freed) }),
 			type: 'success',
 		})
 	} catch (error) {
@@ -74,10 +122,11 @@ async function removeUnused() {
 	<div v-if="runtimes.length" class="flex flex-col gap-3">
 		<div class="flex items-start justify-between gap-4">
 			<div class="flex flex-col gap-1 min-w-0">
-				<h2 class="m-0 text-lg font-semibold text-contrast">Downloaded runtimes</h2>
+				<h2 class="m-0 text-lg font-semibold text-contrast">
+					{{ formatMessage(messages.title) }}
+				</h2>
 				<p class="m-0 leading-tight text-secondary">
-					Java the launcher downloaded for you, {{ formatBytes(totalSize) }} in total. Updating Java
-					leaves the previous copy behind, so these build up over time.
+					{{ formatMessage(messages.description, { size: formatBytes(totalSize) }) }}
 				</p>
 			</div>
 			<Button
@@ -89,7 +138,12 @@ async function removeUnused() {
 				@click="removeUnused"
 			>
 				<TrashIcon />
-				Remove {{ unused.length }} unused ({{ formatBytes(reclaimable) }})
+				{{
+					formatMessage(messages.removeUnused, {
+						count: unused.length,
+						size: formatBytes(reclaimable),
+					})
+				}}
 			</Button>
 		</div>
 
@@ -107,7 +161,7 @@ async function removeUnused() {
 						v-if="runtime.in_use"
 						class="shrink-0 rounded px-1.5 py-0.5 text-[0.65rem] font-bold uppercase tracking-wide bg-brand-highlight text-brand"
 					>
-						In use
+						{{ formatMessage(messages.inUse) }}
 					</span>
 				</span>
 				<span class="text-xs text-secondary truncate" :title="runtime.path">
@@ -120,14 +174,10 @@ async function removeUnused() {
 			</span>
 
 			<IconButton
-				v-tooltip="
-					runtime.in_use
-						? 'A Java setting points at this one — change it first'
-						: 'Delete this runtime'
-				"
+				v-tooltip="formatMessage(runtime.in_use ? messages.inUseTooltip : messages.deleteTooltip)"
 				type="quiet"
 				color="red"
-				label="Delete runtime"
+				:label="formatMessage(messages.deleteLabel)"
 				class="shrink-0"
 				:disabled="busy || runtime.in_use"
 				@click="removeOne(runtime)"

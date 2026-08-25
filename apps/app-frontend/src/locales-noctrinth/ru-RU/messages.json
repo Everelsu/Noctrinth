@@ -65,6 +65,9 @@
 	"app.appearance-settings.minimize-launcher.description": {
 		"message": "Сворачивать окно лаунчера при запуске Minecraft."
 	},
+	"app.changelog.author": {
+		"message": "Автор"
+	},
 	"app.changelog.modrinth-note": {
 		"message": "Показаны недавние выпуски. Полный список изменений приложения Modrinth доступен на их сайте."
 	},
@@ -82,6 +85,165 @@
 	},
 	"app.changelog.source.noctrinth": {
 		"message": "Noctrinth"
+	},
+	"app.collection.delete-modal.description": {
+		"message": "Коллекция будет удалена навсегда. Отменить это действие нельзя."
+	},
+	"app.collection.delete-modal.title": {
+		"message": "Удалить эту коллекцию?"
+	},
+	"app.collection.save-button.create": {
+		"message": "Создать коллекцию"
+	},
+	"app.collection.save-button.empty": {
+		"message": "У вас пока нет коллекций."
+	},
+	"app.collection.save-button.loading": {
+		"message": "Загрузка коллекций..."
+	},
+	"app.collection.save-button.no-matches": {
+		"message": "По запросу ничего не нашлось."
+	},
+	"app.collection.save-button.save": {
+		"message": "Сохранить в коллекцию"
+	},
+	"app.collection.save-button.save-tooltip": {
+		"message": "Сохранить"
+	},
+	"app.collection.save-button.saved": {
+		"message": "Сохранено в коллекцию"
+	},
+	"app.collection.save-button.saved-tooltip": {
+		"message": "Сохранено"
+	},
+	"app.collection.save-button.search": {
+		"message": "Поиск..."
+	},
+	"app.collection.save-button.sign-in": {
+		"message": "Войдите в Modrinth, чтобы сохранять проекты."
+	},
+	"app.error-modal.copy-debug-info": {
+		"message": "Скопировать отладочную информацию"
+	},
+	"app.error-modal.debug-information": {
+		"message": "Отладочная информация"
+	},
+	"app.error-modal.directory.cancel": {
+		"message": "Отменить смену папки"
+	},
+	"app.error-modal.directory.generic.body": {
+		"message": "Noctrinth не может перенести данные в выбранную папку. Обратитесь в поддержку или отмените смену папки."
+	},
+	"app.error-modal.directory.no-space.body": {
+		"message": "Похоже, на диске с выбранной папкой не хватает места. Освободите место и попробуйте снова или отмените смену папки."
+	},
+	"app.error-modal.directory.no-space.heading": {
+		"message": "Недостаточно места"
+	},
+	"app.error-modal.directory.read-only.body": {
+		"message": "Похоже, Noctrinth не может писать в выбранную папку. Измените права доступа и попробуйте снова или отмените смену папки."
+	},
+	"app.error-modal.directory.read-only.heading": {
+		"message": "Измените права на папку"
+	},
+	"app.error-modal.directory.retry": {
+		"message": "Повторить смену папки"
+	},
+	"app.error-modal.game-pass.body": {
+		"message": "Сначала войдите через <launcher-link>официальный лаунчер Minecraft</launcher-link>. Как закончите — возвращайтесь сюда и входите!"
+	},
+	"app.error-modal.game-pass.heading": {
+		"message": "Пользуетесь PC Game Pass, переходите с Bedrock или только что купили игру?"
+	},
+	"app.error-modal.get-support": {
+		"message": "Написать в поддержку"
+	},
+	"app.error-modal.hosts-file.body": {
+		"message": "Noctrinth пытался подключиться к сервисам Microsoft / Xbox / Minecraft, но удалённый сервер отклонил соединение. Возможно, эти сервисы заблокированы в файле hosts. Откройте <support-article>нашу статью поддержки</support-article>, чтобы узнать, как это исправить."
+	},
+	"app.error-modal.network.body": {
+		"message": "Похоже, у Noctrinth не получилось связаться с серверами Microsoft. Обычно виновато нестабильное соединение, так что попробуйте ещё раз. Если не помогает, выполните шаги из <support-article>нашей статьи поддержки</support-article>."
+	},
+	"app.error-modal.network.heading": {
+		"message": "Проблемы с сетью"
+	},
+	"app.error-modal.no-error-message": {
+		"message": "Сообщения об ошибке нет."
+	},
+	"app.error-modal.no-loader.body": {
+		"message": "Noctrinth не нашёл версию загрузчика для этой сборки."
+	},
+	"app.error-modal.no-loader.fix": {
+		"message": "Чтобы это исправить, нужно восстановить сборку. Нажмите кнопку ниже."
+	},
+	"app.error-modal.no-loader.repair": {
+		"message": "Восстановить сборку"
+	},
+	"app.error-modal.other-account.body": {
+		"message": "Проверьте, тем ли аккаунтом вы вошли. Minecraft может быть куплен на другом аккаунте Microsoft."
+	},
+	"app.error-modal.other-account.button": {
+		"message": "Войти другим аккаунтом"
+	},
+	"app.error-modal.other-account.heading": {
+		"message": "Попробуйте другой аккаунт Microsoft"
+	},
+	"app.error-modal.state-init.body": {
+		"message": "Noctrinth не смог загрузиться правильно. Возможно, повреждён файл или не хватает важных файлов приложения."
+	},
+	"app.error-modal.state-init.fix-internet": {
+		"message": "Убедитесь, что есть интернет, и перезапустите приложение."
+	},
+	"app.error-modal.state-init.fix-redownload": {
+		"message": "Скачайте приложение заново."
+	},
+	"app.error-modal.state-init.fixes": {
+		"message": "Это можно попробовать исправить так:"
+	},
+	"app.error-modal.support-prompt": {
+		"message": "Если ничего не помогает и нужна помощь, зайдите на <support-page>страницу поддержки</support-page> и начните чат через виджет в правом нижнем углу — мы поможем. Не забудьте передать оператору отладочную информацию ниже:"
+	},
+	"app.error-modal.title.directory-move": {
+		"message": "Не удалось сменить папку приложения"
+	},
+	"app.error-modal.title.minecraft-auth": {
+		"message": "Не удалось войти в Minecraft"
+	},
+	"app.error-modal.title.no-loader": {
+		"message": "Загрузчик не выбран"
+	},
+	"app.error-modal.title.state-init": {
+		"message": "Не удалось запустить Noctrinth"
+	},
+	"app.error-modal.title.unknown": {
+		"message": "Произошла ошибка"
+	},
+	"app.error-modal.try-signing-in-again": {
+		"message": "Попробовать войти снова"
+	},
+	"app.hosting.title": {
+		"message": "Хостинг"
+	},
+	"app.hosting.update-required.description": {
+		"message": "Чтобы пользоваться хостингом Modrinth через Noctrinth, нужно обновиться"
+	},
+	"app.hosting.update-required.title": {
+		"message": "Нужно обновить Noctrinth"
+	},
+	"app.icon-editor.apply-icons-modal.description": {
+		"message": "Создавайте свои иконки для сборок прямо в Noctrinth. Сочетайте фоны с символами из Minecraft и популярных модов!"
+	},
+	"app.instance.add-content.from-file": {
+		"message": "Добавить из файла"
+	},
+	"app.instance.add-content.install": {
+		"message": "Установить контент"
+	},
+	"app.instance.logs.live": {
+		"message": "Трансляция лога"
+	},
+	"app.instance.logs.unknown-file": {
+		"message": "Неизвестный"
 	},
 	"app.instance.screenshots.copied": {
 		"message": "Скриншот скопирован в буфер обмена"
@@ -131,6 +293,27 @@
 	"app.instance.screenshots.zoom": {
 		"message": "Масштаб"
 	},
+	"app.instance.share.members.column.joined": {
+		"message": "Присоединился"
+	},
+	"app.instance.share.members.column.method": {
+		"message": "Способ"
+	},
+	"app.instance.share.members.never-played": {
+		"message": "Никогда"
+	},
+	"app.instance.share.members.search": {
+		"message": "Поиск среди {count, plural, one {# участника} few {# участников} many {# участников} other {# участника}}..."
+	},
+	"app.instance.share.method.direct": {
+		"message": "Прямое приглашение"
+	},
+	"app.instance.share.method.link": {
+		"message": "Ссылка-приглашение"
+	},
+	"app.instance.tab.screenshots": {
+		"message": "Скриншоты"
+	},
 	"app.library.search.hint": {
 		"message": "↑↓ — выбрать · Tab — вставить · условия складываются, а - переворачивает любое"
 	},
@@ -139,6 +322,45 @@
 	},
 	"app.library.search.placeholder": {
 		"message": "Поиск по сборкам, или @ # ! для фильтров"
+	},
+	"app.library.search.sigil.mod": {
+		"message": "по моду"
+	},
+	"app.library.search.sigil.mod.hint": {
+		"message": "Сборки, в которых есть указанный мод, ресурспак или шейдер"
+	},
+	"app.library.search.sigil.state": {
+		"message": "по состоянию"
+	},
+	"app.library.search.sigil.state.hint": {
+		"message": "Сборки, где что-то устарело, отключено или сломано"
+	},
+	"app.library.search.sigil.type": {
+		"message": "по типу"
+	},
+	"app.library.search.sigil.type.hint": {
+		"message": "Сборки, в которых есть моды, шейдеры, ресурспаки или дата-паки"
+	},
+	"app.library.search.state.broken": {
+		"message": "Саму сборку нужно починить"
+	},
+	"app.library.search.state.disabled": {
+		"message": "Что-то установлено, но выключено"
+	},
+	"app.library.search.state.outdated": {
+		"message": "Для чего-то установленного есть обновление"
+	},
+	"app.library.search.type.datapack": {
+		"message": "Есть дата-паки"
+	},
+	"app.library.search.type.mod": {
+		"message": "Есть моды"
+	},
+	"app.library.search.type.resourcepack": {
+		"message": "Есть ресурспаки"
+	},
+	"app.library.search.type.shader": {
+		"message": "Есть шейдеры"
 	},
 	"app.migration.modrinth.action.choose": {
 		"message": "Выбрать сборки"
@@ -157,6 +379,261 @@
 	},
 	"app.migration.modrinth.title": {
 		"message": "Перенесите свои сборки из Modrinth App"
+	},
+	"app.minecraft-auth-error.contact-support": {
+		"message": "Написать в поддержку"
+	},
+	"app.minecraft-auth-error.copy-debug-info": {
+		"message": "Скопировать отладочную информацию"
+	},
+	"app.minecraft-auth-error.debug-information": {
+		"message": "Отладочная информация"
+	},
+	"app.minecraft-auth-error.header": {
+		"message": "Не удалось войти"
+	},
+	"app.minecraft-auth-error.how-to-fix": {
+		"message": "Как это исправить"
+	},
+	"app.minecraft-auth-error.korea-adult-verification-alt.step-1": {
+		"message": "Откройте <link>Xbox</link> и войдите"
+	},
+	"app.minecraft-auth-error.korea-adult-verification-alt.step-2": {
+		"message": "Пройдите проверку личности"
+	},
+	"app.minecraft-auth-error.korea-adult-verification-alt.step-3": {
+		"message": "После этого попробуйте войти снова"
+	},
+	"app.minecraft-auth-error.korea-adult-verification-alt.what": {
+		"message": "Аккаунт требует подтверждения совершеннолетия по правилам Южной Кореи."
+	},
+	"app.minecraft-auth-error.korea-adult-verification.step-1": {
+		"message": "Откройте <link>Xbox</link> и войдите"
+	},
+	"app.minecraft-auth-error.korea-adult-verification.step-2": {
+		"message": "Пройдите проверку личности"
+	},
+	"app.minecraft-auth-error.korea-adult-verification.step-3": {
+		"message": "После этого попробуйте войти снова"
+	},
+	"app.minecraft-auth-error.korea-adult-verification.what": {
+		"message": "Аккаунт требует подтверждения совершеннолетия по правилам Южной Кореи."
+	},
+	"app.minecraft-auth-error.minecraft-server-error.step-1": {
+		"message": "Подождите несколько минут и попробуйте войти снова"
+	},
+	"app.minecraft-auth-error.minecraft-server-error.step-2": {
+		"message": "Проверьте <link>статус Xbox</link> — возможно, идут сбои"
+	},
+	"app.minecraft-auth-error.minecraft-server-error.step-3": {
+		"message": "Попробуйте войти через <link>официальный лаунчер Minecraft</link>, чтобы понять, повторяется ли проблема и там"
+	},
+	"app.minecraft-auth-error.minecraft-server-error.step-4": {
+		"message": "Если сервисы работают, а ошибка повторяется, обратитесь в поддержку и приложите отладочную информацию ниже"
+	},
+	"app.minecraft-auth-error.minecraft-server-error.what": {
+		"message": "Сервис авторизации Minecraft отвечает ошибкой сервера, поэтому Noctrinth сейчас не может завершить вход."
+	},
+	"app.minecraft-auth-error.network.step-1": {
+		"message": "Перезапустите Noctrinth и попробуйте войти снова"
+	},
+	"app.minecraft-auth-error.network.step-2": {
+		"message": "Проверьте, работает ли интернет"
+	},
+	"app.minecraft-auth-error.network.step-3": {
+		"message": "Разрешите Noctrinth доступ в брандмауэре, антивирусе, прокси, VPN и правилах файла hosts"
+	},
+	"app.minecraft-auth-error.network.step-4": {
+		"message": "Попробуйте другую сеть или временно отключите VPN и прокси, если пользуетесь ими"
+	},
+	"app.minecraft-auth-error.network.step-5": {
+		"message": "Если дело в маршрутизации или DNS, иногда помогает сервис вроде Cloudflare WARP"
+	},
+	"app.minecraft-auth-error.network.what": {
+		"message": "Noctrinth не смог подключиться к сервису Microsoft, Xbox или Minecraft, который нужен для входа. Обычно мешают локальная сеть, DNS, прокси, брандмауэр, файл hosts, VPN или антивирус."
+	},
+	"app.minecraft-auth-error.no-xbox-profile.step-1": {
+		"message": "Убедитесь, что Minecraft куплен на этом аккаунте"
+	},
+	"app.minecraft-auth-error.no-xbox-profile.step-2": {
+		"message": "Откройте <link>страницу входа Minecraft</link> и войдите"
+	},
+	"app.minecraft-auth-error.no-xbox-profile.step-3": {
+		"message": "Создайте профиль Xbox, если появится такой запрос"
+	},
+	"app.minecraft-auth-error.no-xbox-profile.step-4": {
+		"message": "После этого попробуйте войти снова"
+	},
+	"app.minecraft-auth-error.no-xbox-profile.what": {
+		"message": "У этого аккаунта нет профиля Xbox или на нём не куплен Minecraft."
+	},
+	"app.minecraft-auth-error.player-profile.step-1": {
+		"message": "Войдите через <link>официальный лаунчер Minecraft</link>"
+	},
+	"app.minecraft-auth-error.player-profile.step-2": {
+		"message": "Запустите Minecraft: Java Edition из официального лаунчера хотя бы раз"
+	},
+	"app.minecraft-auth-error.player-profile.step-3": {
+		"message": "Если покупка или создание профиля были недавно, подождите до часа"
+	},
+	"app.minecraft-auth-error.player-profile.step-4": {
+		"message": "Убедитесь, что используете аккаунт Microsoft, на котором куплен Minecraft. Подсказка: <link>как найти нужный аккаунт Xbox</link>"
+	},
+	"app.minecraft-auth-error.player-profile.step-5": {
+		"message": "Попробуйте войти в Noctrinth снова"
+	},
+	"app.minecraft-auth-error.player-profile.what": {
+		"message": "Сервисы Minecraft не вернули профиль Java Edition для этого аккаунта. Обычно так бывает, если игра куплена недавно, профиль Java ещё не создан или используется не тот аккаунт Microsoft."
+	},
+	"app.minecraft-auth-error.refresh-token.step-1": {
+		"message": "Выйдите из этого аккаунта Minecraft в Noctrinth"
+	},
+	"app.minecraft-auth-error.refresh-token.step-2": {
+		"message": "Войдите в него заново"
+	},
+	"app.minecraft-auth-error.refresh-token.step-3": {
+		"message": "Когда вход завершится, попробуйте запустить Minecraft снова"
+	},
+	"app.minecraft-auth-error.refresh-token.what": {
+		"message": "Сохранённый токен входа Microsoft истёк или был отозван, поэтому Noctrinth не может обновить сессию Minecraft."
+	},
+	"app.minecraft-auth-error.region-unavailable.step-1": {
+		"message": "Войти можно только там, где поддерживаются сервисы Xbox"
+	},
+	"app.minecraft-auth-error.region-unavailable.step-2": {
+		"message": "Список стран: <link>доступность Xbox</link>"
+	},
+	"app.minecraft-auth-error.region-unavailable.what": {
+		"message": "Xbox Live недоступен в вашем регионе, поэтому вход заблокирован."
+	},
+	"app.minecraft-auth-error.restricted-online-play.step-1": {
+		"message": "Попросите родителя или опекуна войти в <link>Microsoft Family</link>"
+	},
+	"app.minecraft-auth-error.restricted-online-play.step-2": {
+		"message": "Измените разрешения на игру по сети"
+	},
+	"app.minecraft-auth-error.restricted-online-play.step-3": {
+		"message": "После этого попробуйте войти снова"
+	},
+	"app.minecraft-auth-error.restricted-online-play.what": {
+		"message": "Аккаунт ограничен: у него нет разрешения на игру по сети."
+	},
+	"app.minecraft-auth-error.sign-in-again": {
+		"message": "Войти снова"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.step-1": {
+		"message": "Откройте настройки даты и времени в системе"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.step-2": {
+		"message": "Включите автоматический часовой пояс и автоматическое время, если такая опция есть"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.step-3": {
+		"message": "Синхронизируйте часы кнопкой синхронизации в настройках системы"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.step-4": {
+		"message": "Перезапустите Noctrinth"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.step-5": {
+		"message": "Попробуйте войти снова"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.what": {
+		"message": "Сервисы Xbox отклонили первый ответ при входе. Чаще всего виноваты сбитые системные часы или часовой пояс."
+	},
+	"app.minecraft-auth-error.summary": {
+		"message": "Не получилось войти в ваш аккаунт Microsoft. Возможно, дело в ограничениях аккаунта или региона."
+	},
+	"app.minecraft-auth-error.suspended.step-1": {
+		"message": "Откройте <link>поддержку Xbox</link> и посмотрите детали блокировки"
+	},
+	"app.minecraft-auth-error.suspended.step-2": {
+		"message": "Подайте апелляцию, если такая возможность есть"
+	},
+	"app.minecraft-auth-error.suspended.what": {
+		"message": "Аккаунт заблокирован за нарушение правил сообщества Xbox."
+	},
+	"app.minecraft-auth-error.terms-not-accepted.step-1": {
+		"message": "Откройте <link>Xbox</link> и войдите"
+	},
+	"app.minecraft-auth-error.terms-not-accepted.step-2": {
+		"message": "Примите условия, если появится запрос"
+	},
+	"app.minecraft-auth-error.terms-not-accepted.step-3": {
+		"message": "После этого попробуйте войти снова"
+	},
+	"app.minecraft-auth-error.terms-not-accepted.what": {
+		"message": "На аккаунте не приняты условия использования Xbox."
+	},
+	"app.minecraft-auth-error.too-many-requests.step-1": {
+		"message": "Подождите примерно час, прежде чем пробовать снова"
+	},
+	"app.minecraft-auth-error.too-many-requests.step-2": {
+		"message": "После ожидания перезапустите Noctrinth"
+	},
+	"app.minecraft-auth-error.too-many-requests.step-3": {
+		"message": "Попробуйте войти ещё раз"
+	},
+	"app.minecraft-auth-error.too-many-requests.step-4": {
+		"message": "Если сообщение повторится, подождите дольше — временное ограничение должно сняться"
+	},
+	"app.minecraft-auth-error.too-many-requests.what": {
+		"message": "Microsoft или Minecraft временно заблокировали запрос на вход: слишком много попыток за короткое время."
+	},
+	"app.minecraft-auth-error.uk-age-verification.step-1": {
+		"message": "Откройте страницу <link>входа Minecraft</link> и войдите"
+	},
+	"app.minecraft-auth-error.uk-age-verification.step-2": {
+		"message": "Следуйте инструкциям, чтобы подтвердить возраст"
+	},
+	"app.minecraft-auth-error.uk-age-verification.step-3": {
+		"message": "После подтверждения попробуйте войти снова"
+	},
+	"app.minecraft-auth-error.uk-age-verification.step-4": {
+		"message": "Подробности: <link>подтверждение возраста в Великобритании на Xbox</link>"
+	},
+	"app.minecraft-auth-error.uk-age-verification.what": {
+		"message": "Аккаунт Minecraft/Xbox Live требует подтверждения возраста по правилам Великобритании. Без этого вход невозможен."
+	},
+	"app.minecraft-auth-error.underage-no-family.step-1": {
+		"message": "Изучите <link>руководство по семейной группе</link>"
+	},
+	"app.minecraft-auth-error.underage-no-family.step-2": {
+		"message": "Присоединитесь к семейной группе или создайте её по инструкции"
+	},
+	"app.minecraft-auth-error.underage-no-family.step-3": {
+		"message": "После этого попробуйте войти снова"
+	},
+	"app.minecraft-auth-error.underage-no-family.what": {
+		"message": "Аккаунт принадлежит несовершеннолетнему и не привязан к семейной группе Microsoft."
+	},
+	"app.minecraft-auth-error.unknown": {
+		"message": "Неизвестная ошибка"
+	},
+	"app.minecraft-auth-error.unknown-advice": {
+		"message": "Попробуйте зайти на <login-link>страницу входа Minecraft</login-link> — там могут подсказать, что нужно сделать. Также можно обратиться в поддержку, и мы разберёмся подробнее."
+	},
+	"app.minecraft-auth-error.unknown-body": {
+		"message": "Мы не узнали эту ошибку и не можем подсказать точные шаги."
+	},
+	"app.minecraft-auth-error.what-happened": {
+		"message": "Что, по-нашему, произошло"
+	},
+	"app.minecraft-auth-error.xsts-authorize.step-1": {
+		"message": "Войдите через <link>официальный лаунчер Minecraft</link>"
+	},
+	"app.minecraft-auth-error.xsts-authorize.step-2": {
+		"message": "Выполните всё, о чём попросят Microsoft, Xbox или Minecraft"
+	},
+	"app.minecraft-auth-error.xsts-authorize.step-3": {
+		"message": "Попробуйте войти в Noctrinth снова"
+	},
+	"app.minecraft-auth-error.xsts-authorize.step-4": {
+		"message": "Если официальный лаунчер тоже не пускает, действуйте по его подсказке или обратитесь в поддержку Xbox"
+	},
+	"app.minecraft-auth-error.xsts-authorize.what": {
+		"message": "Сервисы Xbox отклонили запрос на авторизацию этого аккаунта в Minecraft, но не сообщили конкретное ограничение, которое Noctrinth умеет распознавать."
+	},
+	"app.nav.modrinth-hosting": {
+		"message": "Хостинг Modrinth"
 	},
 	"app.notifications.accept": {
 		"message": "Принять"
@@ -199,6 +676,12 @@
 	},
 	"app.notifications.version-for": {
 		"message": "для"
+	},
+	"app.project.copy-link.copied": {
+		"message": "Ссылка скопирована"
+	},
+	"app.project.sign-in-to-follow": {
+		"message": "Войдите, чтобы подписаться"
 	},
 	"app.resource-settings.proxy.description": {
 		"message": "Направляет весь сетевой трафик лаунчера (Modrinth API и загрузки с CDN) через прокси. Поддерживаются URL вида http://, https://, socks5:// и socks5h://. Полезно, когда Modrinth недоступен в вашем регионе. Оставьте пустым для прямого подключения. (требуется перезапуск приложения)"
@@ -404,6 +887,15 @@
 	"app.settings.game-options.versions.summary": {
 		"message": "Как это работает на разных версиях игры"
 	},
+	"app.settings.java.gpu.choice.auto": {
+		"message": "На усмотрение Windows"
+	},
+	"app.settings.java.gpu.choice.high-performance": {
+		"message": "Высокая производительность"
+	},
+	"app.settings.java.gpu.choice.power-saving": {
+		"message": "Энергосбережение"
+	},
 	"app.settings.java.gpu.label": {
 		"message": "Видеоадаптер"
 	},
@@ -419,17 +911,50 @@
 	"app.settings.java.gpu.on-power-saving": {
 		"message": "Windows будет запускать эту среду на энергосберегающем адаптере — обычно это встроенная графика, для Minecraft это медленный вариант."
 	},
+	"app.settings.java.runtimes.delete-label": {
+		"message": "Удалить среду"
+	},
+	"app.settings.java.runtimes.delete-tooltip": {
+		"message": "Удалить эту среду"
+	},
+	"app.settings.java.runtimes.description": {
+		"message": "Java, которую скачал лаунчер, всего {size}. При обновлении Java старая копия остаётся на диске, поэтому они накапливаются."
+	},
+	"app.settings.java.runtimes.in-use": {
+		"message": "Используется"
+	},
+	"app.settings.java.runtimes.in-use-tooltip": {
+		"message": "На неё указывает одна из настроек Java — сначала измените её"
+	},
+	"app.settings.java.runtimes.remove-unused": {
+		"message": "Удалить неиспользуемые: {count} ({size})"
+	},
+	"app.settings.java.runtimes.removed-text": {
+		"message": "Освобождено {size}."
+	},
+	"app.settings.java.runtimes.removed-title": {
+		"message": "Среды удалены"
+	},
+	"app.settings.java.runtimes.title": {
+		"message": "Скачанные среды Java"
+	},
 	"app.settings.privacy.discord-rich-presence.description": {
-		"message": "Показывать Modrinth App в текущей активности Discord. Не влияет на Rich Presence модов. Требуется перезапуск."
+		"message": "Показывать Noctrinth в текущей активности Discord. Не влияет на Rich Presence, который добавляют моды. Требуется перезапуск."
 	},
 	"app.settings.resource-management.app-directory.description": {
-		"message": "Здесь Modrinth App хранит сборки и другие файлы. Изменения вступят в силу после перезапуска."
+		"message": "Здесь Noctrinth хранит сборки и другие файлы. Изменения вступят в силу после перезапуска."
 	},
 	"app.settings.tabs.changelog": {
 		"message": "Список изменений"
 	},
 	"app.settings.tabs.shared-game-options": {
 		"message": "Настройки Minecraft"
+	},
+	"app.skins.ely.edit.texture-locked": {
+		"message": "На Ely.by текстура и скин — одно целое, так что заменить её здесь нельзя. Загрузите новую текстуру отдельным скином."
+	},
+	"app.skins.ely.edit.upload-new": {
+		"message": "Загрузить новый скин"
 	},
 	"app.skins.ely.my-skins.empty": {
 		"message": "Пока ничего не загружено. Загрузите скин на Ely.by — и он появится здесь."
@@ -442,6 +967,12 @@
 	},
 	"app.skins.ely.sign-in-needed.title": {
 		"message": "Ely.by не принял изменение"
+	},
+	"app.skins.sign-in.description": {
+		"message": "Войдите в аккаунт Minecraft, чтобы управлять скинами в Noctrinth."
+	},
+	"app.survey.body": {
+		"message": "Не хотите ответить на несколько вопросов о вашем опыте с Noctrinth?"
 	},
 	"app.update-popup.body": {
 		"message": "Noctrinth v{version} готов к установке! Перезагрузите, чтобы обновить сейчас, или обновление произойдёт автоматически при закрытии Noctrinth."
@@ -644,6 +1175,63 @@
 	"collections.status.unlisted": {
 		"message": "По ссылке"
 	},
+	"console.action.collapse": {
+		"message": "Свернуть"
+	},
+	"console.action.expand": {
+		"message": "Развернуть"
+	},
+	"console.crash.problems-detected": {
+		"message": "{count, plural, one {Найдена # проблема} few {Найдено # проблемы} many {Найдено # проблем} other {Найдено # проблемы}}"
+	},
+	"console.delete-modal.header": {
+		"message": "Удалить файл лога"
+	},
+	"console.delete-modal.irreversible": {
+		"message": "Это необратимо"
+	},
+	"console.delete-modal.warning": {
+		"message": "Удаление файла лога нельзя отменить. Продолжить?"
+	},
+	"console.empty-state.instance": {
+		"message": "Запустите сборку кнопкой справа сверху, чтобы здесь появились логи!"
+	},
+	"console.empty-state.server": {
+		"message": "Добро пожаловать на ваш сервер Modrinth! Нажмите зелёную кнопку, чтобы запустить его!"
+	},
+	"console.filter.all": {
+		"message": "Все"
+	},
+	"console.filter.debug": {
+		"message": "Отладка"
+	},
+	"console.filter.error": {
+		"message": "Ошибки"
+	},
+	"console.filter.info": {
+		"message": "Информация"
+	},
+	"console.filter.trace": {
+		"message": "Трассировка"
+	},
+	"console.filter.warn": {
+		"message": "Предупреждения"
+	},
+	"console.search.placeholder": {
+		"message": "Поиск по логам"
+	},
+	"console.share-modal.header": {
+		"message": "Поделиться логами"
+	},
+	"console.terminal.input-disabled": {
+		"message": "Ввод команд отключён"
+	},
+	"console.terminal.send-command": {
+		"message": "Введите команду"
+	},
+	"console.terminal.server-not-running": {
+		"message": "Сервер не запущен"
+	},
 	"creation-flow.modal.import-instance.delete-source.description": {
 		"defaultMessage": "Удаляет файлы каждой перенесённой сборки из другого лаунчера, чтобы они не хранились дважды. Оставьте выключенным, чтобы сохранить обе копии."
 	},
@@ -740,11 +1328,38 @@
 	"instance.action.play-again": {
 		"message": "Запустить ещё одну копию"
 	},
+	"instance.badge.locked": {
+		"message": "Заблокирована"
+	},
+	"instance.badge.locked.label": {
+		"message": "Информация о заблокированной сборке"
+	},
+	"instance.badge.shared": {
+		"message": "Общая"
+	},
+	"instance.badge.shared.label": {
+		"message": "Информация об общей сборке"
+	},
 	"instance.console.copy-started-at": {
 		"message": "запущена в {time}"
 	},
 	"instance.console.copy-unknown-account": {
 		"message": "Неизвестный аккаунт"
+	},
+	"instance.metadata.loader-tooltip": {
+		"message": "Загрузчик модов и версия Minecraft"
+	},
+	"instance.metadata.total-playtime": {
+		"message": "Общее время в игре"
+	},
+	"instance.playtime.hours": {
+		"message": "{hours, plural, one {# час} few {# часа} many {# часов} other {# часа}}"
+	},
+	"instance.playtime.minutes": {
+		"message": "{minutes, plural, one {# минута} few {# минуты} many {# минут} other {# минуты}}"
+	},
+	"instance.playtime.seconds": {
+		"message": "{seconds, plural, one {# секунда} few {# секунды} many {# секунд} other {# секунды}}"
 	},
 	"instance.settings.tabs.java.modern-java": {
 		"message": "Современная Java"
@@ -838,5 +1453,41 @@
 	},
 	"notifications.view-history": {
 		"message": "Посмотреть историю"
+	},
+	"search.sort.date-published": {
+		"message": "Дата публикации"
+	},
+	"search.sort.date-updated": {
+		"message": "Дата обновления"
+	},
+	"search.sort.downloads": {
+		"message": "Загрузки"
+	},
+	"search.sort.followers": {
+		"message": "Подписчики"
+	},
+	"search.sort.players": {
+		"message": "Игроки"
+	},
+	"search.sort.relevance": {
+		"message": "Релевантность"
+	},
+	"search.sort.verified-plays": {
+		"message": "Подтверждённые запуски"
+	},
+	"servers.list-empty.no-servers-description": {
+		"message": "Устанавливайте моды, зовите друзей и играйте вместе прямо в Noctrinth."
+	},
+	"servers.list-empty.play-with-friends-description": {
+		"message": "Пригласите друзей на свой сервер — из Noctrinth они зайдут в один клик."
+	},
+	"settings.display.theme.description": {
+		"message": "Выберите тему для Noctrinth на этом устройстве."
+	},
+	"settings.language.coverage.app-tooltip": {
+		"message": "Примерно {percentage}% Noctrinth доступно на этом языке."
+	},
+	"skin.preview.drag-to-rotate": {
+		"message": "Потяните, чтобы повернуть"
 	}
 }

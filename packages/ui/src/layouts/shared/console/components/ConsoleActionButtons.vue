@@ -8,7 +8,7 @@
 			@click="emit('clear')"
 		>
 			<XIcon />
-			Clear
+			{{ formatMessage(commonMessages.clearButton) }}
 		</Button>
 		<Button
 			v-if="showDelete"
@@ -20,7 +20,7 @@
 			@click="emit('delete')"
 		>
 			<TrashIcon />
-			Delete
+			{{ formatMessage(commonMessages.deleteLabel) }}
 		</Button>
 		<Button
 			v-if="hasLogs"
@@ -31,12 +31,12 @@
 		>
 			<SpinnerIcon v-if="sharing" class="animate-spin" />
 			<ShareIcon v-else />
-			Share
+			{{ formatMessage(messages.share) }}
 		</Button>
 		<Button type="quiet" @click="emit('toggle-fullscreen')">
 			<ContractIcon v-if="fullscreen" />
 			<ExpandIcon v-else />
-			{{ fullscreen ? 'Collapse' : 'Expand' }}
+			{{ formatMessage(fullscreen ? messages.collapse : messages.expand) }}
 		</Button>
 	</div>
 </template>
@@ -52,6 +52,16 @@ import {
 } from '@modrinth/assets'
 
 import { Button } from '#ui/components/base/buttons'
+import { defineMessages, useVIntl } from '#ui/composables/i18n'
+import { commonMessages } from '#ui/utils/common-messages'
+
+const { formatMessage } = useVIntl()
+
+const messages = defineMessages({
+	share: { id: 'content.page-layout.share.label', defaultMessage: 'Share' },
+	expand: { id: 'console.action.expand', defaultMessage: 'Expand' },
+	collapse: { id: 'console.action.collapse', defaultMessage: 'Collapse' },
+})
 
 defineProps<{
 	showClear?: boolean

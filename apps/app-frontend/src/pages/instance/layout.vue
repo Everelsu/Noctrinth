@@ -196,6 +196,7 @@ const messages = defineMessages({
 	filesTab: { id: 'app.instance.tab.files', defaultMessage: 'Files' },
 	worldsTab: { id: 'app.instance.tab.worlds', defaultMessage: 'Worlds' },
 	logsTab: { id: 'app.instance.tab.logs', defaultMessage: 'Logs' },
+	screenshotsTab: { id: 'app.instance.tab.screenshots', defaultMessage: 'Screenshots' },
 	shareTab: { id: 'app.instance.tab.share', defaultMessage: 'Share' },
 	shortcutCreated: {
 		id: 'app.instance.shortcut.created',
@@ -501,7 +502,7 @@ const tabs = computed(() => {
 			icon: TerminalSquareIcon,
 		},
 		{
-			label: 'Screenshots',
+			label: formatMessage(messages.screenshotsTab),
 			href: `${basePath.value}/screenshots`,
 			icon: ImageIcon,
 		},

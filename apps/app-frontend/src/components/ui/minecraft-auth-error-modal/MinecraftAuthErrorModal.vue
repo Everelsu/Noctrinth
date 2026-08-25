@@ -7,13 +7,67 @@ import {
 	MessagesSquareIcon,
 	WrenchIcon,
 } from '@modrinth/assets'
-import { Admonition, Button, ButtonLink, Collapsible, IconButton, NewModal } from '@modrinth/ui'
+import {
+	Admonition,
+	Button,
+	ButtonLink,
+	Collapsible,
+	defineMessages,
+	IconButton,
+	IntlFormatted,
+	NewModal,
+	useVIntl,
+} from '@modrinth/ui'
 import { computed, ref } from 'vue'
 
 import { handleSevereError } from '@/composables/use-error.js'
 import { login as login_flow, set_default_user } from '@/helpers/auth.js'
 
 import { findMinecraftAuthError, type MinecraftAuthError } from './minecraft-auth-errors'
+
+const { formatMessage } = useVIntl()
+
+const messages = defineMessages({
+	header: { id: 'app.minecraft-auth-error.header', defaultMessage: 'Sign in Failed' },
+	summary: {
+		id: 'app.minecraft-auth-error.summary',
+		defaultMessage:
+			"We couldn't sign you into your Microsoft account. This may be due to account restrictions or regional limitations.",
+	},
+	whatHappened: {
+		id: 'app.minecraft-auth-error.what-happened',
+		defaultMessage: 'What we think happened',
+	},
+	howToFix: { id: 'app.minecraft-auth-error.how-to-fix', defaultMessage: 'How to fix it' },
+	unknownTitle: { id: 'app.minecraft-auth-error.unknown', defaultMessage: 'Unknown error' },
+	unknownBody: {
+		id: 'app.minecraft-auth-error.unknown-body',
+		defaultMessage:
+			'We don’t recognize this error and can’t recommend specific steps to resolve it.',
+	},
+	unknownAdvice: {
+		id: 'app.minecraft-auth-error.unknown-advice',
+		defaultMessage:
+			'Try visiting <login-link>Minecraft Login</login-link> and signing in, as it may prompt you with the necessary steps. You can also contact support and we can look into it further.',
+	},
+	contactSupport: {
+		id: 'app.minecraft-auth-error.contact-support',
+		defaultMessage: 'Contact support',
+	},
+	signInAgain: { id: 'app.minecraft-auth-error.sign-in-again', defaultMessage: 'Sign in again' },
+	debugInformation: {
+		id: 'app.minecraft-auth-error.debug-information',
+		defaultMessage: 'Debug information',
+	},
+	copyDebugInfo: {
+		id: 'app.minecraft-auth-error.copy-debug-info',
+		defaultMessage: 'Copy debug info',
+	},
+	noErrorMessage: {
+		id: 'app.error-modal.no-error-message',
+		defaultMessage: 'No error message.',
+	},
+})
 
 const modal = ref<InstanceType<typeof NewModal>>()
 const rawError = ref<string>('')
@@ -55,7 +109,7 @@ async function signInAgain() {
 	}
 }
 
-const debugInfo = computed(() => rawError.value || 'No error message.')
+const debugInfo = computed(() => rawError.value || formatMessage(messages.noErrorMessage))
 
 async function copyToClipboard(text: string) {
 	await navigator.clipboard.writeText(text)
@@ -67,27 +121,22 @@ async function copyToClipboard(text: string) {
 </script>
 
 <template>
-	<NewModal ref="modal" header="Sign in Failed" :max-width="'548px'">
+	<NewModal ref="modal" :header="formatMessage(messages.header)" :max-width="'548px'">
 		<div class="flex flex-col gap-6">
-			<Admonition
-				type="warning"
-				body="	We couldn't sign you into your Microsoft account. This may be due to account restrictions or
-				regional limitations."
-			>
-			</Admonition>
+			<Admonition type="warning" :body="formatMessage(messages.summary)"> </Admonition>
 
 			<!-- Matched error details -->
 			<div class="bg-surface-2 rounded-2xl p-4 px-5 flex flex-col gap-3">
 				<template v-if="matchedError">
 					<div class="flex flex-col gap-1.5">
-						<h3 class="text-base font-bold m-0">What we think happened</h3>
+						<h3 class="text-base font-bold m-0">{{ formatMessage(messages.whatHappened) }}</h3>
 						<p class="text-sm text-secondary m-0">
-							{{ matchedError.whatHappened }}
+							{{ formatMessage(matchedError.whatHappened) }}
 						</p>
 					</div>
 
 					<div class="flex flex-col gap-1.5">
-						<h3 class="text-base font-bold m-0">How to fix it</h3>
+						<h3 class="text-base font-bold m-0">{{ formatMessage(messages.howToFix) }}</h3>
 						<ol class="list-none flex flex-col gap-2 m-0 pl-0">
 							<li
 								v-for="(step, index) in matchedError.stepsToFix"
@@ -99,30 +148,36 @@ async function copyToClipboard(text: string) {
 								>
 									{{ index + 1 }}
 								</span>
-								<!-- eslint-disable-next-line vue/no-v-html -->
-								<span
-									class="text-sm [&_a]:text-info [&_a]:font-medium [&_a]:underline"
-									v-html="step"
-								/>
+								<span class="text-sm [&_a]:text-info [&_a]:font-medium [&_a]:underline">
+									<IntlFormatted :message-id="step.message">
+										<template #link="{ children }">
+											<a :href="step.href" target="_blank" rel="noopener noreferrer">
+												<component :is="() => children" />
+											</a>
+										</template>
+									</IntlFormatted>
+								</span>
 							</li>
 						</ol>
 					</div>
 				</template>
 				<template v-else>
 					<div class="flex flex-col gap-1.5">
-						<h3 class="text-base font-bold m-0">Unknown error</h3>
+						<h3 class="text-base font-bold m-0">{{ formatMessage(messages.unknownTitle) }}</h3>
 						<p class="text-sm text-secondary m-0">
-							We don’t recognize this error and can’t recommend specific steps to resolve it.
+							{{ formatMessage(messages.unknownBody) }}
 						</p>
 						<p class="text-sm text-secondary m-0">
-							Try visiting
-							<a
-								class="text-info font-medium underline hover:underline"
-								href="https://www.minecraft.net/en-us/login"
-								>Minecraft Login</a
-							>
-							and signing in, as it may prompt you with the necessary steps. You can also contact
-							support and we can look into it further.
+							<IntlFormatted :message-id="messages.unknownAdvice">
+								<template #login-link="{ children }">
+									<a
+										class="text-info font-medium underline hover:underline"
+										href="https://www.minecraft.net/en-us/login"
+									>
+										<component :is="() => children" />
+									</a>
+								</template>
+							</IntlFormatted>
 						</p>
 					</div>
 				</template>
@@ -131,7 +186,7 @@ async function copyToClipboard(text: string) {
 			<!-- Action buttons -->
 			<div class="flex items-center gap-2">
 				<ButtonLink href="https://support.modrinth.com" class="!w-full" @click="modal?.hide()">
-					<MessagesSquareIcon /> Contact support
+					<MessagesSquareIcon /> {{ formatMessage(messages.contactSupport) }}
 				</ButtonLink>
 				<Button
 					type="colored"
@@ -140,7 +195,7 @@ async function copyToClipboard(text: string) {
 					class="!w-full"
 					@click="signInAgain"
 				>
-					<LogInIcon /> Sign in again
+					<LogInIcon /> {{ formatMessage(messages.signInAgain) }}
 				</Button>
 			</div>
 
@@ -155,7 +210,7 @@ async function copyToClipboard(text: string) {
 					>
 						<span class="flex items-center gap-2 text-contrast font-extrabold m-0">
 							<WrenchIcon class="h-4 w-4" />
-							Debug information
+							{{ formatMessage(messages.debugInformation) }}
 						</span>
 						<DropdownIcon
 							class="h-5 w-5 text-secondary transition-transform"
@@ -172,8 +227,8 @@ async function copyToClipboard(text: string) {
 								{{ debugInfo }}
 							</div>
 							<IconButton
-								v-tooltip="'Copy debug info'"
-								:label="'Copy debug info'"
+								v-tooltip="formatMessage(messages.copyDebugInfo)"
+								:label="formatMessage(messages.copyDebugInfo)"
 								:disabled="copied"
 								@click="copyToClipboard(debugInfo)"
 							>

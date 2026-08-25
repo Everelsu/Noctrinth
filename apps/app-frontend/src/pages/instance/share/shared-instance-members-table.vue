@@ -5,7 +5,7 @@
 				<StyledInput
 					v-model="search"
 					:icon="SearchIcon"
-					:placeholder="`Search ${rows.length} users...`"
+					:placeholder="formatMessage(messages.searchPlaceholder, { count: rows.length })"
 					wrapper-class="min-w-0 flex-1"
 					input-class="!h-10"
 					clearable
@@ -32,7 +32,7 @@
 					>
 						<SpinnerIcon v-if="invitePending" class="animate-spin" aria-hidden="true" />
 						<UserPlusIcon v-else aria-hidden="true" />
-						Invite friends
+						{{ formatMessage(messages.inviteFriends) }}
 					</Button>
 				</template>
 			</div>
@@ -100,7 +100,7 @@
 				<span v-if="row.lastPlayedAt" v-tooltip="formatDateTime(row.lastPlayedAt)">{{
 					formatRelativeTime(row.lastPlayedAt)
 				}}</span>
-				<span v-else>Never</span>
+				<span v-else>{{ formatMessage(messages.never) }}</span>
 			</template>
 			<template #cell-joined="{ row }">
 				<span
@@ -116,7 +116,7 @@
 				<span class="inline-flex min-w-0 items-center gap-2">
 					<UserPlusIcon v-if="row.method === 'direct'" class="size-5 shrink-0" aria-hidden="true" />
 					<LinkIcon v-else class="size-5 shrink-0" aria-hidden="true" />
-					<span class="min-w-0 truncate">{{ methodLabels[row.method] }}</span>
+					<span class="min-w-0 truncate">{{ formatMessage(methodMessages[row.method]) }}</span>
 				</span>
 			</template>
 			<template #cell-actions="{ row }">
@@ -150,6 +150,7 @@ import { Button, IconButton } from '@modrinth/ui'
 import {
 	AutoLink,
 	Avatar,
+	commonMessages,
 	defineMessages,
 	type SortDirection,
 	StyledInput,
@@ -165,7 +166,7 @@ import { computed, ref, watch } from 'vue'
 import { injectSharedInstanceManagement } from './shared-instance-management-context'
 import {
 	type MethodFilter,
-	methodLabels,
+	methodMessages,
 	type ShareMethod,
 	type ShareRow,
 	type ShareTableColumn,
@@ -189,15 +190,15 @@ const { formatMessage } = useVIntl()
 const formatRelativeTime = useRelativeTime({ style: 'narrow' })
 const formatDateTime = useFormatDateTime({ dateStyle: 'medium', timeStyle: 'short' })
 const methodFilterOptions: Array<{ id: ShareMethod; label: string }> = [
-	{ id: 'direct', label: methodLabels.direct },
-	{ id: 'link', label: methodLabels.link },
+	{ id: 'direct', label: formatMessage(methodMessages.direct) },
+	{ id: 'link', label: formatMessage(methodMessages.link) },
 ]
 const hasMultipleMethods = computed(() => new Set(rows.value.map((row) => row.method)).size > 1)
 const columns = computed<TableColumn<ShareTableColumn>[]>(() => {
 	const result: TableColumn<ShareTableColumn>[] = [
 		{
 			key: 'username',
-			label: 'Username',
+			label: formatMessage(commonMessages.usernameLabel),
 			width: 'clamp(14rem, 30%, 26rem)',
 			enableSorting: true,
 			headerClass: '!pr-3',
@@ -205,7 +206,7 @@ const columns = computed<TableColumn<ShareTableColumn>[]>(() => {
 		},
 		{
 			key: 'lastPlayed',
-			label: 'Last played',
+			label: formatMessage(messages.lastPlayedColumn),
 			width: 'clamp(7rem, 15%, 13rem)',
 			enableSorting: true,
 			headerClass: 'whitespace-nowrap !px-2',
@@ -213,7 +214,7 @@ const columns = computed<TableColumn<ShareTableColumn>[]>(() => {
 		},
 		{
 			key: 'joined',
-			label: 'Joined',
+			label: formatMessage(messages.joinedColumn),
 			width: 'clamp(7rem, 14%, 12rem)',
 			enableSorting: true,
 			defaultSortDirection: 'desc',
@@ -222,7 +223,7 @@ const columns = computed<TableColumn<ShareTableColumn>[]>(() => {
 		},
 		{
 			key: 'method',
-			label: 'Method',
+			label: formatMessage(messages.methodColumn),
 			enableSorting: true,
 			headerClass: 'whitespace-nowrap !px-2',
 			cellClass: 'whitespace-nowrap !px-2',
@@ -231,7 +232,7 @@ const columns = computed<TableColumn<ShareTableColumn>[]>(() => {
 	if (!actionsLocked.value)
 		result.push({
 			key: 'actions',
-			label: 'Actions',
+			label: formatMessage(commonMessages.actionsLabel),
 			align: 'right',
 			width: 'clamp(5.5rem, 7%, 7rem)',
 			headerClass: 'whitespace-nowrap !pl-2 !pr-4',
@@ -246,9 +247,9 @@ const filteredRows = computed(() => {
 		if (!query) return true
 		return [
 			row.username,
-			row.lastPlayedAt ? formatRelativeTime(row.lastPlayedAt) : 'Never',
+			row.lastPlayedAt ? formatRelativeTime(row.lastPlayedAt) : formatMessage(messages.never),
 			row.pending ? 'Pending' : row.joinedAt ? formatRelativeTime(row.joinedAt) : '',
-			methodLabels[row.method],
+			formatMessage(methodMessages[row.method]),
 		].some((value) => value.toLowerCase().includes(query))
 	})
 })
@@ -262,7 +263,9 @@ function compareRows(a: ShareRow, b: ShareRow) {
 			(a.lastPlayedAt?.getTime() ?? Number.NEGATIVE_INFINITY) -
 			(b.lastPlayedAt?.getTime() ?? Number.NEGATIVE_INFINITY)
 	else if (sortColumn.value === 'method')
-		compared = methodLabels[a.method].localeCompare(methodLabels[b.method])
+		compared = formatMessage(methodMessages[a.method]).localeCompare(
+			formatMessage(methodMessages[b.method]),
+		)
 	else
 		compared =
 			(a.pending ? Number.MAX_SAFE_INTEGER : (a.joinedAt?.getTime() ?? Number.NEGATIVE_INFINITY)) -
@@ -304,6 +307,30 @@ const messages = defineMessages({
 	noUsersMatchFilters: {
 		id: 'app.instance.share.members.no-filter-results',
 		defaultMessage: 'No users match your filters.',
+	},
+	lastPlayedColumn: {
+		id: 'instance.last-played',
+		defaultMessage: 'Last played',
+	},
+	joinedColumn: {
+		id: 'app.instance.share.members.column.joined',
+		defaultMessage: 'Joined',
+	},
+	methodColumn: {
+		id: 'app.instance.share.members.column.method',
+		defaultMessage: 'Method',
+	},
+	searchPlaceholder: {
+		id: 'app.instance.share.members.search',
+		defaultMessage: 'Search {count, plural, one {# user} other {# users}}...',
+	},
+	inviteFriends: {
+		id: 'app.instance.share.empty.invite-friends-button',
+		defaultMessage: 'Invite friends',
+	},
+	never: {
+		id: 'app.instance.share.members.never-played',
+		defaultMessage: 'Never',
 	},
 })
 function userProfileLink(username: string) {

@@ -23,7 +23,7 @@
 <script setup lang="ts">
 import { OnlineIndicatorIcon } from '@modrinth/assets'
 import { ConsolePageLayout, defineMessages, provideConsoleManager, useVIntl } from '@modrinth/ui'
-import { computed, onMounted, onUnmounted, ref, shallowRef, triggerRef, watch } from 'vue'
+import { computed, onMounted, ref, shallowRef, triggerRef, watch } from 'vue'
 
 import { useAppEvent } from '@/composables/use-app-event'
 import { useProcessConsole } from '@/composables/useInstanceConsole'
@@ -45,7 +45,7 @@ const messages = defineMessages({
 	},
 })
 
-const { console: liveConsole, hydrate, clear, forget } = useProcessConsole(props.process.uuid)
+const { console: liveConsole, hydrate, clear } = useProcessConsole(props.process.uuid)
 
 const accountName = computed(
 	() => props.process.account_name || formatMessage(messages.unknownAccount),
@@ -78,9 +78,10 @@ onMounted(async () => {
 	loading.value = false
 })
 
-// Held in memory only while it is on screen; what was said is kept behind it and
-// read back on the way in, so nothing is lost by letting this go.
-onUnmounted(() => forget())
+// Kept in memory after the pane goes away, the way the single console has always
+// been: leaving the page and coming back should show what was already there
+// rather than depend on reading it back, which is a request that can fail.
+// One console per copy of an instance, and only for copies started this run.
 
 // Every copy hears every line, so each one keeps only what it said itself.
 useAppEvent('log', (payload) => {

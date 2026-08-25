@@ -219,3 +219,28 @@ export async function uploadElySkin(dataUrl: string): Promise<void> {
 export async function removeElySkin(skinId: number): Promise<void> {
 	await invoke('plugin:ely-auth|ely_remove_skin', { skinId })
 }
+
+/** What {@link editElySkin} can change. Anything left out stays as it is. */
+export interface ElySkinEdit {
+	/** The three-pixel-arm model — Alex on Ely.by, slim everywhere else. */
+	isSlim: boolean
+	name?: string
+	description?: string
+}
+
+/**
+ * Rewrites a skin's details on Ely.by.
+ *
+ * The website's edit form posts every field at once, so the backend reads the
+ * skin's current details first and sends them back untouched around whatever
+ * changed here. Like the rest of the Ely.by writes it runs inside the embedded
+ * window and cannot report the outcome — re-read the listing to find out.
+ */
+export async function editElySkin(skinId: number, edit: ElySkinEdit): Promise<void> {
+	await invoke('plugin:ely-auth|ely_edit_skin', {
+		skinId,
+		isSlim: edit.isSlim,
+		name: edit.name ?? null,
+		description: edit.description ?? null,
+	})
+}

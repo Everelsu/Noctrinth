@@ -124,9 +124,6 @@ export function useProcessConsole(processUuid: string) {
 				window.console.warn('Failed to clear the log of one copy:', error)
 			})
 		},
-		forget: () => {
-			processConsoles.delete(processUuid)
-		},
 	}
 }
 

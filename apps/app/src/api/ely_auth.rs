@@ -20,6 +20,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             ely_wear_skin,
             ely_upload_skin,
             ely_remove_skin,
+            ely_edit_skin,
         ])
         .build()
 }
@@ -147,6 +148,89 @@ pub async fn ely_upload_skin<R: Runtime>(
     data_url: &str,
 ) -> Result<()> {
     run_in_skin_window(app, upload_skin_script(data_url))
+}
+
+/// Rewrites a skin's details on Ely.by.
+///
+/// `/skins/save/<id>` is the edit form's own endpoint, and it takes the whole
+/// form every time: posting only the changed field blanks the name, the
+/// description, the tags and the rest. There is nowhere public to read those
+/// from — the catalogue listing carries neither name nor description — so the
+/// script reads the edit page first and sends everything back, changing only
+/// what the caller asked to change.
+///
+/// `name` and `description` of `None` mean "leave as it is".
+fn edit_skin_script(
+    skin_id: u64,
+    is_slim: bool,
+    name: Option<&str>,
+    description: Option<&str>,
+) -> String {
+    // serde_json writes a JS string literal, or `null`, with the quoting and
+    // escaping a nickname or a description might need.
+    let name = serde_json::to_string(&name).unwrap_or_else(|_| "null".into());
+    let description =
+        serde_json::to_string(&description).unwrap_or_else(|_| "null".into());
+    let is_slim = if is_slim { "1" } else { "0" };
+
+    format!(
+        r#"(async function () {{
+    try {{
+        const page = await fetch('https://ely.by/skins/s{skin_id}/edit', {{
+            credentials: 'same-origin'
+        }}).then(function (r) {{ return r.text(); }});
+
+        const found = page.match(/alight\.service\.skin\s*=\s*(\{{[\s\S]*?\}});/);
+        if (!found) return;
+
+        const skin = JSON.parse(found[1]);
+        const name = {name};
+        const description = {description};
+
+        const body = new URLSearchParams();
+        body.set('name', name === null ? (skin.name || '') : name);
+        body.set('description', description === null ? (skin.description || '') : description);
+        body.set('kind', String(skin.kind == null ? 0 : skin.kind));
+        body.set('color', String(skin.color || '').replace('#', ''));
+        body.set('tags', Array.isArray(skin.tags) ? skin.tags.join(',') : String(skin.tags || ''));
+        body.set('isSlim', '{is_slim}');
+
+        await fetch('https://ely.by/skins/save/{skin_id}', {{
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {{
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'X-Requested-With': 'XMLHttpRequest'
+            }},
+            body: body.toString()
+        }});
+    }} catch (e) {{}}
+}})();"#
+    )
+}
+
+/// Changes the model or the details of one of the account's skins.
+///
+/// Like every other write to Ely.by, this needs the website session that only
+/// the embedded window has, and it cannot report back from there. The caller
+/// confirms by re-reading the public listing, which carries `is_slim`.
+#[tauri::command]
+pub async fn ely_edit_skin<R: Runtime>(
+    app: tauri::AppHandle<R>,
+    skin_id: u64,
+    is_slim: bool,
+    name: Option<String>,
+    description: Option<String>,
+) -> Result<()> {
+    run_in_skin_window(
+        app,
+        edit_skin_script(
+            skin_id,
+            is_slim,
+            name.as_deref(),
+            description.as_deref(),
+        ),
+    )
 }
 
 /// Wears one of the account's uploaded skins.

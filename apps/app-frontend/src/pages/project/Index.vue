@@ -162,11 +162,17 @@
 							</Button>
 							<IconButton
 								v-tooltip="
-									!currentUserId ? 'Sign in to follow' : isFollowing ? 'Following' : 'Follow'
+									formatMessage(
+										!currentUserId
+											? messages.signInToFollow
+											: isFollowing
+												? commonMessages.unfollowButton
+												: commonMessages.followButton,
+									)
 								"
 								type="quiet"
 								size="xl"
-								label="Follow"
+								:label="formatMessage(commonMessages.followButton)"
 								:disabled="!currentUserId || followLoading"
 								@click="toggleFollow"
 							>
@@ -368,6 +374,7 @@ const { formatMessage } = useVIntl()
 
 const messages = defineMessages({
 	moreOptions: { id: 'app.project.more-options', defaultMessage: 'More options' },
+	signInToFollow: { id: 'app.project.sign-in-to-follow', defaultMessage: 'Sign in to follow' },
 	descriptionTab: { id: 'app.project.tab.description', defaultMessage: 'Description' },
 	versionsTab: { id: 'app.project.tab.versions', defaultMessage: 'Versions' },
 	galleryTab: { id: 'app.project.tab.gallery', defaultMessage: 'Gallery' },

@@ -1,12 +1,18 @@
 <script setup>
 import { CheckIcon } from '@modrinth/assets'
-import { Badge, IconButton } from '@modrinth/ui'
+import { Badge, defineMessages, IconButton, useVIntl } from '@modrinth/ui'
 import { computed, ref } from 'vue'
 
 import { SwapIcon } from '@/assets/icons/index.js'
 import ModalWrapper from '@/components/ui/modal/ModalWrapper.vue'
 import { update_managed_modrinth_version } from '@/helpers/instance'
 import { releaseColor } from '@/helpers/utils'
+
+const { formatMessage } = useVIntl()
+
+const messages = defineMessages({
+	switchVersion: { id: 'button.switch-version', defaultMessage: 'Switch version' },
+})
 
 const props = defineProps({
 	versions: {
@@ -77,7 +83,7 @@ const onHide = () => {
 								<IconButton
 									:type="version.id === installedVersion ? 'base' : 'colored'"
 									:color="version.id === installedVersion ? undefined : 'brand'"
-									label="Switch version"
+									:label="formatMessage(messages.switchVersion)"
 									:disabled="inProgress || installing || version.id === installedVersion"
 									@click.stop="() => switchVersion(version.id)"
 								>

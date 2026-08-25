@@ -131,7 +131,7 @@ export function useBrowseSearch(options: UseBrowseSearchOptions): BrowseSearchSt
 		isServerType.value ? serverRequestParams.value : requestParams.value,
 	)
 	const effectiveSortTypes = computed(() =>
-		isServerType.value ? (serverSortTypes as readonly SortType[]) : sortTypes,
+		isServerType.value ? (serverSortTypes.value as readonly SortType[]) : sortTypes.value,
 	)
 	const effectiveCurrentSortType = computed({
 		get: () => (isServerType.value ? serverCurrentSortType.value : currentSortType.value),

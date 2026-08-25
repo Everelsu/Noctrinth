@@ -16,7 +16,7 @@
  * instance as a whole, so `@sodium !outdated` means "Sodium itself is out of
  * date here", not "Sodium is installed and something unrelated is stale".
  */
-import type { ContentItem } from '@modrinth/ui'
+import { type ContentItem, defineMessages } from '@modrinth/ui'
 
 import type { GameInstance } from './types'
 
@@ -95,59 +95,115 @@ export interface SearchSuggestion {
 	iconUrl?: string | null
 }
 
-const SIGIL_SUGGESTIONS: SearchSuggestion[] = [
-	{
-		insert: '@',
-		label: '@ — by mod',
-		hint: 'Instances that have a given mod, resource pack or shader',
-		kind: 'sigil',
+/**
+ * What a completion says for itself.
+ *
+ * The sigils are punctuation and stay as they are; everything written around
+ * them is a sentence somebody reads, so it goes through the catalogue. The
+ * formatter is handed in because this file is a helper and has no component to
+ * take one from — see `suggestionsFor`.
+ */
+const messages = defineMessages({
+	byMod: { id: 'app.library.search.sigil.mod', defaultMessage: 'by mod' },
+	byModHint: {
+		id: 'app.library.search.sigil.mod.hint',
+		defaultMessage: 'Instances that have a given mod, resource pack or shader',
 	},
-	{
-		insert: '#',
-		label: '# — by type',
-		hint: 'Instances that have any mod, shader, resource pack or data pack',
-		kind: 'sigil',
+	byType: { id: 'app.library.search.sigil.type', defaultMessage: 'by type' },
+	byTypeHint: {
+		id: 'app.library.search.sigil.type.hint',
+		defaultMessage: 'Instances that have any mod, shader, resource pack or data pack',
 	},
-	{
-		insert: '!',
-		label: '! — by state',
-		hint: 'Instances with something outdated, disabled or broken',
-		kind: 'sigil',
+	byState: { id: 'app.library.search.sigil.state', defaultMessage: 'by state' },
+	byStateHint: {
+		id: 'app.library.search.sigil.state.hint',
+		defaultMessage: 'Instances with something outdated, disabled or broken',
 	},
-]
+	hasMods: { id: 'app.library.search.type.mod', defaultMessage: 'Has mods' },
+	hasShaders: { id: 'app.library.search.type.shader', defaultMessage: 'Has shader packs' },
+	hasResourcePacks: {
+		id: 'app.library.search.type.resourcepack',
+		defaultMessage: 'Has resource packs',
+	},
+	hasDataPacks: { id: 'app.library.search.type.datapack', defaultMessage: 'Has data packs' },
+	stateOutdated: {
+		id: 'app.library.search.state.outdated',
+		defaultMessage: 'Something installed has an update',
+	},
+	stateDisabled: {
+		id: 'app.library.search.state.disabled',
+		defaultMessage: 'Something is installed but switched off',
+	},
+	stateBroken: {
+		id: 'app.library.search.state.broken',
+		defaultMessage: 'The instance itself needs repairing',
+	},
+})
 
-const TYPE_SUGGESTIONS: SearchSuggestion[] = [
-	{ insert: '#mod', label: '#mod', hint: 'Has mods', kind: 'type' },
-	{ insert: '#shader', label: '#shader', hint: 'Has shader packs', kind: 'type' },
-	{
-		insert: '#resourcepack',
-		label: '#resourcepack',
-		hint: 'Has resource packs',
-		kind: 'type',
-	},
-	{ insert: '#datapack', label: '#datapack', hint: 'Has data packs', kind: 'type' },
-]
+/** Formats a message, or falls back to what it says in English. */
+export type SuggestionFormatter = (descriptor: { defaultMessage: string }) => string
 
-const STATE_SUGGESTIONS: SearchSuggestion[] = [
-	{
-		insert: '!outdated',
-		label: '!outdated',
-		hint: 'Something installed has an update',
-		kind: 'state',
-	},
-	{
-		insert: '!disabled',
-		label: '!disabled',
-		hint: 'Something is installed but switched off',
-		kind: 'state',
-	},
-	{
-		insert: '!broken',
-		label: '!broken',
-		hint: 'The instance itself needs repairing',
-		kind: 'state',
-	},
-]
+const english: SuggestionFormatter = (descriptor) => descriptor.defaultMessage
+
+function sigilSuggestions(format: SuggestionFormatter): SearchSuggestion[] {
+	return [
+		{
+			insert: '@',
+			label: `@ — ${format(messages.byMod)}`,
+			hint: format(messages.byModHint),
+			kind: 'sigil',
+		},
+		{
+			insert: '#',
+			label: `# — ${format(messages.byType)}`,
+			hint: format(messages.byTypeHint),
+			kind: 'sigil',
+		},
+		{
+			insert: '!',
+			label: `! — ${format(messages.byState)}`,
+			hint: format(messages.byStateHint),
+			kind: 'sigil',
+		},
+	]
+}
+
+function typeSuggestions(format: SuggestionFormatter): SearchSuggestion[] {
+	return [
+		{ insert: '#mod', label: '#mod', hint: format(messages.hasMods), kind: 'type' },
+		{ insert: '#shader', label: '#shader', hint: format(messages.hasShaders), kind: 'type' },
+		{
+			insert: '#resourcepack',
+			label: '#resourcepack',
+			hint: format(messages.hasResourcePacks),
+			kind: 'type',
+		},
+		{ insert: '#datapack', label: '#datapack', hint: format(messages.hasDataPacks), kind: 'type' },
+	]
+}
+
+function stateSuggestions(format: SuggestionFormatter): SearchSuggestion[] {
+	return [
+		{
+			insert: '!outdated',
+			label: '!outdated',
+			hint: format(messages.stateOutdated),
+			kind: 'state',
+		},
+		{
+			insert: '!disabled',
+			label: '!disabled',
+			hint: format(messages.stateDisabled),
+			kind: 'state',
+		},
+		{
+			insert: '!broken',
+			label: '!broken',
+			hint: format(messages.stateBroken),
+			kind: 'state',
+		},
+	]
+}
 
 /** The whitespace-separated chunk the user is currently typing. */
 export function activeToken(input: string): string {
@@ -179,6 +235,7 @@ export function suggestionsFor(
 	input: string,
 	contentNames: { name: string; iconUrl?: string | null }[],
 	limit = 8,
+	format: SuggestionFormatter = english,
 ): SearchSuggestion[] {
 	const token = activeToken(input)
 	const negated = token.startsWith('-')
@@ -193,20 +250,20 @@ export function suggestionsFor(
 				}))
 			: suggestions
 
-	if (!bare) return withPrefix(SIGIL_SUGGESTIONS)
+	if (!bare) return withPrefix(sigilSuggestions(format))
 
 	const sigil = bare[0]
 	const value = bare.slice(1).toLowerCase()
 
 	if (sigil === '#') {
 		return withPrefix(
-			TYPE_SUGGESTIONS.filter((suggestion) => suggestion.insert.slice(1).startsWith(value)),
+			typeSuggestions(format).filter((suggestion) => suggestion.insert.slice(1).startsWith(value)),
 		).slice(0, limit)
 	}
 
 	if (sigil === '!') {
 		return withPrefix(
-			STATE_SUGGESTIONS.filter((suggestion) => suggestion.insert.slice(1).startsWith(value)),
+			stateSuggestions(format).filter((suggestion) => suggestion.insert.slice(1).startsWith(value)),
 		).slice(0, limit)
 	}
 

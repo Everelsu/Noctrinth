@@ -15,9 +15,11 @@
 <script setup>
 import {
 	ConsolePageLayout,
+	defineMessages,
 	injectModrinthClient,
 	injectNotificationManager,
 	provideConsoleManager,
+	useVIntl,
 } from '@modrinth/ui'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref, shallowRef, triggerRef, watch, watchEffect } from 'vue'
@@ -29,6 +31,13 @@ import { delete_logs_by_filename, get_output_by_filename } from '@/helpers/logs.
 
 import { injectInstancePage } from '../instance-context'
 import { instanceKeys, instanceProcessesQueryOptions } from '../query-options'
+
+const { formatMessage } = useVIntl()
+
+const messages = defineMessages({
+	liveLog: { id: 'app.instance.logs.live', defaultMessage: 'Live Log' },
+	unknownLog: { id: 'app.instance.logs.unknown-file', defaultMessage: 'Unknown' },
+})
 
 const client = injectModrinthClient()
 const { handleError } = injectNotificationManager()
@@ -58,7 +67,7 @@ await consoleHydrationQuery.suspense()
 
 function buildLogList(rawLogs) {
 	return [
-		{ name: 'Live Log', live: true },
+		{ name: formatMessage(messages.liveLog), live: true },
 		...rawLogs
 			.filter(
 				(log) =>
@@ -70,7 +79,7 @@ function buildLogList(rawLogs) {
 			)
 			.map((log) => ({
 				...log,
-				name: log.filename || 'Unknown',
+				name: log.filename || formatMessage(messages.unknownLog),
 			})),
 	]
 }

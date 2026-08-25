@@ -62,6 +62,9 @@
 	"app.appearance-settings.accent.verdant": {
 		"message": "Verdant"
 	},
+	"app.appearance-settings.minimize-launcher.description": {
+		"message": "Minimize Noctrinth when Minecraft starts."
+	},
 	"app.changelog.author": {
 		"message": "Author"
 	},
@@ -82,6 +85,165 @@
 	},
 	"app.changelog.source.noctrinth": {
 		"message": "Noctrinth"
+	},
+	"app.collection.delete-modal.description": {
+		"message": "This will permanently delete this collection. This action cannot be undone."
+	},
+	"app.collection.delete-modal.title": {
+		"message": "Are you sure you want to delete this collection?"
+	},
+	"app.collection.save-button.create": {
+		"message": "Create new collection"
+	},
+	"app.collection.save-button.empty": {
+		"message": "You don't have any collections yet."
+	},
+	"app.collection.save-button.loading": {
+		"message": "Loading collections..."
+	},
+	"app.collection.save-button.no-matches": {
+		"message": "No collections match your search."
+	},
+	"app.collection.save-button.save": {
+		"message": "Save to collection"
+	},
+	"app.collection.save-button.save-tooltip": {
+		"message": "Save"
+	},
+	"app.collection.save-button.saved": {
+		"message": "Saved to a collection"
+	},
+	"app.collection.save-button.saved-tooltip": {
+		"message": "Saved"
+	},
+	"app.collection.save-button.search": {
+		"message": "Search..."
+	},
+	"app.collection.save-button.sign-in": {
+		"message": "Sign in to Modrinth to save projects."
+	},
+	"app.error-modal.copy-debug-info": {
+		"message": "Copy debug info"
+	},
+	"app.error-modal.debug-information": {
+		"message": "Debug information"
+	},
+	"app.error-modal.directory.cancel": {
+		"message": "Cancel directory change"
+	},
+	"app.error-modal.directory.generic.body": {
+		"message": "Noctrinth is unable to migrate to the new directory you selected. Please contact support for help or cancel the directory change."
+	},
+	"app.error-modal.directory.no-space.body": {
+		"message": "It looks like there is not enough space on the disk containing the directory you selected. Please free up some space and try again or cancel the directory change."
+	},
+	"app.error-modal.directory.no-space.heading": {
+		"message": "Not enough space"
+	},
+	"app.error-modal.directory.read-only.body": {
+		"message": "It looks like Noctrinth is unable to write to the directory you selected. Please adjust the permissions of the directory and try again or cancel the directory change."
+	},
+	"app.error-modal.directory.read-only.heading": {
+		"message": "Change directory permissions"
+	},
+	"app.error-modal.directory.retry": {
+		"message": "Retry directory change"
+	},
+	"app.error-modal.game-pass.body": {
+		"message": "Try signing in with the <launcher-link>official Minecraft Launcher</launcher-link> first. Once you’re done, come back here and sign in!"
+	},
+	"app.error-modal.game-pass.heading": {
+		"message": "Using PC Game Pass, coming from Bedrock, or just bought the game?"
+	},
+	"app.error-modal.get-support": {
+		"message": "Get support"
+	},
+	"app.error-modal.hosts-file.body": {
+		"message": "Noctrinth tried to connect to Microsoft / Xbox / Minecraft services, but the remote server rejected the connection. This may indicate that these services are blocked by the hosts file. Please visit <support-article>our support article</support-article> for steps on how to fix the issue."
+	},
+	"app.error-modal.network.body": {
+		"message": "It looks like there were issues with Noctrinth connecting to Microsoft's servers. This is often the result of a poor connection, so we recommend trying again to see if it works. If issues continue to persist, follow the steps in <support-article>our support article</support-article> to troubleshoot."
+	},
+	"app.error-modal.network.heading": {
+		"message": "Network issues"
+	},
+	"app.error-modal.no-error-message": {
+		"message": "No error message."
+	},
+	"app.error-modal.no-loader.body": {
+		"message": "Noctrinth failed to find the loader version for this instance."
+	},
+	"app.error-modal.no-loader.fix": {
+		"message": "To resolve this, you need to repair the instance. Click the button below to do so."
+	},
+	"app.error-modal.no-loader.repair": {
+		"message": "Repair instance"
+	},
+	"app.error-modal.other-account.body": {
+		"message": "Double check you’ve signed in with the right account. You may own Minecraft on a different Microsoft account."
+	},
+	"app.error-modal.other-account.button": {
+		"message": "Try another account"
+	},
+	"app.error-modal.other-account.heading": {
+		"message": "Try another Microsoft account"
+	},
+	"app.error-modal.state-init.body": {
+		"message": "Noctrinth failed to load correctly. This may be because of a corrupted file, or because the app is missing crucial files."
+	},
+	"app.error-modal.state-init.fix-internet": {
+		"message": "Ensuring you are connected to the internet, then try restarting the app."
+	},
+	"app.error-modal.state-init.fix-redownload": {
+		"message": "Redownloading the app."
+	},
+	"app.error-modal.state-init.fixes": {
+		"message": "You may be able to fix it through one of the following ways:"
+	},
+	"app.error-modal.support-prompt": {
+		"message": "If nothing is working and you need help, visit <support-page>our support page</support-page> and start a chat using the widget in the bottom right and we will be more than happy to assist! Make sure to provide the following debug information to the agent:"
+	},
+	"app.error-modal.title.directory-move": {
+		"message": "Could not change app directory"
+	},
+	"app.error-modal.title.minecraft-auth": {
+		"message": "Unable to sign in to Minecraft"
+	},
+	"app.error-modal.title.no-loader": {
+		"message": "No loader selected"
+	},
+	"app.error-modal.title.state-init": {
+		"message": "Error initializing Noctrinth"
+	},
+	"app.error-modal.title.unknown": {
+		"message": "An error occurred"
+	},
+	"app.error-modal.try-signing-in-again": {
+		"message": "Try signing in again"
+	},
+	"app.hosting.title": {
+		"message": "Hosting"
+	},
+	"app.hosting.update-required.description": {
+		"message": "You need to update to use Modrinth Hosting through Noctrinth"
+	},
+	"app.hosting.update-required.title": {
+		"message": "Noctrinth update required"
+	},
+	"app.icon-editor.apply-icons-modal.description": {
+		"message": "Create custom icons for your instances right in Noctrinth. Mix and match backgrounds with symbols from Minecraft and popular mods!"
+	},
+	"app.instance.add-content.from-file": {
+		"message": "Add from file"
+	},
+	"app.instance.add-content.install": {
+		"message": "Install content"
+	},
+	"app.instance.logs.live": {
+		"message": "Live Log"
+	},
+	"app.instance.logs.unknown-file": {
+		"message": "Unknown"
 	},
 	"app.instance.screenshots.copied": {
 		"message": "Screenshot copied to clipboard"
@@ -131,6 +293,27 @@
 	"app.instance.screenshots.zoom": {
 		"message": "Zoom"
 	},
+	"app.instance.share.members.column.joined": {
+		"message": "Joined"
+	},
+	"app.instance.share.members.column.method": {
+		"message": "Method"
+	},
+	"app.instance.share.members.never-played": {
+		"message": "Never"
+	},
+	"app.instance.share.members.search": {
+		"message": "Search {count, plural, one {# user} other {# users}}..."
+	},
+	"app.instance.share.method.direct": {
+		"message": "Direct invite"
+	},
+	"app.instance.share.method.link": {
+		"message": "Share link"
+	},
+	"app.instance.tab.screenshots": {
+		"message": "Screenshots"
+	},
 	"app.library.search.hint": {
 		"message": "↑↓ to pick · Tab to insert · terms combine, and - flips one around"
 	},
@@ -139,6 +322,45 @@
 	},
 	"app.library.search.placeholder": {
 		"message": "Search instances, or type @ # ! to filter"
+	},
+	"app.library.search.sigil.mod": {
+		"message": "by mod"
+	},
+	"app.library.search.sigil.mod.hint": {
+		"message": "Instances that have a given mod, resource pack or shader"
+	},
+	"app.library.search.sigil.state": {
+		"message": "by state"
+	},
+	"app.library.search.sigil.state.hint": {
+		"message": "Instances with something outdated, disabled or broken"
+	},
+	"app.library.search.sigil.type": {
+		"message": "by type"
+	},
+	"app.library.search.sigil.type.hint": {
+		"message": "Instances that have any mod, shader, resource pack or data pack"
+	},
+	"app.library.search.state.broken": {
+		"message": "The instance itself needs repairing"
+	},
+	"app.library.search.state.disabled": {
+		"message": "Something is installed but switched off"
+	},
+	"app.library.search.state.outdated": {
+		"message": "Something installed has an update"
+	},
+	"app.library.search.type.datapack": {
+		"message": "Has data packs"
+	},
+	"app.library.search.type.mod": {
+		"message": "Has mods"
+	},
+	"app.library.search.type.resourcepack": {
+		"message": "Has resource packs"
+	},
+	"app.library.search.type.shader": {
+		"message": "Has shader packs"
 	},
 	"app.migration.modrinth.action.choose": {
 		"message": "Choose instances"
@@ -157,6 +379,258 @@
 	},
 	"app.migration.modrinth.title": {
 		"message": "Bring your instances over from Modrinth App"
+	},
+	"app.minecraft-auth-error.contact-support": {
+		"message": "Contact support"
+	},
+	"app.minecraft-auth-error.copy-debug-info": {
+		"message": "Copy debug info"
+	},
+	"app.minecraft-auth-error.debug-information": {
+		"message": "Debug information"
+	},
+	"app.minecraft-auth-error.header": {
+		"message": "Sign in Failed"
+	},
+	"app.minecraft-auth-error.how-to-fix": {
+		"message": "How to fix it"
+	},
+	"app.minecraft-auth-error.korea-adult-verification-alt.step-1": {
+		"message": "Visit <link>Xbox</link> and sign in"
+	},
+	"app.minecraft-auth-error.korea-adult-verification-alt.step-2": {
+		"message": "Complete the identity verification process"
+	},
+	"app.minecraft-auth-error.korea-adult-verification-alt.step-3": {
+		"message": "Once finished, try signing in again"
+	},
+	"app.minecraft-auth-error.korea-adult-verification-alt.what": {
+		"message": "This account requires adult verification under South Korean regulations."
+	},
+	"app.minecraft-auth-error.korea-adult-verification.step-1": {
+		"message": "Visit <link>Xbox</link> and sign in"
+	},
+	"app.minecraft-auth-error.korea-adult-verification.step-2": {
+		"message": "Complete the identity verification process"
+	},
+	"app.minecraft-auth-error.korea-adult-verification.step-3": {
+		"message": "Once finished, try signing in again"
+	},
+	"app.minecraft-auth-error.korea-adult-verification.what": {
+		"message": "This account requires adult verification under South Korean regulations."
+	},
+	"app.minecraft-auth-error.minecraft-server-error.step-1": {
+		"message": "Wait a few minutes and try signing in again"
+	},
+	"app.minecraft-auth-error.minecraft-server-error.step-2": {
+		"message": "Check <link>Xbox Status</link> for current service issues"
+	},
+	"app.minecraft-auth-error.minecraft-server-error.step-3": {
+		"message": "Try signing in with the <link>official Minecraft Launcher</link> to confirm whether Minecraft sign-in is also affected there"
+	},
+	"app.minecraft-auth-error.minecraft-server-error.step-4": {
+		"message": "If the service is healthy and this keeps happening, contact support with the debug information below"
+	},
+	"app.minecraft-auth-error.minecraft-server-error.what": {
+		"message": "Minecraft's authentication service is returning a server error, so Noctrinth cannot finish signing you in right now."
+	},
+	"app.minecraft-auth-error.network.step-1": {
+		"message": "Restart Noctrinth and try signing in again"
+	},
+	"app.minecraft-auth-error.network.step-2": {
+		"message": "Check that your internet connection is working"
+	},
+	"app.minecraft-auth-error.network.step-3": {
+		"message": "Allow Noctrinth through your firewall, antivirus, proxy, VPN, and hosts file rules"
+	},
+	"app.minecraft-auth-error.network.step-4": {
+		"message": "Try a different network or temporarily disable VPN/proxy software if you use one"
+	},
+	"app.minecraft-auth-error.network.step-5": {
+		"message": "If routing or DNS is the issue, a service like Cloudflare WARP can sometimes help"
+	},
+	"app.minecraft-auth-error.network.what": {
+		"message": "Noctrinth could not connect to a Microsoft, Xbox, or Minecraft service needed for sign-in. This is usually caused by a local network, DNS, proxy, firewall, hosts file, VPN, or antivirus issue."
+	},
+	"app.minecraft-auth-error.no-xbox-profile.step-1": {
+		"message": "Make sure Minecraft is purchased on this account"
+	},
+	"app.minecraft-auth-error.no-xbox-profile.step-2": {
+		"message": "Visit <link>Minecraft Login</link> and sign in"
+	},
+	"app.minecraft-auth-error.no-xbox-profile.step-3": {
+		"message": "Complete Xbox profile setup if prompted"
+	},
+	"app.minecraft-auth-error.no-xbox-profile.step-4": {
+		"message": "Once finished, try signing in again"
+	},
+	"app.minecraft-auth-error.no-xbox-profile.what": {
+		"message": "This account doesn't have an Xbox profile set up or doesn't own Minecraft."
+	},
+	"app.minecraft-auth-error.player-profile.step-1": {
+		"message": "Sign in with the <link>official Minecraft Launcher</link>"
+	},
+	"app.minecraft-auth-error.player-profile.step-2": {
+		"message": "Launch Minecraft: Java Edition once from the official launcher"
+	},
+	"app.minecraft-auth-error.player-profile.step-3": {
+		"message": "Wait up to an hour if the purchase or profile setup was recent"
+	},
+	"app.minecraft-auth-error.player-profile.step-4": {
+		"message": "Make sure you are using the Microsoft account that owns Minecraft. See <link>Finding the right Xbox account</link> for help"
+	},
+	"app.minecraft-auth-error.player-profile.step-5": {
+		"message": "Try signing in to Noctrinth again"
+	},
+	"app.minecraft-auth-error.player-profile.what": {
+		"message": "Minecraft services could not return a Java Edition profile for this account. This most often happens when the game was purchased recently, the Java profile has not finished being created, or the wrong Microsoft account is being used."
+	},
+	"app.minecraft-auth-error.refresh-token.step-1": {
+		"message": "Sign out of the affected Minecraft account in Noctrinth"
+	},
+	"app.minecraft-auth-error.refresh-token.step-2": {
+		"message": "Sign in to the account again"
+	},
+	"app.minecraft-auth-error.refresh-token.step-3": {
+		"message": "Once the new sign-in finishes, try launching Minecraft again"
+	},
+	"app.minecraft-auth-error.refresh-token.what": {
+		"message": "Your saved Microsoft sign-in token has expired or was revoked, so Noctrinth cannot refresh your Minecraft session."
+	},
+	"app.minecraft-auth-error.region-unavailable.step-1": {
+		"message": "Xbox services must be supported in your country before you can sign in"
+	},
+	"app.minecraft-auth-error.region-unavailable.step-2": {
+		"message": "Check <link>Xbox Availability</link> for supported regions"
+	},
+	"app.minecraft-auth-error.region-unavailable.what": {
+		"message": "Xbox Live isn't available in your region, so sign-in is blocked."
+	},
+	"app.minecraft-auth-error.restricted-online-play.step-1": {
+		"message": "Have a guardian sign in to <link>Microsoft Family</link>"
+	},
+	"app.minecraft-auth-error.restricted-online-play.step-2": {
+		"message": "Update online play permissions"
+	},
+	"app.minecraft-auth-error.restricted-online-play.step-3": {
+		"message": "Once finished, try signing in again"
+	},
+	"app.minecraft-auth-error.restricted-online-play.what": {
+		"message": "This account is restricted and doesn't have permission to play online."
+	},
+	"app.minecraft-auth-error.sign-in-again": {
+		"message": "Sign in again"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.step-1": {
+		"message": "Open your system date and time settings"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.step-2": {
+		"message": "Turn on automatic time zone and automatic time, if available"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.step-3": {
+		"message": "Use the sync option in your system settings to synchronize the clock"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.step-4": {
+		"message": "Restart Noctrinth"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.step-5": {
+		"message": "Try signing in again"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.what": {
+		"message": "Xbox services rejected the first sign-in response. This is most often caused by your system clock or time zone being out of sync."
+	},
+	"app.minecraft-auth-error.summary": {
+		"message": "We couldn't sign you into your Microsoft account. This may be due to account restrictions or regional limitations."
+	},
+	"app.minecraft-auth-error.suspended.step-1": {
+		"message": "Visit <link>Xbox Support</link> and review the enforcement details"
+	},
+	"app.minecraft-auth-error.suspended.step-2": {
+		"message": "Submit an appeal if one is available"
+	},
+	"app.minecraft-auth-error.suspended.what": {
+		"message": "This account was suspended for violating Xbox Community Standards."
+	},
+	"app.minecraft-auth-error.terms-not-accepted.step-1": {
+		"message": "Visit <link>Xbox</link> and sign in"
+	},
+	"app.minecraft-auth-error.terms-not-accepted.step-2": {
+		"message": "Accept the Terms if prompted"
+	},
+	"app.minecraft-auth-error.terms-not-accepted.step-3": {
+		"message": "Once finished, try signing in again"
+	},
+	"app.minecraft-auth-error.terms-not-accepted.what": {
+		"message": "This account hasn't accepted Xbox's Terms of Service."
+	},
+	"app.minecraft-auth-error.too-many-requests.step-1": {
+		"message": "Wait about an hour before trying again"
+	},
+	"app.minecraft-auth-error.too-many-requests.step-2": {
+		"message": "Restart Noctrinth after waiting"
+	},
+	"app.minecraft-auth-error.too-many-requests.step-3": {
+		"message": "Try signing in once more"
+	},
+	"app.minecraft-auth-error.too-many-requests.step-4": {
+		"message": "If the same message appears, wait longer before retrying so the temporary limit can clear"
+	},
+	"app.minecraft-auth-error.too-many-requests.what": {
+		"message": "Microsoft or Minecraft temporarily blocked the sign-in request because there were too many recent attempts."
+	},
+	"app.minecraft-auth-error.uk-age-verification.step-1": {
+		"message": "Go to the <link>Minecraft Login</link> page and sign in"
+	},
+	"app.minecraft-auth-error.uk-age-verification.step-2": {
+		"message": "Follow the instructions to verify your age"
+	},
+	"app.minecraft-auth-error.uk-age-verification.step-3": {
+		"message": "Once verified, try signing in again"
+	},
+	"app.minecraft-auth-error.uk-age-verification.step-4": {
+		"message": "For additional help, visit <link>UK age verification on Xbox</link>"
+	},
+	"app.minecraft-auth-error.uk-age-verification.what": {
+		"message": "Your Minecraft/Xbox Live account requires age verification to comply with UK regulations. You must complete this before signing in."
+	},
+	"app.minecraft-auth-error.underage-no-family.step-1": {
+		"message": "Review the <link>Family Setup Guide</link>"
+	},
+	"app.minecraft-auth-error.underage-no-family.step-2": {
+		"message": "Join or create a family group as instructed"
+	},
+	"app.minecraft-auth-error.underage-no-family.step-3": {
+		"message": "Once finished, try signing in again"
+	},
+	"app.minecraft-auth-error.underage-no-family.what": {
+		"message": "This account is underage and not linked to a Microsoft family group."
+	},
+	"app.minecraft-auth-error.unknown": {
+		"message": "Unknown error"
+	},
+	"app.minecraft-auth-error.unknown-advice": {
+		"message": "Try visiting <login-link>Minecraft Login</login-link> and signing in, as it may prompt you with the necessary steps. You can also contact support and we can look into it further."
+	},
+	"app.minecraft-auth-error.unknown-body": {
+		"message": "We don’t recognize this error and can’t recommend specific steps to resolve it."
+	},
+	"app.minecraft-auth-error.what-happened": {
+		"message": "What we think happened"
+	},
+	"app.minecraft-auth-error.xsts-authorize.step-1": {
+		"message": "Sign in with the <link>official Minecraft Launcher</link>"
+	},
+	"app.minecraft-auth-error.xsts-authorize.step-2": {
+		"message": "Complete any prompts shown by Microsoft, Xbox, or Minecraft"
+	},
+	"app.minecraft-auth-error.xsts-authorize.step-3": {
+		"message": "Try signing in to Noctrinth again"
+	},
+	"app.minecraft-auth-error.xsts-authorize.step-4": {
+		"message": "If the official launcher also fails, follow the error shown there or contact Xbox Support"
+	},
+	"app.minecraft-auth-error.xsts-authorize.what": {
+		"message": "Xbox services rejected the request to authorize this account for Minecraft services, but did not return a specific account restriction that Noctrinth recognizes."
 	},
 	"app.notifications.accept": {
 		"message": "Accept"
@@ -202,6 +676,9 @@
 	},
 	"app.project.copy-link.copied": {
 		"message": "Link copied to clipboard"
+	},
+	"app.project.sign-in-to-follow": {
+		"message": "Sign in to follow"
 	},
 	"app.resource-settings.proxy.description": {
 		"message": "Routes all launcher network traffic (Modrinth API and CDN downloads) through a proxy. Supports http://, https://, socks5:// and socks5h:// URLs. Useful when Modrinth is not reachable in your region. Leave empty to connect directly. (app restart required to take effect)"
@@ -407,6 +884,15 @@
 	"app.settings.game-options.versions.summary": {
 		"message": "How this behaves across game versions"
 	},
+	"app.settings.java.gpu.choice.auto": {
+		"message": "Let Windows decide"
+	},
+	"app.settings.java.gpu.choice.high-performance": {
+		"message": "High performance"
+	},
+	"app.settings.java.gpu.choice.power-saving": {
+		"message": "Power saving"
+	},
 	"app.settings.java.gpu.label": {
 		"message": "Graphics adapter"
 	},
@@ -422,6 +908,33 @@
 	"app.settings.java.gpu.on-power-saving": {
 		"message": "Windows will run this runtime on the power-saving adapter — usually the integrated one, which is the slow option for Minecraft."
 	},
+	"app.settings.java.runtimes.delete-label": {
+		"message": "Delete runtime"
+	},
+	"app.settings.java.runtimes.delete-tooltip": {
+		"message": "Delete this runtime"
+	},
+	"app.settings.java.runtimes.description": {
+		"message": "Java the launcher downloaded for you, {size} in total. Updating Java leaves the previous copy behind, so these build up over time."
+	},
+	"app.settings.java.runtimes.in-use": {
+		"message": "In use"
+	},
+	"app.settings.java.runtimes.in-use-tooltip": {
+		"message": "A Java setting points at this one — change it first"
+	},
+	"app.settings.java.runtimes.remove-unused": {
+		"message": "Remove {count} unused ({size})"
+	},
+	"app.settings.java.runtimes.removed-text": {
+		"message": "Reclaimed {size}."
+	},
+	"app.settings.java.runtimes.removed-title": {
+		"message": "Runtimes removed"
+	},
+	"app.settings.java.runtimes.title": {
+		"message": "Downloaded runtimes"
+	},
 	"app.settings.privacy.discord-rich-presence.description": {
 		"message": "Show Noctrinth as your current activity on Discord. This does not affect Rich Presence added to instances by mods. Requires an app restart."
 	},
@@ -434,6 +947,12 @@
 	"app.settings.tabs.shared-game-options": {
 		"message": "Minecraft options"
 	},
+	"app.skins.ely.edit.texture-locked": {
+		"message": "Ely.by keeps a texture and its skin together, so this one cannot be swapped out. Upload the new texture as another skin instead."
+	},
+	"app.skins.ely.edit.upload-new": {
+		"message": "Upload a new skin"
+	},
 	"app.skins.ely.my-skins.empty": {
 		"message": "Nothing uploaded yet. Upload a skin on Ely.by and it will show up here to click on."
 	},
@@ -445,6 +964,12 @@
 	},
 	"app.skins.ely.sign-in-needed.title": {
 		"message": "Ely.by did not accept the change"
+	},
+	"app.skins.sign-in.description": {
+		"message": "Sign in to your Minecraft account to manage skins in Noctrinth."
+	},
+	"app.survey.body": {
+		"message": "Would you mind answering a few questions about your experience with Noctrinth?"
 	},
 	"app.update-popup.body": {
 		"message": "Noctrinth v{version} is ready to install! Reload to update now, or automatically when you close Noctrinth."
@@ -647,6 +1172,63 @@
 	"collections.status.unlisted": {
 		"message": "Unlisted"
 	},
+	"console.action.collapse": {
+		"message": "Collapse"
+	},
+	"console.action.expand": {
+		"message": "Expand"
+	},
+	"console.crash.problems-detected": {
+		"message": "{count, plural, one {# problem} other {# problems}} detected"
+	},
+	"console.delete-modal.header": {
+		"message": "Delete log file"
+	},
+	"console.delete-modal.irreversible": {
+		"message": "This is irreversible"
+	},
+	"console.delete-modal.warning": {
+		"message": "Deleting this log file cannot be undone. Are you sure you want to continue?"
+	},
+	"console.empty-state.instance": {
+		"message": "Start your instance in the top right to start receiving live logs!"
+	},
+	"console.empty-state.server": {
+		"message": "Welcome to your Modrinth Server! Press the green start button to start your server!"
+	},
+	"console.filter.all": {
+		"message": "All"
+	},
+	"console.filter.debug": {
+		"message": "Debug"
+	},
+	"console.filter.error": {
+		"message": "Error"
+	},
+	"console.filter.info": {
+		"message": "Info"
+	},
+	"console.filter.trace": {
+		"message": "Trace"
+	},
+	"console.filter.warn": {
+		"message": "Warn"
+	},
+	"console.search.placeholder": {
+		"message": "Search logs"
+	},
+	"console.share-modal.header": {
+		"message": "Share Logs"
+	},
+	"console.terminal.input-disabled": {
+		"message": "Command input disabled"
+	},
+	"console.terminal.send-command": {
+		"message": "Send a command"
+	},
+	"console.terminal.server-not-running": {
+		"message": "Server is not running"
+	},
 	"creation-flow.modal.import-instance.delete-source.description": {
 		"defaultMessage": "Deletes each imported instance's files from the other launcher, so they aren't stored twice. Leave this off to keep both copies."
 	},
@@ -731,11 +1313,38 @@
 	"instance.action.play-again": {
 		"message": "Launch another copy"
 	},
+	"instance.badge.locked": {
+		"message": "Locked"
+	},
+	"instance.badge.locked.label": {
+		"message": "Locked instance information"
+	},
+	"instance.badge.shared": {
+		"message": "Shared"
+	},
+	"instance.badge.shared.label": {
+		"message": "Shared instance information"
+	},
 	"instance.console.copy-started-at": {
 		"message": "started {time}"
 	},
 	"instance.console.copy-unknown-account": {
 		"message": "Unknown account"
+	},
+	"instance.metadata.loader-tooltip": {
+		"message": "Mod loader and Minecraft version"
+	},
+	"instance.metadata.total-playtime": {
+		"message": "Total playtime"
+	},
+	"instance.playtime.hours": {
+		"message": "{hours, plural, one {# hour} other {# hours}}"
+	},
+	"instance.playtime.minutes": {
+		"message": "{minutes, plural, one {# minute} other {# minutes}}"
+	},
+	"instance.playtime.seconds": {
+		"message": "{seconds, plural, one {# second} other {# seconds}}"
 	},
 	"instance.settings.tabs.java.modern-java": {
 		"message": "Modern Java"
@@ -829,5 +1438,41 @@
 	},
 	"notifications.view-history": {
 		"message": "View history"
+	},
+	"search.sort.date-published": {
+		"message": "Date published"
+	},
+	"search.sort.date-updated": {
+		"message": "Date updated"
+	},
+	"search.sort.downloads": {
+		"message": "Downloads"
+	},
+	"search.sort.followers": {
+		"message": "Followers"
+	},
+	"search.sort.players": {
+		"message": "Players"
+	},
+	"search.sort.relevance": {
+		"message": "Relevance"
+	},
+	"search.sort.verified-plays": {
+		"message": "Verified Plays"
+	},
+	"servers.list-empty.no-servers-description": {
+		"message": "Install mods, invite friends, and play together all from Noctrinth."
+	},
+	"servers.list-empty.play-with-friends-description": {
+		"message": "Invite friends to play your server with one-click play from Noctrinth."
+	},
+	"settings.display.theme.description": {
+		"message": "Select your preferred color theme across Noctrinth."
+	},
+	"settings.language.coverage.app-tooltip": {
+		"message": "About {percentage}% of Noctrinth is available in this language."
+	},
+	"skin.preview.drag-to-rotate": {
+		"message": "Drag to rotate"
 	}
 }

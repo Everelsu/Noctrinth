@@ -14,10 +14,10 @@ import {
 	SparklesIcon,
 } from '@modrinth/assets'
 import { sortedCategories } from '@modrinth/utils'
-import { type Component, computed, readonly, type Ref, ref } from 'vue'
+import { type Component, computed, type Ref, ref, watch } from 'vue'
 import { type LocationQueryRaw, type LocationQueryValue, useRoute } from 'vue-router'
 
-import { defineMessage, useVIntl } from '../composables/i18n'
+import { defineMessage, defineMessages, useVIntl } from '../composables/i18n'
 import { getProjectTypeIcon } from './auto-icons'
 import {
 	disclosureAiUsageMessages,
@@ -212,6 +212,14 @@ export interface SortType {
 	name: string
 }
 
+export const SORT_TYPE_MESSAGES = defineMessages({
+	relevance: { id: 'search.sort.relevance', defaultMessage: 'Relevance' },
+	downloads: { id: 'search.sort.downloads', defaultMessage: 'Downloads' },
+	follows: { id: 'search.sort.followers', defaultMessage: 'Followers' },
+	newest: { id: 'search.sort.date-published', defaultMessage: 'Date published' },
+	updated: { id: 'search.sort.date-updated', defaultMessage: 'Date updated' },
+})
+
 const PLUGIN_PLATFORMS = ['bungeecord', 'waterfall', 'velocity', 'geyser']
 
 const PROJECT_TYPE_EXCLUSION_FILTERS: Partial<Record<ProjectType, ProjectType[]>> = {
@@ -375,15 +383,24 @@ export function useSearch(
 	const query = ref('')
 	const maxResults = ref(20)
 
-	const sortTypes: readonly SortType[] = readonly([
-		{ display: 'Relevance', name: 'relevance' },
-		{ display: 'Downloads', name: 'downloads' },
-		{ display: 'Followers', name: 'follows' },
-		{ display: 'Date published', name: 'newest' },
-		{ display: 'Date updated', name: 'updated' },
+	const { formatMessage, locale } = useVIntl()
+
+	// Rebuilt when the language changes, so the dropdown is never left holding
+	// labels in the language the app was opened in.
+	const sortTypes = computed<readonly SortType[]>(() => [
+		{ display: formatMessage(SORT_TYPE_MESSAGES.relevance), name: 'relevance' },
+		{ display: formatMessage(SORT_TYPE_MESSAGES.downloads), name: 'downloads' },
+		{ display: formatMessage(SORT_TYPE_MESSAGES.follows), name: 'follows' },
+		{ display: formatMessage(SORT_TYPE_MESSAGES.newest), name: 'newest' },
+		{ display: formatMessage(SORT_TYPE_MESSAGES.updated), name: 'updated' },
 	])
 
-	const currentSortType: Ref<SortType> = ref(sortTypes[0])
+	const currentSortType: Ref<SortType> = ref(sortTypes.value[0])
+
+	watch(sortTypes, (types) => {
+		const match = types.find((type) => type.name === currentSortType.value.name)
+		if (match) currentSortType.value = match
+	})
 
 	const route = useRoute()
 	const currentPage = ref(1)
@@ -392,7 +409,6 @@ export function useSearch(
 	const toggledGroups = ref<string[]>([])
 	const overriddenProvidedFilterTypes = ref<string[]>([])
 
-	const { formatMessage, locale } = useVIntl()
 	const dependsOnFilterName = defineMessage({
 		id: 'search.filter_type.compatible_dependency_project_ids',
 		defaultMessage: 'Depends on',

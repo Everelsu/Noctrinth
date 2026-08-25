@@ -26,7 +26,11 @@
 				v-model="commandInput"
 				v-tooltip="disableInput ? disableInputTooltip : undefined"
 				:icon="TerminalSquareIcon"
-				:placeholder="disableInput ? disabledInputPlaceholder : 'Send a command'"
+				:placeholder="
+					disableInput
+						? (disabledInputPlaceholder ?? formatMessage(messages.serverNotRunning))
+						: formatMessage(messages.sendCommand)
+				"
 				:disabled="disableInput"
 				wrapper-class="w-full"
 				input-class="!h-10"
@@ -43,6 +47,7 @@ import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { IconButton } from '#ui/components/base/buttons'
 import StyledInput from '#ui/components/base/StyledInput.vue'
+import { defineMessages, useVIntl } from '#ui/composables/i18n'
 import { useTerminal } from '#ui/composables/terminal'
 
 const props = withDefaults(
@@ -61,7 +66,6 @@ const props = withDefaults(
 		showInput: false,
 		disableInput: false,
 		disableInputTooltip: undefined,
-		disabledInputPlaceholder: 'Server is not running',
 		fullscreen: false,
 		emptyStateType: undefined,
 		loading: false,
@@ -79,20 +83,58 @@ const FROG = [
 	'\x1B[32m   ~~  ~~  ~~\x1B[37m',
 ]
 
-const EMPTY_STATE_BUBBLES: Record<string, string[]> = {
-	server: [
-		'   __________________________________________________',
-		' /  Welcome to your \x1B[32mModrinth Server\x1B[37m!                  \\',
-		'|   Press the green start button to start your server! |',
-		' \\____________________________________________________/',
-	],
-	instance: [
-		'   _____________________________________________________________',
-		' /  Start your instance in the top right to start               \\',
-		'|   receiving live logs!                                        |',
-		' \\_____________________________________________________________/',
-	],
+const BUBBLE_WIDTH = 56
+
+/**
+ * Wraps at whole words, because the bubble is drawn around whatever comes out
+ * and a translated line is rarely as long as the English one.
+ */
+function wrapWords(text: string, width: number): string[] {
+	const lines: string[] = []
+	let line = ''
+	for (const word of text.split(/\s+/).filter(Boolean)) {
+		if (!line) line = word
+		else if (line.length + 1 + word.length <= width) line += ` ${word}`
+		else {
+			lines.push(line)
+			line = word
+		}
+	}
+	if (line) lines.push(line)
+	return lines.length > 0 ? lines : ['']
 }
+
+/** The speech bubble the frog is saying, drawn to fit whatever it says. */
+function speechBubble(text: string): string[] {
+	const lines = wrapWords(text, BUBBLE_WIDTH)
+	const inner = Math.max(...lines.map((line) => line.length))
+	const pad = (line: string) => line + ' '.repeat(inner - line.length)
+	const rule = '_'.repeat(inner + 4)
+	return [
+		`   ${rule}`,
+		...lines.map((line, index) => (index === 0 ? ` /  ${pad(line)}  \\` : `|   ${pad(line)}  |`)),
+		` \\${rule}/`,
+	]
+}
+
+const { formatMessage } = useVIntl()
+
+const messages = defineMessages({
+	sendCommand: { id: 'console.terminal.send-command', defaultMessage: 'Send a command' },
+	serverNotRunning: {
+		id: 'console.terminal.server-not-running',
+		defaultMessage: 'Server is not running',
+	},
+	serverEmptyState: {
+		id: 'console.empty-state.server',
+		defaultMessage:
+			'Welcome to your Modrinth Server! Press the green start button to start your server!',
+	},
+	instanceEmptyState: {
+		id: 'console.empty-state.instance',
+		defaultMessage: 'Start your instance in the top right to start receiving live logs!',
+	},
+})
 
 const emit = defineEmits<{
 	command: [command: string]
@@ -132,9 +174,14 @@ const {
 function writeEmptyState() {
 	if (!terminal.value || !props.emptyStateType) return
 	terminal.value.reset()
-	const bubble = EMPTY_STATE_BUBBLES[props.emptyStateType]
-	if (bubble) {
-		for (const line of [...bubble, ...FROG]) {
+	const emptyState =
+		props.emptyStateType === 'server'
+			? messages.serverEmptyState
+			: props.emptyStateType === 'instance'
+				? messages.instanceEmptyState
+				: undefined
+	if (emptyState) {
+		for (const line of [...speechBubble(formatMessage(emptyState)), ...FROG]) {
 			terminal.value.writeln(line)
 		}
 	}

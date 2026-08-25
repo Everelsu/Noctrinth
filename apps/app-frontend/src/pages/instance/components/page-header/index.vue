@@ -8,18 +8,18 @@
 			<PageHeaderBadgeItem
 				v-if="instance.quarantined"
 				:icon="LockIcon"
-				aria-label="Locked instance information"
+				:aria-label="formatMessage(messages.lockedBadgeLabel)"
 				class="!border-orange !bg-highlight-orange !text-orange"
 			>
-				Locked
+				{{ formatMessage(messages.lockedBadge) }}
 			</PageHeaderBadgeItem>
 			<PageHeaderBadgeItem
 				v-else
 				:tooltip="sharedInstanceTooltip"
-				aria-label="Shared instance information"
+				:aria-label="formatMessage(messages.sharedBadgeLabel)"
 				class="!border-blue !bg-highlight-blue !text-blue"
 			>
-				Shared
+				{{ formatMessage(messages.sharedBadge) }}
 				<UnknownIcon class="block size-4 shrink-0 text-current" aria-hidden="true" />
 			</PageHeaderBadgeItem>
 		</template>
@@ -39,14 +39,14 @@
 				<PageHeaderMetadataItem
 					:icon="TagIcon"
 					:icon-props="{ tag: loaderDisplayName, enforceType: 'loader' }"
-					tooltip="Mod loader and Minecraft version"
+					:tooltip="formatMessage(messages.loaderTooltip)"
 				>
 					{{ loaderLabel }}
 				</PageHeaderMetadataItem>
 				<PageHeaderMetadataItem
 					v-if="showInstancePlayTime && playtimeLabel"
 					:icon="TimerIcon"
-					tooltip="Total playtime"
+					:tooltip="formatMessage(messages.totalPlaytime)"
 				>
 					{{ playtimeLabel }}
 				</PageHeaderMetadataItem>
@@ -56,7 +56,11 @@
 					:date="instance.last_played"
 					:label="formatMessage(messages.lastPlayed)"
 				/>
-				<PageHeaderMetadataItem v-else :icon="ClockIcon" tooltip="Last played">
+				<PageHeaderMetadataItem
+					v-else
+					:icon="ClockIcon"
+					:tooltip="formatMessage(messages.lastPlayed)"
+				>
 					{{ formatMessage(messages.neverPlayed) }}
 				</PageHeaderMetadataItem>
 			</PageHeaderMetadata>
@@ -267,6 +271,42 @@ const messages = defineMessages({
 		id: 'instance.action.play-again',
 		defaultMessage: 'Launch another copy',
 	},
+	lockedBadge: {
+		id: 'instance.badge.locked',
+		defaultMessage: 'Locked',
+	},
+	lockedBadgeLabel: {
+		id: 'instance.badge.locked.label',
+		defaultMessage: 'Locked instance information',
+	},
+	sharedBadge: {
+		id: 'instance.badge.shared',
+		defaultMessage: 'Shared',
+	},
+	sharedBadgeLabel: {
+		id: 'instance.badge.shared.label',
+		defaultMessage: 'Shared instance information',
+	},
+	loaderTooltip: {
+		id: 'instance.metadata.loader-tooltip',
+		defaultMessage: 'Mod loader and Minecraft version',
+	},
+	totalPlaytime: {
+		id: 'instance.metadata.total-playtime',
+		defaultMessage: 'Total playtime',
+	},
+	playtimeHours: {
+		id: 'instance.playtime.hours',
+		defaultMessage: '{hours, plural, one {# hour} other {# hours}}',
+	},
+	playtimeMinutes: {
+		id: 'instance.playtime.minutes',
+		defaultMessage: '{minutes, plural, one {# minute} other {# minutes}}',
+	},
+	playtimeSeconds: {
+		id: 'instance.playtime.seconds',
+		defaultMessage: '{seconds, plural, one {# second} other {# seconds}}',
+	},
 	sharedInstanceTooltip: {
 		id: 'instance.shared-instance.tooltip',
 		defaultMessage: "This instance's content is being managed by someone else.",
@@ -350,17 +390,19 @@ const playtimeLabel = computed(() => {
 		return undefined
 	}
 
+	// Through the message catalogue rather than an English suffix, so that a
+	// language with more than one plural form gets them all.
 	const hours = Math.floor(seconds / 3600)
 	if (hours >= 1) {
-		return `${hours} hour${hours > 1 ? 's' : ''}`
+		return formatMessage(messages.playtimeHours, { hours })
 	}
 
 	const minutes = Math.floor(seconds / 60)
 	if (minutes >= 1) {
-		return `${minutes} minute${minutes > 1 ? 's' : ''}`
+		return formatMessage(messages.playtimeMinutes, { minutes })
 	}
 
-	return `${seconds} second${seconds === 1 ? '' : 's'}`
+	return formatMessage(messages.playtimeSeconds, { seconds })
 })
 const serverPlayOptions = computed<OverflowMenuOption[]>(() => [
 	{

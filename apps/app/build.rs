@@ -468,6 +468,7 @@ fn main() {
                         "ely_wear_skin",
                         "ely_upload_skin",
                         "ely_remove_skin",
+                        "ely_edit_skin",
                     ])
                     .default_permission(
                         DefaultPermissionRule::AllowAllCommands,

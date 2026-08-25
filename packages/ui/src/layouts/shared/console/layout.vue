@@ -18,7 +18,7 @@
 			<StyledInput
 				v-model="searchQuery"
 				:icon="SearchIcon"
-				placeholder="Search logs"
+				:placeholder="formatMessage(messages.searchPlaceholder)"
 				wrapper-class="flex-1"
 				input-class="!h-10"
 				clearable
@@ -71,22 +71,32 @@
 			@ready="handleTerminalReady"
 		/>
 	</div>
-	<ShareModal ref="shareModal" header="Share Logs" link :social-buttons="false" />
-	<NewModal ref="deleteModal" header="Delete log file" :fade="'danger'" max-width="500px">
+	<ShareModal
+		ref="shareModal"
+		:header="formatMessage(messages.shareModalHeader)"
+		link
+		:social-buttons="false"
+	/>
+	<NewModal
+		ref="deleteModal"
+		:header="formatMessage(messages.deleteModalHeader)"
+		:fade="'danger'"
+		max-width="500px"
+	>
 		<div class="flex flex-col gap-6">
-			<Admonition type="critical" header="This is irreversible">
-				Deleting this log file cannot be undone. Are you sure you want to continue?
+			<Admonition type="critical" :header="formatMessage(messages.irreversibleHeader)">
+				{{ formatMessage(messages.deleteModalWarning) }}
 			</Admonition>
 		</div>
 		<template #actions>
 			<div class="flex justify-end gap-2">
 				<Button type="outlined" @click="deleteModal?.hide()">
 					<XIcon />
-					Cancel
+					{{ formatMessage(commonMessages.cancelButton) }}
 				</Button>
 				<Button type="colored" color="red" :disabled="isDeleting" @click="confirmDelete">
 					<TrashIcon />
-					Delete
+					{{ formatMessage(commonMessages.deleteLabel) }}
 				</Button>
 			</div>
 		</template>
@@ -107,10 +117,12 @@ import Combobox from '#ui/components/base/Combobox.vue'
 import StyledInput from '#ui/components/base/StyledInput.vue'
 import NewModal from '#ui/components/modal/NewModal.vue'
 import ShareModal from '#ui/components/modal/ShareModal.vue'
+import { defineMessages, useVIntl } from '#ui/composables/i18n'
 import { injectModrinthClient } from '#ui/providers'
 import { injectModalBehavior } from '#ui/providers/modal-behavior'
 import { injectPageContext } from '#ui/providers/page-context'
 import { injectNotificationManager } from '#ui/providers/web-notifications.ts'
+import { commonMessages } from '#ui/utils/common-messages'
 
 import ConsoleActionButtons from './components/ConsoleActionButtons.vue'
 import ConsoleFilterPills from './components/ConsoleFilterPills.vue'
@@ -126,17 +138,45 @@ import type { ConditionalLevel } from './composables/console-filtering'
 import { injectConsoleManager } from './providers'
 import type { LogLevel, LogLine } from './types'
 
+const { formatMessage } = useVIntl()
+
+const messages = defineMessages({
+	searchPlaceholder: { id: 'console.search.placeholder', defaultMessage: 'Search logs' },
+	shareModalHeader: { id: 'console.share-modal.header', defaultMessage: 'Share Logs' },
+	deleteModalHeader: { id: 'console.delete-modal.header', defaultMessage: 'Delete log file' },
+	irreversibleHeader: {
+		id: 'console.delete-modal.irreversible',
+		defaultMessage: 'This is irreversible',
+	},
+	deleteModalWarning: {
+		id: 'console.delete-modal.warning',
+		defaultMessage: 'Deleting this log file cannot be undone. Are you sure you want to continue?',
+	},
+	commandInputDisabled: {
+		id: 'console.terminal.input-disabled',
+		defaultMessage: 'Command input disabled',
+	},
+	serverNotRunning: {
+		id: 'console.terminal.server-not-running',
+		defaultMessage: 'Server is not running',
+	},
+	problemsDetected: {
+		id: 'console.crash.problems-detected',
+		defaultMessage: '{count, plural, one {# problem} other {# problems}} detected',
+	},
+})
+
 const ctx = injectConsoleManager()
 const client = injectModrinthClient()
 const modalBehavior = injectModalBehavior()
 const pageContext = injectPageContext(null)
 const { addNotification } = injectNotificationManager()
 
-const crashHeader = computed(() => {
-	const problems = ctx.crashAnalysis?.value?.analysis.problems ?? []
-	const count = problems.length
-	return `${count} problem${count !== 1 ? 's' : ''} detected`
-})
+const crashHeader = computed(() =>
+	formatMessage(messages.problemsDetected, {
+		count: ctx.crashAnalysis?.value?.analysis.problems.length ?? 0,
+	}),
+)
 
 const crashItems = computed<CollapsibleAdmonitionItem[]>(() => {
 	const problems = ctx.crashAnalysis?.value?.analysis.problems ?? []
@@ -237,7 +277,9 @@ const resolvedInputDisabledTooltip = computed(() =>
 )
 
 const resolvedInputDisabledPlaceholder = computed(() =>
-	resolvedInputDisabledTooltip.value ? 'Command input disabled' : 'Server is not running',
+	formatMessage(
+		resolvedInputDisabledTooltip.value ? messages.commandInputDisabled : messages.serverNotRunning,
+	),
 )
 
 const resolvedShareDisabled = computed(() => {

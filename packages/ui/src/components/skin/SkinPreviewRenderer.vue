@@ -14,7 +14,7 @@
 				class="flex items-center justify-center gap-1.5 text-base font-medium leading-6 text-primary"
 			>
 				<UnfoldHorizontalIcon class="size-5 shrink-0" />
-				Drag to rotate
+				{{ formatMessage(messages.dragToRotate) }}
 			</span>
 		</div>
 		<div
@@ -136,6 +136,7 @@ import {
 } from '#ui/composables/skin-rendering'
 
 import { useDynamicFontSize } from '../../composables'
+import { defineMessages, useVIntl } from '../../composables/i18n'
 import { createRadialSpotlightShader, syncDamageFlashShader } from './skin-preview-shader'
 
 const props = withDefaults(
@@ -177,6 +178,15 @@ const props = withDefaults(
 		}),
 	},
 )
+
+const { formatMessage } = useVIntl()
+
+const messages = defineMessages({
+	dragToRotate: {
+		id: 'skin.preview.drag-to-rotate',
+		defaultMessage: 'Drag to rotate',
+	},
+})
 
 const emit = defineEmits<{
 	earsFeaturesDetected: [detected: boolean]

@@ -501,6 +501,28 @@ function readMessageFile(filePath: string): MessageFile {
 	return JSON.parse(fs.readFileSync(filePath, 'utf8')) as MessageFile
 }
 
+/**
+ * Overlays Noctrinth's own catalogue, the way the app does when it boots.
+ *
+ * `src/locales-noctrinth/<locale>/` carries the fork's strings: `fallback.json`
+ * translates upstream strings Crowdin has not covered yet, `messages.json` the
+ * fork's own and the handful upstream says differently. Counting only
+ * `src/locales/` reports a language as far less finished than it is on screen —
+ * which is what the settings page was showing. Precedence follows
+ * `applyNoctrinthMessages`: fallbacks fill gaps, the fork's own messages win.
+ */
+function applyForkCatalog(merged: MessageFile, scopeDir: string, locale: string): void {
+	const forkDirectory = path.join(scopeDir, 'src/locales-noctrinth', locale)
+
+	for (const [key, entry] of Object.entries(
+		readMessageFile(path.join(forkDirectory, 'fallback.json')),
+	)) {
+		if (!messageText(merged[key])) merged[key] = entry
+	}
+
+	Object.assign(merged, readMessageFile(path.join(forkDirectory, 'messages.json')))
+}
+
 function mergeProductCatalog(
 	rootDir: string,
 	catalogScopes: string[],
@@ -513,6 +535,13 @@ function mergeProductCatalog(
 			readMessageFile(path.join(rootDir, scope, 'src/locales', locale, 'index.json')),
 		)
 	}
+
+	// After every upstream scope, so a fork override of a `packages/ui` string
+	// is not undone by the scope that follows it.
+	for (const scope of catalogScopes) {
+		applyForkCatalog(merged, path.join(rootDir, scope), locale)
+	}
+
 	return merged
 }
 

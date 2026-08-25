@@ -34,6 +34,7 @@ import { computed, inject, onMounted, onUnmounted, ref, useTemplateRef, watch } 
 import EarsModIcon from '@/assets/skins/ears-mod.png'
 import type AccountsCard from '@/components/ui/AccountsCard.vue'
 import EditSkinModal from '@/components/ui/skin/EditSkinModal.vue'
+import NoctrinthElySkinModal from '@/components/ui/skin/NoctrinthElySkinModal.vue'
 import VirtualSkinSectionList from '@/components/ui/skin/VirtualSkinSectionList.vue'
 import { useAppSettings } from '@/composables/use-app-settings.ts'
 import { handleSevereError } from '@/composables/use-error.js'
@@ -42,6 +43,7 @@ import { check_reachable, get_default_user, login as login_flow, users } from '@
 import { ely_open_skin_window } from '@/helpers/ely_auth'
 import {
 	clearElySkinCache,
+	editElySkin,
 	ELY_FALLBACK_SKIN,
 	type ElyUploadedSkin,
 	getElyCapeTexture,
@@ -59,7 +61,7 @@ import {
 	getSkinPreviewKey,
 	skinBlobUrlMap,
 } from '@/helpers/rendering/batch-skin-renderer.ts'
-import type { Cape, Skin, SkinTextureUrl } from '@/helpers/skins.ts'
+import type { Cape, Skin, SkinModel, SkinTextureUrl } from '@/helpers/skins.ts'
 import {
 	determineModelType,
 	equip_skin,
@@ -80,10 +82,12 @@ import { hasPride26Badge } from '@/helpers/user-campaigns.ts'
 import { useRootBreadcrumb } from '@/providers/breadcrumbs'
 import { appMessages } from '@/utils/app-messages'
 
+const { formatMessage } = useVIntl()
+
 useRootBreadcrumb({
 	slot: 'root',
 	id: 'skins',
-	label: 'Skin selector',
+	label: () => formatMessage(appMessages.skinSelectorLabel),
 	to: '/skins',
 	visual: { type: 'icon', component: ShirtIcon },
 })
@@ -273,8 +277,8 @@ const messages = defineMessages({
 const editSkinModal = useTemplateRef('editSkinModal')
 const addSkinFileInput = useTemplateRef<HTMLInputElement>('addSkinFileInput')
 const skinSectionList = useTemplateRef<VirtualSkinSectionListExpose>('skinSectionList')
+const elySkinSectionList = useTemplateRef<VirtualSkinSectionListExpose>('elySkinSectionList')
 
-const { formatMessage } = useVIntl()
 const notifications = injectNotificationManager()
 const { addNotification, handleError } = notifications
 const auth = injectAuth()
@@ -493,19 +497,68 @@ async function onElyDrop(event: DragEvent) {
 }
 
 async function uploadElySkinFile(file: File) {
+	await openElyAddDialog(new Uint8Array(await file.arrayBuffer()))
+}
+
+/** The texture waiting in the add dialog, kept here because the upload needs it. */
+const elyAddBytes = ref<Uint8Array | null>(null)
+
+/**
+ * Shows the picked texture before it goes anywhere.
+ *
+ * The Microsoft flow asks about the model before adding a skin, and Ely.by has
+ * the same two models — it just has no capes to ask about.
+ */
+async function openElyAddDialog(bytes: Uint8Array) {
+	if (elyWearingId.value !== null) return
+
+	const texture = `data:image/png;base64,${arrayBufferToBase64(bytes)}`
+	let detected: SkinModel = 'CLASSIC'
+	try {
+		detected = await determineModelType(texture)
+	} catch {
+		// Unreadable texture: the dialog opens on the wide model, which the user
+		// can still change.
+	}
+
+	elyAddBytes.value = bytes
+	elyEditModal.value?.showNew(new MouseEvent('click'), texture, detected)
+}
+
+/** Uploads the texture the add dialog is holding, with the model chosen there. */
+async function addElySkin(isSlim: boolean) {
+	const bytes = elyAddBytes.value
+	if (!bytes || elyEditSaving.value) return
+
+	elyEditSaving.value = true
+	try {
+		await uploadElySkinBytes(bytes, isSlim)
+	} finally {
+		elyEditSaving.value = false
+		elyAddBytes.value = null
+		elyEditModal.value?.hide()
+	}
+}
+
+/**
+ * Uploads raw PNG bytes to Ely.by and waits for the account to wear them.
+ *
+ * Takes bytes rather than a `File` because a native drag and drop never
+ * produces one: Tauri intercepts the OS drop and hands over a path, which the
+ * backend reads for us.
+ */
+async function uploadElySkinBytes(bytes: Uint8Array, isSlim?: boolean) {
 	elyWearingId.value = -1
 	const before = elyCurrentSkinUrl.value
 	try {
-		const bytes = new Uint8Array(await file.arrayBuffer())
-		let binary = ''
-		for (const byte of bytes) binary += String.fromCharCode(byte)
-		await uploadElySkin(`data:image/png;base64,${btoa(binary)}`)
+		await uploadElySkin(`data:image/png;base64,${arrayBufferToBase64(bytes)}`)
 
 		// The upload URL is not known ahead of time, so this waits for the worn
 		// skin to become anything other than what it was.
 		const changed = await waitForElySkin(undefined)
 		if (changed && !sameTexture(elyCurrentSkinUrl.value, before)) {
 			elyPendingSkin.value = null
+			await applyModelToNewElySkin(isSlim)
 			refreshElySkin()
 		} else {
 			reportElySignInNeeded()
@@ -515,6 +568,30 @@ async function uploadElySkinFile(file: File) {
 	} finally {
 		elyWearingId.value = null
 	}
+}
+
+/**
+ * Puts the chosen model on the skin that was just uploaded.
+ *
+ * Ely.by decides the model itself when a texture arrives, so the choice made in
+ * the add dialog is applied afterwards — and only when the two disagree, to
+ * save a round trip through the website.
+ */
+async function applyModelToNewElySkin(isSlim: boolean | undefined) {
+	if (isSlim === undefined) return
+
+	const username = elyAccount.value?.profile.name
+	if (!username) return
+
+	const items = await listElySkins(username).catch(() => null)
+	if (!items) return
+	elySkins.value = items
+
+	const uploaded = items.find((item) => sameTexture(item.skin_url, elyCurrentSkinUrl.value))
+	if (!uploaded || uploaded.is_slim === isSlim) return
+
+	await editElySkin(uploaded.id, { isSlim })
+	await waitForElyModel(uploaded.id, isSlim)
 }
 
 /**
@@ -530,6 +607,65 @@ function reportElySignInNeeded() {
 		title: formatMessage(messages.elySignInNeededTitle),
 		text: formatMessage(messages.elySignInNeededText),
 	})
+}
+
+const elyEditModal = useTemplateRef<InstanceType<typeof NoctrinthElySkinModal>>('elyEditModal')
+const elyEditSaving = ref(false)
+
+function openElyEdit(skin: Skin, event: MouseEvent) {
+	if (elyWearingId.value !== null) return
+	elyEditModal.value?.show(event, skin)
+}
+
+/**
+ * Waits for the catalogue to agree that the model changed.
+ *
+ * The website call cannot answer back from the embedded window, so the public
+ * listing is the evidence — the same trick the wear flow uses with the texture.
+ */
+async function waitForElyModel(id: number, isSlim: boolean, timeoutMs = 20000) {
+	const username = elyAccount.value?.profile.name
+	if (!username) return false
+
+	const deadline = Date.now() + timeoutMs
+	while (Date.now() < deadline) {
+		await new Promise((resolve) => setTimeout(resolve, 1500))
+		const items = await listElySkins(username).catch(() => null)
+		const entry = items?.find((item) => item.id === id)
+		if (entry && entry.is_slim === isSlim) {
+			elySkins.value = items ?? elySkins.value
+			return true
+		}
+	}
+
+	return false
+}
+
+/** Changes the model of one of the account's Ely.by skins. */
+async function saveElyEdit(skin: Skin, isSlim: boolean) {
+	const id = Number(skin.texture_key.replace('ely:', ''))
+	if (!Number.isFinite(id) || elyEditSaving.value) return
+
+	elyEditSaving.value = true
+	try {
+		await editElySkin(id, { isSlim })
+		if (await waitForElyModel(id, isSlim)) {
+			// The pending pick holds a copy of the old model, so it would show the
+			// wrong arms until the next click.
+			if (elyPendingSkin.value?.texture_key === skin.texture_key) {
+				elyPendingSkin.value = null
+			}
+			await loadElySkins()
+			if (skin.is_equipped) refreshElySkin()
+			elyEditModal.value?.hide()
+		} else {
+			reportElySignInNeeded()
+		}
+	} catch (error) {
+		handleError(error)
+	} finally {
+		elyEditSaving.value = false
+	}
 }
 
 /** Deletes a skin from the account's Ely.by catalogue. */
@@ -565,7 +701,27 @@ function applyPendingElySkin() {
 const elyPreviewTexture = computed(
 	() => elyPendingSkin.value?.texture ?? elySkinTexture.value ?? ELY_FALLBACK_SKIN,
 )
-const elyPreviewVariant = computed(() => elyPendingSkin.value?.variant ?? elySkinVariant.value)
+
+/** The catalogue entry for the skin currently on the account, when it has one. */
+const elyWornSkin = computed(() =>
+	elySkins.value.find((entry) => sameTexture(entry.skin_url, elyCurrentSkinUrl.value)),
+)
+
+/**
+ * Which arms the worn skin is drawn with.
+ *
+ * Ely.by's own flag decides this in game, so it decides it here too — reading
+ * the texture only guesses, and the guess does not change when the model is
+ * switched from the edit dialog. The guess stays as the fallback for a skin
+ * that is worn but somehow not in the catalogue listing.
+ */
+const elyWornVariant = computed<'CLASSIC' | 'SLIM'>(() => {
+	const worn = elyWornSkin.value
+	if (!worn) return elySkinVariant.value
+	return worn.is_slim ? 'SLIM' : 'CLASSIC'
+})
+
+const elyPreviewVariant = computed(() => elyPendingSkin.value?.variant ?? elyWornVariant.value)
 
 async function applyElySkin(skin: Skin) {
 	const id = Number(skin.texture_key.replace('ely:', ''))
@@ -1300,7 +1456,11 @@ function isSkinFileDrag(event: DragEvent) {
 }
 
 function isPositionOverAddSkinButton(position: { x: number; y: number }) {
-	const element = skinSectionList.value?.getAddSkinButtonElement()
+	// Only one of the two grids is ever mounted: an Ely.by account replaces the
+	// Microsoft one outright.
+	const element =
+		skinSectionList.value?.getAddSkinButtonElement() ??
+		elySkinSectionList.value?.getAddSkinButtonElement()
 
 	if (!element) {
 		return false
@@ -1312,14 +1472,36 @@ function isPositionOverAddSkinButton(position: { x: number; y: number }) {
 	return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom
 }
 
+/** Whichever grid is on screen owns the drag highlight on its add tile. */
+function setAddSkinDragActive(active: boolean) {
+	if (elyAccount.value) {
+		isElyDragActive.value = active
+	} else {
+		isAddSkinButtonDragActive.value = active
+	}
+}
+
+/** True while the visible grid cannot take a new skin right now. */
+const isSkinDropBusy = computed(() =>
+	elyAccount.value ? elyWearingId.value !== null : isSkinManagementReadOnly.value,
+)
+
+/**
+ * The only drop path that works in the app.
+ *
+ * Tauri swallows OS file drops before the page sees them, so `dragover` and
+ * `drop` on an element never carry the file — the webview reports the paths
+ * through this event instead, and the backend reads the bytes. Both grids go
+ * through here; only the destination differs.
+ */
 async function handleAddSkinNativeDragDrop(event: { payload: DragDropEvent }) {
-	if (isSkinManagementReadOnly.value) return
+	if (isSkinDropBusy.value) return
 
 	const payload = event.payload
 
 	if (payload.type === 'leave') {
 		isDraggingSkinFile.value = false
-		isAddSkinButtonDragActive.value = false
+		setAddSkinDragActive(false)
 		return
 	}
 
@@ -1328,8 +1510,7 @@ async function handleAddSkinNativeDragDrop(event: { payload: DragDropEvent }) {
 	}
 
 	if (payload.type === 'enter' || payload.type === 'over') {
-		isAddSkinButtonDragActive.value =
-			isDraggingSkinFile.value && isPositionOverAddSkinButton(payload.position)
+		setAddSkinDragActive(isDraggingSkinFile.value && isPositionOverAddSkinButton(payload.position))
 		return
 	}
 
@@ -1338,7 +1519,7 @@ async function handleAddSkinNativeDragDrop(event: { payload: DragDropEvent }) {
 		(isDraggingSkinFile.value || hasSkinPath) && isPositionOverAddSkinButton(payload.position)
 
 	isDraggingSkinFile.value = false
-	isAddSkinButtonDragActive.value = false
+	setAddSkinDragActive(false)
 
 	if (!shouldUpload) {
 		return
@@ -1352,7 +1533,11 @@ async function handleAddSkinNativeDragDrop(event: { payload: DragDropEvent }) {
 
 	try {
 		const data = await get_dragged_skin_data(skinPath)
-		await processSkinFileBuffer(data)
+		if (elyAccount.value) {
+			await openElyAddDialog(data)
+		} else {
+			await processSkinFileBuffer(data)
+		}
 	} catch (error) {
 		addNotification({
 			title: formatMessage(messages.droppedFileErrorTitle),
@@ -1532,6 +1717,13 @@ async function checkUserChanges() {
 		accept="image/png"
 		class="hidden"
 		@change="onElyUploadChange"
+	/>
+	<NoctrinthElySkinModal
+		ref="elyEditModal"
+		:saving="elyEditSaving"
+		@save="saveElyEdit"
+		@add="addElySkin"
+		@upload="openElyUpload"
 	/>
 	<ConfirmModal
 		ref="deleteSkinModal"
@@ -1817,6 +2009,7 @@ async function checkUserChanges() {
 				</p>
 				<VirtualSkinSectionList
 					v-else
+					ref="elySkinSectionList"
 					:saved-skins="elySkinsAsSkins"
 					:default-skin-sections="[]"
 					:get-baked-skin-textures="getBakedSkinTextures"
@@ -1825,6 +2018,7 @@ async function checkUserChanges() {
 					:is-add-skin-button-drag-active="isElyDragActive"
 					:read-only="elyWearingId !== null"
 					@select="requestElySkin"
+					@edit="openElyEdit"
 					@delete="deleteElySkin"
 					@add-skin="openElyUpload"
 					@add-skin-dragenter="onElyDragOver"

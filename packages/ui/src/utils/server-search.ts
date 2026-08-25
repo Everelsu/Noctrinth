@@ -1,7 +1,7 @@
 import type { Labrinth } from '@modrinth/api-client'
 import { getCategoryIcon, GlobeIcon, SERVER_CATEGORY_ICON_MAP, UserIcon } from '@modrinth/assets'
 import { sortedCategories } from '@modrinth/utils'
-import { computed, type ComputedRef, type Ref, ref, shallowRef } from 'vue'
+import { computed, type ComputedRef, type Ref, ref, shallowRef, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { defineMessage, LOCALES, useVIntl } from '../composables/i18n'
@@ -102,14 +102,38 @@ export const SERVER_LANGUAGES = {
 	zu: defineMessage({ id: 'project.server.language.zu', defaultMessage: 'Zulu' }),
 }
 
-export const SERVER_SORT_TYPES: SortType[] = [
-	{ display: 'Relevance', name: 'relevance' },
-	{ display: 'Verified Plays', name: 'minecraft_java_server.verified_plays_2w' },
-	{ display: 'Players', name: 'minecraft_java_server.ping.data.players_online' },
-	{ display: 'Followers', name: 'follows' },
-	{ display: 'Date Published', name: 'date_created' },
-	{ display: 'Date Updated', name: 'date_modified' },
-]
+const SERVER_SORT_TYPE_MESSAGES = {
+	relevance: defineMessage({ id: 'search.sort.relevance', defaultMessage: 'Relevance' }),
+	verifiedPlays: defineMessage({
+		id: 'search.sort.verified-plays',
+		defaultMessage: 'Verified Plays',
+	}),
+	players: defineMessage({ id: 'search.sort.players', defaultMessage: 'Players' }),
+	follows: defineMessage({ id: 'search.sort.followers', defaultMessage: 'Followers' }),
+	datePublished: defineMessage({
+		id: 'search.sort.date-published',
+		defaultMessage: 'Date published',
+	}),
+	dateUpdated: defineMessage({ id: 'search.sort.date-updated', defaultMessage: 'Date updated' }),
+}
+
+/** The sort options, in the language the app is currently in. */
+export function serverSortTypes(formatMessage: (message: { id: string }) => string): SortType[] {
+	return [
+		{ display: formatMessage(SERVER_SORT_TYPE_MESSAGES.relevance), name: 'relevance' },
+		{
+			display: formatMessage(SERVER_SORT_TYPE_MESSAGES.verifiedPlays),
+			name: 'minecraft_java_server.verified_plays_2w',
+		},
+		{
+			display: formatMessage(SERVER_SORT_TYPE_MESSAGES.players),
+			name: 'minecraft_java_server.ping.data.players_online',
+		},
+		{ display: formatMessage(SERVER_SORT_TYPE_MESSAGES.follows), name: 'follows' },
+		{ display: formatMessage(SERVER_SORT_TYPE_MESSAGES.datePublished), name: 'date_created' },
+		{ display: formatMessage(SERVER_SORT_TYPE_MESSAGES.dateUpdated), name: 'date_modified' },
+	]
+}
 
 const FILTER_FIELD_MAP: Record<string, string> = {
 	server_content_type: 'minecraft_java_server.content.kind',
@@ -140,7 +164,13 @@ export function useServerSearch(opts: {
 
 	const route = useRoute()
 
-	const serverCurrentSortType = shallowRef<SortType>(SERVER_SORT_TYPES[0])
+	const availableServerSortTypes = computed(() => serverSortTypes(formatMessage))
+	const serverCurrentSortType = shallowRef<SortType>(availableServerSortTypes.value[0])
+
+	watch(availableServerSortTypes, (types) => {
+		const match = types.find((type) => type.name === serverCurrentSortType.value.name)
+		if (match) serverCurrentSortType.value = match
+	})
 	const serverCurrentFilters = ref<FilterValue[]>([{ type: 'server_status', option: 'online' }])
 	const serverToggledGroups = ref<string[]>([])
 
@@ -452,7 +482,8 @@ export function useServerSearch(opts: {
 
 		if (q.ss) {
 			serverCurrentSortType.value =
-				SERVER_SORT_TYPES.find((s) => s.name === String(q.ss)) ?? SERVER_SORT_TYPES[0]
+				availableServerSortTypes.value.find((s) => s.name === String(q.ss)) ??
+				availableServerSortTypes.value[0]
 		}
 
 		if (q.m) {
@@ -527,7 +558,7 @@ export function useServerSearch(opts: {
 		serverCurrentSortType,
 		serverCurrentFilters,
 		serverToggledGroups,
-		serverSortTypes: SERVER_SORT_TYPES,
+		serverSortTypes: availableServerSortTypes,
 		serverFilterTypes,
 		newFilters,
 		serverRequestParams,

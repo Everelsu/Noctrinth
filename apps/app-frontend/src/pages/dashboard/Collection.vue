@@ -15,6 +15,7 @@ import {
 import {
 	Avatar,
 	Button,
+	commonMessages,
 	defineMessages,
 	DropdownSelect,
 	type FilterPillOption,
@@ -57,7 +58,7 @@ const router = useRouter()
 useRootBreadcrumb({
 	slot: 'root',
 	id: 'collections',
-	label: 'Collections',
+	label: () => formatMessage(commonMessages.collectionsLabel),
 	to: '/dashboard/collections',
 	visual: { type: 'icon', component: LibraryIcon },
 })

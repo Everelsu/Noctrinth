@@ -1,12 +1,31 @@
 <script setup lang="ts">
 import { DropdownIcon, FolderOpenIcon, PlusIcon } from '@modrinth/assets'
-import { Button, injectNotificationManager, TeleportOverflowMenu } from '@modrinth/ui'
+import {
+	Button,
+	commonMessages,
+	defineMessages,
+	injectNotificationManager,
+	TeleportOverflowMenu,
+	useVIntl,
+} from '@modrinth/ui'
 import { open } from '@tauri-apps/plugin-dialog'
 import { useRouter } from 'vue-router'
 
 import { add_project_from_path } from '@/helpers/instance'
 
 const { handleError } = injectNotificationManager()
+const { formatMessage } = useVIntl()
+
+const messages = defineMessages({
+	installContent: {
+		id: 'app.instance.add-content.install',
+		defaultMessage: 'Install content',
+	},
+	addFromFile: {
+		id: 'app.instance.add-content.from-file',
+		defaultMessage: 'Add from file',
+	},
+})
 
 const props = defineProps({
 	instance: {
@@ -38,14 +57,14 @@ const handleSearchContent = async () => {
 	<div class="joined-buttons">
 		<Button @click="handleSearchContent">
 			<PlusIcon />
-			Install content
+			{{ formatMessage(messages.installContent) }}
 		</Button>
 		<TeleportOverflowMenu
-			label="More options"
+			:label="formatMessage(commonMessages.moreOptionsButton)"
 			:options="[
 				{
 					id: 'from_file',
-					label: 'Add from file',
+					label: formatMessage(messages.addFromFile),
 					action: handleAddContentFromFile,
 				},
 			]"
@@ -54,7 +73,7 @@ const handleSearchContent = async () => {
 			<DropdownIcon />
 			<template #from_file>
 				<FolderOpenIcon />
-				<span class="no-wrap"> Add from file </span>
+				<span class="no-wrap"> {{ formatMessage(messages.addFromFile) }} </span>
 			</template>
 		</TeleportOverflowMenu>
 	</div>

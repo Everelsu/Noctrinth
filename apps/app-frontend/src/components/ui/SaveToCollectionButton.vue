@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { BookmarkIcon, CheckIcon, PlusIcon, SearchIcon } from '@modrinth/assets'
-import { injectNotificationManager, StyledInput, TeleportPopoutMenu } from '@modrinth/ui'
+import {
+	defineMessages,
+	injectNotificationManager,
+	StyledInput,
+	TeleportPopoutMenu,
+	useVIntl,
+} from '@modrinth/ui'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import CollectionCreateModal from '@/components/ui/modal/CollectionCreateModal.vue'
@@ -17,6 +23,32 @@ const props = defineProps<{
 }>()
 
 const { handleError } = injectNotificationManager()
+const { formatMessage } = useVIntl()
+
+const messages = defineMessages({
+	saved: { id: 'app.collection.save-button.saved', defaultMessage: 'Saved to a collection' },
+	save: { id: 'app.collection.save-button.save', defaultMessage: 'Save to collection' },
+	savedTooltip: { id: 'app.collection.save-button.saved-tooltip', defaultMessage: 'Saved' },
+	saveTooltip: { id: 'app.collection.save-button.save-tooltip', defaultMessage: 'Save' },
+	searchPlaceholder: { id: 'app.collection.save-button.search', defaultMessage: 'Search...' },
+	signInHint: {
+		id: 'app.collection.save-button.sign-in',
+		defaultMessage: 'Sign in to Modrinth to save projects.',
+	},
+	loading: { id: 'app.collection.save-button.loading', defaultMessage: 'Loading collections...' },
+	noMatches: {
+		id: 'app.collection.save-button.no-matches',
+		defaultMessage: 'No collections match your search.',
+	},
+	noCollections: {
+		id: 'app.collection.save-button.empty',
+		defaultMessage: "You don't have any collections yet.",
+	},
+	createNew: {
+		id: 'app.collection.save-button.create',
+		defaultMessage: 'Create new collection',
+	},
+})
 
 const collections = ref<Collection[]>([])
 const loading = ref(false)
@@ -100,8 +132,8 @@ onMounted(load)
 		type="quiet"
 		size="xl"
 		placement="bottom-end"
-		:label="isInAnyCollection ? 'Saved to a collection' : 'Save to collection'"
-		:tooltip="isInAnyCollection ? 'Saved' : 'Save'"
+		:label="formatMessage(isInAnyCollection ? messages.saved : messages.save)"
+		:tooltip="formatMessage(isInAnyCollection ? messages.savedTooltip : messages.saveTooltip)"
 		@open="load"
 	>
 		<template #trigger>
@@ -114,15 +146,13 @@ onMounted(load)
 					:icon="SearchIcon"
 					type="text"
 					clearable
-					placeholder="Search..."
+					:placeholder="formatMessage(messages.searchPlaceholder)"
 				/>
 				<div class="picker-list">
-					<p v-if="!signedIn" class="hint">Sign in to Modrinth to save projects.</p>
-					<p v-else-if="loading" class="hint">Loading collections...</p>
+					<p v-if="!signedIn" class="hint">{{ formatMessage(messages.signInHint) }}</p>
+					<p v-else-if="loading" class="hint">{{ formatMessage(messages.loading) }}</p>
 					<p v-else-if="filtered.length === 0" class="hint">
-						{{
-							filter ? 'No collections match your search.' : "You don't have any collections yet."
-						}}
+						{{ formatMessage(filter ? messages.noMatches : messages.noCollections) }}
 					</p>
 					<button
 						v-for="c in filtered"
@@ -141,7 +171,7 @@ onMounted(load)
 				<div class="picker-footer">
 					<button class="picker-row" @click="openCreate">
 						<span class="check-box" aria-hidden="true"><PlusIcon /></span>
-						<span class="row-name">Create new collection</span>
+						<span class="row-name">{{ formatMessage(messages.createNew) }}</span>
 					</button>
 				</div>
 			</div>

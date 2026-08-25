@@ -120,7 +120,9 @@ export function useProcessConsole(processUuid: string) {
 		},
 		clear: async () => {
 			console.clear()
-			await clear_log_buffer_for_process(processUuid).catch(() => {})
+			await clear_log_buffer_for_process(processUuid).catch((error) => {
+				window.console.warn('Failed to clear the log of one copy:', error)
+			})
 		},
 		forget: () => {
 			processConsoles.delete(processUuid)

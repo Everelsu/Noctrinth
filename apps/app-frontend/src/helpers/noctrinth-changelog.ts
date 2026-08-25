@@ -43,6 +43,11 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 - The splash screen and the window icon are drawn in the chosen accent.
 - The wordmark in the title bar turns and sweeps while a download, an install or a page load is running.
 - Signing in to Minecraft from the getting started checklist asks which account to add: Microsoft or Ely.by.
+- A folder of the launcher's own for skins put there by hand: one \`<name>.png\` per player, with \`capes/\` and \`elytras/\` beside it. It is asked before any skin system, so it also overrides one, and \`<name>-slim.png\` is drawn on the thin model.
+- An instance that is already running can be launched a second time, from the button beside Stop on its page. The game starts as whichever account is signed in now, so switching accounts between the two is how somebody ends up in the same world twice.
+- The running instances list names the account each copy is signed in as.
+- Each copy of a running instance has a console of its own on the Logs tab, side by side and headed by the account it is signed in as. One copy, or none, is the page as it was.
+- Micropatches: a release can be rebuilt and published again under the number it already went out as, and installs already on that version take the update. Add a build number to \`VERSION\` (\`0.18.2\` becomes \`0.18.2+1\`), then run the release workflow on the release's own tag with Micropatch ticked.
 
 ### Changed
 - The empty home screen says Noctrinth and shows the fork's own mark in the accent colour, instead of Modrinth's name and icon.
@@ -50,6 +55,9 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 - Noctrinth's translations moved to \`src/locales-noctrinth/\` and are applied over upstream's catalogues instead of being edited into them.
 - The changelog is one file again; screenshots are still published with the changelog site rather than shipped in the installer.
 - The in-app changelog is no longer fetched or cached at runtime — it is the one the build shipped with.
+- Collections and Notifications are laid out in the cards, surfaces and spacing the rest of the launcher uses, rather than as a page inside one large box.
+- The Collections / Notifications tab row is gone from both pages; the account menu is how you get to either.
+- Launching on an Ely.by account no longer waits on Ely.by. The agent is handed the address of the account system's API and what it says about itself, which it used to go and fetch twice before the game started, and a token Ely.by vouched for in the last ten minutes is taken at its word. Both are also what a launch without a connection had been tripping over.
 
 ### Fixed
 - The launcher could die on a cold start with "should be initialized when used", and open fine the next time.
@@ -65,9 +73,16 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 - Licensed players stayed Steve whenever Ely.by's proxy to Mojang did not answer, which is often; Mojang is now asked directly for the names Ely.by has never heard of.
 - A player who changed their skin and rejoined kept the old one for another ten minutes. A skin is now current for fifteen seconds, and looked at again in the background after that.
 - Everyone came back as Steve for a moment whenever they walked back into view, and everyone at once after a death, while the game waited on a fresh lookup. A skin already known is now handed over immediately.
+- Every session started by looking everyone up over again; what was found is written down now and read back at the next launch.
+- A skin system that would not answer could hold a frame up for ten seconds while its timeouts ran out one after another. The game is made to wait five at the most, and the lookup finishes on its own.
 - The player's own arm was Steve's for the first moment after spawning: their own skin is now looked up while the game is still starting.
 - A licensed player's skin cost two requests to Mojang every time it was looked at; the id behind the name is now remembered.
 - Names an offline server can hand out but Mojang would not issue, such as one with a dash in it, were never looked up.
+- On Minecraft 1.20.2 and newer, a skin looked up by name was never drawn at all: the client asks for a player's skin as trusted or not, and puts Steve in the place of one it does not count as trusted.
+- The console of the copy that started first stayed empty: the two commands a per-copy console calls were never declared, so the app refused them and the pane had nothing to show.
+- An Ely.by session token stood in an instance's log in full, and went out with it whenever a log was shared: only Microsoft tokens were ever removed. Ely.by's are too now, and the session line the game writes for itself is blanked whatever account it belongs to.
+- Clearing the live log left it empty for good — clearing the output also forgot which copies of the instance were running, so nothing could be read back until the game was started again.
+- A release's notes on GitHub stayed as GitHub generated them: the workflow was still looking for the changelog in the per-release Markdown files it had moved out of.
 - The app's icon files still carried the old mark, so the installer, the taskbar and the dock showed it.`,
 	},
 	{

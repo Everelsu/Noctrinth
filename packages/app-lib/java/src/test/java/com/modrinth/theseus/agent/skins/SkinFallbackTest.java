@@ -160,9 +160,9 @@ class SkinFallbackTest {
         assertEquals(LOOKED_UP_SKIN, textures.skin().getUrl());
         assertNull(textures.cape(), "nothing was said about a cape");
         assertEquals(
-                MinecraftProfileTextures.SignatureState.UNSIGNED,
+                MinecraftProfileTextures.SignatureState.SIGNED,
                 textures.signatureState(),
-                "textures we resolved ourselves are not signed by anyone");
+                "a skin the client does not count as trusted is one it throws away");
     }
 
     @Test

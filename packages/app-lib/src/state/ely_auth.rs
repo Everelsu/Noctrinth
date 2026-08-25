@@ -1,8 +1,31 @@
 use crate::util::fetch::INSECURE_REQWEST_CLIENT;
+use dashmap::DashMap;
 use serde::Serializer;
 use serde::ser::SerializeStruct;
 use serde::{Deserialize, Serialize};
+use std::sync::LazyLock;
+use std::time::{Duration, Instant};
 use uuid::Uuid;
+
+/// How long to wait on Ely.by before carrying on without an answer.
+const AUTH_TIMEOUT: Duration = Duration::from_secs(5);
+
+/// Tokens Ely.by has already vouched for, and when it did.
+///
+/// Every launch asks whether the token is still good, which costs the best part
+/// of a second on the way to starting the game and is asked again the moment
+/// somebody launches a second copy. An answer that recent is still true.
+static RECENTLY_VALIDATED: LazyLock<DashMap<Uuid, Instant>> =
+    LazyLock::new(DashMap::new);
+
+/// How long such an answer is trusted for.
+const VALIDATION_TTL: Duration = Duration::from_secs(10 * 60);
+
+fn validated_recently(uuid: Uuid) -> bool {
+    RECENTLY_VALIDATED
+        .get(&uuid)
+        .is_some_and(|at| at.elapsed() < VALIDATION_TTL)
+}
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct ElyCredentials {
@@ -138,6 +161,10 @@ impl ElyCredentials {
                 "accessToken": self.access_token,
                 "clientToken": self.client_token
             }))
+            // The shared client waits up to three quarters of a minute, which
+            // is a long time to hold a launch on a question whose answer only
+            // decides whether to refresh a token.
+            .timeout(AUTH_TIMEOUT)
             .send()
             .await;
 
@@ -162,6 +189,7 @@ impl ElyCredentials {
                 "accessToken": self.access_token,
                 "clientToken": self.client_token
             }))
+            .timeout(AUTH_TIMEOUT)
             .send()
             .await
             .map_err(|e| {
@@ -229,17 +257,29 @@ impl ElyCredentials {
             active: row.active == 1,
         };
 
+        // Asked once and then left alone for a while: the answer does not change
+        // from one launch to the next, and every ask is time spent before the
+        // game starts.
+        if validated_recently(uuid) {
+            return Ok(Some(creds));
+        }
+
         // Validate and refresh if needed. The account is only removed when
         // Ely.by explicitly rejects both the token and its refresh — a network
         // failure (offline play, Ely.by outage) keeps the stored credentials,
         // so a flaky connection can no longer sign the user out.
         match creds.validate().await {
-            ElyTokenCheck::Valid | ElyTokenCheck::Unreachable => {}
+            ElyTokenCheck::Valid => {
+                RECENTLY_VALIDATED.insert(uuid, Instant::now());
+            }
+            ElyTokenCheck::Unreachable => {}
             ElyTokenCheck::Invalid => match creds.refresh().await {
                 Ok(ElyRefresh::Refreshed) => {
+                    RECENTLY_VALIDATED.insert(uuid, Instant::now());
                     creds.upsert(exec).await.ok();
                 }
                 Ok(ElyRefresh::Rejected) => {
+                    RECENTLY_VALIDATED.remove(&creds.uuid);
                     Self::remove(creds.uuid, exec).await.ok();
                     return Ok(None);
                 }

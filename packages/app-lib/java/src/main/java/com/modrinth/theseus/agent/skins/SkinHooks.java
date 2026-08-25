@@ -28,8 +28,19 @@ public final class SkinHooks {
     /** What a packed textures payload calls the player it is for. */
     private static final String PROFILE_NAME = "profileName";
 
-    /** The signature state to claim for textures we resolved ourselves. */
-    private static final String UNSIGNED_CONSTANT = "UNSIGNED";
+    /**
+     * The signature state to claim for textures we resolved ourselves.
+     *
+     * <p>Not the honest-looking {@code UNSIGNED}: from 1.20.2 the client asks
+     * for a player's skin as either trusted or not, and throws away an untrusted
+     * one — {@code PlayerSkin.secure} is exactly {@code signatureState ==
+     * SIGNED}, and a skin without it is replaced by Steve before it is ever
+     * drawn. What the state answers is whether these textures can be trusted,
+     * and these came from the skin system the launcher was told to use rather
+     * than from the server, so they can. It says nothing about chat signing,
+     * which has a key of its own.
+     */
+    private static final String SIGNED_CONSTANT = "SIGNED";
 
     private SkinHooks() {}
 
@@ -360,7 +371,7 @@ public final class SkinHooks {
                 arguments[i] = texture == null ? null : buildTexture(loader, texture);
                 textureIndex++;
             } else if (parameter.isEnum()) {
-                arguments[i] = enumConstant(parameter, UNSIGNED_CONSTANT);
+                arguments[i] = enumConstant(parameter, SIGNED_CONSTANT);
                 if (arguments[i] == null) {
                     final Object[] constants = parameter.getEnumConstants();
                     arguments[i] = constants.length > 0 ? constants[0] : null;

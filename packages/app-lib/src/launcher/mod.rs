@@ -1166,8 +1166,26 @@ pub async fn launch_minecraft(
             &state.directories,
         )
         .await?;
-        command
-            .arg(format!("-javaagent:{}=ely.by", injector.to_string_lossy()));
+        let profile = crate::util::authlib_injector::get_injector_profile(
+            &state.directories,
+            "ely.by",
+        )
+        .await;
+
+        command.arg(format!(
+            "-javaagent:{}={}",
+            injector.to_string_lossy(),
+            profile.api_root
+        ));
+
+        // Handed what it would otherwise go and ask for: two requests the game
+        // no longer waits on before it starts, and two it no longer needs a
+        // network for at all.
+        if let Some(prefetched) = profile.prefetched {
+            command.arg(format!(
+                "-Dauthlibinjector.yggdrasil.prefetched={prefetched}"
+            ));
+        }
     }
 
     command

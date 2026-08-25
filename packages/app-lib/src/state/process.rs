@@ -66,7 +66,7 @@ pub fn push_log_line(process_uuid: &str, line: String) {
     LOG_BUFFERS
         .entry(process_uuid.to_string())
         .or_insert_with(LogRingBuffer::new)
-        .push(line);
+        .push(crate::api::logs::censor_session_ids(line));
 }
 
 pub fn get_log_buffer(process_uuid: &str) -> Vec<String> {
@@ -89,10 +89,14 @@ pub fn remove_log_buffer(process_uuid: &str) {
 }
 
 /// Forgets the live output of every copy of an instance.
+///
+/// What each copy said goes; which copies there are stays, or a running game
+/// would have nowhere to be read from and the live log would stay empty until
+/// it was started again.
 pub fn remove_instance_log_buffers(instance_id: &str) {
-    if let Some((_, uuids)) = INSTANCE_PROCESSES.remove(instance_id) {
-        for uuid in uuids {
-            remove_log_buffer(&uuid);
+    if let Some(uuids) = INSTANCE_PROCESSES.get(instance_id) {
+        for uuid in uuids.value() {
+            remove_log_buffer(uuid);
         }
     }
 }
@@ -659,6 +663,20 @@ impl Process {
         }
     }
 
+    /// The same event with the session id taken out of what it says.
+    fn without_session_id(event: &Log4jEvent) -> Log4jEvent {
+        let censor = |text: &Option<String>| {
+            text.as_ref()
+                .map(|text| crate::api::logs::censor_session_ids(text.clone()))
+        };
+
+        Log4jEvent {
+            message: censor(&event.message),
+            throwable: censor(&event.throwable),
+            ..event.clone()
+        }
+    }
+
     fn format_log4j_entry(event: &Log4jEvent) -> Option<String> {
         let message = event.message.as_ref()?;
         let thread = event.thread_name.as_deref().unwrap_or("");
@@ -685,6 +703,11 @@ impl Process {
         process_uuid: &str,
         event: &Log4jEvent,
     ) {
+        // Before anything is kept or shown: what the game says about its own
+        // session is a working credential, and it belongs in no buffer, no file
+        // and on no screen somebody is about to screenshot.
+        let event = &Self::without_session_id(event);
+
         if let Some(formatted) = Self::format_log4j_entry(event) {
             push_log_line(process_uuid, formatted.trim_end().to_string());
         }
@@ -710,7 +733,9 @@ impl Process {
     }
 
     fn emit_legacy_log(instance_id: &str, process_uuid: &str, message: &str) {
-        push_log_line(process_uuid, message.to_string());
+        let message = crate::api::logs::censor_session_ids(message.to_string());
+
+        push_log_line(process_uuid, message.clone());
 
         #[cfg(feature = "tauri")]
         {
@@ -718,9 +743,7 @@ impl Process {
             let _ = event_state.send(crate::event::AppEvent::Log(LogPayload {
                 instance_id: instance_id.to_string(),
                 process_uuid: process_uuid.to_string(),
-                event: LogEvent::Legacy {
-                    message: message.to_string(),
-                },
+                event: LogEvent::Legacy { message },
             }));
         }
         #[cfg(not(feature = "tauri"))]
@@ -736,7 +759,14 @@ impl Process {
         let mut file =
             OpenOptions::new().append(true).create(true).open(path)?;
 
-        file.write_all(line.as_bytes())?;
+        // The game writes its session id into its own output on every launch,
+        // and that is a working credential. It is taken out on the way past
+        // rather than on the way out to a screen, so that the copy kept on disk
+        // does not hold one either — whoever opens that file, or attaches it
+        // somewhere, gets a log and not an account.
+        file.write_all(
+            crate::api::logs::censor_session_ids(line.to_string()).as_bytes(),
+        )?;
         Ok(())
     }
 

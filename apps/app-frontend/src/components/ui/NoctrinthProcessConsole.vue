@@ -22,8 +22,7 @@
 
 <script setup lang="ts">
 import { OnlineIndicatorIcon } from '@modrinth/assets'
-import { ConsolePageLayout, provideConsoleManager } from '@modrinth/ui'
-import { defineMessages, useVIntl } from '@vintl/vintl'
+import { ConsolePageLayout, defineMessages, provideConsoleManager, useVIntl } from '@modrinth/ui'
 import { computed, onMounted, onUnmounted, ref, shallowRef, triggerRef, watch } from 'vue'
 
 import { useAppEvent } from '@/composables/use-app-event'
@@ -71,7 +70,11 @@ watch(
 )
 
 onMounted(async () => {
-	await hydrate().catch(() => {})
+	// Not silently: an empty console with the game plainly running is the kind
+	// of thing that should say why.
+	await hydrate().catch((error) => {
+		console.warn('Failed to read back what this copy has already said:', error)
+	})
 	loading.value = false
 })
 

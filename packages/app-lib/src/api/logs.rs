@@ -12,6 +12,7 @@ use tokio::{
 use crate::{
     State,
     prelude::Credentials,
+    state::ElyCredentials,
     util::io::{self, IOError},
 };
 
@@ -38,11 +39,73 @@ pub struct LatestLogCursor {
     pub new_file: bool,
 }
 
+/// Blanks out the session line the game writes at startup.
+///
+/// Minecraft logs `(Session ID is token:<token>:<uuid>)` itself, before anything
+/// here gets a say, and that line is a working credential for as long as the
+/// session lasts. Matching on the text rather than on a token this launcher
+/// happens to have on file covers an account that has since been removed, one
+/// signed in elsewhere, and account systems nobody has thought of yet.
+pub(crate) fn censor_session_ids(s: String) -> String {
+    const MARKER: &str = "Session ID is ";
+
+    let mut out = String::with_capacity(s.len());
+    let mut rest = s.as_str();
+
+    while let Some(at) = rest.find(MARKER) {
+        let (before, after) = rest.split_at(at + MARKER.len());
+        out.push_str(before);
+        out.push_str("{MINECRAFT_SESSION_ID}");
+
+        // To the end of the line, or of whatever it was written inside.
+        let end = after
+            .find(|c: char| c == ')' || c == '\n' || c == '\r')
+            .unwrap_or(after.len());
+        rest = &after[end..];
+    }
+
+    out.push_str(rest);
+    out
+}
+
 #[derive(Serialize, Debug)] // Not deserialize
 #[serde(transparent)]
 pub struct CensoredString(String);
 impl CensoredString {
-    pub fn censor(mut s: String, credentials_list: &[Credentials]) -> Self {
+    pub fn censor(s: String, credentials_list: &[Credentials]) -> Self {
+        Self::censor_all(s, credentials_list, &[])
+    }
+
+    /// The same, for a launcher that knows more than one account system.
+    ///
+    /// Ely.by's tokens live in a table of their own and were covered by none of
+    /// this: an Ely.by session token stood in the log in full, and went out with
+    /// it whenever a log was shared.
+    pub fn censor_all(
+        mut s: String,
+        credentials_list: &[Credentials],
+        ely_credentials: &[ElyCredentials],
+    ) -> Self {
+        // Whoever it belongs to and whichever account system issued it: the
+        // game writes this line itself on every launch, and a token nobody here
+        // has on file is still a token.
+        s = censor_session_ids(s);
+
+        for credentials in ely_credentials {
+            s = s
+                .replace(&credentials.access_token, "{MINECRAFT_ACCESS_TOKEN}")
+                .replace(&credentials.client_token, "{MINECRAFT_CLIENT_TOKEN}")
+                .replace(&credentials.username, "{MINECRAFT_USERNAME}")
+                .replace(
+                    &credentials.uuid.as_simple().to_string(),
+                    "{MINECRAFT_UUID}",
+                )
+                .replace(
+                    &credentials.uuid.as_hyphenated().to_string(),
+                    "{MINECRAFT_UUID}",
+                );
+        }
+
         let username = whoami::username();
         s = s
             .replace(&format!("/{username}/"), "/{COMPUTER_USERNAME}/")
@@ -384,6 +447,9 @@ async fn get_output_by_filename_from_path(
         .into_iter()
         .map(|x| x.1)
         .collect::<Vec<_>>();
+    let ely_credentials = ElyCredentials::get_all(&state.pool)
+        .await
+        .unwrap_or_default();
 
     if let Some(ext) = path.extension() {
         if ext == "gz" {
@@ -395,7 +461,11 @@ async fn get_output_by_filename_from_path(
             let compacted = read_compacted_log(&mut reader)
                 .map_err(|e| IOError::with_path(e, &path))?;
             maybe_emit_log_compaction_warning(file_name, compacted.stats).await;
-            return Ok(CensoredString::censor(compacted.output, &credentials));
+            return Ok(CensoredString::censor_all(
+                compacted.output,
+                &credentials,
+                &ely_credentials,
+            ));
         } else if ext == "log" || ext == "txt" {
             let file = std::fs::File::open(&path)
                 .map_err(|e| IOError::with_path(e, &path))?;
@@ -403,7 +473,11 @@ async fn get_output_by_filename_from_path(
             let compacted = read_compacted_log(&mut reader)
                 .map_err(|e| IOError::with_path(e, &path))?;
             maybe_emit_log_compaction_warning(file_name, compacted.stats).await;
-            return Ok(CensoredString::censor(compacted.output, &credentials));
+            return Ok(CensoredString::censor_all(
+                compacted.output,
+                &credentials,
+                &ely_credentials,
+            ));
         }
     }
     Err(crate::ErrorKind::OtherError(format!(
@@ -495,8 +569,15 @@ async fn censor_lines(lines: Vec<String>) -> crate::Result<CensoredString> {
         .into_iter()
         .map(|x| x.1)
         .collect::<Vec<_>>();
+    let ely_credentials = ElyCredentials::get_all(&state.pool)
+        .await
+        .unwrap_or_default();
     maybe_emit_log_compaction_warning("live log", compacted.stats).await;
-    Ok(CensoredString::censor(compacted.output, &credentials))
+    Ok(CensoredString::censor_all(
+        compacted.output,
+        &credentials,
+        &ely_credentials,
+    ))
 }
 
 pub fn clear_live_log_buffer(instance_id: &str) {
@@ -568,11 +649,58 @@ pub async fn get_generic_live_log_cursor(
         .into_iter()
         .map(|x| x.1)
         .collect::<Vec<_>>();
+    let ely_credentials = ElyCredentials::get_all(&state.pool)
+        .await
+        .unwrap_or_default();
     maybe_emit_log_compaction_warning(log_file_name, compacted.stats).await;
-    let output = CensoredString::censor(compacted.output, &credentials);
+    let output = CensoredString::censor_all(
+        compacted.output,
+        &credentials,
+        &ely_credentials,
+    );
     Ok(LatestLogCursor {
         cursor,
         new_file,
         output,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::censor_session_ids;
+
+    /// The line the game writes for itself, which is a working credential.
+    #[test]
+    fn blanks_out_the_session_id_the_game_logs() {
+        let log = concat!(
+            "[16:43:27] [main/INFO]: Setting user: Everesu\n",
+            "[16:43:27] [main/INFO]: (Session ID is token:eyJ0eXAiOiJKV1Qi.payload.sig:8dbaa676e1ab)\n",
+            "[16:43:27] [Client thread/INFO]: LWJGL Version: 2.9.1\n"
+        );
+
+        let censored = censor_session_ids(log.to_string());
+
+        assert!(
+            !censored.contains("eyJ0eXAiOiJKV1Qi"),
+            "the token is still there: {censored}"
+        );
+        assert!(
+            !censored.contains("8dbaa676e1ab"),
+            "the rest of the session id is still there: {censored}"
+        );
+        assert!(censored.contains("MINECRAFT_SESSION_ID"));
+        assert!(
+            censored.contains("Setting user: Everesu")
+                && censored.contains("LWJGL Version: 2.9.1"),
+            "the log around it must survive: {censored}"
+        );
+    }
+
+    /// Nothing to blank out, nothing changed.
+    #[test]
+    fn leaves_a_log_without_one_alone() {
+        let log = "[16:43:27] [main/INFO]: LWJGL Version: 2.9.1\n".to_string();
+
+        assert_eq!(log.clone(), censor_session_ids(log).as_str());
+    }
 }

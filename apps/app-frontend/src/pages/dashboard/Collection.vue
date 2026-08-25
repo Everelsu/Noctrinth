@@ -21,7 +21,6 @@ import {
 	FilterPills,
 	injectNotificationManager,
 	LoadingIndicator,
-	NavTabs,
 	PageHeader,
 	PageHeaderActions,
 	ProjectCard,
@@ -64,8 +63,6 @@ useRootBreadcrumb({
 })
 
 const messages = defineMessages({
-	tabCollections: { id: 'collection.tab.collections', defaultMessage: 'Collections' },
-	tabNotifications: { id: 'collection.tab.notifications', defaultMessage: 'Notifications' },
 	loading: { id: 'collection.loading', defaultMessage: 'Loading...' },
 	statusPrivate: { id: 'collection.status.private', defaultMessage: 'Private' },
 	statusPublic: { id: 'collection.status.public', defaultMessage: 'Public' },
@@ -423,17 +420,6 @@ watch(
 	<div v-else class="p-6 flex flex-col gap-4">
 		<CollectionEditModal ref="editModal" @saved="onEditSaved" />
 		<CollectionDeleteModal ref="deleteModal" @deleted="onDeleted" />
-
-		<NavTabs
-			:links="[
-				{
-					label: formatMessage(messages.tabCollections),
-					href: `/dashboard/collections`,
-					subpages: ['/collection/'],
-				},
-				{ label: formatMessage(messages.tabNotifications), href: `/dashboard/notifications` },
-			]"
-		/>
 
 		<template v-if="collection">
 			<PageHeader :title="collection.name">

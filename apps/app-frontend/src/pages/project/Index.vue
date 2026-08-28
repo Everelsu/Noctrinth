@@ -1009,7 +1009,6 @@ async function install(version) {
 
 const options = ref(null)
 const handleRightClick = (event) => {
-	const project = data.value
 	options.value.open(event, [
 		{
 			id: 'install',
@@ -1022,19 +1021,16 @@ const handleRightClick = (event) => {
 			id: 'open_link',
 			label: formatMessage(commonMessages.openInModrinthButton),
 			icon: GlobeIcon,
-			action: () => openProjectLink(project),
+			action: () => openProjectInBrowser(),
 		},
 		{
 			id: 'copy_link',
 			label: formatMessage(commonMessages.copyLinkButton),
 			icon: ClipboardCopyIcon,
-			action: () => copyProjectLink(project),
+			action: () => copyProjectLink(),
 		},
 	])
 }
-const getProjectLink = (project) => `https://modrinth.com/${project.project_type}/${project.slug}`
-const openProjectLink = (project) => openUrl(getProjectLink(project))
-const copyProjectLink = (project) => navigator.clipboard.writeText(getProjectLink(project))
 </script>
 
 <style scoped lang="scss">

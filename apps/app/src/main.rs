@@ -209,7 +209,44 @@ fn manifest_patch(notes: Option<&str>) -> u32 {
         .unwrap_or(0)
 }
 
+/// Stack each async worker gets, in place of Rust's 2 MiB default for a thread
+/// it spawns itself.
+///
+/// Tauri builds its own tokio runtime with `Runtime::new()`, which leaves the
+/// worker threads on that default. The install path polls several large
+/// futures together — `download_minecraft` joins the client, the log config,
+/// the assets and the libraries in one `try_join!` — and an unoptimised build
+/// lays every nested future out inline, so a big enough version runs that off
+/// the end of the stack: a `cargo tauri dev` run dies with
+/// STATUS_STACK_OVERFLOW on `tokio-rt-worker` where a release build survives.
+///
+/// The `/STACK` link flag in `.cargo/config.toml` does not cover this. That
+/// sets the PE header's default, which Windows applies only to threads created
+/// without a size of their own, and Rust always passes one explicitly — so it
+/// raises the main thread and nothing else.
+const ASYNC_WORKER_STACK_SIZE: usize = 16 * 1024 * 1024;
+
+/// Hands Tauri a runtime whose workers have room to poll the install futures.
+///
+/// Must run before anything touches `tauri::async_runtime`, which builds the
+/// default runtime on first use and then refuses to be replaced.
+fn install_async_runtime() {
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .thread_stack_size(ASYNC_WORKER_STACK_SIZE)
+        .build()
+        .expect("the app's async runtime should be buildable");
+
+    // Tauri keeps the handle and not the runtime, so this one has to outlive
+    // the call. It lives as long as the process either way.
+    let runtime: &'static tokio::runtime::Runtime =
+        Box::leak(Box::new(runtime));
+    tauri::async_runtime::set(runtime.handle().clone());
+}
+
 fn main() {
+    install_async_runtime();
+
     #[cfg(feature = "export-app-events")]
     theseus::export_app_event_bindings(
         std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))

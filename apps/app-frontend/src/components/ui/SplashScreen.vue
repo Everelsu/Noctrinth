@@ -103,6 +103,22 @@ useAppEvent('loading', (e) => {
 .splash-screen {
 	--color-purple: var(--noctrinth-accent, var(--color-purple-400));
 	--color-brand: var(--color-purple);
+
+	/*
+	 * The wash over the splash, which the theme writes in Modrinth's green. An
+	 * accent preset repaints it through `--splash-wash`, but the preset that
+	 * keeps the theme's own colour sets nothing at all — and that colour, here,
+	 * is the fork's purple and not upstream's green.
+	 */
+	--splash-tint-top: rgba(110, 45, 180, 0.15);
+	--splash-tint-bottom: rgba(20, 12, 35, 0.3);
+	--splash-overlay: rgba(22, 24, 28, 0.64);
+
+	&.light-mode {
+		--splash-tint-top: rgba(214, 185, 255, 0.465);
+		--splash-tint-bottom: rgba(199, 183, 255, 0.563);
+		--splash-overlay: rgba(216, 181, 255, 0.315);
+	}
 }
 
 .splash-fade-leave-active {

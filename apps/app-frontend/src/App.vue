@@ -1363,16 +1363,6 @@ const modrinthAccountMenuOptions = computed(() => [
 		action: () => router.push(`/user/${encodeURIComponent(credentials.value.user.username)}`),
 	},
 	{
-		id: 'plus',
-		label: formatMessage(messages.upgradeToModrinthPlus),
-		icon: ArrowBigUpDashIcon,
-		type: 'link',
-		href: 'https://modrinth.plus?app',
-		target: '_blank',
-		tone: 'purple',
-		shown: !hasPlus.value,
-	},
-	{
 		id: 'add-friend',
 		label: formatMessage(messages.addFriend),
 		icon: UserPlusIcon,

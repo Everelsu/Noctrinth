@@ -49,7 +49,11 @@ The Modrinth App is a genuinely good launcher — but it only knows Microsoft ac
 - **Ely.by accounts** — sign in alongside Microsoft, launch through authlib-injector, manage skins in an embedded window
 - **Modrinth App migration** — a banner spots an existing Modrinth App install and offers to bring instances over, all at once or hand-picked, optionally clearing them from the source once the copy lands
 - **CurseForge modpack `.zip` import** — install a pack straight from disk through the same job pipeline as everything else: queued, resumable, rolled back cleanly on failure
-- **Screenshots tab** — a per-instance gallery with a full-screen viewer, zoom and pan, copy to clipboard, reveal in folder and delete
+- **Accent presets** — nine colours for the whole interface, from the splash screen and the window icon down to the loading bar, optionally tinting the surfaces with them
+- **Skins for every player** — offline servers send no skins at all, so everyone is Steve; the launcher looks them up by name from Ely.by and falls back to Mojang, without a mod on either side
+- **A skins folder of your own** — drop `<name>.png` in and that player wears it, ahead of any skin system, with `capes/` and `elytras/` beside it
+- **Two copies of one instance** — launch an instance that is already running as a second account, each with its own console on the Logs tab
+- **A shared `options.txt` profile** — pick the Minecraft options you want written into every instance on launch, and exclude the instances you don't
 - **Collections & followed projects** — browse, create and edit collections, plus a virtual collection of everything you follow
 - **Notifications** — Modrinth's notification feed, built into the app
 - **Proxy** — one URL (`http://`, `https://`, `socks5://`, `socks5h://`) routes every launcher request, for regions where Modrinth is blocked
@@ -71,7 +75,7 @@ Grab the installer for your platform from the [latest release](https://github.co
 Updates are signed and delivered automatically through GitHub Releases — no reinstalling.
 
 > [!NOTE]
-> Pre-release builds (`0.17.4-beta.1` and similar) are **not** served to the auto-updater. Install them by hand; the app will pick up the matching stable release as a normal update once it ships.
+> Pre-release builds (`0.19.2-beta.1` and similar) are **not** served to the auto-updater. Install them by hand; the app will pick up the matching stable release as a normal update once it ships.
 
 ### Bring your instances over
 
@@ -113,9 +117,9 @@ For architecture and infrastructure that isn't fork-specific, the [upstream repo
 
 ## Relationship with upstream
 
-Noctrinth syncs with [modrinth/code](https://github.com/modrinth/code) and pins its version to upstream's exactly — when Modrinth is on `0.17.3`, so is Noctrinth. Where both sides implement the same thing, upstream's version wins and the fork's is dropped. Fork-only work survives only where it doesn't collide.
+Noctrinth syncs with [modrinth/code](https://github.com/modrinth/code) and pins its version to upstream's exactly — when Modrinth is on `0.19.1`, so is Noctrinth. Where both sides implement the same thing, upstream's version wins and the fork's is dropped. Fork-only work survives only where it doesn't collide.
 
-Fast patches between upstream releases ship as semver pre-releases (`0.17.4-beta.1`), which sort above the current stable and below the next one — so testers roll onto the real release the moment it lands.
+Fast patches between upstream releases ship as semver pre-releases (`0.19.2-beta.1`), which sort above the current stable and below the next one — so testers roll onto the real release the moment it lands.
 
 ## Contributing
 

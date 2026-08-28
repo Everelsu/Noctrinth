@@ -16,7 +16,7 @@
 					<label class="mb-2 block text-lg font-semibold text-contrast" for="ce-title">
 						Title
 					</label>
-					<StyledInput
+					<Input
 						id="ce-title"
 						v-model="title"
 						:maxlength="64"
@@ -27,13 +27,7 @@
 				<label class="mb-2 mt-4 block text-lg font-semibold text-contrast" for="ce-desc">
 					Description
 				</label>
-				<StyledInput
-					id="ce-desc"
-					v-model="description"
-					multiline
-					:maxlength="255"
-					wrapper-class="h-24"
-				/>
+				<Textarea id="ce-desc" v-model="description" :maxlength="255" wrapper-class="h-24" />
 				<label for="ce-visibility" class="mb-2 mt-4 block text-lg font-semibold text-contrast">
 					Visibility
 				</label>
@@ -76,9 +70,10 @@ import {
 	Avatar,
 	Button,
 	injectNotificationManager,
+	Input,
 	NewModal,
 	RadioButtons,
-	StyledInput,
+	Textarea,
 } from '@modrinth/ui'
 import { ref } from 'vue'
 

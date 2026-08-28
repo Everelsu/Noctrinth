@@ -15,6 +15,7 @@ pub const INSTANCES_FOLDER_NAME: &str = "profiles";
 pub const METADATA_FOLDER_NAME: &str = "meta";
 /// Where a player can drop a `.png` to give somebody a skin by hand.
 pub const PLAYER_SKINS_FOLDER_NAME: &str = "player_skins";
+pub const SYNCED_OPTIONS_FOLDER_NAME: &str = "synced-options";
 
 #[derive(Debug)]
 pub struct DirectoryInfo {
@@ -156,6 +157,11 @@ impl DirectoryInfo {
         self.config_dir.join(INSTANCES_FOLDER_NAME)
     }
 
+    #[inline]
+    pub fn synced_options_dir(&self) -> PathBuf {
+        self.config_dir.join(SYNCED_OPTIONS_FOLDER_NAME)
+    }
+
     /// Gets the logs dir for a given instance path
     #[inline]
     pub fn instance_logs_dir(&self, instance_path: &str) -> PathBuf {
@@ -281,6 +287,7 @@ impl DirectoryInfo {
                     CACHES_FOLDER_NAME,
                     INSTANCES_FOLDER_NAME,
                     METADATA_FOLDER_NAME,
+                    SYNCED_OPTIONS_FOLDER_NAME,
                 ];
 
                 struct MovePath {

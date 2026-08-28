@@ -1,6 +1,6 @@
 <template>
 	<Transition name="splash-fade" @after-leave="onAfterLeave">
-		<div v-if="!doneLoading" class="splash-screen dark">
+		<div v-if="!doneLoading" class="splash-screen" :class="`${theme.active}-mode`">
 			<div class="app-logo-wrapper" data-tauri-drag-region>
 				<NoctrinthAppLogo class="app-logo" />
 				<ProgressBar class="loading-bar" :progress="Math.min(loadingProgress, 100)" />
@@ -20,6 +20,9 @@ import { ref, watch } from 'vue'
 import NoctrinthAppLogo from '@/assets/modrinth_app.svg?component'
 import ProgressBar from '@/components/ui/ProgressBar.vue'
 import { useAppEvent } from '@/composables/use-app-event'
+import { useTheme } from '@/composables/use-theme.ts'
+
+const theme = useTheme()
 
 const doneLoading = ref(false)
 const loadingProgress = ref(0)
@@ -82,16 +85,22 @@ useAppEvent('loading', (e) => {
 	position: fixed;
 	inset: 0;
 	z-index: 10000;
+
+	--splash-cube-image: url('@/assets/loading/cube.png');
+
+	&.light-mode {
+		--splash-cube-image: url('@/assets/loading/cube-light.webp');
+	}
 }
 
 /*
- * The `dark` class on this element matches the theme's own selector, so the
- * whole dark palette is re-declared here — including the brand colour, which
- * would beat the accent set on the document and leave the mark and the bar
- * purple on a window that is not. Taken back from the accent's own variable,
- * with the theme's purple as the fallback for the preset that keeps it.
+ * The theme's own selector re-declares the whole palette on this element —
+ * including the brand colour, which would beat the accent set on the document
+ * and leave the mark and the bar purple on a window that is not. Taken back
+ * from the accent's own variable, with the theme's purple as the fallback for
+ * the preset that keeps it.
  */
-.splash-screen.dark {
+.splash-screen {
 	--color-purple: var(--noctrinth-accent, var(--color-purple-400));
 	--color-brand: var(--color-purple);
 }
@@ -115,6 +124,7 @@ useAppEvent('loading', (e) => {
 	align-items: center;
 
 	gap: 1rem;
+	color: var(--color-contrast);
 
 	z-index: 9998;
 }
@@ -137,9 +147,9 @@ useAppEvent('loading', (e) => {
 	background:
 		var(
 			--splash-wash,
-			linear-gradient(180deg, rgba(110, 45, 180, 0.15) 0%, rgba(20, 12, 35, 0.3) 97.29%)
+			linear-gradient(180deg, var(--splash-tint-top) 0%, var(--splash-tint-bottom) 97.29%)
 		),
-		linear-gradient(0deg, rgba(22, 24, 28, 0.64), rgba(22, 24, 28, 0.64));
+		linear-gradient(0deg, var(--splash-overlay), var(--splash-overlay));
 	z-index: 9997;
 }
 
@@ -152,11 +162,19 @@ useAppEvent('loading', (e) => {
 
 	width: 180vw;
 	height: 180vh;
-	opacity: 0.8;
-	background: #16181c url('@/assets/loading/cube.png') center no-repeat;
-	background-size: contain;
+	background-color: var(--color-bg);
 
 	z-index: 9996;
+
+	&::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: var(--splash-cube-image) center no-repeat;
+		background-size: contain;
+		opacity: var(--splash-cube-opacity);
+		mix-blend-mode: var(--splash-cube-blend);
+	}
 }
 
 .base-bg {

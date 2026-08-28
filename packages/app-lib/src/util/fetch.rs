@@ -19,7 +19,7 @@ use std::num::NonZeroU32;
 use std::path::Path;
 use std::pin::Pin;
 use std::sync::{Arc, LazyLock};
-use std::time::{self, Duration, Instant, SystemTime};
+use std::time::{Duration, Instant, SystemTime};
 use tokio::sync::Semaphore;
 use tokio::{fs::File, io::AsyncReadExt, io::AsyncWriteExt};
 use tracing::{debug, info};
@@ -341,11 +341,14 @@ fn duration_seconds_ceil(duration: Duration) -> u64 {
         .saturating_add(u64::from(duration.subsec_nanos() > 0))
 }
 
+fn reqwest_client_builder_with_timeout() -> reqwest::ClientBuilder {
+    reqwest_client_builder().read_timeout(Duration::from_secs(30))
+}
+
 fn reqwest_client_builder() -> reqwest::ClientBuilder {
     let mut builder = reqwest::Client::builder()
-        .connect_timeout(time::Duration::from_secs(15))
-        .read_timeout(time::Duration::from_secs(30))
-        .tcp_keepalive(Some(time::Duration::from_secs(10)))
+        .connect_timeout(Duration::from_secs(15))
+        .tcp_keepalive(Some(Duration::from_secs(10)))
         .user_agent(crate::launcher_user_agent());
 
     if let Some(url) = PROXY_URL.read().as_deref() {
@@ -362,17 +365,32 @@ fn reqwest_client_builder() -> reqwest::ClientBuilder {
 
 pub static INSECURE_REQWEST_CLIENT: LazyLock<reqwest::Client> =
     LazyLock::new(|| {
-        reqwest_client_builder()
+        reqwest_client_builder_with_timeout()
             .build()
             .expect("client configuration should be valid")
     });
 
 pub static REQWEST_CLIENT: LazyLock<reqwest::Client> = LazyLock::new(|| {
-    reqwest_client_builder()
+    reqwest_client_builder_with_timeout()
         .https_only(true)
         .build()
         .expect("client configuration should be valid")
 });
+
+pub static INSECURE_NO_TIMEOUT_REQWEST_CLIENT: LazyLock<reqwest::Client> =
+    LazyLock::new(|| {
+        reqwest_client_builder()
+            .build()
+            .expect("client configuration should be valid")
+    });
+
+pub static NO_TIMEOUT_REQWEST_CLIENT: LazyLock<reqwest::Client> =
+    LazyLock::new(|| {
+        reqwest_client_builder()
+            .https_only(true)
+            .build()
+            .expect("client configuration should be valid")
+    });
 
 const FETCH_ATTEMPTS: usize = 2;
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { PlusIcon, SearchIcon, SquarePlusIcon } from '@modrinth/assets'
-import { Avatar, Button, defineMessages, StyledInput, useVIntl } from '@modrinth/ui'
+import { Avatar, Button, defineMessages, Input, useVIntl } from '@modrinth/ui'
 import { computed, inject } from 'vue'
 
 import FilterMenu from '@/components/ui/library/library-toolbar/filter-menu.vue'
@@ -83,7 +83,7 @@ function openNewGroup() {
 				@focusin="searchFocused = true"
 				@focusout="onSearchBlur"
 			>
-				<StyledInput
+				<Input
 					v-model="search"
 					:icon="SearchIcon"
 					type="text"

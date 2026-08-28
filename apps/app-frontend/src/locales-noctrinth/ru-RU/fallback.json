@@ -233,6 +233,9 @@
 	"app.instance.tab.logs": {
 		"message": "Логи"
 	},
+	"app.instance.tab.screenshots": {
+		"message": "Скриншоты"
+	},
 	"app.instance.tab.share": {
 		"message": "Поделиться"
 	},

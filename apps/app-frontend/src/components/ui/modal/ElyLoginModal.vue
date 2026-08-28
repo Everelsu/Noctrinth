@@ -7,7 +7,7 @@
 						{{ formatMessage(messages.usernameLabel) }}
 					</span>
 				</label>
-				<StyledInput
+				<Input
 					id="ely-username"
 					v-model="username"
 					:placeholder="formatMessage(messages.usernamePlaceholder)"
@@ -23,7 +23,7 @@
 						{{ formatMessage(messages.passwordLabel) }}
 					</span>
 				</label>
-				<StyledInput
+				<Input
 					id="ely-password"
 					v-model="password"
 					:type="showPassword ? 'text' : 'password'"
@@ -46,7 +46,7 @@
 							<EyeIcon v-else class="h-5 w-5" />
 						</button>
 					</template>
-				</StyledInput>
+				</Input>
 			</div>
 
 			<div v-if="needsTotp" class="flex flex-col gap-2">
@@ -56,7 +56,7 @@
 					</span>
 					<span>{{ formatMessage(messages.totpHint) }}</span>
 				</label>
-				<StyledInput
+				<Input
 					id="ely-totp"
 					v-model="totp"
 					inputmode="numeric"
@@ -105,7 +105,7 @@
 
 <script setup lang="ts">
 import { EyeIcon, EyeOffIcon, LogInIcon, SpinnerIcon, XIcon } from '@modrinth/assets'
-import { Admonition, Button, defineMessages, NewModal, StyledInput, useVIntl } from '@modrinth/ui'
+import { Admonition, Button, defineMessages, Input, NewModal, useVIntl } from '@modrinth/ui'
 import { ref } from 'vue'
 
 import { ely_login, type ElyCredentials } from '@/helpers/ely_auth'

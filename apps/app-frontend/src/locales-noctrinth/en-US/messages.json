@@ -245,54 +245,6 @@
 	"app.instance.logs.unknown-file": {
 		"message": "Unknown"
 	},
-	"app.instance.screenshots.copied": {
-		"message": "Screenshot copied to clipboard"
-	},
-	"app.instance.screenshots.copy": {
-		"message": "Copy image"
-	},
-	"app.instance.screenshots.copy-failed": {
-		"message": "Failed to copy screenshot"
-	},
-	"app.instance.screenshots.count": {
-		"message": "{count, plural, one {# screenshot} other {# screenshots}}"
-	},
-	"app.instance.screenshots.delete.description": {
-		"message": "This will permanently delete the screenshot from disk. This cannot be undone."
-	},
-	"app.instance.screenshots.delete.title": {
-		"message": "Delete this screenshot?"
-	},
-	"app.instance.screenshots.empty.description": {
-		"message": "Press F2 while playing this instance to capture a screenshot."
-	},
-	"app.instance.screenshots.empty.title": {
-		"message": "No screenshots yet"
-	},
-	"app.instance.screenshots.next": {
-		"message": "Next"
-	},
-	"app.instance.screenshots.open-folder-button": {
-		"message": "Open folder"
-	},
-	"app.instance.screenshots.previous": {
-		"message": "Previous"
-	},
-	"app.instance.screenshots.refresh": {
-		"message": "Refresh"
-	},
-	"app.instance.screenshots.reveal": {
-		"message": "Show in folder"
-	},
-	"app.instance.screenshots.sort-newest": {
-		"message": "Newest first"
-	},
-	"app.instance.screenshots.sort-oldest": {
-		"message": "Oldest first"
-	},
-	"app.instance.screenshots.zoom": {
-		"message": "Zoom"
-	},
 	"app.instance.share.members.column.joined": {
 		"message": "Joined"
 	},
@@ -310,9 +262,6 @@
 	},
 	"app.instance.share.method.link": {
 		"message": "Share link"
-	},
-	"app.instance.tab.screenshots": {
-		"message": "Screenshots"
 	},
 	"app.library.search.hint": {
 		"message": "↑↓ to pick · Tab to insert · terms combine, and - flips one around"

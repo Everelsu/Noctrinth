@@ -1,7 +1,7 @@
 <template>
 	<div class="flex flex-col gap-4">
 		<div class="flex flex-col justify-between gap-3 lg:flex-row">
-			<StyledInput
+			<Input
 				v-model="query"
 				:icon="SearchIcon"
 				type="text"
@@ -136,6 +136,7 @@
 								<Combobox
 									v-model="currentReportTargetFilter"
 									class="!w-full"
+									dropdown-class="!z-[10000]"
 									:options="reportTargetFilterTypes"
 									:placeholder="formatMessage(commonMessages.filterByLabel)"
 									@select="goToPage(1)"
@@ -147,6 +148,7 @@
 									<Combobox
 										v-model="currentReportIssueFilter"
 										class="!w-full"
+										dropdown-class="!z-[10000]"
 										:options="reportIssueFilterTypes"
 										:placeholder="formatMessage(commonMessages.filterByLabel)"
 										@select="goToPage(1)"
@@ -158,6 +160,7 @@
 								<Combobox
 									v-model="currentProjectTypeFilter"
 									class="!w-full"
+									dropdown-class="!z-[10000]"
 									:options="projectTypeFilterTypes"
 									:placeholder="formatMessage(commonMessages.filterByLabel)"
 									@select="goToPage(1)"
@@ -219,11 +222,12 @@ import {
 	commonMessages,
 	formatReportType,
 	injectModrinthClient,
+	Input,
 	MultiSelect,
 	type MultiSelectItem,
 	Pagination,
-	StyledInput,
 	TeleportPopoutMenu,
+	useDebugLogger,
 	useVIntl,
 } from '@modrinth/ui'
 import Fuse from 'fuse.js'
@@ -238,6 +242,7 @@ const route = useRoute()
 const router = useRouter()
 const auth = await useAuth()
 const client = injectModrinthClient()
+const debug = useDebugLogger('ModerationReports')
 
 const { data: allReports } = await useLazyAsyncData('new-moderation-reports', async () => {
 	const startTime = performance.now()
@@ -281,7 +286,7 @@ const { data: allReports } = await useLazyAsyncData('new-moderation-reports', as
 	const endTime = performance.now()
 	const duration = endTime - startTime
 
-	console.debug(
+	debug(
 		`Reports fetched and processed in ${duration.toFixed(2)}ms (${(duration / 1000).toFixed(2)}s)`,
 	)
 

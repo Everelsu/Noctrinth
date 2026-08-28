@@ -1,8 +1,8 @@
 <template>
 	<div class="flex flex-col gap-4">
-		<div class="flex flex-col gap-4">
+		<div class="flex flex-col gap-2">
 			<div class="flex items-center gap-2">
-				<StyledInput
+				<Input
 					v-model="search"
 					:icon="SearchIcon"
 					:placeholder="formatMessage(messages.searchPlaceholder, { count: rows.length })"
@@ -152,8 +152,8 @@ import {
 	Avatar,
 	commonMessages,
 	defineMessages,
+	Input,
 	type SortDirection,
-	StyledInput,
 	Table,
 	type TableColumn,
 	truncatedTooltip,

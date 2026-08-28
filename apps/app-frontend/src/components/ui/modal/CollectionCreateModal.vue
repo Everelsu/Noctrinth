@@ -8,7 +8,7 @@
 						<span class="text-brand-red">*</span>
 					</span>
 				</label>
-				<StyledInput
+				<Input
 					id="cc-name"
 					v-model="name"
 					:maxlength="64"
@@ -21,10 +21,9 @@
 					<span class="text-lg font-semibold text-contrast">Summary</span>
 					<span>A sentence or two that describes your collection.</span>
 				</label>
-				<StyledInput
+				<Textarea
 					id="cc-desc"
 					v-model="description"
-					multiline
 					:maxlength="256"
 					placeholder="This is a collection of..."
 				/>
@@ -56,7 +55,7 @@
 
 <script setup lang="ts">
 import { PlusIcon, SpinnerIcon, XIcon } from '@modrinth/assets'
-import { Button, injectNotificationManager, NewModal, StyledInput } from '@modrinth/ui'
+import { Button, injectNotificationManager, Input, NewModal, Textarea } from '@modrinth/ui'
 import { ref } from 'vue'
 
 import { type Collection, createCollection } from '@/helpers/modrinth-api'

@@ -3,6 +3,7 @@ import {
 	CheckIcon,
 	CopyIcon,
 	DropdownIcon,
+	FolderOpenIcon,
 	HammerIcon,
 	LogInIcon,
 	UpdatedIcon,
@@ -29,6 +30,7 @@ import { trackEvent } from '@/helpers/analytics'
 import { login as login_flow, set_default_user } from '@/helpers/auth.js'
 import { install_existing_instance } from '@/helpers/install'
 import { cancel_directory_change } from '@/helpers/settings.ts'
+import { showAppDbBackupsFolder } from '@/helpers/utils.js'
 
 const { handleError } = injectNotificationManager()
 const { formatMessage } = useVIntl()
@@ -164,6 +166,10 @@ const messages = defineMessages({
 		id: 'app.error-modal.no-error-message',
 		defaultMessage: 'No error message.',
 	},
+	openBackupsFolder: {
+		id: 'app.error.state-init.open-backups-folder',
+		defaultMessage: 'Open backups folder',
+	},
 })
 
 const errorModal = ref()
@@ -259,6 +265,10 @@ async function cancelDirectoryChange() {
 
 function retryDirectoryChange() {
 	window.location.reload()
+}
+
+async function openDbBackupsFolder() {
+	await showAppDbBackupsFolder().catch(handleError)
 }
 
 const loadingRepair = ref(false)
@@ -443,6 +453,10 @@ async function copyToClipboard(text) {
 									class="m-0 p-0 rounded-none bg-transparent text-sm font-mono break-words overflow-auto"
 								>
 									{{ debugInfo }}
+									<button class="btn" @click="openDbBackupsFolder">
+										<FolderOpenIcon aria-hidden="true" />
+										{{ formatMessage(messages.openBackupsFolder) }}
+									</button>
 								</div>
 								<IconButton
 									v-tooltip="formatMessage(messages.copyDebugInfo)"

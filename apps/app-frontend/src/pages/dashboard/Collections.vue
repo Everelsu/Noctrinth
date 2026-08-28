@@ -14,7 +14,7 @@ import {
 	defineMessages,
 	DropdownSelect,
 	injectNotificationManager,
-	StyledInput,
+	Input,
 	useCompactNumber,
 	useVIntl,
 } from '@modrinth/ui'
@@ -151,7 +151,7 @@ function onCreated(collection: Collection) {
 	<div class="flex flex-col gap-4">
 		<CollectionCreateModal ref="createModal" @created="onCreated" />
 		<div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-			<StyledInput
+			<Input
 				v-model="filterQuery"
 				:icon="SearchIcon"
 				type="text"

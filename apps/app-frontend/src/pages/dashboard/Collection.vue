@@ -21,11 +21,11 @@ import {
 	type FilterPillOption,
 	FilterPills,
 	injectNotificationManager,
+	Input,
 	LoadingIndicator,
 	PageHeader,
 	PageHeaderActions,
 	ProjectCard,
-	StyledInput,
 	useCompactNumber,
 	useVIntl,
 } from '@modrinth/ui'
@@ -494,7 +494,7 @@ watch(
 				</template>
 			</PageHeader>
 
-			<StyledInput
+			<Input
 				v-model="searchQuery"
 				:icon="SearchIcon"
 				type="text"

@@ -3,7 +3,7 @@ import { BookmarkIcon, CheckIcon, PlusIcon, SearchIcon } from '@modrinth/assets'
 import {
 	defineMessages,
 	injectNotificationManager,
-	StyledInput,
+	Input,
 	TeleportPopoutMenu,
 	useVIntl,
 } from '@modrinth/ui'
@@ -141,7 +141,7 @@ onMounted(load)
 		</template>
 		<template #panel>
 			<div class="picker-panel">
-				<StyledInput
+				<Input
 					v-model="filter"
 					:icon="SearchIcon"
 					type="text"

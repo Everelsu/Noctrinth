@@ -264,7 +264,10 @@ async fn run_credentials(
     // launch — fullscreen, quick play — still wins on a duplicate key.
     let mut mc_set_options: Vec<McOption> = settings
         .shared_game_options
-        .applicable_to(&context.applied_content_set.game_version)
+        .applicable_to(
+            &context.instance.id,
+            &context.applied_content_set.game_version,
+        )
         .map(|option| McOption {
             key: option.key.clone(),
             value: option.value.clone(),

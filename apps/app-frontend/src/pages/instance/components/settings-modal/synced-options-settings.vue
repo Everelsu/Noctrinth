@@ -20,12 +20,18 @@ import { computed, inject, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import {
+	emptyProfile,
+	type SharedGameOptionsProfile,
+	withInstanceExcluded,
+} from '@/helpers/game-options'
+import {
 	get_synced_option_join_preview,
 	get_synced_options_overview,
 	set_synced_option,
 	type SyncedOption,
 	type SyncedOptionJoinResolution,
 } from '@/helpers/instance'
+import { get as getSettings, set as setSettings } from '@/helpers/settings.ts'
 import type { GameInstance } from '@/helpers/types'
 import { appSettingsModalOpenSyncedOptionsKey } from '@/providers/app-settings-modal'
 
@@ -44,6 +50,18 @@ const router = useRouter()
 const openAppSettingsSyncedOptions = inject(appSettingsModalOpenSyncedOptionsKey, () => {})
 
 const messages = defineMessages({
+	gameOptions: {
+		id: 'instance.settings.tabs.synced-options.game-options',
+		defaultMessage: 'Minecraft options',
+	},
+	gameOptionsExcludeDescription: {
+		id: 'instance.settings.tabs.synced-options.game-options.exclude-description',
+		defaultMessage: "Leave this instance's options.txt alone.",
+	},
+	gameOptionsDisabled: {
+		id: 'instance.settings.tabs.synced-options.game-options.disabled-in-app',
+		defaultMessage: 'The Minecraft options profile is turned off in app settings.',
+	},
 	sharedSettingsDescription: {
 		id: 'instance.settings.tabs.synced-options.shared-settings.description',
 		defaultMessage:
@@ -255,6 +273,41 @@ async function setExcluded(option: SyncedOption, nextExcluded: boolean) {
 	}
 }
 
+/**
+ * The fork's own options profile, which is a settings row rather than one of
+ * upstream's synced options — so it carries its exclusions itself and is read
+ * and written here directly instead of going through `set_synced_option`.
+ */
+const gameOptionsProfile = ref<SharedGameOptionsProfile>(
+	(await getSettings().catch(handleError))?.shared_game_options ?? emptyProfile(),
+)
+
+const gameOptionsExcluded = computed(() =>
+	(gameOptionsProfile.value.excluded_instances ?? []).includes(instance.value.id),
+)
+
+const savingGameOptions = ref(false)
+
+async function setGameOptionsExcluded(excluded: boolean) {
+	savingGameOptions.value = true
+	try {
+		// Re-read so this cannot roll back an edit made in app settings while the
+		// instance's own settings were open.
+		const current = await getSettings()
+		const profile = withInstanceExcluded(
+			current.shared_game_options ?? emptyProfile(),
+			instance.value.id,
+			excluded,
+		)
+		await setSettings({ ...current, shared_game_options: profile })
+		gameOptionsProfile.value = profile
+	} catch (error) {
+		handleError(error)
+	} finally {
+		savingGameOptions.value = false
+	}
+}
+
 function resolveHotbars(resolution: SyncedOptionJoinResolution) {
 	mutation.mutate({
 		option: 'creative_hotbars',
@@ -355,6 +408,33 @@ function resolveHotbars(resolution: SyncedOptionJoinResolution) {
 								!!disabledReason(row.option)
 							"
 							@update:model-value="(excluded) => setExcluded(row.option, excluded)"
+						/>
+					</span>
+				</div>
+			</div>
+
+			<div class="flex items-center justify-between gap-6">
+				<div class="flex min-w-0 flex-col gap-1">
+					<h2 class="m-0 text-lg font-semibold text-contrast">
+						{{ formatMessage(messages.gameOptions) }}
+					</h2>
+					<p class="m-0 text-secondary">
+						{{ formatMessage(messages.gameOptionsExcludeDescription) }}
+					</p>
+				</div>
+				<div class="flex shrink-0 items-center gap-2">
+					<SpinnerIcon v-if="savingGameOptions" class="size-5 animate-spin" />
+					<span
+						v-tooltip="
+							gameOptionsProfile.enabled ? undefined : formatMessage(messages.gameOptionsDisabled)
+						"
+						class="flex"
+					>
+						<Toggle
+							id="exclude-game-options"
+							:model-value="gameOptionsExcluded"
+							:disabled="savingGameOptions || !gameOptionsProfile.enabled"
+							@update:model-value="setGameOptionsExcluded"
 						/>
 					</span>
 				</div>

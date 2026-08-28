@@ -1505,6 +1505,15 @@
 	"instance.settings.tabs.synced-options.creative-hotbars.exclude-description": {
 		"message": "Исключить эту сборку из синхронизации сохранённых панелей творческого режима."
 	},
+	"instance.settings.tabs.synced-options.game-options": {
+		"message": "Настройки Minecraft"
+	},
+	"instance.settings.tabs.synced-options.game-options.disabled-in-app": {
+		"message": "Профиль настроек Minecraft выключен в настройках приложения."
+	},
+	"instance.settings.tabs.synced-options.game-options.exclude-description": {
+		"message": "Не трогать options.txt этой сборки."
+	},
 	"instance.settings.tabs.synced-options.hotbars-conflict.backup-description": {
 		"message": "Заменяемая версия будет сохранена в резервную копию до внесения изменений."
 	},

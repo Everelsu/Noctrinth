@@ -617,10 +617,33 @@ export interface SharedGameOptionEntry {
 export interface SharedGameOptionsProfile {
 	enabled: boolean
 	entries: SharedGameOptionEntry[]
+	/** Instances the profile is not applied to, by id. */
+	excluded_instances: string[]
 }
 
 export function emptyProfile(): SharedGameOptionsProfile {
-	return { enabled: false, entries: [] }
+	return { enabled: false, entries: [], excluded_instances: [] }
+}
+
+/** Whether the profile reaches this instance, matching the launcher's own check. */
+export function profileAppliesTo(
+	profile: SharedGameOptionsProfile | undefined,
+	instanceId: string,
+): boolean {
+	return !!profile?.enabled && !(profile.excluded_instances ?? []).includes(instanceId)
+}
+
+/** The profile with one instance opted in or out, leaving everything else alone. */
+export function withInstanceExcluded(
+	profile: SharedGameOptionsProfile,
+	instanceId: string,
+	excluded: boolean,
+): SharedGameOptionsProfile {
+	const others = (profile.excluded_instances ?? []).filter((id) => id !== instanceId)
+	return {
+		...profile,
+		excluded_instances: excluded ? [...others, instanceId] : others,
+	}
 }
 
 /** Builds the stored entry for one catalogue option at the given UI value. */

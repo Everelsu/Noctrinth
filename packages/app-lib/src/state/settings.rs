@@ -80,6 +80,14 @@ pub struct Settings {
 pub struct SharedGameOptions {
     pub enabled: bool,
     pub entries: Vec<SharedGameOption>,
+    /// Instances the profile is not applied to, by id.
+    ///
+    /// Kept here rather than on the instance so the whole feature stays in one
+    /// fork-owned settings row: upstream's own per-instance sync flags are its
+    /// enum and its columns, and adding a fifth to them would put a fork field
+    /// in the middle of a structure every sync rewrites.
+    #[serde(default)]
+    pub excluded_instances: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -149,15 +157,25 @@ impl SharedGameOption {
 }
 
 impl SharedGameOptions {
+    /// Whether this instance takes the profile at all.
+    pub fn applies_to_instance(&self, instance_id: &str) -> bool {
+        self.enabled
+            && !self
+                .excluded_instances
+                .iter()
+                .any(|excluded| excluded == instance_id)
+    }
+
     /// Entries that apply to an instance on `game_version`, in stored order.
     pub fn applicable_to(
         &self,
+        instance_id: &str,
         game_version: &str,
     ) -> impl Iterator<Item = &SharedGameOption> {
-        let enabled = self.enabled;
+        let applies = self.applies_to_instance(instance_id);
         self.entries
             .iter()
-            .filter(move |entry| enabled && entry.applies_to(game_version))
+            .filter(move |entry| applies && entry.applies_to(game_version))
     }
 }
 
@@ -576,8 +594,9 @@ mod shared_game_options_tests {
         let profile = SharedGameOptions {
             enabled: false,
             entries: vec![option(None, None)],
+            excluded_instances: Vec::new(),
         };
-        assert_eq!(profile.applicable_to("1.20.1").count(), 0);
+        assert_eq!(profile.applicable_to("an-instance", "1.20.1").count(), 0);
     }
 
     #[test]
@@ -585,9 +604,21 @@ mod shared_game_options_tests {
         let profile = SharedGameOptions {
             enabled: true,
             entries: vec![option(None, None), option(Some("1.13"), None)],
+            excluded_instances: Vec::new(),
         };
-        assert_eq!(profile.applicable_to("1.20.1").count(), 2);
-        assert_eq!(profile.applicable_to("1.12.2").count(), 1);
+        assert_eq!(profile.applicable_to("an-instance", "1.20.1").count(), 2);
+        assert_eq!(profile.applicable_to("an-instance", "1.12.2").count(), 1);
+    }
+
+    #[test]
+    fn an_excluded_instance_takes_nothing_while_others_still_do() {
+        let profile = SharedGameOptions {
+            enabled: true,
+            entries: vec![option(None, None)],
+            excluded_instances: vec!["opted-out".to_string()],
+        };
+        assert_eq!(profile.applicable_to("opted-out", "1.20.1").count(), 0);
+        assert_eq!(profile.applicable_to("another", "1.20.1").count(), 1);
     }
 }
 

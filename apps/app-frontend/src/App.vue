@@ -71,6 +71,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { type } from '@tauri-apps/plugin-os'
 import { saveWindowState, StateFlags } from '@tauri-apps/plugin-window-state'
+import { hideAllPoppers } from 'floating-vue'
 import { computed, nextTick, onMounted, onUnmounted, provide, ref, watch } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 
@@ -375,8 +376,17 @@ providePageContext({
 })
 provideModalBehavior({
 	noblur: computed(() => !appTheme.advancedRendering),
-	onShow: () => take_ads_window_hold(),
-	onHide: () => release_ads_window_hold(),
+	onShow: () => {
+		// A dialog covers whatever was hovered without the pointer moving, so the
+		// tooltip that was up never hears it left — and the settings cog's stayed
+		// on screen for the rest of the session, with nothing left to hide it.
+		hideAllPoppers()
+		take_ads_window_hold()
+	},
+	onHide: () => {
+		hideAllPoppers()
+		release_ads_window_hold()
+	},
 })
 
 const creationIconEditorModal = ref(null)

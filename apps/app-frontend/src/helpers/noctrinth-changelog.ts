@@ -35,17 +35,21 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
-		version: '0.19.0',
+		version: '0.19.1',
 		date: '2026-08-28T00:00:00+00:00',
 		body: `### Changed
-- Synced with upstream Modrinth (0.18.2 → 0.19.0): a Screenshots page in the sidebar that gathers every instance's screenshots in one place, an editor that annotates, doodles on and blurs them, switching between several signed-in Modrinth accounts, syncing of command history, the in-game server list and creative hotbars between instances, right-click actions on "Jump in" cards, context menus drawn like overflow menus, a splash screen that follows the colour theme, and fixes for icon padding, window controls behind the splash screen, snapshot grouping since 26.1, cut-off settings headers and text inputs.
+- Synced with upstream Modrinth (0.18.2 → 0.19.1): a Screenshots page in the sidebar that gathers every instance's screenshots in one place, an editor that annotates, doodles on and blurs them, switching between several signed-in Modrinth accounts, syncing of command history, the in-game server list and creative hotbars between instances, right-click actions on "Jump in" cards, context menus drawn like overflow menus, a splash screen that follows the colour theme, and fixes for icon padding, window controls behind the splash screen, snapshot grouping since 26.1, cut-off settings headers and text inputs.
+- Spoilers, code blocks and inline snippets in descriptions are drawn to upstream's new style, and fourth-level headings stand apart from body text.
 - Screenshots are upstream's page now: grouped by date, instance or a group of your own, searchable, exported as a ZIP and edited in place. An instance can be kept out of it, which gives that instance a tab of its own again.
 - Skins for every player moved to Settings → Instances, where upstream folded the rest of the default instance options.
 - Modern Java is a section of its own at the top of an instance's Java tab, above the installation, memory, arguments and environment sections upstream now leads with a toggle.
 - Collections and Notifications are still in the account menu, beside upstream's new profile, Modrinth+, add-a-friend and account-switching entries.
 
 ### Removed
-- Noctrinth's own screenshots tab, and the strings that went with it. Upstream's page does more, and does it for every instance at once.`,
+- Noctrinth's own screenshots tab, and the strings that went with it. Upstream's page does more, and does it for every instance at once.
+
+### Fixed
+- The Screenshots page and tab lagged with a lot of screenshots in them.`,
 	},
 	{
 		version: '0.18.2',

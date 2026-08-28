@@ -20,6 +20,12 @@ name: Noctrinth CI
 #   the heavy upstream `CI` workflow (turbo-ci.yml) was removed — it was built
 #   for the Modrinth monorepo's infrastructure, not a desktop-app fork, and
 #   would queue forever on runners this repo doesn't have.
+#
+#   The same goes for every other workflow upstream ships: they deploy
+#   Modrinth's own services from Modrinth's own runners and secrets. A sync
+#   brings them back whenever upstream touches one, so this directory holds
+#   only `noctrinth-*` and `pages.yml`, and anything else that turns up is
+#   upstream's to run, not ours.
 
 on:
   pull_request:

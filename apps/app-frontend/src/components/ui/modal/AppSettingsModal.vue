@@ -8,7 +8,6 @@ import {
 	PaintbrushIcon,
 	RefreshCwIcon,
 	Settings2Icon,
-	SettingsIcon,
 	ShieldIcon,
 	ToggleRightIcon,
 	UserIcon,
@@ -39,7 +38,6 @@ import LanguageSettings from '@/components/ui/settings/display/LanguageSettings.
 import InstancesSyncedSettings from '@/components/ui/settings/instances/InstancesSyncedSettings.vue'
 import JavaSettings from '@/components/ui/settings/instances/JavaSettings.vue'
 import ResourceManagementSettings from '@/components/ui/settings/instances/ResourceManagementSettings.vue'
-import SharedGameOptionsSettings from '@/components/ui/settings/instances/SharedGameOptionsSettings.vue'
 import { useAppSettings } from '@/composables/use-app-settings.ts'
 import { get, set } from '@/helpers/settings.ts'
 import {
@@ -149,15 +147,6 @@ const tabs = [
 		category: tabCategories.instances,
 		icon: RefreshCwIcon,
 		content: InstancesSyncedSettings,
-	},
-	{
-		name: defineMessage({
-			id: 'app.settings.tabs.shared-game-options',
-			defaultMessage: 'Minecraft options',
-		}),
-		category: tabCategories.instances,
-		icon: SettingsIcon,
-		content: SharedGameOptionsSettings,
 	},
 	{
 		name: defineMessage({

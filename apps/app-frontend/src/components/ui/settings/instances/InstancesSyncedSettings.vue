@@ -21,8 +21,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import type { Component } from 'vue'
 import { computed, ref, shallowRef, watch } from 'vue'
 
+import SharedGameOptionsSettings from '@/components/ui/settings/instances/SharedGameOptionsSettings.vue'
 import WorldItem from '@/components/ui/world/WorldItem.vue'
 import useMemorySlider from '@/composables/useMemorySlider'
+import { emptyProfile } from '@/helpers/game-options'
 import {
 	get_command_history,
 	get_global_synced_options,
@@ -139,6 +141,19 @@ const messages = defineMessages({
 		id: 'app.settings.default-instance-options.universal-skins.description',
 		defaultMessage:
 			'Servers in offline mode send no skins at all, which is why everyone is Steve there. Look them up by name instead, from Ely.by — which answers for the players registered there and falls back to Mojang for everyone else. Needs no mods, and never replaces a skin the server did send.',
+	},
+	gameOptionsTitle: {
+		id: 'app.settings.game-options.title',
+		defaultMessage: 'Minecraft options',
+	},
+	gameOptionsDescription: {
+		id: 'app.settings.game-options.description',
+		defaultMessage:
+			"Values you switch on here are written into every instance's options.txt when it launches. Everything else is left exactly as the game saved it.",
+	},
+	gameOptionsEditorTitle: {
+		id: 'app.settings.game-options.editor-title',
+		defaultMessage: 'Edit Minecraft options',
 	},
 	fullscreenTitle: {
 		id: 'app.settings.default-instance-options.fullscreen.title',
@@ -315,6 +330,20 @@ const globalOptionsQuery = useQuery({
 	queryFn: get_global_synced_options,
 })
 const globalOptions = computed(() => globalOptionsQuery.data.value ?? defaultGlobalOptions)
+const gameOptionsModal = ref<InstanceType<typeof NewModal> | null>(null)
+
+/**
+ * Turning the profile on and off without disturbing what it holds.
+ *
+ * The editor writes the whole profile back, so the toggle has to keep the
+ * entries it is not touching — switching it off is not the same as clearing it,
+ * and someone who turns it back on expects their options still there.
+ */
+function setGameOptionsEnabled(enabled: boolean) {
+	const current = settings.value.shared_game_options ?? emptyProfile()
+	settings.value.shared_game_options = { ...current, enabled }
+}
+
 const commandHistoryModal = ref<InstanceType<typeof NewModal> | null>(null)
 const serverEditorModal = ref<InstanceType<typeof NewModal> | null>(null)
 const editServerModal = ref<InstanceType<typeof NewModal> | null>(null)
@@ -512,6 +541,20 @@ watch(
 <template>
 	<div>
 		<NewModal
+			ref="gameOptionsModal"
+			:header="formatMessage(messages.gameOptionsEditorTitle)"
+			max-width="700px"
+			width="700px"
+		>
+			<Suspense>
+				<SharedGameOptionsSettings
+					v-if="settings.shared_game_options"
+					v-model="settings.shared_game_options"
+				/>
+			</Suspense>
+		</NewModal>
+
+		<NewModal
 			ref="commandHistoryModal"
 			:header="formatMessage(messages.commandHistoryEditorTitle)"
 			class="command-history-modal"
@@ -670,6 +713,35 @@ watch(
 								:id="`global-sync-${row.option}`"
 								:model-value="globalOptions[row.option]"
 								@update:model-value="(enabled) => toggleGlobalOption(row.option, enabled)"
+							/>
+						</div>
+					</div>
+
+					<div class="flex items-center justify-between gap-6">
+						<div class="flex min-w-0 flex-col gap-1">
+							<h2 class="m-0 text-lg font-semibold text-contrast">
+								{{ formatMessage(messages.gameOptionsTitle) }}
+							</h2>
+							<p class="m-0 text-secondary">
+								{{ formatMessage(messages.gameOptionsDescription) }}
+							</p>
+						</div>
+						<div class="flex shrink-0 items-center gap-2">
+							<span v-tooltip="formatMessage(commonMessages.editButton)" class="flex">
+								<IconButton
+									type="outlined"
+									circular
+									:disabled="!settings.shared_game_options?.enabled"
+									:label="formatMessage(commonMessages.editButton)"
+									@click="gameOptionsModal?.show()"
+								>
+									<EditIcon />
+								</IconButton>
+							</span>
+							<Toggle
+								id="shared-game-options-enabled"
+								:model-value="!!settings.shared_game_options?.enabled"
+								@update:model-value="setGameOptionsEnabled"
 							/>
 						</div>
 					</div>

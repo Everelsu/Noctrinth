@@ -893,9 +893,6 @@
 	"app.settings.tabs.changelog": {
 		"message": "Changelog"
 	},
-	"app.settings.tabs.shared-game-options": {
-		"message": "Minecraft options"
-	},
 	"app.skins.ely.edit.texture-locked": {
 		"message": "Ely.by keeps a texture and its skin together, so this one cannot be swapped out. Upload the new texture as another skin instead."
 	},

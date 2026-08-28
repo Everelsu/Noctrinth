@@ -896,9 +896,6 @@
 	"app.settings.tabs.changelog": {
 		"message": "Список изменений"
 	},
-	"app.settings.tabs.shared-game-options": {
-		"message": "Настройки Minecraft"
-	},
 	"app.skins.ely.edit.texture-locked": {
 		"message": "На Ely.by текстура и скин — одно целое, так что заменить её здесь нельзя. Загрузите новую текстуру отдельным скином."
 	},

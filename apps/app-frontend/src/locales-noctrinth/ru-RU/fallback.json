@@ -752,6 +752,9 @@
 	"app.settings.default-instance-options.window.title": {
 		"message": "Окно"
 	},
+	"app.settings.game-options.editor-title": {
+		"message": "Настройки Minecraft"
+	},
 	"app.settings.synced-options.command-history": {
 		"message": "История команд"
 	},
@@ -850,6 +853,9 @@
 	},
 	"button.add-another": {
 		"message": "Добавить ещё"
+	},
+	"button.copied-to-clipboard": {
+		"message": "Скопировано в буфер обмена"
 	},
 	"button.i-understand": {
 		"message": "Понятно"
@@ -1120,6 +1126,117 @@
 	},
 	"hosting.specs.shared-cpus": {
 		"message": "{cpus} общих ядер"
+	},
+	"image-viewer.close": {
+		"message": "Закрыть"
+	},
+	"image-viewer.edit": {
+		"message": "Редактировать"
+	},
+	"image-viewer.editor.censor.blur": {
+		"message": "Размытие"
+	},
+	"image-viewer.editor.censor.mode": {
+		"message": "Чем скрывать"
+	},
+	"image-viewer.editor.censor.solid": {
+		"message": "Заливка"
+	},
+	"image-viewer.editor.colour": {
+		"message": "Цвет"
+	},
+	"image-viewer.editor.crop.dimensions": {
+		"message": "{width} × {height} px"
+	},
+	"image-viewer.editor.crop.reset": {
+		"message": "Сбросить обрезку"
+	},
+	"image-viewer.editor.delete-selection": {
+		"message": "Удалить выбранную пометку"
+	},
+	"image-viewer.editor.eraser.area": {
+		"message": "Область"
+	},
+	"image-viewer.editor.eraser.element": {
+		"message": "Объект"
+	},
+	"image-viewer.editor.eraser.mode": {
+		"message": "Режим ластика"
+	},
+	"image-viewer.editor.image-editing-tools": {
+		"message": "Инструменты редактирования"
+	},
+	"image-viewer.editor.more-save-options": {
+		"message": "Другие способы сохранить"
+	},
+	"image-viewer.editor.overwrite": {
+		"message": "Перезаписать"
+	},
+	"image-viewer.editor.redo": {
+		"message": "Повторить"
+	},
+	"image-viewer.editor.save-as-new": {
+		"message": "Сохранить копию"
+	},
+	"image-viewer.editor.save-image": {
+		"message": "Сохранить изображение"
+	},
+	"image-viewer.editor.size": {
+		"message": "Размер"
+	},
+	"image-viewer.editor.tool.arrow": {
+		"message": "Стрелка"
+	},
+	"image-viewer.editor.tool.censor": {
+		"message": "Скрытие"
+	},
+	"image-viewer.editor.tool.crop": {
+		"message": "Обрезка"
+	},
+	"image-viewer.editor.tool.ellipse": {
+		"message": "Эллипс"
+	},
+	"image-viewer.editor.tool.eraser": {
+		"message": "Ластик"
+	},
+	"image-viewer.editor.tool.highlight": {
+		"message": "Маркер"
+	},
+	"image-viewer.editor.tool.pen": {
+		"message": "Карандаш"
+	},
+	"image-viewer.editor.tool.rectangle": {
+		"message": "Прямоугольник"
+	},
+	"image-viewer.editor.tool.select": {
+		"message": "Выделение"
+	},
+	"image-viewer.editor.tool.text": {
+		"message": "Текст"
+	},
+	"image-viewer.editor.undo": {
+		"message": "Отменить"
+	},
+	"image-viewer.editor.width": {
+		"message": "Толщина"
+	},
+	"image-viewer.editor.zoom-fit": {
+		"message": "Вписать"
+	},
+	"image-viewer.editor.zoom-fit-workspace": {
+		"message": "Вписать в рабочую область"
+	},
+	"image-viewer.editor.zoom-in": {
+		"message": "Приблизить"
+	},
+	"image-viewer.editor.zoom-out": {
+		"message": "Отдалить"
+	},
+	"image-viewer.next": {
+		"message": "Следующее изображение"
+	},
+	"image-viewer.previous": {
+		"message": "Предыдущее изображение"
 	},
 	"input.clear": {
 		"message": "Очистить поле"
@@ -1499,6 +1616,9 @@
 	"label.explanation": {
 		"message": "Пояснение"
 	},
+	"layout.account-switcher.switching": {
+		"message": "Смена аккаунта..."
+	},
 	"markdown-editor.max-length.value": {
 		"message": "{currentLength}/{maxLength}"
 	},
@@ -1546,6 +1666,9 @@
 	},
 	"onboarding-checklist.title": {
 		"message": "С чего начать"
+	},
+	"profile.button.shared-instances": {
+		"message": "Открыть общие сборки"
 	},
 	"project.disclosure.advertising.title": {
 		"message": "Содержит рекламу"
@@ -1618,6 +1741,12 @@
 	},
 	"project.status.archived.header": {
 		"message": "{title} в архиве"
+	},
+	"project.versions.filter.channel": {
+		"message": "Канал"
+	},
+	"project.versions.filter.selected-count": {
+		"message": "Выбрано: {count, number}"
 	},
 	"report.type.ai-images": {
 		"message": "Изображения, созданные ИИ, в иконке, галерее или описании"
@@ -1936,5 +2065,11 @@
 	},
 	"ui.pagination.previous-page": {
 		"message": "Предыдущая страница"
+	},
+	"user.role.moderator": {
+		"message": "Модератор контента"
+	},
+	"user.role.modrinth-team": {
+		"message": "Команда Modrinth"
 	}
 }

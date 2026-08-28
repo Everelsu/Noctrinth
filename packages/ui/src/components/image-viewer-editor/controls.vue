@@ -273,7 +273,7 @@ function formatEraserMode(value: ScreenshotEraserMode) {
 		</Button>
 		<SplitButton
 			type="colored"
-			color="green"
+			color="brand"
 			:disabled="busy"
 			:options="saveOptions"
 			:menu-label="formatMessage(messages.moreSaveOptions)"

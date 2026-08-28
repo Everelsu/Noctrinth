@@ -6,7 +6,6 @@ import {
 	defineMessages,
 	DropdownSelect,
 	IconButton,
-	injectNotificationManager,
 	Slider,
 	Toggle,
 	useVIntl,
@@ -16,17 +15,14 @@ import { computed, ref } from 'vue'
 
 import type { GameOption, GameOptionGroup, SharedGameOptionsProfile } from '@/helpers/game-options'
 import {
-	emptyProfile,
 	fromEntry,
 	GAME_OPTION_GROUPS,
 	GAME_OPTIONS,
 	optionsForGroup,
 	toEntry,
 } from '@/helpers/game-options'
-import { get, set } from '@/helpers/settings.ts'
 
 const { formatMessage } = useVIntl()
-const { handleError } = injectNotificationManager()
 
 const messages = defineMessages({
 	title: {
@@ -103,9 +99,17 @@ const messages = defineMessages({
 	},
 })
 
-const storedProfile: SharedGameOptionsProfile = (await get()).shared_game_options ?? emptyProfile()
+/**
+ * The stored profile, owned by the synced settings tab this editor opens from.
+ *
+ * It used to read and write the settings row itself, which put two writers on
+ * one key: the tab that carries the toggle saves the whole settings object, so
+ * whichever wrote last won. The tab owns the profile now and this is the editor
+ * for it.
+ */
+const profile = defineModel<SharedGameOptionsProfile>({ required: true })
 
-const enabled = ref(storedProfile.enabled)
+const enabled = computed(() => profile.value.enabled)
 
 /** Which catalogue options the profile takes over, keyed by `options.txt` key. */
 const managed = ref<Record<string, boolean>>({})
@@ -113,7 +117,7 @@ const managed = ref<Record<string, boolean>>({})
 const values = ref<Record<string, unknown>>({})
 
 for (const option of GAME_OPTIONS) {
-	const entry = storedProfile.entries.find((candidate) => candidate.key === option.key)
+	const entry = profile.value.entries.find((candidate) => candidate.key === option.key)
 	managed.value[option.key] = entry !== undefined
 	values.value[option.key] = entry ? fromEntry(option, entry) : option.default
 }
@@ -139,25 +143,17 @@ function resetAll(): void {
 	}
 }
 
-function buildProfile(): SharedGameOptionsProfile {
-	return {
-		enabled: enabled.value,
-		entries: GAME_OPTIONS.filter((option) => managed.value[option.key]).map((option) =>
-			toEntry(option, values.value[option.key]),
-		),
-	}
-}
-
-// Debounced so dragging a slider doesn't write the settings row on every frame,
-// and re-read first so saving here can't clobber another tab's edits.
+// Debounced so dragging a slider doesn't rewrite the profile on every frame.
+// `profile` itself is deliberately not watched: the toggle that sets `enabled`
+// lives outside this editor, and reacting to it here would write straight back.
 watchDebounced(
-	[enabled, managed, values],
-	async () => {
-		try {
-			const current = await get()
-			await set({ ...current, shared_game_options: buildProfile() })
-		} catch (error) {
-			handleError(error)
+	[managed, values],
+	() => {
+		profile.value = {
+			enabled: profile.value.enabled,
+			entries: GAME_OPTIONS.filter((option) => managed.value[option.key]).map((option) =>
+				toEntry(option, values.value[option.key]),
+			),
 		}
 	},
 	{ deep: true, debounce: 400, maxWait: 2000 },
@@ -199,18 +195,6 @@ function optionNote(option: GameOption): string {
 <template>
 	<div class="flex flex-col gap-4">
 		<div class="rounded-xl bg-bg-raised p-4 flex flex-col gap-3">
-			<div class="flex items-start justify-between gap-4">
-				<div class="flex flex-col gap-1 min-w-0">
-					<h2 class="m-0 text-lg font-semibold text-contrast">
-						{{ formatMessage(messages.title) }}
-					</h2>
-					<p class="m-0 leading-tight text-secondary">
-						{{ formatMessage(messages.description) }}
-					</p>
-				</div>
-				<Toggle id="shared-game-options-enabled" v-model="enabled" class="mt-1 shrink-0" />
-			</div>
-
 			<div class="flex items-center justify-between gap-4 flex-wrap">
 				<span class="text-sm font-semibold" :class="enabled ? 'text-brand' : 'text-secondary'">
 					<template v-if="!enabled">{{ formatMessage(messages.profileOff) }}</template>

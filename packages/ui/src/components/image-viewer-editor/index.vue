@@ -30,6 +30,7 @@ const emit = defineEmits<{
 	hide: []
 	navigate: [item: ImageViewerEditorItem, index: number, direction: 'next' | 'previous']
 	save: [payload: ImageViewerEditorSavePayload]
+	copy: [item: ImageViewerEditorItem]
 }>()
 
 const activeId = ref<string | null>(null)
@@ -220,6 +221,12 @@ async function markSavedAndView(itemId?: string) {
 	if (itemId && props.items.some((item) => item.id === itemId)) activeId.value = itemId
 }
 
+/** Whether the viewer should leave a copy to the browser's own text handling. */
+function hasTextSelection() {
+	const selection = document.getSelection()
+	return !!selection && !selection.isCollapsed && selection.toString().length > 0
+}
+
 function handleKeydown(event: KeyboardEvent) {
 	if (!activeItem.value || mode.value === 'edit' || document.querySelector('.modal-root')) return
 	if (event.key === 'Escape') {
@@ -231,6 +238,12 @@ function handleKeydown(event: KeyboardEvent) {
 	} else if (event.key === 'ArrowRight') {
 		event.preventDefault()
 		next()
+	} else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'c') {
+		// The image is what the viewer is showing, so that is what a copy means
+		// here — unless the caption is selected, which is a copy of its own.
+		if (hasTextSelection()) return
+		event.preventDefault()
+		emit('copy', activeItem.value)
 	}
 }
 

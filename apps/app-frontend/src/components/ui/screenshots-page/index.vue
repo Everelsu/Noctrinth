@@ -1388,6 +1388,7 @@ onBeforeUnmount(() => {
 		editor="enabled"
 		:saving="saveEditMutation.isPending.value"
 		@save="saveScreenshotEdit"
+		@copy="(item) => copyScreenshotBySelectionKey(item.id)"
 	>
 		<template #actions="{ item }">
 			<IconButton

@@ -8,7 +8,7 @@
 		>
 			<IconButton
 				type="quiet"
-				label="Minimize window"
+				:label="formatMessage(messages.minimize)"
 				class="relative expanded-button"
 				@click="getCurrentWindow().minimize()"
 			>
@@ -16,7 +16,7 @@
 			</IconButton>
 			<IconButton
 				type="quiet"
-				label="Toggle maximize window"
+				:label="formatMessage(messages.toggleMaximize)"
 				class="relative expanded-button"
 				@click="getCurrentWindow().toggleMaximize()"
 			>
@@ -25,7 +25,7 @@
 			</IconButton>
 			<IconButton
 				type="quiet"
-				label="Close window"
+				:label="formatMessage(messages.close)"
 				class="relative expanded-button close-button"
 				@click="handleClose"
 			>
@@ -37,7 +37,7 @@
 
 <script setup>
 import { MaximizeIcon, MinimizeIcon, RestoreIcon, XIcon } from '@modrinth/assets'
-import { IconButton } from '@modrinth/ui'
+import { defineMessages, IconButton, useVIntl } from '@modrinth/ui'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { saveWindowState, StateFlags } from '@tauri-apps/plugin-window-state'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
@@ -45,6 +45,17 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useAppSettings } from '@/composables/use-app-settings.ts'
 import { get as getSettings } from '@/helpers/settings.ts'
 import { getOS } from '@/helpers/utils.js'
+
+const { formatMessage } = useVIntl()
+
+const messages = defineMessages({
+	minimize: { id: 'app.window-controls.minimize', defaultMessage: 'Minimize window' },
+	toggleMaximize: {
+		id: 'app.window-controls.toggle-maximize',
+		defaultMessage: 'Toggle maximize window',
+	},
+	close: { id: 'app.window-controls.close', defaultMessage: 'Close window' },
+})
 
 const appSettings = useAppSettings()
 

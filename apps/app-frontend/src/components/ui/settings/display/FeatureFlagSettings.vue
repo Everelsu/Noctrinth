@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { SearchIcon } from '@modrinth/assets'
-import { Button, Input, Toggle } from '@modrinth/ui'
+import { Button, defineMessages, Input, Toggle, useVIntl } from '@modrinth/ui'
 import Fuse from 'fuse.js'
 import { computed, ref, watch } from 'vue'
 
@@ -10,6 +10,15 @@ import {
 	useAppSettings,
 } from '@/composables/use-app-settings.ts'
 import { get as getSettings, set as setSettings } from '@/helpers/settings.ts'
+
+const { formatMessage } = useVIntl()
+
+const messages = defineMessages({
+	searchPlaceholder: {
+		id: 'app.settings.feature-flags.search.placeholder',
+		defaultMessage: 'Search flags...',
+	},
+})
 
 const appSettings = useAppSettings()
 
@@ -50,7 +59,7 @@ watch(
 			v-model="searchQuery"
 			type="search"
 			:icon="SearchIcon"
-			placeholder="Search flags..."
+			:placeholder="formatMessage(messages.searchPlaceholder)"
 			wrapper-class="w-full"
 		/>
 		<div v-for="option in filteredFlags" :key="option" class="flex items-center justify-between">

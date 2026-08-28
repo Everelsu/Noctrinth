@@ -70,6 +70,10 @@ function openProfile(username: string) {
 const friendOptions = useTemplateRef('friendOptions')
 
 const messages = defineMessages({
+	moreOptions: {
+		id: 'friends.friend.more-options',
+		defaultMessage: 'More options',
+	},
 	removeFriend: {
 		id: 'friends.friend.remove-friend',
 		defaultMessage: 'Remove friend',
@@ -152,7 +156,7 @@ const messages = defineMessages({
 					<TeleportOverflowMenu
 						v-if="friend.accepted"
 						type="quiet"
-						label="More options"
+						:label="formatMessage(messages.moreOptions)"
 						class="opacity-0 group-hover:opacity-100 transition-opacity"
 						:options="[
 							{

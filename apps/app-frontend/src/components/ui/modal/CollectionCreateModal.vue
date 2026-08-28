@@ -1,10 +1,10 @@
 <template>
-	<NewModal ref="modal" header="Creating a collection">
+	<NewModal ref="modal" :header="formatMessage(messages.header)">
 		<div class="min-w-md flex max-w-md flex-col gap-3">
 			<div class="flex flex-col gap-2">
 				<label for="cc-name">
 					<span class="text-lg font-semibold text-contrast">
-						Name
+						{{ formatMessage(messages.nameLabel) }}
 						<span class="text-brand-red">*</span>
 					</span>
 				</label>
@@ -12,41 +12,36 @@
 					id="cc-name"
 					v-model="name"
 					:maxlength="64"
-					placeholder="Enter collection name..."
+					:placeholder="formatMessage(messages.namePlaceholder)"
 					autocomplete="off"
 				/>
 			</div>
 			<div class="flex flex-col gap-2">
 				<label for="cc-desc" class="flex flex-col gap-1">
-					<span class="text-lg font-semibold text-contrast">Summary</span>
-					<span>A sentence or two that describes your collection.</span>
+					<span class="text-lg font-semibold text-contrast">
+						{{ formatMessage(messages.summaryLabel) }}
+					</span>
+					<span>{{ formatMessage(messages.summaryHint) }}</span>
 				</label>
 				<Textarea
 					id="cc-desc"
 					v-model="description"
 					:maxlength="256"
-					placeholder="This is a collection of..."
+					:placeholder="formatMessage(messages.summaryPlaceholder)"
 				/>
 			</div>
 			<p class="m-0">
-				Your new collection will be created as a public collection with
-				{{
-					initialProjects.length === 0
-						? 'no projects'
-						: initialProjects.length === 1
-							? '1 project'
-							: `${initialProjects.length} projects`
-				}}.
+				{{ formatMessage(messages.visibilityNote, { count: initialProjects.length }) }}
 			</p>
 			<div class="flex justify-end gap-2">
 				<Button type="outlined" @click="hide">
 					<XIcon aria-hidden="true" />
-					Cancel
+					{{ formatMessage(commonMessages.cancelButton) }}
 				</Button>
 				<Button :disabled="submitting || !name.trim()" type="colored" color="brand" @click="submit">
 					<SpinnerIcon v-if="submitting" class="animate-spin" aria-hidden="true" />
 					<PlusIcon v-else aria-hidden="true" />
-					{{ submitting ? 'Creating...' : 'Create collection' }}
+					{{ formatMessage(submitting ? messages.creating : messages.create) }}
 				</Button>
 			</div>
 		</div>
@@ -55,12 +50,52 @@
 
 <script setup lang="ts">
 import { PlusIcon, SpinnerIcon, XIcon } from '@modrinth/assets'
-import { Button, injectNotificationManager, Input, NewModal, Textarea } from '@modrinth/ui'
+import {
+	Button,
+	commonMessages,
+	defineMessages,
+	injectNotificationManager,
+	Input,
+	NewModal,
+	Textarea,
+	useVIntl,
+} from '@modrinth/ui'
 import { ref } from 'vue'
 
 import { type Collection, createCollection } from '@/helpers/modrinth-api'
 
+const { formatMessage } = useVIntl()
 const { handleError, addNotification } = injectNotificationManager()
+
+const messages = defineMessages({
+	header: { id: 'app.collection.create.header', defaultMessage: 'Creating a collection' },
+	nameLabel: { id: 'app.collection.create.name', defaultMessage: 'Name' },
+	namePlaceholder: {
+		id: 'app.collection.create.name.placeholder',
+		defaultMessage: 'Enter collection name...',
+	},
+	summaryLabel: { id: 'app.collection.create.summary', defaultMessage: 'Summary' },
+	summaryHint: {
+		id: 'app.collection.create.summary.hint',
+		defaultMessage: 'A sentence or two that describes your collection.',
+	},
+	summaryPlaceholder: {
+		id: 'app.collection.create.summary.placeholder',
+		defaultMessage: 'This is a collection of...',
+	},
+	visibilityNote: {
+		id: 'app.collection.create.visibility-note',
+		defaultMessage:
+			'Your new collection will be created as a public collection with {count, plural, =0 {no projects} one {# project} other {# projects}}.',
+	},
+	create: { id: 'app.collection.create.submit', defaultMessage: 'Create collection' },
+	creating: { id: 'app.collection.create.submitting', defaultMessage: 'Creating...' },
+	created: { id: 'app.collection.create.created', defaultMessage: 'Collection created' },
+	createdDetail: {
+		id: 'app.collection.create.created.detail',
+		defaultMessage: 'Created “{name}”.',
+	},
+})
 
 const emit = defineEmits<{
 	created: [Collection]
@@ -96,8 +131,8 @@ async function submit() {
 		})
 		emit('created', collection)
 		addNotification({
-			title: 'Collection created',
-			text: `Created "${collection.name}".`,
+			title: formatMessage(messages.created),
+			text: formatMessage(messages.createdDetail, { name: collection.name }),
 			type: 'success',
 		})
 		hide()

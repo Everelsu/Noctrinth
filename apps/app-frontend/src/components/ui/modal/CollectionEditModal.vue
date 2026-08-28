@@ -1,5 +1,5 @@
 <template>
-	<NewModal ref="modal" header="Editing collection">
+	<NewModal ref="modal" :header="formatMessage(messages.header)">
 		<div class="flex w-[30rem] flex-col gap-3">
 			<div class="flow-root">
 				<div class="float-end ml-4">
@@ -14,7 +14,7 @@
 				</div>
 				<div class="overflow-hidden">
 					<label class="mb-2 block text-lg font-semibold text-contrast" for="ce-title">
-						Title
+						{{ formatMessage(messages.title) }}
 					</label>
 					<Input
 						id="ce-title"
@@ -25,11 +25,11 @@
 					/>
 				</div>
 				<label class="mb-2 mt-4 block text-lg font-semibold text-contrast" for="ce-desc">
-					Description
+					{{ formatMessage(messages.description) }}
 				</label>
 				<Textarea id="ce-desc" v-model="description" :maxlength="255" wrapper-class="h-24" />
 				<label for="ce-visibility" class="mb-2 mt-4 block text-lg font-semibold text-contrast">
-					Visibility
+					{{ formatMessage(messages.visibility) }}
 				</label>
 				<RadioButtons
 					id="ce-visibility"
@@ -38,7 +38,7 @@
 				>
 					<template #default="{ item }">
 						<span class="flex items-center gap-1">
-							{{ item === 'listed' ? 'Public' : item === 'unlisted' ? 'Unlisted' : 'Private' }}
+							{{ formatMessage(visibilityMessages[item]) }}
 						</span>
 					</template>
 				</RadioButtons>
@@ -46,7 +46,7 @@
 			<div class="flex justify-end gap-2">
 				<Button class="w-24" @click="hide">
 					<XIcon aria-hidden="true" />
-					Cancel
+					{{ formatMessage(commonMessages.cancelButton) }}
 				</Button>
 				<Button
 					class="w-36"
@@ -57,7 +57,7 @@
 				>
 					<SpinnerIcon v-if="saving" class="animate-spin" aria-hidden="true" />
 					<SaveIcon v-else aria-hidden="true" />
-					{{ saving ? 'Saving...' : 'Save' }}
+					{{ formatMessage(saving ? messages.saving : commonMessages.saveButton) }}
 				</Button>
 			</div>
 		</div>
@@ -69,17 +69,36 @@ import { SaveIcon, SpinnerIcon, XIcon } from '@modrinth/assets'
 import {
 	Avatar,
 	Button,
+	commonMessages,
+	defineMessages,
 	injectNotificationManager,
 	Input,
 	NewModal,
 	RadioButtons,
 	Textarea,
+	useVIntl,
 } from '@modrinth/ui'
 import { ref } from 'vue'
 
 import { type Collection, editCollection } from '@/helpers/modrinth-api'
 
+const { formatMessage } = useVIntl()
 const { handleError, addNotification } = injectNotificationManager()
+
+const messages = defineMessages({
+	header: { id: 'app.collection.edit.header', defaultMessage: 'Editing collection' },
+	title: { id: 'app.collection.edit.title', defaultMessage: 'Title' },
+	description: { id: 'app.collection.edit.description', defaultMessage: 'Description' },
+	visibility: { id: 'app.collection.edit.visibility', defaultMessage: 'Visibility' },
+	saving: { id: 'app.collection.edit.saving', defaultMessage: 'Saving...' },
+})
+
+/** The three values `RadioButtons` is given, as the words shown for them. */
+const visibilityMessages = defineMessages({
+	listed: { id: 'app.collection.visibility.listed', defaultMessage: 'Public' },
+	unlisted: { id: 'app.collection.visibility.unlisted', defaultMessage: 'Unlisted' },
+	private: { id: 'app.collection.visibility.private', defaultMessage: 'Private' },
+})
 
 const emit = defineEmits<{
 	saved: [Collection]

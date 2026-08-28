@@ -86,11 +86,59 @@
 	"app.changelog.source.noctrinth": {
 		"message": "Noctrinth"
 	},
+	"app.collection.create.created": {
+		"message": "Collection created"
+	},
+	"app.collection.create.created.detail": {
+		"message": "Created “{name}”."
+	},
+	"app.collection.create.header": {
+		"message": "Creating a collection"
+	},
+	"app.collection.create.name": {
+		"message": "Name"
+	},
+	"app.collection.create.name.placeholder": {
+		"message": "Enter collection name..."
+	},
+	"app.collection.create.submit": {
+		"message": "Create collection"
+	},
+	"app.collection.create.submitting": {
+		"message": "Creating..."
+	},
+	"app.collection.create.summary": {
+		"message": "Summary"
+	},
+	"app.collection.create.summary.hint": {
+		"message": "A sentence or two that describes your collection."
+	},
+	"app.collection.create.summary.placeholder": {
+		"message": "This is a collection of..."
+	},
+	"app.collection.create.visibility-note": {
+		"message": "Your new collection will be created as a public collection with {count, plural, =0 {no projects} one {# project} other {# projects}}."
+	},
 	"app.collection.delete-modal.description": {
 		"message": "This will permanently delete this collection. This action cannot be undone."
 	},
 	"app.collection.delete-modal.title": {
 		"message": "Are you sure you want to delete this collection?"
+	},
+	"app.collection.edit.description": {
+		"message": "Description"
+	},
+	"app.collection.edit.header": {
+		"message": "Editing collection"
+	},
+	"app.collection.edit.saving": {
+		"message": "Saving..."
+	},
+	"app.collection.edit.title": {
+		"message": "Title"
+	},
+	"app.collection.edit.visibility": {
+		"message": "Visibility"
 	},
 	"app.collection.save-button.create": {
 		"message": "Create new collection"
@@ -121,6 +169,15 @@
 	},
 	"app.collection.save-button.sign-in": {
 		"message": "Sign in to Modrinth to save projects."
+	},
+	"app.collection.visibility.listed": {
+		"message": "Public"
+	},
+	"app.collection.visibility.private": {
+		"message": "Private"
+	},
+	"app.collection.visibility.unlisted": {
+		"message": "Unlisted"
 	},
 	"app.error-modal.copy-debug-info": {
 		"message": "Copy debug info"
@@ -644,6 +701,9 @@
 	"app.settings.default-instance-options.universal-skins.title": {
 		"message": "Skins for every player"
 	},
+	"app.settings.feature-flags.search.placeholder": {
+		"message": "Search flags..."
+	},
 	"app.settings.game-options.ao.label": {
 		"message": "Smooth lighting"
 	},
@@ -667,6 +727,9 @@
 	},
 	"app.settings.game-options.description": {
 		"message": "Values you switch on here are written into every instance's options.txt when it launches. Everything else is left exactly as the game saved it."
+	},
+	"app.settings.game-options.editor-title": {
+		"message": "Edit Minecraft options"
 	},
 	"app.settings.game-options.enableVsync.label": {
 		"message": "VSync"
@@ -940,6 +1003,15 @@
 	},
 	"app.welcome-screen.title": {
 		"message": "Welcome to Noctrinth"
+	},
+	"app.window-controls.close": {
+		"message": "Close window"
+	},
+	"app.window-controls.minimize": {
+		"message": "Minimize window"
+	},
+	"app.window-controls.toggle-maximize": {
+		"message": "Toggle maximize window"
 	},
 	"collection.delete": {
 		"message": "Delete"
@@ -1256,6 +1328,12 @@
 	"ely-skins.section-title": {
 		"message": "Ely.by skin"
 	},
+	"friends.friend.more-options": {
+		"message": "More options"
+	},
+	"friends.requests.none": {
+		"message": "You have no pending friend requests :C"
+	},
 	"instance.action.play-again": {
 		"message": "Launch another copy"
 	},
@@ -1324,6 +1402,15 @@
 	},
 	"instance.settings.tabs.java.modern-java-version-hint": {
 		"message": "Picking a version downloads it and pins it as this instance’s Java installation. The lowest one is the best tested; newer ones are supported but less proven with mods for this Minecraft version."
+	},
+	"instance.settings.tabs.synced-options.game-options": {
+		"message": "Minecraft options"
+	},
+	"instance.settings.tabs.synced-options.game-options.disabled-in-app": {
+		"message": "The Minecraft options profile is turned off in app settings."
+	},
+	"instance.settings.tabs.synced-options.game-options.exclude-description": {
+		"message": "Leave this instance's options.txt alone."
 	},
 	"minecraft-account.add-ely-account": {
 		"message": "Add Ely.by account"

@@ -86,11 +86,59 @@
 	"app.changelog.source.noctrinth": {
 		"message": "Noctrinth"
 	},
+	"app.collection.create.created": {
+		"message": "Коллекция создана"
+	},
+	"app.collection.create.created.detail": {
+		"message": "Создана «{name}»."
+	},
+	"app.collection.create.header": {
+		"message": "Создание коллекции"
+	},
+	"app.collection.create.name": {
+		"message": "Название"
+	},
+	"app.collection.create.name.placeholder": {
+		"message": "Введите название коллекции..."
+	},
+	"app.collection.create.submit": {
+		"message": "Создать коллекцию"
+	},
+	"app.collection.create.submitting": {
+		"message": "Создание..."
+	},
+	"app.collection.create.summary": {
+		"message": "Описание"
+	},
+	"app.collection.create.summary.hint": {
+		"message": "Пара предложений о том, что это за коллекция."
+	},
+	"app.collection.create.summary.placeholder": {
+		"message": "Это коллекция из..."
+	},
+	"app.collection.create.visibility-note": {
+		"message": "Коллекция будет создана публичной, {count, plural, =0 {без проектов} one {с # проектом} few {с # проектами} many {с # проектами} other {с # проектами}}."
+	},
 	"app.collection.delete-modal.description": {
 		"message": "Коллекция будет удалена навсегда. Отменить это действие нельзя."
 	},
 	"app.collection.delete-modal.title": {
 		"message": "Удалить эту коллекцию?"
+	},
+	"app.collection.edit.description": {
+		"message": "Описание"
+	},
+	"app.collection.edit.header": {
+		"message": "Изменение коллекции"
+	},
+	"app.collection.edit.saving": {
+		"message": "Сохранение..."
+	},
+	"app.collection.edit.title": {
+		"message": "Название"
+	},
+	"app.collection.edit.visibility": {
+		"message": "Видимость"
 	},
 	"app.collection.save-button.create": {
 		"message": "Создать коллекцию"
@@ -121,6 +169,15 @@
 	},
 	"app.collection.save-button.sign-in": {
 		"message": "Войдите в Modrinth, чтобы сохранять проекты."
+	},
+	"app.collection.visibility.listed": {
+		"message": "Публичная"
+	},
+	"app.collection.visibility.private": {
+		"message": "Приватная"
+	},
+	"app.collection.visibility.unlisted": {
+		"message": "По ссылке"
 	},
 	"app.error-modal.copy-debug-info": {
 		"message": "Скопировать отладочную информацию"
@@ -647,6 +704,9 @@
 	"app.settings.default-instance-options.universal-skins.title": {
 		"message": "Скины всех игроков"
 	},
+	"app.settings.feature-flags.search.placeholder": {
+		"message": "Поиск флагов..."
+	},
 	"app.settings.game-options.ao.label": {
 		"message": "Плавное освещение"
 	},
@@ -670,6 +730,9 @@
 	},
 	"app.settings.game-options.description": {
 		"message": "Отмеченные здесь значения записываются в options.txt каждого инстанса при запуске. Всё остальное остаётся таким, каким его сохранила игра."
+	},
+	"app.settings.game-options.editor-title": {
+		"message": "Настройки Minecraft"
 	},
 	"app.settings.game-options.enableVsync.label": {
 		"message": "Вертикальная синхронизация"
@@ -943,6 +1006,15 @@
 	},
 	"app.welcome-screen.title": {
 		"message": "Добро пожаловать в Noctrinth"
+	},
+	"app.window-controls.close": {
+		"message": "Закрыть окно"
+	},
+	"app.window-controls.minimize": {
+		"message": "Свернуть окно"
+	},
+	"app.window-controls.toggle-maximize": {
+		"message": "Развернуть или восстановить окно"
 	},
 	"collection.delete": {
 		"message": "Удалить"
@@ -1271,6 +1343,12 @@
 	"format.bytes.4": {
 		"defaultMessage": "{count, number} TiB"
 	},
+	"friends.friend.more-options": {
+		"message": "Ещё действия"
+	},
+	"friends.requests.none": {
+		"message": "Заявок в друзья пока нет :C"
+	},
 	"instance.action.play-again": {
 		"message": "Запустить ещё одну копию"
 	},
@@ -1339,6 +1417,15 @@
 	},
 	"instance.settings.tabs.java.modern-java-version-hint": {
 		"message": "Выбор версии скачает её и закрепит за этой сборкой. Самая младшая обкатана лучше всех; новые поддерживаются, но с модами этой версии Minecraft проверены меньше."
+	},
+	"instance.settings.tabs.synced-options.game-options": {
+		"message": "Настройки Minecraft"
+	},
+	"instance.settings.tabs.synced-options.game-options.disabled-in-app": {
+		"message": "Профиль настроек Minecraft выключен в настройках приложения."
+	},
+	"instance.settings.tabs.synced-options.game-options.exclude-description": {
+		"message": "Не трогать options.txt этой сборки."
 	},
 	"minecraft-account.add-ely-account": {
 		"message": "Добавить аккаунт Ely.by"

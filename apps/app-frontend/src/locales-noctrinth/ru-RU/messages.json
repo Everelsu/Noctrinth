@@ -245,6 +245,12 @@
 	"app.error-modal.other-account.heading": {
 		"message": "Попробуйте другой аккаунт Microsoft"
 	},
+	"app.error-modal.service-outage.body": {
+		"message": "Серверы входа Microsoft ответили ошибкой, и Noctrinth не смог до них достучаться даже после нескольких попыток. Это неполадка на их стороне, обычно она проходит за несколько минут — подождите немного и попробуйте снова."
+	},
+	"app.error-modal.service-outage.heading": {
+		"message": "Сервисы Microsoft недоступны"
+	},
 	"app.error-modal.state-init.body": {
 		"message": "Noctrinth не смог загрузиться правильно. Возможно, повреждён файл или не хватает важных файлов приложения."
 	},

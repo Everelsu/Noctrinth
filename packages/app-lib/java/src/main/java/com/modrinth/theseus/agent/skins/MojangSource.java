@@ -84,15 +84,17 @@ final class MojangSource implements SkinSource.Source {
         }
 
         final String id = string(Http.getJson(profilesUrl + Http.encode(username)), "id");
-        if (id != null) {
+
+        // Remembered either way. A name Mojang has never heard of is every
+        // player on an account system of their own, and every one of them would
+        // otherwise cost a request here each time they are looked at.
+        if (IDS.size() >= MAX_CACHED_IDS) {
+            IDS.values().removeIf(entry -> entry.expiresAt <= now);
             if (IDS.size() >= MAX_CACHED_IDS) {
-                IDS.values().removeIf(entry -> entry.expiresAt <= now);
-                if (IDS.size() >= MAX_CACHED_IDS) {
-                    IDS.clear();
-                }
+                IDS.clear();
             }
-            IDS.put(username, new CachedId(id, now + ID_TTL_MS));
         }
+        IDS.put(username, new CachedId(id, now + ID_TTL_MS));
 
         return id;
     }
@@ -133,7 +135,9 @@ final class MojangSource implements SkinSource.Source {
     }
 
     private static final class CachedId {
+        /** Null for a name Mojang has never heard of. */
         final String id;
+
         final long expiresAt;
 
         CachedId(String id, long expiresAt) {

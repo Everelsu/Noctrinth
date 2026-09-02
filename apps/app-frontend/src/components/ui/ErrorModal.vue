@@ -64,6 +64,15 @@ const messages = defineMessages({
 		defaultMessage:
 			'Noctrinth tried to connect to Microsoft / Xbox / Minecraft services, but the remote server rejected the connection. This may indicate that these services are blocked by the hosts file. Please visit <support-article>our support article</support-article> for steps on how to fix the issue.',
 	},
+	serviceOutageHeading: {
+		id: 'app.error-modal.service-outage.heading',
+		defaultMessage: 'Microsoft services are unavailable',
+	},
+	serviceOutageBody: {
+		id: 'app.error-modal.service-outage.body',
+		defaultMessage:
+			'Microsoft’s sign-in servers answered with an error, and Noctrinth kept retrying without getting through. This is on their side, and it usually clears up within a few minutes — wait a moment, then try again.',
+	},
 	otherAccountHeading: {
 		id: 'app.error-modal.other-account.heading',
 		defaultMessage: 'Try another Microsoft account',
@@ -192,7 +201,11 @@ defineExpose({
 			titleMessage.value = messages.titleMinecraftAuth
 			errorType.value = 'minecraft_auth'
 			supportLink.value = ''
+			metadata.value = {}
 
+			if (errorVal.message.includes('temporarily unavailable')) {
+				metadata.value.serviceOutage = true
+			}
 			if (
 				errorVal.message.includes('existing connection was forcibly closed') ||
 				errorVal.message.includes('error sending request for url')
@@ -311,7 +324,11 @@ async function copyToClipboard(text) {
 		<div class="modal-body max-w-[550px]">
 			<div class="markdown-body">
 				<template v-if="errorType === 'minecraft_auth'">
-					<template v-if="metadata.network">
+					<template v-if="metadata.serviceOutage">
+						<h3>{{ formatMessage(messages.serviceOutageHeading) }}</h3>
+						<p>{{ formatMessage(messages.serviceOutageBody) }}</p>
+					</template>
+					<template v-else-if="metadata.network">
 						<h3>{{ formatMessage(messages.networkHeading) }}</h3>
 						<p>
 							<IntlFormatted :message-id="messages.networkBody">

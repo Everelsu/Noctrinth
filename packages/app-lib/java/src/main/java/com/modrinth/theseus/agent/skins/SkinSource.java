@@ -33,9 +33,11 @@ import java.util.concurrent.TimeoutException;
  *
  * <p>Disabled unless the launcher sets {@code noctrinth.skins.source}. Its value is a list
  * separated by commas: the base URL of anything serving {@code /textures/{name}}, or the word
- * {@code mojang} for Mojang's own name lookup. They are asked in the order given and the first one
- * that has heard of the player wins, which is how a private skin server can sit in front of the
- * public one.
+ * {@code mojang} for Mojang's own name lookup. The first one that has heard of the player wins,
+ * which is how a private skin server can sit in front of the public one — but they are all asked
+ * at once rather than in turn, because the game does not wait for ever and the player who needs
+ * the source at the end of the list is the one who would never be reached in time. See {@link
+ * #PER_SOURCE_WAIT_MS}.
  */
 public final class SkinSource {
     private static final String SOURCE_PROPERTY = "noctrinth.skins.source";
@@ -85,6 +87,37 @@ public final class SkinSource {
      */
     private static final long FIRST_WAIT_MS = 5 * 1000L;
 
+    /**
+     * The longest any one source is waited on before the answer of the one after it will do.
+     *
+     * <p>Preferring an earlier source cannot mean waiting on it without end: a skin system that
+     * proxies Mojang for the players it does not have of its own answers for a licensed player
+     * most of the time and hangs or fails the rest of it, and every second of that is spent
+     * against {@link #FIRST_WAIT_MS}. Past this, whoever else has answered is the answer, and the
+     * slow one is still remembered for the sighting after this.
+     */
+    private static final long PER_SOURCE_WAIT_MS = 3 * 1000L;
+
+    /**
+     * The longest a source is given once nobody else has answered either.
+     *
+     * <p>Reached only when the quick pass over them all came back with nothing, and by then
+     * whoever asked has their answer — an empty one — and is not waiting on this. What it is for is
+     * the remembering: a source that was merely slow still gets to say what it knows, and the next
+     * time this player is looked at the answer is already in. Long enough for any source to have
+     * hit a timeout of its own; it is not a substitute for one.
+     */
+    private static final long LATE_WAIT_MS = 20 * 1000L;
+
+    /**
+     * How long a source that failed is left out of the next lookups.
+     *
+     * <p>Only ever when somebody else can answer. A source that is down stays down for longer than
+     * one player walks into view, and asking it again for every one of them costs a connection and
+     * a wait each time — while the source that could have answered is the one being kept waiting.
+     */
+    private static final long UNHEALTHY_MS = 60 * 1000L;
+
     /** A bound on the cache, so a busy server cannot grow it without end. */
     private static final int MAX_CACHED_NAMES = 512;
 
@@ -104,6 +137,9 @@ public final class SkinSource {
 
     private static final Map<String, CachedTextures> CACHE = new ConcurrentHashMap<>();
 
+    /** Sources that have just failed, and until when they are left alone. */
+    private static final Map<Source, Long> UNHEALTHY_UNTIL = new ConcurrentHashMap<>();
+
     /** Names a refresh is already running for, so a crowd cannot ask twice over. */
     private static final Set<String> IN_FLIGHT = ConcurrentHashMap.newKeySet();
 
@@ -116,7 +152,7 @@ public final class SkinSource {
      */
     private static final ExecutorService REFRESHERS = new ThreadPoolExecutor(
             0,
-            4,
+            8,
             30L,
             TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(64),
@@ -126,6 +162,26 @@ public final class SkinSource {
                 return thread;
             },
             // Refused rather than dropped, so whoever asked knows to do it itself.
+            new ThreadPoolExecutor.AbortPolicy());
+
+    /**
+     * Where the sources are asked, kept apart from the looking-again above.
+     *
+     * <p>A lookup waits on the sources it started, so running both on the same threads would have
+     * a queue full of lookups waiting for the sources behind them in it. Everything here is a
+     * socket waiting for an answer, which is why there can be a good few of them.
+     */
+    private static final ExecutorService LOOKUPS = new ThreadPoolExecutor(
+            0,
+            16,
+            30L,
+            TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(64),
+            runnable -> {
+                final Thread thread = new Thread(runnable, "noctrinth-skins-source");
+                thread.setDaemon(true);
+                return thread;
+            },
             new ThreadPoolExecutor.AbortPolicy());
 
     /** When the file on disk was last written, and whether it is behind what is in memory. */
@@ -218,26 +274,97 @@ public final class SkinSource {
         refreshLater(username);
     }
 
-    /** Asks every source in turn, and remembers whatever the first one to know answered. */
+    /** Asks every source at once, and remembers what the first one to know answered. */
     private static Map<String, Texture> fetch(String username) {
-        Map<String, Texture> textures = Collections.emptyMap();
-        for (final Source source : SOURCES) {
-            try {
-                textures = source.textures(username);
-            } catch (Throwable t) {
-                // A skin is not worth interrupting the game over, whatever went
-                // wrong; the next source may still know them.
-                debug("Failed to look up textures for " + username + " at " + source + ": " + t);
-                textures = Collections.emptyMap();
-            }
+        final List<Source> asked = healthy();
+        final List<FutureTask<Map<String, Texture>>> answers = new ArrayList<>(asked.size());
 
-            if (!textures.isEmpty()) {
-                break;
+        for (final Source source : asked) {
+            final FutureTask<Map<String, Texture>> answer = new FutureTask<>(() -> ask(source, username));
+            answers.add(answer);
+
+            try {
+                LOOKUPS.execute(answer);
+            } catch (Throwable rejected) {
+                // Every thread is busy; there is nowhere to run this but here.
+                answer.run();
             }
+        }
+
+        // Quickly first, so that one source taking its time cannot keep the
+        // answer another one already has from the player waiting to be drawn.
+        Map<String, Texture> textures = collect(username, asked, answers, PER_SOURCE_WAIT_MS);
+
+        // Then patiently, for what was only slow. Whoever asked has long since
+        // been answered; this is what gets remembered.
+        if (textures.isEmpty()) {
+            textures = collect(username, asked, answers, LATE_WAIT_MS);
         }
 
         store(username, textures, System.currentTimeMillis());
         return textures;
+    }
+
+    /**
+     * What the first source to know has, waiting no longer than {@code wait} on any one of them.
+     *
+     * <p>Asked in the order they were listed however they finish, so that a skin server put in
+     * front of another is still the one that speaks for a player they both know.
+     */
+    private static Map<String, Texture> collect(
+            String username, List<Source> asked, List<FutureTask<Map<String, Texture>>> answers, long wait) {
+        for (int i = 0; i < answers.size(); i++) {
+            Map<String, Texture> answer = Collections.emptyMap();
+            try {
+                answer = answers.get(i).get(wait, TimeUnit.MILLISECONDS);
+            } catch (TimeoutException slow) {
+                // Left running. Being slow is not being wrong, so this is not
+                // held against the source: only a failure is.
+                debug("Gave up waiting on " + asked.get(i) + " for " + username);
+            } catch (Throwable t) {
+                debug("Failed to look up " + username + " at " + asked.get(i) + ": " + t);
+            }
+
+            if (!answer.isEmpty()) {
+                return answer;
+            }
+        }
+
+        return Collections.emptyMap();
+    }
+
+    /** What one source has for a name, or nothing at all if it could not say. */
+    private static Map<String, Texture> ask(Source source, String username) {
+        try {
+            return source.textures(username);
+        } catch (Throwable t) {
+            // A skin is not worth interrupting the game over, whatever went
+            // wrong; another source may still know them.
+            debug("Failed to look up textures for " + username + " at " + source + ": " + t);
+            markUnhealthy(source);
+            return Collections.emptyMap();
+        }
+    }
+
+    /** The sources worth asking right now, which is all of them unless one is failing. */
+    private static List<Source> healthy() {
+        final long now = System.currentTimeMillis();
+        final List<Source> healthy = new ArrayList<>(SOURCES.size());
+
+        for (final Source source : SOURCES) {
+            final Long until = UNHEALTHY_UNTIL.get(source);
+            if (until == null || until <= now) {
+                healthy.add(source);
+            }
+        }
+
+        // Nobody is well: ask anyway, since the alternative is answering for
+        // nobody at all until one of them recovers unasked.
+        return healthy.isEmpty() ? SOURCES : healthy;
+    }
+
+    private static void markUnhealthy(Source source) {
+        UNHEALTHY_UNTIL.put(source, System.currentTimeMillis() + UNHEALTHY_MS);
     }
 
     private static void refreshLater(String username) {

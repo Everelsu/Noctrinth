@@ -39,6 +39,7 @@ pub enum MinecraftAuthStep {
     GetOAuthToken,
     RefreshOAuthToken,
     SisuAuthorize,
+    XboxUserAuthorize,
     XstsAuthorize,
     MinecraftToken,
     MinecraftEntitlements,
@@ -73,6 +74,13 @@ pub enum MinecraftAuthenticationError {
         #[source]
         source: reqwest::Error,
     },
+    #[error(
+        "The Microsoft authentication service is temporarily unavailable, answering with HTTP status {status_code} during step {step:?}. Please try again in a few minutes."
+    )]
+    ServiceUnavailable {
+        step: MinecraftAuthStep,
+        status_code: StatusCode,
+    },
     #[error("Error reading XBOX Session ID header")]
     NoSessionId,
     #[error("Error reading user hash")]
@@ -97,6 +105,20 @@ impl MinecraftAuthenticationError {
                 .is_ok_and(|response| response.error == "invalid_grant")
         )
     }
+
+    fn is_service_unavailable(&self) -> bool {
+        matches!(self, Self::ServiceUnavailable { .. })
+    }
+}
+
+/// Whether an error means an authentication service was down, rather than
+/// anything being wrong with the account or the request.
+fn is_service_unavailable_error(err: &crate::Error) -> bool {
+    matches!(
+        &*err.raw,
+        ErrorKind::MinecraftAuthenticationError(source)
+            if source.is_service_unavailable()
+    )
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -111,31 +133,72 @@ pub struct MinecraftLoginFlow {
 pub async fn login_begin(
     exec: impl sqlx::Executor<'_, Database = sqlx::Sqlite> + Copy,
 ) -> crate::Result<MinecraftLoginFlow> {
-    let (pair, current_date) =
-        DeviceTokenPair::refresh_and_get_device_token(Utc::now(), exec).await?;
-
     let verifier = generate_oauth_challenge();
     let result = sha2::Sha256::digest(&verifier);
     let challenge = BASE64_URL_SAFE_NO_PAD.encode(result);
 
-    match sisu_authenticate(
+    match sisu_login_begin(&challenge, exec).await {
+        Ok((session_id, auth_request_uri)) => Ok(MinecraftLoginFlow {
+            verifier,
+            challenge,
+            session_id,
+            auth_request_uri,
+        }),
+        Err(err) if is_service_unavailable_error(&err) => {
+            tracing::warn!(
+                "Could not start the Sisu sign-in flow, falling back to the classic one: {err}"
+            );
+
+            Ok(MinecraftLoginFlow {
+                verifier,
+                // An empty session ID marks a flow Sisu knows nothing about
+                session_id: String::new(),
+                auth_request_uri: classic_auth_request_uri(&challenge),
+                challenge,
+            })
+        }
+        Err(err) => Err(err),
+    }
+}
+
+/// Asks Sisu for the sign-in URL the official launcher uses, which needs a
+/// device token bound to a key this device holds.
+async fn sisu_login_begin(
+    challenge: &str,
+    exec: impl sqlx::Executor<'_, Database = sqlx::Sqlite> + Copy,
+) -> crate::Result<(String, String)> {
+    let (pair, current_date) =
+        DeviceTokenPair::refresh_and_get_device_token(Utc::now(), exec).await?;
+
+    let (session_id, redirect_uri) = sisu_authenticate(
         &pair.token.token,
-        &challenge,
+        challenge,
         &pair.key,
         current_date,
     )
-    .await
-    {
-        Ok((session_id, redirect_uri)) => {
-            return Ok(MinecraftLoginFlow {
-                verifier,
-                challenge,
-                session_id,
-                auth_request_uri: redirect_uri.value.msa_oauth_redirect,
-            });
-        }
-        Err(err) => return Err(crate::ErrorKind::from(err).into()),
-    }
+    .await?;
+
+    Ok((session_id, redirect_uri.value.msa_oauth_redirect))
+}
+
+/// The sign-in URL launchers used before Sisu existed. It asks `login.live.com`
+/// for the very same authorization code, so the only thing lost by taking it is
+/// the Sisu session, which the classic token exchange does not need either.
+fn classic_auth_request_uri(challenge: &str) -> String {
+    let mut url = Url::parse("https://login.live.com/oauth20_authorize.srf")
+        .expect("the classic authorization URL is valid");
+
+    url.query_pairs_mut()
+        .append_pair("client_id", MICROSOFT_CLIENT_ID)
+        .append_pair("response_type", "code")
+        .append_pair("redirect_uri", AUTH_REPLY_URL)
+        .append_pair("scope", REQUESTED_SCOPE)
+        .append_pair("code_challenge", challenge)
+        .append_pair("code_challenge_method", "S256")
+        .append_pair("state", &generate_oauth_challenge())
+        .append_pair("prompt", "select_account");
+
+    url.into()
 }
 
 #[tracing::instrument]
@@ -144,36 +207,24 @@ pub async fn login_finish(
     flow: MinecraftLoginFlow,
     exec: impl sqlx::Executor<'_, Database = sqlx::Sqlite> + Copy,
 ) -> crate::Result<Credentials> {
-    let (pair, _) =
-        DeviceTokenPair::refresh_and_get_device_token(Utc::now(), exec).await?;
-
     let oauth_token = oauth_token(code, &flow.verifier).await?;
-    let sisu_authorize = sisu_authorize(
+
+    let xbox_token = xbox_token_for_minecraft(
         Some(&flow.session_id),
         &oauth_token.value.access_token,
-        &pair.token.token,
-        &pair.key,
         oauth_token.date,
+        exec,
     )
     .await?;
-
-    let xbox_token = xsts_authorize(
-        sisu_authorize.value,
-        &pair.token.token,
-        &pair.key,
-        sisu_authorize.date,
-    )
-    .await?;
-    let minecraft_token = minecraft_token(xbox_token.value).await?;
+    let minecraft_token = minecraft_token(xbox_token).await?;
 
     minecraft_entitlements(&minecraft_token.access_token).await?;
 
     let mut credentials = Credentials {
         offline_profile: MinecraftProfile::default(),
+        expires: minecraft_token_expiry(&minecraft_token),
         access_token: minecraft_token.access_token,
         refresh_token: oauth_token.value.refresh_token,
-        expires: oauth_token.date
-            + Duration::seconds(oauth_token.value.expires_in as i64),
         active: true,
     };
 
@@ -279,36 +330,19 @@ impl Credentials {
         }
 
         let oauth_token = oauth_refresh(&self.refresh_token).await?;
-        let (pair, current_date) =
-            DeviceTokenPair::refresh_and_get_device_token(
-                oauth_token.date,
-                exec,
-            )
-            .await?;
 
-        let sisu_authorize = sisu_authorize(
+        let xbox_token = xbox_token_for_minecraft(
             None,
             &oauth_token.value.access_token,
-            &pair.token.token,
-            &pair.key,
-            current_date,
+            oauth_token.date,
+            exec,
         )
         .await?;
+        let minecraft_token = minecraft_token(xbox_token).await?;
 
-        let xbox_token = xsts_authorize(
-            sisu_authorize.value,
-            &pair.token.token,
-            &pair.key,
-            sisu_authorize.date,
-        )
-        .await?;
-
-        let minecraft_token = minecraft_token(xbox_token.value).await?;
-
+        self.expires = minecraft_token_expiry(&minecraft_token);
         self.access_token = minecraft_token.access_token;
         self.refresh_token = oauth_token.value.refresh_token;
-        self.expires = oauth_token.date
-            + Duration::seconds(oauth_token.value.expires_in as i64);
 
         self.upsert(exec).await?;
 
@@ -483,6 +517,14 @@ impl Credentials {
                     ) = *err.raw
                         && (source.is_connect() || source.is_timeout())
                     {
+                        return Ok(Some(creds));
+                    }
+
+                    // An outage on Microsoft's side says nothing about whether these
+                    // credentials are still good, so hold on to them like we do when
+                    // the network itself is unreachable, instead of failing whatever
+                    // the user was doing
+                    if is_service_unavailable_error(&err) {
                         return Ok(Some(creds));
                     }
 
@@ -945,7 +987,9 @@ async fn sisu_authenticate(
 #[derive(Deserialize)]
 struct OAuthToken {
     // pub token_type: String,
-    pub expires_in: u64,
+    // The Minecraft token obtained with this one lives far longer, and it is
+    // the one credentials expire with, so this is of no use to us
+    // pub expires_in: u64,
     // pub scope: String,
     pub access_token: String,
     pub refresh_token: String,
@@ -988,14 +1032,8 @@ async fn oauth_token(
         }
     })?;
 
-    let body = serde_json::from_str(&text).map_err(|source| {
-        MinecraftAuthenticationError::DeserializeResponse {
-            source,
-            raw: text,
-            step: MinecraftAuthStep::GetOAuthToken,
-            status_code: status,
-        }
-    })?;
+    let body =
+        parse_auth_response(text, status, MinecraftAuthStep::GetOAuthToken)?;
 
     Ok(RequestWithDate {
         date: current_date,
@@ -1036,14 +1074,11 @@ async fn oauth_refresh(
         }
     })?;
 
-    let body = serde_json::from_str(&text).map_err(|source| {
-        MinecraftAuthenticationError::DeserializeResponse {
-            source,
-            raw: text,
-            step: MinecraftAuthStep::RefreshOAuthToken,
-            status_code: status,
-        }
-    })?;
+    let body = parse_auth_response(
+        text,
+        status,
+        MinecraftAuthStep::RefreshOAuthToken,
+    )?;
 
     Ok(RequestWithDate {
         date: current_date,
@@ -1104,6 +1139,153 @@ async fn sisu_authorize(
     })
 }
 
+/// Trades a Microsoft access token for the Xbox Live token Minecraft services
+/// accept.
+///
+/// The Sisu flow the official launcher uses is preferred, but it lives behind
+/// `sisu.xboxlive.com`, which goes down on its own often enough to be worth
+/// routing around. The classic flow that launchers used before Sisu existed
+/// reaches the same place through entirely different hosts, needing neither a
+/// device token nor request signing, so an outage of one is rarely an outage of
+/// both.
+#[tracing::instrument(skip(access_token, exec))]
+async fn xbox_token_for_minecraft(
+    session_id: Option<&str>,
+    access_token: &str,
+    current_date: DateTime<Utc>,
+    exec: impl sqlx::Executor<'_, Database = sqlx::Sqlite> + Copy,
+) -> crate::Result<DeviceToken> {
+    // A sign-in that already had to begin without Sisu has no session for it to
+    // authorize, so there is nothing to try there
+    if !session_id.is_some_and(str::is_empty) {
+        match sisu_xbox_token(session_id, access_token, current_date, exec)
+            .await
+        {
+            Ok(token) => return Ok(token),
+            Err(err) if is_service_unavailable_error(&err) => {
+                tracing::warn!(
+                    "Sisu is unavailable, falling back to the classic Xbox Live sign-in: {err}"
+                );
+            }
+            Err(err) => return Err(err),
+        }
+    }
+
+    Ok(classic_xbox_token(access_token).await?)
+}
+
+async fn sisu_xbox_token(
+    session_id: Option<&str>,
+    access_token: &str,
+    current_date: DateTime<Utc>,
+    exec: impl sqlx::Executor<'_, Database = sqlx::Sqlite> + Copy,
+) -> crate::Result<DeviceToken> {
+    let (pair, current_date) =
+        DeviceTokenPair::refresh_and_get_device_token(current_date, exec)
+            .await?;
+
+    let sisu_authorize = sisu_authorize(
+        session_id,
+        access_token,
+        &pair.token.token,
+        &pair.key,
+        current_date,
+    )
+    .await?;
+
+    let xbox_token = xsts_authorize(
+        sisu_authorize.value,
+        &pair.token.token,
+        &pair.key,
+        sisu_authorize.date,
+    )
+    .await?;
+
+    Ok(xbox_token.value)
+}
+
+async fn classic_xbox_token(
+    access_token: &str,
+) -> Result<DeviceToken, MinecraftAuthenticationError> {
+    let user_token = xbox_user_token(access_token).await?;
+
+    classic_xsts_authorize(&user_token.token).await
+}
+
+/// An unsigned Xbox Live token request, as used by the classic flow.
+async fn xbox_live_request(
+    url: &str,
+    body: serde_json::Value,
+    step: MinecraftAuthStep,
+) -> Result<DeviceToken, MinecraftAuthenticationError> {
+    let body = serde_json::to_vec(&body).map_err(|source| {
+        MinecraftAuthenticationError::SerializeBody { source, step }
+    })?;
+
+    let res = auth_retry(|| {
+        INSECURE_REQWEST_CLIENT
+            .post(url)
+            .header("Content-Type", "application/json; charset=utf-8")
+            .header("Accept", "application/json")
+            .header("x-xbl-contract-version", "1")
+            .body(body.clone())
+            .send()
+    })
+    .await
+    .map_err(|source| MinecraftAuthenticationError::Request { source, step })?;
+
+    let status = res.status();
+    let text = res.text().await.map_err(|source| {
+        MinecraftAuthenticationError::Request { source, step }
+    })?;
+
+    parse_auth_response(text, status, step)
+}
+
+/// Exchanges a Microsoft access token for an Xbox Live user token without
+/// involving Sisu.
+async fn xbox_user_token(
+    access_token: &str,
+) -> Result<DeviceToken, MinecraftAuthenticationError> {
+    xbox_live_request(
+        "https://user.auth.xboxlive.com/user/authenticate",
+        json!({
+            "Properties": {
+                "AuthMethod": "RPS",
+                "SiteName": "user.auth.xboxlive.com",
+                // The ticket format this client ID uses, the same one the Sisu
+                // authorize step sends
+                "RpsTicket": format!("t={access_token}"),
+            },
+            "RelyingParty": "http://auth.xboxlive.com",
+            "TokenType": "JWT",
+        }),
+        MinecraftAuthStep::XboxUserAuthorize,
+    )
+    .await
+}
+
+/// Authorizes an Xbox Live user token for Minecraft services. Unlike the Sisu
+/// path, this presents no device or title token, so it is not tied to a device
+/// key this launcher registered earlier.
+async fn classic_xsts_authorize(
+    user_token: &str,
+) -> Result<DeviceToken, MinecraftAuthenticationError> {
+    xbox_live_request(
+        "https://xsts.auth.xboxlive.com/xsts/authorize",
+        json!({
+            "Properties": {
+                "SandboxId": "RETAIL",
+                "UserTokens": [user_token],
+            },
+            "RelyingParty": "rp://api.minecraftservices.com/",
+            "TokenType": "JWT",
+        }),
+        MinecraftAuthStep::XstsAuthorize,
+    )
+    .await
+}
+
 #[tracing::instrument(skip(key))]
 async fn xsts_authorize(
     authorize: SisuAuthorize,
@@ -1142,7 +1324,23 @@ struct MinecraftToken {
     // pub username: String,
     pub access_token: String,
     // pub token_type: String,
-    // pub expires_in: u64,
+    pub expires_in: u64,
+}
+
+/// When the credentials built around a Minecraft token should be refreshed.
+///
+/// The Minecraft token is the only one the game and Minecraft services ever
+/// see, and it outlives by a day the Microsoft access token it was obtained
+/// with. Expiring credentials on the Microsoft token's hourly schedule would
+/// mean walking the whole Xbox Live chain every hour for nothing, and being
+/// unable to play whenever Xbox Live happens to be down at that moment.
+fn minecraft_token_expiry(token: &MinecraftToken) -> DateTime<Utc> {
+    const MAX_TOKEN_LIFETIME: i64 = 24 * 60 * 60;
+
+    // Local time is what this is compared against later, so counting from now
+    // rather than from a server date keeps clock skew out of it
+    Utc::now()
+        + Duration::seconds((token.expires_in as i64).min(MAX_TOKEN_LIFETIME))
 }
 
 #[tracing::instrument]
@@ -1184,14 +1382,7 @@ async fn minecraft_token(
         }
     })?;
 
-    serde_json::from_str(&text).map_err(|source| {
-        MinecraftAuthenticationError::DeserializeResponse {
-            source,
-            raw: text,
-            step: MinecraftAuthStep::MinecraftToken,
-            status_code: status,
-        }
-    })
+    parse_auth_response(text, status, MinecraftAuthStep::MinecraftToken)
 }
 
 #[derive(
@@ -1413,15 +1604,11 @@ async fn minecraft_profile(
         }
     })?;
 
-    let mut profile =
-        serde_json::from_str::<MinecraftProfile>(&text).map_err(|source| {
-            MinecraftAuthenticationError::DeserializeResponse {
-                source,
-                raw: text,
-                step: MinecraftAuthStep::MinecraftProfile,
-                status_code: status,
-            }
-        })?;
+    let mut profile = parse_auth_response::<MinecraftProfile>(
+        text,
+        status,
+        MinecraftAuthStep::MinecraftProfile,
+    )?;
     profile.fetch_time = Some(Instant::now());
 
     tracing::debug!(
@@ -1458,17 +1645,80 @@ async fn minecraft_entitlements(
         }
     })?;
 
+    parse_auth_response(text, status, MinecraftAuthStep::MinecraftEntitlements)
+}
+
+// auth utils
+
+const RETRY_COUNT: usize = 5;
+const BASE_RETRY_WAIT: std::time::Duration =
+    std::time::Duration::from_millis(250);
+const MAX_RETRY_WAIT: std::time::Duration = std::time::Duration::from_secs(4);
+
+/// Whether a status means the authentication service is having a moment, rather
+/// than something being wrong with the request itself. Microsoft puts a CDN in
+/// front of these endpoints which answers with an HTML error page while the
+/// service behind it is down, so such responses are not even JSON.
+fn is_transient_status(status: StatusCode) -> bool {
+    status.is_server_error()
+        || matches!(
+            status,
+            StatusCode::REQUEST_TIMEOUT | StatusCode::TOO_MANY_REQUESTS
+        )
+}
+
+/// Parses the JSON body of an authentication response, reporting a body that
+/// could not be parsed because the service was failing as the outage it is,
+/// instead of as a deserialization error quoting an HTML error page.
+fn parse_auth_response<T: DeserializeOwned>(
+    text: String,
+    status_code: StatusCode,
+    step: MinecraftAuthStep,
+) -> Result<T, MinecraftAuthenticationError> {
     serde_json::from_str(&text).map_err(|source| {
-        MinecraftAuthenticationError::DeserializeResponse {
-            source,
-            raw: text,
-            step: MinecraftAuthStep::MinecraftEntitlements,
-            status_code: status,
+        if is_transient_status(status_code) {
+            tracing::warn!(
+                "Authentication step {step:?} failed with status {status_code}: {text}"
+            );
+
+            MinecraftAuthenticationError::ServiceUnavailable {
+                step,
+                status_code,
+            }
+        } else {
+            MinecraftAuthenticationError::DeserializeResponse {
+                source,
+                raw: text,
+                step,
+                status_code,
+            }
         }
     })
 }
 
-// auth utils
+/// The delay the service asked us to hold off for, when it sent one.
+fn retry_after(response: &Response) -> Option<std::time::Duration> {
+    response
+        .headers()
+        .get(reqwest::header::RETRY_AFTER)?
+        .to_str()
+        .ok()?
+        .trim()
+        .parse::<u64>()
+        .ok()
+        .map(std::time::Duration::from_secs)
+}
+
+/// A wait that grows exponentially with each attempt, with some jitter so that
+/// every client retrying at once does not come back in the same instant.
+fn backoff_wait(attempt: usize) -> std::time::Duration {
+    let wait = BASE_RETRY_WAIT
+        .saturating_mul(1u32 << (attempt.min(4) as u32))
+        .min(MAX_RETRY_WAIT);
+
+    wait + wait.mul_f32(rand::thread_rng().gen_range(0.0..0.25))
+}
+
 #[tracing::instrument(skip(reqwest_request))]
 async fn auth_retry<F>(
     reqwest_request: impl Fn() -> F,
@@ -1476,30 +1726,31 @@ async fn auth_retry<F>(
 where
     F: Future<Output = Result<Response, reqwest::Error>>,
 {
-    const RETRY_COUNT: usize = 5; // Does command 9 times
-    const RETRY_WAIT: std::time::Duration =
-        std::time::Duration::from_millis(250);
-
     let mut resp = reqwest_request().await;
-    for i in 0..RETRY_COUNT {
-        match &resp {
-            Ok(_) => {
-                break;
-            }
-            Err(err) => {
-                if err.is_connect() || err.is_timeout() {
-                    if i < RETRY_COUNT - 1 {
-                        tracing::debug!(
-                            "Request failed with connect error, retrying...",
-                        );
-                        tokio::time::sleep(RETRY_WAIT).await;
-                        resp = reqwest_request().await;
-                    } else {
-                        break;
-                    }
+
+    for attempt in 0..RETRY_COUNT {
+        let wait = match &resp {
+            // Microsoft's authentication services go down for a minute often enough
+            // that giving up on the first failure makes signing in flaky, and makes a
+            // token refresh fail for a reason that has nothing to do with the account
+            Ok(res) if is_transient_status(res.status()) => {
+                match retry_after(res) {
+                    // Waiting out a long back-off would leave the app hanging, and
+                    // the service has told us there is no point in trying sooner
+                    Some(wait) if wait > MAX_RETRY_WAIT => break,
+                    Some(wait) => wait,
+                    None => backoff_wait(attempt),
                 }
             }
-        }
+            Err(err) if err.is_connect() || err.is_timeout() => {
+                backoff_wait(attempt)
+            }
+            _ => break,
+        };
+
+        tracing::debug!("Authentication request failed, retrying in {wait:?}");
+        tokio::time::sleep(wait).await;
+        resp = reqwest_request().await;
     }
 
     resp
@@ -1614,14 +1865,7 @@ async fn send_signed_request<T: DeserializeOwned>(
         MinecraftAuthenticationError::Request { source, step }
     })?;
 
-    let body = serde_json::from_str(&body).map_err(|source| {
-        MinecraftAuthenticationError::DeserializeResponse {
-            source,
-            raw: body,
-            step,
-            status_code: status,
-        }
-    })?;
+    let body = parse_auth_response(body, status, step)?;
     Ok(SignedRequestResponse {
         headers,
         current_date,

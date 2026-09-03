@@ -35,6 +35,21 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.19.2',
+		date: '2026-09-03T00:00:00+00:00',
+		body: `### Added
+- Signing in to Minecraft falls back to the classic Xbox Live flow when Microsoft's Sisu service is unavailable. It runs on different servers, which are usually up when Sisu is not.
+
+### Changed
+- Synced with upstream Modrinth (0.19.1 → 0.19.2): an instance's hooks, window and behaviour settings are gathered into a Behavior tab, syncing an option between instances asks which instance to take it from, the Screenshots page stays smooth with thousands of screenshots in it, turning a Java override off puts the recommended installation back, and an instance's page no longer shows what it knew before the instance was last edited.
+- An instance installed from a modpack starts with the launcher's shared settings kept out of it: the options profile skips it and every synced option is off, so the pack's own options.txt, server list and hotbars are not written over on the first launch. An instance you made yourself starts as it always did, and each of these is still a switch in the instance's own settings.
+- A sign-in request that fails because Microsoft is having trouble is tried again with a growing wait, and an outage on their side says so instead of arriving as a JSON parsing error.
+- The Minecraft token is refreshed when it is about to expire, once a day, rather than every hour on the Microsoft one behind it. An account that is already signed in keeps working while Xbox Live is down.
+
+### Fixed
+- Licensed players stayed Steve on offline-mode servers whenever Ely.by's proxy to Mojang was slow or failing. Every skin source is now asked at once rather than one after another, so a source that hangs no longer runs out the clock before Mojang has answered, and one that is failing is left alone for a minute.`,
+	},
+	{
 		version: '0.19.1',
 		date: '2026-08-28T00:00:00+00:00',
 		body: `### Changed

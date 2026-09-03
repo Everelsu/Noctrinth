@@ -1,3 +1,4 @@
+use super::managed_instance_defaults;
 use crate::launcher::get_loader_version_from_profile;
 use crate::state::instances::{
     ContentSet, ContentSetStatus, ContentSourceKind, Instance,
@@ -122,6 +123,16 @@ pub(crate) async fn create_instance(
         )
         .await?;
         tx.commit().await?;
+
+        // A modpack brings its own options, server list and hotbars, and the
+        // shared settings would write over them on the first launch.
+        if managed_instance_defaults::is_managed(&input.link) {
+            managed_instance_defaults::keep_shared_settings_out(
+                &instance_id,
+                state,
+            )
+            .await?;
+        }
 
         crate::state::instances::watcher::watch_instance_folder(
             &instance.id,

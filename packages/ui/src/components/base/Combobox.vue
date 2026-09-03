@@ -156,19 +156,19 @@
 														:is="item.icon"
 														v-if="item.icon"
 														class="h-5 w-5"
-														:class="item.value === modelValue ? 'text-green' : 'text-primary'"
+														:class="item.value === modelValue ? 'text-brand' : 'text-primary'"
 													/>
 													<div class="flex flex-col gap-1.5">
 														<span
 															class="font-semibold leading-tight"
-															:class="item.value === modelValue ? 'text-green' : 'text-primary'"
+															:class="item.value === modelValue ? 'text-brand' : 'text-primary'"
 														>
 															{{ item.label }}
 														</span>
 														<span
 															v-if="item.subLabel"
 															class="text-sm"
-															:class="item.value === modelValue ? 'text-green' : 'text-secondary'"
+															:class="item.value === modelValue ? 'text-brand' : 'text-secondary'"
 														>
 															{{ item.subLabel }}
 														</span>
@@ -435,17 +435,30 @@ const optionsWithKeys = computed(() => {
 	}))
 })
 
+/**
+ * What is left of a string once everything between its words and numbers is
+ * dropped, so that "1 7 10" and "1-7-10" find "1.7.10".
+ */
+function looseMatchable(value: string): string {
+	return value.replace(/[^\p{L}\p{N}]+/gu, '')
+}
+
 const filteredOptions = computed(() => {
 	if (!searchQuery.value || !props.searchable || props.disableSearchFilter || !userHasTyped.value) {
 		return optionsWithKeys.value
 	}
 
 	const query = searchQuery.value.toLowerCase()
+	const looseQuery = looseMatchable(query)
 	return optionsWithKeys.value.filter((opt) => {
 		if (isDivider(opt)) return false
 		if (opt.label.toLowerCase().includes(query)) return true
 		if (opt.searchTerms?.some((term) => term.toLowerCase().includes(query))) return true
-		return false
+		if (!looseQuery) return false
+		if (looseMatchable(opt.label.toLowerCase()).includes(looseQuery)) return true
+		return !!opt.searchTerms?.some((term) =>
+			looseMatchable(term.toLowerCase()).includes(looseQuery),
+		)
 	})
 })
 
@@ -464,7 +477,7 @@ function getOptionClasses(item: ComboboxOption<T> & { key: string }, _index: num
 		item.class,
 		{
 			'bg-surface-4 text-contrast hover:brightness-[115%] focus:brightness-[115%]': !isSelected,
-			'bg-highlight-green text-green hover:bg-highlight-green focus:bg-highlight-green': isSelected,
+			'bg-brand-highlight text-brand hover:bg-brand-highlight focus:bg-brand-highlight': isSelected,
 			'cursor-not-allowed opacity-50 pointer-events-none': item.disabled,
 		},
 	]

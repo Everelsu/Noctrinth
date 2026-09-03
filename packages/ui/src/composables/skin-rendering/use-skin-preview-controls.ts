@@ -16,6 +16,13 @@ export function useSkinPreviewControls({
 	const modelPitch = ref(0)
 	const MAX_PITCH = Math.PI / 2
 
+	// How much closer the wheel has brought the model. The frame it is drawn in
+	// is left alone: what grows is the figure inside it, so the nametag, the
+	// subtitle and the controls under it all stay where they were.
+	const modelZoom = ref(1)
+	const MIN_ZOOM = 0.5
+	const MAX_ZOOM = 4
+
 	const isDragging = ref(false)
 	const previousX = ref(0)
 	const previousY = ref(0)
@@ -53,6 +60,26 @@ export function useSkinPreviewControls({
 		}
 	}
 
+	function onWheel(event: WheelEvent) {
+		// Nothing else should move while the wheel is over the model: the page
+		// scrolling out from under a zoom is what makes it feel broken.
+		event.preventDefault()
+
+		// A wheel reports lines on Firefox and pages when it is turned against a
+		// modifier, so both are brought back to something like pixels first.
+		const pixels =
+			event.deltaMode === 1
+				? event.deltaY * 16
+				: event.deltaMode === 2
+					? event.deltaY * 100
+					: event.deltaY
+
+		// Multiplicative, so a notch is the same proportion of the size wherever
+		// it is turned, rather than a leap at one end and nothing at the other.
+		const zoomed = modelZoom.value * Math.exp(-pixels * 0.001)
+		modelZoom.value = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoomed))
+	}
+
 	function onCanvasClick() {
 		if (!hasDragged.value) {
 			onClickWithoutDrag()
@@ -69,9 +96,11 @@ export function useSkinPreviewControls({
 		ignoreControlClick,
 		modelPitch,
 		modelRotation,
+		modelZoom,
 		onCanvasClick,
 		onPointerDown,
 		onPointerMove,
 		onPointerUp,
+		onWheel,
 	}
 }

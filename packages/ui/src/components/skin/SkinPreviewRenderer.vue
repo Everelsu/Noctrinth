@@ -4,6 +4,7 @@
 		ref="skinPreviewContainer"
 		class="relative w-full h-full overflow-visible cursor-grab"
 		@click="onCanvasClick"
+		@wheel="onWheel"
 	>
 		<div
 			data-skin-preview-debug="controls"
@@ -275,10 +276,12 @@ const {
 	ignoreControlClick,
 	modelPitch,
 	modelRotation,
+	modelZoom,
 	onCanvasClick,
 	onPointerDown,
 	onPointerMove,
 	onPointerUp,
+	onWheel,
 } = useSkinPreviewControls({
 	initialRotation: toRef(props, 'initialRotation'),
 	onClickWithoutDrag: () => {
@@ -391,7 +394,8 @@ const animatedModelGroupPosition = computed<SkinPreviewTuple>(() => {
 
 const animatedModelGroupScale = computed<SkinPreviewTuple>(() => {
 	const [x, y, z] = modelGroupScale.value
-	return [x * clickImpulseScaleX.value, y * clickImpulseScaleY.value, z]
+	const zoom = modelZoom.value
+	return [x * clickImpulseScaleX.value * zoom, y * clickImpulseScaleY.value * zoom, z * zoom]
 })
 
 // Shadow lives INSIDE the model group, so it inherits position+rotation+scale

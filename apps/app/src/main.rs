@@ -12,7 +12,6 @@ use tauri_plugin_fs::FsExt;
 use theseus::prelude::*;
 
 mod api;
-mod error;
 
 /// How long the exit path may spend landing a debounced skin change before it
 /// gives up. `app.run`'s callback runs on the window event-loop thread, so this

@@ -14,7 +14,7 @@ import {
 	SparklesIcon,
 } from '@modrinth/assets'
 import { sortedCategories } from '@modrinth/utils'
-import { type Component, computed, type Ref, ref, watch } from 'vue'
+import { type Component, computed, type Ref, ref, shallowRef, watch } from 'vue'
 import { type LocationQueryRaw, type LocationQueryValue, useRoute } from 'vue-router'
 
 import { defineMessage, defineMessages, useVIntl } from '../composables/i18n'
@@ -395,7 +395,10 @@ export function useSearch(
 		{ display: formatMessage(SORT_TYPE_MESSAGES.updated), name: 'updated' },
 	])
 
-	const currentSortType: Ref<SortType> = ref(sortTypes.value[0])
+	// Shallow, so the value stays the very object the options were built from:
+	// a deep ref hands back a reactive proxy of it instead, which is equal to
+	// nothing in the list, and the dropdown then has nothing to show as chosen.
+	const currentSortType: Ref<SortType> = shallowRef(sortTypes.value[0])
 
 	watch(sortTypes, (types) => {
 		const match = types.find((type) => type.name === currentSortType.value.name)
@@ -987,7 +990,8 @@ export function useSearch(
 			}
 		})
 		loadQueryParam(['s'], (sort) => {
-			currentSortType.value = sortTypes.find((sortType) => sortType.name === sort) ?? sortTypes[0]
+			currentSortType.value =
+				sortTypes.value.find((sortType) => sortType.name === sort) ?? sortTypes.value[0]
 			readParams.add('s')
 		})
 		loadQueryParam(['m'], (count) => {

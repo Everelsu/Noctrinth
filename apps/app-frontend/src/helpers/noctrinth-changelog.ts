@@ -35,6 +35,17 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.20.0',
+		date: '2026-09-08T00:00:00+00:00',
+		body: `### Changed
+- Synced with upstream Modrinth (0.19.2 → 0.20.0): Minecraft's own settings are edited and shared between instances from the launcher, with per-instance overrides and a source instance to take them from; resource packs can be shared the same way, off by default; a Features tab collects the parts of the interface that can be turned off; and a long list of memory fixes for the library, skins, screenshots, installs and instance icons.
+- Noctrinth's own options profile is gone, and upstream's settings syncing takes its place: it does everything the profile did and holds a version's own options against the ones being shared, which the profile could only guess at. The options it was applying stay in each instance's options.txt; what to share is now chosen in Settings → Instances.
+- The wheel zoom and the up-and-down tilt of the skin preview moved with it into the component upstream split out.
+
+### Fixed
+- Skins for every player is a setting again. Upstream rewrote the page it lived on.`,
+	},
+	{
 		version: '0.19.2',
 		date: '2026-09-03T00:00:00+00:00',
 		body: `### Added

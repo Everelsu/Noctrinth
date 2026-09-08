@@ -11,12 +11,6 @@
 	"app.appearance-settings.compact-mode.title": {
 		"message": "Компактный режим"
 	},
-	"app.appearance-settings.default-landing-page.description": {
-		"message": "Страница, которая открывается при запуске лаунчера."
-	},
-	"app.appearance-settings.default-landing-page.title": {
-		"message": "Стартовая страница"
-	},
 	"app.appearance-settings.native-decorations.description": {
 		"message": "Использовать заголовок окна и кнопки управления вашей системы. Требуется перезапуск приложения."
 	},
@@ -91,45 +85,6 @@
 	},
 	"app.hosting.update-required.rinthbot-alt": {
 		"message": "Радостный бот Modrinth"
-	},
-	"app.icon-editor.apply-icons-modal.apply-error": {
-		"message": "Не удалось назначить сборкам случайные иконки."
-	},
-	"app.icon-editor.apply-icons-modal.apply-success": {
-		"message": "Случайная иконка назначена {num, plural, one {# сборке} few {# сборкам} many {# сборкам} other {# сборкам}}."
-	},
-	"app.icon-editor.apply-icons-modal.badge": {
-		"message": "Новое в этом обновлении"
-	},
-	"app.icon-editor.apply-icons-modal.close": {
-		"message": "Закрыть"
-	},
-	"app.icon-editor.apply-icons-modal.instances-without-icons": {
-		"message": "У {count, plural, one {# сборки} few {# сборок} many {# сборок} other {# сборок}} ещё нет иконок. Назначить {count, plural, one {ей} few {им} many {им} other {им}} случайные для начала?"
-	},
-	"app.icon-editor.apply-icons-modal.random-icons": {
-		"message": "Случайные иконки"
-	},
-	"app.icon-editor.apply-icons-modal.skip": {
-		"message": "Пропустить"
-	},
-	"app.icon-editor.apply-icons-modal.title": {
-		"message": "Редактор иконок"
-	},
-	"app.icon-editor.notification.close": {
-		"message": "Закрыть"
-	},
-	"app.icon-editor.notification.description": {
-		"message": "Оформите свои сборки!"
-	},
-	"app.icon-editor.notification.dismiss": {
-		"message": "Скрыть"
-	},
-	"app.icon-editor.notification.title": {
-		"message": "Новый редактор иконок"
-	},
-	"app.icon-editor.notification.view-update": {
-		"message": "Посмотреть обновление"
 	},
 	"app.instance.action.add-content": {
 		"message": "Добавить контент"
@@ -253,9 +208,6 @@
 	},
 	"app.instance.tab.worlds": {
 		"message": "Миры"
-	},
-	"app.instance.worlds.remove-server-modal.synced-removal-notice": {
-		"message": "Этот сервер также будет удалён из {count, plural, one {# другой сборки} few {# других сборок} many {# других сборок} other {# других сборок}}, потому что он синхронизирован."
 	},
 	"app.instance.worlds.search-worlds-placeholder": {
 		"message": "Поиск среди {count} миров..."
@@ -524,9 +476,6 @@
 	"app.nav.add-account": {
 		"message": "Добавить аккаунт"
 	},
-	"app.nav.library": {
-		"message": "Библиотека"
-	},
 	"app.nav.loading-profile": {
 		"message": "Загрузка профиля..."
 	},
@@ -550,9 +499,6 @@
 	},
 	"app.navigation.home": {
 		"message": "Главная"
-	},
-	"app.navigation.more-options": {
-		"message": "Ещё"
 	},
 	"app.navigation.next-image": {
 		"message": "Следующее изображение"
@@ -788,12 +734,6 @@
 	"app.settings.synced-options.multiplayer-servers.none-synced-yet": {
 		"message": "Серверы пока не синхронизируются"
 	},
-	"app.settings.synced-options.screenshots": {
-		"message": "Скриншоты"
-	},
-	"app.settings.synced-options.screenshots.description": {
-		"message": "Смотреть скриншоты со всех сборок в одном месте."
-	},
 	"app.settings.tabs.synced-options": {
 		"message": "Синхронизация"
 	},
@@ -808,12 +748,6 @@
 	},
 	"app.skins.modal.demo-save-tooltip": {
 		"message": "Войдите, чтобы сохранять скины."
-	},
-	"app.skins.sign-in.rinthbot-alt": {
-		"message": "Восторженный Modrinth Bot"
-	},
-	"app.skins.sign-in.title": {
-		"message": "Войдите"
 	},
 	"app.update.download-error.missing-version": {
 		"message": "Не удалось скачать обновление: нет доступной версии"
@@ -1130,15 +1064,6 @@
 	"image-viewer.edit": {
 		"message": "Редактировать"
 	},
-	"image-viewer.editor.censor.blur": {
-		"message": "Размытие"
-	},
-	"image-viewer.editor.censor.mode": {
-		"message": "Чем скрывать"
-	},
-	"image-viewer.editor.censor.solid": {
-		"message": "Заливка"
-	},
 	"image-viewer.editor.colour": {
 		"message": "Цвет"
 	},
@@ -1234,12 +1159,6 @@
 	},
 	"image-viewer.previous": {
 		"message": "Предыдущее изображение"
-	},
-	"input.clear": {
-		"message": "Очистить поле"
-	},
-	"input.search": {
-		"message": "Поиск"
 	},
 	"instance.files.adding-files": {
 		"message": "Добавление файлов ({completed}/{total})"
@@ -1469,18 +1388,6 @@
 	"instance.settings.tabs.general.icon": {
 		"message": "Иконка"
 	},
-	"instance.settings.tabs.general.library-groups": {
-		"message": "Группировка"
-	},
-	"instance.settings.tabs.general.library-groups.create": {
-		"message": "Создать новую группу"
-	},
-	"instance.settings.tabs.general.library-groups.description": {
-		"message": "Позволяет организовать сборки по разным разделам в библиотеке."
-	},
-	"instance.settings.tabs.general.library-groups.enter-name": {
-		"message": "Введите название группы"
-	},
 	"instance.settings.tabs.settings-overrides": {
 		"message": "Исключения синхронизации"
 	},
@@ -1490,17 +1397,11 @@
 	"instance.settings.tabs.synced-options.command-history.disabled-in-app": {
 		"message": "Синхронизация истории команд выключена в настройках приложения."
 	},
-	"instance.settings.tabs.synced-options.command-history.exclude-description": {
-		"message": "Исключить эту сборку из синхронизации истории команд."
-	},
 	"instance.settings.tabs.synced-options.creative-hotbars": {
 		"message": "Сохранённые панели творческого режима"
 	},
 	"instance.settings.tabs.synced-options.creative-hotbars.disabled-in-app": {
 		"message": "Синхронизация сохранённых панелей творческого режима выключена в настройках приложения."
-	},
-	"instance.settings.tabs.synced-options.creative-hotbars.exclude-description": {
-		"message": "Исключить эту сборку из синхронизации сохранённых панелей творческого режима."
 	},
 	"instance.settings.tabs.synced-options.hotbars-conflict.backup-description": {
 		"message": "Заменяемая версия будет сохранена в резервную копию до внесения изменений."
@@ -1523,20 +1424,8 @@
 	"instance.settings.tabs.synced-options.multiplayer-servers.disabled-in-app": {
 		"message": "Синхронизация списка серверов выключена в настройках приложения."
 	},
-	"instance.settings.tabs.synced-options.multiplayer-servers.exclude-description": {
-		"message": "Исключить эту сборку из синхронизации списка серверов."
-	},
 	"instance.settings.tabs.synced-options.open-app-settings": {
 		"message": "Открыть настройки синхронизации"
-	},
-	"instance.settings.tabs.synced-options.screenshots": {
-		"message": "Скриншоты"
-	},
-	"instance.settings.tabs.synced-options.screenshots.disabled-in-app": {
-		"message": "Скриншоты выключены в настройках приложения."
-	},
-	"instance.settings.tabs.synced-options.screenshots.exclude-description": {
-		"message": "Не показывать скриншоты этой сборки на странице «Скриншоты»."
 	},
 	"instance.settings.tabs.synced-options.shared-settings.description": {
 		"message": "Игровые настройки можно использовать сразу в нескольких сборках. Что именно — выбирается в настройках приложения."

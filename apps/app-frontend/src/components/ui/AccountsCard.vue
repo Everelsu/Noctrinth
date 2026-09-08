@@ -149,7 +149,7 @@ import {
 	type ElyCredentials,
 } from '@/helpers/ely_auth'
 import { clearElySkinCache, getElyHeadUrl } from '@/helpers/ely_skins'
-import { getPlayerHeadUrl } from '@/helpers/rendering/batch-skin-renderer.ts'
+import { getPlayerHeadUrl } from '@/helpers/rendering/player-head'
 import type { Skin } from '@/helpers/skins'
 import { get_available_skins } from '@/helpers/skins'
 
@@ -180,7 +180,6 @@ const defaultUser = ref<string | undefined>()
 const elyDefaultUser = ref<string | undefined>()
 const selectedProvider = ref<'microsoft' | 'ely_by'>('microsoft')
 const equippedSkin = ref<Skin | null>(null)
-const headUrlCache = ref(new Map<string, string>())
 const elyHeadCache = ref(new Map<string, string>())
 const elyLoginModal = ref<InstanceType<typeof ElyLoginModal>>()
 
@@ -216,6 +215,23 @@ async function loadElyAccounts() {
 			)
 	}
 }
+const equippedHeadUrl = ref<string>()
+let headRequest = 0
+
+async function updateHeadUrl(skin: Skin | null) {
+	const request = ++headRequest
+	if (equippedHeadUrl.value) URL.revokeObjectURL(equippedHeadUrl.value)
+	equippedHeadUrl.value = undefined
+	if (!skin) return
+	const url = await getPlayerHeadUrl(skin)
+	if (request !== headRequest) URL.revokeObjectURL(url)
+	else equippedHeadUrl.value = url
+}
+
+onUnmounted(() => {
+	headRequest++
+	if (equippedHeadUrl.value) URL.revokeObjectURL(equippedHeadUrl.value)
+})
 
 async function refreshValues() {
 	// Microsoft accounts — the primary provider. Behavior left unchanged.
@@ -245,21 +261,16 @@ async function refreshValues() {
 	// (e.g. an Ely.by account is selected) to avoid spurious backend errors.
 	if (!defaultUser.value) {
 		equippedSkin.value = null
+		void updateHeadUrl(null)
 	} else {
 		try {
 			const skins = await get_available_skins()
 			equippedSkin.value = skins.find((skin) => skin.is_equipped) ?? null
 
-			if (equippedSkin.value) {
-				try {
-					const headUrl = await getPlayerHeadUrl(equippedSkin.value)
-					headUrlCache.value.set(equippedSkin.value.texture_key, headUrl)
-				} catch (error) {
-					console.warn('Failed to get head render for equipped skin:', error)
-				}
-			}
+			await updateHeadUrl(equippedSkin.value)
 		} catch {
 			equippedSkin.value = null
+			void updateHeadUrl(null)
 		}
 	}
 }
@@ -268,8 +279,7 @@ async function setEquippedSkin(skin: Skin) {
 	equippedSkin.value = skin
 
 	try {
-		const headUrl = await getPlayerHeadUrl(skin)
-		headUrlCache.value = new Map(headUrlCache.value).set(skin.texture_key, headUrl)
+		await updateHeadUrl(skin)
 	} catch (error) {
 		console.warn('Failed to get head render for equipped skin:', error)
 	}
@@ -316,7 +326,7 @@ const avatarUrl = computed(() => {
 		return elyHeadCache.value.get(selectedAccount.value.profile.id) ?? STEVE_HEAD_URL
 	}
 	if (equippedSkin.value?.texture_key) {
-		const cachedUrl = headUrlCache.value.get(equippedSkin.value.texture_key)
+		const cachedUrl = equippedHeadUrl.value
 		if (cachedUrl) {
 			return cachedUrl
 		}
@@ -338,7 +348,7 @@ function getAccountAvatarUrl(account: AnyCredential) {
 		account.profile.id === selectedAccount.value?.profile?.id &&
 		equippedSkin.value?.texture_key
 	) {
-		const cachedUrl = headUrlCache.value.get(equippedSkin.value.texture_key)
+		const cachedUrl = equippedHeadUrl.value
 		if (cachedUrl) {
 			return cachedUrl
 		}

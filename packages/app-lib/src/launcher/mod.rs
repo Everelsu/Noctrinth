@@ -25,10 +25,9 @@ use chrono::Utc;
 use daedalus as d;
 use daedalus::minecraft::{LoggingSide, RuleAction, VersionInfo};
 use daedalus::modded::{LoaderVersion, Manifest};
-use regex::Regex;
 use serde::Deserialize;
-use std::fmt::Write;
-use std::path::PathBuf;
+use std::future::Future;
+use std::path::{Path, PathBuf};
 use tokio::process::Command;
 
 mod args;
@@ -336,7 +335,16 @@ async fn get_instance_full_path(instance_path: &str) -> crate::Result<PathBuf> {
     Ok(full_path)
 }
 
-pub async fn install_minecraft_with_reporter(
+/// Keeps installation state on the heap so callers do not inherit its size.
+pub fn install_minecraft_with_reporter(
+    context: &InstanceLaunchContext,
+    repairing: bool,
+    reporter: Option<InstallProgressReporter>,
+) -> impl Future<Output = crate::Result<()>> + Send + '_ {
+    Box::pin(install_minecraft_inner(context, repairing, reporter))
+}
+
+async fn install_minecraft_inner(
     context: &InstanceLaunchContext,
     repairing: bool,
     reporter: Option<InstallProgressReporter>,
@@ -375,7 +383,7 @@ pub async fn install_minecraft_with_reporter(
     .await?;
     emit_instance(&instance.id, InstancePayloadType::Edited).await?;
 
-    let result = async {
+    let result = Box::pin(async {
     let instance_path = get_instance_full_path(&instance.path).await?;
     if let Some(reporter) = &reporter {
         reporter
@@ -524,17 +532,17 @@ pub async fn install_minecraft_with_reporter(
             )
             .await?;
     }
-    download::download_minecraft(
-        &state,
-        &version_info,
-        loading_bar.as_ref(),
-        &java_version.architecture,
-        repairing,
-        minecraft_updated,
-        reporter.clone(),
-        phase_details.clone(),
-    )
-    .await?;
+	Box::pin(download::download_minecraft(
+		&state,
+		&version_info,
+		loading_bar.as_ref(),
+		&java_version.architecture,
+		repairing,
+		minecraft_updated,
+		reporter.clone(),
+		phase_details.clone(),
+	))
+	.await?;
 
     let client_path = state
         .directories
@@ -696,6 +704,17 @@ pub async fn install_minecraft_with_reporter(
 			&state.pool,
 		)
 		.await?;
+		if let Err(error) =
+			crate::api::instance::reconcile_instance_synced_options(
+				&instance.id,
+			)
+			.await
+		{
+			tracing::warn!(
+				"Failed to reconcile synced options after installing {}: {error}",
+				instance.id
+			);
+		}
 		emit_instance(&instance.id, InstancePayloadType::Edited).await?;
 	}
     if let Some(loading_bar) = &loading_bar {
@@ -703,7 +722,7 @@ pub async fn install_minecraft_with_reporter(
     }
 
     Ok::<(), crate::Error>(())
-    }
+	})
     .await;
 
     if result.is_err() {
@@ -756,29 +775,37 @@ pub async fn install_minecraft_for_instance_id_with_reporter(
 pub async fn read_protocol_version_from_jar(
     path: PathBuf,
 ) -> crate::Result<Option<u32>> {
+    Ok(read_game_version_metadata_from_jar(&path)
+        .await?
+        .and_then(|data| data.protocol_version))
+}
+
+#[derive(Deserialize, Debug)]
+pub(crate) struct GameVersionMetadata {
+    pub(crate) protocol_version: Option<u32>,
+    pub(crate) world_version: Option<u32>,
+}
+
+/// Reads the game's embedded metadata, available from snapshot 18w47b onward.
+pub(crate) async fn read_game_version_metadata_from_jar(
+    path: &Path,
+) -> crate::Result<Option<GameVersionMetadata>> {
     let zip = async_zip::tokio::read::fs::ZipFileReader::new(path).await?;
-    let Some(entry_index) = zip
-        .file()
-        .entries()
-        .iter()
-        .position(|x| matches!(x.filename().as_str(), Ok("version.json")))
-    else {
+    let Some(entry_index) = zip.file().entries().iter().position(|entry| {
+        entry
+            .filename()
+            .as_str()
+            .is_ok_and(|name| name == "version.json")
+    }) else {
         return Ok(None);
     };
 
-    #[derive(Deserialize, Debug)]
-    struct VersionData {
-        protocol_version: Option<u32>,
-    }
-
-    let mut data = vec![];
+    let mut data = Vec::new();
     zip.reader_with_entry(entry_index)
         .await?
         .read_to_end_checked(&mut data)
         .await?;
-    let data: VersionData = serde_json::from_slice(&data)?;
-
-    Ok(data.protocol_version)
+    Ok(Some(serde_json::from_slice(&data)?))
 }
 
 fn link_project_and_version(
@@ -806,73 +833,12 @@ fn link_project_and_version(
     }
 }
 
-/// A single `options.txt` entry to apply before the game starts.
-#[derive(Debug, Clone)]
-pub struct McOption {
-    pub key: String,
-    pub value: String,
-    /// Skip rather than append when the instance's `options.txt` has no such
-    /// key — see the write loop in [`launch_minecraft`].
-    pub only_if_present: bool,
-}
-
-impl McOption {
-    /// An entry that is always written, creating the key if needed.
-    pub fn always(key: impl Into<String>, value: impl Into<String>) -> Self {
-        Self {
-            key: key.into(),
-            value: value.into(),
-            only_if_present: false,
-        }
-    }
-}
-
-/// Applies `options` to the contents of an `options.txt`, returning the result.
-///
-/// `file_existed` says whether the game has ever written this file. Once it
-/// has, the file lists every option that version knows about, so a missing key
-/// is evidence the option does not exist and [`McOption::only_if_present`]
-/// entries are dropped. Before the first run there is nothing to infer from, so
-/// those entries are written anyway — otherwise a newly created instance would
-/// silently ignore the shared profile, and the game simply discards keys it
-/// doesn't recognise the next time it saves.
-fn merge_mc_options(
-    options_string: &str,
-    options: &[McOption],
-    file_existed: bool,
-) -> crate::Result<String> {
-    let mut options_string = options_string.to_string();
-
-    for McOption {
-        key,
-        value,
-        only_if_present,
-    } in options
-    {
-        let re = Regex::new(&format!(r"(?m)^{}:.*$", regex::escape(key)))?;
-        // check if the regex exists in the file
-        if !re.is_match(&options_string) {
-            if *only_if_present && file_existed {
-                continue;
-            }
-            // The key was not found in the file, so append it
-            write!(&mut options_string, "\n{key}:{value}").unwrap();
-        } else {
-            options_string = re
-                .replace_all(&options_string, &format!("{key}:{value}"))
-                .to_string();
-        }
-    }
-
-    Ok(options_string)
-}
-
 #[tracing::instrument(skip_all)]
 #[allow(clippy::too_many_arguments)]
 pub async fn launch_minecraft(
     java_args: &[String],
     env_args: &[(String, String)],
-    mc_set_options: &[McOption],
+    mc_set_options: &[(String, String)],
     wrapper: &Option<String>,
     memory: &MemorySettings,
     resolution: &WindowSize,
@@ -1021,9 +987,6 @@ pub async fn launch_minecraft(
     };
 
     let env_args = Vec::from(env_args);
-
-    let _instance_content_lock =
-        state.lock_instance_content(&instance.id).await;
 
     // Check if instance has a running process, and reject running the command if it does
     // Done late so a quick double call doesn't launch two instances
@@ -1232,43 +1195,39 @@ pub async fn launch_minecraft(
 
     command.envs(env_args.iter().cloned());
 
-    // Overwrites the minecraft options.txt file with the settings from the profile
-    // Uses 'a:b' syntax which is not quite yaml
-    if !mc_set_options.is_empty() {
-        let options_path = instance_path.join("options.txt");
+    if let Err(error) =
+        crate::api::instance::reconcile_synced_packs(&instance.id).await
+    {
+        tracing::warn!(
+            "Failed to reconcile synced packs before launching {}: {error}",
+            instance.id
+        );
+    }
 
-        // Whether the game has ever written this file decides how much we can
-        // infer from a key being absent — see the write loop below.
-        let options_file_existed = options_path.exists();
+    if let Err(error) =
+        crate::api::instance::sync_game_options_before_launch(&instance.id)
+            .await
+    {
+        tracing::warn!(
+            "Failed to reconcile game options before launching {}: {error}",
+            instance.id
+        );
+    }
 
-        let (options_string, input_encoding) = if options_file_existed {
-            io::read_any_encoding_to_string(&options_path).await?
-        } else {
-            (String::new(), encoding_rs::UTF_8)
-        };
+    crate::api::instance::apply_game_options_launcher_overrides(
+        &instance.id,
+        mc_set_options,
+    )
+    .await?;
 
-        // UTF-16 encodings may be successfully detected and read, but we cannot encode
-        // them back, and it's technically possible that the game client strongly expects
-        // such encoding
-        if input_encoding != input_encoding.output_encoding() {
-            return Err(crate::ErrorKind::LauncherError(format!(
-                "The instance options.txt file uses an unsupported encoding: {}. \
-                Please either turn off instance options that need to modify this file, \
-                or convert the file to an encoding that both the game and this app support, \
-                such as UTF-8.",
-                input_encoding.name()
-            ))
-            .into());
-        }
-
-        let options_string = merge_mc_options(
-            &options_string,
-            mc_set_options,
-            options_file_existed,
-        )?;
-
-        io::write(&options_path, input_encoding.encode(&options_string).0)
-            .await?;
+    let _instance_content_lock =
+        state.lock_instance_content(&instance.id).await;
+    if crate::state::instance_has_running_process(&instance.id, &state).await? {
+        return Err(crate::ErrorKind::LauncherError(format!(
+            "Instance {} is already running",
+            instance.id
+        ))
+        .as_error());
     }
 
     crate::state::instances::commands::set_instance_last_played(
@@ -1350,125 +1309,4 @@ pub async fn launch_minecraft(
             },
         )
         .await
-}
-
-#[cfg(test)]
-mod merge_mc_options_tests {
-    use super::*;
-
-    fn presence_gated(key: &str, value: &str) -> McOption {
-        McOption {
-            key: key.to_string(),
-            value: value.to_string(),
-            only_if_present: true,
-        }
-    }
-
-    #[test]
-    fn overwrites_an_existing_key_in_place() {
-        let existing = "fov:0.0\nguiScale:2";
-        let merged =
-            merge_mc_options(existing, &[presence_gated("fov", "0.5")], true)
-                .unwrap();
-
-        assert_eq!(merged, "fov:0.5\nguiScale:2");
-    }
-
-    #[test]
-    fn leaves_unrelated_keys_alone() {
-        let existing = "fov:0.0\nlang:en_us\nguiScale:2";
-        let merged =
-            merge_mc_options(existing, &[McOption::always("fov", "1.0")], true)
-                .unwrap();
-
-        assert!(merged.contains("lang:en_us"));
-        assert!(merged.contains("guiScale:2"));
-    }
-
-    #[test]
-    fn presence_gated_keys_are_skipped_when_the_file_lacks_them() {
-        let existing = "fov:0.0";
-        let merged = merge_mc_options(
-            existing,
-            &[presence_gated("simulationDistance", "12")],
-            true,
-        )
-        .unwrap();
-
-        assert_eq!(merged, "fov:0.0");
-    }
-
-    #[test]
-    fn presence_gated_keys_are_written_on_a_never_launched_instance() {
-        // The regression behind "settings don't apply in a newly created
-        // instance": there is no options.txt yet, so absence proves nothing.
-        let merged = merge_mc_options(
-            "",
-            &[
-                presence_gated("fov", "0.5"),
-                presence_gated("soundCategory_master", "0.3"),
-            ],
-            false,
-        )
-        .unwrap();
-
-        assert!(merged.contains("fov:0.5"));
-        assert!(merged.contains("soundCategory_master:0.3"));
-    }
-
-    #[test]
-    fn always_entries_are_created_even_on_an_existing_file() {
-        let merged = merge_mc_options(
-            "fov:0.0",
-            &[McOption::always("fullscreen", "true")],
-            true,
-        )
-        .unwrap();
-
-        assert!(merged.contains("fullscreen:true"));
-    }
-
-    #[test]
-    fn later_entries_win_over_earlier_ones() {
-        // run.rs relies on this: the shared profile is seeded first so
-        // per-launch overrides pushed after it take precedence.
-        let merged = merge_mc_options(
-            "fullscreen:false",
-            &[
-                presence_gated("fullscreen", "false"),
-                McOption::always("fullscreen", "true"),
-            ],
-            true,
-        )
-        .unwrap();
-
-        assert_eq!(merged, "fullscreen:true");
-    }
-
-    #[test]
-    fn keys_are_matched_whole_not_as_prefixes() {
-        // `soundCategory_master` must not be rewritten by an entry for
-        // `soundCategory_music`, and vice versa.
-        let existing = "soundCategory_master:1.0\nsoundCategory_music:1.0";
-        let merged = merge_mc_options(
-            existing,
-            &[presence_gated("soundCategory_music", "0.2")],
-            true,
-        )
-        .unwrap();
-
-        assert_eq!(merged, "soundCategory_master:1.0\nsoundCategory_music:0.2");
-    }
-
-    #[test]
-    fn values_with_regex_characters_are_written_literally() {
-        let merged = merge_mc_options(
-            "key_key.attack:key.mouse.left",
-            &[presence_gated("key_key.attack", "key.mouse.right")],
-            true,
-        )
-        .unwrap();
-
-        assert_eq!(merged, "key_key.attack:key.mouse.right");
-    }
 }

@@ -1,7 +1,7 @@
 [package]
 name = "theseus_gui"
 # The actual version is set by the theseus-build workflow on tagging
-version = "0.19.2"
+version = "0.20.0"
 edition.workspace = true
 description = "Noctrinth is a desktop application for managing your Minecraft mods"
 repository = "https://github.com/Everelsu/Noctrinth"
@@ -16,12 +16,14 @@ either = { workspace = true }
 enumset = { workspace = true, features = ["serde"] }
 hyper = { workspace = true, features = ["server"] }
 hyper-util = { workspace = true }
+image = { workspace = true, features = ["gif", "jpeg", "png", "webp"] }
 native-dialog = { workspace = true }
 paste = { workspace = true }
 path-util = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 serde_with = { workspace = true }
+sha2 = { workspace = true }
 tauri-plugin-deep-link = { workspace = true }
 tauri-plugin-dialog = { workspace = true }
 tauri-plugin-fs = { workspace = true }

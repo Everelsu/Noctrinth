@@ -1,8 +1,8 @@
 use super::content::get_projects;
-use crate::launcher::McOption;
 use crate::server_address::ServerAddress;
 use crate::state::{
-    Credentials, ElyCredentials, InstanceLink, ProcessMetadata, Settings, State,
+    Credentials, ElyCredentials, InstanceLink, ProcessMetadata, Settings,
+    State, game_options_sync_is_enabled, load_game_option_preferences,
 };
 use crate::util::fetch;
 use crate::util::io::IOError;
@@ -116,6 +116,19 @@ async fn run_credentials(
                 "Tried to run a nonexistent instance {instance_id}!"
             ))
         })?;
+    let instance_sync_preferences =
+        crate::state::instances::adapters::sqlite::instance_rows::get_instance_sync_preferences(
+            instance_id,
+            &state.pool,
+        )
+        .await?;
+    let fullscreen_is_shared = game_options_sync_is_enabled(&state.pool)
+        .await?
+        && instance_sync_preferences.game_options
+        && load_game_option_preferences(&state.pool)
+            .await?
+            .get("fullscreen")
+            .is_some_and(|preference| preference.enabled);
     if crate::state::instances::adapters::sqlite::instance_rows::is_instance_quarantined(
         instance_id,
         &state.pool,
@@ -260,26 +273,12 @@ async fn run_credentials(
         })
         .filter(|hook_command| !hook_command.is_empty());
 
-    // The shared profile goes first so anything decided for this specific
-    // launch — fullscreen, quick play — still wins on a duplicate key.
-    let mut mc_set_options: Vec<McOption> = settings
-        .shared_game_options
-        .applicable_to(
-            &context.instance.id,
-            &context.applied_content_set.game_version,
-        )
-        .map(|option| McOption {
-            key: option.key.clone(),
-            value: option.value.clone(),
-            only_if_present: option.only_if_present,
-        })
-        .collect();
+    let mut mc_set_options: Vec<(String, String)> = Vec::new();
 
     if let Some(fullscreen) = context.launch_overrides.force_fullscreen {
-        mc_set_options
-            .push(McOption::always("fullscreen", fullscreen.to_string()));
-    } else if settings.force_fullscreen {
-        mc_set_options.push(McOption::always("fullscreen", "true"));
+        mc_set_options.push(("fullscreen".to_string(), fullscreen.to_string()));
+    } else if settings.force_fullscreen && !fullscreen_is_shared {
+        mc_set_options.push(("fullscreen".to_string(), "true".to_string()));
     }
 
     if let Some(project_id) = server_play_project_id(&context.link)

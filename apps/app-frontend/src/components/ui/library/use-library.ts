@@ -13,8 +13,14 @@ import {
 	TrashIcon,
 	UploadIcon,
 } from '@modrinth/assets'
-import type { ButtonMenuLeafOption, ButtonMenuOption } from '@modrinth/ui'
-import { defineMessages, formatLoader, injectNotificationManager, useVIntl } from '@modrinth/ui'
+import {
+	type ButtonMenuLeafOption,
+	type ButtonMenuOption,
+	defineMessages,
+	formatLoader,
+	injectNotificationManager,
+	useVIntl,
+} from '@modrinth/ui'
 import { open as openDialog } from '@tauri-apps/plugin-dialog'
 import { useEventListener, useStorage } from '@vueuse/core'
 import dayjs from 'dayjs'
@@ -56,6 +62,8 @@ import {
 	suggestionsFor,
 } from '@/helpers/instance-search'
 import type { GameInstance, InstanceIconConfig } from '@/helpers/types'
+
+import { librarySearch } from './view-state'
 
 export const librarySortOptions = [
 	'Name',
@@ -192,7 +200,7 @@ function createLibraryState(instances: Ref<GameInstance[]>) {
 	const { handleError } = injectNotificationManager()
 	const { formatMessage } = useVIntl()
 
-	const search = ref('')
+	const search = librarySearch
 
 	// The library search is a small query language, not a name filter: bare words
 	// match the instance name, while `@name`, `#type` and `!state` ask about the

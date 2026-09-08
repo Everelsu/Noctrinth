@@ -55,12 +55,8 @@ import {
 	uploadElySkin,
 	wearElySkin,
 } from '@/helpers/ely_skins'
-import type { RenderResult } from '@/helpers/rendering/batch-skin-renderer.ts'
-import {
-	generateSkinPreviews,
-	getSkinPreviewKey,
-	skinBlobUrlMap,
-} from '@/helpers/rendering/batch-skin-renderer.ts'
+import { generateSkinPreviews } from '@/helpers/rendering/batch-skin-renderer.ts'
+import { cleanupUnusedPreviews } from '@/helpers/rendering/skin-previews'
 import type { Cape, Skin, SkinModel, SkinTextureUrl } from '@/helpers/skins.ts'
 import {
 	determineModelType,
@@ -1010,7 +1006,9 @@ async function loadSkins() {
 			shouldPreserveKnownEquippedSkin && locallyKnownEquippedSkin
 				? mergeEquippedSkin(loadedSkins, locallyKnownEquippedSkin)
 				: loadedSkins
-		generateSkinPreviews(skins.value, capes.value)
+		void cleanupUnusedPreviews(skins.value).catch((error) =>
+			console.warn('Could not clean skin previews', error),
+		)
 		selectedSkin.value = skins.value.find((s) => s.is_equipped) ?? null
 		originalSelectedSkin.value = selectedSkin.value
 	} catch (error) {
@@ -1148,7 +1146,9 @@ function removeLocalSkin(deletedSkin: Skin) {
 		originalSelectedSkin.value = nextSkins.find((skin) => skin.is_equipped) ?? null
 	}
 
-	generateSkinPreviews(skins.value, capes.value)
+	void cleanupUnusedPreviews(skins.value).catch((error) =>
+		console.warn('Could not clean skin previews', error),
+	)
 }
 
 function setLocallyEquippedSkin(skinToApply: Skin) {
@@ -1229,7 +1229,9 @@ function updateLocalSkin(savedSkin: Skin, applied: boolean, previousSkin?: Skin)
 		}
 	}
 
-	generateSkinPreviews(skins.value, capes.value)
+	void cleanupUnusedPreviews(skins.value).catch((error) =>
+		console.warn('Could not clean skin previews', error),
+	)
 }
 
 async function reorderSavedSkins(orderedSkins: Skin[]) {
@@ -1245,14 +1247,18 @@ async function reorderSavedSkins(orderedSkins: Skin[]) {
 	const nextSavedSkins = [...orderedSkins, ...remainingSavedSkins]
 
 	skins.value = [...nextSavedSkins, ...defaultSkins]
-	generateSkinPreviews(skins.value, capes.value)
+	void cleanupUnusedPreviews(skins.value).catch((error) =>
+		console.warn('Could not clean skin previews', error),
+	)
 
 	try {
 		const persistedSavedSkins = await preserveExternalSkins(nextSavedSkins)
 
 		if (persistedSavedSkins.some((skin, index) => skin !== nextSavedSkins[index])) {
 			skins.value = [...persistedSavedSkins, ...defaultSkins]
-			generateSkinPreviews(skins.value, capes.value)
+			void cleanupUnusedPreviews(skins.value).catch((error) =>
+				console.warn('Could not clean skin previews', error),
+			)
 		}
 
 		await set_custom_skin_order(
@@ -1264,7 +1270,9 @@ async function reorderSavedSkins(orderedSkins: Skin[]) {
 		skins.value = previousSkins
 		selectedSkin.value = previousSelectedSkin
 		originalSelectedSkin.value = previousOriginalSelectedSkin
-		generateSkinPreviews(skins.value, capes.value)
+		void cleanupUnusedPreviews(skins.value).catch((error) =>
+			console.warn('Could not clean skin previews', error),
+		)
 		addNotification({
 			type: 'error',
 			title: formatMessage(messages.reorderSkinErrorTitle),
@@ -1400,10 +1408,6 @@ async function loadCurrentUser() {
 		currentUser.value = undefined
 		currentUserId.value = undefined
 	}
-}
-
-function getBakedSkinTextures(skin: Skin): RenderResult | undefined {
-	return skinBlobUrlMap.get(getSkinPreviewKey(skin))
 }
 
 async function login() {
@@ -1912,7 +1916,7 @@ async function checkUserChanges() {
 				ref="skinSectionList"
 				:saved-skins="savedSkins"
 				:default-skin-sections="defaultSkinSections"
-				:get-baked-skin-textures="getBakedSkinTextures"
+				:capes="capes"
 				:is-skin-selected="isSkinSelected"
 				:is-skin-active="isSkinActive"
 				:is-add-skin-button-drag-active="isAddSkinButtonDragActive"
@@ -2012,7 +2016,7 @@ async function checkUserChanges() {
 					ref="elySkinSectionList"
 					:saved-skins="elySkinsAsSkins"
 					:default-skin-sections="[]"
-					:get-baked-skin-textures="getBakedSkinTextures"
+					:capes="[]"
 					:is-skin-selected="isElySkinSelected"
 					:is-skin-active="isElySkinActive"
 					:is-add-skin-button-drag-active="isElyDragActive"

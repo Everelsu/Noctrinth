@@ -184,15 +184,15 @@ async function copyToClipboard(text: string) {
 			</div>
 
 			<!-- Action buttons -->
-			<div class="flex items-center gap-2">
-				<ButtonLink href="https://support.modrinth.com" class="!w-full" @click="modal?.hide()">
+			<div class="flex items-center gap-1">
+				<ButtonLink href="https://support.modrinth.com" class="flex-1" @click="modal?.hide()">
 					<MessagesSquareIcon /> {{ formatMessage(messages.contactSupport) }}
 				</ButtonLink>
 				<Button
 					type="colored"
 					color="brand"
 					:disabled="loadingSignIn"
-					class="!w-full"
+					class="flex-1"
 					@click="signInAgain"
 				>
 					<LogInIcon /> {{ formatMessage(messages.signInAgain) }}

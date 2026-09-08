@@ -287,9 +287,6 @@
 	"app.hosting.update-required.title": {
 		"message": "Noctrinth update required"
 	},
-	"app.icon-editor.apply-icons-modal.description": {
-		"message": "Create custom icons for your instances right in Noctrinth. Mix and match backgrounds with symbols from Minecraft and popular mods!"
-	},
 	"app.instance.add-content.from-file": {
 		"message": "Add from file"
 	},
@@ -704,198 +701,6 @@
 	"app.settings.feature-flags.search.placeholder": {
 		"message": "Search flags..."
 	},
-	"app.settings.game-options.ao.label": {
-		"message": "Smooth lighting"
-	},
-	"app.settings.game-options.applies.between": {
-		"message": "Only applied on Minecraft {min}–{max}."
-	},
-	"app.settings.game-options.applies.from": {
-		"message": "Only applied on Minecraft {min} and newer."
-	},
-	"app.settings.game-options.applies.up-to": {
-		"message": "Only applied on Minecraft {max} and older."
-	},
-	"app.settings.game-options.applying-count": {
-		"message": "Applying {managed} of {total} options"
-	},
-	"app.settings.game-options.autoJump.label": {
-		"message": "Auto-jump"
-	},
-	"app.settings.game-options.clear-all": {
-		"message": "Clear all"
-	},
-	"app.settings.game-options.description": {
-		"message": "Values you switch on here are written into every instance's options.txt when it launches. Everything else is left exactly as the game saved it."
-	},
-	"app.settings.game-options.editor-title": {
-		"message": "Edit Minecraft options"
-	},
-	"app.settings.game-options.enableVsync.label": {
-		"message": "VSync"
-	},
-	"app.settings.game-options.entityShadows.label": {
-		"message": "Entity shadows"
-	},
-	"app.settings.game-options.fov.label": {
-		"message": "Field of view"
-	},
-	"app.settings.game-options.gamma.label": {
-		"message": "Brightness"
-	},
-	"app.settings.game-options.graphicsMode.choice.0": {
-		"message": "Fast"
-	},
-	"app.settings.game-options.graphicsMode.choice.1": {
-		"message": "Fancy"
-	},
-	"app.settings.game-options.graphicsMode.choice.2": {
-		"message": "Fabulous"
-	},
-	"app.settings.game-options.graphicsMode.label": {
-		"message": "Graphics"
-	},
-	"app.settings.game-options.group-on-count": {
-		"message": "{count} on"
-	},
-	"app.settings.game-options.group.controls": {
-		"message": "Controls"
-	},
-	"app.settings.game-options.group.sound": {
-		"message": "Sound"
-	},
-	"app.settings.game-options.group.video": {
-		"message": "Video"
-	},
-	"app.settings.game-options.guiScale.choice.0": {
-		"message": "Auto"
-	},
-	"app.settings.game-options.guiScale.choice.1": {
-		"message": "Small"
-	},
-	"app.settings.game-options.guiScale.choice.2": {
-		"message": "Normal"
-	},
-	"app.settings.game-options.guiScale.choice.3": {
-		"message": "Large"
-	},
-	"app.settings.game-options.guiScale.choice.4": {
-		"message": "Very large"
-	},
-	"app.settings.game-options.guiScale.label": {
-		"message": "GUI scale"
-	},
-	"app.settings.game-options.invertYMouse.label": {
-		"message": "Invert mouse"
-	},
-	"app.settings.game-options.manage-option": {
-		"message": "Manage {option} across all instances"
-	},
-	"app.settings.game-options.maxFps.description": {
-		"message": "260 means unlimited, matching the in-game slider."
-	},
-	"app.settings.game-options.maxFps.label": {
-		"message": "Max framerate"
-	},
-	"app.settings.game-options.mouseSensitivity.description": {
-		"message": "50% is the game’s \"Normal\"."
-	},
-	"app.settings.game-options.mouseSensitivity.label": {
-		"message": "Sensitivity"
-	},
-	"app.settings.game-options.nothing-selected": {
-		"message": "Nothing selected yet — tick an option below"
-	},
-	"app.settings.game-options.particles.choice.0": {
-		"message": "All"
-	},
-	"app.settings.game-options.particles.choice.1": {
-		"message": "Decreased"
-	},
-	"app.settings.game-options.particles.choice.2": {
-		"message": "Minimal"
-	},
-	"app.settings.game-options.particles.label": {
-		"message": "Particles"
-	},
-	"app.settings.game-options.profile-off": {
-		"message": "Profile is off — nothing is applied"
-	},
-	"app.settings.game-options.renderDistance.label": {
-		"message": "Render distance"
-	},
-	"app.settings.game-options.reset.label": {
-		"message": "Reset to default"
-	},
-	"app.settings.game-options.reset.tooltip": {
-		"message": "Reset to the game default"
-	},
-	"app.settings.game-options.simulationDistance.label": {
-		"message": "Simulation distance"
-	},
-	"app.settings.game-options.soundCategory_ambient.label": {
-		"message": "Ambient / environment"
-	},
-	"app.settings.game-options.soundCategory_block.label": {
-		"message": "Blocks"
-	},
-	"app.settings.game-options.soundCategory_hostile.label": {
-		"message": "Hostile creatures"
-	},
-	"app.settings.game-options.soundCategory_master.label": {
-		"message": "Master volume"
-	},
-	"app.settings.game-options.soundCategory_music.label": {
-		"message": "Music"
-	},
-	"app.settings.game-options.soundCategory_neutral.label": {
-		"message": "Friendly creatures"
-	},
-	"app.settings.game-options.soundCategory_player.label": {
-		"message": "Players"
-	},
-	"app.settings.game-options.soundCategory_record.label": {
-		"message": "Jukebox / note blocks"
-	},
-	"app.settings.game-options.soundCategory_voice.label": {
-		"message": "Voice / speech"
-	},
-	"app.settings.game-options.soundCategory_weather.label": {
-		"message": "Weather"
-	},
-	"app.settings.game-options.title": {
-		"message": "Minecraft options"
-	},
-	"app.settings.game-options.toggleCrouch.label": {
-		"message": "Sneak: toggle"
-	},
-	"app.settings.game-options.toggleSprint.label": {
-		"message": "Sprint: toggle"
-	},
-	"app.settings.game-options.unit.chunks": {
-		"message": " chunks"
-	},
-	"app.settings.game-options.unit.degrees": {
-		"message": "°"
-	},
-	"app.settings.game-options.unit.fps": {
-		"message": " fps"
-	},
-	"app.settings.game-options.unit.percent": {
-		"message": "%"
-	},
-	"app.settings.game-options.versions.changed-meaning": {
-		"message": "A few options kept their name but changed what their value means. Those are marked with a version and are only written to versions where they're valid."
-	},
-	"app.settings.game-options.versions.missing-keys": {
-		"message": "Minecraft writes every option it knows about into options.txt, so an option missing from an instance's file means that version doesn't have it — the launcher leaves it alone instead of inventing it. Nothing to configure, it adapts on its own."
-	},
-	"app.settings.game-options.versions.never-launched": {
-		"message": "An instance that has never been launched has no file yet, so there is nothing to read. In that case the options are written up front, and the game drops anything it doesn't recognise the first time it saves."
-	},
-	"app.settings.game-options.versions.summary": {
-		"message": "How this behaves across game versions"
-	},
 	"app.settings.java.gpu.choice.auto": {
 		"message": "Let Windows decide"
 	},
@@ -973,9 +778,6 @@
 	},
 	"app.skins.ely.sign-in-needed.title": {
 		"message": "Ely.by did not accept the change"
-	},
-	"app.skins.sign-in.description": {
-		"message": "Sign in to your Minecraft account to manage skins in Noctrinth."
 	},
 	"app.survey.body": {
 		"message": "Would you mind answering a few questions about your experience with Noctrinth?"
@@ -1091,12 +893,6 @@
 	"collection.status.unlisted": {
 		"message": "Unlisted"
 	},
-	"collection.tab.collections": {
-		"message": "Collections"
-	},
-	"collection.tab.notifications": {
-		"message": "Notifications"
-	},
 	"collection.type.datapack": {
 		"message": "Data packs"
 	},
@@ -1190,10 +986,10 @@
 	"collections.status.unlisted": {
 		"message": "Unlisted"
 	},
-	"console.action.collapse": {
+	"console.actions.collapse": {
 		"message": "Collapse"
 	},
-	"console.action.expand": {
+	"console.actions.expand": {
 		"message": "Expand"
 	},
 	"console.crash.problems-detected": {
@@ -1252,12 +1048,6 @@
 	},
 	"creation-flow.modal.import-instance.delete-source.label": {
 		"defaultMessage": "Remove from {launcher} after importing"
-	},
-	"dashboard.tab.collections": {
-		"message": "Collections"
-	},
-	"dashboard.tab.notifications": {
-		"message": "Notifications"
 	},
 	"ely-login.cancel": {
 		"message": "Cancel"
@@ -1403,15 +1193,6 @@
 	"instance.settings.tabs.java.modern-java-version-hint": {
 		"message": "Picking a version downloads it and pins it as this instance’s Java installation. The lowest one is the best tested; newer ones are supported but less proven with mods for this Minecraft version."
 	},
-	"instance.settings.tabs.synced-options.game-options": {
-		"message": "Minecraft options"
-	},
-	"instance.settings.tabs.synced-options.game-options.disabled-in-app": {
-		"message": "The Minecraft options profile is turned off in app settings."
-	},
-	"instance.settings.tabs.synced-options.game-options.exclude-description": {
-		"message": "Leave this instance's options.txt alone."
-	},
 	"minecraft-account.add-ely-account": {
 		"message": "Add Ely.by account"
 	},
@@ -1504,8 +1285,5 @@
 	},
 	"settings.language.coverage.app-tooltip": {
 		"message": "About {percentage}% of Noctrinth is available in this language."
-	},
-	"skin.preview.drag-to-rotate": {
-		"message": "Drag to rotate"
 	}
 }

@@ -18,6 +18,7 @@ pub mod reports;
 pub mod settings;
 pub mod shortcuts;
 pub mod tags;
+mod thumbnails;
 pub mod users;
 pub mod utils;
 pub mod window_icon;

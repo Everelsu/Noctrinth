@@ -55,7 +55,6 @@ import {
 	uploadElySkin,
 	wearElySkin,
 } from '@/helpers/ely_skins'
-import { generateSkinPreviews } from '@/helpers/rendering/batch-skin-renderer.ts'
 import { cleanupUnusedPreviews } from '@/helpers/rendering/skin-previews'
 import type { Cape, Skin, SkinModel, SkinTextureUrl } from '@/helpers/skins.ts'
 import {
@@ -390,11 +389,6 @@ async function loadElySkins() {
 				}
 			}),
 		)
-
-		// Same preview pipeline as the Microsoft grid, so the tiles end up
-		// rendered rather than showing raw texture sheets. Baked once, after
-		// the textures settle, because each call supersedes the last.
-		generateSkinPreviews(elySkinsAsSkins.value, [])
 	} catch (error) {
 		// This runs on every refresh, so a dropped connection must not raise a
 		// notification each time — the grid simply keeps what it had.

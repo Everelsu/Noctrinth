@@ -28,7 +28,7 @@ const emit = defineEmits<{
 			size="sm"
 			:interaction="modelValue === true ? 'none' : 'surface'"
 			class="boolean-control-on !rounded-[10px] !px-3 !font-medium disabled:!opacity-100"
-			:class="modelValue === true ? '!text-green' : '!text-contrast'"
+			:class="modelValue === true ? '!text-brand' : '!text-contrast'"
 			:aria-pressed="modelValue === true"
 			:disabled="disabled"
 			@click="emit('update:model-value', true)"
@@ -51,8 +51,8 @@ const emit = defineEmits<{
 
 <style scoped>
 .boolean-control-on[aria-pressed='true'] {
-	background-color: color-mix(in srgb, var(--color-green) 30%, var(--surface-3));
-	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-green) 60%, transparent);
+	background-color: color-mix(in srgb, var(--color-brand) 30%, var(--surface-3));
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-brand) 60%, transparent);
 }
 
 .boolean-control-off[aria-pressed='true'] {

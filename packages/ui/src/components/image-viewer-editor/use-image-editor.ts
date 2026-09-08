@@ -43,7 +43,22 @@ const CONTROL_SIZE = 14
 const CONTROL_TOUCH_SIZE = 24
 const MAX_RENDERED_CANVAS_PIXELS = 16_777_216
 const MIN_CROP_SIZE = 1
-const SELECTION_COLOR = '#1bd96a'
+/** Drawn on if the accent cannot be read, which is Modrinth's own. */
+const FALLBACK_SELECTION_COLOR = '#1bd96a'
+
+/**
+ * What the editor draws its selection and handles in.
+ *
+ * Read when it is needed rather than kept: the accent is a setting, and a
+ * colour taken once at import would be the one the app opened in.
+ */
+function selectionColor(): string {
+	if (typeof document === 'undefined') return FALLBACK_SELECTION_COLOR
+
+	const accent = getComputedStyle(document.documentElement).getPropertyValue('--color-brand').trim()
+
+	return accent || FALLBACK_SELECTION_COLOR
+}
 const CENSOR_REGENERATED_PROPERTIES = new Set([
 	'type',
 	'version',
@@ -285,7 +300,7 @@ export function useImageEditor() {
 			originX: 'left',
 			originY: 'top',
 			fill: 'transparent',
-			stroke: SELECTION_COLOR,
+			stroke: selectionColor(),
 			strokeUniform: true,
 			strokeWidth: 2,
 			lockRotation: true,
@@ -1346,9 +1361,9 @@ export function useImageEditor() {
 		const renderScale = Math.max(canvas.value?.getZoom() ?? 1, 0.01)
 		const controlScale = renderScale / displayScale
 		object.set({
-			borderColor: SELECTION_COLOR,
+			borderColor: selectionColor(),
 			borderScaleFactor: 2 * controlScale,
-			cornerColor: SELECTION_COLOR,
+			cornerColor: selectionColor(),
 			cornerSize: CONTROL_SIZE * controlScale,
 			cornerStrokeColor: '#ffffff',
 			cornerStyle: 'circle',

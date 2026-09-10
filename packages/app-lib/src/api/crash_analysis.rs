@@ -42,6 +42,16 @@ const JVM_ERROR_HEAD_BYTES: u64 = 96 * 1024;
 /// How many findings are worth showing at once.
 const MAX_FINDINGS: usize = 8;
 
+/// How far from the log a crash report may have been written and still be about
+/// the same run.
+///
+/// Crash reports pile up in a folder and are never cleared, so the newest one
+/// can be from a week ago while the game has run fine since. The game writes it
+/// as it goes down, moments after the last line of the log; anything older than
+/// this is somebody else's crash and saying otherwise would be worse than
+/// saying nothing.
+const SAME_RUN_SECONDS: u64 = 5 * 60;
+
 #[derive(
     Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord,
 )]
@@ -422,12 +432,23 @@ pub async fn analyze_instance(
 
     let mut diagnosis = CrashDiagnosis::default();
 
-    // The game's own report first: when there is one, it is about the run that
-    // just ended and it names the exception.
+    // The log the instance last wrote is what the other two are dated against:
+    // the game writes a crash report as it goes down, moments after the last
+    // line of it.
+    let latest_log = logs_dir.join("latest.log");
+    let log_modified = if latest_log.is_file() {
+        Some(modified_seconds(&latest_log).await)
+    } else {
+        None
+    };
+
+    // The game's own report first, when it belongs to the same run: it names
+    // the exception, which the log around it often does not.
     if let Some(report) = newest_file(&crash_reports_dir, |name| {
         name.starts_with("crash-") && name.ends_with(".txt")
     })
     .await
+        && is_same_run(&report, log_modified).await
     {
         read_into(
             &mut diagnosis,
@@ -443,6 +464,7 @@ pub async fn analyze_instance(
         name.starts_with("hs_err_pid") && name.ends_with(".log")
     })
     .await
+        && is_same_run(&jvm_error, log_modified).await
     {
         read_into(
             &mut diagnosis,
@@ -453,9 +475,8 @@ pub async fn analyze_instance(
         .await;
     }
 
-    // And the log it was writing, which is where anything the other two missed
-    // was printed on the way down.
-    let latest_log = logs_dir.join("latest.log");
+    // And the log itself, which is where anything the other two missed was
+    // printed on the way down.
     if latest_log.is_file() {
         read_into(
             &mut diagnosis,
@@ -516,6 +537,24 @@ fn finish(diagnosis: &mut CrashDiagnosis) {
     });
 
     diagnosis.findings.truncate(MAX_FINDINGS);
+}
+
+/// Whether a file was written closely enough to the log to be about the run
+/// the log is of.
+///
+/// With no log to date it against there is nothing to compare, and the newest
+/// report is the best guess there is.
+async fn is_same_run(path: &Path, log_modified: Option<u64>) -> bool {
+    let Some(log_modified) = log_modified else {
+        return true;
+    };
+
+    let written = modified_seconds(path).await;
+    if written == 0 || log_modified == 0 {
+        return true;
+    }
+
+    written.abs_diff(log_modified) <= SAME_RUN_SECONDS
 }
 
 enum ReadFrom {

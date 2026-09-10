@@ -30,7 +30,7 @@
 		"message": "Действия с проектом"
 	},
 	"app.browse.project-type.data-packs": {
-		"message": "Наборы данных"
+		"message": "Датапаки"
 	},
 	"app.browse.project-type.mods": {
 		"message": "Моды"
@@ -48,7 +48,7 @@
 		"message": "Отвязать"
 	},
 	"app.content.sync-data-packs-disabled": {
-		"message": "Сначала включите синхронизацию наборов данных в настройках приложения."
+		"message": "Сначала включите синхронизацию датапаков в настройках приложения."
 	},
 	"app.content.sync-pack": {
 		"message": "Синхронизировать"
@@ -1791,7 +1791,7 @@
 		"message": "Откуда взять творческие панели"
 	},
 	"app.settings.synced-options.choose-sync-source.data-packs-title": {
-		"message": "Откуда взять наборы данных"
+		"message": "Откуда взять датапаки"
 	},
 	"app.settings.synced-options.choose-sync-source.game-settings-description": {
 		"message": "Выберите сборку, из которой скопировать настройки игры. Они нужны только для первой синхронизации — потом их можно менять из любой сборки."
@@ -1830,13 +1830,13 @@
 		"message": "Синхронизировать сохранённые панели творческого режима между сборками."
 	},
 	"app.settings.synced-options.data-packs": {
-		"message": "Синхронизировать наборы данных"
+		"message": "Синхронизировать датапаки"
 	},
 	"app.settings.synced-options.data-packs.description": {
-		"message": "Одни и те же наборы данных во всех сборках"
+		"message": "Одни и те же датапаки во всех сборках"
 	},
 	"app.settings.synced-options.data-packs.none-synced-yet": {
-		"message": "Вы ещё не синхронизировали ни одного набора данных"
+		"message": "Вы ещё не синхронизировали ни одного датапака"
 	},
 	"app.settings.synced-options.edit.no-instances": {
 		"message": "Добавьте сборку, прежде чем править общие данные."
@@ -2016,7 +2016,7 @@
 		"message": "Выберите источник"
 	},
 	"app.sync-instances-update.choose-source.data-packs": {
-		"message": "Выберите сборку, из которой скопировать наборы данных. Они нужны только для первой синхронизации — потом их можно менять из любой сборки."
+		"message": "Выберите сборку, из которой скопировать датапаки. Они нужны только для первой синхронизации — потом их можно менять из любой сборки."
 	},
 	"app.sync-instances-update.choose-source.resource-packs": {
 		"message": "Выберите сборку, из которой скопировать наборы ресурсов. Они нужны только для первой синхронизации — потом их можно менять из любой сборки."
@@ -2124,7 +2124,7 @@
 		"message": "Это содержимое синхронизировано"
 	},
 	"app.synced-packs.data-packs.title": {
-		"message": "Синхронизированные наборы данных"
+		"message": "Синхронизированные датапаки"
 	},
 	"app.synced-packs.empty": {
 		"message": "Добавьте наборы со страницы содержимого сборки, чтобы начать синхронизацию."
@@ -2769,13 +2769,13 @@
 		"message": "Отключите это исключение, чтобы править общие данные."
 	},
 	"instance.settings.synced-options.data-packs": {
-		"message": "Не синхронизировать наборы данных"
+		"message": "Не синхронизировать датапаки"
 	},
 	"instance.settings.synced-options.data-packs.description": {
-		"message": "Держать наборы данных этой сборки отдельно от общих."
+		"message": "Держать датапаки этой сборки отдельно от общих."
 	},
 	"instance.settings.synced-options.data-packs.disabled": {
-		"message": "Синхронизация наборов данных выключена в настройках приложения."
+		"message": "Синхронизация датапаков выключена в настройках приложения."
 	},
 	"instance.settings.synced-options.edit-packs": {
 		"message": "Изменить общие наборы"
@@ -3240,7 +3240,7 @@
 		"message": "Неизвестная ошибка"
 	},
 	"settings.display.project-list-layouts.datapack": {
-		"message": "Страница наборов данных"
+		"message": "Страница датапаков"
 	},
 	"settings.display.project-list-layouts.description": {
 		"message": "Выберите вид для каждой страницы со списком проектов."

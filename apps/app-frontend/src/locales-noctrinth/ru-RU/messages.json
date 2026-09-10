@@ -179,6 +179,177 @@
 	"app.collection.visibility.unlisted": {
 		"message": "По ссылке"
 	},
+	"app.crash.dismiss": {
+		"message": "Скрыть"
+	},
+	"app.crash.found-in": {
+		"message": "В файле {file}"
+	},
+	"app.crash.header": {
+		"message": "Лаунчер кое-что нашёл в этом падении"
+	},
+	"app.crash.header-note": {
+		"message": "Об этом запуске стоит знать"
+	},
+	"app.crash.hide-evidence": {
+		"message": "Скрыть строку"
+	},
+	"app.crash.open-folder": {
+		"message": "Открыть папку сборки"
+	},
+	"app.crash.open-settings": {
+		"message": "Открыть настройки"
+	},
+	"app.crash.rule.connector-fabric-mod.fix": {
+		"message": "Connector не тянет Sodium, Iris и Indium. Возьмите их forge-версии — Embeddium и Oculus."
+	},
+	"app.crash.rule.connector-fabric-mod.title": {
+		"message": "Fabric-мод на графику загружен через Sinytra Connector"
+	},
+	"app.crash.rule.corrupted-archive.fix": {
+		"message": "Почините сборку, чтобы лаунчер скачал его заново. Оборванная загрузка выглядит ровно так."
+	},
+	"app.crash.rule.corrupted-archive.title": {
+		"message": "Файл, который читала игра, повреждён или докачан не до конца"
+	},
+	"app.crash.rule.crash-description.title": {
+		"message": "Игра описала это так: {description}"
+	},
+	"app.crash.rule.disk-full.fix": {
+		"message": "Освободите место на диске со сборкой и запустите снова."
+	},
+	"app.crash.rule.disk-full.title": {
+		"message": "На диске закончилось место"
+	},
+	"app.crash.rule.duplicate-mods.fix": {
+		"message": "Откройте папку модов и оставьте по одной копии каждого — обычно виноваты две версии одного файла."
+	},
+	"app.crash.rule.duplicate-mods.title": {
+		"message": "Один и тот же мод установлен несколько раз"
+	},
+	"app.crash.rule.fabric-missing-dependency.fix": {
+		"message": "Установите {dependency} или уберите {mod_name}."
+	},
+	"app.crash.rule.fabric-missing-dependency.title": {
+		"message": "{mod_name} требует {dependency}, а его нет"
+	},
+	"app.crash.rule.fabric-wrong-dependency-version.fix": {
+		"message": "Обновите {dependency} до {requirement} или возьмите подходящую сборку {mod_name}."
+	},
+	"app.crash.rule.fabric-wrong-dependency-version.title": {
+		"message": "{mod_name} требует другую версию {dependency}"
+	},
+	"app.crash.rule.file-locked.fix": {
+		"message": "Закройте другие лаунчеры и ещё запущенные копии игры, и проверьте, не сканирует ли эту папку антивирус."
+	},
+	"app.crash.rule.file-locked.title": {
+		"message": "Файл игры держала другая программа"
+	},
+	"app.crash.rule.forge-missing-dependency.fix": {
+		"message": "Установите {dependency} или уберите {mod_id}."
+	},
+	"app.crash.rule.forge-missing-dependency.title": {
+		"message": "{mod_id} требует {dependency}, которого нет"
+	},
+	"app.crash.rule.gpu-driver-amd.title": {
+		"message": "Упал драйвер видеокарты AMD ({library})"
+	},
+	"app.crash.rule.gpu-driver-intel.title": {
+		"message": "Упал драйвер видеокарты Intel ({library})"
+	},
+	"app.crash.rule.gpu-driver-nvidia.title": {
+		"message": "Упал драйвер видеокарты NVIDIA ({library})"
+	},
+	"app.crash.rule.gpu-driver.fix": {
+		"message": "Обновите драйвер с сайта производителя, а не через Windows Update, и на время проверки отключите шейдеры."
+	},
+	"app.crash.rule.heap-too-large-to-start.fix": {
+		"message": "Уменьшите выделенную память и запустите снова."
+	},
+	"app.crash.rule.heap-too-large-to-start.title": {
+		"message": "Сборка попросила больше памяти, чем удалось зарезервировать ({size})"
+	},
+	"app.crash.rule.java-too-old.fix": {
+		"message": "Укажите сборке Java {needs} или дайте лаунчеру скачать её."
+	},
+	"app.crash.rule.java-too-old.title": {
+		"message": "Что-то требует Java {needs}, а сборка запустилась на Java {has}"
+	},
+	"app.crash.rule.java-unsupported-class.fix": {
+		"message": "Смените Java для этой сборки в её настройках."
+	},
+	"app.crash.rule.java-unsupported-class.title": {
+		"message": "Мод собран под более новую Java, чем та, на которой запустились"
+	},
+	"app.crash.rule.jvm-problematic-frame.title": {
+		"message": "Сама Java остановилась в {frame}"
+	},
+	"app.crash.rule.jvm-signal.title": {
+		"message": "Процесс был остановлен сигналом {signal}"
+	},
+	"app.crash.rule.loader-suggestion.fix": {
+		"message": "{suggestion}"
+	},
+	"app.crash.rule.loader-suggestion.title": {
+		"message": "Загрузчик модов сам подсказал решение"
+	},
+	"app.crash.rule.missing-native-library.fix": {
+		"message": "Почините сборку. Если повторится — проверьте, не отправляет ли антивирус папку natives в карантин."
+	},
+	"app.crash.rule.missing-native-library.title": {
+		"message": "Библиотеку, которую игра грузит с диска, загрузить не удалось"
+	},
+	"app.crash.rule.mixin-failed.fix": {
+		"message": "Имя перед .mixins.json — это и есть мод, который стоит обновить или убрать первым; если один и тот же кусок игры правят два мода, менять придётся оба."
+	},
+	"app.crash.rule.mixin-failed.title": {
+		"message": "Мод не смог пропатчить игру ({config})"
+	},
+	"app.crash.rule.mod-for-other-version.fix": {
+		"message": "Он искал {symbol}, которого в этой версии нет. Обновите мод или возьмите сборку под вашу версию игры."
+	},
+	"app.crash.rule.mod-for-other-version.title": {
+		"message": "Мод собран под другую версию Minecraft"
+	},
+	"app.crash.rule.opengl-unsupported.fix": {
+		"message": "Обновите драйвер видеокарты. На ноутбуке с двумя видеокартами убедитесь, что игра запускается на более мощной."
+	},
+	"app.crash.rule.opengl-unsupported.title": {
+		"message": "Драйвер не смог дать игре нужный ей OpenGL"
+	},
+	"app.crash.rule.optifine-present.fix": {
+		"message": "OptiFine ломается о большинство современных модов. Sodium с Iris или Embeddium с Oculus делают то же самое и рассчитаны на соседство с ними."
+	},
+	"app.crash.rule.optifine-present.title": {
+		"message": "В момент падения был загружен OptiFine"
+	},
+	"app.crash.rule.out-of-memory-heap.fix": {
+		"message": "Выдайте сборке больше памяти или требуйте от неё меньше: дальность прорисовки и моды на генерацию мира обычно съедают больше всего."
+	},
+	"app.crash.rule.out-of-memory-heap.title": {
+		"message": "Игре не хватило выданной ей памяти"
+	},
+	"app.crash.rule.out-of-memory-metaspace.fix": {
+		"message": "Так бывает у очень больших сборок на маленьком объёме памяти. Поднимите его для этой сборки."
+	},
+	"app.crash.rule.out-of-memory-metaspace.title": {
+		"message": "Игре не хватило места под загружаемый код"
+	},
+	"app.crash.rule.out-of-memory-system.fix": {
+		"message": "Уменьшите объём памяти, который просит сборка, или закройте лишние программы. Если просить больше, чем есть у машины, игра не запустится вовсе."
+	},
+	"app.crash.rule.out-of-memory-system.title": {
+		"message": "На компьютере не осталось свободной памяти"
+	},
+	"app.crash.rule.suspected-mods.fix": {
+		"message": "Отключите их по одному и запускайте игру после каждого."
+	},
+	"app.crash.rule.suspected-mods.title": {
+		"message": "Загрузчик подозревает: {mods}"
+	},
+	"app.crash.show-evidence": {
+		"message": "Показать строку"
+	},
 	"app.error-modal.copy-debug-info": {
 		"message": "Скопировать отладочную информацию"
 	},

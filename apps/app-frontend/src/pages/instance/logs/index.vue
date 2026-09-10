@@ -1,6 +1,19 @@
 <template>
 	<div class="flex flex-col gap-4 h-full">
 		<!--
+			What the launcher itself made of the files this instance last wrote.
+			Upstream's banner above the console is mclo.gs reading the live log;
+			this one reads the crash report and the JVM's own error file too, and
+			says so without a connection. See helpers/noctrinth-crash.ts.
+		-->
+		<NoctrinthCrashDiagnosis
+			v-if="localFindings.length"
+			:instance-id="instanceId"
+			:findings="localFindings"
+			:on-open-settings="instancePage.openSettings"
+			@dismiss="localFindings = []"
+		/>
+		<!--
 			One console is two games talking over each other once an instance is
 			running twice, so each copy gets its own. One copy, or none, is the page
 			as it has always been: the live log alongside every log kept on disk.
@@ -24,10 +37,12 @@ import {
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref, shallowRef, triggerRef, watch, watchEffect } from 'vue'
 
+import NoctrinthCrashDiagnosis from '@/components/ui/NoctrinthCrashDiagnosis.vue'
 import NoctrinthProcessConsole from '@/components/ui/NoctrinthProcessConsole.vue'
 import { useAppEvent } from '@/composables/use-app-event'
 import { useInstanceConsole } from '@/composables/useInstanceConsole'
 import { delete_logs_by_filename, get_output_by_filename } from '@/helpers/logs.js'
+import { analyzeCrashText, analyzeInstanceCrash } from '@/helpers/noctrinth-crash'
 
 import { injectInstancePage } from '../instance-context'
 import { instanceKeys, instanceProcessesQueryOptions } from '../query-options'
@@ -144,6 +159,28 @@ watchEffect(() => {
 
 const crashAnalysis = ref(null)
 
+const localFindings = ref([])
+
+/**
+ * Reads what the instance left on disk: the crash report, the JVM error file
+ * and the tail of the log. Runs when the page opens and when a run ends, which
+ * is when those files are complete.
+ */
+async function diagnoseInstance() {
+	const diagnosis = await analyzeInstanceCrash(instanceId.value)
+	localFindings.value = diagnosis.findings
+}
+
+/** The same rules against a log the player has picked out of the list. */
+async function diagnoseText(output, logType, filename) {
+	const diagnosis = await analyzeCrashText(
+		output,
+		logType === 'CrashReport' ? 'crash_report' : 'log',
+		filename,
+	)
+	localFindings.value = diagnosis.findings
+}
+
 async function analyseForCrash() {
 	const lines = liveConsole.output.value
 	if (lines.length === 0) return
@@ -199,7 +236,11 @@ provideConsoleManager({
 })
 
 watch(selectedLogIndex, async (newIndex) => {
-	if (newIndex === 0) return
+	if (newIndex === 0) {
+		// Back to the live console, where what is on disk is what there is to say.
+		void diagnoseInstance()
+		return
+	}
 	const log = filteredLogs.value[newIndex]
 	if (!log) return
 
@@ -207,6 +248,7 @@ watch(selectedLogIndex, async (newIndex) => {
 	if (cached) {
 		historicalConsole.clear()
 		historicalConsole.addLegacyLog(cached)
+		void diagnoseText(cached, log.log_type, log.filename)
 		return
 	}
 
@@ -216,6 +258,9 @@ watch(selectedLogIndex, async (newIndex) => {
 	if (output) {
 		historicalConsole.clear()
 		historicalConsole.addLegacyLog(output)
+		// A log picked out of the list is read by the same rules, so an old
+		// crash can be looked at as well as the last one.
+		void diagnoseText(output, log.log_type, log.filename)
 	}
 })
 
@@ -223,6 +268,7 @@ selectedLogIndex.value = 0
 
 if (!instancePage.playing.value) {
 	void analyseForCrash()
+	void diagnoseInstance()
 }
 
 useAppEvent('log', (payload) => {
@@ -257,6 +303,7 @@ useAppEvent('process', async (e) => {
 		const { data } = await historicalLogsQuery.refetch()
 		if (data) logs.value = buildLogList(data)
 		void analyseForCrash()
+		void diagnoseInstance()
 	}
 })
 </script>

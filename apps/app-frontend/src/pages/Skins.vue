@@ -336,15 +336,43 @@ function sameTexture(a: string | null | undefined, b: string | null | undefined)
 
 // Presented through the same grid the Microsoft account uses, so an Ely.by
 // account gets the real skin list rather than a page of buttons.
+/**
+ * What a texture is, in a few characters.
+ *
+ * A tile's preview is drawn once and kept, on disk, under a key made from the
+ * skin it is of — so the key has to say what it was drawn from as well. An
+ * Ely.by skin is on screen before its texture has been fetched, and would
+ * otherwise be remembered as the placeholder it was first drawn from.
+ */
+function textureFingerprint(texture: string | undefined): string {
+	if (!texture) return 'pending'
+
+	let hash = 0
+	for (let index = 0; index < texture.length; index++) {
+		hash = (Math.imul(31, hash) + texture.charCodeAt(index)) | 0
+	}
+
+	return (hash >>> 0).toString(36)
+}
+
 const elySkinsAsSkins = computed<Skin[]>(() =>
-	elySkins.value.map((skin) => ({
-		texture_key: `ely:${skin.id}`,
-		variant: skin.is_slim ? 'SLIM' : 'CLASSIC',
-		texture: elyTextures.value[skin.id] ?? ELY_FALLBACK_SKIN,
-		source: 'custom_external',
-		is_equipped: sameTexture(skin.skin_url, elyCurrentSkinUrl.value),
-	})),
+	elySkins.value.map((skin) => {
+		const texture = elyTextures.value[skin.id]
+
+		return {
+			texture_key: `ely:${skin.id}:${textureFingerprint(texture)}`,
+			variant: skin.is_slim ? 'SLIM' : 'CLASSIC',
+			texture: texture ?? ELY_FALLBACK_SKIN,
+			source: 'custom_external' as const,
+			is_equipped: sameTexture(skin.skin_url, elyCurrentSkinUrl.value),
+		}
+	}),
 )
+
+/** The Ely.by skin a tile is of, from the key that also carries its texture. */
+function elySkinId(skin: Skin): number {
+	return Number(skin.texture_key.split(':')[1])
+}
 
 function isElySkinSelected(skin: Skin) {
 	return elyPendingSkin.value
@@ -633,7 +661,7 @@ async function waitForElyModel(id: number, isSlim: boolean, timeoutMs = 20000) {
 
 /** Changes the model of one of the account's Ely.by skins. */
 async function saveElyEdit(skin: Skin, isSlim: boolean) {
-	const id = Number(skin.texture_key.replace('ely:', ''))
+	const id = elySkinId(skin)
 	if (!Number.isFinite(id) || elyEditSaving.value) return
 
 	elyEditSaving.value = true
@@ -660,7 +688,7 @@ async function saveElyEdit(skin: Skin, isSlim: boolean) {
 
 /** Deletes a skin from the account's Ely.by catalogue. */
 async function deleteElySkin(skin: Skin) {
-	const id = Number(skin.texture_key.replace('ely:', ''))
+	const id = elySkinId(skin)
 	if (!Number.isFinite(id) || elyWearingId.value !== null) return
 
 	elyWearingId.value = id
@@ -714,7 +742,7 @@ const elyWornVariant = computed<'CLASSIC' | 'SLIM'>(() => {
 const elyPreviewVariant = computed(() => elyPendingSkin.value?.variant ?? elyWornVariant.value)
 
 async function applyElySkin(skin: Skin) {
-	const id = Number(skin.texture_key.replace('ely:', ''))
+	const id = elySkinId(skin)
 	if (!Number.isFinite(id) || elyWearingId.value !== null) return
 
 	elyWearingId.value = id

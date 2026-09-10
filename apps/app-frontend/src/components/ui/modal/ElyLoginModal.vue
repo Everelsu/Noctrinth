@@ -1,6 +1,12 @@
 <template>
-	<NewModal ref="modal" :header="formatMessage(messages.header)">
-		<div class="flex max-w-md flex-col gap-3">
+	<NewModal
+		ref="modal"
+		:header="formatMessage(messages.header)"
+		max-width="480px"
+		width="100%"
+		actions-divider
+	>
+		<div class="flex w-full flex-col gap-4">
 			<div class="flex flex-col gap-2">
 				<label for="ely-username">
 					<span class="text-lg font-semibold text-contrast">
@@ -82,7 +88,9 @@
 					{{ formatMessage(messages.signUpLink) }}
 				</a>
 			</p>
+		</div>
 
+		<template #actions>
 			<div class="flex justify-end gap-2">
 				<Button :disabled="loading" type="outlined" @click="hide">
 					<XIcon aria-hidden="true" />
@@ -99,7 +107,7 @@
 					{{ formatMessage(loading ? messages.signingIn : messages.signIn) }}
 				</Button>
 			</div>
-		</div>
+		</template>
 	</NewModal>
 </template>
 

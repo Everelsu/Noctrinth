@@ -15,7 +15,7 @@
 				class="flex items-center justify-center gap-1.5 text-base font-medium leading-6 text-primary"
 			>
 				<UnfoldHorizontalIcon class="size-5 shrink-0" />
-				Drag to rotate
+				{{ formatMessage(messages.dragToRotate) }}
 			</span>
 		</div>
 		<div
@@ -103,6 +103,7 @@
 
 <script setup lang="ts">
 import { ClassicPlayerModel, SlimPlayerModel, UnfoldHorizontalIcon } from '@modrinth/assets'
+import { defineMessages, useVIntl } from '#ui/composables/i18n'
 import { TresCanvas } from '@tresjs/core'
 import * as THREE from 'three'
 import {
@@ -133,6 +134,15 @@ import {
 
 import { useDynamicFontSize } from '../../composables'
 import { createRadialSpotlightShader, syncDamageFlashShader } from './skin-preview-shader'
+
+const { formatMessage } = useVIntl()
+
+const messages = defineMessages({
+	dragToRotate: {
+		id: 'skin.preview.drag-to-rotate',
+		defaultMessage: 'Drag to rotate',
+	},
+})
 
 const props = withDefaults(
 	defineProps<{

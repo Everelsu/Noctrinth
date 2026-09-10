@@ -44,6 +44,21 @@
 	"app.browse.project-type.shaders": {
 		"message": "Шейдеры"
 	},
+	"app.content.desync-pack": {
+		"message": "Отвязать"
+	},
+	"app.content.sync-data-packs-disabled": {
+		"message": "Сначала включите синхронизацию наборов данных в настройках приложения."
+	},
+	"app.content.sync-pack": {
+		"message": "Синхронизировать"
+	},
+	"app.content.sync-packs-override": {
+		"message": "Сначала отключите исключение из синхронизации наборов в настройках этой сборки."
+	},
+	"app.content.sync-resource-packs-disabled": {
+		"message": "Сначала включите синхронизацию наборов ресурсов в настройках приложения."
+	},
 	"app.error.state-init.open-backups-folder": {
 		"message": "Открыть папку резервных копий"
 	},
@@ -52,6 +67,57 @@
 	},
 	"app.export-modal.export-complete-description": {
 		"message": "{name} успешно экспортирован."
+	},
+	"app.features-settings.instance-pages.title": {
+		"message": "Сборки"
+	},
+	"app.features-settings.play-page.title": {
+		"message": "Страница игры"
+	},
+	"app.features-settings.quick-instances.description": {
+		"message": "Сколько недавних сборок показывать в левой панели. Это же можно поменять, потянув за разделитель."
+	},
+	"app.features-settings.quick-instances.title": {
+		"message": "Быстрые сборки в панели"
+	},
+	"app.features-settings.show-all-screenshots.description": {
+		"message": "Показывать в левой панели кнопку со скриншотами из всех сборок."
+	},
+	"app.features-settings.show-all-screenshots.title": {
+		"message": "Все скриншоты в панели"
+	},
+	"app.features-settings.show-files-tab.title": {
+		"message": "Вкладка «Файлы» в сборках"
+	},
+	"app.features-settings.show-jump-in.description": {
+		"message": "Показывать недавние миры и сборки вверху страницы игры."
+	},
+	"app.features-settings.show-jump-in.title": {
+		"message": "Раздел «Продолжить»"
+	},
+	"app.features-settings.show-screenshots-tab.title": {
+		"message": "Вкладка «Скриншоты» в сборках"
+	},
+	"app.features-settings.show-skin-selector.description": {
+		"message": "Показывать в левой панели кнопку выбора скина."
+	},
+	"app.features-settings.show-skin-selector.title": {
+		"message": "Выбор скина в панели"
+	},
+	"app.features-settings.show-worlds-tab.title": {
+		"message": "Вкладка «Миры» в сборках"
+	},
+	"app.features-settings.sidebar.title": {
+		"message": "Боковая панель"
+	},
+	"app.features-settings.sync-across-devices.description": {
+		"message": "Использовать эти настройки везде, где выполнен вход. Выключите, чтобы на этом устройстве были свои."
+	},
+	"app.features-settings.sync-across-devices.signed-out-tooltip": {
+		"message": "Войдите в аккаунт Modrinth, чтобы синхронизировать настройки."
+	},
+	"app.features-settings.sync-across-devices.title": {
+		"message": "Синхронизировать эти настройки между устройствами"
 	},
 	"app.home.jump-back-in.actions.label": {
 		"message": "Действия со сборкой"
@@ -208,6 +274,18 @@
 	},
 	"app.instance.tab.worlds": {
 		"message": "Миры"
+	},
+	"app.instance.worlds.remove-server-modal.remove-everywhere": {
+		"message": "Удалить везде"
+	},
+	"app.instance.worlds.remove-server-modal.remove-here": {
+		"message": "Удалить здесь"
+	},
+	"app.instance.worlds.remove-server-modal.synced-description": {
+		"message": "Его можно удалить только из этой сборки или из всех синхронизированных. Если удалить только здесь, для сборки включатся исключения, и она перестанет получать изменения списка серверов."
+	},
+	"app.instance.worlds.remove-server-modal.synced-header": {
+		"message": "Этот сервер синхронизирован"
 	},
 	"app.instance.worlds.search-worlds-placeholder": {
 		"message": "Поиск среди {count} миров..."
@@ -698,6 +776,1044 @@
 	"app.settings.default-instance-options.window.title": {
 		"message": "Окно"
 	},
+	"app.settings.game-options.category.accessibility.description": {
+		"message": "Настройки доступности"
+	},
+	"app.settings.game-options.category.accessibility.label": {
+		"message": "Специальные возможности"
+	},
+	"app.settings.game-options.category.chat.description": {
+		"message": "Видимость и вид чата"
+	},
+	"app.settings.game-options.category.chat.label": {
+		"message": "Чат"
+	},
+	"app.settings.game-options.category.controls.description": {
+		"message": "Мышь, передвижение и клавиши"
+	},
+	"app.settings.game-options.category.controls.label": {
+		"message": "Управление"
+	},
+	"app.settings.game-options.category.custom.description": {
+		"message": "Настройки, добавленные модами"
+	},
+	"app.settings.game-options.category.custom.label": {
+		"message": "Прочие настройки"
+	},
+	"app.settings.game-options.category.language.description": {
+		"message": "Язык игры"
+	},
+	"app.settings.game-options.category.language.label": {
+		"message": "Язык"
+	},
+	"app.settings.game-options.category.music-and-sound.description": {
+		"message": "Громкость и звук"
+	},
+	"app.settings.game-options.category.music-and-sound.label": {
+		"message": "Музыка и звук"
+	},
+	"app.settings.game-options.category.online.description": {
+		"message": "Сетевая игра и Realms"
+	},
+	"app.settings.game-options.category.online.label": {
+		"message": "Сеть"
+	},
+	"app.settings.game-options.category.skin-customization.description": {
+		"message": "Слои скина и главная рука"
+	},
+	"app.settings.game-options.category.skin-customization.label": {
+		"message": "Настройки скина"
+	},
+	"app.settings.game-options.category.video.description": {
+		"message": "Камера и изображение"
+	},
+	"app.settings.game-options.category.video.label": {
+		"message": "Графика"
+	},
+	"app.settings.game-options.choice.all": {
+		"message": "Все"
+	},
+	"app.settings.game-options.choice.balanced": {
+		"message": "Сбалансированно"
+	},
+	"app.settings.game-options.choice.by-player": {
+		"message": "По игроку"
+	},
+	"app.settings.game-options.choice.chat": {
+		"message": "Чат"
+	},
+	"app.settings.game-options.choice.commands-only": {
+		"message": "Только команды"
+	},
+	"app.settings.game-options.choice.constant": {
+		"message": "Постоянно"
+	},
+	"app.settings.game-options.choice.crosshair": {
+		"message": "Прицел"
+	},
+	"app.settings.game-options.choice.custom": {
+		"message": "Своё"
+	},
+	"app.settings.game-options.choice.decreased": {
+		"message": "Уменьшено"
+	},
+	"app.settings.game-options.choice.default": {
+		"message": "По умолчанию"
+	},
+	"app.settings.game-options.choice.fabulous": {
+		"message": "Роскошно!"
+	},
+	"app.settings.game-options.choice.fancy": {
+		"message": "Детально"
+	},
+	"app.settings.game-options.choice.far": {
+		"message": "Далеко"
+	},
+	"app.settings.game-options.choice.fast": {
+		"message": "Быстро"
+	},
+	"app.settings.game-options.choice.frequent": {
+		"message": "Часто"
+	},
+	"app.settings.game-options.choice.hidden": {
+		"message": "Скрыто"
+	},
+	"app.settings.game-options.choice.hotbar": {
+		"message": "Панель быстрого доступа"
+	},
+	"app.settings.game-options.choice.left": {
+		"message": "Левая"
+	},
+	"app.settings.game-options.choice.limited": {
+		"message": "Ограниченно"
+	},
+	"app.settings.game-options.choice.max-fps": {
+		"message": "Максимум кадров"
+	},
+	"app.settings.game-options.choice.maximum": {
+		"message": "Максимум"
+	},
+	"app.settings.game-options.choice.minimal": {
+		"message": "Минимально"
+	},
+	"app.settings.game-options.choice.minimum": {
+		"message": "Минимум"
+	},
+	"app.settings.game-options.choice.nearby": {
+		"message": "Рядом"
+	},
+	"app.settings.game-options.choice.never": {
+		"message": "Никогда"
+	},
+	"app.settings.game-options.choice.none": {
+		"message": "Нет"
+	},
+	"app.settings.game-options.choice.normal": {
+		"message": "Обычно"
+	},
+	"app.settings.game-options.choice.off": {
+		"message": "Выкл."
+	},
+	"app.settings.game-options.choice.on": {
+		"message": "Вкл."
+	},
+	"app.settings.game-options.choice.opengl": {
+		"message": "OpenGL"
+	},
+	"app.settings.game-options.choice.pause": {
+		"message": "Меню паузы"
+	},
+	"app.settings.game-options.choice.pause-and-toast": {
+		"message": "Меню паузы и уведомления"
+	},
+	"app.settings.game-options.choice.power-saver": {
+		"message": "Энергосбережение"
+	},
+	"app.settings.game-options.choice.right": {
+		"message": "Правая"
+	},
+	"app.settings.game-options.choice.short": {
+		"message": "Коротко"
+	},
+	"app.settings.game-options.choice.shown": {
+		"message": "Показано"
+	},
+	"app.settings.game-options.choice.system": {
+		"message": "Системный"
+	},
+	"app.settings.game-options.choice.tiny": {
+		"message": "Крошечный"
+	},
+	"app.settings.game-options.choice.vulkan": {
+		"message": "Vulkan"
+	},
+	"app.settings.game-options.choice.when-minimized": {
+		"message": "Когда свёрнуто"
+	},
+	"app.settings.game-options.choice.while-afk": {
+		"message": "Во время бездействия"
+	},
+	"app.settings.game-options.compatibility.none": {
+		"message": "Некоторые сборки не могут применить эту настройку"
+	},
+	"app.settings.game-options.compatibility.reason.launcher-controlled": {
+		"message": "Этой настройкой управляют параметры запуска Modrinth."
+	},
+	"app.settings.game-options.custom-value.placeholder": {
+		"message": "Введите значение"
+	},
+	"app.settings.game-options.keybind.assigned-status": {
+		"message": "«{setting}» теперь назначено на {binding}."
+	},
+	"app.settings.game-options.keybind.cancelled-status": {
+		"message": "Смена привязки отменена."
+	},
+	"app.settings.game-options.keybind.change": {
+		"message": "{setting}: {binding}. Нажмите, чтобы изменить привязку."
+	},
+	"app.settings.game-options.keybind.choose": {
+		"message": "Выберите клавишу"
+	},
+	"app.settings.game-options.keybind.conflict-description": {
+		"message": "Уже используется здесь: {settings}."
+	},
+	"app.settings.game-options.keybind.key.arrow-down": {
+		"message": "Стрелка вниз"
+	},
+	"app.settings.game-options.keybind.key.arrow-left": {
+		"message": "Стрелка влево"
+	},
+	"app.settings.game-options.keybind.key.arrow-right": {
+		"message": "Стрелка вправо"
+	},
+	"app.settings.game-options.keybind.key.arrow-up": {
+		"message": "Стрелка вверх"
+	},
+	"app.settings.game-options.keybind.key.backspace": {
+		"message": "Backspace"
+	},
+	"app.settings.game-options.keybind.key.caps-lock": {
+		"message": "Caps Lock"
+	},
+	"app.settings.game-options.keybind.key.delete": {
+		"message": "Delete"
+	},
+	"app.settings.game-options.keybind.key.end": {
+		"message": "End"
+	},
+	"app.settings.game-options.keybind.key.enter": {
+		"message": "Enter"
+	},
+	"app.settings.game-options.keybind.key.escape": {
+		"message": "Escape"
+	},
+	"app.settings.game-options.keybind.key.home": {
+		"message": "Home"
+	},
+	"app.settings.game-options.keybind.key.insert": {
+		"message": "Insert"
+	},
+	"app.settings.game-options.keybind.key.keypad-key": {
+		"message": "Num {key}"
+	},
+	"app.settings.game-options.keybind.key.left-alt": {
+		"message": "Левый Alt"
+	},
+	"app.settings.game-options.keybind.key.left-command": {
+		"message": "Левый Command"
+	},
+	"app.settings.game-options.keybind.key.left-control": {
+		"message": "Левый Ctrl"
+	},
+	"app.settings.game-options.keybind.key.left-shift": {
+		"message": "Левый Shift"
+	},
+	"app.settings.game-options.keybind.key.left-super": {
+		"message": "Левый Super"
+	},
+	"app.settings.game-options.keybind.key.menu": {
+		"message": "Menu"
+	},
+	"app.settings.game-options.keybind.key.num-lock": {
+		"message": "Num Lock"
+	},
+	"app.settings.game-options.keybind.key.page-down": {
+		"message": "Page Down"
+	},
+	"app.settings.game-options.keybind.key.page-up": {
+		"message": "Page Up"
+	},
+	"app.settings.game-options.keybind.key.pause": {
+		"message": "Pause"
+	},
+	"app.settings.game-options.keybind.key.print-screen": {
+		"message": "Print Screen"
+	},
+	"app.settings.game-options.keybind.key.right-alt": {
+		"message": "Правый Alt"
+	},
+	"app.settings.game-options.keybind.key.right-command": {
+		"message": "Правый Command"
+	},
+	"app.settings.game-options.keybind.key.right-control": {
+		"message": "Правый Ctrl"
+	},
+	"app.settings.game-options.keybind.key.right-shift": {
+		"message": "Правый Shift"
+	},
+	"app.settings.game-options.keybind.key.right-super": {
+		"message": "Правый Super"
+	},
+	"app.settings.game-options.keybind.key.scroll-lock": {
+		"message": "Scroll Lock"
+	},
+	"app.settings.game-options.keybind.key.space": {
+		"message": "Пробел"
+	},
+	"app.settings.game-options.keybind.key.tab": {
+		"message": "Tab"
+	},
+	"app.settings.game-options.keybind.key.unbound": {
+		"message": "Не назначено"
+	},
+	"app.settings.game-options.keybind.key.unknown": {
+		"message": "Неизвестная клавиша"
+	},
+	"app.settings.game-options.keybind.listen": {
+		"message": "Нажмите клавишу…"
+	},
+	"app.settings.game-options.keybind.listening-status": {
+		"message": "Ожидание клавиши или кнопки мыши. Нажмите Escape, чтобы очистить привязку."
+	},
+	"app.settings.game-options.keybind.mixed": {
+		"message": "Различается по сборкам"
+	},
+	"app.settings.game-options.keybind.modifier.alt": {
+		"message": "Alt"
+	},
+	"app.settings.game-options.keybind.modifier.command": {
+		"message": "Command"
+	},
+	"app.settings.game-options.keybind.modifier.control": {
+		"message": "Ctrl"
+	},
+	"app.settings.game-options.keybind.modifier.shift": {
+		"message": "Shift"
+	},
+	"app.settings.game-options.keybind.modifier.super": {
+		"message": "Super"
+	},
+	"app.settings.game-options.keybind.mouse.button": {
+		"message": "Кнопка мыши {button}"
+	},
+	"app.settings.game-options.keybind.mouse.left": {
+		"message": "Левая кнопка мыши"
+	},
+	"app.settings.game-options.keybind.mouse.middle": {
+		"message": "Средняя кнопка мыши"
+	},
+	"app.settings.game-options.keybind.mouse.right": {
+		"message": "Правая кнопка мыши"
+	},
+	"app.settings.game-options.keybind.recording-label": {
+		"message": "{setting}: ожидание клавиши или кнопки мыши. Нажмите Escape, чтобы очистить привязку."
+	},
+	"app.settings.game-options.keybind.scancode": {
+		"message": "Скан-код {code}"
+	},
+	"app.settings.game-options.keybind.unsupported-status": {
+		"message": "Minecraft не понимает такой ввод. Нажмите другую клавишу."
+	},
+	"app.settings.game-options.setting.advanced-opengl.label": {
+		"message": "Расширенный OpenGL"
+	},
+	"app.settings.game-options.setting.allow-cursor-changes.label": {
+		"message": "Разрешить смену курсора"
+	},
+	"app.settings.game-options.setting.allow-server-listing.description": {
+		"message": "Показывать имя игрока в списках серверов."
+	},
+	"app.settings.game-options.setting.allow-server-listing.label": {
+		"message": "Списки серверов"
+	},
+	"app.settings.game-options.setting.alternate-blocks.label": {
+		"message": "Альтернативные блоки"
+	},
+	"app.settings.game-options.setting.ambient-occlusion.label": {
+		"message": "Плавное освещение"
+	},
+	"app.settings.game-options.setting.ambient-volume.label": {
+		"message": "Окружение"
+	},
+	"app.settings.game-options.setting.anaglyph-3d.label": {
+		"message": "3D-анаглиф"
+	},
+	"app.settings.game-options.setting.anisotropic-filtering.label": {
+		"message": "Анизотропная фильтрация"
+	},
+	"app.settings.game-options.setting.anisotropy.label": {
+		"message": "Анизотропия"
+	},
+	"app.settings.game-options.setting.attack-indicator.label": {
+		"message": "Индикатор атаки"
+	},
+	"app.settings.game-options.setting.auto-jump.description": {
+		"message": "Автоматически запрыгивать на блок высотой в один блок."
+	},
+	"app.settings.game-options.setting.auto-jump.label": {
+		"message": "Автопрыжок"
+	},
+	"app.settings.game-options.setting.auto-suggestions.label": {
+		"message": "Подсказки команд"
+	},
+	"app.settings.game-options.setting.autosave-indicator.label": {
+		"message": "Индикатор автосохранения"
+	},
+	"app.settings.game-options.setting.biome-blend-radius.description": {
+		"message": "Расстояние, на котором смешиваются цвета биомов."
+	},
+	"app.settings.game-options.setting.biome-blend-radius.label": {
+		"message": "Смешивание биомов"
+	},
+	"app.settings.game-options.setting.blocks-volume.label": {
+		"message": "Блоки"
+	},
+	"app.settings.game-options.setting.brightness.label": {
+		"message": "Яркость"
+	},
+	"app.settings.game-options.setting.cape.description": {
+		"message": "Показывать плащ игрока, включая текстуру элитр."
+	},
+	"app.settings.game-options.setting.cape.label": {
+		"message": "Плащ"
+	},
+	"app.settings.game-options.setting.chat-background-only.label": {
+		"message": "Фон только под текстом"
+	},
+	"app.settings.game-options.setting.chat-colors.label": {
+		"message": "Цвета в чате"
+	},
+	"app.settings.game-options.setting.chat-delay.label": {
+		"message": "Задержка чата"
+	},
+	"app.settings.game-options.setting.chat-line-spacing.label": {
+		"message": "Межстрочный интервал чата"
+	},
+	"app.settings.game-options.setting.chat-links-prompt.description": {
+		"message": "Спрашивать перед открытием ссылок из чата."
+	},
+	"app.settings.game-options.setting.chat-links-prompt.label": {
+		"message": "Предупреждать о ссылках"
+	},
+	"app.settings.game-options.setting.chat-links.description": {
+		"message": "Разрешить открывать веб-ссылки из чата."
+	},
+	"app.settings.game-options.setting.chat-links.label": {
+		"message": "Веб-ссылки"
+	},
+	"app.settings.game-options.setting.chat-opacity.description": {
+		"message": "Непрозрачность текста чата."
+	},
+	"app.settings.game-options.setting.chat-opacity.label": {
+		"message": "Непрозрачность чата"
+	},
+	"app.settings.game-options.setting.chat-preview.label": {
+		"message": "Предпросмотр чата"
+	},
+	"app.settings.game-options.setting.chat-scale.label": {
+		"message": "Масштаб чата"
+	},
+	"app.settings.game-options.setting.chat-visibility.label": {
+		"message": "Видимость чата"
+	},
+	"app.settings.game-options.setting.chat-width.label": {
+		"message": "Ширина чата"
+	},
+	"app.settings.game-options.setting.chunk-fade-time.label": {
+		"message": "Появление чанков"
+	},
+	"app.settings.game-options.setting.cloud-range.label": {
+		"message": "Дальность облаков"
+	},
+	"app.settings.game-options.setting.clouds.label": {
+		"message": "Облака"
+	},
+	"app.settings.game-options.setting.ctrl-click-right-click.label": {
+		"message": "Ctrl+клик как правый клик"
+	},
+	"app.settings.game-options.setting.cutout-leaves.label": {
+		"message": "Прозрачная листва"
+	},
+	"app.settings.game-options.setting.damage-tilt.label": {
+		"message": "Наклон при уроне"
+	},
+	"app.settings.game-options.setting.dark-splash.description": {
+		"message": "Сделать заставку Mojang Studios чёрной вместо красной."
+	},
+	"app.settings.game-options.setting.dark-splash.label": {
+		"message": "Монохромный логотип"
+	},
+	"app.settings.game-options.setting.darkness-pulsing.label": {
+		"message": "Пульсация тьмы"
+	},
+	"app.settings.game-options.setting.debug-gui-scale.label": {
+		"message": "Масштаб отладочного экрана"
+	},
+	"app.settings.game-options.setting.directional-audio.label": {
+		"message": "Направленный звук"
+	},
+	"app.settings.game-options.setting.discrete-mouse-scroll.description": {
+		"message": "Считать каждое движение колеса одним шагом прокрутки."
+	},
+	"app.settings.game-options.setting.discrete-mouse-scroll.label": {
+		"message": "Пошаговая прокрутка"
+	},
+	"app.settings.game-options.setting.entity-distance.label": {
+		"message": "Дальность существ"
+	},
+	"app.settings.game-options.setting.entity-shadows.label": {
+		"message": "Тени существ"
+	},
+	"app.settings.game-options.setting.exclusive-fullscreen.label": {
+		"message": "Монопольный полноэкранный режим"
+	},
+	"app.settings.game-options.setting.extra-telemetry.label": {
+		"message": "Дополнительная телеметрия"
+	},
+	"app.settings.game-options.setting.focused-chat-height.label": {
+		"message": "Высота открытого чата"
+	},
+	"app.settings.game-options.setting.force-unicode-font.label": {
+		"message": "Юникодный шрифт"
+	},
+	"app.settings.game-options.setting.fov-effects.label": {
+		"message": "Эффекты обзора"
+	},
+	"app.settings.game-options.setting.fov.label": {
+		"message": "Поле зрения"
+	},
+	"app.settings.game-options.setting.fullscreen.label": {
+		"message": "Полноэкранный режим"
+	},
+	"app.settings.game-options.setting.glint-speed.label": {
+		"message": "Скорость блеска"
+	},
+	"app.settings.game-options.setting.glint-strength.label": {
+		"message": "Сила блеска"
+	},
+	"app.settings.game-options.setting.graphics-backend.label": {
+		"message": "Графический движок"
+	},
+	"app.settings.game-options.setting.graphics.description": {
+		"message": "Влияет на качество картинки и производительность."
+	},
+	"app.settings.game-options.setting.graphics.label": {
+		"message": "Графика"
+	},
+	"app.settings.game-options.setting.gui-scale.description": {
+		"message": "Размер интерфейса и игрового HUD."
+	},
+	"app.settings.game-options.setting.gui-scale.label": {
+		"message": "Масштаб интерфейса"
+	},
+	"app.settings.game-options.setting.hat.description": {
+		"message": "Показывать слой скина «головной убор»."
+	},
+	"app.settings.game-options.setting.hat.label": {
+		"message": "Головной убор"
+	},
+	"app.settings.game-options.setting.held-item-tooltips.label": {
+		"message": "Подсказки о предметах в руке"
+	},
+	"app.settings.game-options.setting.hide-lightning-flashes.label": {
+		"message": "Скрывать вспышки молний"
+	},
+	"app.settings.game-options.setting.hide-matched-names.label": {
+		"message": "Скрывать совпадающие имена"
+	},
+	"app.settings.game-options.setting.hide-server-address.label": {
+		"message": "Скрывать адрес сервера"
+	},
+	"app.settings.game-options.setting.hide-splash-texts.label": {
+		"message": "Скрывать надписи на заставке"
+	},
+	"app.settings.game-options.setting.high-contrast-outline.label": {
+		"message": "Контрастная обводка блоков"
+	},
+	"app.settings.game-options.setting.high-contrast.description": {
+		"message": "Повысить контрастность элементов интерфейса."
+	},
+	"app.settings.game-options.setting.high-contrast.label": {
+		"message": "Высокая контрастность"
+	},
+	"app.settings.game-options.setting.hostile-volume.label": {
+		"message": "Враждебные существа"
+	},
+	"app.settings.game-options.setting.improved-transparency.label": {
+		"message": "Улучшенная прозрачность"
+	},
+	"app.settings.game-options.setting.in-game-notifications.label": {
+		"message": "Уведомления в игре"
+	},
+	"app.settings.game-options.setting.inactivity-framerate-limit.label": {
+		"message": "Снижение частоты кадров"
+	},
+	"app.settings.game-options.setting.invert-horizontal-mouse.label": {
+		"message": "Инвертировать мышь по горизонтали"
+	},
+	"app.settings.game-options.setting.invert-mouse.description": {
+		"message": "Инвертировать движение мыши по вертикали."
+	},
+	"app.settings.game-options.setting.invert-mouse.label": {
+		"message": "Инвертировать мышь"
+	},
+	"app.settings.game-options.setting.jacket.description": {
+		"message": "Показывать слой скина «куртка»."
+	},
+	"app.settings.game-options.setting.jacket.label": {
+		"message": "Куртка"
+	},
+	"app.settings.game-options.setting.japanese-glyph-variants.label": {
+		"message": "Японские варианты глифов"
+	},
+	"app.settings.game-options.setting.key-advancements.label": {
+		"message": "Достижения"
+	},
+	"app.settings.game-options.setting.key-attack.label": {
+		"message": "Атака"
+	},
+	"app.settings.game-options.setting.key-back.label": {
+		"message": "Шаг назад"
+	},
+	"app.settings.game-options.setting.key-chat.label": {
+		"message": "Открыть чат"
+	},
+	"app.settings.game-options.setting.key-command.label": {
+		"message": "Команда"
+	},
+	"app.settings.game-options.setting.key-debug-advanced-tooltips.label": {
+		"message": "Подробные подсказки"
+	},
+	"app.settings.game-options.setting.key-debug-chunk-borders.label": {
+		"message": "Границы чанков"
+	},
+	"app.settings.game-options.setting.key-debug-clear-chat.label": {
+		"message": "Очистить чат"
+	},
+	"app.settings.game-options.setting.key-debug-copy-location.label": {
+		"message": "Скопировать координаты"
+	},
+	"app.settings.game-options.setting.key-debug-copy-recreate-command.label": {
+		"message": "Скопировать команду воссоздания"
+	},
+	"app.settings.game-options.setting.key-debug-crash.label": {
+		"message": "Вызвать отладочный сбой"
+	},
+	"app.settings.game-options.setting.key-debug-dump-dynamic-textures.label": {
+		"message": "Выгрузить динамические текстуры"
+	},
+	"app.settings.game-options.setting.key-debug-dump-version.label": {
+		"message": "Выгрузить версию"
+	},
+	"app.settings.game-options.setting.key-debug-focus-pause.label": {
+		"message": "Пауза при потере фокуса"
+	},
+	"app.settings.game-options.setting.key-debug-fps-charts.label": {
+		"message": "Графики кадров"
+	},
+	"app.settings.game-options.setting.key-debug-hitboxes.label": {
+		"message": "Показывать хитбоксы"
+	},
+	"app.settings.game-options.setting.key-debug-improved-transparency.label": {
+		"message": "Отладка улучшенной прозрачности"
+	},
+	"app.settings.game-options.setting.key-debug-lightmap-texture.label": {
+		"message": "Текстура карты освещения"
+	},
+	"app.settings.game-options.setting.key-debug-modifier.label": {
+		"message": "Модификатор отладки"
+	},
+	"app.settings.game-options.setting.key-debug-network-charts.label": {
+		"message": "Графики сети"
+	},
+	"app.settings.game-options.setting.key-debug-options.label": {
+		"message": "Параметры отладки"
+	},
+	"app.settings.game-options.setting.key-debug-overlay.label": {
+		"message": "Отладочный экран"
+	},
+	"app.settings.game-options.setting.key-debug-profiling-chart.label": {
+		"message": "График профилирования"
+	},
+	"app.settings.game-options.setting.key-debug-profiling.label": {
+		"message": "Начать профилирование"
+	},
+	"app.settings.game-options.setting.key-debug-reload-chunks.label": {
+		"message": "Перезагрузить чанки"
+	},
+	"app.settings.game-options.setting.key-debug-reload-resource-packs.label": {
+		"message": "Перезагрузить наборы ресурсов"
+	},
+	"app.settings.game-options.setting.key-debug-spectate.label": {
+		"message": "Наблюдать за существом"
+	},
+	"app.settings.game-options.setting.key-debug-switch-game-mode.label": {
+		"message": "Сменить режим игры"
+	},
+	"app.settings.game-options.setting.key-drop.label": {
+		"message": "Выбросить предмет"
+	},
+	"app.settings.game-options.setting.key-forward.label": {
+		"message": "Шаг вперёд"
+	},
+	"app.settings.game-options.setting.key-friends.label": {
+		"message": "Друзья"
+	},
+	"app.settings.game-options.setting.key-fullscreen.label": {
+		"message": "Полноэкранный режим"
+	},
+	"app.settings.game-options.setting.key-hotbar-1.label": {
+		"message": "Ячейка 1"
+	},
+	"app.settings.game-options.setting.key-hotbar-2.label": {
+		"message": "Ячейка 2"
+	},
+	"app.settings.game-options.setting.key-hotbar-3.label": {
+		"message": "Ячейка 3"
+	},
+	"app.settings.game-options.setting.key-hotbar-4.label": {
+		"message": "Ячейка 4"
+	},
+	"app.settings.game-options.setting.key-hotbar-5.label": {
+		"message": "Ячейка 5"
+	},
+	"app.settings.game-options.setting.key-hotbar-6.label": {
+		"message": "Ячейка 6"
+	},
+	"app.settings.game-options.setting.key-hotbar-7.label": {
+		"message": "Ячейка 7"
+	},
+	"app.settings.game-options.setting.key-hotbar-8.label": {
+		"message": "Ячейка 8"
+	},
+	"app.settings.game-options.setting.key-hotbar-9.label": {
+		"message": "Ячейка 9"
+	},
+	"app.settings.game-options.setting.key-inventory.label": {
+		"message": "Инвентарь"
+	},
+	"app.settings.game-options.setting.key-jump.label": {
+		"message": "Прыжок"
+	},
+	"app.settings.game-options.setting.key-left.label": {
+		"message": "Шаг влево"
+	},
+	"app.settings.game-options.setting.key-load-toolbar.label": {
+		"message": "Загрузить панель"
+	},
+	"app.settings.game-options.setting.key-perspective.label": {
+		"message": "Сменить вид"
+	},
+	"app.settings.game-options.setting.key-pick-item.label": {
+		"message": "Выбрать блок"
+	},
+	"app.settings.game-options.setting.key-player-list.label": {
+		"message": "Список игроков"
+	},
+	"app.settings.game-options.setting.key-quick-actions.label": {
+		"message": "Быстрые действия"
+	},
+	"app.settings.game-options.setting.key-right.label": {
+		"message": "Шаг вправо"
+	},
+	"app.settings.game-options.setting.key-save-toolbar.label": {
+		"message": "Сохранить панель"
+	},
+	"app.settings.game-options.setting.key-screenshot.label": {
+		"message": "Скриншот"
+	},
+	"app.settings.game-options.setting.key-smooth-camera.label": {
+		"message": "Кинематографическая камера"
+	},
+	"app.settings.game-options.setting.key-sneak.label": {
+		"message": "Красться"
+	},
+	"app.settings.game-options.setting.key-social-interactions.label": {
+		"message": "Социальные взаимодействия"
+	},
+	"app.settings.game-options.setting.key-spectator-hotbar.label": {
+		"message": "Панель наблюдателя"
+	},
+	"app.settings.game-options.setting.key-spectator-outlines.label": {
+		"message": "Подсвечивать наблюдателей"
+	},
+	"app.settings.game-options.setting.key-sprint.label": {
+		"message": "Бежать"
+	},
+	"app.settings.game-options.setting.key-swap-offhand.label": {
+		"message": "Поменять руки"
+	},
+	"app.settings.game-options.setting.key-toggle-gui.label": {
+		"message": "Скрыть интерфейс"
+	},
+	"app.settings.game-options.setting.key-toggle-spectator-shader.label": {
+		"message": "Шейдер наблюдателя"
+	},
+	"app.settings.game-options.setting.key-use.label": {
+		"message": "Использовать предмет"
+	},
+	"app.settings.game-options.setting.language.label": {
+		"message": "Язык"
+	},
+	"app.settings.game-options.setting.left-pants-leg.label": {
+		"message": "Левая штанина"
+	},
+	"app.settings.game-options.setting.left-sleeve.label": {
+		"message": "Левый рукав"
+	},
+	"app.settings.game-options.setting.legacy-framerate-limit.label": {
+		"message": "Ограничение кадров"
+	},
+	"app.settings.game-options.setting.legacy-view-distance.label": {
+		"message": "Дальность обзора"
+	},
+	"app.settings.game-options.setting.mac-fullscreen-menu.label": {
+		"message": "Меню macOS в полноэкранном режиме"
+	},
+	"app.settings.game-options.setting.main-hand.description": {
+		"message": "Какая рука считается главной — левая или правая."
+	},
+	"app.settings.game-options.setting.main-hand.label": {
+		"message": "Главная рука"
+	},
+	"app.settings.game-options.setting.master-volume.label": {
+		"message": "Общая громкость"
+	},
+	"app.settings.game-options.setting.max-framerate.label": {
+		"message": "Максимум кадров в секунду"
+	},
+	"app.settings.game-options.setting.menu-background-blur.label": {
+		"message": "Размытие фона меню"
+	},
+	"app.settings.game-options.setting.mipmap-levels.description": {
+		"message": "Сглаживание текстур на расстоянии."
+	},
+	"app.settings.game-options.setting.mipmap-levels.label": {
+		"message": "Уровни мип-текстур"
+	},
+	"app.settings.game-options.setting.mouse-wheel-sensitivity.label": {
+		"message": "Чувствительность колеса мыши"
+	},
+	"app.settings.game-options.setting.music-frequency.label": {
+		"message": "Частота музыки"
+	},
+	"app.settings.game-options.setting.music-toast.description": {
+		"message": "Где показывать название играющей музыки: в меню паузы и/или всплывающим уведомлением."
+	},
+	"app.settings.game-options.setting.music-toast.label": {
+		"message": "Уведомление о музыке"
+	},
+	"app.settings.game-options.setting.music-volume.label": {
+		"message": "Музыка"
+	},
+	"app.settings.game-options.setting.narrator-hotkey.label": {
+		"message": "Горячая клавиша диктора"
+	},
+	"app.settings.game-options.setting.narrator.description": {
+		"message": "Что читает диктор."
+	},
+	"app.settings.game-options.setting.narrator.label": {
+		"message": "Диктор"
+	},
+	"app.settings.game-options.setting.neutral-volume.label": {
+		"message": "Мирные существа"
+	},
+	"app.settings.game-options.setting.notification-time.description": {
+		"message": "Сколько времени всплывающие уведомления остаются на экране."
+	},
+	"app.settings.game-options.setting.notification-time.label": {
+		"message": "Время показа уведомлений"
+	},
+	"app.settings.game-options.setting.operator-items-tab.label": {
+		"message": "Вкладка предметов оператора"
+	},
+	"app.settings.game-options.setting.panorama-speed.label": {
+		"message": "Скорость панорамы"
+	},
+	"app.settings.game-options.setting.particles.label": {
+		"message": "Частицы"
+	},
+	"app.settings.game-options.setting.players-volume.label": {
+		"message": "Игроки"
+	},
+	"app.settings.game-options.setting.prioritize-chunk-updates.label": {
+		"message": "Приоритет обновления чанков"
+	},
+	"app.settings.game-options.setting.quit-shortcuts.label": {
+		"message": "Сочетания для выхода"
+	},
+	"app.settings.game-options.setting.raw-mouse-input.label": {
+		"message": "Прямой ввод мыши"
+	},
+	"app.settings.game-options.setting.realms-notifications.label": {
+		"message": "Уведомления Realms"
+	},
+	"app.settings.game-options.setting.record-volume.label": {
+		"message": "Проигрыватель и нотные блоки"
+	},
+	"app.settings.game-options.setting.reduced-debug-info.label": {
+		"message": "Сокращённая отладочная информация"
+	},
+	"app.settings.game-options.setting.render-distance.label": {
+		"message": "Дальность прорисовки"
+	},
+	"app.settings.game-options.setting.right-pants-leg.label": {
+		"message": "Правая штанина"
+	},
+	"app.settings.game-options.setting.right-sleeve.label": {
+		"message": "Правый рукав"
+	},
+	"app.settings.game-options.setting.rotate-with-minecart.label": {
+		"message": "Поворот вместе с вагонеткой"
+	},
+	"app.settings.game-options.setting.save-chat-drafts.label": {
+		"message": "Сохранять черновики чата"
+	},
+	"app.settings.game-options.setting.screen-effects.label": {
+		"message": "Эффекты на экране"
+	},
+	"app.settings.game-options.setting.secure-chat-only.label": {
+		"message": "Только защищённый чат"
+	},
+	"app.settings.game-options.setting.sensitivity.label": {
+		"message": "Чувствительность мыши"
+	},
+	"app.settings.game-options.setting.server-textures.label": {
+		"message": "Текстуры сервера"
+	},
+	"app.settings.game-options.setting.share-presence.label": {
+		"message": "Показывать, во что вы играете"
+	},
+	"app.settings.game-options.setting.simulation-distance.description": {
+		"message": "На каком расстоянии обновляются существа и тикают блоки и жидкости."
+	},
+	"app.settings.game-options.setting.simulation-distance.label": {
+		"message": "Дальность симуляции"
+	},
+	"app.settings.game-options.setting.snooper.label": {
+		"message": "Сбор статистики"
+	},
+	"app.settings.game-options.setting.sprint-window.label": {
+		"message": "Окно двойного нажатия для бега"
+	},
+	"app.settings.game-options.setting.subtitles.description": {
+		"message": "Показывать подписи к звукам игры."
+	},
+	"app.settings.game-options.setting.subtitles.label": {
+		"message": "Субтитры"
+	},
+	"app.settings.game-options.setting.text-background-opacity.label": {
+		"message": "Непрозрачность фона текста"
+	},
+	"app.settings.game-options.setting.texture-filtering.label": {
+		"message": "Фильтрация текстур"
+	},
+	"app.settings.game-options.setting.toggle-attack.label": {
+		"message": "Атака переключателем"
+	},
+	"app.settings.game-options.setting.toggle-crouch.description": {
+		"message": "Одно нажатие — и персонаж остаётся красться."
+	},
+	"app.settings.game-options.setting.toggle-crouch.label": {
+		"message": "Красться переключателем"
+	},
+	"app.settings.game-options.setting.toggle-sprint.description": {
+		"message": "Одно нажатие — и персонаж продолжает бежать."
+	},
+	"app.settings.game-options.setting.toggle-sprint.label": {
+		"message": "Бег переключателем"
+	},
+	"app.settings.game-options.setting.toggle-use.label": {
+		"message": "Использование переключателем"
+	},
+	"app.settings.game-options.setting.touchscreen.label": {
+		"message": "Режим сенсорного экрана"
+	},
+	"app.settings.game-options.setting.ui-volume.label": {
+		"message": "Интерфейс"
+	},
+	"app.settings.game-options.setting.unfocused-chat-height.label": {
+		"message": "Высота закрытого чата"
+	},
+	"app.settings.game-options.setting.use-vbo.label": {
+		"message": "Использовать VBO"
+	},
+	"app.settings.game-options.setting.view-bobbing.description": {
+		"message": "Покачивание камеры при ходьбе."
+	},
+	"app.settings.game-options.setting.view-bobbing.label": {
+		"message": "Покачивание камеры"
+	},
+	"app.settings.game-options.setting.vignette.label": {
+		"message": "Виньетирование"
+	},
+	"app.settings.game-options.setting.voice-volume.label": {
+		"message": "Голос и речь"
+	},
+	"app.settings.game-options.setting.vsync.description": {
+		"message": "Ограничить частоту кадров частотой обновления экрана, чтобы не было разрывов картинки."
+	},
+	"app.settings.game-options.setting.vsync.label": {
+		"message": "Вертикальная синхронизация"
+	},
+	"app.settings.game-options.setting.weather-radius.label": {
+		"message": "Радиус погоды"
+	},
+	"app.settings.game-options.setting.weather-volume.label": {
+		"message": "Погода"
+	},
+	"app.settings.game-options.validation.changed-since-opened": {
+		"message": "Эта настройка изменилась в другом месте. Проверьте её и попробуйте снова."
+	},
+	"app.settings.game-options.validation.invalid-value": {
+		"message": "Выберите допустимое значение."
+	},
+	"app.settings.game-options.validation.missing-value": {
+		"message": "Сначала выберите значение."
+	},
+	"app.settings.game-options.validation.no-compatible-instances": {
+		"message": "Некоторые сборки не могут применить эту настройку"
+	},
+	"app.settings.synced-options.choose-sync-source.command-history-title": {
+		"message": "Откуда взять историю команд"
+	},
+	"app.settings.synced-options.choose-sync-source.creative-hotbars-title": {
+		"message": "Откуда взять творческие панели"
+	},
+	"app.settings.synced-options.choose-sync-source.data-packs-title": {
+		"message": "Откуда взять наборы данных"
+	},
+	"app.settings.synced-options.choose-sync-source.game-settings-description": {
+		"message": "Выберите сборку, из которой скопировать настройки игры. Они нужны только для первой синхронизации — потом их можно менять из любой сборки."
+	},
+	"app.settings.synced-options.choose-sync-source.game-settings-title": {
+		"message": "Откуда взять настройки игры"
+	},
+	"app.settings.synced-options.choose-sync-source.ineligible": {
+		"message": "Эту сборку нельзя выбрать источником"
+	},
+	"app.settings.synced-options.choose-sync-source.load-error": {
+		"message": "Не удалось загрузить список источников. Попробуйте ещё раз."
+	},
+	"app.settings.synced-options.choose-sync-source.multiplayer-servers-title": {
+		"message": "Откуда взять список серверов"
+	},
+	"app.settings.synced-options.choose-sync-source.resource-packs-title": {
+		"message": "Откуда взять наборы ресурсов"
+	},
+	"app.settings.synced-options.choose-sync-source.retry": {
+		"message": "Попробовать снова"
+	},
 	"app.settings.synced-options.command-history": {
 		"message": "История команд"
 	},
@@ -713,11 +1829,116 @@
 	"app.settings.synced-options.creative-hotbars.description": {
 		"message": "Синхронизировать сохранённые панели творческого режима между сборками."
 	},
+	"app.settings.synced-options.data-packs": {
+		"message": "Синхронизировать наборы данных"
+	},
+	"app.settings.synced-options.data-packs.description": {
+		"message": "Одни и те же наборы данных во всех сборках"
+	},
+	"app.settings.synced-options.data-packs.none-synced-yet": {
+		"message": "Вы ещё не синхронизировали ни одного набора данных"
+	},
+	"app.settings.synced-options.edit.no-instances": {
+		"message": "Добавьте сборку, прежде чем править общие данные."
+	},
+	"app.settings.synced-options.edit.no-synced-data": {
+		"message": "Выберите источник, прежде чем править эту настройку."
+	},
+	"app.settings.synced-options.game-settings": {
+		"message": "Синхронизировать настройки игры"
+	},
+	"app.settings.synced-options.game-settings.button": {
+		"message": "Изменить настройки игры"
+	},
+	"app.settings.synced-options.game-settings.conflict-text": {
+		"message": "Мы загрузили свежие настройки. Проверьте изменения и сохраните ещё раз."
+	},
+	"app.settings.synced-options.game-settings.conflict-title": {
+		"message": "Эти настройки изменились в другом месте"
+	},
+	"app.settings.synced-options.game-settings.custom-empty": {
+		"message": "Настройки от модов появятся здесь, когда Modrinth найдёт их в одной из ваших сборок."
+	},
+	"app.settings.synced-options.game-settings.description": {
+		"message": "Одни и те же настройки игры во всех сборках."
+	},
+	"app.settings.synced-options.game-settings.disable-all": {
+		"message": "Не синхронизировать ничего"
+	},
+	"app.settings.synced-options.game-settings.disabled-tooltip": {
+		"message": "Включите синхронизацию настроек игры, прежде чем выбирать отдельные настройки."
+	},
+	"app.settings.synced-options.game-settings.empty": {
+		"message": "Под ваш поиск или фильтр ничего не подходит."
+	},
+	"app.settings.synced-options.game-settings.enable-all": {
+		"message": "Синхронизировать всё"
+	},
+	"app.settings.synced-options.game-settings.load-failed": {
+		"message": "Не удалось загрузить настройки игры."
+	},
+	"app.settings.synced-options.game-settings.loading": {
+		"message": "Загрузка настроек…"
+	},
+	"app.settings.synced-options.game-settings.no-options-to-edit": {
+		"message": "Пока нечего настраивать"
+	},
+	"app.settings.synced-options.game-settings.not-being-synced": {
+		"message": "Не синхронизируется"
+	},
+	"app.settings.synced-options.game-settings.retry": {
+		"message": "Повторить"
+	},
+	"app.settings.synced-options.game-settings.save": {
+		"message": "Сохранить настройки"
+	},
+	"app.settings.synced-options.game-settings.search": {
+		"message": "Поиск по настройкам…"
+	},
+	"app.settings.synced-options.game-settings.sync-description": {
+		"message": "Синхронизированные настройки применяются ко всем сборкам и перекрывают значения из модпака."
+	},
+	"app.settings.synced-options.game-settings.sync-setting": {
+		"message": "Синхронизировать «{setting}» между сборками"
+	},
+	"app.settings.synced-options.game-settings.sync-title": {
+		"message": "Синхронизация настроек игры"
+	},
+	"app.settings.synced-options.game-settings.synced-across-instances": {
+		"message": "Синхронизировано между сборками"
+	},
+	"app.settings.synced-options.game-settings.title": {
+		"message": "Настройки игры"
+	},
+	"app.settings.synced-options.game-settings.unsaved-changes": {
+		"message": "Есть несохранённые изменения."
+	},
+	"app.settings.synced-options.game-settings.unsync-setting": {
+		"message": "Не синхронизировать «{setting}» между сборками"
+	},
+	"app.settings.synced-options.game-settings.value-mixed": {
+		"message": "Различается по сборкам"
+	},
+	"app.settings.synced-options.game-settings.value-off": {
+		"message": "Выкл."
+	},
+	"app.settings.synced-options.game-settings.value-on": {
+		"message": "Вкл."
+	},
+	"app.settings.synced-options.game-settings.value-unset": {
+		"message": "Выберите значение"
+	},
 	"app.settings.synced-options.multiplayer-servers": {
 		"message": "Список серверов"
 	},
 	"app.settings.synced-options.multiplayer-servers.address": {
 		"message": "Адрес сервера"
+	},
+	"app.settings.synced-options.multiplayer-servers.copy-address": {
+		"message": "Скопировать адрес"
+	},
+	"app.settings.synced-options.multiplayer-servers.count": {
+		"message": "{count, plural, one {# сервер} few {# сервера} many {# серверов} other {# сервера}}"
 	},
 	"app.settings.synced-options.multiplayer-servers.description": {
 		"message": "Синхронизировать список серверов между сборками."
@@ -728,11 +1949,47 @@
 	"app.settings.synced-options.multiplayer-servers.empty": {
 		"message": "Сейчас не синхронизируется ни один добавленный вручную сервер."
 	},
+	"app.settings.synced-options.multiplayer-servers.filter-offline": {
+		"message": "Не в сети"
+	},
+	"app.settings.synced-options.multiplayer-servers.filter-online": {
+		"message": "В сети"
+	},
+	"app.settings.synced-options.multiplayer-servers.more-options": {
+		"message": "Ещё действия с сервером"
+	},
 	"app.settings.synced-options.multiplayer-servers.name": {
 		"message": "Название сервера"
 	},
+	"app.settings.synced-options.multiplayer-servers.no-results": {
+		"message": "Под ваш поиск или фильтры серверов не нашлось."
+	},
 	"app.settings.synced-options.multiplayer-servers.none-synced-yet": {
 		"message": "Серверы пока не синхронизируются"
+	},
+	"app.settings.synced-options.multiplayer-servers.players-online": {
+		"message": "{count, number} в сети"
+	},
+	"app.settings.synced-options.multiplayer-servers.search": {
+		"message": "Поиск среди {count, number} {count, plural, one {синхронизированного сервера} few {синхронизированных серверов} many {синхронизированных серверов} other {синхронизированных серверов}}…"
+	},
+	"app.settings.synced-options.multiplayer-servers.status": {
+		"message": "Состояние"
+	},
+	"app.settings.synced-options.packs.disabled": {
+		"message": "Включите синхронизацию, прежде чем править общие наборы."
+	},
+	"app.settings.synced-options.resource-packs": {
+		"message": "Синхронизировать наборы ресурсов"
+	},
+	"app.settings.synced-options.resource-packs.description": {
+		"message": "Одни и те же наборы ресурсов во всех сборках"
+	},
+	"app.settings.synced-options.resource-packs.none-synced-yet": {
+		"message": "Вы ещё не синхронизировали ни одного набора ресурсов"
+	},
+	"app.settings.tabs.features": {
+		"message": "Возможности"
 	},
 	"app.settings.tabs.synced-options": {
 		"message": "Синхронизация"
@@ -748,6 +2005,135 @@
 	},
 	"app.skins.modal.demo-save-tooltip": {
 		"message": "Войдите, чтобы сохранять скины."
+	},
+	"app.sync-instances-update.badge": {
+		"message": "Новое в этом обновлении"
+	},
+	"app.sync-instances-update.choose-source.all": {
+		"message": "Выберите сборку, из которой скопировать настройки игры, наборы ресурсов, историю команд, творческие панели и список серверов. Всё это нужно только для первой синхронизации — потом можно менять из любой сборки."
+	},
+	"app.sync-instances-update.choose-source.all-title": {
+		"message": "Выберите источник"
+	},
+	"app.sync-instances-update.choose-source.data-packs": {
+		"message": "Выберите сборку, из которой скопировать наборы данных. Они нужны только для первой синхронизации — потом их можно менять из любой сборки."
+	},
+	"app.sync-instances-update.choose-source.resource-packs": {
+		"message": "Выберите сборку, из которой скопировать наборы ресурсов. Они нужны только для первой синхронизации — потом их можно менять из любой сборки."
+	},
+	"app.sync-instances-update.creative-hotbars": {
+		"message": "Синхронизировать творческие панели"
+	},
+	"app.sync-instances-update.description": {
+		"message": "Теперь настройки игры, серверы, наборы ресурсов и другое можно синхронизировать между сборками — чтобы всё оставалось на своих местах, куда бы вы ни зашли."
+	},
+	"app.sync-instances-update.load-error": {
+		"message": "Не удалось загрузить настройки синхронизации. Попробуйте ещё раз."
+	},
+	"app.sync-instances-update.manage-later": {
+		"message": "Синхронизацию можно включить сейчас, а настроить позже в параметрах приложения."
+	},
+	"app.sync-instances-update.notification.description": {
+		"message": "Держите настройки игры, серверы, наборы ресурсов и остальное одинаковыми во всех сборках."
+	},
+	"app.sync-instances-update.notification.dismiss": {
+		"message": "Скрыть"
+	},
+	"app.sync-instances-update.notification.title": {
+		"message": "Синхронизируйте сборки"
+	},
+	"app.sync-instances-update.notification.view-update": {
+		"message": "Посмотреть"
+	},
+	"app.sync-instances-update.retry": {
+		"message": "Попробовать снова"
+	},
+	"app.sync-instances-update.skip": {
+		"message": "Пропустить"
+	},
+	"app.sync-instances-update.sync-all": {
+		"message": "Синхронизировать всё"
+	},
+	"app.sync-instances-update.title": {
+		"message": "Синхронизируйте сборки"
+	},
+	"app.synced-content.change.disable-description": {
+		"message": "Его можно выключить во всех синхронизированных сборках или только в этой. Если выключить только здесь, для сборки включатся исключения."
+	},
+	"app.synced-content.change.disable-everywhere": {
+		"message": "Выключить везде"
+	},
+	"app.synced-content.change.disable-everywhere-description": {
+		"message": "Выключить это содержимое во всех синхронизированных сборках."
+	},
+	"app.synced-content.change.disable-here": {
+		"message": "Выключить здесь"
+	},
+	"app.synced-content.change.disable-title": {
+		"message": "Выключить содержимое?"
+	},
+	"app.synced-content.change.enable-description": {
+		"message": "Его можно включить во всех синхронизированных сборках или только в этой. Если включить только здесь, для сборки включатся исключения."
+	},
+	"app.synced-content.change.enable-everywhere": {
+		"message": "Включить везде"
+	},
+	"app.synced-content.change.enable-everywhere-description": {
+		"message": "Включить это содержимое во всех синхронизированных сборках."
+	},
+	"app.synced-content.change.enable-here": {
+		"message": "Включить здесь"
+	},
+	"app.synced-content.change.enable-title": {
+		"message": "Включить содержимое?"
+	},
+	"app.synced-content.delete.delete-everywhere": {
+		"message": "Удалить везде"
+	},
+	"app.synced-content.delete.delete-here": {
+		"message": "Удалить здесь"
+	},
+	"app.synced-content.delete.description": {
+		"message": "Это содержимое будет удалено из всех ваших сборок"
+	},
+	"app.synced-content.delete.mixed": {
+		"message": "Выбранное несинхронизированное содержимое удалится только из этой сборки."
+	},
+	"app.synced-content.delete.override-description": {
+		"message": "Его можно удалить только из этой сборки или из всех синхронизированных. Если удалить только здесь, для сборки включатся исключения, и она перестанет получать изменения по этим типам содержимого."
+	},
+	"app.synced-content.delete.resource-pack-description": {
+		"message": "{count, plural, one {Его} other {Их}} можно удалить только из этой сборки или из всех синхронизированных. Если удалить только здесь, для сборки включатся исключения, и она перестанет получать изменения наборов ресурсов."
+	},
+	"app.synced-content.delete.resource-pack-header": {
+		"message": "{count, plural, one {Этот набор ресурсов синхронизирован} other {Эти наборы ресурсов синхронизированы}}"
+	},
+	"app.synced-content.desync.description": {
+		"message": "У этой сборки останется своя копия. Оставить это содержимое синхронизированным в остальных сборках или убрать и оттуда?"
+	},
+	"app.synced-content.desync.keep": {
+		"message": "Оставить"
+	},
+	"app.synced-content.desync.remove": {
+		"message": "Убрать"
+	},
+	"app.synced-content.desync.title": {
+		"message": "Отвязать содержимое"
+	},
+	"app.synced-content.warning.title": {
+		"message": "Это содержимое синхронизировано"
+	},
+	"app.synced-packs.data-packs.title": {
+		"message": "Синхронизированные наборы данных"
+	},
+	"app.synced-packs.empty": {
+		"message": "Добавьте наборы со страницы содержимого сборки, чтобы начать синхронизацию."
+	},
+	"app.synced-packs.load-failed": {
+		"message": "Не удалось загрузить наборы. Попробуйте обновить."
+	},
+	"app.synced-packs.resource-packs.title": {
+		"message": "Синхронизированные наборы ресурсов"
 	},
 	"app.update.download-error.missing-version": {
 		"message": "Не удалось скачать обновление: нет доступной версии"
@@ -1379,6 +2765,33 @@
 	"instance.last-played": {
 		"message": "Последний запуск"
 	},
+	"instance.settings.synced-options.data-override": {
+		"message": "Отключите это исключение, чтобы править общие данные."
+	},
+	"instance.settings.synced-options.data-packs": {
+		"message": "Не синхронизировать наборы данных"
+	},
+	"instance.settings.synced-options.data-packs.description": {
+		"message": "Держать наборы данных этой сборки отдельно от общих."
+	},
+	"instance.settings.synced-options.data-packs.disabled": {
+		"message": "Синхронизация наборов данных выключена в настройках приложения."
+	},
+	"instance.settings.synced-options.edit-packs": {
+		"message": "Изменить общие наборы"
+	},
+	"instance.settings.synced-options.packs-override": {
+		"message": "Отключите это исключение, чтобы править общие наборы. Собственными наборами сборки можно управлять во вкладке содержимого."
+	},
+	"instance.settings.synced-options.resource-packs": {
+		"message": "Не синхронизировать наборы ресурсов"
+	},
+	"instance.settings.synced-options.resource-packs.description": {
+		"message": "Держать наборы ресурсов этой сборки отдельно от общих."
+	},
+	"instance.settings.synced-options.resource-packs.disabled": {
+		"message": "Синхронизация наборов ресурсов выключена в настройках приложения."
+	},
 	"instance.settings.tabs.general.edit-icon.create": {
 		"message": "Создать иконку"
 	},
@@ -1402,6 +2815,15 @@
 	},
 	"instance.settings.tabs.synced-options.creative-hotbars.disabled-in-app": {
 		"message": "Синхронизация сохранённых панелей творческого режима выключена в настройках приложения."
+	},
+	"instance.settings.tabs.synced-options.game-settings": {
+		"message": "Не синхронизировать настройки игры"
+	},
+	"instance.settings.tabs.synced-options.game-settings.description": {
+		"message": "Держать options.txt этой сборки отдельно от общей копии."
+	},
+	"instance.settings.tabs.synced-options.game-settings.disabled-in-app": {
+		"message": "Синхронизация настроек игры выключена в настройках приложения."
 	},
 	"instance.settings.tabs.synced-options.hotbars-conflict.backup-description": {
 		"message": "Заменяемая версия будет сохранена в резервную копию до внесения изменений."

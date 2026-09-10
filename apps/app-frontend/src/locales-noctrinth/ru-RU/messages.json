@@ -1306,5 +1306,8 @@
 	},
 	"settings.language.coverage.app-tooltip": {
 		"message": "Примерно {percentage}% Noctrinth доступно на этом языке."
+	},
+	"skin.preview.drag-to-rotate": {
+		"message": "Перетащите, чтобы повернуть"
 	}
 }

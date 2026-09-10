@@ -1,8 +1,9 @@
 use super::content::get_projects;
 use crate::server_address::ServerAddress;
 use crate::state::{
-    Credentials, ElyCredentials, InstanceLink, ProcessMetadata, Settings,
-    State, game_options_sync_is_enabled, load_game_option_preferences,
+    Credentials, ElyCredentials, InstanceLink, OfflineCredentials,
+    ProcessMetadata, Settings, State, game_options_sync_is_enabled,
+    load_game_option_preferences,
 };
 use crate::util::fetch;
 use crate::util::io::IOError;
@@ -84,6 +85,22 @@ async fn run_inner(
             instance_id,
             &credentials,
             true,
+            quick_play_type,
+            additional,
+        )
+        .await;
+    }
+
+    // And with nothing that can be signed in — no connection to refresh a
+    // Microsoft token with, or no account that was ever online — an account
+    // that is only a name. Singleplayer and offline-mode servers ask for
+    // nothing more; see state/offline_auth.rs.
+    if let Some(offline) = OfflineCredentials::get_active(&state.pool).await? {
+        let credentials = offline.to_minecraft_credentials();
+        return run_credentials(
+            instance_id,
+            &credentials,
+            false,
             quick_play_type,
             additional,
         )

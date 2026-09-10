@@ -67,6 +67,9 @@ pub mod server_join_log;
 mod ely_auth;
 pub use self::ely_auth::*;
 
+mod offline_auth;
+pub use self::offline_auth::*;
+
 // Global state
 // RwLock on state only has concurrent reads, except for config dir change which takes control of the State
 static LAUNCHER_STATE: OnceCell<Arc<State>> = OnceCell::const_new();

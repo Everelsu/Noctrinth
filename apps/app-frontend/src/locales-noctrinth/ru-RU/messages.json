@@ -17,6 +17,12 @@
 	"app.account-provider.microsoft-hint": {
 		"message": "Лицензия Minecraft, купленная у Mojang."
 	},
+	"app.account-provider.offline": {
+		"message": "Оффлайн-аккаунт"
+	},
+	"app.account-provider.offline-hint": {
+		"message": "Просто ник. Одиночная игра и серверы без лицензии."
+	},
 	"app.account.collections": {
 		"message": "Коллекции"
 	},
@@ -1388,11 +1394,20 @@
 	"minecraft-account.add-ely-account": {
 		"message": "Добавить аккаунт Ely.by"
 	},
+	"minecraft-account.add-offline-account": {
+		"message": "Добавить оффлайн-аккаунт"
+	},
 	"minecraft-account.label-ely-by": {
 		"message": "Аккаунт Ely.by"
 	},
 	"minecraft-account.label-microsoft": {
 		"message": "Аккаунт Microsoft"
+	},
+	"minecraft-account.label-offline": {
+		"message": "Оффлайн-аккаунт"
+	},
+	"minecraft-account.label-offline-short": {
+		"message": "Оффлайн"
 	},
 	"notifications.back": {
 		"message": "Назад"
@@ -1444,6 +1459,33 @@
 	},
 	"notifications.view-history": {
 		"message": "Посмотреть историю"
+	},
+	"offline-account.add": {
+		"message": "Добавить аккаунт"
+	},
+	"offline-account.description": {
+		"message": "Только ник и ничего больше. С ним лаунчер запускает игру, когда войти некуда."
+	},
+	"offline-account.header": {
+		"message": "Добавить оффлайн-аккаунт"
+	},
+	"offline-account.invalid": {
+		"message": "От 3 до 16 латинских букв, цифр или подчёркиваний — как принимает сервер."
+	},
+	"offline-account.limitation-body": {
+		"message": "Серверы с лицензией спрашивают у Mojang, настоящая ли сессия, а её здесь нет. Всё остальное — миры на этом компьютере, локальная сеть и серверы с online-mode=false — работает как работало."
+	},
+	"offline-account.limitation-header": {
+		"message": "Только одиночная игра и серверы без лицензии"
+	},
+	"offline-account.username-label": {
+		"message": "Ник"
+	},
+	"offline-account.username-placeholder": {
+		"message": "Ник, под которым играть…"
+	},
+	"offline-account.uuid": {
+		"message": "Будет играть как {uuid}"
 	},
 	"search.sort.date-published": {
 		"message": "Дата публикации"

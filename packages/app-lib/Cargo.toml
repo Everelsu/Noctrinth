@@ -62,6 +62,7 @@ postcard-bindgen = { workspace = true, features = ["generating", "std"], optiona
 quartz_nbt = { workspace = true, features = ["serde"] }
 quick-xml = { workspace = true, features = ["async-tokio"] }
 rand = { workspace = true }
+md-5 = { workspace = true }
 regex = { workspace = true }
 reqwest = { workspace = true, features = [
   "brotli",

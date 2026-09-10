@@ -2349,6 +2349,7 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 			ref="accountProviderModal"
 			@microsoft="accounts?.login()"
 			@ely="accounts?.showElyLogin()"
+			@offline="accounts?.showOfflineLogin()"
 		/>
 		<CreationFlowModal
 			ref="installationModal"

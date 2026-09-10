@@ -419,6 +419,7 @@ fn main() {
         .plugin(api::instance::init())
         .plugin(api::logs::init())
         .plugin(api::noctrinth_crash::init())
+        .plugin(api::noctrinth_offline_auth::init())
         .plugin(api::jre::init())
         .plugin(api::metadata::init())
         .plugin(api::minecraft_skins::init())

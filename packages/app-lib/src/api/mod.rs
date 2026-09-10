@@ -12,6 +12,7 @@ pub mod metadata;
 pub mod minecraft_auth;
 pub mod minecraft_skins;
 pub mod mr_auth;
+pub mod offline_auth;
 pub mod onboarding_checklist;
 pub mod pack;
 pub mod process;
@@ -32,11 +33,11 @@ pub mod data {
         InstanceLaunchOverridesPatch, InstanceLink, InstanceMetadata,
         InstanceSyncedOption, InstanceSyncedOptions, InstanceTabVisibility,
         JavaVersion, LinkedModpackInfo, MemorySettings, ModLoader,
-        ModrinthCredentials, OnboardingChecklist, Organization, OwnerType,
-        ProcessMetadata, Project, ProjectType, ProjectV3, SearchResult,
-        SearchResults, SearchResultsV3, Settings, SharedInstanceAttachment,
-        SharedInstanceRole, TeamMember, Theme, User, UserFriend, Version,
-        WindowSize,
+        ModrinthCredentials, OfflineCredentials, OnboardingChecklist,
+        Organization, OwnerType, ProcessMetadata, Project, ProjectType,
+        ProjectV3, SearchResult, SearchResults, SearchResultsV3, Settings,
+        SharedInstanceAttachment, SharedInstanceRole, TeamMember, Theme, User,
+        UserFriend, Version, WindowSize,
     };
     pub use ariadne::users::UserStatus;
     pub use modrinth_content_management::{

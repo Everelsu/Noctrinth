@@ -2,18 +2,21 @@
 /**
  * Asks which kind of Minecraft account is being added.
  *
- * Noctrinth signs in with two: Microsoft and Ely.by. The accounts card offers
- * both, but everything else that says "sign in to Minecraft" — the getting
- * started checklist, most of all, which is the first thing a new install shows
- * — went straight to Microsoft, leaving no way in for an Ely.by player.
+ * Noctrinth signs in with two account systems, Microsoft and Ely.by, and plays
+ * without one at all under a name of the player's choosing. The accounts card
+ * offers all three, but everything else that says "sign in to Minecraft" — the
+ * getting started checklist, most of all, which is the first thing a new
+ * install shows — went straight to Microsoft, leaving no way in for anybody
+ * else.
  */
-import { LogInIcon } from '@modrinth/assets'
+import { LogInIcon, UserIcon } from '@modrinth/assets'
 import { Button, defineMessages, NewModal, useVIntl } from '@modrinth/ui'
 import { ref } from 'vue'
 
 const emit = defineEmits<{
 	microsoft: []
 	ely: []
+	offline: []
 }>()
 
 const { formatMessage } = useVIntl()
@@ -39,6 +42,14 @@ const messages = defineMessages({
 		id: 'app.account-provider.ely',
 		defaultMessage: 'Ely.by account',
 	},
+	offline: {
+		id: 'app.account-provider.offline',
+		defaultMessage: 'Offline account',
+	},
+	offlineHint: {
+		id: 'app.account-provider.offline-hint',
+		defaultMessage: 'Just a name. Singleplayer and servers in offline mode.',
+	},
 	elyHint: {
 		id: 'app.account-provider.ely-hint',
 		defaultMessage: 'Plays on servers that accept Ely.by.',
@@ -47,7 +58,7 @@ const messages = defineMessages({
 
 const modal = ref<InstanceType<typeof NewModal>>()
 
-function choose(provider: 'microsoft' | 'ely'): void {
+function choose(provider: 'microsoft' | 'ely' | 'offline'): void {
 	modal.value?.hide()
 	emit(provider)
 }
@@ -92,6 +103,20 @@ defineExpose({
 						<span class="font-semibold leading-5">{{ formatMessage(messages.ely) }}</span>
 						<span class="text-sm font-normal leading-5 text-secondary">
 							{{ formatMessage(messages.elyHint) }}
+						</span>
+					</span>
+				</Button>
+				<Button
+					size="lg"
+					class="!h-auto !justify-start !py-3"
+					native-type="button"
+					@click="choose('offline')"
+				>
+					<UserIcon aria-hidden="true" />
+					<span class="flex min-w-0 flex-col items-start">
+						<span class="font-semibold leading-5">{{ formatMessage(messages.offline) }}</span>
+						<span class="text-sm font-normal leading-5 text-secondary">
+							{{ formatMessage(messages.offlineHint) }}
 						</span>
 					</span>
 				</Button>

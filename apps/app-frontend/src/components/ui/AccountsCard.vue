@@ -13,6 +13,10 @@
 			<LogInIcon />
 			{{ formatMessage(messages.addElyAccount) }}
 		</Button>
+		<Button @click="offlineModal?.show()">
+			<LogInIcon />
+			{{ formatMessage(messages.addOfflineAccount) }}
+		</Button>
 	</div>
 	<Accordion
 		v-else
@@ -68,6 +72,7 @@
 									? 'bg-brand-highlight text-brand'
 									: 'bg-surface-3 text-secondary'
 							"
+							:title="accountProviderLabel(account)"
 						>
 							{{ accountProviderLabel(account) }}
 						</span>
@@ -102,10 +107,19 @@
 					<PlusIcon />
 					{{ formatMessage(messages.addElyAccount) }}
 				</Button>
+				<Button
+					v-if="allAccounts.length > 0"
+					class="w-full !bg-button-bg !text-primary ![box-shadow:var(--shadow-button)]"
+					@click="offlineModal?.show()"
+				>
+					<PlusIcon />
+					{{ formatMessage(messages.addOfflineAccount) }}
+				</Button>
 			</div>
 		</div>
 	</Accordion>
 	<ElyLoginModal ref="elyLoginModal" @logged-in="refreshValues" />
+	<OfflineAccountModal ref="offlineModal" @added="refreshValues" />
 </template>
 
 <script setup lang="ts">
@@ -131,6 +145,7 @@ import type { Ref } from 'vue'
 import { computed, onUnmounted, ref } from 'vue'
 
 import ElyLoginModal from '@/components/ui/modal/ElyLoginModal.vue'
+import OfflineAccountModal from '@/components/ui/modal/OfflineAccountModal.vue'
 import { useAppEvent } from '@/composables/use-app-event'
 import { handleSevereError } from '@/composables/use-error.js'
 import { trackEvent } from '@/helpers/analytics'
@@ -149,6 +164,13 @@ import {
 	type ElyCredentials,
 } from '@/helpers/ely_auth'
 import { clearElySkinCache, getElyHeadUrl } from '@/helpers/ely_skins'
+import {
+	offline_get_default_user,
+	offline_remove,
+	offline_set_default_user,
+	offline_users,
+	type OfflineCredentials,
+} from '@/helpers/offline_auth'
 import { getPlayerHeadUrl } from '@/helpers/rendering/player-head'
 import type { Skin } from '@/helpers/skins'
 import { get_available_skins } from '@/helpers/skins'
@@ -167,10 +189,22 @@ type MinecraftCredential = {
 	}
 }
 
-type AnyCredential = MinecraftCredential | ElyCredentials
+type AnyCredential = MinecraftCredential | ElyCredentials | OfflineCredentials
+type AccountProvider = 'microsoft' | 'ely_by' | 'offline'
 
 function isElyAccount(a: AnyCredential): a is ElyCredentials {
 	return 'auth_provider' in a && a.auth_provider === 'ely_by'
+}
+
+function isOfflineAccount(a: AnyCredential): a is OfflineCredentials {
+	return 'auth_provider' in a && a.auth_provider === 'offline'
+}
+
+/** Which of the three an account came from, for comparing like with like. */
+function providerOf(a: AnyCredential): AccountProvider {
+	if (isElyAccount(a)) return 'ely_by'
+	if (isOfflineAccount(a)) return 'offline'
+	return 'microsoft'
 }
 
 const accounts: Ref<MinecraftCredential[]> = ref([])
@@ -178,13 +212,20 @@ const elyAccounts: Ref<ElyCredentials[]> = ref([])
 const loginDisabled = ref(false)
 const defaultUser = ref<string | undefined>()
 const elyDefaultUser = ref<string | undefined>()
-const selectedProvider = ref<'microsoft' | 'ely_by'>('microsoft')
+const offlineAccounts: Ref<OfflineCredentials[]> = ref([])
+const offlineDefaultUser = ref<string | undefined>()
+const selectedProvider = ref<AccountProvider>('microsoft')
 const equippedSkin = ref<Skin | null>(null)
 const elyHeadCache = ref(new Map<string, string>())
 const elyLoginModal = ref<InstanceType<typeof ElyLoginModal>>()
+const offlineModal = ref<InstanceType<typeof OfflineAccountModal>>()
 
 const allAccounts = computed<AnyCredential[]>(() => {
-	const combined: AnyCredential[] = [...accounts.value, ...elyAccounts.value]
+	const combined: AnyCredential[] = [
+		...accounts.value,
+		...elyAccounts.value,
+		...offlineAccounts.value,
+	]
 	combined.sort((a, b) => (a.profile?.name ?? '').localeCompare(b.profile?.name ?? ''))
 	return combined
 })
@@ -194,6 +235,21 @@ const allAccounts = computed<AnyCredential[]>(() => {
  * failure here is swallowed (logged to console only) so it can never surface
  * error popups to, block, or otherwise disrupt users of Microsoft accounts.
  */
+/**
+ * Accounts that are only a name, which are read from this machine and cannot
+ * fail for any reason worth telling anybody about.
+ */
+async function loadOfflineAccounts() {
+	try {
+		offlineDefaultUser.value = (await offline_get_default_user()) ?? undefined
+		offlineAccounts.value = (await offline_users()) ?? []
+	} catch (error) {
+		console.warn('Failed to load offline accounts:', error)
+		offlineAccounts.value = []
+		offlineDefaultUser.value = undefined
+	}
+}
+
 async function loadElyAccounts() {
 	try {
 		elyDefaultUser.value = (await ely_get_default_user()) ?? undefined
@@ -242,17 +298,23 @@ async function refreshValues() {
 	// Ely.by accounts — isolated, optional, never blocks the above.
 	await loadElyAccounts()
 
+	// And the ones that are only a name, which nothing can fail to load.
+	await loadOfflineAccounts()
+
 	// Pick a provider only when the current choice has no valid default account
 	// (e.g. initial load or after the selected account was removed). An explicit
 	// selection made via setAccount() is preserved as long as it still resolves.
 	const currentProviderValid =
 		(selectedProvider.value === 'microsoft' && defaultUser.value !== undefined) ||
-		(selectedProvider.value === 'ely_by' && elyDefaultUser.value !== undefined)
+		(selectedProvider.value === 'ely_by' && elyDefaultUser.value !== undefined) ||
+		(selectedProvider.value === 'offline' && offlineDefaultUser.value !== undefined)
 	if (!currentProviderValid) {
 		if (defaultUser.value) {
 			selectedProvider.value = 'microsoft'
 		} else if (elyDefaultUser.value) {
 			selectedProvider.value = 'ely_by'
+		} else if (offlineDefaultUser.value) {
+			selectedProvider.value = 'offline'
 		}
 	}
 
@@ -293,6 +355,9 @@ const selectedAccount = computed<AnyCredential | undefined>(() => {
 	if (selectedProvider.value === 'ely_by') {
 		return elyAccounts.value.find((account) => account.profile.id === elyDefaultUser.value)
 	}
+	if (selectedProvider.value === 'offline') {
+		return offlineAccounts.value.find((account) => account.profile.id === offlineDefaultUser.value)
+	}
 	return accounts.value.find((account) => account.profile.id === defaultUser.value)
 })
 
@@ -304,6 +369,7 @@ defineExpose({
 	// So anything offering a choice of account — the getting started checklist,
 	// for one — can open the Ely.by dialog this card owns.
 	showElyLogin: () => elyLoginModal.value?.show(),
+	showOfflineLogin: () => offlineModal.value?.show(),
 	loginDisabled,
 	selectedAccount,
 })
@@ -322,6 +388,10 @@ function microsoftHeadUrl(id: string): string {
 }
 
 const avatarUrl = computed(() => {
+	// An offline account has no skin to fetch and no id anybody could look up.
+	if (selectedAccount.value && isOfflineAccount(selectedAccount.value)) {
+		return STEVE_HEAD_URL
+	}
 	if (selectedAccount.value && isElyAccount(selectedAccount.value)) {
 		return elyHeadCache.value.get(selectedAccount.value.profile.id) ?? STEVE_HEAD_URL
 	}
@@ -341,6 +411,9 @@ const avatarUrl = computed(() => {
 })
 
 function getAccountAvatarUrl(account: AnyCredential) {
+	if (isOfflineAccount(account)) {
+		return STEVE_HEAD_URL
+	}
 	if (isElyAccount(account)) {
 		return elyHeadCache.value.get(account.profile.id) ?? STEVE_HEAD_URL
 	}
@@ -358,7 +431,9 @@ function getAccountAvatarUrl(account: AnyCredential) {
 
 /** Short provider label shown on the account badge. */
 function accountProviderLabel(account: AnyCredential): string {
-	return isElyAccount(account) ? 'Ely.by' : 'Microsoft'
+	if (isElyAccount(account)) return 'Ely.by'
+	if (isOfflineAccount(account)) return formatMessage(messages.offlineAccountShort)
+	return 'Microsoft'
 }
 
 /** Subtitle under the selected account name in the accordion header. */
@@ -366,21 +441,23 @@ const selectedAccountTypeLabel = computed(() => {
 	if (!selectedAccount.value) {
 		return formatMessage(messages.minecraftAccount)
 	}
-	return isElyAccount(selectedAccount.value)
-		? formatMessage(messages.elyByAccount)
-		: formatMessage(messages.microsoftAccount)
+	if (isElyAccount(selectedAccount.value)) return formatMessage(messages.elyByAccount)
+	if (isOfflineAccount(selectedAccount.value)) return formatMessage(messages.offlineAccount)
+	return formatMessage(messages.microsoftAccount)
 })
 
 function isAccountSelected(account: AnyCredential): boolean {
 	const selected = selectedAccount.value
 	if (!selected) return false
-	return (
-		selected.profile.id === account.profile.id && isElyAccount(selected) === isElyAccount(account)
-	)
+	return selected.profile.id === account.profile.id && providerOf(selected) === providerOf(account)
 }
 
 async function setAccount(account: AnyCredential) {
-	if (isElyAccount(account)) {
+	if (isOfflineAccount(account)) {
+		await offline_set_default_user(account.profile.id).catch(handleError)
+		offlineDefaultUser.value = account.profile.id
+		selectedProvider.value = 'offline'
+	} else if (isElyAccount(account)) {
 		await ely_set_default_user(account.profile.id).catch(handleError)
 		elyDefaultUser.value = account.profile.id
 		selectedProvider.value = 'ely_by'
@@ -409,9 +486,11 @@ async function logoutAccount(account: AnyCredential) {
 	const wasSelected =
 		selectedAccount.value !== undefined &&
 		selectedAccount.value.profile.id === account.profile.id &&
-		isElyAccount(selectedAccount.value) === isElyAccount(account)
+		providerOf(selectedAccount.value) === providerOf(account)
 
-	if (isElyAccount(account)) {
+	if (isOfflineAccount(account)) {
+		await offline_remove(account.profile.id).catch(handleError)
+	} else if (isElyAccount(account)) {
 		await ely_logout(account.profile.id).catch(handleError)
 	} else {
 		await remove_user(account.profile.id).catch(handleError)
@@ -480,6 +559,18 @@ const messages = defineMessages({
 	signInToMinecraft: {
 		id: 'minecraft-account.sign-in',
 		defaultMessage: 'Sign in to Minecraft',
+	},
+	addOfflineAccount: {
+		id: 'minecraft-account.add-offline-account',
+		defaultMessage: 'Add offline account',
+	},
+	offlineAccount: {
+		id: 'minecraft-account.label-offline',
+		defaultMessage: 'Offline account',
+	},
+	offlineAccountShort: {
+		id: 'minecraft-account.label-offline-short',
+		defaultMessage: 'Offline',
 	},
 })
 </script>

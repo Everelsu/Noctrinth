@@ -233,9 +233,7 @@ pub async fn retry_job(job_id: Uuid) -> crate::Result<InstallJobSnapshot> {
             return Err(error);
         }
     };
-    if let Err(error) =
-        lock_existing_instance_if_needed(&job.state, &state).await
-    {
+    if let Err(error) = lock_install_target(&job.state, &state).await {
         let error_view = install_error_view(
             job.state.progress.phase,
             &error,
@@ -413,9 +411,7 @@ async fn start(request: InstallRequest) -> crate::Result<InstallJobSnapshot> {
             return Err(error);
         }
     };
-    if let Err(error) =
-        lock_existing_instance_if_needed(&job_state, &state).await
-    {
+    if let Err(error) = lock_install_target(&job_state, &state).await {
         let error_view = install_error_view(
             job_state.progress.phase,
             &error,
@@ -1007,7 +1003,7 @@ async fn run_request(
         }
         InstallRequest::InstallExistingInstance { instance_id, force } => {
             prepare_existing_rollback(job_state, state, &instance_id).await?;
-            lock_existing_instance(&instance_id, state).await?;
+            lock_instance(&instance_id, state).await?;
             update_progress(
                 job_id,
                 job_state,
@@ -1039,7 +1035,7 @@ async fn run_request(
             post_install_edit,
         } => {
             prepare_existing_rollback(job_state, state, &instance_id).await?;
-            lock_existing_instance(&instance_id, state).await?;
+            lock_instance(&instance_id, state).await?;
             crate::api::instance::prepare_instance_update(&instance_id).await?;
             let disabled_project_ids = remove_existing_pack_content(
                 job_id,
@@ -1067,7 +1063,7 @@ async fn run_request(
         }
         InstallRequest::UpdateSharedInstance { instance_id, data } => {
             prepare_existing_rollback(job_state, state, &instance_id).await?;
-            lock_existing_instance(&instance_id, state).await?;
+            lock_instance(&instance_id, state).await?;
             let rollback_instance = job_state
                 .rollback
                 .as_ref()
@@ -1457,23 +1453,24 @@ async fn prepare_existing_rollback(
     Ok(())
 }
 
-async fn lock_existing_instance_if_needed(
+async fn lock_install_target(
     job_state: &InstallJobState,
     state: &State,
 ) -> crate::Result<()> {
-    if let InstallCleanup::RestoreExistingInstance { instance_id } =
-        &job_state.cleanup
-    {
-        lock_existing_instance(instance_id, state).await?;
+    match &job_state.target {
+        InstallTarget::NewInstance {
+            instance_id: Some(instance_id),
+        }
+        | InstallTarget::ExistingInstance { instance_id } => {
+            lock_instance(instance_id, state).await?;
+        }
+        InstallTarget::NewInstance { instance_id: None } => {}
     }
 
     Ok(())
 }
 
-async fn lock_existing_instance(
-    instance_id: &str,
-    state: &State,
-) -> crate::Result<()> {
+async fn lock_instance(instance_id: &str, state: &State) -> crate::Result<()> {
     crate::state::instances::commands::set_instance_install_stage(
         instance_id,
         InstanceInstallStage::MinecraftInstalling,

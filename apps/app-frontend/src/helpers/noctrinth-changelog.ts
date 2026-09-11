@@ -35,6 +35,18 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.20.2',
+		date: '2026-09-11T00:00:00+00:00',
+		body: `### Changed
+- Synced with upstream Modrinth (0.20.0 → 0.20.2): the app and its settings window open noticeably faster, and the "New update" notice stops coming back once it has been dismissed.
+- Game settings gained a great deal with it: a keybinding names the mod it belongs to and links to that mod's Modrinth page or its file in the Content tab, keybindings can be searched by mod name or by filename, mod keybindings are shown under the translated names carried in the mod's own jar in the launcher's language, and Language became a searchable dropdown listing language names and regions.
+- Memory sliders read from 0MB upwards in GB and no longer cut large values off, sliders were redrawn throughout, and a slider's number field updates properly after a value has been rounded or held to the allowed range.
+- Resource packs in the Content tab and multiplayer servers in the Worlds tab carry sync badges of their own.
+
+### Fixed
+- From upstream: field of view and mouse sensitivity were saved and shown wrongly on Minecraft 1.19 and newer, setting up resource pack syncing failed outright when a single pack had malformed metadata, quick instances pushed the sidebar's navigation buttons off-screen in a small window, compact library cards had their bottom borders clipped, sync source pickers showed a loading screen over a list they already had, and the Screenshots breadcrumb icon did not match its sidebar icon.`,
+	},
+	{
 		version: '0.20.0',
 		date: '2026-09-08T00:00:00+00:00',
 		body: `### Changed

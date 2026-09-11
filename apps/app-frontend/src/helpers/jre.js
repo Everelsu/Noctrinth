@@ -3,6 +3,7 @@
  * So, for example, addDefaultInstance creates a blank instance object, where the Rust struct is serialized,
  *  and deserialized into a usable JS object.
  */
+import { queryOptions } from '@tanstack/vue-query'
 import { invoke } from '@tauri-apps/api/core'
 
 /*
@@ -102,4 +103,13 @@ export async function remove_installed_runtime(path) {
 /** @returns {Promise<number>} bytes reclaimed */
 export async function remove_unused_runtimes() {
 	return await invoke('plugin:jre|jre_remove_unused_runtimes')
+}
+
+export function maxMemoryQueryOptions() {
+	return queryOptions({
+		queryKey: ['system', 'memory', 'total'],
+		queryFn: get_max_memory,
+		staleTime: Infinity,
+		gcTime: Infinity,
+	})
 }

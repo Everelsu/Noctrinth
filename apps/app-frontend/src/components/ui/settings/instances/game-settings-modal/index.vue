@@ -10,7 +10,6 @@ import {
 	SearchIcon,
 	SettingsIcon,
 	ShirtIcon,
-	SpinnerIcon,
 	TagCategoryAudioIcon,
 	TagCategoryGamepad2Icon,
 	UnlinkIcon,
@@ -29,9 +28,12 @@ import {
 	useVIntl,
 } from '@modrinth/ui'
 import type { Component } from 'vue'
-import { computed, ref } from 'vue'
+import { computed, inject, ref, watch } from 'vue'
+import { type RouteLocationRaw, useRouter } from 'vue-router'
 
 import type { EditableGameSetting, GameSettingCategory } from '@/helpers/game-options'
+import { injectInstanceSettings } from '@/pages/instance/components/settings-modal/instance-settings-context'
+import { appSettingsModalContextKey } from '@/providers/app-settings-modal'
 
 import {
 	canonicalValueText,
@@ -47,6 +49,7 @@ import {
 } from './messages'
 import GameSettingRow from './row.vue'
 import { useGameSettingsEditor } from './use-editor'
+import { useGameSettingLabels } from './use-labels'
 
 const props = defineProps<{
 	instanceId?: string
@@ -57,6 +60,9 @@ const emit = defineEmits<{
 }>()
 
 const { formatMessage } = useVIntl()
+const router = useRouter()
+const appSettingsModal = inject(appSettingsModalContextKey, null)
+const instanceSettings = injectInstanceSettings(null)
 
 const messages = defineMessages({
 	title: {
@@ -119,6 +125,7 @@ const modal = ref<InstanceType<typeof TabbedModal> | null>(null)
 const confirmLeaveModal = ref<InstanceType<typeof ConfirmLeaveModal> | null>(null)
 const activeCategoryId = ref('')
 const search = ref('')
+const opened = ref(false)
 let allowClose = false
 
 const {
@@ -129,7 +136,7 @@ const {
 	loading,
 	loadError,
 	saving,
-	load: loadSettings,
+	load,
 	reset: resetEditor,
 	cancelChanges,
 	setSyncEnabled,
@@ -152,6 +159,21 @@ const categoryIcons: Record<string, Component> = {
 	accessibility: EyeIcon,
 	custom: WrenchIcon,
 	custom_settings: WrenchIcon,
+}
+
+const localeLabels = useGameSettingLabels(
+	opened,
+	() => props.instanceId,
+	() => draftState.value?.settings ?? [],
+)
+
+function settingLabel(setting: EditableGameSetting) {
+	if (setting.kind === 'external') {
+		return (
+			localeLabels.value[setting.option_id]?.label ?? formatGameSettingLabel(formatMessage, setting)
+		)
+	}
+	return formatGameSettingLabel(formatMessage, setting)
 }
 
 const categories = computed<GameSettingCategory[]>(() => {
@@ -192,8 +214,12 @@ const categorySettings = computed(() => {
 			query &&
 			!settingSearchText(
 				setting,
-				formatGameSettingLabel(formatMessage, setting),
-				formatGameSettingDescription(formatMessage, setting),
+				settingLabel(setting),
+				setting.kind === 'external'
+					? (localeLabels.value[setting.option_id]?.source?.project?.title ??
+							localeLabels.value[setting.option_id]?.source?.file_name ??
+							'')
+					: formatGameSettingDescription(formatMessage, setting),
 			).includes(query)
 		)
 			return false
@@ -220,7 +246,7 @@ const keybindConflicts = computed(() => {
 				setting.option_id,
 				settings
 					.filter((candidate) => candidate.option_id !== setting.option_id)
-					.map((candidate) => formatGameSettingLabel(formatMessage, candidate)),
+					.map((candidate) => settingLabel(candidate)),
 			)
 		}
 	}
@@ -257,20 +283,24 @@ function changeCategory(_fromIndex: number, toIndex: number): boolean {
 	return true
 }
 
-async function load() {
-	if (!(await loadSettings())) return
-	if (!categories.value.some((category) => category.id === activeCategoryId.value)) {
-		activeCategoryId.value = categories.value[0]?.id ?? 'custom_settings'
-	}
-	const index = categories.value.findIndex((category) => category.id === activeCategoryId.value)
-	if (index >= 0) modal.value?.setTab(index)
-}
+watch(
+	categories,
+	() => {
+		if (!categories.value.some((category) => category.id === activeCategoryId.value)) {
+			activeCategoryId.value = categories.value[0]?.id ?? 'custom_settings'
+		}
+		const index = categories.value.findIndex((category) => category.id === activeCategoryId.value)
+		if (index >= 0) modal.value?.setTab(index)
+	},
+	{ flush: 'sync' },
+)
 
 function show() {
+	opened.value = true
 	allowClose = false
 	search.value = ''
-	modal.value?.show()
 	void load()
+	modal.value?.show()
 }
 
 function hide() {
@@ -278,6 +308,7 @@ function hide() {
 }
 
 function reset() {
+	opened.value = false
 	resetEditor()
 	allowClose = false
 }
@@ -293,6 +324,18 @@ async function confirmDiscard() {
 	if (!discard) return
 	allowClose = true
 	modal.value?.hide()
+}
+
+async function openSource(location: RouteLocationRaw) {
+	if (isDirty.value || saving.value) return
+	if (appSettingsModal && !appSettingsModal.close()) return
+	allowClose = true
+	modal.value?.hide()
+	if (instanceSettings?.closeModal) {
+		instanceSettings.closeModal(() => void router.push(location))
+	} else {
+		await router.push(location)
+	}
 }
 
 function toggleVisibleSync() {
@@ -314,6 +357,7 @@ defineExpose({ show, hide })
 		:header="modalTitle"
 		:before-hide="beforeHide"
 		:before-tab-change="changeCategory"
+		:hide-tab-selection="search.trim().length > 0"
 		:on-after-hide="reset"
 		:floating-action-bar-shown="isDirty"
 		max-width="min(1080px, calc(95vw - 2rem))"
@@ -363,10 +407,16 @@ defineExpose({ show, hide })
 
 				<div
 					v-if="loading"
-					class="flex min-h-40 flex-1 items-center justify-center gap-2 text-secondary"
+					role="status"
+					:aria-label="formatMessage(messages.loading)"
+					class="flex flex-1 flex-col gap-4"
 				>
-					<SpinnerIcon class="size-5 animate-spin" aria-hidden="true" />
-					{{ formatMessage(messages.loading) }}
+					<div
+						v-for="row in 5"
+						:key="row"
+						class="h-20 animate-pulse rounded-xl bg-surface-3"
+						aria-hidden="true"
+					/>
 				</div>
 				<div
 					v-else-if="loadError"
@@ -394,8 +444,11 @@ defineExpose({ show, hide })
 							v-for="setting in categorySettings"
 							:key="setting.option_id"
 							:setting="setting"
+							:locale-label="localeLabels[setting.option_id]"
 							:keybind-conflicts="keybindConflicts.get(setting.option_id)"
 							:show-sync-toggle="!isLocalEditor"
+							:source-navigation-disabled="isDirty || saving"
+							@open-source="openSource"
 							@update:sync-enabled="setSyncEnabled([setting.option_id], $event)"
 							@update:canonical-value="setCanonicalValue(setting.option_id, $event)"
 						/>

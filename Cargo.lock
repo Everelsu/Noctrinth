@@ -6253,6 +6253,7 @@ dependencies = [
  "serde",
  "thiserror 2.0.17",
  "tokio",
+ "utoipa",
 ]
 
 [[package]]
@@ -11343,7 +11344,7 @@ dependencies = [
 
 [[package]]
 name = "theseus"
-version = "0.20.0"
+version = "0.20.2"
 dependencies = [
  "ariadne",
  "async-minecraft-ping",
@@ -11434,7 +11435,7 @@ dependencies = [
 
 [[package]]
 name = "theseus_gui"
-version = "0.20.0"
+version = "0.20.2"
 dependencies = [
  "async_zip",
  "chrono",

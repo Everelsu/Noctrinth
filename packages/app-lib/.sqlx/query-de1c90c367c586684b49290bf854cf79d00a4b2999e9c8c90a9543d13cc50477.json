@@ -1,0 +1,74 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT project_id, name, slug, summary, icon_url, website_url,\n               author_id, author_name, author_url, author_avatar_url\n        FROM curseforge_project_cache\n        WHERE expires > $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "project_id",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "name",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "slug",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "summary",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "icon_url",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "website_url",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "author_id",
+        "ordinal": 6,
+        "type_info": "Text"
+      },
+      {
+        "name": "author_name",
+        "ordinal": 7,
+        "type_info": "Text"
+      },
+      {
+        "name": "author_url",
+        "ordinal": 8,
+        "type_info": "Text"
+      },
+      {
+        "name": "author_avatar_url",
+        "ordinal": 9,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "de1c90c367c586684b49290bf854cf79d00a4b2999e9c8c90a9543d13cc50477"
+}

@@ -7,7 +7,16 @@ export type ContentCardProject = Pick<
 	Labrinth.Projects.v2.Project,
 	'id' | 'slug' | 'title' | 'icon_url'
 > &
-	Partial<Pick<Labrinth.Projects.v2.Project, 'license' | 'categories' | 'additional_categories'>>
+	Partial<
+		Pick<Labrinth.Projects.v2.Project, 'license' | 'categories' | 'additional_categories'>
+	> & {
+		/**
+		 * Noctrinth's own: where a project that is not on Modrinth lives. Its
+		 * `id` cannot be routed to a page in the app, so this is opened on the
+		 * web instead.
+		 */
+		external_url?: string | null
+	}
 
 export type ContentCardVersion = Pick<Labrinth.Versions.v2.Version, 'id' | 'version_number'> & {
 	file_name: string
@@ -20,6 +29,8 @@ export interface ContentOwner {
 	avatar_url?: string
 	type: 'user' | 'organization'
 	link?: string | RouteLocationRaw | (() => void)
+	/** Noctrinth's own, for the same reason as on the project. */
+	external_url?: string | null
 }
 
 export interface ContentSource {

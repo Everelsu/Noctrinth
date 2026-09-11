@@ -124,6 +124,7 @@ import {
 import { debugAnalytics, initAnalytics, trackEvent } from '@/helpers/analytics'
 import { check_reachable } from '@/helpers/auth.js'
 import { get_user, get_user_many, get_version } from '@/helpers/cache.js'
+import { registerCurseforgeApiKey } from '@/helpers/curseforge-key'
 import { gameSettingsQueryOptions } from '@/helpers/game-options'
 import {
 	install_create_modpack_instance,
@@ -934,6 +935,13 @@ async function setupApp() {
 const stateFailed = ref(false)
 traceStartupStep('Initialize backend state', () => initialize_state(appEventChannel))
 	.then(() => {
+		// Noctrinth's own: the CurseForge key lives in the frontend bundle, and
+		// the backend needs it to name installed CurseForge content. Nothing
+		// waits on it — a listing drawn before it lands simply has filenames in
+		// it, and redraws with names once the answers are cached.
+		void traceStartupStep('Register CurseForge key', registerCurseforgeApiKey).catch((err) =>
+			console.warn('Could not register the CurseForge key', err),
+		)
 		traceStartupStep('Initialize frontend state', setupApp).catch((err) => {
 			stateFailed.value = true
 			console.error(err)

@@ -419,6 +419,7 @@ fn main() {
         .plugin(api::instance::init())
         .plugin(api::logs::init())
         .plugin(api::noctrinth_crash::init())
+        .plugin(api::noctrinth_curseforge::init())
         .plugin(api::noctrinth_offline_auth::init())
         .plugin(api::noctrinth_recovery::init())
         .plugin(api::jre::init())

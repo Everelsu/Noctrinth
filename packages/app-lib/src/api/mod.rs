@@ -1,6 +1,7 @@
 //! API for interacting with Theseus
 pub mod cache;
 pub mod crash_analysis;
+pub mod curseforge_metadata;
 pub mod ely_auth;
 pub mod friends;
 pub mod gpu;

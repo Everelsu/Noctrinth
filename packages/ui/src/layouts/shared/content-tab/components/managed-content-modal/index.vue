@@ -284,7 +284,13 @@ const tableItems = computed<ContentCardTableItem[]>(() =>
 			title: item.embedded_metadata?.name ?? item.file_name,
 			icon_url: item.embedded_metadata?.icon_url ?? null,
 		},
-		projectLink: !item.external && item.project?.id ? `/project/${item.project.id}` : undefined,
+		// Noctrinth's own: a project that is not on Modrinth links out to where
+		// it does live — its id routes nowhere in the app.
+		projectLink: item.project?.external_url
+			? item.project.external_url
+			: !item.external && item.project?.id
+				? `/project/${item.project.id}`
+				: undefined,
 		version: props.showVersion
 			? (item.version ?? {
 					id: item.id,
@@ -296,9 +302,10 @@ const tableItems = computed<ContentCardTableItem[]>(() =>
 			? {
 					...item.owner,
 					link:
-						item.owner.type === 'user'
+						item.owner.external_url ??
+						(item.owner.type === 'user'
 							? `/user/${encodeURIComponent(item.owner.id)}`
-							: `https://modrinth.com/organization/${item.owner.id}`,
+							: `https://modrinth.com/organization/${item.owner.id}`),
 				}
 			: undefined,
 		source: item.source

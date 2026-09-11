@@ -447,6 +447,7 @@ pub(crate) async fn get_linked_modpack_info(
             name: org.name,
             avatar_url: org.icon_url,
             owner_type: OwnerType::Organization,
+            external_url: None,
         })
     } else {
         let team = CachedEntry::get_team(
@@ -464,6 +465,7 @@ pub(crate) async fn get_linked_modpack_info(
                     name: member.user.username,
                     avatar_url: member.user.avatar_url,
                     owner_type: OwnerType::User,
+                    external_url: None,
                 })
         })
     };
@@ -770,9 +772,9 @@ async fn content_projects_for_scope_inner(
                 source_kind,
                 exclude_untracked,
             } => {
-                if entry
-                    .is_some_and(|entry| entry.source_kind.counts_as(source_kind))
-                    || (exclude_untracked && entry.is_none())
+                if entry.is_some_and(|entry| {
+                    entry.source_kind.counts_as(source_kind)
+                }) || (exclude_untracked && entry.is_none())
                 {
                     continue;
                 }
@@ -900,30 +902,50 @@ async fn content_files_to_content_items(
     cache_behaviour: Option<CacheBehaviour>,
     state: &State,
 ) -> crate::Result<Vec<ContentItem>> {
-    let project_ids = files
-        .iter()
-        .filter_map(|(_, file)| {
-            file.metadata
-                .as_ref()
-                .map(|metadata| metadata.project_id.clone())
-        })
-        .collect::<HashSet<_>>();
-    let version_ids = files
-        .iter()
-        .filter_map(|(_, file)| {
-            file.metadata
-                .as_ref()
-                .map(|metadata| metadata.version_id.clone())
-        })
-        .collect::<HashSet<_>>();
-    let meta = resolve_metadata(
-        &project_ids,
-        &version_ids,
-        cache_behaviour,
-        &state.pool,
-        &state.api_semaphore,
-    )
-    .await?;
+    // Noctrinth's own: a CurseForge file's entry carries CurseForge's numeric
+    // ids in the same two columns a Modrinth file's carries Modrinth's, so the
+    // two have to be told apart before either is looked up. Asking Modrinth
+    // about "627196" was never going to answer, and asking it three hundred
+    // times per listing is what a pack installed from a CurseForge zip did.
+    let is_curseforge = |file: &ContentFile| {
+        file.source_kind
+            .is_some_and(crate::state::ContentSourceKind::has_curseforge_ids)
+    };
+    let ids_of = |curseforge: bool, version: bool| {
+        files
+            .iter()
+            .filter(|(_, file)| is_curseforge(file) == curseforge)
+            .filter_map(|(_, file)| {
+                file.metadata.as_ref().map(|metadata| {
+                    if version {
+                        metadata.version_id.clone()
+                    } else {
+                        metadata.project_id.clone()
+                    }
+                })
+            })
+            .collect::<HashSet<_>>()
+    };
+    let project_ids = ids_of(false, false);
+    let version_ids = ids_of(false, true);
+    let curseforge_project_ids = ids_of(true, false);
+    let curseforge_file_ids = ids_of(true, true);
+
+    let (meta, curseforge) = tokio::join!(
+        resolve_metadata(
+            &project_ids,
+            &version_ids,
+            cache_behaviour,
+            &state.pool,
+            &state.api_semaphore,
+        ),
+        crate::api::curseforge_metadata::resolve(
+            &curseforge_project_ids,
+            &curseforge_file_ids,
+            state,
+        ),
+    );
+    let meta = meta?;
     let embedded_metadata =
         super::embedded_content_metadata::resolve_embedded_content_metadata(
             instance, loader, files, state,
@@ -967,6 +989,21 @@ async fn content_files_to_content_items(
             let owner = project.and_then(|project| {
                 resolve_owner(project, &meta.teams, &meta.organizations)
             });
+            // Noctrinth's own: what CurseForge answered, in the shape the row
+            // draws. Only reached for a file whose ids were CurseForge's, so
+            // it can never stand in for a Modrinth answer.
+            let curseforge_meta =
+                file.metadata.as_ref().filter(|_| is_curseforge(file)).map(
+                    |metadata| {
+                        (
+                            curseforge.projects.get(&metadata.project_id),
+                            curseforge.files.get(&metadata.version_id),
+                        )
+                    },
+                );
+            let curseforge_project =
+                curseforge_meta.and_then(|(project, _)| project);
+            let curseforge_file = curseforge_meta.and_then(|(_, file)| file);
 
             ContentItem {
                 synced_pack: None,
@@ -977,20 +1014,35 @@ async fn content_files_to_content_items(
                 enabled: file.enabled,
                 locked: file.locked,
                 project_type: file.project_type,
-                project: project.map(content_item_project),
-                version: version.map(|version| ContentItemVersion {
-                    id: version.id.clone(),
-                    version_number: version.version_number.clone(),
-                    file_name: file.file_name.clone(),
-                    date_published: Some(version.date_published.to_rfc3339()),
+                project: project.map(content_item_project).or_else(|| {
+                    curseforge_project.map(curseforge_content_item_project)
                 }),
+                version: version
+                    .map(|version| ContentItemVersion {
+                        id: version.id.clone(),
+                        version_number: version.version_number.clone(),
+                        file_name: file.file_name.clone(),
+                        date_published: Some(
+                            version.date_published.to_rfc3339(),
+                        ),
+                    })
+                    .or_else(|| {
+                        curseforge_file.map(|cf_file| ContentItemVersion {
+                            id: cf_file.id.clone(),
+                            version_number: cf_file.display_name.clone(),
+                            file_name: file.file_name.clone(),
+                            date_published: cf_file.file_date.clone(),
+                        })
+                    }),
                 environment: resolve_environment(
                     file.metadata
                         .as_ref()
                         .map(|metadata| metadata.version_id.as_str()),
                     &meta.versions_v3,
                 ),
-                owner,
+                owner: owner.or_else(|| {
+                    curseforge_project.and_then(curseforge_content_item_owner)
+                }),
                 has_update: file.update_version_id.is_some(),
                 update_version_id: file.update_version_id.clone(),
                 date_added: modification_times[index].clone(),
@@ -1147,6 +1199,7 @@ fn resolve_owner(
                 name: organization.name.clone(),
                 avatar_url: organization.icon_url.clone(),
                 owner_type: OwnerType::Organization,
+                external_url: None,
             })
     } else {
         teams
@@ -1161,6 +1214,7 @@ fn resolve_owner(
                 name: member.user.username.clone(),
                 avatar_url: member.user.avatar_url.clone(),
                 owner_type: OwnerType::User,
+                external_url: None,
             })
     }
 }
@@ -1174,7 +1228,48 @@ fn content_item_project(project: &Project) -> ContentItemProject {
         license: project.license.clone(),
         categories: project.categories.clone(),
         additional_categories: project.additional_categories.clone(),
+        external_url: None,
     }
+}
+
+/// Noctrinth's own: a CurseForge project in the shape a content row draws.
+///
+/// CurseForge publishes no licence with a project, and a row that claimed one
+/// would be inventing it, so it is left saying exactly that.
+fn curseforge_content_item_project(
+    project: &crate::api::curseforge_metadata::CurseforgeProject,
+) -> ContentItemProject {
+    ContentItemProject {
+        id: project.id.clone(),
+        slug: project.slug.clone(),
+        title: project.name.clone(),
+        icon_url: project.icon_url.clone(),
+        license: crate::state::License {
+            id: "unknown".to_string(),
+            name: "Unknown".to_string(),
+            url: None,
+        },
+        categories: Vec::new(),
+        additional_categories: Vec::new(),
+        external_url: project.website_url.clone(),
+    }
+}
+
+/// Noctrinth's own: the author CurseForge names, when it names one.
+fn curseforge_content_item_owner(
+    project: &crate::api::curseforge_metadata::CurseforgeProject,
+) -> Option<ContentItemOwner> {
+    let name = project.author_name.clone()?;
+    Some(ContentItemOwner {
+        // CurseForge's own member id, which routes nowhere in the app — the
+        // link below is what actually opens. The name stands in for an author
+        // CurseForge gave no id for.
+        id: project.author_id.clone().unwrap_or_else(|| name.clone()),
+        name,
+        avatar_url: project.author_avatar_url.clone(),
+        owner_type: OwnerType::User,
+        external_url: project.author_url.clone(),
+    })
 }
 
 fn file_metadata_from_entry_or_cache(

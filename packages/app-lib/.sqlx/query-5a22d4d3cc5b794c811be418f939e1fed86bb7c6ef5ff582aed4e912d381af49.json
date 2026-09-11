@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO curseforge_project_cache (\n                project_id, name, slug, summary, icon_url, website_url,\n                author_id, author_name, author_url, author_avatar_url, expires\n            )\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)\n            ON CONFLICT(project_id) DO UPDATE SET\n                name = excluded.name,\n                slug = excluded.slug,\n                summary = excluded.summary,\n                icon_url = excluded.icon_url,\n                website_url = excluded.website_url,\n                author_id = excluded.author_id,\n                author_name = excluded.author_name,\n                author_url = excluded.author_url,\n                author_avatar_url = excluded.author_avatar_url,\n                expires = excluded.expires\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 11
+    },
+    "nullable": []
+  },
+  "hash": "5a22d4d3cc5b794c811be418f939e1fed86bb7c6ef5ff582aed4e912d381af49"
+}

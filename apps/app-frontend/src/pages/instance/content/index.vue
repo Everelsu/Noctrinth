@@ -223,6 +223,14 @@ const messages = defineMessages({
 let savedModalState: ManagedContentModalState | null = null
 
 function contentOwnerLink(owner: ContentOwner): NonNullable<ContentOwner['link']> {
+	// Noctrinth's own: an author who is not a Modrinth user has no page in the
+	// app to route to, so their own is opened instead.
+	if (owner.external_url) {
+		const url = owner.external_url
+		return () => {
+			void openUrl(url)
+		}
+	}
 	if (owner.type === 'user') return `/user/${encodeURIComponent(owner.id)}`
 	return () => {
 		void openUrl(`https://modrinth.com/organization/${owner.id}`)
@@ -1694,9 +1702,14 @@ provideContentManager({
 			title: item.embedded_metadata?.name ?? item.file_name.replace('.disabled', ''),
 			icon_url: item.embedded_metadata?.icon_url ?? null,
 		},
-		projectLink: item.project?.id
-			? { path: `/project/${item.project.id}`, query: { i: instancePage.instanceId.value } }
-			: undefined,
+		// Noctrinth's own: a CurseForge project's id routes nowhere in the app,
+		// so the card links out to where the project actually lives. AutoLink
+		// opens a plain http(s) string externally.
+		projectLink: item.project?.external_url
+			? item.project.external_url
+			: item.project?.id
+				? { path: `/project/${item.project.id}`, query: { i: instancePage.instanceId.value } }
+				: undefined,
 		version: item.version ?? {
 			id: item.file_name,
 			version_number: contentVersionLabel(item),
@@ -1722,7 +1735,12 @@ provideContentManager({
 		locked: item.locked,
 		installing: item.installing,
 		hideDelete: !canDeleteContent(item),
-		hideSwitchVersion: !canChangeContentVersion(item) || !item.project?.id || !item.version?.id,
+		// Changing version needs a version list, which only Modrinth content has.
+		hideSwitchVersion:
+			!canChangeContentVersion(item) ||
+			!item.project?.id ||
+			!item.version?.id ||
+			!!item.project?.external_url,
 		hasUpdate: canUpdateProject(item) && !item.locked,
 	}),
 	showSharedContentFilter,

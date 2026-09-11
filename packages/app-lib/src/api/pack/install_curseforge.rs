@@ -90,7 +90,12 @@ struct CfManifest {
     /// people actually use write one — as a URL on CurseForge's avatar CDN,
     /// which is the only copy of the picture a pack that ships no image file
     /// has anywhere.
-    #[serde(default, alias = "iconUrl", alias = "thumbnailUrl", alias = "logo")]
+    #[serde(
+        default,
+        alias = "iconUrl",
+        alias = "thumbnailUrl",
+        alias = "logo"
+    )]
     image: Option<String>,
 }
 
@@ -702,8 +707,7 @@ async fn apply_pack_icon(
         }
     };
 
-    let icon_path =
-        crate::api::instance::cache_icon(icon_bytes, state).await?;
+    let icon_path = crate::api::instance::cache_icon(icon_bytes, state).await?;
     crate::api::instance::edit(
         instance_id,
         EditInstance {

@@ -103,7 +103,6 @@
 
 <script setup lang="ts">
 import { ClassicPlayerModel, SlimPlayerModel, UnfoldHorizontalIcon } from '@modrinth/assets'
-import { defineMessages, useVIntl } from '#ui/composables/i18n'
 import { TresCanvas } from '@tresjs/core'
 import * as THREE from 'three'
 import {
@@ -118,6 +117,7 @@ import {
 	watch,
 } from 'vue'
 
+import { defineMessages, useVIntl } from '#ui/composables/i18n'
 import type {
 	SkinPreviewAnimationConfig,
 	SkinPreviewFitPadding,

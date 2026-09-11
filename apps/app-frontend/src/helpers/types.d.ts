@@ -156,6 +156,8 @@ export type ContentSourceKind =
 	| 'modrinth_hosting'
 	| 'imported_modpack'
 	| 'shared_instance'
+	| 'curseforge'
+	| 'curseforge_modpack'
 
 type ContentFile = {
 	enabled: boolean

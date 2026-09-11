@@ -85,6 +85,13 @@ struct CfManifest {
     /// Name of the overrides folder inside the zip. Defaults to `overrides`.
     #[serde(default)]
     overrides: Option<String>,
+    /// Noctrinth's own: where the pack's picture lives, when the manifest says
+    /// so at all. CurseForge's own format has no such field, but the exporters
+    /// people actually use write one — as a URL on CurseForge's avatar CDN,
+    /// which is the only copy of the picture a pack that ships no image file
+    /// has anywhere.
+    #[serde(default, alias = "iconUrl", alias = "thumbnailUrl", alias = "logo")]
+    image: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -400,7 +407,9 @@ pub(crate) async fn install_curseforge_pack_files_with_reporter(
     // Noctrinth's own: a manifest has no icon field, so a pack's instance used
     // to come out blank even when the zip was carrying the pack's picture all
     // along. Never worth failing an install over.
-    if let Err(error) = apply_pack_icon(&pack_file, instance_id, &state).await {
+    if let Err(error) =
+        apply_pack_icon(&pack_file, &manifest, instance_id, &state).await
+    {
         tracing::warn!("Could not read the pack's own icon: {error}");
     }
 
@@ -560,7 +569,10 @@ async fn download_cf_file(
         bytes,
         cf_file.sha1(),
         None,
-        ContentSourceKind::CurseForge,
+        // The pack's own, as against a CurseForge mod the user adds later —
+        // which is what tells the pack's content list from everything beside
+        // it. Both carry CurseForge ids; only this one is part of the pack.
+        ContentSourceKind::CurseForgeModpack,
         Some(&cf_project_id),
         Some(&cf_file_id),
         state,
@@ -604,21 +616,10 @@ fn pack_icon_rank(entry_name: &str) -> Option<(usize, usize, usize)> {
     Some((depth, stem_rank, extension_rank))
 }
 
-/// Gives the instance the picture the pack ships, if it ships one and the
-/// instance has not been given one already — a reinstall over an instance the
-/// user has since chosen an icon for leaves that choice alone.
-async fn apply_pack_icon(
+/// The picture a pack ships inside its own zip, if it ships one.
+async fn pack_icon_from_zip(
     pack_file: &bytes::Bytes,
-    instance_id: &str,
-    state: &State,
-) -> crate::Result<()> {
-    let already_has_icon = crate::api::instance::get(instance_id)
-        .await?
-        .is_some_and(|metadata| metadata.instance.icon_path.is_some());
-    if already_has_icon {
-        return Ok(());
-    }
-
+) -> crate::Result<Option<Vec<u8>>> {
     let mut zip_reader = ZipFileReader::with_tokio(Cursor::new(pack_file))
         .await
         .map_err(|_| {
@@ -638,7 +639,7 @@ async fn apply_pack_icon(
         })
         .min()
     else {
-        return Ok(());
+        return Ok(None);
     };
 
     let mut icon_bytes = Vec::new();
@@ -647,8 +648,62 @@ async fn apply_pack_icon(
         reader.read_to_end_checked(&mut icon_bytes).await?;
     }
 
+    Ok(Some(icon_bytes))
+}
+
+/// Gives the instance the pack's picture, if the pack has one and the instance
+/// has not been given one already — a reinstall over an instance the user has
+/// since chosen an icon for leaves that choice alone.
+///
+/// A pack carries its picture one of two ways, and most carry it only the
+/// second: as an image file in the zip, or as a URL in the manifest pointing
+/// at CurseForge's avatar CDN. A zip holding several hundred mods and no
+/// picture at all is the common case, so the URL is not a fallback worth
+/// skipping — without it such a pack installs blank.
+async fn apply_pack_icon(
+    pack_file: &bytes::Bytes,
+    manifest: &CfManifest,
+    instance_id: &str,
+    state: &State,
+) -> crate::Result<()> {
+    let already_has_icon = crate::api::instance::get(instance_id)
+        .await?
+        .is_some_and(|metadata| metadata.instance.icon_path.is_some());
+    if already_has_icon {
+        return Ok(());
+    }
+
+    let icon_bytes = match pack_icon_from_zip(pack_file).await? {
+        Some(bytes) => bytes::Bytes::from(bytes),
+        None => {
+            // Fetched only over TLS, and only from the manifest's own field —
+            // the same footing as the mod download URLs beside it.
+            let Some(url) = manifest
+                .image
+                .as_deref()
+                .map(str::trim)
+                .filter(|url| url.starts_with("https://"))
+            else {
+                return Ok(());
+            };
+            fetch_advanced(
+                Method::GET,
+                url,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                &state.fetch_semaphore,
+                &state.pool,
+            )
+            .await?
+        }
+    };
+
     let icon_path =
-        crate::api::instance::cache_icon(icon_bytes.into(), state).await?;
+        crate::api::instance::cache_icon(icon_bytes, state).await?;
     crate::api::instance::edit(
         instance_id,
         EditInstance {
@@ -790,6 +845,48 @@ mod tests {
         assert!(pack_icon_rank("overrides/config/mod/logo.png").is_none());
         assert!(pack_icon_rank("manifest.json").is_none());
         assert!(pack_icon_rank("overrides/icon.svg").is_none());
+    }
+
+    #[test]
+    fn a_manifest_can_name_the_pack_s_picture() {
+        // Shape taken from a real export: no icon file anywhere in the zip,
+        // the picture only reachable through the manifest's own field.
+        let manifest: CfManifest = serde_json::from_str(
+            r#"{
+                "minecraft": {
+                    "version": "1.20.1",
+                    "modLoaders": [{ "id": "forge-47.4.10", "primary": true }]
+                },
+                "name": "Zombie REAP",
+                "version": "3.6",
+                "files": [],
+                "overrides": "overrides",
+                "image": "https://media.forgecdn.net/avatars/1886/328/x.gif"
+            }"#,
+        )
+        .unwrap();
+
+        assert_eq!(
+            manifest.image.as_deref(),
+            Some("https://media.forgecdn.net/avatars/1886/328/x.gif")
+        );
+    }
+
+    #[test]
+    fn a_manifest_without_a_picture_is_still_a_manifest() {
+        let manifest: CfManifest = serde_json::from_str(
+            r#"{
+                "minecraft": {
+                    "version": "1.20.1",
+                    "modLoaders": [{ "id": "forge-47.4.10", "primary": true }]
+                },
+                "name": "Plain",
+                "files": []
+            }"#,
+        )
+        .unwrap();
+
+        assert!(manifest.image.is_none());
     }
 
     #[test]

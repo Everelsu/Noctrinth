@@ -3,7 +3,13 @@ import { computed, type Ref } from 'vue'
 
 import type { GameInstance } from '@/helpers/types'
 
-const managedSourceKinds = new Set(['shared_instance', 'modrinth_modpack', 'imported_modpack'])
+const managedSourceKinds = new Set([
+	'shared_instance',
+	'modrinth_modpack',
+	'imported_modpack',
+	// Noctrinth's own: what a CurseForge pack's own files are stamped with.
+	'curseforge_modpack',
+])
 
 export function useManagedContentPolicy(instance: Ref<GameInstance>) {
 	const { formatMessage } = useVIntl()

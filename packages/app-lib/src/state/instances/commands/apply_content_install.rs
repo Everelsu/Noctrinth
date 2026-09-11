@@ -597,7 +597,7 @@ async fn finish_project_install(
         // CurseForge files carry CF numeric ids in project_id/version_id, but
         // they are NOT Modrinth files — caching them as a KnownModrinthFile
         // would poison the Modrinth hash cache.
-        if source_kind == ContentSourceKind::CurseForge {
+        if source_kind.has_curseforge_ids() {
             None
         } else {
             project_id.zip(version_id).map(|(project_id, version_id)| {

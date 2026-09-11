@@ -36,6 +36,8 @@ export type ContentSourceKind =
 	| 'modrinth_hosting'
 	| 'imported_modpack'
 	| 'shared_instance'
+	| 'curseforge'
+	| 'curseforge_modpack'
 
 export interface ContentActionWarning {
 	admonitionHeader: string

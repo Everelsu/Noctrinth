@@ -113,6 +113,10 @@
 		"friends:default",
 		"worlds:default",
 		"ely-auth:default",
-		"window-icon:default"
+		"window-icon:default",
+		"noctrinth-offline-auth:default",
+		"noctrinth-crash:default",
+		"noctrinth-recovery:default",
+		"noctrinth-curseforge:default"
 	]
 }

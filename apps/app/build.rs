@@ -520,6 +520,54 @@ fn main() {
                     .default_permission(
                         DefaultPermissionRule::AllowAllCommands,
                     ),
+            )
+            // Noctrinth's own. A plugin that is not declared here has every one
+            // of its commands denied by the ACL at runtime, silently — the
+            // frontend's `invoke` simply rejects, which reads as the feature
+            // being broken rather than as a permission being missing. Adding a
+            // plugin in `main.rs` is only half of adding a plugin.
+            .plugin(
+                "noctrinth-offline-auth",
+                InlinedPlugin::new()
+                    .commands(&[
+                        "offline_add",
+                        "offline_remove",
+                        "offline_users",
+                        "offline_get_default_user",
+                        "offline_set_default_user",
+                        "offline_preview_uuid",
+                    ])
+                    .default_permission(
+                        DefaultPermissionRule::AllowAllCommands,
+                    ),
+            )
+            .plugin(
+                "noctrinth-crash",
+                InlinedPlugin::new()
+                    .commands(&["crash_analyze_instance", "crash_analyze_text"])
+                    .default_permission(
+                        DefaultPermissionRule::AllowAllCommands,
+                    ),
+            )
+            .plugin(
+                "noctrinth-recovery",
+                InlinedPlugin::new()
+                    .commands(&[
+                        "recovery_scan_for_orphans",
+                        "recovery_adopt_orphan",
+                        "recovery_find_launchers",
+                    ])
+                    .default_permission(
+                        DefaultPermissionRule::AllowAllCommands,
+                    ),
+            )
+            .plugin(
+                "noctrinth-curseforge",
+                InlinedPlugin::new()
+                    .commands(&["curseforge_set_api_key"])
+                    .default_permission(
+                        DefaultPermissionRule::AllowAllCommands,
+                    ),
             ),
     )
     .expect("Failed to run tauri-build");

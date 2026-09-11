@@ -14,6 +14,7 @@ pub mod minecraft_skins;
 pub mod mr_auth;
 pub mod noctrinth_crash;
 pub mod noctrinth_offline_auth;
+pub mod noctrinth_recovery;
 pub mod onboarding_checklist;
 pub mod process;
 pub mod reports;

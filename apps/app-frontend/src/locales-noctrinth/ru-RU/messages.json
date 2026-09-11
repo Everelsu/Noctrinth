@@ -869,6 +869,42 @@
 	"app.project.sign-in-to-follow": {
 		"message": "Войдите, чтобы подписаться"
 	},
+	"app.recover-instances.description": {
+		"message": "Ищет папки со сборками, о которых лаунчер ничего не знает, — то, что остаётся, когда база данных потерялась, а папки нет."
+	},
+	"app.recover-instances.found": {
+		"message": "{count, plural, one {# папки нет в лаунчере} few {# папок нет в лаунчере} many {# папок нет в лаунчере} other {# папок нет в лаунчере}}"
+	},
+	"app.recover-instances.import": {
+		"message": "Импортировать"
+	},
+	"app.recover-instances.imported": {
+		"message": "{name} вернулась"
+	},
+	"app.recover-instances.imported-body": {
+		"message": "Папка не тронута. Файлы версии докачаются при следующем запуске."
+	},
+	"app.recover-instances.mods": {
+		"message": "{count, plural, one {# мод} few {# мода} many {# модов} other {# мода}}"
+	},
+	"app.recover-instances.none": {
+		"message": "Все папки там уже есть в лаунчере."
+	},
+	"app.recover-instances.scan": {
+		"message": "Просканировать папку"
+	},
+	"app.recover-instances.scanning": {
+		"message": "Сканирую…"
+	},
+	"app.recover-instances.title": {
+		"message": "Сборки в папке лаунчера"
+	},
+	"app.recover-instances.unknown-version": {
+		"message": "Нет лога или отчёта о падении, из которого можно прочитать версию, — такую папку придётся добавить вручную."
+	},
+	"app.recover-instances.worlds": {
+		"message": "{count, plural, one {# мир} few {# мира} many {# миров} other {# мира}}"
+	},
 	"app.resource-settings.proxy.description": {
 		"message": "Направляет весь сетевой трафик лаунчера (Modrinth API и загрузки с CDN) через прокси. Поддерживаются URL вида http://, https://, socks5:// и socks5h://. Полезно, когда Modrinth недоступен в вашем регионе. Оставьте пустым для прямого подключения. (требуется перезапуск приложения)"
 	},

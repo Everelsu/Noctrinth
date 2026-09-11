@@ -11,6 +11,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed, nextTick, onScopeDispose, ref } from 'vue'
 
+import NoctrinthRecoverInstances from '@/components/ui/settings/instances/NoctrinthRecoverInstances.vue'
 import NoctrinthSkinLookupSetting from '@/components/ui/settings/instances/NoctrinthSkinLookupSetting.vue'
 import {
 	type GlobalSyncedOptions,
@@ -631,6 +632,8 @@ onScopeDispose(clearBaseSource)
 		</section>
 
 		<NoctrinthSkinLookupSetting />
+
+		<NoctrinthRecoverInstances />
 
 		<LaunchOptions />
 	</div>

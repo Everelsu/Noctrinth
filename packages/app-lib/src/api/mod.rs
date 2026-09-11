@@ -6,6 +6,7 @@ pub mod friends;
 pub mod gpu;
 pub mod handler;
 pub mod instance;
+pub mod instance_recovery;
 pub mod jre;
 pub mod logs;
 pub mod metadata;

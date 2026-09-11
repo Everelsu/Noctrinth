@@ -64,9 +64,21 @@ async fn run_inner(
     .await?;
 
     // Prefer a signed-in Microsoft account.
-    if let Some(default_account) =
-        Credentials::get_default_credential(&state.pool).await?
-    {
+    //
+    // A sign-in that cannot be checked is not a reason to refuse to launch:
+    // the account may still be good, and if it is not there may be another one
+    // below that needs nothing checked at all. What went wrong is written down
+    // and the next provider gets its turn.
+    let microsoft = Credentials::get_default_credential(&state.pool)
+        .await
+        .unwrap_or_else(|error| {
+            tracing::warn!(
+                "Could not read the signed-in Microsoft account, trying what else there is: {error}"
+            );
+            None
+        });
+
+    if let Some(default_account) = microsoft {
         return run_credentials(
             instance_id,
             &default_account,
@@ -79,7 +91,16 @@ async fn run_inner(
 
     // Otherwise fall back to an active Ely.by account, launching via the
     // authlib-injector agent.
-    if let Some(ely) = ElyCredentials::get_active(&state.pool).await? {
+    let ely = ElyCredentials::get_active(&state.pool)
+        .await
+        .unwrap_or_else(|error| {
+            tracing::warn!(
+                "Could not read the Ely.by account, trying what else there is: {error}"
+            );
+            None
+        });
+
+    if let Some(ely) = ely {
         let credentials = ely.to_minecraft_credentials();
         return run_credentials(
             instance_id,

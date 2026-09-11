@@ -7,10 +7,14 @@ use crate::state::{
 use crate::util::fetch::{sha1_async, write};
 use crate::util::io;
 use bytes::Bytes;
+use image::codecs::gif::GifDecoder;
 use image::imageops::FilterType;
-use image::{DynamicImage, ImageFormat, ImageReader, Rgba, RgbaImage};
+use image::{
+    AnimationDecoder, DynamicImage, ImageDecoder, ImageFormat, ImageReader,
+    Rgba, RgbaImage,
+};
 use std::fs::File as StdFile;
-use std::io::{BufRead, BufReader, Cursor, Seek};
+use std::io::{BufRead, BufReader, Cursor, Read, Seek};
 use std::path::{Path, PathBuf};
 
 const INSTANCE_ICON_MAX_BYTES: usize = 4 * 1024 * 1024;
@@ -18,6 +22,8 @@ const INSTANCE_ICON_MAX_DIMENSION: u32 = 512;
 const INSTANCE_ICON_MAX_SOURCE_DIMENSION: u32 = 8_192;
 const INSTANCE_ICON_MAX_DECODE_BYTES: u64 = 64 * 1024 * 1024;
 const GENERATED_ICON_SIZE: u32 = 256;
+/// Noctrinth's own: what an icon that was kept animated is stored as.
+const ANIMATED_EXTENSION: &str = "gif";
 const MAX_ICON_CONFIG_ID_LENGTH: usize = 64;
 const MAX_SYMBOL_BYTES: usize = 4 * 1024 * 1024;
 const MAX_SYMBOL_DIMENSION: u32 = 4096;
@@ -168,16 +174,25 @@ pub(crate) async fn cache_icon(
     bytes: Bytes,
     state: &State,
 ) -> crate::Result<PathBuf> {
-    let bytes = tokio::task::spawn_blocking(move || {
+    let (bytes, animated) = tokio::task::spawn_blocking(move || {
         if looks_like_svg(&bytes) {
             return Err(svg_not_supported_error());
         }
 
-        normalize_raster(Cursor::new(bytes))
+        // Noctrinth's own: a GIF that moves is kept whole.
+        if keep_as_animated_gif(&bytes) {
+            return Ok((bytes, true));
+        }
+
+        normalize_raster(Cursor::new(bytes)).map(|bytes| (bytes, false))
     })
     .await??;
 
-    write_cached_icon(bytes, state).await
+    if animated {
+        write_cached_icon_as(bytes, ANIMATED_EXTENSION, state).await
+    } else {
+        write_cached_icon(bytes, state).await
+    }
 }
 
 pub(crate) async fn cache_icon_from_path(
@@ -185,7 +200,7 @@ pub(crate) async fn cache_icon_from_path(
     state: &State,
 ) -> crate::Result<PathBuf> {
     let icon_path = icon_path.to_path_buf();
-    let bytes = tokio::task::spawn_blocking(move || {
+    let (bytes, animated) = tokio::task::spawn_blocking(move || {
         let file = StdFile::open(&icon_path).map_err(|error| {
             crate::ErrorKind::InputError(format!(
                 "Could not open instance icon {}: {error}",
@@ -206,11 +221,52 @@ pub(crate) async fn cache_icon_from_path(
             return Err(svg_not_supported_error());
         }
 
-        normalize_raster(reader)
+        // Noctrinth's own: read a small GIF whole so it can be kept whole.
+        // Anything else is left to stream, so a picture far too big to be an
+        // icon is never pulled into memory just to be rejected.
+        if reader
+            .stream_position()
+            .ok()
+            .and_then(|_| reader.get_ref().metadata().ok())
+            .is_some_and(|metadata| {
+                (metadata.len() as usize) < INSTANCE_ICON_MAX_BYTES
+            })
+            && image::guess_format(reader.fill_buf().unwrap_or_default()).ok()
+                == Some(ImageFormat::Gif)
+        {
+            let mut gif = Vec::new();
+            reader.rewind().map_err(|error| {
+                crate::ErrorKind::InputError(format!(
+                    "Could not read instance icon {}: {error}",
+                    icon_path.display()
+                ))
+            })?;
+            reader.read_to_end(&mut gif).map_err(|error| {
+                crate::ErrorKind::InputError(format!(
+                    "Could not read instance icon {}: {error}",
+                    icon_path.display()
+                ))
+            })?;
+            if keep_as_animated_gif(&gif) {
+                return Ok((Bytes::from(gif), true));
+            }
+            reader.rewind().map_err(|error| {
+                crate::ErrorKind::InputError(format!(
+                    "Could not read instance icon {}: {error}",
+                    icon_path.display()
+                ))
+            })?;
+        }
+
+        normalize_raster(reader).map(|bytes| (bytes, false))
     })
     .await??;
 
-    write_cached_icon(bytes, state).await
+    if animated {
+        write_cached_icon_as(bytes, ANIMATED_EXTENSION, state).await
+    } else {
+        write_cached_icon(bytes, state).await
+    }
 }
 
 pub(crate) async fn migrate_legacy_icons() -> crate::Result<()> {
@@ -312,6 +368,19 @@ async fn write_cached_icon(
     bytes: Bytes,
     state: &State,
 ) -> crate::Result<PathBuf> {
+    write_cached_icon_as(bytes, "png", state).await
+}
+
+/// Noctrinth's own: the same, for an icon that is not stored as a PNG.
+///
+/// The extension is the only thing that tells the frontend how to draw it —
+/// an `<img>` animates a `.gif` and does not animate a `.png`, whatever the
+/// bytes inside say.
+async fn write_cached_icon_as(
+    bytes: Bytes,
+    extension: &str,
+    state: &State,
+) -> crate::Result<PathBuf> {
     if bytes.len() >= INSTANCE_ICON_MAX_BYTES {
         return Err(icon_too_large_error());
     }
@@ -321,10 +390,46 @@ async fn write_cached_icon(
         .directories
         .caches_dir()
         .join("icons")
-        .join(format!("{hash}.png"));
+        .join(format!("{hash}.{extension}"));
     write(&path, &bytes, &state.io_semaphore).await?;
 
     Ok(io::canonicalize(path)?)
+}
+
+/// Noctrinth's own: whether these bytes are a GIF that moves, and small enough
+/// to keep as they are.
+///
+/// Every other icon is decoded and re-encoded as a PNG, which for an animated
+/// GIF means keeping the first frame and throwing the rest away — the icon
+/// arrives and then just sits there. A mod's icon animates because it is drawn
+/// straight from its URL and never goes through any of this; there is no
+/// reason an instance's should not.
+///
+/// The limits are the ones every other icon is held to. A GIF that fails them
+/// is not refused: it falls back to the still frame, which is exactly what it
+/// would have been before.
+fn keep_as_animated_gif(bytes: &[u8]) -> bool {
+    if bytes.len() >= INSTANCE_ICON_MAX_BYTES
+        || image::guess_format(bytes).ok() != Some(ImageFormat::Gif)
+    {
+        return false;
+    }
+
+    let Ok(decoder) = GifDecoder::new(Cursor::new(bytes)) else {
+        return false;
+    };
+    let (width, height) = decoder.dimensions();
+    if width > INSTANCE_ICON_MAX_DIMENSION
+        || height > INSTANCE_ICON_MAX_DIMENSION
+    {
+        return false;
+    }
+
+    // Two frames is all it takes to know, and all that is decoded to find out.
+    let Ok(decoder) = GifDecoder::new(Cursor::new(bytes)) else {
+        return false;
+    };
+    decoder.into_frames().filter_map(Result::ok).take(2).count() > 1
 }
 
 fn normalize_raster<R>(reader: R) -> crate::Result<Bytes>
@@ -396,11 +501,26 @@ fn inspect_legacy_icon(icon_path: &Path) -> crate::Result<LegacyIconAction> {
     if has_svg_extension(icon_path) || looks_like_svg(bytes) {
         return Ok(LegacyIconAction::Remove);
     }
+    let format = image::guess_format(bytes).ok();
 
     if metadata.len() < INSTANCE_ICON_MAX_BYTES as u64
-        && image::guess_format(bytes).ok() == Some(image::ImageFormat::Png)
+        && format == Some(ImageFormat::Png)
     {
         return Ok(LegacyIconAction::Keep);
+    }
+
+    // Noctrinth's own: an icon that was kept animated must not be normalised
+    // back into its first frame the next time the launcher starts.
+    if metadata.len() < INSTANCE_ICON_MAX_BYTES as u64
+        && format == Some(ImageFormat::Gif)
+    {
+        let mut gif = Vec::new();
+        if reader.rewind().is_ok()
+            && reader.read_to_end(&mut gif).is_ok()
+            && keep_as_animated_gif(&gif)
+        {
+            return Ok(LegacyIconAction::Keep);
+        }
     }
 
     Ok(LegacyIconAction::Normalize)
@@ -593,11 +713,37 @@ fn svg_not_supported_error() -> crate::Error {
 #[cfg(test)]
 mod tests {
     use super::{
-        GENERATED_ICON_SIZE, InstanceIconBackground, InstanceIconConfig,
-        ValidatedIconBackground, render_generated_icon, validate_icon_config,
+        GENERATED_ICON_SIZE, INSTANCE_ICON_MAX_DIMENSION,
+        InstanceIconBackground, InstanceIconConfig, ValidatedIconBackground,
+        keep_as_animated_gif, render_generated_icon, validate_icon_config,
     };
-    use image::{DynamicImage, ImageFormat, Rgba, RgbaImage};
+    use image::codecs::gif::GifEncoder;
+    use image::{Delay, DynamicImage, Frame, ImageFormat, Rgba, RgbaImage};
     use std::io::Cursor;
+
+    /// A GIF of `frames` frames, each `size` square.
+    fn gif(frames: usize, size: u32) -> Vec<u8> {
+        let mut bytes = Vec::new();
+        {
+            let mut encoder = GifEncoder::new(&mut bytes);
+            for index in 0..frames {
+                let shade = (index * 40) as u8;
+                encoder
+                    .encode_frame(Frame::from_parts(
+                        RgbaImage::from_pixel(
+                            size,
+                            size,
+                            Rgba([shade, shade, shade, 255]),
+                        ),
+                        0,
+                        0,
+                        Delay::from_numer_denom_ms(100, 1),
+                    ))
+                    .unwrap();
+            }
+        }
+        bytes
+    }
 
     fn png(pixel: Rgba<u8>) -> Vec<u8> {
         let mut bytes = Cursor::new(Vec::new());
@@ -689,5 +835,41 @@ mod tests {
             })
             .is_err()
         );
+    }
+
+    #[test]
+    fn a_gif_that_moves_is_kept_as_it_is() {
+        assert!(keep_as_animated_gif(&gif(3, 64)));
+        // The shape a CurseForge pack's own icon actually comes in: 400x400
+        // and a couple of dozen frames.
+        assert!(keep_as_animated_gif(&gif(23, 400)));
+    }
+
+    #[test]
+    fn a_gif_of_one_frame_is_just_a_picture() {
+        // Nothing to preserve, so it takes the ordinary path and comes out a
+        // PNG like everything else.
+        assert!(!keep_as_animated_gif(&gif(1, 64)));
+    }
+
+    #[test]
+    fn a_png_is_never_mistaken_for_one() {
+        assert!(!keep_as_animated_gif(&png(Rgba([1, 2, 3, 255]))));
+    }
+
+    #[test]
+    fn a_gif_too_large_to_be_an_icon_falls_back_to_a_still() {
+        // Refusing it outright would be a step back: before any of this, such
+        // a GIF was resized into a perfectly good icon.
+        assert!(!keep_as_animated_gif(&gif(
+            2,
+            INSTANCE_ICON_MAX_DIMENSION + 1
+        )));
+    }
+
+    #[test]
+    fn nonsense_is_not_a_gif() {
+        assert!(!keep_as_animated_gif(b"GIF89a not really"));
+        assert!(!keep_as_animated_gif(&[]));
     }
 }

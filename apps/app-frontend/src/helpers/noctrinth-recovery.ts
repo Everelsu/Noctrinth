@@ -39,3 +39,11 @@ export async function adoptOrphan(
 		loaderVersion,
 	})
 }
+
+/**
+ * Everywhere a launcher was found, rather than only where its installer would
+ * have put it. See `packages/app-lib/src/api/launcher_search.rs`.
+ */
+export async function findLauncherPaths(launcherType: string): Promise<string[]> {
+	return await invoke('plugin:noctrinth-recovery|recovery_find_launchers', { launcherType })
+}

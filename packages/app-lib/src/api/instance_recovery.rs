@@ -137,7 +137,7 @@ pub async fn scan_for_orphans() -> crate::Result<Vec<OrphanedInstance>> {
         orphans.push(describe(&path, folder).await);
     }
 
-    orphans.sort_by(|a, b| b.modified.cmp(&a.modified));
+    orphans.sort_by_key(|orphan| std::cmp::Reverse(orphan.modified));
     Ok(orphans)
 }
 

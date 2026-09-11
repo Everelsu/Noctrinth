@@ -1,11 +1,8 @@
 import { type AbstractWebNotificationManager, provideInstanceImport } from '@modrinth/ui'
 import { open } from '@tauri-apps/plugin-dialog'
 
-import {
-	get_default_launcher_path,
-	get_importable_instances,
-	import_instance,
-} from '@/helpers/import.js'
+import { get_importable_instances, import_instance } from '@/helpers/import.js'
+import { findLauncherPaths } from '@/helpers/noctrinth-recovery'
 
 /** Launcher type identifiers understood by the backend, with how they're shown. */
 const LAUNCHERS = [
@@ -25,11 +22,14 @@ export function setupInstanceImportProvider(notificationManager: AbstractWebNoti
 			const launchers = []
 			for (const launcher of LAUNCHERS) {
 				try {
-					const path = await get_default_launcher_path(launcher.name)
-					if (!path) continue
-					const instances = await get_importable_instances(launcher.name, path)
-					if (instances?.length > 0) {
-						launchers.push({ ...launcher, path, instances })
+					// Every place it was found, not only where its installer would
+					// have put it: a second drive and a portable build in Downloads
+					// are both normal, and typing the path is what people give up on.
+					for (const path of await findLauncherPaths(launcher.name)) {
+						const instances = await get_importable_instances(launcher.name, path)
+						if (instances?.length > 0) {
+							launchers.push({ ...launcher, path, instances })
+						}
 					}
 				} catch {
 					// Skip launchers that fail detection

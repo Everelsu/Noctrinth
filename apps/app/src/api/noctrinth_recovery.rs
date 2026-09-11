@@ -3,7 +3,10 @@
 //! See `theseus::instance_recovery` for what is read out of a folder and why.
 
 use crate::api::Result;
+use std::path::PathBuf;
 use theseus::instance_recovery::{self, OrphanedInstance};
+use theseus::launcher_search;
+use theseus::pack::import::ImportLauncherType;
 use theseus::prelude::ModLoader;
 
 pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
@@ -11,6 +14,7 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
         .invoke_handler(tauri::generate_handler![
             recovery_scan_for_orphans,
             recovery_adopt_orphan,
+            recovery_find_launchers,
         ])
         .build()
 }
@@ -38,4 +42,13 @@ pub async fn recovery_adopt_orphan(
         loader_version,
     )
     .await?)
+}
+
+/// Everywhere this launcher was found, rather than only where its installer
+/// would have put it.
+#[tauri::command]
+pub fn recovery_find_launchers(
+    launcher_type: ImportLauncherType,
+) -> Vec<PathBuf> {
+    launcher_search::find_all(launcher_type)
 }

@@ -19,6 +19,8 @@ use crate::{
 
 pub mod atlauncher;
 pub mod curseforge;
+/// Noctrinth's own: what copying a CurseForge instance's folder leaves behind.
+mod curseforge_completion;
 pub mod gdlauncher;
 pub mod mmc;
 pub mod modrinth;

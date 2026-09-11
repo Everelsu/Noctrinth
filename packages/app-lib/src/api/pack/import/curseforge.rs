@@ -10,7 +10,9 @@ use crate::{
     util::{fetch::fetch, io},
 };
 
-use super::{finish_import, recache_icon};
+use super::{
+    copy_dotminecraft_with_reporter, curseforge_completion, recache_icon,
+};
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -72,11 +74,23 @@ pub async fn import_curseforge(
     // Recache Curseforge Icon if it exists
     let mut icon = None;
 
-    if let Some(icon_path) = minecraft_instance.profile_image_path.clone() {
+    // Noctrinth's own: `profileImagePath` is an absolute path into the
+    // CurseForge installation, so it is routinely dead by the time an instance
+    // is imported. The picture is looked for in the folder as well, and a dead
+    // path now falls through to the thumbnail instead of ruling it out.
+    if let Some(icon_path) = curseforge_completion::find_instance_image(
+        &curseforge_instance_folder,
+        minecraft_instance.profile_image_path.as_deref(),
+    )
+    .await
+    {
         icon = recache_icon(icon_path).await?;
-    } else if let Some(InstalledModpack {
-        thumbnail_url: Some(thumbnail_url),
-    }) = minecraft_instance.installed_modpack.clone()
+    }
+
+    if icon.is_none()
+        && let Some(InstalledModpack {
+            thumbnail_url: Some(thumbnail_url),
+        }) = minecraft_instance.installed_modpack.clone()
     {
         let icon_bytes = fetch(
             &thumbnail_url,
@@ -174,12 +188,31 @@ pub async fn import_curseforge(
 
     // Copy in contained folders as overrides
     let state = State::get().await?;
-    finish_import(
+    copy_dotminecraft_with_reporter(
         instance_id,
-        curseforge_instance_folder,
+        curseforge_instance_folder.clone(),
         &state.io_semaphore,
-        reporter,
-        details,
+        reporter.clone(),
+        details.clone(),
+    )
+    .await?;
+
+    // Noctrinth's own, and the reason this does not call `finish_import`: the
+    // copy is not the whole pack. Whatever the instance says it has but did
+    // not bring is fetched before Minecraft is installed, so the instance is
+    // whole by the time the job finishes rather than a mod short.
+    curseforge_completion::restore_missing_addons(
+        instance_id,
+        &curseforge_instance_folder,
+        &reporter,
+        &details,
+    )
+    .await?;
+
+    crate::launcher::install_minecraft_for_instance_id_with_reporter(
+        instance_id,
+        false,
+        Some(reporter),
     )
     .await?;
 

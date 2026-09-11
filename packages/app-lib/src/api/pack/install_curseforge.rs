@@ -397,6 +397,13 @@ pub(crate) async fn install_curseforge_pack_files_with_reporter(
     extract_overrides(&pack_file, &manifest, instance_id, &reporter, &details)
         .await?;
 
+    // Noctrinth's own: a manifest has no icon field, so a pack's instance used
+    // to come out blank even when the zip was carrying the pack's picture all
+    // along. Never worth failing an install over.
+    if let Err(error) = apply_pack_icon(&pack_file, instance_id, &state).await {
+        tracing::warn!("Could not read the pack's own icon: {error}");
+    }
+
     crate::launcher::install_minecraft_for_instance_id_with_reporter(
         instance_id,
         false,
@@ -562,6 +569,98 @@ async fn download_cf_file(
     Ok(())
 }
 
+/// Noctrinth's own: names a CurseForge pack ships its own picture under, in
+/// the order they are preferred.
+const PACK_ICON_STEMS: [&str; 5] =
+    ["icon", "pack", "modpack-icon", "logo", "thumbnail"];
+
+/// Extensions accepted for those, matched case-insensitively. SVG is left out
+/// deliberately: instance icons are rasterised, and `cache_icon` refuses it.
+const PACK_ICON_EXTENSIONS: [&str; 6] =
+    ["png", "jpg", "jpeg", "webp", "gif", "bmp"];
+
+/// How well a zip entry does as the pack's picture — lower is better, `None`
+/// means it is not one.
+///
+/// Only the zip's root and the root of a folder inside it are considered: a
+/// pack's own picture sits beside `manifest.json` or at the top of
+/// `overrides/`, while `overrides/config/.../logo.png` belongs to a mod and
+/// has nothing to do with the pack.
+fn pack_icon_rank(entry_name: &str) -> Option<(usize, usize, usize)> {
+    let depth = entry_name.matches('/').count();
+    if depth > 1 {
+        return None;
+    }
+
+    let file_name = entry_name.rsplit('/').next()?;
+    let (stem, extension) = file_name.rsplit_once('.')?;
+    let stem_rank = PACK_ICON_STEMS
+        .iter()
+        .position(|candidate| stem.eq_ignore_ascii_case(candidate))?;
+    let extension_rank = PACK_ICON_EXTENSIONS
+        .iter()
+        .position(|candidate| extension.eq_ignore_ascii_case(candidate))?;
+
+    Some((depth, stem_rank, extension_rank))
+}
+
+/// Gives the instance the picture the pack ships, if it ships one and the
+/// instance has not been given one already — a reinstall over an instance the
+/// user has since chosen an icon for leaves that choice alone.
+async fn apply_pack_icon(
+    pack_file: &bytes::Bytes,
+    instance_id: &str,
+    state: &State,
+) -> crate::Result<()> {
+    let already_has_icon = crate::api::instance::get(instance_id)
+        .await?
+        .is_some_and(|metadata| metadata.instance.icon_path.is_some());
+    if already_has_icon {
+        return Ok(());
+    }
+
+    let mut zip_reader = ZipFileReader::with_tokio(Cursor::new(pack_file))
+        .await
+        .map_err(|_| {
+            crate::Error::from(crate::ErrorKind::InputError(
+                "Failed to read CurseForge modpack zip".to_string(),
+            ))
+        })?;
+
+    let Some((_, index)) = zip_reader
+        .file()
+        .entries()
+        .iter()
+        .enumerate()
+        .filter_map(|(index, file)| {
+            let name = file.filename().as_str().ok()?;
+            Some((pack_icon_rank(name)?, index))
+        })
+        .min()
+    else {
+        return Ok(());
+    };
+
+    let mut icon_bytes = Vec::new();
+    {
+        let mut reader = zip_reader.reader_with_entry(index).await?;
+        reader.read_to_end_checked(&mut icon_bytes).await?;
+    }
+
+    let icon_path =
+        crate::api::instance::cache_icon(icon_bytes.into(), state).await?;
+    crate::api::instance::edit(
+        instance_id,
+        EditInstance {
+            icon_path: Some(Some(icon_path.to_string_lossy().to_string())),
+            ..EditInstance::default()
+        },
+    )
+    .await?;
+
+    Ok(())
+}
+
 /// Extract the modpack's overrides folder into the instance directory,
 /// reporting extraction progress through the job reporter.
 async fn extract_overrides(
@@ -677,4 +776,36 @@ async fn extract_overrides(
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_pack_icon_is_only_looked_for_where_a_pack_puts_one() {
+        assert!(pack_icon_rank("icon.png").is_some());
+        assert!(pack_icon_rank("overrides/pack.png").is_some());
+        // A mod's own artwork, buried in the config it came with.
+        assert!(pack_icon_rank("overrides/config/mod/logo.png").is_none());
+        assert!(pack_icon_rank("manifest.json").is_none());
+        assert!(pack_icon_rank("overrides/icon.svg").is_none());
+    }
+
+    #[test]
+    fn the_pack_icon_closest_to_the_manifest_wins() {
+        let mut entries = [
+            "overrides/thumbnail.jpg",
+            "overrides/icon.png",
+            "icon.jpg",
+            "pack.png",
+        ];
+        entries.sort_by_key(|name| pack_icon_rank(name).unwrap());
+
+        // Root before overrides, then `icon` before `pack`, then png before
+        // jpg — so a pack that ships several is read the way a person would.
+        assert_eq!(entries[0], "icon.jpg");
+        assert_eq!(entries[1], "pack.png");
+        assert_eq!(entries[2], "overrides/icon.png");
+    }
 }

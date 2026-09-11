@@ -13,6 +13,12 @@ static THUMBNAIL_WORKER: Semaphore = Semaphore::const_new(1);
 static GENERATED_THUMBNAILS: AtomicUsize = AtomicUsize::new(0);
 const CACHE_LIMIT: u64 = 128 * 1024 * 1024;
 
+/// Noctrinth's own: the most of a file that has to be read to tell whether it
+/// is a GIF worth serving whole. Comfortably over the cap an instance icon is
+/// held to, and small enough that a large picture is never pulled into memory
+/// just to be turned down.
+const ANIMATION_PROBE_BYTES: u64 = 4 * 1024 * 1024;
+
 #[tauri::command]
 pub async fn get_image_thumbnail<R: Runtime>(
     app: tauri::AppHandle<R>,
@@ -66,6 +72,16 @@ fn create_thumbnail(
     if target.is_file() {
         return Ok(target);
     }
+
+    // Noctrinth's own: a thumbnail is a still PNG, which for a GIF means the
+    // first frame and nothing else — and the library grid is the one place an
+    // instance's icon is most on show. One small enough to serve as it is goes
+    // out unchanged; anything larger still gets a thumbnail, because a grid is
+    // no place to be decoding several megabytes a card.
+    if metadata.len() <= ANIMATION_PROBE_BYTES && is_animated_gif(path) {
+        return Ok(path.to_path_buf());
+    }
+
     std::fs::create_dir_all(cache)?;
     let mut reader = image::ImageReader::open(path)?.with_guessed_format()?;
     let mut limits = image::Limits::default();
@@ -89,6 +105,17 @@ fn create_thumbnail(
         tracing::warn!(%error, "Could not prune thumbnail cache");
     }
     Ok(target)
+}
+
+/// Noctrinth's own: whether this file is a GIF the launcher would have kept
+/// animated, asked of the file rather than of bytes already in hand.
+fn is_animated_gif(path: &Path) -> bool {
+    path.extension()
+        .and_then(|extension| extension.to_str())
+        .is_some_and(|extension| extension.eq_ignore_ascii_case("gif"))
+        && std::fs::read(path).is_ok_and(|bytes| {
+            theseus::instance::keep_as_animated_gif(&bytes)
+        })
 }
 
 fn prune_cache(cache: &Path, current: &Path) -> std::io::Result<()> {

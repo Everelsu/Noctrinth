@@ -399,6 +399,10 @@ async fn write_cached_icon_as(
 /// Noctrinth's own: whether these bytes are a GIF that moves, and small enough
 /// to keep as they are.
 ///
+/// Public because the thumbnailer has to ask the same question: it turns an
+/// icon into a still PNG for the library grid, which would undo all of this
+/// for the one place the icons are most on show.
+///
 /// Every other icon is decoded and re-encoded as a PNG, which for an animated
 /// GIF means keeping the first frame and throwing the rest away — the icon
 /// arrives and then just sits there. A mod's icon animates because it is drawn
@@ -408,7 +412,7 @@ async fn write_cached_icon_as(
 /// The limits are the ones every other icon is held to. A GIF that fails them
 /// is not refused: it falls back to the still frame, which is exactly what it
 /// would have been before.
-fn keep_as_animated_gif(bytes: &[u8]) -> bool {
+pub fn keep_as_animated_gif(bytes: &[u8]) -> bool {
     if bytes.len() >= INSTANCE_ICON_MAX_BYTES
         || image::guess_format(bytes).ok() != Some(ImageFormat::Gif)
     {

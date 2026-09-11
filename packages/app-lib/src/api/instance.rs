@@ -36,7 +36,7 @@ pub use self::groups::{
 };
 pub use self::icon::{
     cache_generated_icon, edit_generated_icon, edit_generated_icon_if_empty,
-    edit_icon, get_recent_icon_configs,
+    edit_icon, get_recent_icon_configs, keep_as_animated_gif,
 };
 pub(crate) use self::icon::{
     cache_icon, cache_icon_from_path, migrate_legacy_icons,

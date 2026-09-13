@@ -13,7 +13,23 @@ use crate::state::OfflineCredentials;
 pub async fn add(username: &str) -> crate::Result<OfflineCredentials> {
     let state = State::get().await?;
 
-    OfflineCredentials::create(username, &state.pool).await
+    let account = OfflineCredentials::create(username, &state.pool).await?;
+
+    // The checklist's "sign in to Minecraft" step is about having an account to
+    // play with, and an offline one is exactly that. Neither this nor the
+    // interface asks anything else, but the sidebar's "Playing as" card is only
+    // shown once that step is done — so an account added here was written down
+    // and then had nowhere to appear, which reads as the account never having
+    // been added at all.
+    if let Err(error) =
+        crate::onboarding_checklist::mark_logged_into_minecraft().await
+    {
+        tracing::warn!(
+            "Failed to mark offline account in onboarding checklist: {error}"
+        );
+    }
+
+    Ok(account)
 }
 
 #[tracing::instrument]

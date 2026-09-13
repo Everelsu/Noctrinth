@@ -170,12 +170,71 @@ fn java_step_progress(current: u64) -> InstallProgress {
     }
 }
 
+/// A runtime for this major version already sitting in the launcher's own Java
+/// directory, if there is one and it still runs.
+///
+/// Nothing but a Java setting pointing at a runtime keeps the launcher from
+/// coming here, and a setting is not the same thing as an installation. An
+/// install interrupted after the archive was extracted but before the setting
+/// was written, a settings row cleared, a machine where the database was
+/// rebuilt — in each of those the runtime is already on disk, and fetching
+/// fifty megabytes again to arrive at the same directory is a download the
+/// player watches for nothing.
+///
+/// It is not only wasted time. Extraction deletes the existing installation
+/// first, so every one of those repeats also takes away the Java that was
+/// working until the new archive is unpacked over it.
+async fn installed_runtime_for(java_version: u32) -> Option<PathBuf> {
+    let state = State::get().await.ok()?;
+    let mut entries =
+        tokio::fs::read_dir(state.directories.java_versions_dir())
+            .await
+            .ok()?;
+
+    while let Ok(Some(entry)) = entries.next_entry().await {
+        if !entry.metadata().await.is_ok_and(|entry| entry.is_dir()) {
+            continue;
+        }
+
+        // Azul names its directories after the version inside, so the name is
+        // worth reading before starting a process to ask. A name that cannot be
+        // read is checked anyway rather than skipped: it costs one `java
+        // -version`, and being wrong here means downloading everything again.
+        let name = entry.file_name().to_string_lossy().to_string();
+        if major_version_from_runtime_name(&name)
+            .is_some_and(|major| major != java_version)
+        {
+            continue;
+        }
+
+        let executable = runtime_executable(&entry.path());
+        let Ok(runtime) = jre::check_java_at_filepath(&executable).await else {
+            continue;
+        };
+        if extract_java_version(&runtime.version)
+            .is_ok_and(|major| major == java_version)
+        {
+            tracing::info!(
+                "Java {java_version} is already installed at {}",
+                executable.display()
+            );
+            return Some(executable);
+        }
+    }
+
+    None
+}
+
 async fn auto_install_java_inner(
     java_version: u32,
     show_loading: bool,
     reporter: Option<InstallProgressReporter>,
 ) -> crate::Result<PathBuf> {
     let state = State::get().await?;
+
+    if let Some(installed) = installed_runtime_for(java_version).await {
+        return Ok(installed);
+    }
 
     let loading_bar = if show_loading {
         Some(

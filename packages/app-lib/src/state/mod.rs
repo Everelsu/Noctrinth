@@ -298,6 +298,13 @@ impl State {
         let directories =
             DirectoryInfo::init(settings.custom_dir, &app_identifier).await?;
 
+        // Downloads stage inside the launcher's own directory rather than the
+        // operating system's temporary one, so a modpack is written to the
+        // drive the player gave the launcher.
+        crate::util::fetch::set_download_staging_dir(
+            directories.caches_dir().join("downloads"),
+        );
+
         let discord_rpc = DiscordGuard::init()?;
 
         tracing::info!("Initializing file watcher");

@@ -69,6 +69,7 @@ import {
 	Button,
 	commonMessages,
 	defineMessages,
+	injectNotificationManager,
 	Input,
 	NewModal,
 	useVIntl,
@@ -77,6 +78,7 @@ import { ref, watch } from 'vue'
 
 import { offline_add, offline_preview_uuid, type OfflineCredentials } from '@/helpers/offline_auth'
 
+const { handleError } = injectNotificationManager()
 const { formatMessage } = useVIntl()
 
 const emit = defineEmits<{ added: [OfflineCredentials] }>()
@@ -108,6 +110,11 @@ async function submit() {
 	try {
 		emit('added', await offline_add(username.value.trim()))
 		hide()
+	} catch (error) {
+		// Without this the rejection goes nowhere: the dialog stays open with
+		// the name still in it and nothing said, which reads as the button not
+		// working rather than as the account having been refused.
+		handleError(error)
 	} finally {
 		loading.value = false
 	}

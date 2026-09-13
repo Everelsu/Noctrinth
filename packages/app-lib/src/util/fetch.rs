@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::future::Future;
 use std::num::NonZeroU32;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::pin::Pin;
 use std::sync::{Arc, LazyLock};
 use std::time::{Duration, Instant, SystemTime};
@@ -200,6 +200,78 @@ static PROXY_URL: parking_lot::RwLock<Option<String>> =
 
 pub fn set_proxy_url(url: Option<String>) {
     *PROXY_URL.write() = url.filter(|u| !u.trim().is_empty());
+}
+
+/// Where a download is written while it is still arriving.
+///
+/// Every downloaded file is streamed to a temporary file first and only moved
+/// into place once it is whole and its hash checks out. Left to itself,
+/// `tempfile` puts that in the operating system's temporary directory — on
+/// Windows, always on the system drive, whatever the player chose for the
+/// launcher. Installing a large modpack then writes its entire content to a
+/// drive the player may have moved the launcher off precisely because it had no
+/// room, and the install dies on a full disk with nothing to say about why.
+/// Every file also crosses drives twice, since the copy into the instance
+/// cannot be a rename.
+///
+/// Set to the launcher's own directory, both stop being true. Unset — before
+/// the state is up — the operating system's directory is still used, which is
+/// what the few downloads made that early want anyway.
+static DOWNLOAD_STAGING_DIR: parking_lot::RwLock<Option<PathBuf>> =
+    parking_lot::RwLock::new(None);
+
+/// How long an abandoned staging file is kept before the next startup sweeps
+/// it. Generous, because the only thing that leaves one behind is the launcher
+/// being killed mid-download, and a download in flight in another copy of the
+/// launcher must not be swept out from under it.
+const STAGING_FILE_MAX_AGE: Duration = Duration::from_secs(24 * 60 * 60);
+
+/// Points downloads at `dir`, and clears out what an earlier run abandoned
+/// there.
+pub fn set_download_staging_dir(dir: PathBuf) {
+    if let Err(error) = std::fs::create_dir_all(&dir) {
+        tracing::warn!(
+            "Could not create the download staging directory {}: {error} —              falling back to the system temporary directory",
+            dir.display()
+        );
+        return;
+    }
+
+    sweep_staging_dir(&dir);
+    *DOWNLOAD_STAGING_DIR.write() = Some(dir);
+}
+
+fn sweep_staging_dir(dir: &Path) {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
+
+    for entry in entries.flatten() {
+        let old_enough = entry
+            .metadata()
+            .and_then(|metadata| metadata.modified())
+            .is_ok_and(|modified| {
+                modified
+                    .elapsed()
+                    .is_ok_and(|age| age > STAGING_FILE_MAX_AGE)
+            });
+        if old_enough && let Err(error) = std::fs::remove_file(entry.path()) {
+            tracing::debug!(
+                "Could not remove the abandoned download {}: {error}",
+                entry.path().display()
+            );
+        }
+    }
+}
+
+/// A temporary file to stream a download into.
+fn staging_file() -> std::io::Result<tempfile::TempPath> {
+    let dir = DOWNLOAD_STAGING_DIR.read().clone();
+    match dir {
+        Some(dir) => tempfile::NamedTempFile::new_in(dir),
+        None => tempfile::NamedTempFile::new(),
+    }
+    .map(tempfile::NamedTempFile::into_temp_path)
 }
 
 const API_RETRY_AFTER_FALLBACK: Duration = Duration::from_secs(60);
@@ -530,10 +602,7 @@ async fn read_file_response(
     mut progress: Option<&mut FetchProgressFn<'_>>,
 ) -> crate::Result<DownloadedFile> {
     use futures::StreamExt;
-    let path = tokio::task::spawn_blocking(|| {
-        tempfile::NamedTempFile::new().map(|file| file.into_temp_path())
-    })
-    .await??;
+    let path = tokio::task::spawn_blocking(staging_file).await??;
     let mut file = File::create(&path).await?;
     let total = response.content_length().unwrap_or(0);
     let mut stream = response.bytes_stream();

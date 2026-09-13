@@ -44,7 +44,10 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 ### Fixed
 - The "Sync your settings" notice stops coming back after it has been dismissed. The dismissal is written down now instead of being remembered only until the window closes.
 - An instance that belongs to a server project starts from Jump In. Its Play button ran the instance directly, which is not what a server project instance is launched by, so it did nothing that lasted.
-- A migration upstream shipped without is included, so the table behind a server-linked instance's server list is the shape the code expects.`,
+- A migration upstream shipped without is included, so the table behind a server-linked instance's server list is the shape the code expects.
+- An offline account appears once it is added. It was being written down correctly and then had nowhere to show: the sidebar's "Playing as" card only appears once the getting-started checklist counts you as signed in to Minecraft, and only the Microsoft and Ely.by sign-ins ever said so. Adding a name says so too now. An add that genuinely fails says why, instead of leaving the dialog sitting there.
+- Java is not downloaded again when it is already installed. The launcher looked for it in its settings rather than on disk, so anything that lost the setting — an install interrupted after the archive was unpacked, most of all — meant fetching the whole runtime a second time. Worse, unpacking deletes the installed copy first, so each of those attempts took away the Java that was working until the new one landed. The runtime already sitting in the launcher's Java folder is used.
+- A download is staged inside the launcher's own folder instead of Windows' temporary one. Every file arrives in a temporary file before it is checked and moved into place, and that file was going to the system drive no matter where the launcher was put — so installing a large modpack wrote all of it to the drive it was moved off of, and a full disk ended the install without saying what filled it. Anything an interrupted run leaves behind is cleared out a day later.`,
 	},
 	{
 		version: '0.20.2',

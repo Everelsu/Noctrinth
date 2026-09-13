@@ -37,8 +37,14 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
 		version: '0.20.4',
 		date: '2026-09-13T00:00:00+00:00',
-		body: `### Changed
+		body: `### Added
+- An exported .mrpack carries the instance's picture. The export walks the instance folder and an icon is not in it — it is cached beside the launcher's other state — so every pack made here arrived somewhere else blank. It goes in where Modrinth's own launcher looks for it, and where a launcher that has never heard of pack icons simply unpacks it into the instance folder and finds an icon again. A checkbox, on by default. An icon generated in the editor needs nothing special: it is a real 256-pixel picture in the same place.
+- An animated icon survives the trip. It goes in a second time under its own extension, because whether an icon keeps moving is decided by the name, so a GIF under the name compatibility demands comes back as a single frame. Importing prefers the one that still moves.
+
+### Changed
 - Synced with upstream Modrinth (0.20.2 → 0.20.4). Both are bugfix releases; nothing new came with them.
+- The crash reader recognises fifty-three things instead of twenty-six, and rules can now say what they are *not* about. Among the new ones: a name the game cannot use getting into a path, which is what happens when the Windows account is named in an alphabet other than Latin and is a crash that only ever finds some people; dependency ranges quoted with both versions; a mixin that failed told apart from two mixins that collided; Java too new as distinct from too old; a world held shut by a datapack; a damaged chunk; an unreadable config; the memory allocator; the sound stack; the graphics libraries of Linux and macOS; the wrong Java build on an Apple Silicon Mac; Oculus without Embeddium; Sodium without Indium; ids run out on 1.12; a server thread that stopped answering; and world generation waiting on itself.
+- A release build now records how its own start-up went, in the launcher log. The measuring was already there and had been switched off everywhere except development builds, which is the one place a slow start is nobody's complaint.
 - Resource pack syncing now reconciles an instance in the background, in a queue that retries on its own, rather than doing the work in front of whatever asked for it. Launching an instance and opening the app were both waiting on it.
 
 ### Fixed

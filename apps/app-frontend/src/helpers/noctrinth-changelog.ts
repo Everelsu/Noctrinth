@@ -35,6 +35,18 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.20.4',
+		date: '2026-09-13T00:00:00+00:00',
+		body: `### Changed
+- Synced with upstream Modrinth (0.20.2 → 0.20.4). Both are bugfix releases; nothing new came with them.
+- Resource pack syncing now reconciles an instance in the background, in a queue that retries on its own, rather than doing the work in front of whatever asked for it. Launching an instance and opening the app were both waiting on it.
+
+### Fixed
+- The "Sync your settings" notice stops coming back after it has been dismissed. The dismissal is written down now instead of being remembered only until the window closes.
+- An instance that belongs to a server project starts from Jump In. Its Play button ran the instance directly, which is not what a server project instance is launched by, so it did nothing that lasted.
+- A migration upstream shipped without is included, so the table behind a server-linked instance's server list is the shape the code expects.`,
+	},
+	{
 		version: '0.20.2',
 		date: '2026-09-11T00:00:00+00:00',
 		body: `### Added

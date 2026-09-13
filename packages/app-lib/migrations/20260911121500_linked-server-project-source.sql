@@ -1,3 +1,15 @@
+-- Upstream's migration, renumbered.
+--
+-- It arrived as `20260911120000_linked-server-project-source.sql`, the exact
+-- version Noctrinth's own `20260911120000_offline-accounts.sql` already
+-- occupies, and a version is a primary key in `_sqlx_migrations`: two files
+-- sharing one cannot both be applied. Renumbering the fork's file instead was
+-- not an option — it has shipped, so every installed copy has 20260911120000
+-- recorded against the offline-accounts checksum, and handing that version to
+-- a different file makes sqlx refuse to start with a checksum mismatch.
+--
+-- Nothing but the filename changed. See this folder's README.
+
 CREATE TABLE instance_servers_new (
 	instance_id TEXT NOT NULL,
 	id TEXT NOT NULL,

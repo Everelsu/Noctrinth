@@ -2,6 +2,7 @@ package com.modrinth.theseus.agent.skins;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -93,6 +94,52 @@ final class Http {
             this.retryAfterMs = retryAfterMs;
         }
     }
+
+    /**
+     * The bytes at a URL, or null when there is nothing there for whoever was asked about.
+     *
+     * <p>The same rules as {@link #getJson}: a 404 is an answer, a 5xx or a rate limit is not.
+     */
+    static byte[] getBytes(String url) throws Exception {
+        final HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+        connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
+        connection.setReadTimeout(READ_TIMEOUT_MS);
+        connection.setRequestProperty("User-Agent", "Noctrinth");
+
+        try {
+            final int status = connection.getResponseCode();
+            if (status == 429) {
+                throw new RateLimited(url, retryAfterMs(connection));
+            }
+            if (status >= 500) {
+                throw new IOException("asked " + url + " and got " + status);
+            }
+            if (status != HttpURLConnection.HTTP_OK) {
+                SkinSource.debug("Asked " + url + " and got " + status);
+                return null;
+            }
+
+            try (InputStream stream = connection.getInputStream()) {
+                final ByteArrayOutputStream collected = new ByteArrayOutputStream();
+                final byte[] buffer = new byte[8192];
+                int read;
+                long total = 0;
+                while ((read = stream.read(buffer)) != -1) {
+                    total += read;
+                    if (total > MAX_TEXTURE_BYTES) {
+                        throw new IOException(url + " is larger than a texture has any reason to be");
+                    }
+                    collected.write(buffer, 0, read);
+                }
+                return collected.toByteArray();
+            }
+        } finally {
+            connection.disconnect();
+        }
+    }
+
+    /** What a texture will not be bigger than, so a bad answer cannot be read forever. */
+    private static final long MAX_TEXTURE_BYTES = 2 * 1024 * 1024;
 
     /** A name as it can be put in a path. */
     static String encode(String value) throws Exception {

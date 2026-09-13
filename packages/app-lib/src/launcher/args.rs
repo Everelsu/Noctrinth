@@ -36,7 +36,13 @@ const TEMPORARY_REPLACE_CHAR: &str = "\n";
 /// behind it for the licensed players it has never heard of. Ely.by proxies
 /// Mojang itself, but not reliably enough to be the only way there — a licensed
 /// player is exactly who is missing when that proxy is having a bad day.
-pub const UNIVERSAL_SKINS_SOURCE: &str = "https://skinsystem.ely.by,mojang";
+/// OptiFine's capes come last because they are only capes: the sources before
+/// it speak for the skin, and each kind of texture goes to the first source
+/// listed that has one. A great many players have a cape there and nowhere
+/// else, and it is answered by name, which is what makes it work on a world
+/// opened to LAN — where nobody's id is the one Mojang issued.
+pub const UNIVERSAL_SKINS_SOURCE: &str =
+    "https://skinsystem.ely.by,mojang,optifine";
 
 /// Everything the agent in `theseus.jar` needs to look a skin up.
 ///

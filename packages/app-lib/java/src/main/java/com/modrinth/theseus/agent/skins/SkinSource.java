@@ -296,9 +296,16 @@ public final class SkinSource {
         Map<String, Texture> textures = collect(username, asked, answers, PER_SOURCE_WAIT_MS);
 
         // Then patiently, for what was only slow. Whoever asked has long since
-        // been answered; this is what gets remembered.
-        if (textures.isEmpty()) {
-            textures = collect(username, asked, answers, LATE_WAIT_MS);
+        // been answered — the game waits no longer than FIRST_WAIT_MS — so this
+        // costs nobody anything and is what gets remembered.
+        //
+        // Run even when something was found, because a partial answer is now a
+        // thing that can happen: the skin arrived and the cape is still coming.
+        // Sources that have already finished return at once, so the wait is
+        // only ever for the ones that had not.
+        final Map<String, Texture> patient = collect(username, asked, answers, LATE_WAIT_MS);
+        if (patient.size() > textures.size()) {
+            textures = patient;
         }
 
         store(username, textures, System.currentTimeMillis());
@@ -306,13 +313,21 @@ public final class SkinSource {
     }
 
     /**
-     * What the first source to know has, waiting no longer than {@code wait} on any one of them.
+     * What the sources have between them, waiting no longer than {@code wait} on any one of them.
      *
-     * <p>Asked in the order they were listed however they finish, so that a skin server put in
-     * front of another is still the one that speaks for a player they both know.
+     * <p>Taken a texture at a time rather than an answer at a time. A player's skin and their cape
+     * do not have to come from the same place, and often cannot: a cape service knows nothing about
+     * skins, so a whole-answer rule would either hide it behind whoever answered first or let it
+     * replace the skin with nothing. Each kind goes to the first source listed that has it, which
+     * keeps the meaning the order always had — a skin server put in front of another still speaks
+     * for a player they both know — and lets a source that only knows capes take part at all.
+     *
+     * <p>Asked in the order they were listed however they finish.
      */
     private static Map<String, Texture> collect(
             String username, List<Source> asked, List<FutureTask<Map<String, Texture>>> answers, long wait) {
+        final Map<String, Texture> merged = new LinkedHashMap<>();
+
         for (int i = 0; i < answers.size(); i++) {
             Map<String, Texture> answer = Collections.emptyMap();
             try {
@@ -325,12 +340,16 @@ public final class SkinSource {
                 debug("Failed to look up " + username + " at " + asked.get(i) + ": " + t);
             }
 
-            if (!answer.isEmpty()) {
-                return answer;
+            for (final Map.Entry<String, Texture> texture : answer.entrySet()) {
+                // Absent rather than replaced: the first source listed that has
+                // this kind is the one that keeps it.
+                if (!merged.containsKey(texture.getKey())) {
+                    merged.put(texture.getKey(), texture.getValue());
+                }
             }
         }
 
-        return Collections.emptyMap();
+        return merged.isEmpty() ? Collections.emptyMap() : Collections.unmodifiableMap(merged);
     }
 
     /** What one source has for a name, or nothing at all if it could not say. */
@@ -625,10 +644,28 @@ public final class SkinSource {
                 continue;
             }
 
-            sources.add(MojangSource.NAME.equalsIgnoreCase(entry) ? new MojangSource() : new SkinSystemSource(entry));
+            if (MojangSource.NAME.equalsIgnoreCase(entry)) {
+                sources.add(new MojangSource());
+            } else if (OptiFineCapeSource.NAME.equalsIgnoreCase(entry)) {
+                // Kept beside the cache rather than among the skins put there by
+                // hand: these are fetched and converted, and nobody chose them.
+                sources.add(new OptiFineCapeSource(convertedTexturesDir()));
+            } else {
+                sources.add(new SkinSystemSource(entry));
+            }
         }
 
         return Collections.unmodifiableList(sources);
+    }
+
+    /** Where textures this agent had to redraw before the game could read them are kept. */
+    private static Path convertedTexturesDir() {
+        final String cache = System.getProperty(CACHE_PROPERTY);
+        final Path beside = cache == null || cache.trim().isEmpty()
+                ? Paths.get(System.getProperty("java.io.tmpdir"), "noctrinth-skins")
+                : Paths.get(cache.trim()).toAbsolutePath().getParent();
+
+        return (beside == null ? Paths.get(".") : beside).resolve("converted-textures");
     }
 
     static void debug(String message) {

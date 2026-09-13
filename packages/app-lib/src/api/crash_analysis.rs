@@ -124,6 +124,13 @@ struct Rule {
     /// A second thing that has to be somewhere in the same file, when one line
     /// on its own would be too easy to mistake.
     also: Option<&'static str>,
+    /// Something that, if it is in the same file, means this rule is wrong.
+    ///
+    /// A log records what is installed as readily as what went wrong, so a rule
+    /// looking for a name finds it in the mod list of every run that was fine.
+    /// This is how a rule says what it is not about — and a wrong finding costs
+    /// more than a missing one, because somebody acts on it.
+    unless: Option<&'static str>,
     /// Kinds of file this rule speaks about; empty means all of them.
     kinds: &'static [CrashSourceKind],
 }
@@ -136,6 +143,7 @@ static RULES: &[Rule] = &[
         severity: CrashSeverity::Note,
         pattern: r"(?m)^Description: (?P<description>.+)$",
         also: None,
+        unless: None,
         kinds: &[CrashSourceKind::CrashReport],
     },
     // Forge and NeoForge work some of this out themselves and say so.
@@ -144,6 +152,7 @@ static RULES: &[Rule] = &[
         severity: CrashSeverity::Warning,
         pattern: r"(?m)^\s*A potential solution has been determined[:,]?\s*(?P<suggestion>.*)$",
         also: None,
+        unless: None,
         kinds: &[],
     },
     Rule {
@@ -151,6 +160,7 @@ static RULES: &[Rule] = &[
         severity: CrashSeverity::Warning,
         pattern: r"(?m)^\s*Suspected Mods?: (?P<mods>.+)$",
         also: None,
+        unless: None,
         kinds: &[],
     },
     // Memory.
@@ -159,6 +169,7 @@ static RULES: &[Rule] = &[
         severity: CrashSeverity::Critical,
         pattern: r"java\.lang\.OutOfMemoryError: Java heap space",
         also: None,
+        unless: None,
         kinds: &[],
     },
     Rule {
@@ -166,6 +177,7 @@ static RULES: &[Rule] = &[
         severity: CrashSeverity::Critical,
         pattern: r"java\.lang\.OutOfMemoryError: (?:Metaspace|Compressed class space)",
         also: None,
+        unless: None,
         kinds: &[],
     },
     Rule {
@@ -173,6 +185,7 @@ static RULES: &[Rule] = &[
         severity: CrashSeverity::Critical,
         pattern: r"(?:There is insufficient memory for the Java Runtime Environment|Native memory allocation \(\w+\) failed|Failed to reserve shared memory)",
         also: None,
+        unless: None,
         kinds: &[],
     },
     Rule {
@@ -180,6 +193,7 @@ static RULES: &[Rule] = &[
         severity: CrashSeverity::Critical,
         pattern: r"Could not reserve enough space for (?P<size>[\w ]+) object heap",
         also: None,
+        unless: None,
         kinds: &[],
     },
     // Java itself.
@@ -188,6 +202,7 @@ static RULES: &[Rule] = &[
         severity: CrashSeverity::Critical,
         pattern: r"class file version (?P<class_version>\d+)(?:\.\d+)?\), this version of the Java Runtime only recognizes class file versions up to (?P<runtime_version>\d+)",
         also: None,
+        unless: None,
         kinds: &[],
     },
     Rule {
@@ -195,6 +210,7 @@ static RULES: &[Rule] = &[
         severity: CrashSeverity::Critical,
         pattern: r"java\.lang\.UnsupportedClassVersionError: (?P<class_name>[\w./$]+)",
         also: None,
+        unless: None,
         kinds: &[],
     },
     // Mods that are missing, doubled, or built for something else.
@@ -203,6 +219,7 @@ static RULES: &[Rule] = &[
         severity: CrashSeverity::Critical,
         pattern: r"(?m)^\s*-\s*Mod '(?P<mod_name>[^']+)' \((?P<mod_id>[^)]+)\)[^\n]*? requires [^\n]*? of (?:mod )?'?(?P<dependency>[\w\-.]+)'?, which is missing",
         also: None,
+        unless: None,
         kinds: &[],
     },
     Rule {
@@ -210,6 +227,7 @@ static RULES: &[Rule] = &[
         severity: CrashSeverity::Critical,
         pattern: r"(?m)^\s*-\s*Mod '(?P<mod_name>[^']+)' \((?P<mod_id>[^)]+)\)[^\n]*? requires (?P<requirement>[^\n]+?) of (?:mod )?'?(?P<dependency>[\w\-.]+)'?, but only the wrong version",
         also: None,
+        unless: None,
         kinds: &[],
     },
     Rule {
@@ -217,6 +235,7 @@ static RULES: &[Rule] = &[
         severity: CrashSeverity::Critical,
         pattern: r"Mod ID: '(?P<dependency>[^']+)', Requested by: '(?P<mod_id>[^']+)'",
         also: None,
+        unless: None,
         kinds: &[],
     },
     Rule {
@@ -224,6 +243,7 @@ static RULES: &[Rule] = &[
         severity: CrashSeverity::Critical,
         pattern: r"(?i)duplicate mod(?:s| ids| entries)?(?: found| detected)?[:!]?\s*(?P<mods>[^\n]*)",
         also: None,
+        unless: None,
         kinds: &[],
     },
     Rule {
@@ -231,6 +251,7 @@ static RULES: &[Rule] = &[
         severity: CrashSeverity::Warning,
         pattern: r"java\.lang\.(?:NoSuchMethodError|NoClassDefFoundError|NoSuchFieldError): (?:Failed resolution of: )?(?P<symbol>[\w./$;()\[\]<>]*net[/.]minecraft[\w./$;()\[\]<>]*)",
         also: None,
+        unless: None,
         kinds: &[],
     },
     Rule {
@@ -238,6 +259,173 @@ static RULES: &[Rule] = &[
         severity: CrashSeverity::Critical,
         pattern: r"Mixin (?:apply|prepare|transformation) (?:for|of)?\s*[^\n]*?(?P<config>[\w\-.]+\.mixins?\.json)",
         also: None,
+        unless: None,
+        kinds: &[],
+    },
+    Rule {
+        id: "neoforge_dependency_version",
+        severity: CrashSeverity::Critical,
+        pattern: r"Mod ID: '(?P<dependency>[^']+)', Requested by: '(?P<mod_id>[^']+)', Expected range: '(?P<expected>[^']+)', Actual version: '(?P<actual>[^']+)'",
+        also: None,
+        unless: None,
+        kinds: &[],
+    },
+    Rule {
+        id: "mod_incompatible",
+        severity: CrashSeverity::Critical,
+        pattern: r"(?m)^\s*-\s*Mod '(?P<mod_name>[^']+)' \((?P<mod_id>[^)]+)\)[^\n]*? is incompatible with [^\n]*?'?(?P<conflict>[\w\-.]+)'?",
+        also: None,
+        unless: None,
+        kinds: &[],
+    },
+    Rule {
+        id: "not_a_mod_file",
+        severity: CrashSeverity::Critical,
+        pattern: r"(?i)(?P<file>[\w\-. ]+\.jar)[^\n]{0,40}?is not a valid (?:mod|jar) file",
+        also: None,
+        unless: None,
+        kinds: &[],
+    },
+    // Mixins, which is what most mod conflicts actually look like.
+    Rule {
+        id: "mixin_injection_failed",
+        severity: CrashSeverity::Critical,
+        pattern: r"Critical injection failure: [^\n]*?(?P<config>[\w\-.]+\.mixins?\.json)[^\n]*?(?:->|::)?\s*(?P<mixin>[\w$]+)?",
+        also: None,
+        unless: None,
+        kinds: &[],
+    },
+    Rule {
+        id: "mixin_invalid_injection",
+        severity: CrashSeverity::Critical,
+        pattern: r"org\.spongepowered\.asm\.mixin\.[\w.]*?(?P<exception>InvalidInjectionException|InjectionError|MixinApplyError|MixinTransformerError)",
+        also: None,
+        unless: None,
+        kinds: &[],
+    },
+    // Java that is too new, which reads nothing like Java that is too old.
+    Rule {
+        id: "java_too_new",
+        severity: CrashSeverity::Critical,
+        pattern: r"Unsupported class file major version (?P<major>\d+)",
+        also: None,
+        unless: None,
+        kinds: &[],
+    },
+    Rule {
+        id: "missing_main_class",
+        severity: CrashSeverity::Critical,
+        pattern: r"Could not find or load main class (?P<class_name>[\w./$]+)",
+        also: None,
+        unless: None,
+        kinds: &[],
+    },
+    // Graphics, from the line the game writes about what it is drawing on.
+    Rule {
+        id: "software_renderer",
+        severity: CrashSeverity::Critical,
+        pattern: r"Renderer: '(?P<renderer>[^']*(?:Microsoft Basic Render|llvmpipe|GDI Generic|SwiftShader)[^']*)'",
+        also: None,
+        unless: None,
+        kinds: &[],
+    },
+    Rule {
+        id: "integrated_gpu_in_use",
+        severity: CrashSeverity::Note,
+        pattern: r"Renderer: '(?P<renderer>[^']*(?:Intel\(R\) (?:UHD|HD|Iris) Graphics|AMD Radeon\(TM\) Graphics)[^']*)'",
+        also: None,
+        unless: None,
+        kinds: &[],
+    },
+    // The world, which is the other thing a player can lose.
+    Rule {
+        id: "datapack_blocked_world",
+        severity: CrashSeverity::Critical,
+        pattern: r"Errors in currently selected datapacks prevented the world from loading",
+        also: None,
+        unless: None,
+        kinds: &[],
+    },
+    Rule {
+        id: "chunk_unreadable",
+        severity: CrashSeverity::Warning,
+        pattern: r"(?i)Chunk file at \[?(?P<chunk>-?\d+,\s*-?\d+)\]? is (?P<problem>missing|in the wrong location)",
+        also: None,
+        unless: None,
+        kinds: &[],
+    },
+    Rule {
+        id: "config_unreadable",
+        severity: CrashSeverity::Critical,
+        pattern: r"(?i)(?:Failed to load config|Error parsing config|ConfigLoadingException)[^\n]{0,80}?(?P<file>[\w\-./]+\.(?:toml|json5?|cfg|properties))",
+        also: None,
+        unless: None,
+        kinds: &[],
+    },
+    // A resource name the game will not accept, which on a Windows install is
+    // almost always the player's own folder name.
+    Rule {
+        id: "resource_location_invalid",
+        severity: CrashSeverity::Critical,
+        pattern: r"ResourceLocationException: (?P<problem>[^\n]*?)(?:in path|in ID)?\s*(?P<value>[^\n]*)",
+        also: None,
+        unless: None,
+        kinds: &[],
+    },
+    Rule {
+        id: "language_provider_mismatch",
+        severity: CrashSeverity::Critical,
+        pattern: r"(?:requires language provider (?P<provider>[\w]+):(?P<wanted>[\d.,\[\])(]+)|Missing or unsupported mandatory dependencies)",
+        also: None,
+        unless: None,
+        kinds: &[],
+    },
+    Rule {
+        id: "java_module_error",
+        severity: CrashSeverity::Critical,
+        pattern: r"java\.lang\.module\.(?P<exception>FindException|ResolutionException|InvalidModuleDescriptorException)(?:: (?P<detail>[^\n]+))?",
+        also: None,
+        unless: None,
+        kinds: &[],
+    },
+    Rule {
+        id: "oculus_without_embeddium",
+        severity: CrashSeverity::Critical,
+        pattern: r"(?i)oculus[^\n]{0,60}?requires[^\n]{0,40}?(?:embeddium|rubidium)",
+        also: None,
+        unless: None,
+        kinds: &[],
+    },
+    Rule {
+        id: "missing_indium",
+        severity: CrashSeverity::Critical,
+        pattern: r"(?i)(?:requires[^\n]{0,40}?indium|Indium is required|fabric-renderer-api-v1[^\n]{0,60}?(?:missing|not (?:found|installed)))",
+        also: None,
+        unless: None,
+        kinds: &[],
+    },
+    Rule {
+        id: "too_many_block_ids",
+        severity: CrashSeverity::Critical,
+        pattern: r"(?i)(?:Invalid id (?P<id>\d{4,})|maximum (?:block|item) id|too many (?:blocks|items|ids))",
+        also: None,
+        unless: None,
+        kinds: &[],
+    },
+    Rule {
+        id: "server_thread_stuck",
+        severity: CrashSeverity::Critical,
+        pattern: r"(?:A single server tick took (?P<seconds>[\d.]+) seconds|Considering it to be crashed, server will forcibly shutdown|watchdog[^\n]{0,40}?(?:deadlock|stuck))",
+        also: None,
+        unless: None,
+        kinds: &[],
+    },
+    Rule {
+        id: "feature_order_cycle",
+        severity: CrashSeverity::Critical,
+        pattern: r"(?i)(?:Feature order cycle found|Cycle while building feature order)",
+        also: None,
+        unless: None,
         kinds: &[],
     },
     Rule {
@@ -245,13 +433,26 @@ static RULES: &[Rule] = &[
         severity: CrashSeverity::Warning,
         pattern: r"(?P<frame>(?:net\.optifine|optifine)[\w.$]*)",
         also: Some(r"(?i)(?:exception|error|crash)"),
+        unless: None,
         kinds: &[],
     },
     Rule {
         id: "connector_fabric_mod",
         severity: CrashSeverity::Warning,
-        pattern: r"(?i)sinytra|connector",
-        also: Some(r"(?i)(?:sodium|iris|indium)"),
+        // Sinytra Connector failing, rather than Sinytra Connector existing.
+        // The old rule looked for its name next to Sodium's or Iris's, and a
+        // log names every mod that loaded — so it fired on runs where nothing
+        // was wrong and told people to replace mods that were working. What it
+        // looks for now is Connector saying it could not carry something.
+        pattern: r"(?i)(?:dev\.su5ed\.sinytra|org\.sinytra)[\w.]*?(?P<exception>\w*(?:Exception|Error))|Connector (?:failed to|could not) [^\n]+",
+        also: None,
+        // The official NeoForge builds do not go through Connector at all. A
+        // pack can carry both — Connector for something else entirely — and
+        // blaming it for a crash it had no part in is the mistake this rule was
+        // making before.
+        unless: Some(
+            r"(?i)(?:sodium|iris)[\w\-]*?neoforge|neoforge[\w\-]*?(?:sodium|iris)",
+        ),
         kinds: &[],
     },
     // The files under the game.
@@ -260,6 +461,7 @@ static RULES: &[Rule] = &[
         severity: CrashSeverity::Critical,
         pattern: r"(?:java\.util\.zip\.ZipException|Invalid CEN header|zip END header not found|error in opening zip file|java\.io\.EOFException)",
         also: None,
+        unless: None,
         kinds: &[],
     },
     Rule {
@@ -267,6 +469,7 @@ static RULES: &[Rule] = &[
         severity: CrashSeverity::Critical,
         pattern: r"(?:No space left on device|There is not enough space on the disk|ENOSPC)",
         also: None,
+        unless: None,
         kinds: &[],
     },
     Rule {
@@ -274,6 +477,7 @@ static RULES: &[Rule] = &[
         severity: CrashSeverity::Warning,
         pattern: r"The process cannot access the file because it is being used by another process",
         also: None,
+        unless: None,
         kinds: &[],
     },
     // The machine the game is drawn on.
@@ -282,6 +486,7 @@ static RULES: &[Rule] = &[
         severity: CrashSeverity::Critical,
         pattern: r"(?i)(?P<library>ati[a-z0-9]*\.dll|amdvlk[a-z0-9]*\.dll|amdxx[a-z0-9]*\.dll)",
         also: None,
+        unless: None,
         kinds: &[CrashSourceKind::JvmError],
     },
     Rule {
@@ -289,6 +494,7 @@ static RULES: &[Rule] = &[
         severity: CrashSeverity::Critical,
         pattern: r"(?i)(?P<library>nvoglv(?:32|64)\.dll|nvd3dum\.dll)",
         also: None,
+        unless: None,
         kinds: &[CrashSourceKind::JvmError],
     },
     Rule {
@@ -296,6 +502,7 @@ static RULES: &[Rule] = &[
         severity: CrashSeverity::Critical,
         pattern: r"(?i)(?P<library>ig[a-z0-9]*icd(?:32|64)\.dll|igd[a-z0-9]*\.dll)",
         also: None,
+        unless: None,
         kinds: &[CrashSourceKind::JvmError],
     },
     Rule {
@@ -303,6 +510,7 @@ static RULES: &[Rule] = &[
         severity: CrashSeverity::Critical,
         pattern: r"(?:GLFW error 6554[0-9]|WGL: The driver does not appear to support OpenGL|Pixel format not accelerated|Failed to create window|OpenGL 3\.2|GL_ARB_framebuffer_object)",
         also: None,
+        unless: None,
         kinds: &[],
     },
     Rule {
@@ -310,14 +518,66 @@ static RULES: &[Rule] = &[
         severity: CrashSeverity::Critical,
         pattern: r"(?:java\.lang\.UnsatisfiedLinkError|no lwjgl(?:64)? in java\.library\.path|Failed to locate library)",
         also: None,
+        unless: None,
         kinds: &[],
     },
     // The JVM died rather than the game, and said where.
+    // Native frames that name their own cause, which the generic frame rule
+    // below would only quote.
+    Rule {
+        id: "native_allocator",
+        severity: CrashSeverity::Critical,
+        pattern: r"(?i)(?P<library>jemalloc[\w.]*\.(?:dll|so|dylib))",
+        also: None,
+        unless: None,
+        kinds: &[CrashSourceKind::JvmError],
+    },
+    Rule {
+        id: "native_audio",
+        severity: CrashSeverity::Critical,
+        pattern: r"(?i)(?P<library>(?:soft_)?oal[\w.]*\.dll|libopenal[\w.]*\.so|OpenAL[\w.]*\.dylib)|alc?[A-Z]\w*Cleanup",
+        also: None,
+        unless: None,
+        kinds: &[CrashSourceKind::JvmError],
+    },
+    Rule {
+        id: "native_window_linux",
+        severity: CrashSeverity::Critical,
+        pattern: r"(?P<library>libglfw[\w.]*\.so|libX11[\w.]*\.so|libGLX[\w.]*\.so)",
+        also: None,
+        unless: None,
+        kinds: &[CrashSourceKind::JvmError],
+    },
+    Rule {
+        id: "native_shader_macos",
+        severity: CrashSeverity::Critical,
+        pattern: r"(?P<library>libGLProgrammability\.dylib|GLEngine)",
+        also: None,
+        unless: None,
+        kinds: &[CrashSourceKind::JvmError],
+    },
+    Rule {
+        id: "wrong_jdk_apple_silicon",
+        severity: CrashSeverity::Critical,
+        pattern: r"~StubRoutines::SafeFetch32",
+        also: None,
+        unless: None,
+        kinds: &[CrashSourceKind::JvmError],
+    },
+    Rule {
+        id: "jvm_itself_failed",
+        severity: CrashSeverity::Warning,
+        pattern: r"(?m)^#\s*[CJV]\s+\[?(?P<library>jvm\.dll|libjvm\.so)",
+        also: None,
+        unless: None,
+        kinds: &[CrashSourceKind::JvmError],
+    },
     Rule {
         id: "jvm_problematic_frame",
         severity: CrashSeverity::Warning,
         pattern: r"(?m)^#\s*(?:C|J|V|j)\s+(?P<frame>.+)$",
         also: None,
+        unless: None,
         kinds: &[CrashSourceKind::JvmError],
     },
     Rule {
@@ -325,21 +585,25 @@ static RULES: &[Rule] = &[
         severity: CrashSeverity::Note,
         pattern: r"(?m)^#\s*(?P<signal>(?:EXCEPTION_|SIG)[A-Z_]+) \(0x[0-9a-fA-F]+\)",
         also: None,
+        unless: None,
         kinds: &[CrashSourceKind::JvmError],
     },
 ];
 
-static COMPILED: LazyLock<Vec<(Regex, Option<Regex>)>> = LazyLock::new(|| {
+type CompiledRule = (Regex, Option<Regex>, Option<Regex>);
+
+static COMPILED: LazyLock<Vec<CompiledRule>> = LazyLock::new(|| {
+    let compile = |pattern: &str| {
+        Regex::new(pattern).expect("a crash rule pattern is a valid regex")
+    };
+
     RULES
         .iter()
         .map(|rule| {
             (
-                Regex::new(rule.pattern)
-                    .expect("a crash rule pattern is a valid regex"),
-                rule.also.map(|also| {
-                    Regex::new(also)
-                        .expect("a crash rule pattern is a valid regex")
-                }),
+                compile(rule.pattern),
+                rule.also.map(&compile),
+                rule.unless.map(&compile),
             )
         })
         .collect()
@@ -356,13 +620,19 @@ pub fn findings_in(
 ) -> Vec<CrashFinding> {
     let mut findings = Vec::new();
 
-    for (rule, (pattern, also)) in RULES.iter().zip(COMPILED.iter()) {
+    for (rule, (pattern, also, unless)) in RULES.iter().zip(COMPILED.iter()) {
         if !rule.kinds.is_empty() && !rule.kinds.contains(&kind) {
             continue;
         }
 
         if let Some(also) = also
             && !also.is_match(text)
+        {
+            continue;
+        }
+
+        if let Some(unless) = unless
+            && unless.is_match(text)
         {
             continue;
         }
@@ -682,6 +952,28 @@ mod tests {
     #[test]
     fn every_rule_pattern_compiles() {
         assert_eq!(COMPILED.len(), RULES.len());
+    }
+
+    #[test]
+    fn a_mod_list_is_not_a_diagnosis() {
+        // What a perfectly healthy NeoForge run looks like: Connector installed
+        // for something else, and the official builds of the rendering mods
+        // beside it. Naming Connector here is what the rule used to do, and it
+        // sent people to replace mods that were doing their job.
+        let text = "[12:00:01] [main/INFO]: Loading 214 mods:\n\t- connectormod 1.0\n\t- sodium 0.6.0+mc1.21.1-neoforge\n\t- iris 1.8.0+mc1.21.1-neoforge\n[12:00:44] [Render thread/ERROR]: java.lang.OutOfMemoryError: Java heap space";
+        let matched = rules_matching(text, CrashSourceKind::Log);
+
+        assert!(!matched.contains(&"connector_fabric_mod".to_string()));
+        assert!(matched.contains(&"out_of_memory_heap".to_string()));
+    }
+
+    #[test]
+    fn connector_is_named_when_it_is_the_one_that_failed() {
+        let text = "[12:00:03] [main/ERROR]: Connector failed to transform mod file sodium-fabric.jar\ndev.su5ed.sinytra.connector.ConnectorException: no";
+        assert!(
+            rules_matching(text, CrashSourceKind::Log)
+                .contains(&"connector_fabric_mod".to_string())
+        );
     }
 
     #[test]

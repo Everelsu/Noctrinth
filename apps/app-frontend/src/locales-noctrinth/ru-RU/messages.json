@@ -206,11 +206,23 @@
 	"app.crash.open-settings": {
 		"message": "Открыть настройки"
 	},
+	"app.crash.rule.chunk-unreadable.fix": {
+		"message": "Сначала сделайте резервную копию мира. Один повреждённый файл региона можно удалить — он сгенерируется заново, потеряется только построенное там."
+	},
+	"app.crash.rule.chunk-unreadable.title": {
+		"message": "Часть мира не читается (чанк {chunk})"
+	},
+	"app.crash.rule.config-unreadable.fix": {
+		"message": "Удалите этот файл и запустите игру снова — мод запишет новый со своими значениями по умолчанию."
+	},
+	"app.crash.rule.config-unreadable.title": {
+		"message": "Файл настроек повреждён ({file})"
+	},
 	"app.crash.rule.connector-fabric-mod.fix": {
-		"message": "Connector не тянет Sodium, Iris и Indium. Возьмите их forge-версии — Embeddium и Oculus."
+		"message": "На NeoForge ставьте родную NeoForge-сборку мода, если она есть: у Sodium и Iris официальные сборки есть, и через Connector они не идут. На Forge 1.20.1 и старше аналоги — Embeddium и Oculus."
 	},
 	"app.crash.rule.connector-fabric-mod.title": {
-		"message": "Fabric-мод на графику загружен через Sinytra Connector"
+		"message": "Sinytra Connector не смог протащить Fabric-мод ({exception})"
 	},
 	"app.crash.rule.corrupted-archive.fix": {
 		"message": "Почините сборку, чтобы лаунчер скачал его заново. Оборванная загрузка выглядит ровно так."
@@ -220,6 +232,12 @@
 	},
 	"app.crash.rule.crash-description.title": {
 		"message": "Игра описала это так: {description}"
+	},
+	"app.crash.rule.datapack-blocked-world.fix": {
+		"message": "Мод, добавлявший рецепты или генерацию мира, убрали или изменили. Верните его либо откройте мир в безопасном режиме, чтобы загрузить без сломанного датапака."
+	},
+	"app.crash.rule.datapack-blocked-world.title": {
+		"message": "Мир не загрузился из-за ошибок в датапаке"
 	},
 	"app.crash.rule.disk-full.fix": {
 		"message": "Освободите место на диске со сборкой и запустите снова."
@@ -244,6 +262,12 @@
 	},
 	"app.crash.rule.fabric-wrong-dependency-version.title": {
 		"message": "{mod_name} требует другую версию {dependency}"
+	},
+	"app.crash.rule.feature-order-cycle.fix": {
+		"message": "Каждый ждёт другого, поэтому порядка не существует. Уберите один из модов на генерацию мира или поставьте мод, который расставляет порядок."
+	},
+	"app.crash.rule.feature-order-cycle.title": {
+		"message": "Два мода на генерацию мира спорят, что идёт первым"
 	},
 	"app.crash.rule.file-locked.fix": {
 		"message": "Закройте другие лаунчеры и ещё запущенные копии игры, и проверьте, не сканирует ли эту папку антивирус."
@@ -275,6 +299,24 @@
 	"app.crash.rule.heap-too-large-to-start.title": {
 		"message": "Сборка попросила больше памяти, чем удалось зарезервировать ({size})"
 	},
+	"app.crash.rule.integrated-gpu-in-use.fix": {
+		"message": "Если в компьютере есть отдельная видеокарта, игра использует более слабую. Лаунчер может попросить Windows переключиться на другую."
+	},
+	"app.crash.rule.integrated-gpu-in-use.title": {
+		"message": "Игра работает на встроенном видеоядре ({renderer})"
+	},
+	"app.crash.rule.java-module-error.fix": {
+		"message": "Java не запускается, когда два файла объявляют один и тот же модуль. Ниже указано какой — найдите, в каких модах он лежит, и оставьте тот, что новее."
+	},
+	"app.crash.rule.java-module-error.title": {
+		"message": "Два мода принесли одну и ту же библиотеку ({exception})"
+	},
+	"app.crash.rule.java-too-new.fix": {
+		"message": "Старым версиям Minecraft нужна старая Java. Дайте лаунчеру поставить ту, которую ждёт эта версия."
+	},
+	"app.crash.rule.java-too-new.title": {
+		"message": "Эта Java новее, чем игра умеет использовать"
+	},
 	"app.crash.rule.java-too-old.fix": {
 		"message": "Укажите сборке Java {needs} или дайте лаунчеру скачать её."
 	},
@@ -287,17 +329,41 @@
 	"app.crash.rule.java-unsupported-class.title": {
 		"message": "Мод собран под более новую Java, чем та, на которой запустились"
 	},
+	"app.crash.rule.jvm-itself-failed.fix": {
+		"message": "Падение внутри самой Java — это либо неисправное железо, либо ошибка в этой сборке Java. Сначала проверьте память; если с ней всё в порядке, поставьте для этой сборки другую версию Java."
+	},
+	"app.crash.rule.jvm-itself-failed.title": {
+		"message": "Упала сама Java, а не игра"
+	},
 	"app.crash.rule.jvm-problematic-frame.title": {
 		"message": "Сама Java остановилась в {frame}"
 	},
 	"app.crash.rule.jvm-signal.title": {
 		"message": "Процесс был остановлен сигналом {signal}"
 	},
+	"app.crash.rule.language-provider-mismatch.fix": {
+		"message": "В строках ниже написано, что именно он хотел. Либо обновите загрузчик для этой сборки, либо возьмите сборку мода под тот загрузчик, что стоит сейчас."
+	},
+	"app.crash.rule.language-provider-mismatch.title": {
+		"message": "Мод собран под другую версию загрузчика"
+	},
 	"app.crash.rule.loader-suggestion.fix": {
 		"message": "{suggestion}"
 	},
 	"app.crash.rule.loader-suggestion.title": {
 		"message": "Загрузчик модов сам подсказал решение"
+	},
+	"app.crash.rule.missing-indium.fix": {
+		"message": "Sodium не реализует интерфейс отрисовки, через который рисуют некоторые моды, а Indium его возвращает. Поставьте Indium для той же версии Minecraft."
+	},
+	"app.crash.rule.missing-indium.title": {
+		"message": "Моду нужен Indium, чтобы рисовать через Sodium"
+	},
+	"app.crash.rule.missing-main-class.fix": {
+		"message": "Сборка неполная — обычно из-за прерванной установки. Почините или переустановите её."
+	},
+	"app.crash.rule.missing-main-class.title": {
+		"message": "Игра не запустилась вообще ({class_name} отсутствует)"
 	},
 	"app.crash.rule.missing-native-library.fix": {
 		"message": "Почините сборку. Если повторится — проверьте, не отправляет ли антивирус папку natives в карантин."
@@ -311,11 +377,71 @@
 	"app.crash.rule.mixin-failed.title": {
 		"message": "Мод не смог пропатчить игру ({config})"
 	},
+	"app.crash.rule.mixin-injection-failed.fix": {
+		"message": "Почти всегда мод из этого файла собран под другую версию игры или другого мода. Обновите его, а если он уже свежий — уберите тот, с которым он конфликтует."
+	},
+	"app.crash.rule.mixin-injection-failed.title": {
+		"message": "Мод не смог изменить игру там, где рассчитывал ({config})"
+	},
+	"app.crash.rule.mixin-invalid-injection.fix": {
+		"message": "Посмотрите, какие моды названы в строках ниже, и обновите их. Если среди них мод на производительность или отрисовку — сначала попробуйте без него: они трогают больше всего."
+	},
+	"app.crash.rule.mixin-invalid-injection.title": {
+		"message": "Два мода изменили одно и то же место в игре"
+	},
 	"app.crash.rule.mod-for-other-version.fix": {
 		"message": "Он искал {symbol}, которого в этой версии нет. Обновите мод или возьмите сборку под вашу версию игры."
 	},
 	"app.crash.rule.mod-for-other-version.title": {
 		"message": "Мод собран под другую версию Minecraft"
+	},
+	"app.crash.rule.mod-incompatible.fix": {
+		"message": "Эти двое вместе не ставятся. Оставьте нужный, второй уберите."
+	},
+	"app.crash.rule.mod-incompatible.title": {
+		"message": "{mod_name} отказывается работать вместе с {conflict}"
+	},
+	"app.crash.rule.native-allocator.fix": {
+		"message": "Почти всегда это сбоящая память или её разгон. Прогоните тест ОЗУ и отключите XMP или EXPO в BIOS — посмотрите, прекратится ли."
+	},
+	"app.crash.rule.native-allocator.title": {
+		"message": "Процесс уронил распределитель памяти ({library})"
+	},
+	"app.crash.rule.native-audio.fix": {
+		"message": "Обычно устройство вывода меняется на ходу: вынули наушники, Bluetooth-колонка ушла в сон. Обновите звуковой драйвер и задайте постоянное устройство вывода."
+	},
+	"app.crash.rule.native-audio.title": {
+		"message": "Процесс уронила звуковая подсистема"
+	},
+	"app.crash.rule.native-shader-macos.fix": {
+		"message": "Шейдерпак, который macOS не может скомпилировать. Отключите шейдеры — почти все они написаны под драйверы, которых у Apple нет."
+	},
+	"app.crash.rule.native-shader-macos.title": {
+		"message": "Процесс уронил графический слой macOS"
+	},
+	"app.crash.rule.native-window-linux.fix": {
+		"message": "Обновите драйвер видеокарты и Mesa. На Wayland большинства таких падений не бывает, если запускать игру через XWayland."
+	},
+	"app.crash.rule.native-window-linux.title": {
+		"message": "Процесс уронила системная графическая библиотека ({library})"
+	},
+	"app.crash.rule.neoforge-dependency-version.fix": {
+		"message": "Обновите {dependency} до версии из этого диапазона либо откатите {mod_id} до той, что примет имеющуюся."
+	},
+	"app.crash.rule.neoforge-dependency-version.title": {
+		"message": "{mod_id} требует {dependency} {expected}, а нашёл {actual}"
+	},
+	"app.crash.rule.not-a-mod-file.fix": {
+		"message": "Обычно это скачанная вместо файла веб-страница или ресурспак, по ошибке положенный в папку модов. Удалите и скачайте заново."
+	},
+	"app.crash.rule.not-a-mod-file.title": {
+		"message": "{file} — не мод"
+	},
+	"app.crash.rule.oculus-without-embeddium.fix": {
+		"message": "Oculus рисует через Embeddium и без него не стартует. Поставьте Embeddium — или, если это NeoForge, используйте официальные сборки Sodium и Iris вместо обоих."
+	},
+	"app.crash.rule.oculus-without-embeddium.title": {
+		"message": "Oculus стоит без Embeddium"
 	},
 	"app.crash.rule.opengl-unsupported.fix": {
 		"message": "Обновите драйвер видеокарты. На ноутбуке с двумя видеокартами убедитесь, что игра запускается на более мощной."
@@ -347,11 +473,41 @@
 	"app.crash.rule.out-of-memory-system.title": {
 		"message": "На компьютере не осталось свободной памяти"
 	},
+	"app.crash.rule.resource-location-invalid.fix": {
+		"message": "Minecraft допускает в таких именах только строчные латинские буквы, цифры и несколько символов. Обычная причина — учётная запись Windows названа не латиницей, и эти буквы оказываются в пути ко всему. Перенесите папку лаунчера туда, где путь целиком латинский."
+	},
+	"app.crash.rule.resource-location-invalid.title": {
+		"message": "В путь попало имя, которое игра не принимает"
+	},
+	"app.crash.rule.server-thread-stuck.fix": {
+		"message": "Что-то заняло столько времени, что игра перестала ждать — обычно генерация мира на медленном диске или мод, застрявший в цикле. В строках ниже видно, чем она была занята."
+	},
+	"app.crash.rule.server-thread-stuck.title": {
+		"message": "Мир перестал отвечать и был выключен"
+	},
+	"app.crash.rule.software-renderer.fix": {
+		"message": "Windows перешла на программную отрисовку, а на ней Minecraft не работает. Установите драйвер видеокарты с сайта производителя."
+	},
+	"app.crash.rule.software-renderer.title": {
+		"message": "Игра рисует без драйвера видеокарты ({renderer})"
+	},
 	"app.crash.rule.suspected-mods.fix": {
 		"message": "Отключите их по одному и запускайте игру после каждого."
 	},
 	"app.crash.rule.suspected-mods.title": {
 		"message": "Загрузчик подозревает: {mods}"
+	},
+	"app.crash.rule.too-many-block-ids.fix": {
+		"message": "В старых версиях Minecraft тут жёсткий предел. Уберите часть контентных модов или поставьте мод, поднимающий лимит для этой версии."
+	},
+	"app.crash.rule.too-many-block-ids.title": {
+		"message": "В сборке кончились идентификаторы блоков или предметов"
+	},
+	"app.crash.rule.wrong-jdk-apple-silicon.fix": {
+		"message": "Mac на Apple Silicon с Java под Intel или наоборот. Дайте лаунчеру поставить Java для этой сборки вместо уже установленной в системе."
+	},
+	"app.crash.rule.wrong-jdk-apple-silicon.title": {
+		"message": "Java не той сборки для этого Mac"
 	},
 	"app.crash.show-evidence": {
 		"message": "Показать строку"

@@ -192,12 +192,12 @@ const messages = defineMessages({
 	},
 	connector_fabric_mod: {
 		id: 'app.crash.rule.connector-fabric-mod.title',
-		defaultMessage: 'A Fabric rendering mod was loaded through Sinytra Connector',
+		defaultMessage: 'Sinytra Connector could not carry a Fabric mod ({exception})',
 	},
 	connector_fabric_mod_fix: {
 		id: 'app.crash.rule.connector-fabric-mod.fix',
 		defaultMessage:
-			'Connector cannot carry Sodium, Iris or Indium. Use the Forge builds — Embeddium and Oculus — instead.',
+			'On NeoForge, install the mod's own NeoForge build where there is one — Sodium and Iris both have official ones, and they do not go through Connector. On Forge 1.20.1 and older the equivalents are Embeddium and Oculus.',
 	},
 	corrupted_archive: {
 		id: 'app.crash.rule.corrupted-archive.title',
@@ -268,6 +268,242 @@ const messages = defineMessages({
 		id: 'app.crash.rule.jvm-signal.title',
 		defaultMessage: 'The process was stopped by {signal}',
 	},
+
+	neoforge_dependency_version: {
+		id: 'app.crash.rule.neoforge-dependency-version.title',
+		defaultMessage: '{mod_id} needs {dependency} {expected}, and found {actual}',
+	},
+	neoforge_dependency_version_fix: {
+		id: 'app.crash.rule.neoforge-dependency-version.fix',
+		defaultMessage:
+			'Update {dependency} to a version in that range, or roll {mod_id} back to one that accepts what you have.',
+	},
+	mod_incompatible: {
+		id: 'app.crash.rule.mod-incompatible.title',
+		defaultMessage: '{mod_name} refuses to run alongside {conflict}',
+	},
+	mod_incompatible_fix: {
+		id: 'app.crash.rule.mod-incompatible.fix',
+		defaultMessage:
+			'The two cannot both be installed. Keep whichever you need and remove the other.',
+	},
+	not_a_mod_file: {
+		id: 'app.crash.rule.not-a-mod-file.title',
+		defaultMessage: '{file} is not a mod',
+	},
+	not_a_mod_file_fix: {
+		id: 'app.crash.rule.not-a-mod-file.fix',
+		defaultMessage:
+			'Usually a download that saved the web page instead of the file, or a resource pack put in the mods folder by mistake. Remove it and download it again.',
+	},
+	mixin_injection_failed: {
+		id: 'app.crash.rule.mixin-injection-failed.title',
+		defaultMessage: 'A mod could not patch the game where it expected to ({config})',
+	},
+	mixin_injection_failed_fix: {
+		id: 'app.crash.rule.mixin-injection-failed.fix',
+		defaultMessage:
+			'Almost always the mod behind that file being built for a different version of the game or of another mod. Update it, and if it is already current, remove the mod it clashes with.',
+	},
+	mixin_invalid_injection: {
+		id: 'app.crash.rule.mixin-invalid-injection.title',
+		defaultMessage: 'Two mods changed the same part of the game',
+	},
+	mixin_invalid_injection_fix: {
+		id: 'app.crash.rule.mixin-invalid-injection.fix',
+		defaultMessage:
+			'Look at the mods named in the lines below and update them. If one of them is a performance or rendering mod, try without it first — those touch the most.',
+	},
+	java_too_new: {
+		id: 'app.crash.rule.java-too-new.title',
+		defaultMessage: 'This Java is newer than the game can use',
+	},
+	java_too_new_fix: {
+		id: 'app.crash.rule.java-too-new.fix',
+		defaultMessage:
+			'Older versions of Minecraft need an older Java. Let the launcher install the one this version expects.',
+	},
+	missing_main_class: {
+		id: 'app.crash.rule.missing-main-class.title',
+		defaultMessage: 'The game could not be started at all ({class_name} is missing)',
+	},
+	missing_main_class_fix: {
+		id: 'app.crash.rule.missing-main-class.fix',
+		defaultMessage:
+			'The instance is incomplete — usually an install that was interrupted. Repair or reinstall it.',
+	},
+	software_renderer: {
+		id: 'app.crash.rule.software-renderer.title',
+		defaultMessage: 'The game is drawing without a graphics driver ({renderer})',
+	},
+	software_renderer_fix: {
+		id: 'app.crash.rule.software-renderer.fix',
+		defaultMessage:
+			'Windows is falling back to software rendering, which Minecraft cannot run on. Install the driver for your graphics card from its maker.',
+	},
+	integrated_gpu_in_use: {
+		id: 'app.crash.rule.integrated-gpu-in-use.title',
+		defaultMessage: 'The game is running on the built-in graphics chip ({renderer})',
+	},
+	integrated_gpu_in_use_fix: {
+		id: 'app.crash.rule.integrated-gpu-in-use.fix',
+		defaultMessage:
+			'If this computer also has a separate graphics card, the game is using the slower one. The launcher can ask Windows to use the other.',
+	},
+	datapack_blocked_world: {
+		id: 'app.crash.rule.datapack-blocked-world.title',
+		defaultMessage: 'The world would not load because a datapack has errors',
+	},
+	datapack_blocked_world_fix: {
+		id: 'app.crash.rule.datapack-blocked-world.fix',
+		defaultMessage:
+			'A mod that adds recipes or world generation was removed or changed. Put it back, or open the world with "safe mode" to load it without the broken datapack.',
+	},
+	chunk_unreadable: {
+		id: 'app.crash.rule.chunk-unreadable.title',
+		defaultMessage: 'Part of the world could not be read (chunk {chunk})',
+	},
+	chunk_unreadable_fix: {
+		id: 'app.crash.rule.chunk-unreadable.fix',
+		defaultMessage:
+			'Back the world up before doing anything else. A single damaged region file can be deleted and regenerated, losing only what was built there.',
+	},
+	config_unreadable: {
+		id: 'app.crash.rule.config-unreadable.title',
+		defaultMessage: 'A settings file is damaged ({file})',
+	},
+	config_unreadable_fix: {
+		id: 'app.crash.rule.config-unreadable.fix',
+		defaultMessage:
+			'Delete that file and start the game again — the mod will write a fresh one with its defaults.',
+	},
+
+	native_allocator: {
+		id: 'app.crash.rule.native-allocator.title',
+		defaultMessage: 'The memory allocator brought the process down ({library})',
+	},
+	native_allocator_fix: {
+		id: 'app.crash.rule.native-allocator.fix',
+		defaultMessage:
+			'Almost always failing memory or a memory overclock. Run a RAM test, and turn off XMP or EXPO in the BIOS to see if it stops.',
+	},
+	native_audio: {
+		id: 'app.crash.rule.native-audio.title',
+		defaultMessage: 'The sound system brought the process down',
+	},
+	native_audio_fix: {
+		id: 'app.crash.rule.native-audio.fix',
+		defaultMessage:
+			'Usually the audio device changing while the game runs — headphones unplugged, a Bluetooth speaker going to sleep. Update the sound driver, and set a fixed output device.',
+	},
+	native_window_linux: {
+		id: 'app.crash.rule.native-window-linux.title',
+		defaultMessage: 'A system graphics library brought the process down ({library})',
+	},
+	native_window_linux_fix: {
+		id: 'app.crash.rule.native-window-linux.fix',
+		defaultMessage:
+			'Update the graphics driver and Mesa. On Wayland, running the game through XWayland avoids most of these.',
+	},
+	native_shader_macos: {
+		id: 'app.crash.rule.native-shader-macos.title',
+		defaultMessage: 'The macOS graphics layer brought the process down',
+	},
+	native_shader_macos_fix: {
+		id: 'app.crash.rule.native-shader-macos.fix',
+		defaultMessage:
+			'A shader pack macOS cannot compile. Turn shaders off — most packs are written for drivers Apple does not ship.',
+	},
+	wrong_jdk_apple_silicon: {
+		id: 'app.crash.rule.wrong-jdk-apple-silicon.title',
+		defaultMessage: 'Java is the wrong build for this Mac',
+	},
+	wrong_jdk_apple_silicon_fix: {
+		id: 'app.crash.rule.wrong-jdk-apple-silicon.fix',
+		defaultMessage:
+			'An Apple Silicon Mac running an Intel Java, or the reverse. Let the launcher install Java for this instance rather than using one already on the system.',
+	},
+	jvm_itself_failed: {
+		id: 'app.crash.rule.jvm-itself-failed.title',
+		defaultMessage: 'Java itself stopped, not the game',
+	},
+	jvm_itself_failed_fix: {
+		id: 'app.crash.rule.jvm-itself-failed.fix',
+		defaultMessage:
+			'A crash inside Java itself is either failing hardware or a bug in that Java build. Test the memory first; if it is clean, install a different Java version for this instance.',
+	},
+	resource_location_invalid: {
+		id: 'app.crash.rule.resource-location-invalid.title',
+		defaultMessage: 'A name the game cannot use got into a path',
+	},
+	resource_location_invalid_fix: {
+		id: 'app.crash.rule.resource-location-invalid.fix',
+		defaultMessage:
+			'Minecraft only accepts lowercase Latin letters, digits and a few symbols in these names. The usual cause is the Windows account being named in another alphabet, which puts those letters in the path to everything. Move the launcher folder somewhere with a plain Latin path.',
+	},
+	language_provider_mismatch: {
+		id: 'app.crash.rule.language-provider-mismatch.title',
+		defaultMessage: 'A mod was built for a different version of the loader',
+	},
+	language_provider_mismatch_fix: {
+		id: 'app.crash.rule.language-provider-mismatch.fix',
+		defaultMessage:
+			'The lines below name what it wanted. Either update the loader for this instance, or take the build of that mod made for the loader you have.',
+	},
+	java_module_error: {
+		id: 'app.crash.rule.java-module-error.title',
+		defaultMessage: 'Two mods shipped the same library ({exception})',
+	},
+	java_module_error_fix: {
+		id: 'app.crash.rule.java-module-error.fix',
+		defaultMessage:
+			'Java refuses to start when two files claim the same module. The detail below names it — find which mods carry it and keep the newer one.',
+	},
+	oculus_without_embeddium: {
+		id: 'app.crash.rule.oculus-without-embeddium.title',
+		defaultMessage: 'Oculus is installed without Embeddium',
+	},
+	oculus_without_embeddium_fix: {
+		id: 'app.crash.rule.oculus-without-embeddium.fix',
+		defaultMessage:
+			'Oculus draws through Embeddium and cannot start without it. Install Embeddium, or on NeoForge use the official Sodium and Iris builds instead of either.',
+	},
+	missing_indium: {
+		id: 'app.crash.rule.missing-indium.title',
+		defaultMessage: 'A mod needs Indium to draw with Sodium',
+	},
+	missing_indium_fix: {
+		id: 'app.crash.rule.missing-indium.fix',
+		defaultMessage:
+			'Sodium leaves out the rendering interface some mods draw through, and Indium puts it back. Install Indium for the same Minecraft version.',
+	},
+	too_many_block_ids: {
+		id: 'app.crash.rule.too-many-block-ids.title',
+		defaultMessage: 'The pack ran out of ids for blocks or items',
+	},
+	too_many_block_ids_fix: {
+		id: 'app.crash.rule.too-many-block-ids.fix',
+		defaultMessage:
+			'Old versions of Minecraft have a hard limit here. Remove some content mods, or install one that raises the limit for that version.',
+	},
+	server_thread_stuck: {
+		id: 'app.crash.rule.server-thread-stuck.title',
+		defaultMessage: 'The world stopped responding and was shut down',
+	},
+	server_thread_stuck_fix: {
+		id: 'app.crash.rule.server-thread-stuck.fix',
+		defaultMessage:
+			'Something took so long that the game gave up waiting — usually world generation on a slow disk, or one mod stuck in a loop. The lines below name what it was doing.',
+	},
+	feature_order_cycle: {
+		id: 'app.crash.rule.feature-order-cycle.title',
+		defaultMessage: 'Two world-generation mods disagree about what comes first',
+	},
+	feature_order_cycle_fix: {
+		id: 'app.crash.rule.feature-order-cycle.fix',
+		defaultMessage:
+			'Each is waiting for the other, so no order exists. Remove one of the world-generation mods, or install a mod that resolves the ordering.',
+	},
 })
 
 /** Rules whose fix is a page of this launcher rather than a sentence. */
@@ -282,6 +518,13 @@ const ACTIONS: Record<string, 'settings' | 'folder'> = {
 	corrupted_archive: 'folder',
 	missing_native_library: 'folder',
 	file_locked: 'folder',
+	java_too_new: 'settings',
+	integrated_gpu_in_use: 'settings',
+	not_a_mod_file: 'folder',
+	config_unreadable: 'folder',
+	chunk_unreadable: 'folder',
+	wrong_jdk_apple_silicon: 'settings',
+	jvm_itself_failed: 'settings',
 }
 
 /** A class file version is its Java version plus forty-four. */

@@ -35,7 +35,19 @@ final class Http {
 
         try {
             final int status = connection.getResponseCode();
-            if (status >= 500 || status == 429) {
+            if (status == 429) {
+                // Being rate limited is not being broken, and the two must not
+                // be answered the same way. Mojang's name lookup is the tight
+                // one, and on a local network every client behind the same
+                // address is spending the same allowance — so it is reached
+                // exactly when several people are playing together, which is
+                // the moment their skins are wanted. Benching it then leaves
+                // the licensed players as Steve for as long as it lasts, and
+                // the source that could not answer for them anyway is the only
+                // one left being asked.
+                throw new RateLimited(url, retryAfterMs(connection));
+            }
+            if (status >= 500) {
                 throw new IOException("asked " + url + " and got " + status);
             }
             if (status != HttpURLConnection.HTTP_OK) {
@@ -49,6 +61,36 @@ final class Http {
             }
         } finally {
             connection.disconnect();
+        }
+    }
+
+    /** How long the source asked to be left alone for, or a short guess. */
+    private static long retryAfterMs(HttpURLConnection connection) {
+        final String header = connection.getHeaderField("Retry-After");
+        if (header != null) {
+            try {
+                return Math.max(1000L, Long.parseLong(header.trim()) * 1000L);
+            } catch (NumberFormatException notSeconds) {
+                // A date rather than a count of seconds, which is allowed and
+                // is not worth parsing for this.
+            }
+        }
+
+        return DEFAULT_RETRY_AFTER_MS;
+    }
+
+    /** What a source that would not say when asked is left alone for. */
+    private static final long DEFAULT_RETRY_AFTER_MS = 10 * 1000L;
+
+    /** A source that is well, busy, and said so. */
+    static final class RateLimited extends IOException {
+        private static final long serialVersionUID = 1L;
+
+        final long retryAfterMs;
+
+        RateLimited(String url, long retryAfterMs) {
+            super("asked " + url + " and was told to wait " + retryAfterMs + "ms");
+            this.retryAfterMs = retryAfterMs;
         }
     }
 

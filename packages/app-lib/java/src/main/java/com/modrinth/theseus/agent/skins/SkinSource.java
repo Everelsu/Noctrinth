@@ -337,11 +337,19 @@ public final class SkinSource {
     private static Map<String, Texture> ask(Source source, String username) {
         try {
             return source.textures(username);
+        } catch (Http.RateLimited busy) {
+            // Asked too often rather than unwell. Left alone only for as long
+            // as it asked to be, which is usually seconds — being benched for a
+            // minute at a time would mean never being asked again while a
+            // server is busy enough to have hit the limit in the first place.
+            debug("Rate limited by " + source + " for " + username + ": " + busy.getMessage());
+            markUnhealthy(source, busy.retryAfterMs);
+            return Collections.emptyMap();
         } catch (Throwable t) {
             // A skin is not worth interrupting the game over, whatever went
             // wrong; another source may still know them.
             debug("Failed to look up textures for " + username + " at " + source + ": " + t);
-            markUnhealthy(source);
+            markUnhealthy(source, UNHEALTHY_MS);
             return Collections.emptyMap();
         }
     }
@@ -363,8 +371,8 @@ public final class SkinSource {
         return healthy.isEmpty() ? SOURCES : healthy;
     }
 
-    private static void markUnhealthy(Source source) {
-        UNHEALTHY_UNTIL.put(source, System.currentTimeMillis() + UNHEALTHY_MS);
+    private static void markUnhealthy(Source source, long forMs) {
+        UNHEALTHY_UNTIL.put(source, System.currentTimeMillis() + forMs);
     }
 
     private static void refreshLater(String username) {

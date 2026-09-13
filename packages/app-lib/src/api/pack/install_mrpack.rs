@@ -542,20 +542,41 @@ pub(crate) async fn install_zipped_mrpack_files_with_reporter(
 
     if !icon_exists {
         let icon_entry =
-            zip_reader.file().entries().iter().enumerate().find_map(
-                |(index, entry)| {
-                    matches!(
-                        entry.filename().as_str(),
-                        Ok("icon.png"
-                            | "overrides/icon.png"
-                            | "client-overrides/icon.png")
-                    )
-                    .then_some(index)
-                },
-            );
+            // A `.gif` before a `.png` of the same name: a pack that carries
+            // both is one exported from here, and the GIF is the one that still
+            // moves — the PNG beside it is the same picture under the name the
+            // launchers that only look for `icon.png` insist on.
+            [
+                "icon.gif",
+                "overrides/icon.gif",
+                "client-overrides/icon.gif",
+                "icon.png",
+                "overrides/icon.png",
+                "client-overrides/icon.png",
+            ]
+            .into_iter()
+            .find_map(|wanted| {
+                zip_reader.file().entries().iter().enumerate().find_map(
+                    |(index, entry)| {
+                        entry
+                            .filename()
+                            .as_str()
+                            .is_ok_and(|name| name == wanted)
+                            .then_some((index, wanted))
+                    },
+                )
+            });
 
-        if let Some(icon_entry) = icon_entry {
-            let icon_path = instance_full_path.join("icon.png");
+        if let Some((icon_entry, icon_name)) = icon_entry {
+            // Kept under the extension it arrived with: whether an icon stays
+            // animated is decided by its name, so extracting a GIF as `.png`
+            // would flatten the one thing it was chosen for.
+            let icon_path =
+                instance_full_path.join(if icon_name.ends_with(".gif") {
+                    "icon.gif"
+                } else {
+                    "icon.png"
+                });
             zip_reader
                 .extract_entry(
                     icon_entry,

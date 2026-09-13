@@ -364,6 +364,21 @@ where
             .map_err(std::io::Error::from)?;
         writer.write_all(icon)?;
         emit_progress(icon.len() as u64)?;
+
+        // An icon that moves goes in a second time under its own extension.
+        // The copy above is what every launcher that looks for a pack icon
+        // finds, and it is the whole picture — but whether an icon stays
+        // animated is decided by its name, here and in the launchers that
+        // support it at all, so a GIF called `icon.png` comes back as its first
+        // frame. Two copies of a picture already held under a hundred kilobytes
+        // is a cheap price for the one it was chosen for.
+        if crate::api::instance::keep_as_animated_gif(icon) {
+            writer
+                .start_file("overrides/icon.gif", options)
+                .map_err(std::io::Error::from)?;
+            writer.write_all(icon)?;
+            emit_progress(icon.len() as u64)?;
+        }
     }
 
     writer

@@ -1271,6 +1271,9 @@
 	"creation-flow.modal.import-instance.delete-source.label": {
 		"defaultMessage": "Удалить из {launcher} после переноса"
 	},
+	"ely-login.back": {
+		"message": "Назад"
+	},
 	"ely-login.cancel": {
 		"message": "Отмена"
 	},
@@ -1280,20 +1283,47 @@
 	"ely-login.error.network": {
 		"message": "Не удалось подключиться к серверам Ely.by. Проверьте интернет-соединение."
 	},
+	"ely-login.error.page": {
+		"message": "Вход не завершился. Попробуйте снова или войдите по паролю."
+	},
+	"ely-login.forgot-password": {
+		"message": "Забыли?"
+	},
 	"ely-login.header": {
 		"message": "Вход через Ely.by"
 	},
 	"ely-login.hide-password": {
 		"message": "Скрыть пароль"
 	},
+	"ely-login.intro": {
+		"message": "Аккаунт Ely.by позволяет играть на серверах, которые его принимают, не покупая Minecraft."
+	},
 	"ely-login.no-account": {
 		"message": "Нет аккаунта?"
+	},
+	"ely-login.page-button": {
+		"message": "Продолжить на ely.by"
+	},
+	"ely-login.page-button-hint": {
+		"message": "Откроет страницу входа Ely.by."
+	},
+	"ely-login.page-description": {
+		"message": "Ely.by спросит, кто вы, на своей странице, в отдельном окне. Пароль вводится там и через лаунчер не проходит."
+	},
+	"ely-login.page-waiting": {
+		"message": "Ждём Ely.by..."
 	},
 	"ely-login.password-label": {
 		"message": "Пароль"
 	},
 	"ely-login.password-placeholder": {
 		"message": "Введите пароль…"
+	},
+	"ely-login.password-warning-body": {
+		"message": "Это работает, и пароль уходит прямо в Ely.by. Но вход на их собственной странице означает, что здесь его никто не видит — используйте его, если он открывается."
+	},
+	"ely-login.password-warning-header": {
+		"message": "Здесь лаунчер спрашивает ваш пароль от Ely.by"
 	},
 	"ely-login.show-password": {
 		"message": "Показать пароль"
@@ -1308,13 +1338,19 @@
 		"message": "Вход…"
 	},
 	"ely-login.totp-hint": {
-		"message": "Этот аккаунт защищён двухфакторной аутентификацией."
+		"message": "Аккаунт защищён двухфакторной аутентификацией. Введите шесть цифр из приложения-аутентификатора."
 	},
 	"ely-login.totp-label": {
 		"message": "Код двухфакторной аутентификации"
 	},
 	"ely-login.totp-placeholder": {
 		"message": "Введите 6-значный код..."
+	},
+	"ely-login.use-password": {
+		"message": "Войти по паролю"
+	},
+	"ely-login.username-hint": {
+		"message": "То же, чем вы входите на ely.by."
 	},
 	"ely-login.username-label": {
 		"message": "Имя пользователя или email"

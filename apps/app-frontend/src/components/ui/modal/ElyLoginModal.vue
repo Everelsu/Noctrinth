@@ -66,28 +66,41 @@
 				{{ formatMessage(messages.passwordWarningBody) }}
 			</Admonition>
 
+			<p class="m-0 text-base leading-6 text-secondary">
+				{{ formatMessage(messages.intro) }}
+			</p>
+
 			<div class="flex flex-col gap-2">
-				<label for="ely-username">
+				<label for="ely-username" class="flex flex-col gap-1">
 					<span class="text-lg font-semibold text-contrast">
 						{{ formatMessage(messages.usernameLabel) }}
 					</span>
+					<span class="text-sm text-secondary">{{ formatMessage(messages.usernameHint) }}</span>
 				</label>
 				<Input
 					id="ely-username"
 					v-model="username"
 					:placeholder="formatMessage(messages.usernamePlaceholder)"
 					autocomplete="username"
-					:disabled="loading"
+					:disabled="loading || needsTotp"
 					@keyup.enter="submit"
 				/>
 			</div>
 
 			<div class="flex flex-col gap-2">
-				<label for="ely-password">
-					<span class="text-lg font-semibold text-contrast">
+				<div class="flex items-baseline justify-between gap-2">
+					<label for="ely-password" class="text-lg font-semibold text-contrast">
 						{{ formatMessage(messages.passwordLabel) }}
-					</span>
-				</label>
+					</label>
+					<a
+						href="https://account.ely.by/forgot-password"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="shrink-0 text-sm text-secondary hover:text-contrast hover:underline"
+					>
+						{{ formatMessage(messages.forgotPassword) }}
+					</a>
+				</div>
 				<Input
 					id="ely-password"
 					v-model="password"
@@ -95,7 +108,7 @@
 					input-class="!pr-11"
 					:placeholder="formatMessage(messages.passwordPlaceholder)"
 					autocomplete="current-password"
-					:disabled="loading"
+					:disabled="loading || needsTotp"
 					@keyup.enter="submit"
 				>
 					<template #right>
@@ -114,18 +127,19 @@
 				</Input>
 			</div>
 
-			<div v-if="needsTotp" class="flex flex-col gap-2">
+			<div v-if="needsTotp" class="flex flex-col gap-2 rounded-xl bg-bg-raised p-4">
 				<label for="ely-totp" class="flex flex-col gap-1">
 					<span class="text-lg font-semibold text-contrast">
 						{{ formatMessage(messages.totpLabel) }}
 					</span>
-					<span>{{ formatMessage(messages.totpHint) }}</span>
+					<span class="text-sm text-secondary">{{ formatMessage(messages.totpHint) }}</span>
 				</label>
 				<Input
 					id="ely-totp"
 					v-model="totp"
 					inputmode="numeric"
 					autocomplete="one-time-code"
+					maxlength="6"
 					:placeholder="formatMessage(messages.totpPlaceholder)"
 					:disabled="loading"
 					@keyup.enter="submit"
@@ -139,7 +153,7 @@
 			<p class="m-0 text-sm text-secondary">
 				{{ formatMessage(messages.noAccount) }}
 				<a
-					href="https://ely.by"
+					href="https://ely.by/register"
 					target="_blank"
 					rel="noopener noreferrer"
 					class="font-semibold text-brand hover:underline"
@@ -219,7 +233,17 @@ const messages = defineMessages({
 		id: 'ely-login.error.page',
 		defaultMessage: 'The sign-in did not finish. Try again, or use a password.',
 	},
+	intro: {
+		id: 'ely-login.intro',
+		defaultMessage:
+			'An Ely.by account lets you play on servers that accept it, without buying Minecraft.',
+	},
 	usernameLabel: { id: 'ely-login.username-label', defaultMessage: 'Username or email' },
+	usernameHint: {
+		id: 'ely-login.username-hint',
+		defaultMessage: 'Whatever you sign in to ely.by with.',
+	},
+	forgotPassword: { id: 'ely-login.forgot-password', defaultMessage: 'Forgot it?' },
 	usernamePlaceholder: {
 		id: 'ely-login.username-placeholder',
 		defaultMessage: 'Enter your Ely.by username or email...',
@@ -251,7 +275,8 @@ const messages = defineMessages({
 	},
 	totpHint: {
 		id: 'ely-login.totp-hint',
-		defaultMessage: 'This account is protected with two-factor authentication.',
+		defaultMessage:
+			'This account is protected with two-factor authentication. Enter the six digits from your authenticator app.',
 	},
 })
 

@@ -58,7 +58,11 @@
 		</div>
 
 		<div v-else class="flex w-full flex-col gap-4">
-			<Admonition type="warning" :header="formatMessage(messages.passwordWarningHeader)">
+			<Admonition
+				v-if="PAGE_SIGN_IN_ENABLED"
+				type="warning"
+				:header="formatMessage(messages.passwordWarningHeader)"
+			>
 				{{ formatMessage(messages.passwordWarningBody) }}
 			</Admonition>
 
@@ -150,10 +154,14 @@
 				<Button
 					:disabled="loading"
 					type="outlined"
-					@click="mode === 'page' ? hide() : backToPage()"
+					@click="mode === 'page' || !PAGE_SIGN_IN_ENABLED ? hide() : backToPage()"
 				>
 					<XIcon aria-hidden="true" />
-					{{ formatMessage(mode === 'page' ? messages.cancel : messages.back) }}
+					{{
+						formatMessage(
+							mode === 'page' || !PAGE_SIGN_IN_ENABLED ? messages.cancel : messages.back,
+						)
+					}}
 				</Button>
 				<Button
 					v-if="mode === 'password'"
@@ -253,7 +261,18 @@ const emit = defineEmits<{
 
 const modal = ref<InstanceType<typeof NewModal>>()
 /** Which way in is on screen: Ely.by's own page, or the password form. */
-const mode = ref<'page' | 'password'>('page')
+/**
+ * Whether signing in on Ely.by's own page is offered.
+ *
+ * Off while the page itself will not finish loading in the sign-in window. The
+ * flow behind it is complete and stays in the tree — the window, the PKCE
+ * exchange, the refresh path — so turning it back on is this one line, not a
+ * rebuild. Until then the password form is the way in, which is what it was
+ * before any of this and what still works.
+ */
+const PAGE_SIGN_IN_ENABLED = false
+
+const mode = ref<'page' | 'password'>(PAGE_SIGN_IN_ENABLED ? 'page' : 'password')
 const username = ref('')
 const password = ref('')
 const totp = ref('')
@@ -263,7 +282,7 @@ const loading = ref(false)
 const errorMessage = ref('')
 
 function show(event?: MouseEvent) {
-	mode.value = 'page'
+	mode.value = PAGE_SIGN_IN_ENABLED ? 'page' : 'password'
 	username.value = ''
 	password.value = ''
 	totp.value = ''

@@ -113,9 +113,8 @@ fn is_animated_gif(path: &Path) -> bool {
     path.extension()
         .and_then(|extension| extension.to_str())
         .is_some_and(|extension| extension.eq_ignore_ascii_case("gif"))
-        && std::fs::read(path).is_ok_and(|bytes| {
-            theseus::instance::keep_as_animated_gif(&bytes)
-        })
+        && std::fs::read(path)
+            .is_ok_and(|bytes| theseus::instance::keep_as_animated_gif(&bytes))
 }
 
 fn prune_cache(cache: &Path, current: &Path) -> std::io::Result<()> {

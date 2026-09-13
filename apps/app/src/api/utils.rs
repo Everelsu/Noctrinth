@@ -24,6 +24,7 @@ pub fn init<R: Runtime>() -> tauri::plugin::TauriPlugin<R> {
             show_app_db_backups_folder,
             progress_bars_list,
             get_opening_command,
+            log_startup_event,
             super::thumbnails::get_image_thumbnail,
         ])
         .build()
@@ -38,6 +39,24 @@ pub enum OS {
 }
 
 /// Gets OS
+/// Noctrinth's own: writes one step of the interface's own start-up into the
+/// launcher log.
+///
+/// The interface already measures its start-up, step by step, and already
+/// notices a step that has hung — but it wrote all of it to the webview's
+/// console and only in a development build, which is the one build where
+/// start-up is not the build anybody complains about. A player reporting a slow
+/// start sends the launcher log, and until now that log went quiet exactly
+/// where the answer was: the backend finishes, and then nothing is recorded
+/// until the interface asks for something a quarter of a minute later.
+///
+/// The text is the interface's own, so it is recorded as a message and never
+/// interpreted.
+#[tauri::command]
+pub fn log_startup_event(event: String, details: String) {
+    tracing::info!(target: "noctrinth::startup", "Startup: {event} {details}");
+}
+
 #[tauri::command]
 pub fn get_os() -> OS {
     #[cfg(target_os = "windows")]

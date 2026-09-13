@@ -413,6 +413,7 @@ fn main() {
                         "show_app_db_backups_folder",
                         "progress_bars_list",
                         "get_opening_command",
+                        "log_startup_event",
                         "get_image_thumbnail",
                     ])
                     .default_permission(

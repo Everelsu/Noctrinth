@@ -17,9 +17,14 @@ impl DiscordGuard {
     /// Initialize discord IPC client, and attempt to connect to it
     /// If it fails, it will still return a DiscordGuard, but the client will be unconnected
     pub fn init() -> crate::Result<DiscordGuard> {
-        // Discord Rich Presence application ID. Register your own app at
-        // https://discord.com/developers/applications and paste its
-        // Application ID here. (This is currently Modrinth's app ID.)
+        // Noctrinth's own Discord application, registered at
+        // https://discord.com/developers/applications — not Modrinth's, which
+        // is where the name Discord shows on the presence comes from.
+        //
+        // The application is also where the picture comes from: `large_image`
+        // below is a key into that application's Rich Presence → Art Assets,
+        // not a file in this repository, and a key with nothing uploaded under
+        // it draws no picture at all rather than failing in any visible way.
         let dipc = DiscordIpcClient::new("1505548256585846974");
 
         Ok(DiscordGuard {

@@ -197,7 +197,7 @@ const messages = defineMessages({
 	connector_fabric_mod_fix: {
 		id: 'app.crash.rule.connector-fabric-mod.fix',
 		defaultMessage:
-			'On NeoForge, install the mod's own NeoForge build where there is one — Sodium and Iris both have official ones, and they do not go through Connector. On Forge 1.20.1 and older the equivalents are Embeddium and Oculus.',
+			"On NeoForge, install the mod's own NeoForge build where there is one — Sodium and Iris both have official ones, and they do not go through Connector. On Forge 1.20.1 and older the equivalents are Embeddium and Oculus.",
 	},
 	corrupted_archive: {
 		id: 'app.crash.rule.corrupted-archive.title',

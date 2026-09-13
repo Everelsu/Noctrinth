@@ -105,23 +105,26 @@
 					id="ely-password"
 					v-model="password"
 					:type="showPassword ? 'text' : 'password'"
-					input-class="!pr-11"
 					:placeholder="formatMessage(messages.passwordPlaceholder)"
 					autocomplete="current-password"
 					:disabled="loading || needsTotp"
 					@keyup.enter="submit"
 				>
 					<template #right>
+						<!-- Laid out by the field's own trailing slot, which is a flex row
+						     and not a positioned box: taking it out of the flow put it
+						     beside the field rather than inside it. Styled like the
+						     field's built-in clear button so the two match. -->
 						<button
 							type="button"
-							class="absolute right-1.5 z-[1] flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent text-secondary transition-colors hover:bg-button-bg hover:text-contrast"
+							class="relative flex size-5 shrink-0 cursor-pointer select-none items-center justify-center border-none bg-transparent p-0 text-secondary opacity-60 transition-colors before:absolute before:-inset-2 hover:text-contrast hover:opacity-100 focus-visible:text-contrast focus-visible:opacity-100 group-focus-within/input:text-contrast group-focus-within/input:opacity-100"
 							:aria-label="
 								formatMessage(showPassword ? messages.hidePassword : messages.showPassword)
 							"
 							@click="showPassword = !showPassword"
 						>
-							<EyeOffIcon v-if="showPassword" class="h-5 w-5" />
-							<EyeIcon v-else class="h-5 w-5" />
+							<EyeOffIcon v-if="showPassword" class="size-5" aria-hidden="true" />
+							<EyeIcon v-else class="size-5" aria-hidden="true" />
 						</button>
 					</template>
 				</Input>

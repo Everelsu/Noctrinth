@@ -67,6 +67,8 @@ pub mod server_join_log;
 mod ely_auth;
 pub use self::ely_auth::*;
 
+pub mod ely_oauth;
+
 mod offline_auth;
 pub use self::offline_auth::*;
 

@@ -2,6 +2,7 @@
 import { FolderOpenIcon, XIcon } from '@modrinth/assets'
 import {
 	Button,
+	Checkbox,
 	commonMessages,
 	defineMessages,
 	FileTreeSelect,
@@ -43,6 +44,15 @@ const messages = defineMessages({
 		defaultMessage: 'Enter modpack description...',
 	},
 	exportButton: { id: 'app.export-modal.export-button', defaultMessage: 'Export' },
+	includeIcon: {
+		id: 'app.export-modal.include-icon',
+		defaultMessage: "Include the instance's icon",
+	},
+	includeIconHint: {
+		id: 'app.export-modal.include-icon-hint',
+		defaultMessage:
+			'Saved as the pack icon, which Modrinth App and other launchers show when the pack is installed.',
+	},
 	exportComplete: {
 		id: 'app.export-modal.export-complete',
 		defaultMessage: 'Export complete',
@@ -72,6 +82,9 @@ const exportModal = ref(null)
 const nameInput = ref(props.instance.name)
 const exportDescription = ref('')
 const versionInput = ref('1.0.0')
+// On by default: a pack arriving without the picture it was made with is the
+// surprise, not the other way round.
+const includeIcon = ref(true)
 const files = shallowRef([])
 const includedFilePaths = ref([])
 const excludedFilePaths = ref([])
@@ -116,6 +129,7 @@ const exportPack = async () => {
 				versionInput.value,
 				exportDescription.value,
 				nameInput.value,
+				includeIcon.value,
 			)
 
 			const fileName = outputPath.split(/[\\/]/).pop() ?? outputPath
@@ -226,6 +240,17 @@ function normalizeExportPath(path) {
 					wrapper-class="w-full"
 				/>
 			</div>
+			<label class="flex cursor-pointer items-start gap-3">
+				<Checkbox v-model="includeIcon" class="mt-0.5 shrink-0" />
+				<span class="flex min-w-0 flex-col gap-1">
+					<span class="font-semibold text-contrast">
+						{{ formatMessage(messages.includeIcon) }}
+					</span>
+					<span class="text-sm text-secondary">
+						{{ formatMessage(messages.includeIconHint) }}
+					</span>
+				</span>
+			</label>
 			<FileTreeSelect
 				:key="fileTreeKey"
 				v-model="includedFilePaths"

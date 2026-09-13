@@ -461,6 +461,12 @@
 	"app.error-modal.try-signing-in-again": {
 		"message": "Попробовать войти снова"
 	},
+	"app.export-modal.include-icon": {
+		"message": "Вложить иконку инстанса"
+	},
+	"app.export-modal.include-icon-hint": {
+		"message": "Сохраняется как иконка пака — её показывают Modrinth App и другие лаунчеры при установке."
+	},
 	"app.hosting.title": {
 		"message": "Хостинг"
 	},

@@ -173,6 +173,7 @@ pub async fn export_mrpack(
     version_id: Option<String>,
     description: Option<String>,
     _name: Option<String>,
+    include_icon: bool,
 ) -> crate::Result<()> {
     let state = State::get().await?;
     let _permit: tokio::sync::SemaphorePermit =
@@ -243,6 +244,15 @@ pub async fn export_mrpack(
         }
     }
 
+    // The instance's own picture, which the walk above cannot have found: an
+    // icon lives in the launcher's cache, not in the instance folder, so every
+    // pack exported until now arrived somewhere else blank.
+    let icon = if include_icon {
+        read_instance_icon(&metadata).await
+    } else {
+        None
+    };
+
     let total_bytes = override_files
         .iter()
         .fold(1_u64, |total, (_, _, size)| total.saturating_add(*size));
@@ -259,9 +269,15 @@ pub async fn export_mrpack(
     tokio::task::spawn_blocking(move || {
         let file = std::fs::File::create(&export_path)
             .map_err(|error| IOError::with_path(error, &export_path))?;
-        write_mrpack_archive(file, override_files, &data, |bytes_written| {
-            emit_loading(&loading_bar, bytes_written as f64, None)
-        })
+        write_mrpack_archive(
+            file,
+            override_files,
+            &data,
+            icon.as_deref(),
+            |bytes_written| {
+                emit_loading(&loading_bar, bytes_written as f64, None)
+            },
+        )
     })
     .await??;
 
@@ -279,10 +295,31 @@ fn ensure_standard_zip_file_size(size: u64) -> crate::Result<()> {
     Ok(())
 }
 
+/// The picture the instance is shown with, if it has one that can be read.
+///
+/// Never an error: a pack that exports without its icon is a pack missing a
+/// picture, and a pack that refuses to export because of one is a lost
+/// afternoon.
+async fn read_instance_icon(metadata: &InstanceMetadata) -> Option<Vec<u8>> {
+    let path = metadata.instance.icon_path.as_deref()?;
+
+    match io::read(PathBuf::from(path)).await {
+        Ok(bytes) if !bytes.is_empty() => Some(bytes),
+        Ok(_) => None,
+        Err(error) => {
+            tracing::warn!(
+                "Could not read {path} to export as the pack icon: {error}"
+            );
+            None
+        }
+    }
+}
+
 fn write_mrpack_archive<W, F>(
     writer: W,
     override_files: Vec<(PathBuf, SafeRelativeUtf8UnixPathBuf, u64)>,
     packfile_data: &[u8],
+    icon: Option<&[u8]>,
     mut emit_progress: F,
 ) -> crate::Result<()>
 where
@@ -310,6 +347,23 @@ where
             writer.write_all(&buffer[..bytes_read])?;
             emit_progress(bytes_read as u64)?;
         }
+    }
+
+    // Written as `overrides/icon.png` because that is where Modrinth's own
+    // launcher looks — along with `icon.png` and `client-overrides/icon.png` —
+    // and because anything that does not look for a pack icon at all simply
+    // unpacks it into the instance folder, where it is an icon again.
+    //
+    // The bytes go in as they are, whatever they started as. Every consumer
+    // works out the format from the content rather than the name, so a picture
+    // that was not a PNG is still read; giving it another name here would only
+    // hide it from the one launcher this is for.
+    if let Some(icon) = icon {
+        writer
+            .start_file("overrides/icon.png", options)
+            .map_err(std::io::Error::from)?;
+        writer.write_all(icon)?;
+        emit_progress(icon.len() as u64)?;
     }
 
     writer

@@ -592,6 +592,8 @@ export async function export_instance_mrpack(
 	versionId?: string,
 	description?: string,
 	name?: string,
+	/** Put the instance's picture in the pack, where other launchers look for it. */
+	includeIcon = true,
 ): Promise<void> {
 	return await invoke('plugin:instance|instance_export_mrpack', {
 		instanceId,
@@ -601,6 +603,7 @@ export async function export_instance_mrpack(
 		versionId,
 		description,
 		name,
+		includeIcon,
 	})
 }
 

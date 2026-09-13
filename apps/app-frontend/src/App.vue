@@ -102,6 +102,10 @@ import SharedInstanceInviteHandler from '@/components/ui/shared-instances/shared
 import SplashScreen from '@/components/ui/SplashScreen.vue'
 import SurveyPopup from '@/components/ui/SurveyPopup.vue'
 import SyncInstancesUpdateModal from '@/components/ui/sync-instances-update-modal/index.vue'
+import {
+	markSyncInstancesUpdateNotificationShown,
+	shouldShowSyncInstancesUpdateNotification,
+} from '@/components/ui/sync-instances-update-modal/show-notification'
 import WindowControls from '@/components/ui/WindowControls.vue'
 import { useCheckDisableMouseover } from '@/composables/macCssFix.js'
 import { setAccentPreset } from '@/composables/use-accent.ts'
@@ -858,9 +862,14 @@ async function setupApp() {
 	stateInitialized.value = true
 	debugStartup('App state initialized')
 	await traceStartupStep('Render initialized app', nextTick)
+	const isSyncUpdateVersion = version.startsWith('0.20.')
+	if (isSyncUpdateVersion && pending_update_toast_for_version !== version) {
+		markSyncInstancesUpdateNotificationShown()
+	}
 	if (
 		appSettings.getFeatureFlag('show_sync_instances_update_modal') ||
-		(pending_update_toast_for_version === version &&
+		(isSyncUpdateVersion &&
+			pending_update_toast_for_version === version &&
 			(
 				await traceStartupStep('Load instances for update notification', () =>
 					queryClient.fetchQuery(instanceListQueryOptions()),
@@ -1186,6 +1195,8 @@ function showSyncInstancesUpdateNotification() {
 	) {
 		return
 	}
+
+	if (!shouldShowSyncInstancesUpdateNotification()) return
 
 	const notification = addPopupNotification({
 		contentType: 'standard',

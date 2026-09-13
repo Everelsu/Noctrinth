@@ -106,12 +106,13 @@ pub async fn ely_oauth_login<R: Runtime>(
 
         let url = window.url()?;
 
-        // Recorded once per address rather than twenty times a second. This is
-        // the one place the sign-in can go wrong invisibly, and without it the
-        // log says nothing about where Ely.by actually sent the player.
+        // Recorded once per address rather than twenty times a second, and at
+        // info because the default filter is info: a sign-in that goes wrong
+        // here goes wrong invisibly, and a diagnostic nobody can see is not one.
+        // A whole sign-in is a handful of lines.
         if url.as_str() != last_seen {
             last_seen = url.as_str().to_string();
-            tracing::debug!("Ely.by sign-in window is at {last_seen}");
+            tracing::info!("Ely.by sign-in window is at {last_seen}");
         }
 
         match read_redirect(url.as_str(), &request.state) {

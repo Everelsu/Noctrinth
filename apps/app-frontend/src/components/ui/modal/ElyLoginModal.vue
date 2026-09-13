@@ -6,7 +6,62 @@
 		width="100%"
 		actions-divider
 	>
-		<div class="flex w-full flex-col gap-4">
+		<div v-if="mode === 'page'" class="flex w-full flex-col gap-4">
+			<p class="m-0 text-base leading-6 text-secondary">
+				{{ formatMessage(messages.pageDescription) }}
+			</p>
+
+			<Button
+				:disabled="loading"
+				type="colored"
+				color="brand"
+				size="lg"
+				class="!h-auto !justify-start !py-3"
+				@click="signInOnPage"
+			>
+				<SpinnerIcon v-if="loading" class="animate-spin" aria-hidden="true" />
+				<LogInIcon v-else aria-hidden="true" />
+				<span class="flex min-w-0 flex-col items-start">
+					<span class="font-semibold leading-5">
+						{{ formatMessage(loading ? messages.pageWaiting : messages.pageButton) }}
+					</span>
+					<span class="text-sm font-normal leading-5 opacity-80">
+						{{ formatMessage(messages.pageButtonHint) }}
+					</span>
+				</span>
+			</Button>
+
+			<Admonition v-if="errorMessage" type="critical">
+				{{ errorMessage }}
+			</Admonition>
+
+			<p class="m-0 text-sm text-secondary">
+				{{ formatMessage(messages.noAccount) }}
+				<a
+					href="https://ely.by"
+					target="_blank"
+					rel="noopener noreferrer"
+					class="font-semibold text-brand hover:underline"
+				>
+					{{ formatMessage(messages.signUpLink) }}
+				</a>
+			</p>
+
+			<button
+				type="button"
+				class="m-0 cursor-pointer border-0 bg-transparent p-0 text-left text-sm text-secondary underline hover:text-contrast"
+				:disabled="loading"
+				@click="usePasswordInstead"
+			>
+				{{ formatMessage(messages.usePassword) }}
+			</button>
+		</div>
+
+		<div v-else class="flex w-full flex-col gap-4">
+			<Admonition type="warning" :header="formatMessage(messages.passwordWarningHeader)">
+				{{ formatMessage(messages.passwordWarningBody) }}
+			</Admonition>
+
 			<div class="flex flex-col gap-2">
 				<label for="ely-username">
 					<span class="text-lg font-semibold text-contrast">
@@ -92,11 +147,16 @@
 
 		<template #actions>
 			<div class="flex justify-end gap-2">
-				<Button :disabled="loading" type="outlined" @click="hide">
+				<Button
+					:disabled="loading"
+					type="outlined"
+					@click="mode === 'page' ? hide() : backToPage()"
+				>
 					<XIcon aria-hidden="true" />
-					{{ formatMessage(messages.cancel) }}
+					{{ formatMessage(mode === 'page' ? messages.cancel : messages.back) }}
 				</Button>
 				<Button
+					v-if="mode === 'password'"
 					:disabled="loading || !username.trim() || !password || (needsTotp && !totp.trim())"
 					type="colored"
 					color="brand"
@@ -116,12 +176,41 @@ import { EyeIcon, EyeOffIcon, LogInIcon, SpinnerIcon, XIcon } from '@modrinth/as
 import { Admonition, Button, defineMessages, Input, NewModal, useVIntl } from '@modrinth/ui'
 import { ref } from 'vue'
 
-import { ely_login, type ElyCredentials } from '@/helpers/ely_auth'
+import { ely_login, ely_oauth_login, type ElyCredentials } from '@/helpers/ely_auth'
 
 const { formatMessage } = useVIntl()
 
 const messages = defineMessages({
 	header: { id: 'ely-login.header', defaultMessage: 'Sign in with Ely.by' },
+	pageDescription: {
+		id: 'ely-login.page-description',
+		defaultMessage:
+			'Ely.by will ask who you are on its own page, in a window of its own. Your password is typed there and never passes through the launcher.',
+	},
+	pageButton: { id: 'ely-login.page-button', defaultMessage: 'Continue on ely.by' },
+	pageButtonHint: {
+		id: 'ely-login.page-button-hint',
+		defaultMessage: 'Opens the Ely.by sign-in page.',
+	},
+	pageWaiting: { id: 'ely-login.page-waiting', defaultMessage: 'Waiting for Ely.by...' },
+	usePassword: {
+		id: 'ely-login.use-password',
+		defaultMessage: 'Sign in with a password instead',
+	},
+	back: { id: 'ely-login.back', defaultMessage: 'Back' },
+	passwordWarningHeader: {
+		id: 'ely-login.password-warning-header',
+		defaultMessage: 'This asks the launcher for your Ely.by password',
+	},
+	passwordWarningBody: {
+		id: 'ely-login.password-warning-body',
+		defaultMessage:
+			'It works, and the password is sent straight to Ely.by. But signing in on their own page means nothing here ever sees it — use that unless it will not open.',
+	},
+	pageFailed: {
+		id: 'ely-login.error.page',
+		defaultMessage: 'The sign-in did not finish. Try again, or use a password.',
+	},
 	usernameLabel: { id: 'ely-login.username-label', defaultMessage: 'Username or email' },
 	usernamePlaceholder: {
 		id: 'ely-login.username-placeholder',
@@ -163,6 +252,8 @@ const emit = defineEmits<{
 }>()
 
 const modal = ref<InstanceType<typeof NewModal>>()
+/** Which way in is on screen: Ely.by's own page, or the password form. */
+const mode = ref<'page' | 'password'>('page')
 const username = ref('')
 const password = ref('')
 const totp = ref('')
@@ -172,6 +263,7 @@ const loading = ref(false)
 const errorMessage = ref('')
 
 function show(event?: MouseEvent) {
+	mode.value = 'page'
 	username.value = ''
 	password.value = ''
 	totp.value = ''
@@ -184,6 +276,44 @@ function show(event?: MouseEvent) {
 
 function hide() {
 	modal.value?.hide()
+}
+
+function usePasswordInstead() {
+	errorMessage.value = ''
+	mode.value = 'password'
+}
+
+function backToPage() {
+	errorMessage.value = ''
+	mode.value = 'page'
+}
+
+/** Hands the sign-in to Ely.by and waits for the window to come back. */
+async function signInOnPage() {
+	if (loading.value) return
+
+	loading.value = true
+	errorMessage.value = ''
+	try {
+		const credentials = await ely_oauth_login()
+		// Null is the player closing the window: leave the modal as it was, with
+		// nothing said, so trying again is one click and not a dismissed error.
+		if (credentials) {
+			emit('logged-in', credentials)
+			hide()
+		}
+	} catch (error: unknown) {
+		errorMessage.value = formatPageError(extractErrorMessage(error))
+	} finally {
+		loading.value = false
+	}
+}
+
+function formatPageError(message: string): string {
+	if (/request failed|error sending request/i.test(message)) {
+		return formatMessage(messages.loginFailedNetwork)
+	}
+	return message.trim() || formatMessage(messages.pageFailed)
 }
 
 async function submit() {

@@ -1,6 +1,13 @@
 use crate::state::ElyCredentials;
 use uuid::Uuid;
 
+// The sign-in on Ely.by's own page is driven from the desktop shell — it is the
+// half that owns a window — so the pieces it needs are re-exported here rather
+// than left inside a private module.
+pub use crate::state::ely_oauth::{
+    ElyAuthorizationRequest, ElyRedirect, read_redirect,
+};
+
 pub async fn login(
     username: &str,
     password: &str,
@@ -12,6 +19,46 @@ pub async fn login(
     // The checklist's "sign in to Minecraft" step is about having an account to
     // play with, and an Ely.by account is one — only the Microsoft flow marked
     // it, so signing in here left the step outstanding forever.
+    if let Err(error) =
+        crate::onboarding_checklist::mark_logged_into_minecraft().await
+    {
+        tracing::warn!(
+            "Failed to mark Ely.by login in onboarding checklist: {error}"
+        );
+    }
+
+    Ok(creds)
+}
+
+/// Where to send the player to sign in, and what to hold on to until they do.
+///
+/// The verifier and the state are handed back rather than kept here because the
+/// window that opens the page is what waits for the answer, and a sign-in the
+/// player abandons should leave nothing behind to expire.
+pub fn begin_oauth() -> crate::state::ely_oauth::ElyAuthorizationRequest {
+    crate::state::ely_oauth::begin()
+}
+
+/// Turns the code Ely.by sent back into a signed-in account.
+pub async fn finish_oauth(
+    code: &str,
+    verifier: &str,
+) -> crate::Result<ElyCredentials> {
+    let state = crate::State::get().await?;
+    let tokens = crate::state::ely_oauth::exchange_code(code, verifier).await?;
+
+    let creds = ElyCredentials {
+        uuid: tokens.uuid,
+        username: tokens.username,
+        access_token: tokens.access_token,
+        // Nothing issues one here: the client token belongs to the password
+        // flow, and this account will never be refreshed through it.
+        client_token: String::new(),
+        active: true,
+        refresh_token: tokens.refresh_token,
+    };
+    creds.upsert(&state.pool).await?;
+
     if let Err(error) =
         crate::onboarding_checklist::mark_logged_into_minecraft().await
     {

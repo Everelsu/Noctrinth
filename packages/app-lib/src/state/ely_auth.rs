@@ -34,6 +34,14 @@ pub struct ElyCredentials {
     pub access_token: String,
     pub client_token: String,
     pub active: bool,
+    /// Present only for an account signed in on Ely.by's own page.
+    ///
+    /// Which of the two ways an account arrived by is not recorded anywhere
+    /// else, and it decides how the account is kept alive: with one, the token
+    /// is renewed against Ely.by's OAuth endpoint; without, against the
+    /// password flow's `authserver`. Accounts that predate the page flow have
+    /// none, and go on being refreshed exactly as they were.
+    pub refresh_token: Option<String>,
 }
 
 impl Serialize for ElyCredentials {
@@ -151,6 +159,7 @@ impl ElyCredentials {
             access_token: data.access_token,
             client_token: data.client_token,
             active: true,
+            refresh_token: None,
         })
     }
 
@@ -183,6 +192,25 @@ impl ElyCredentials {
     /// is unknown (network failure, server error) and the stored credentials
     /// must NOT be discarded.
     async fn refresh(&mut self) -> crate::Result<ElyRefresh> {
+        // An account signed in on Ely.by's own page is renewed there. The
+        // password flow's endpoint knows nothing about an OAuth token and would
+        // refuse it, which `get_active` reads as the account being dead — so
+        // sending one there would sign the player out on the next launch.
+        if let Some(refresh_token) = self.refresh_token.clone() {
+            let tokens = super::ely_oauth::refresh(&refresh_token).await?;
+
+            self.access_token = tokens.access_token;
+            self.username = tokens.username;
+            self.refresh_token = tokens.refresh_token;
+
+            // Deliberately never `Rejected`: a refusal and a failed request
+            // arrive here as the same error, and removing the account on a
+            // connection that happened to drop is the worse of the two
+            // mistakes. A genuinely dead token is caught by the next sign-in
+            // instead of by a silent sign-out.
+            return Ok(ElyRefresh::Refreshed);
+        }
+
         let resp = INSECURE_REQWEST_CLIENT
             .post("https://authserver.ely.by/auth/refresh")
             .json(&serde_json::json!({
@@ -255,6 +283,7 @@ impl ElyCredentials {
             access_token: row.access_token,
             client_token: row.client_token,
             active: row.active == 1,
+            refresh_token: Self::stored_refresh_token(&row.uuid, exec).await?,
         };
 
         // Asked once and then left alone for a while: the answer does not change
@@ -314,6 +343,8 @@ impl ElyCredentials {
                 access_token: row.access_token,
                 client_token: row.client_token,
                 active: row.active == 1,
+                refresh_token: Self::stored_refresh_token(&row.uuid, exec)
+                    .await?,
             });
         }
 
@@ -346,7 +377,31 @@ impl ElyCredentials {
         .execute(exec)
         .await?;
 
+        // Written on its own, with a runtime-checked query, so the sqlx offline
+        // cache does not need regenerating for this fork-only column. A `None`
+        // is written as well as a `Some`: it is what says the account is kept
+        // alive by the password flow.
+        sqlx::query("UPDATE ely_users SET refresh_token = ? WHERE uuid = ?")
+            .bind(&self.refresh_token)
+            .bind(&uuid)
+            .execute(exec)
+            .await?;
+
         Ok(())
+    }
+
+    /// The refresh token stored for this account, if it has one.
+    async fn stored_refresh_token(
+        uuid: &str,
+        exec: impl sqlx::Executor<'_, Database = sqlx::Sqlite>,
+    ) -> crate::Result<Option<String>> {
+        Ok(sqlx::query_scalar(
+            "SELECT refresh_token FROM ely_users WHERE uuid = ?",
+        )
+        .bind(uuid)
+        .fetch_optional(exec)
+        .await?
+        .flatten())
     }
 
     pub async fn remove(

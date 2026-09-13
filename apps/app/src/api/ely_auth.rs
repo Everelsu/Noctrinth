@@ -8,6 +8,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
     tauri::plugin::Builder::<R>::new("ely-auth")
         .invoke_handler(tauri::generate_handler![
             ely_login,
+            ely_oauth_login,
             ely_logout,
             ely_get_users,
             ely_get_default_user,
@@ -31,6 +32,113 @@ pub async fn ely_login(
     password: String,
 ) -> Result<ElyCredentials> {
     Ok(ely_auth::login(&username, &password).await?)
+}
+
+/// Label of the window the player signs in to Ely.by in.
+const ELY_SIGN_IN_WINDOW_LABEL: &str = "ely-sign-in";
+
+/// How long the window is left open before the sign-in is given up on.
+const ELY_SIGN_IN_TIMEOUT_MINUTES: i64 = 10;
+
+/// Signs in by sending the player to Ely.by's own page.
+///
+/// Built the same way as the Microsoft sign-in next door, deliberately. That
+/// one watches where the window has arrived, fifty milliseconds at a time,
+/// rather than asking to be told when it moves — and the difference is not
+/// stylistic. A navigation callback is not called for every way a page can
+/// send a browser somewhere, and when it is missed the window simply follows
+/// the redirect and sits there, signed in, with the launcher still waiting.
+/// Reading the address the window is actually at cannot miss it.
+///
+/// `Ok(None)` is the player closing the window: a decision, not a failure, and
+/// nothing for the interface to apologise about.
+///
+/// What identifies the redirect is the `state`, not the address — see
+/// [`theseus::ely_auth::read_redirect`]. The password is typed on Ely.by's page
+/// and never passes through here; the code that comes back is worthless without
+/// the PKCE verifier held in this call, which is why the window is opened and
+/// awaited in one place.
+#[tauri::command]
+pub async fn ely_oauth_login<R: Runtime>(
+    app: tauri::AppHandle<R>,
+) -> Result<Option<ElyCredentials>> {
+    use theseus::ely_auth::{ElyRedirect, read_redirect};
+
+    let request = ely_auth::begin_oauth();
+    let start = chrono::Utc::now();
+
+    // A window left over from a sign-in that did not finish is precisely what a
+    // player who has just failed will try again from. Refusing to open a second
+    // one would make every attempt after the first fail too, until the launcher
+    // was restarted.
+    if let Some(stale) = app.get_webview_window(ELY_SIGN_IN_WINDOW_LABEL) {
+        stale.close()?;
+    }
+
+    let window = tauri::WebviewWindowBuilder::new(
+        &app,
+        ELY_SIGN_IN_WINDOW_LABEL,
+        tauri::WebviewUrl::External(request.url.parse().map_err(|_| {
+            theseus::ErrorKind::OtherError(
+                "Could not build the Ely.by sign-in address".to_string(),
+            )
+            .as_error()
+        })?),
+    )
+    .title("Sign in with Ely.by")
+    .always_on_top(true)
+    .min_inner_size(500.0, 500.0)
+    .inner_size(1000.0, 700.0)
+    .focused(true)
+    .center()
+    .build()?;
+
+    window.request_user_attention(Some(tauri::UserAttentionType::Critical))?;
+
+    let mut last_seen = String::new();
+    while (chrono::Utc::now() - start)
+        < chrono::Duration::minutes(ELY_SIGN_IN_TIMEOUT_MINUTES)
+    {
+        if window.title().is_err() {
+            // The window is gone: the player closed it.
+            return Ok(None);
+        }
+
+        let url = window.url()?;
+
+        // Recorded once per address rather than twenty times a second. This is
+        // the one place the sign-in can go wrong invisibly, and without it the
+        // log says nothing about where Ely.by actually sent the player.
+        if url.as_str() != last_seen {
+            last_seen = url.as_str().to_string();
+            tracing::debug!("Ely.by sign-in window is at {last_seen}");
+        }
+
+        match read_redirect(url.as_str(), &request.state) {
+            Some(ElyRedirect::Code(code)) => {
+                window.close()?;
+                tracing::info!("Ely.by sign-in returned a code");
+                return Ok(Some(
+                    ely_auth::finish_oauth(&code, request.pkce.verifier())
+                        .await?,
+                ));
+            }
+            Some(ElyRedirect::Denied(reason)) => {
+                window.close()?;
+                return Err(theseus::ErrorKind::OtherError(format!(
+                    "Ely.by did not allow the sign-in: {reason}"
+                ))
+                .as_error()
+                .into());
+            }
+            None => {}
+        }
+
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    }
+
+    window.close()?;
+    Ok(None)
 }
 
 #[tauri::command]

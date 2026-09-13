@@ -149,17 +149,18 @@ pub enum ElyRedirect {
 
 /// Reads a redirect the window was about to follow.
 ///
-/// `None` means this is not the redirect — the window is somewhere else in the
-/// sign-in, and should be left alone.
+/// What identifies it is the `state`, not the address. The address is Ely.by's
+/// to choose — whatever is written in the application registration, down to a
+/// trailing slash — and a launcher that insisted on recognising it would fail
+/// silently the moment the two disagreed: the window would follow the redirect,
+/// land on a page, and sit there signed in with nobody listening. The state is
+/// 32 random characters this launcher issued moments ago and told nobody else,
+/// so a navigation carrying it is this sign-in coming back, wherever it points.
+///
+/// `None` means this is not it — the window is somewhere else in the sign-in,
+/// and should be left alone.
 pub fn read_redirect(url: &str, expected_state: &str) -> Option<ElyRedirect> {
     let parsed = url::Url::parse(url).ok()?;
-    let expected = url::Url::parse(REDIRECT_URI).ok()?;
-
-    // The query is ours to read; the path is what identifies the redirect.
-    if parsed.origin() != expected.origin() || parsed.path() != expected.path()
-    {
-        return None;
-    }
 
     let mut code = None;
     let mut error = None;
@@ -173,9 +174,11 @@ pub fn read_redirect(url: &str, expected_state: &str) -> Option<ElyRedirect> {
         }
     }
 
-    // A redirect carrying the wrong state did not come from the sign-in this
-    // launcher started, so nothing in it is worth acting on.
-    if state.as_deref() != Some(expected_state) {
+    // Carrying no state at all is every other page in the sign-in, and is not
+    // worth a word. Carrying the wrong one is worth one: it did not come from
+    // the sign-in this launcher started.
+    let state = state?;
+    if state != expected_state {
         tracing::warn!("Ignoring an Ely.by redirect with an unexpected state");
         return None;
     }
@@ -395,7 +398,18 @@ mod tests {
             Some(ElyRedirect::Denied(error)) if error == "access_denied"
         ));
 
-        // Somewhere else entirely, a forged state, and the page mid-sign-in.
+        // The address is not what identifies it: Ely.by's registration decides
+        // that, and a redirect that carries the state is this sign-in wherever
+        // it points.
+        assert!(matches!(
+            read_redirect(
+                &format!("https://example.invalid/anywhere?code=xyz&state={state}"),
+                state
+            ),
+            Some(ElyRedirect::Code(code)) if code == "xyz"
+        ));
+
+        // A page mid-sign-in carries no state, a forged one carries the wrong.
         assert!(
             read_redirect("https://account.ely.by/oauth2/v1?code=xyz", state)
                 .is_none()

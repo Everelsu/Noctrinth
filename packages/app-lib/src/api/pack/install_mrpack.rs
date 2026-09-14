@@ -10,7 +10,6 @@ use crate::install::{
 use crate::pack::install_from::{
     EnvType, PackFile, PackFileHash, set_instance_information,
 };
-use crate::pack::noctrinth_delta::PackDelta;
 use crate::state::instances::ContentSourceKind;
 use crate::state::{
     CachedEntry, CachedFile, EditInstance, InstanceInstallStage, SideType,
@@ -75,9 +74,6 @@ struct ModpackContentInstallContext {
     file_infos_by_hash: Arc<HashMap<String, CachedFile>>,
     num_files: usize,
     content_total_bytes: u64,
-    // What an update worked out it does not have to fetch again; empty for a
-    // fresh install, which has nothing to compare against.
-    delta: Arc<PackDelta>,
 }
 
 impl ModpackContentInstallContext {
@@ -468,36 +464,11 @@ where
     Ok((size, hasher.digest().to_string()))
 }
 
-/// Reads just the manifest out of an `.mrpack`.
-///
-/// An update needs to know what the incoming pack contains before it starts
-/// deleting what the old one left behind, and that decision should not cost a
-/// second trip to the network: the archive is already local by this point, so
-/// this only walks its central directory and pulls out the one entry.
-pub(crate) async fn read_pack_manifest(
-    file: &CreatePackFile,
-) -> crate::Result<PackFormat> {
-    let mut zip_reader = MrpackZipReader::new(file).await?;
-
-    let Some(manifest_idx) = zip_reader.file().entries().iter().position(|f| {
-        matches!(f.filename().as_str(), Ok("modrinth.index.json"))
-    }) else {
-        return Err(crate::Error::from(crate::ErrorKind::InputError(
-            "No pack manifest found in mrpack".to_string(),
-        )));
-    };
-
-    let manifest = zip_reader.read_entry_to_string(manifest_idx).await?;
-
-    Ok(serde_json::from_str(&manifest)?)
-}
-
 pub(crate) async fn install_zipped_mrpack_files_with_reporter(
     create_pack: CreatePack,
     ignore_lock: bool,
     reason: DownloadReason,
     reporter: InstallProgressReporter,
-    delta: Arc<PackDelta>,
 ) -> crate::Result<String> {
     let state = &State::get().await?;
 
@@ -773,7 +744,6 @@ pub(crate) async fn install_zipped_mrpack_files_with_reporter(
         file_infos_by_hash,
         num_files,
         content_total_bytes,
-        delta,
     };
     loading_try_for_each_concurrent(
         futures::stream::iter(pack.files).map(Ok::<PackFile, crate::Error>),
@@ -881,72 +851,53 @@ pub(crate) async fn install_zipped_mrpack_files_with_reporter(
                         Ok(())
                     })
                 };
-                // An earlier version of this pack already put these exact
-                // bytes at this exact path, and nothing has touched them since.
-                // Leaving the file alone is the whole point of the delta; only
-                // the bookkeeping below still has to run for it.
-                let reused = content_context.delta.keeps(project.path.as_str());
-                let path = target_path;
-                let (installed_sha1, installed_size, downloaded_bytes) = if reused
+                let progress =
+                    &mut report_download_progress as &mut FetchProgressFn<'_>;
+                let file = match fetch_file_mirrors(
+                    &project
+                        .downloads
+                        .iter()
+                        .map(|x| &**x)
+                        .collect::<Vec<&str>>(),
+                    project.hashes.get(&PackFileHash::Sha1).map(|x| &**x),
+                    Some(&content_context.download_meta),
+                    None,
+                    &state.fetch_semaphore,
+                    &state.pool,
+                    Some(progress),
+                )
+                .await
                 {
-                    (
-                        project
-                            .hashes
-                            .get(&PackFileHash::Sha1)
-                            .cloned()
-                            .unwrap_or_default(),
-                        project_size,
-                        0,
-                    )
-                } else {
-                    let progress = &mut report_download_progress
-                        as &mut FetchProgressFn<'_>;
-                    let file = match fetch_file_mirrors(
-                        &project
-                            .downloads
-                            .iter()
-                            .map(|x| &**x)
-                            .collect::<Vec<&str>>(),
-                        project.hashes.get(&PackFileHash::Sha1).map(|x| &**x),
-                        Some(&content_context.download_meta),
-                        None,
-                        &state.fetch_semaphore,
-                        &state.pool,
-                        Some(progress),
-                    )
-                    .await
-                    {
-                        Ok(file) => {
-                            content_context
-                                .remove_active_download(&project_path)
-                                .await;
-                            file
-                        }
-                        Err(error) => {
-                            content_context
-                                .remove_active_download(&project_path)
-                                .await;
-                            content_context
-                                .reporter
-                                .persist_failure_context(context)
-                                .await;
-                            return Err(error);
-                        }
-                    };
-
-                    content_context
-                        .reporter
-                        .preserve_failure_context(
-                            context.clone(),
-                            file.copy_to(&path, &state.io_semaphore).await,
-                        )
-                        .await?;
-
-                    (file.sha1.clone(), file.size, file.size)
+                    Ok(file) => {
+                        content_context
+                            .remove_active_download(&project_path)
+                            .await;
+                        file
+                    }
+                    Err(error) => {
+                        content_context
+                            .remove_active_download(&project_path)
+                            .await;
+                        content_context
+                            .reporter
+                            .persist_failure_context(context)
+                            .await;
+                        return Err(error);
+                    }
                 };
-                let modified_at_ns = crate::state::file_modified_at_ns(
-                    &io::metadata(&path).await?,
-                )?;
+                let downloaded_bytes = file.size;
+
+                let path = target_path;
+				content_context
+					.reporter
+					.preserve_failure_context(
+						context.clone(),
+						file.copy_to(&path, &state.io_semaphore).await,
+					)
+					.await?;
+				let modified_at_ns = crate::state::file_modified_at_ns(
+					&io::metadata(&path).await?,
+				)?;
 
                 {
                     let _permit = state.install_db_semaphore.acquire().await?;
@@ -955,11 +906,11 @@ pub(crate) async fn install_zipped_mrpack_files_with_reporter(
                         .preserve_failure_context(
                             context.clone(),
                             cache_file_hash_metadata(
-                                &content_context.instance_path,
-                                project.path.as_str(),
-                                installed_size,
-                                modified_at_ns,
-                                installed_sha1.clone(),
+								&content_context.instance_path,
+								project.path.as_str(),
+								file.size,
+								modified_at_ns,
+								file.sha1.clone(),
                                 ProjectType::get_from_parent_folder(&path),
                                 None,
                                 &state.pool,
@@ -1010,18 +961,15 @@ pub(crate) async fn install_zipped_mrpack_files_with_reporter(
                     }
                 }
 
-                let event = if reused {
-                    InstallJobEventKind::ContentFileSkipped {
-                        path: project_path,
-                        reason: "already installed and up to date".to_string(),
-                    }
-                } else {
-                    InstallJobEventKind::ContentFileCompleted {
-                        path: project_path,
-                        bytes: downloaded_bytes,
-                    }
-                };
-                content_context.mark_downloaded(project_size, event).await?;
+                content_context
+                    .mark_downloaded(
+                        project_size,
+                        InstallJobEventKind::ContentFileCompleted {
+                            path: project_path,
+                            bytes: downloaded_bytes,
+                        },
+                    )
+                    .await?;
                 Ok(())
             }
         },
@@ -1294,7 +1242,6 @@ fn modpack_source_kind(version_id: Option<&str>) -> ContentSourceKind {
 pub async fn remove_all_related_files(
     instance_id: String,
     mrpack_file: CreatePackFile,
-    delta: &PackDelta,
 ) -> crate::Result<()> {
     // Updates can remove files from a locally imported or downloaded pack, so share the same reader path.
     let mut zip_reader = MrpackZipReader::new(&mrpack_file).await?;
@@ -1368,11 +1315,6 @@ pub async fn remove_all_related_files(
     )
     .await?
     {
-        // The incoming pack wants this exact file at this exact path, so
-        // removing it here would only mean downloading it back in a moment.
-        if delta.keeps(&file.relative_path) {
-            continue;
-        }
         if let Some(project_id) = &file.project_id
             && to_remove.contains(project_id)
         {
@@ -1388,9 +1330,6 @@ pub async fn remove_all_related_files(
     // Iterate over all Modrinth project file paths in the json, and remove them
     // (There should be few, but this removes any files the .mrpack intended as Modrinth projects but were unrecognized)
     for file in pack.files {
-        if delta.keeps(file.path.as_str()) {
-            continue;
-        }
         match io::remove_file(instance_full_path.join(file.path.as_str())).await
         {
             Ok(_) => (),

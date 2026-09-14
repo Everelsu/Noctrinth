@@ -8,16 +8,14 @@ import {
 	Input,
 	Slider,
 	Toggle,
-	useFormatBytes,
 	useVIntl,
 } from '@modrinth/ui'
 import { open } from '@tauri-apps/plugin-dialog'
-import { onMounted, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 
 import ConfirmModalWrapper from '@/components/ui/modal/ConfirmModalWrapper.vue'
 import { useAppSettings } from '@/composables/use-app-settings.ts'
 import { purge_cache_types } from '@/helpers/cache.js'
-import { fileCacheSize, purgeFileCache } from '@/helpers/noctrinth-file-cache.ts'
 import { get, set } from '@/helpers/settings.ts'
 import { showAppDbBackupsFolder } from '@/helpers/utils.js'
 
@@ -26,8 +24,6 @@ const { formatMessage } = useVIntl()
 const appSettings = useAppSettings()
 const settings = ref(await get())
 const purgeCacheConfirmModal = ref(null)
-const formatBytes = useFormatBytes()
-const downloadCacheBytes = ref(0)
 const alwaysShowCopyDetailsFlag = 'always_show_copy_details'
 
 const messages = defineMessages({
@@ -105,19 +101,6 @@ const messages = defineMessages({
 		defaultMessage:
 			'Show the Copy details action while an install is queued or running. It is always available for failed or interrupted installs.',
 	},
-	downloadCacheTitle: {
-		id: 'app.resource-settings.download-cache.title',
-		defaultMessage: 'Downloaded files',
-	},
-	downloadCacheDescription: {
-		id: 'app.resource-settings.download-cache.description',
-		defaultMessage:
-			'Mods and modpack files are kept here after they are downloaded, so installing a pack again, going back to an older version of one, or setting up a second instance of it copies from your disk instead of downloading everything a second time. Currently holding {size}; the oldest files are dropped once it grows past 4 GB.',
-	},
-	purgeDownloadCache: {
-		id: 'app.resource-settings.download-cache.purge',
-		defaultMessage: 'Clear downloaded files',
-	},
 	appDatabaseBackupsTitle: {
 		id: 'app.settings.resource-management.app-database-backups.title',
 		defaultMessage: 'App database backups',
@@ -182,19 +165,6 @@ function handlePurgeCacheClick() {
 
 	purgeCacheConfirmModal.value?.show()
 }
-
-async function refreshDownloadCacheSize() {
-	downloadCacheBytes.value = await fileCacheSize().catch(() => 0)
-}
-
-async function purgeDownloadCache() {
-	await purgeFileCache().catch(handleError)
-	await refreshDownloadCacheSize()
-}
-
-onMounted(() => {
-	void refreshDownloadCacheSize()
-})
 
 async function openDbBackupsFolder() {
 	await showAppDbBackupsFolder().catch(handleError)
@@ -283,23 +253,6 @@ async function findLauncherDir() {
 			</Button>
 			<p class="m-0 leading-tight text-secondary">
 				{{ formatMessage(messages.appCacheDescription) }}
-			</p>
-		</div>
-
-		<div class="flex flex-col gap-2.5">
-			<h2 class="m-0 text-lg font-semibold text-contrast">
-				{{ formatMessage(messages.downloadCacheTitle) }}
-			</h2>
-			<Button id="purge-download-cache" class="w-fit" @click="purgeDownloadCache">
-				<TrashIcon aria-hidden="true" />
-				{{ formatMessage(messages.purgeDownloadCache) }}
-			</Button>
-			<p class="m-0 leading-tight text-secondary">
-				{{
-					formatMessage(messages.downloadCacheDescription, {
-						size: formatBytes(downloadCacheBytes),
-					})
-				}}
 			</p>
 		</div>
 

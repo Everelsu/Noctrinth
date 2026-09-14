@@ -1,6 +1,5 @@
 //! Functions for fetching information from the Internet
 use super::io::{self, IOError};
-use super::noctrinth_file_cache;
 use crate::event::LoadingBarId;
 use crate::event::emit::emit_loading;
 use crate::{ErrorKind, LabrinthError};
@@ -475,99 +474,16 @@ pub type FetchProgressFn<'a> = dyn FnMut(
     + Send
     + 'a;
 
-/// Where a downloaded file's bytes actually live.
-///
-/// A staged download is deleted once the last handle to it is dropped; one
-/// taken from the file cache must outlive every handle, since the whole point
-/// of it is to still be there next time.
-#[derive(Debug)]
-pub(crate) enum DownloadedFileSource {
-    Staged(tempfile::TempPath),
-    Cached(PathBuf),
-}
-
-impl DownloadedFileSource {
-    fn path(&self) -> &Path {
-        match self {
-            Self::Staged(path) => path.as_ref(),
-            Self::Cached(path) => path,
-        }
-    }
-}
-
 #[derive(Clone, Debug)]
 pub struct DownloadedFile {
-    source: Arc<DownloadedFileSource>,
+    path: Arc<tempfile::TempPath>,
     pub size: u64,
     pub sha1: String,
 }
 
 impl DownloadedFile {
     pub fn path(&self) -> &Path {
-        self.source.path()
-    }
-
-    /// A file already sitting in the launcher's file cache, under its hash.
-    pub(crate) fn from_cache(path: PathBuf, size: u64, sha1: String) -> Self {
-        Self {
-            source: Arc::new(DownloadedFileSource::Cached(path)),
-            size,
-            sha1,
-        }
-    }
-
-    /// Moves a staged download into the file cache at `path`, so that it
-    /// survives this install and is found by the next one.
-    ///
-    /// A rename rather than a copy: the staging directory and the cache sit
-    /// under the same launcher folder, so the bytes never move, and the file
-    /// only appears under its final name once it is whole. Returns the file
-    /// unchanged, in `Err`, when it cannot be moved — every caller can carry on
-    /// with a download that simply was not kept.
-    pub(crate) async fn persist_into_cache(
-        self,
-        path: &Path,
-    ) -> Result<Self, Self> {
-        let Self { source, size, sha1 } = self;
-        let source = match Arc::try_unwrap(source) {
-            Ok(source) => source,
-            Err(source) => return Err(Self { source, size, sha1 }),
-        };
-        let DownloadedFileSource::Staged(staged) = source else {
-            return Err(Self {
-                source: Arc::new(source),
-                size,
-                sha1,
-            });
-        };
-
-        let unkept = |staged, error: std::io::Error| {
-            tracing::debug!(
-                "Could not keep the download of {sha1} in the file cache: \
-                 {error}",
-                sha1 = &sha1
-            );
-            Err(Self {
-                source: Arc::new(DownloadedFileSource::Staged(staged)),
-                size,
-                sha1: sha1.clone(),
-            })
-        };
-
-        if let Some(parent) = path.parent()
-            && let Err(error) = io::create_dir_all(parent).await
-        {
-            return unkept(staged, std::io::Error::other(error));
-        }
-
-        match staged.persist(path) {
-            Ok(()) => Ok(Self::from_cache(path.to_path_buf(), size, sha1)),
-            Err(tempfile::PathPersistError {
-                error,
-                path: staged,
-                ..
-            }) => unkept(staged, error),
-        }
+        self.path.as_ref().as_ref()
     }
 
     pub async fn copy_to(
@@ -615,16 +531,6 @@ pub async fn fetch_file(
     exec: impl sqlx::Executor<'_, Database = sqlx::Sqlite>,
     progress: Option<&mut FetchProgressFn<'_>>,
 ) -> crate::Result<DownloadedFile> {
-    // Only content is kept: a download without a `DownloadMeta` is one of
-    // Minecraft's own files, which have a shared store of their own already.
-    let cacheable = download_meta.is_some();
-    if cacheable
-        && let Some(sha1) = sha1
-        && let Some(file) = noctrinth_file_cache::lookup(sha1).await
-    {
-        return Ok(file);
-    }
-
     let body = fetch_advanced_with_target(
         Method::GET,
         url,
@@ -643,11 +549,7 @@ pub async fn fetch_file(
     )
     .await?;
     match body {
-        FetchBody::File(file) => Ok(if cacheable {
-            noctrinth_file_cache::store(file).await
-        } else {
-            file
-        }),
+        FetchBody::File(file) => Ok(file),
         FetchBody::Memory(_) => unreachable!("requested a file download"),
     }
 }
@@ -666,17 +568,6 @@ pub async fn fetch_file_mirrors(
             ErrorKind::InputError("No mirrors provided!".to_string()).into()
         );
     }
-
-    // Only content is kept: a download without a `DownloadMeta` is one of
-    // Minecraft's own files, which have a shared store of their own already.
-    let cacheable = download_meta.is_some();
-    if cacheable
-        && let Some(sha1) = sha1
-        && let Some(file) = noctrinth_file_cache::lookup(sha1).await
-    {
-        return Ok(file);
-    }
-
     for (index, mirror) in mirrors.iter().enumerate() {
         let body = fetch_advanced_with_target(
             Method::GET,
@@ -696,13 +587,7 @@ pub async fn fetch_file_mirrors(
         )
         .await;
         match body {
-            Ok(FetchBody::File(file)) => {
-                return Ok(if cacheable {
-                    noctrinth_file_cache::store(file).await
-                } else {
-                    file
-                });
-            }
+            Ok(FetchBody::File(file)) => return Ok(file),
             Ok(FetchBody::Memory(_)) => {
                 unreachable!("requested a file download")
             }
@@ -736,7 +621,7 @@ async fn read_file_response(
     file.flush().await?;
     drop(file);
     Ok(DownloadedFile {
-        source: Arc::new(DownloadedFileSource::Staged(path)),
+        path: Arc::new(path),
         size,
         sha1: hasher.hexdigest(),
     })

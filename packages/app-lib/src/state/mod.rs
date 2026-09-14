@@ -307,13 +307,6 @@ impl State {
             directories.caches_dir().join("downloads"),
         );
 
-        // A content file is named after the hash it was checked against, so the
-        // same mod is fetched once however many packs, versions and instances
-        // ask for it.
-        crate::util::noctrinth_file_cache::set_file_cache_dir(
-            directories.caches_dir().join("files"),
-        );
-
         let discord_rpc = DiscordGuard::init()?;
 
         tracing::info!("Initializing file watcher");

@@ -232,7 +232,9 @@ pub async fn get_instance_from_pack(
                     .unwrap_or(false);
                 if !valid_key {
                     return Err(crate::ErrorKind::InputError(
-                        "This is a CurseForge modpack, but no CurseForge API                          key is available. The launcher needs an API key to                          resolve modpack files through CurseForge."
+                        "This is a CurseForge modpack, but no CurseForge API \
+                         key is available. The launcher needs an API key to \
+                         resolve modpack files through CurseForge."
                             .to_string(),
                     )
                     .into());

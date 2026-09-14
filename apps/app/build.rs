@@ -571,6 +571,14 @@ fn main() {
                     .default_permission(
                         DefaultPermissionRule::AllowAllCommands,
                     ),
+            )
+            .plugin(
+                "noctrinth-file-cache",
+                InlinedPlugin::new()
+                    .commands(&["file_cache_size", "file_cache_purge"])
+                    .default_permission(
+                        DefaultPermissionRule::AllowAllCommands,
+                    ),
             ),
     )
     .expect("Failed to run tauri-build");

@@ -17,11 +17,12 @@ use crate::api::pack::install_curseforge::{
     install_curseforge_pack_files_with_reporter, zip_file_has_entry,
 };
 use crate::api::pack::install_from::{
-    CreatePackLocation, generate_pack_from_file,
+    CreatePack, CreatePackLocation, generate_pack_from_file,
     generate_pack_from_version_id_with_reporter, get_instance_from_pack,
     get_local_pack_instance,
 };
 use crate::api::pack::install_mrpack::install_zipped_mrpack_files_with_reporter;
+use crate::api::pack::noctrinth_delta::{PackDelta, plan_pack_delta};
 use crate::event::InstancePayloadType;
 use crate::event::emit::emit_instance;
 use crate::state::instances::adapters::sqlite::content_rows;
@@ -33,6 +34,7 @@ use crate::state::{
 use crate::util::fetch::DownloadReason;
 use std::collections::HashSet;
 use std::path::PathBuf;
+use std::sync::Arc;
 use uuid::Uuid;
 
 pub async fn create_instance(
@@ -1037,19 +1039,48 @@ async fn run_request(
             prepare_existing_rollback(job_state, state, &instance_id).await?;
             lock_instance(&instance_id, state).await?;
             crate::api::instance::prepare_instance_update(&instance_id).await?;
+            let reporter =
+                InstallProgressReporter::new(job_id, job_state.clone());
+            // Resolved before anything is torn down: the incoming manifest is
+            // what tells the update which files it can leave alone, and once
+            // they are deleted that answer is gone. It also means a pack that
+            // fails to download leaves the instance untouched.
+            let resolved = resolve_pack(
+                location,
+                &instance_id,
+                DownloadReason::Modpack,
+                &reporter,
+            )
+            .await?;
+            let delta = Arc::new(match &resolved {
+                ResolvedPack::Mrpack(create_pack) => {
+                    plan_pack_delta(&instance_id, &create_pack.file, state)
+                        .await
+                }
+                ResolvedPack::Curseforge { .. } => PackDelta::default(),
+            });
+            if !delta.is_empty() {
+                tracing::info!(
+                    "Reusing {} file(s) ({} bytes) already installed in \
+                     instance {instance_id} instead of downloading them again",
+                    delta.kept_files(),
+                    delta.kept_bytes(),
+                );
+            }
             let disabled_project_ids = remove_existing_pack_content(
                 job_id,
                 job_state,
                 state,
                 &instance_id,
+                &delta,
             )
             .await?;
-            Box::pin(install_pack(
-                job_id,
-                job_state,
-                location,
-                instance_id.clone(),
+            Box::pin(install_resolved_pack(
+                resolved,
+                &instance_id,
                 DownloadReason::Modpack,
+                reporter,
+                Arc::clone(&delta),
             ))
             .await?;
             restore_disabled_projects(
@@ -1164,6 +1195,7 @@ async fn remove_existing_pack_content(
     job_state: &InstallJobState,
     state: &State,
     instance_id: &str,
+    delta: &PackDelta,
 ) -> crate::Result<HashSet<String>> {
     let metadata = crate::state::instances::commands::get_instance_metadata(
         instance_id,
@@ -1188,6 +1220,7 @@ async fn remove_existing_pack_content(
                 instance_id,
                 &metadata,
                 state,
+                delta,
             )
             .await?;
             return Ok(HashSet::new());
@@ -1219,6 +1252,7 @@ async fn remove_existing_pack_content(
     crate::api::pack::install_mrpack::remove_all_related_files(
         instance_id.to_string(),
         old_pack.file,
+        delta,
     )
     .await?;
 
@@ -1229,6 +1263,7 @@ async fn remove_existing_imported_pack_content(
     instance_id: &str,
     metadata: &crate::state::InstanceMetadata,
     state: &State,
+    delta: &PackDelta,
 ) -> crate::Result<()> {
     let _content_lock = state.lock_instance_content(instance_id).await;
     let entries = content_rows::get_content_entries(
@@ -1266,6 +1301,11 @@ async fn remove_existing_imported_pack_content(
         let Some(file) = files.get(&file_id) else {
             continue;
         };
+        // Kept because the incoming pack asks for these exact bytes at this
+        // exact path; its content rows are rewritten as the install proceeds.
+        if delta.keeps(&file.relative_path) {
+            continue;
+        }
         crate::util::io::remove_file(base.join(&file.relative_path)).await?;
         let mut tx = state.pool.begin().await?;
         content_rows::remove_content_entries_for_file(
@@ -1318,14 +1358,25 @@ async fn restore_disabled_projects(
     Ok(())
 }
 
-pub(super) async fn install_pack(
-    job_id: Uuid,
-    job_state: &mut InstallJobState,
+/// A modpack archive that has been fetched but not yet applied.
+///
+/// Holding the two kinds apart is what lets an update look inside the incoming
+/// pack — and work out what it already has — before it starts deleting the
+/// version it is replacing.
+pub(super) enum ResolvedPack {
+    Mrpack(Box<CreatePack>),
+    Curseforge {
+        bytes: bytes::Bytes,
+        api_key: String,
+    },
+}
+
+pub(super) async fn resolve_pack(
     location: CreatePackLocation,
-    instance_id: String,
+    instance_id: &str,
     reason: DownloadReason,
-) -> crate::Result<()> {
-    let reporter = InstallProgressReporter::new(job_id, job_state.clone());
+    reporter: &InstallProgressReporter,
+) -> crate::Result<ResolvedPack> {
     reporter
         .update(
             InstallPhaseId::DownloadingPackFile,
@@ -1354,7 +1405,7 @@ pub(super) async fn install_pack(
                 version_id,
                 title,
                 icon_url,
-                instance_id.clone(),
+                instance_id.to_string(),
                 reason,
                 reporter.clone(),
             )
@@ -1389,29 +1440,67 @@ pub(super) async fn install_pack(
                     })?;
                 let bytes =
                     bytes::Bytes::from(crate::util::io::read(&path).await?);
-                install_curseforge_pack_files_with_reporter(
-                    bytes,
-                    &api_key,
-                    &instance_id,
-                    reason,
-                    reporter,
-                )
-                .await?;
-                return Ok(());
+                return Ok(ResolvedPack::Curseforge { bytes, api_key });
             }
-            generate_pack_from_file(path, instance_id.clone()).await?
+            generate_pack_from_file(path, instance_id.to_string()).await?
         }
     };
 
-    Box::pin(install_zipped_mrpack_files_with_reporter(
-        create_pack,
-        false,
-        reason,
-        reporter,
-    ))
-    .await?;
+    Ok(ResolvedPack::Mrpack(Box::new(create_pack)))
+}
+
+pub(super) async fn install_resolved_pack(
+    resolved: ResolvedPack,
+    instance_id: &str,
+    reason: DownloadReason,
+    reporter: InstallProgressReporter,
+    delta: Arc<PackDelta>,
+) -> crate::Result<()> {
+    match resolved {
+        ResolvedPack::Curseforge { bytes, api_key } => {
+            install_curseforge_pack_files_with_reporter(
+                bytes,
+                &api_key,
+                instance_id,
+                reason,
+                reporter,
+            )
+            .await?;
+        }
+        ResolvedPack::Mrpack(create_pack) => {
+            Box::pin(install_zipped_mrpack_files_with_reporter(
+                *create_pack,
+                false,
+                reason,
+                reporter,
+                delta,
+            ))
+            .await?;
+        }
+    }
 
     Ok(())
+}
+
+pub(super) async fn install_pack(
+    job_id: Uuid,
+    job_state: &mut InstallJobState,
+    location: CreatePackLocation,
+    instance_id: String,
+    reason: DownloadReason,
+) -> crate::Result<()> {
+    let reporter = InstallProgressReporter::new(job_id, job_state.clone());
+    let resolved =
+        resolve_pack(location, &instance_id, reason, &reporter).await?;
+    // A fresh install has nothing already on disk to compare against.
+    install_resolved_pack(
+        resolved,
+        &instance_id,
+        reason,
+        reporter,
+        Arc::new(PackDelta::default()),
+    )
+    .await
 }
 
 async fn prepare_existing_rollback(

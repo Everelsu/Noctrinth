@@ -1,14 +1,13 @@
-import 'floating-vue/dist/style.css'
 import 'overlayscrollbars/overlayscrollbars.css'
 
+import { installTooltipDirective } from '@modrinth/ui'
 import { VueQueryPlugin } from '@tanstack/vue-query'
-import FloatingVue from 'floating-vue'
 import { createApp } from 'vue'
 
 import App from '@/App.vue'
 import { overlayScrollbarsDirective } from '@/directives/overlayScrollbars'
 import { setupErrorReporting } from '@/helpers/error-reporting'
-import { installPopperCleanup } from '@/helpers/noctrinth-popper-cleanup'
+import { installTooltipCleanup } from '@/helpers/noctrinth-tooltip-cleanup'
 import { debugStartup, traceStartupStep } from '@/helpers/startup-debug'
 import i18nPlugin from '@/plugins/i18n'
 import i18nDebugPlugin from '@/plugins/i18n-debug'
@@ -23,26 +22,13 @@ app.use(router)
 if (import.meta.env.DEV) {
 	void traceStartupStep('Initial router readiness', () => router.isReady()).catch(() => {})
 }
-app.use(FloatingVue, {
-	themes: {
-		'ribbit-popout': {
-			$extend: 'dropdown',
-			placement: 'bottom-end',
-			instantMove: true,
-			distance: 8,
-		},
-		'dismissable-prompt': {
-			$extend: 'dropdown',
-			placement: 'bottom-start',
-		},
-	},
-})
 app.use(i18nPlugin)
 app.use(i18nDebugPlugin)
+installTooltipDirective(app)
 
-// Tooltips that were never told to hide, because what they belonged to went
-// away while the pointer was still on it.
-installPopperCleanup(router)
+// Tooltips that were never told to hide, because the window lost focus or the
+// pointer left it while one was up.
+installTooltipCleanup(router)
 app.directive('overlay-scrollbars', overlayScrollbarsDirective)
 
 async function mount() {

@@ -1651,7 +1651,6 @@ onBeforeUnmount(() => {
 			<Button
 				v-tooltip="formatMessage(commonMessages.clearButton)"
 				type="quiet"
-				:aria-label="formatMessage(commonMessages.clearButton)"
 				:disabled="bulkBusy"
 				@click="clearSelection"
 			>
@@ -1663,7 +1662,6 @@ onBeforeUnmount(() => {
 			<Button
 				v-tooltip="formatMessage(messages.newGroup)"
 				type="quiet"
-				:aria-label="formatMessage(messages.newGroup)"
 				:disabled="bulkBusy"
 				@click="createCustomGroup"
 			>
@@ -1674,7 +1672,6 @@ onBeforeUnmount(() => {
 				v-if="selectedGroupedScreenshots.length > 0"
 				v-tooltip="formatMessage(messages.removeFromGroup)"
 				type="quiet"
-				:aria-label="formatMessage(messages.removeFromGroup)"
 				:disabled="bulkBusy"
 				@click="removeSelectedScreenshotsFromGroups"
 			>
@@ -1684,7 +1681,6 @@ onBeforeUnmount(() => {
 			<Button
 				v-tooltip="formatMessage(messages.exportZip)"
 				type="quiet"
-				:aria-label="formatMessage(messages.exportZip)"
 				:disabled="bulkBusy"
 				@click="exportSelected"
 			>
@@ -1697,7 +1693,6 @@ onBeforeUnmount(() => {
 				type="quiet"
 				color="red"
 				interaction="filled"
-				:aria-label="formatMessage(commonMessages.deleteLabel)"
 				:disabled="bulkBusy"
 				@click="bulkDeleteModal?.show()"
 			>

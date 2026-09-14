@@ -35,6 +35,13 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.20.5',
+		date: '2026-09-14T00:00:00+00:00',
+		body: `### Changed
+- Synced with upstream Modrinth (0.20.4 → 0.20.5). Tooltips are its own work now, in place of the library it had been using: they wait before appearing, do not re-open when you sweep past a neighbouring one, move between positions instead of jumping, and take a moment to close. Focus no longer escapes an open dialog, and the action bar in the modpack content modal stops drawing underneath it.
+- The fork's cure for tooltips that would not go away was rebuilt on what replaced the library it was written against. The case it handled best — something unmounted while its tooltip is up — upstream now handles in the tooltip itself, which is the better place for it. What stays here are the three moments a tooltip cannot see: the window losing focus, the pointer leaving the window rather than moving to something inside it, and a navigation past an element that outlives the route it was on.`,
+	},
+	{
 		version: '0.20.4',
 		date: '2026-09-13T00:00:00+00:00',
 		body: `### Added

@@ -717,14 +717,19 @@ const projectEnvironmentModal = useTemplateRef('projectEnvironmentModal')
 
 const baseId = useId()
 
-const serverProject = computed(() => ({
-	name: project.value.title,
-	slug: project.value.slug || project.value.id,
-	numPlayers: projectV3.value?.minecraft_java_server?.ping?.data?.players_online,
-	icon: project.value.icon_url,
-	statusOnline: !!projectV3.value?.minecraft_java_server?.ping?.data,
-	region: projectV3.value?.minecraft_server?.region,
-}))
+const serverProject = computed(() => {
+	if (!project.value) {
+		return undefined
+	}
+	return {
+		name: project.value.title,
+		slug: project.value.slug || project.value.id,
+		numPlayers: projectV3.value?.minecraft_java_server?.ping?.data?.players_online,
+		icon: project.value.icon_url,
+		statusOnline: !!projectV3.value?.minecraft_java_server?.ping?.data,
+		region: projectV3.value?.minecraft_server?.region,
+	}
+})
 
 function handlePlayServerProject() {
 	openInAppModal.value?.show({
@@ -956,21 +961,25 @@ const { data: projectCheck, error: projectCheckError } = useQuery({
 
 const projectId = computed(() => projectCheck.value?.id)
 
+function showProjectLoadError(error) {
+	const status = error.statusCode ?? error.status ?? 500
+	showError({
+		fatal: true,
+		statusCode: status,
+		message:
+			status === 404
+				? formatMessage(messages.projectNotFound)
+				: formatMessage(messages.errorLoadingProject, {
+						message: error.message ? `: ${error.message}` : '',
+					}),
+	})
+}
+
 watch(
 	projectCheckError,
 	(error) => {
 		if (error) {
-			const status = error.statusCode ?? error.status ?? 500
-			showError({
-				fatal: true,
-				statusCode: status,
-				message:
-					status === 404
-						? formatMessage(messages.projectNotFound)
-						: formatMessage(messages.errorLoadingProject, {
-								message: error.message ? `: ${error.message}` : '',
-							}),
-			})
+			showProjectLoadError(error)
 		}
 	},
 	{ immediate: true },
@@ -984,23 +993,11 @@ const { data: projectRaw, error: projectV2Error } = useQuery({
 	enabled: computed(() => !!projectId.value),
 })
 
-// Handle project not found - use showError since watch runs outside Nuxt context
 watch(
 	projectV2Error,
 	(error) => {
 		if (error) {
-			// error.statusCode from ModrinthApiError, error.status as fallback
-			const status = error.statusCode ?? error.status ?? 500
-			showError({
-				fatal: true,
-				statusCode: status,
-				message:
-					status === 404
-						? formatMessage(messages.projectNotFound)
-						: formatMessage(messages.errorLoadingProject, {
-								message: error.message ? `: ${error.message}` : '',
-							}),
-			})
+			showProjectLoadError(error)
 		}
 	},
 	{ immediate: true },
@@ -2285,7 +2282,10 @@ async function copyPermalink() {
 	await navigator.clipboard.writeText(`${config.public.siteUrl}/project/${project.value.id}`)
 }
 
-const collapsedChecklist = useLocalStorage(`project-checklist-collapsed-${project.value.id}`, false)
+const collapsedChecklist = useLocalStorage(
+	computed(() => `project-checklist-collapsed-${projectId.value ?? ''}`),
+	false,
+)
 
 const showModerationChecklist = ref(false)
 const collapsedModerationChecklist = useLocalStorage('collapsed-moderation-checklist', false)
@@ -2410,6 +2410,8 @@ function handleKeybinds(event) {
 }
 
 const navLinks = computed(() => {
+	if (!project.value) return []
+
 	const routeType = route.params.type || project.value.project_type
 	const projectUrl = `/${routeType}/${project.value.slug ? project.value.slug : project.value.id}`
 

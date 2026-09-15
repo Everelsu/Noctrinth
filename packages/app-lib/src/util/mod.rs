@@ -1,5 +1,6 @@
 //! Theseus utility functions
 pub mod authlib_injector;
+pub(crate) mod content_hash;
 pub mod fetch;
 pub mod io;
 pub mod jre;

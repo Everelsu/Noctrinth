@@ -35,6 +35,15 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.21.2',
+		date: '2026-09-15T00:00:00+00:00',
+		body: `### Changed
+- Synced with upstream Modrinth (0.20.5 → 0.21.2), which rebuilt how content files are kept. Every mod, pack and archive the launcher downloads now lives once in a shared store, and an instance points at that copy rather than holding one of its own — so the same mod in five instances costs the disk what one does. There is a Content storage section in Resource management showing what is unique, what is shared and what nothing uses any more, with a size limit, a clear button and a check-and-repair pass for files that went missing or bad. Installs got a download manager with speeds, time remaining and pause, resume and cancel.
+- The fork's own store of downloaded files is gone, and so is the reuse it did when a modpack changed version. Both existed because an update deleted every file the old pack listed and downloaded the whole new one back; upstream now answers the same question and answers it further. A file the store already holds is placed into an instance by reflink or hard link where the filesystem allows one, so an unchanged mod costs neither bandwidth nor disk, where the fork's version still copied it. What it kept was limited to a size this fork picked and never shared between instances.
+- Downloads no longer stage through a directory of the fork's own. Upstream stages inside its store, which is under the launcher's folder for the same reason the fork's was, and clears out what an interrupted run leaves behind.
+- A file dragged into an instance under a name the filesystem cannot take is now refused rather than quietly renamed. That is upstream's rule, applied where content arrives; a modpack's own files are still cleaned up on the way in, so a CurseForge pack carrying such a name installs as before.`,
+	},
+	{
 		version: '0.20.5',
 		date: '2026-09-14T00:00:00+00:00',
 		body: `### Changed

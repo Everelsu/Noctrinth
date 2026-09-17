@@ -35,6 +35,17 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.21.4',
+		date: '2026-09-17T00:00:00+00:00',
+		body: `### Changed
+- Synced with upstream Modrinth (0.21.2 → 0.21.4), two rounds of fixes to the store that arrived with 0.21.2.
+- An instance holds its own copy of a file again. The last release said the shared store points several instances at one copy where the filesystem allows it; upstream has turned that off for now, because a couple of mods did not take being opened through a link. Nothing about the store changes otherwise — a mod is still downloaded once — but the disk it saved between instances comes back until upstream puts linking back.
+- Minecraft's own libraries are checked on launch, so a file that went missing or arrived damaged is caught before the game does something inexplicable with it. The same check no longer runs against the content store on every launch, which is what was stopping some people from starting the game at all.
+
+### Fixed
+- Sliders snap where they look like they should, and stop drifting a step when dragged.`,
+	},
+	{
 		version: '0.21.2',
 		date: '2026-09-15T00:00:00+00:00',
 		body: `### Changed

@@ -799,12 +799,12 @@ impl<'a> InstanceContent<'a> {
             // A CurseForge file carries CurseForge's numeric ids here, and
             // they are not Modrinth's — caching it as a Modrinth file would
             // poison the hash cache with ids that mean something else.
-            origin
-                .filter(|_| !source_kind.has_curseforge_ids())
-                .map(|origin| KnownModrinthFile {
+            origin.filter(|_| !source_kind.has_curseforge_ids()).map(
+                |origin| KnownModrinthFile {
                     project_id: &origin.0,
                     version_id: &origin.1,
-                }),
+                },
+            ),
             &self.state.pool,
         )
         .await

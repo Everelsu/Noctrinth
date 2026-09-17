@@ -74,9 +74,6 @@ jobs:
   rust:
     name: App Rust check
     runs-on: ubuntu-latest
-    env:
-      # Make `cargo test` treat crates without tests as a pass rather than an error.
-      NEXTEST_NO_TESTS: pass
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -100,21 +97,12 @@ jobs:
         with:
           workspaces: '. -> target'
 
-      # app-lib reads Modrinth endpoint URLs at compile time via env!(). The
-      # staging template supplies safe placeholder values for those — but it
-      # does NOT include MODRINTH_OAUTH_CLIENT_ID/SECRET (those are injected
-      # from repo secrets only in the release workflow). env!() requires the
-      # variable to be *declared*, even as an empty/dummy value, or the crate
-      # fails to compile — so append harmless placeholders here. CI only
-      # compiles the crate; it never performs a real OAuth flow, so these
-      # never need to be real credentials.
+      # app-lib reads Modrinth's endpoint URLs at compile time through env!(),
+      # which fails the build if one is not declared. The staging template
+      # declares every one of them, and points them at staging, which is where
+      # a build that is only ever type-checked should be pointed anyway.
       - name: Prepare app-lib environment
-        run: |
-          cp packages/app-lib/.env.staging packages/app-lib/.env
-          cat >> packages/app-lib/.env <<'EOF'
-          MODRINTH_OAUTH_CLIENT_ID=ci-placeholder
-          MODRINTH_OAUTH_CLIENT_SECRET=ci-placeholder
-          EOF
+        run: cp packages/app-lib/.env.staging packages/app-lib/.env
 
       # Tauri's build.rs requires the frontendDist directory to exist. A stub
       # index.html satisfies it so the Rust can be type-checked without first

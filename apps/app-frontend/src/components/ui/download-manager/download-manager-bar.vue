@@ -51,7 +51,7 @@ const appearance = computed(() => {
 		return {
 			icon: 'complete',
 			borderClass: 'border-brand',
-			backgroundColor: 'var(--color-green-highlight)',
+			backgroundColor: 'var(--color-brand-highlight)',
 			highlighted: true,
 		}
 	}
@@ -332,7 +332,7 @@ defineExpose({ focus: () => trigger.value?.focus() })
 						class="absolute inset-y-0 left-0 grid h-5 place-items-center overflow-hidden rounded-full border border-solid border-brand text-xs font-medium leading-4 text-brand tabular-nums"
 						:style="{
 							width: `${countWidth}px`,
-							backgroundColor: 'var(--color-green-highlight)',
+							backgroundColor: 'var(--color-brand-highlight)',
 						}"
 						:initial="false"
 						:animate="{ scale: countPulse ? 1.08 : 1 }"

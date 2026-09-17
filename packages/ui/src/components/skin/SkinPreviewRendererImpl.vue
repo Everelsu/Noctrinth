@@ -75,9 +75,9 @@
 
 			<Suspense>
 				<TresMesh
-					:position="spotlightPosition"
+					:position="animatedSpotlightPosition"
 					:rotation="[-Math.PI / 2, 0, 0]"
-					:scale="spotlightScale"
+					:scale="animatedSpotlightScale"
 				>
 					<TresCircleGeometry :args="[1, 128]" />
 					<TresShaderMaterial v-bind="radialSpotlightShader" />
@@ -392,6 +392,27 @@ const animatedModelGroupScale = computed<SkinPreviewTuple>(() => {
 	const [x, y, z] = modelGroupScale.value
 	const zoom = modelZoom.value
 	return [x * clickImpulseScaleX.value * zoom, y * clickImpulseScaleY.value * zoom, z * zoom]
+})
+
+// The shadow is a sibling of the model rather than a child of it, so none of
+// the movement above reaches it on its own: zoom in and it stayed the size it
+// was, nudge the model sideways on a click and it stayed where it was. It
+// follows the same values here, minus the two that would lift it off the floor
+// — a shadow that pitched with the model, or turned with it, would stop looking
+// like one.
+const animatedSpotlightPosition = computed<SkinPreviewTuple>(() => {
+	const [x, y, z] = spotlightPosition.value
+	// The model is centred on the group's origin, so squashing it vertically
+	// draws the feet up towards that centre, and the shadow with them.
+	return [x + clickImpulseOffsetX.value, y * clickImpulseScaleY.value * modelZoom.value, z]
+})
+
+const animatedSpotlightScale = computed<SkinPreviewTuple>(() => {
+	const [x, y, z] = spotlightScale.value
+	const zoom = modelZoom.value
+	// A circle lying in its own XY plane, turned to face up: its Y is the
+	// floor's Z, so only its X takes the horizontal squash.
+	return [x * clickImpulseScaleX.value * zoom, y * zoom, z * zoom]
 })
 
 defineExpose({

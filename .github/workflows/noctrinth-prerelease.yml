@@ -14,19 +14,19 @@ name: Noctrinth Pre-release
 # so a tester on a beta is offered the stable 0.17.4 as soon as it ships.
 #
 # Release flow:
-#   1. Set a pre-release version in apps/app-frontend/package.json — it must
-#      carry a suffix, e.g. `0.17.4-beta.1` or `0.17.4-rc.2`. This is the
-#      single source of truth; the crate versions and the release name are
-#      derived from it.
+#   1. Set a pre-release version in VERSION at the repo root — it must carry a
+#      suffix, e.g. `0.17.4-beta.1` or `0.17.4-rc.2`. This is the single
+#      source of truth; `scripts/sync-version.mjs` mirrors it into package.json
+#      and the crate versions, and the release name is derived from it.
 #   2. Commit, then push a matching tag, e.g.
 #        git tag noctrinth-v0.17.4-beta.1 && git push origin noctrinth-v0.17.4-beta.1
 #      Either `v0.17.4-beta.1` or `noctrinth-v0.17.4-beta.1` triggers this
 #      workflow; the tag name is only a label, the built version always comes
-#      from package.json.
+#      from VERSION.
 #   3. This workflow builds every OS and creates a DRAFT release flagged as a
 #      pre-release. Review it, then publish.
-#   4. When the stable release is ready, drop the suffix from package.json and
-#      use the Noctrinth Release workflow instead.
+#   4. When the stable release is ready, drop the suffix from VERSION and use
+#      the Noctrinth Release workflow instead.
 #
 # Required repository secrets: the same set as noctrinth-release.yml.
 
@@ -152,7 +152,7 @@ jobs:
         shell: bash
         run: |
           # Guards the mistake this split invites: tagging `-beta.1` while
-          # package.json still holds a stable version would build and publish a
+          # VERSION still holds a stable version would build and publish a
           # normal release under a pre-release tag.
           # VERSION may carry the build number of a rebuild after a `+`; the
           # release number is the part in front of it.
@@ -161,7 +161,7 @@ jobs:
           case "$VERSION" in
             *-*) echo "Building pre-release version $VERSION" ;;
             *)
-              echo "::error::apps/app-frontend/package.json is at stable version $VERSION. Give it a pre-release suffix (e.g. $VERSION-beta.1), or use the Noctrinth Release workflow."
+              echo "::error::VERSION is at stable version $VERSION. Give it a pre-release suffix (e.g. $VERSION-beta.1), or use the Noctrinth Release workflow."
               exit 1
               ;;
           esac
@@ -214,8 +214,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # Match the changelog entry by the package.json version, the same
-          # source the crate versions came from — independent of the tag name.
+          # Match the changelog entry by the VERSION file, the same source the
+          # crate versions came from — independent of the tag name.
           # VERSION may carry the build number of a rebuild after a `+`; the
           # release number is the part in front of it.
           VERSION=$(tr -d "[:space:]" < VERSION)

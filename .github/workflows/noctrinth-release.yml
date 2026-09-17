@@ -5,12 +5,13 @@ name: Noctrinth Release
 # generated `latest.json` from the latest published release.
 #
 # Release flow:
-#   1. Bump the version in apps/app-frontend/package.json (the single source of
-#      truth — the crate versions and release name are derived from it).
+#   1. Bump the version in VERSION at the repo root (the single source of
+#      truth — `scripts/sync-version.mjs` mirrors it into package.json and the
+#      crate versions, and the release name is derived from it).
 #   2. Commit, then push a matching tag, e.g.
 #        git tag v0.17.3 && git push origin v0.17.3
 #      Either `v0.17.3` or `noctrinth-v0.17.3` triggers a release; the tag
-#      name is only a label, the built version always comes from package.json.
+#      name is only a label, the built version always comes from VERSION.
 #   3. This workflow builds every OS, creates a DRAFT release, uploads the
 #      bundles + latest.json. Review it, then publish the draft — updates go
 #      live for existing installs once the release is published.
@@ -323,8 +324,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # Match the changelog entry by the package.json version, the same
-          # source the crate versions came from — independent of the tag name.
+          # Match the changelog entry by the VERSION file, the same source the
+          # crate versions came from — independent of the tag name.
           # VERSION may carry the build number of a rebuild after a `+`; the
           # release number is the part in front of it.
           VERSION=$(tr -d "[:space:]" < VERSION)

@@ -142,13 +142,35 @@ fn is_really(launcher: ImportLauncherType, path: &Path) -> bool {
     }
 }
 
+/// What two paths have to agree on to be the same folder.
+///
+/// Comparing the paths themselves is not enough: the names a launcher is looked
+/// for under differ in case (`curseforge` and `CurseForge`, `MultiMC` and
+/// `multimc`), and on Windows and macOS those find the one folder twice.
+/// Resolving each one settles case, `..`, symlinks and junctions in one go, and
+/// leaves the extended-length prefix off where it can.
+fn same_folder_as(path: &Path) -> PathBuf {
+    crate::util::io::canonicalize(path).unwrap_or_else(|_| path.to_path_buf())
+}
+
 /// Everywhere this launcher was found, most likely first.
 pub fn find_all(launcher: ImportLauncherType) -> Vec<PathBuf> {
     let mut found = Vec::new();
+    // The path offered is the one it was found under, which reads better than
+    // whatever resolving it produces; only the comparison is resolved.
+    let mut seen: Vec<PathBuf> = Vec::new();
     let mut push = |path: PathBuf| {
-        if is_really(launcher, &path) && !found.contains(&path) {
-            found.push(path);
+        if !is_really(launcher, &path) {
+            return;
         }
+
+        let resolved = same_folder_as(&path);
+        if seen.contains(&resolved) {
+            return;
+        }
+
+        seen.push(resolved);
+        found.push(path);
     };
 
     // The places the launcher's own installer puts it come first, because they
@@ -249,5 +271,35 @@ mod tests {
     #[test]
     fn there_is_somewhere_to_look() {
         assert!(!roots().is_empty());
+    }
+
+    /// The names a launcher is looked for under differ only in case, so on a
+    /// filesystem that does not care about case every one of them finds the
+    /// same folder — and it was being offered once per name.
+    #[test]
+    fn one_folder_is_offered_once_however_it_is_spelled() {
+        let folder = std::env::temp_dir().join("noctrinth-one-multimc");
+        let _ = std::fs::remove_dir_all(&folder);
+        std::fs::create_dir_all(&folder).unwrap();
+        std::fs::write(folder.join("multimc.cfg"), "").unwrap();
+
+        let spellings = [
+            folder.clone(),
+            folder.join(".").join("..").join("noctrinth-one-multimc"),
+        ];
+
+        let mut found = Vec::new();
+        let mut seen: Vec<PathBuf> = Vec::new();
+        for path in spellings {
+            let resolved = same_folder_as(&path);
+            if !seen.contains(&resolved) {
+                seen.push(resolved);
+                found.push(path);
+            }
+        }
+
+        assert_eq!(found.len(), 1, "found {found:?}");
+
+        let _ = std::fs::remove_dir_all(&folder);
     }
 }

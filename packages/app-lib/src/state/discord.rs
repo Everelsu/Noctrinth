@@ -1,21 +1,32 @@
-use std::sync::{Arc, atomic::AtomicBool};
+use std::sync::mpsc;
 
 use discord_rich_presence::{
     DiscordIpc, DiscordIpcClient,
     activity::{Activity, Assets},
 };
-use tokio::sync::RwLock;
 
 use crate::State;
 
+enum Presence {
+    Activity {
+        text: String,
+        reconnect_if_fail: bool,
+    },
+    Clear,
+}
+
+/// Talks to Discord from a thread of its own. Every call into
+/// `discord-rich-presence` is a blocking read on the IPC pipe with no timeout,
+/// and a Discord that accepts the pipe but never answers the handshake holds
+/// that read forever — so nothing here is ever awaited: callers queue what the
+/// presence should be and move on, and a stuck pipe only stalls the presence.
 pub struct DiscordGuard {
-    client: Arc<RwLock<DiscordIpcClient>>,
-    connected: Arc<AtomicBool>,
+    sender: mpsc::Sender<Presence>,
 }
 
 impl DiscordGuard {
-    /// Initialize discord IPC client, and attempt to connect to it
-    /// If it fails, it will still return a DiscordGuard, but the client will be unconnected
+    /// Starts the Discord thread. It connects on the first activity it is
+    /// given, and never just to clear one.
     pub fn init() -> crate::Result<DiscordGuard> {
         // Noctrinth's own Discord application, registered at
         // https://discord.com/developers/applications — not Modrinth's, which
@@ -25,106 +36,33 @@ impl DiscordGuard {
         // below is a key into that application's Rich Presence → Art Assets,
         // not a file in this repository, and a key with nothing uploaded under
         // it draws no picture at all rather than failing in any visible way.
-        let dipc = DiscordIpcClient::new("1505548256585846974");
+        let client = DiscordIpcClient::new("1505548256585846974");
 
-        Ok(DiscordGuard {
-            client: Arc::new(RwLock::new(dipc)),
-            connected: Arc::new(AtomicBool::new(false)),
-        })
+        let (sender, receiver) = mpsc::channel();
+        std::thread::Builder::new()
+            .name("discord-rpc".into())
+            .spawn(move || run(client, receiver))?;
+
+        Ok(DiscordGuard { sender })
     }
 
-    /// If the client failed connecting during init(), this will check for connection and attempt to reconnect
-    /// This MUST be called first in any client method that requires a connection, because those can PANIC if the client is not connected
-    /// (No connection is different than a failed connection, the latter will not panic and can be retried)
-    pub async fn retry_if_not_ready(&self) -> bool {
-        let mut client = self.client.write().await;
-        if !self.connected.load(std::sync::atomic::Ordering::Relaxed) {
-            if client.connect().is_ok() {
-                self.connected
-                    .store(true, std::sync::atomic::Ordering::Relaxed);
-                return true;
-            }
-            return false;
-        }
-        true
-    }
-
-    /// Set the activity to the given message
-    /// First checks if discord is disabled, and if so, clear the activity instead
+    /// Set the activity to the given message, or clear it if Discord RPC is
+    /// disabled in the settings
     pub async fn set_activity(
         &self,
         msg: &str,
         reconnect_if_fail: bool,
     ) -> crate::Result<()> {
-        // Check if discord is disabled, and if so, clear the activity instead
         let state = State::get().await?;
         let settings = crate::state::Settings::get(&state.pool).await?;
-        if !settings.discord_rpc {
-            Ok(self.clear_activity(true).await?)
-        } else {
-            Ok(self.force_set_activity(msg, reconnect_if_fail).await?)
-        }
-    }
-
-    /// Sets the activity to the given message, regardless of if discord is disabled or offline
-    /// Should not be used except for in the above method, or if it is already known that discord is enabled (specifically for state initialization) and we are connected to the internet
-    pub async fn force_set_activity(
-        &self,
-        msg: &str,
-        reconnect_if_fail: bool,
-    ) -> crate::Result<()> {
-        // Attempt to connect if not connected. Do not continue if it fails, as the client.set_activity can panic if it never was connected
-        if !self.retry_if_not_ready().await {
-            return Ok(());
-        }
-
-        let activity = Activity::new().state(msg).assets(
-            Assets::new()
-                .large_image("noctrinth_simple")
-                .large_text("Noctrinth"),
-        );
-
-        // Attempt to set the activity
-        // If the existing connection fails, attempt to reconnect and try again
-        let mut client: tokio::sync::RwLockWriteGuard<'_, DiscordIpcClient> =
-            self.client.write().await;
-        let res = client.set_activity(activity.clone());
-
-        if reconnect_if_fail {
-            if let Err(_e) = res {
-                client.reconnect()?;
-                return Ok(client.set_activity(activity)?); // try again, but don't reconnect if it fails again
+        let _ = self.sender.send(if settings.discord_rpc {
+            Presence::Activity {
+                text: msg.to_string(),
+                reconnect_if_fail,
             }
         } else {
-            res?;
-        }
-
-        Ok(())
-    }
-
-    /// Clear the activity entirely ('disabling' the RPC until the next set_activity)
-    pub async fn clear_activity(
-        &self,
-        reconnect_if_fail: bool,
-    ) -> crate::Result<()> {
-        // Attempt to connect if not connected. Do not continue if it fails, as the client.clear_activity can panic if it never was connected
-        if !self.retry_if_not_ready().await {
-            return Ok(());
-        }
-
-        // Attempt to clear the activity
-        // If the existing connection fails, attempt to reconnect and try again
-        let mut client = self.client.write().await;
-        let res = client.clear_activity();
-
-        if reconnect_if_fail {
-            if res.is_err() {
-                client.reconnect()?;
-                return Ok(client.clear_activity()?); // try again, but don't reconnect if it fails again
-            }
-        } else {
-            res?;
-        }
+            Presence::Clear
+        });
         Ok(())
     }
 
@@ -134,23 +72,58 @@ impl DiscordGuard {
         reconnect_if_fail: bool,
     ) -> crate::Result<()> {
         let state = State::get().await?;
-
-        let settings = crate::state::Settings::get(&state.pool).await?;
-        if !settings.discord_rpc {
-            println!("Discord is disabled, clearing activity");
-            return self.clear_activity(true).await;
-        }
-
         let running_instances = state.process_manager.get_all();
         if let Some(existing_child) = running_instances.first() {
             self.set_activity(
                 &format!("Playing {}", existing_child.instance_name),
                 reconnect_if_fail,
             )
-            .await?;
+            .await
         } else {
-            self.set_activity("Idling...", reconnect_if_fail).await?;
+            self.set_activity("Idling...", reconnect_if_fail).await
         }
-        Ok(())
+    }
+}
+
+fn run(mut client: DiscordIpcClient, receiver: mpsc::Receiver<Presence>) {
+    let mut connected = false;
+    while let Ok(mut presence) = receiver.recv() {
+        // Only the newest request matters once the thread has fallen behind.
+        while let Ok(newer) = receiver.try_recv() {
+            presence = newer;
+        }
+
+        match presence {
+            Presence::Activity {
+                text,
+                reconnect_if_fail,
+            } => {
+                // The client can panic when used without ever having connected.
+                if !connected {
+                    connected = client.connect().is_ok();
+                    if !connected {
+                        continue;
+                    }
+                }
+
+                let activity = Activity::new().state(&text).assets(
+                    Assets::new()
+                        .large_image("noctrinth_simple")
+                        .large_text("Noctrinth"),
+                );
+                if client.set_activity(activity.clone()).is_err()
+                    && reconnect_if_fail
+                {
+                    connected = client.reconnect().is_ok()
+                        && client.set_activity(activity).is_ok();
+                }
+            }
+            Presence::Clear => {
+                if connected && client.clear_activity().is_err() {
+                    connected = client.reconnect().is_ok()
+                        && client.clear_activity().is_ok();
+                }
+            }
+        }
     }
 }

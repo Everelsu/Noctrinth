@@ -35,6 +35,30 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.21.6',
+		date: '2026-09-28T00:00:00+00:00',
+		body: `### Added
+- Update all in an instance's Content tab opens a window where each project's new version can be picked and its changelog read before anything is installed.
+- A setting to bring the launcher back to the front when Minecraft closes, off by default.
+
+### Changed
+- Synced with upstream Modrinth (0.21.4 → 0.21.6).
+- Bulk updates run through the download manager, so the Content tab can be left while they install.
+- Profile pictures can be up to 512 KiB after compression, up from 256 KiB.
+
+### Fixed
+- "Database is locked" errors.
+- A modpack no longer stops updating after one of its files is renamed outside the launcher.
+- Very old instances whose folder names end in a dot or a space open again.
+- Instance pages load faster.
+- A locally installed loader no longer needs its metadata downloaded again on launch.
+- Symlinked screenshots no longer break the Screenshots page.
+- Alt Gr is no longer read as Left Ctrl in keybind inputs on Windows.
+- Duplicating an instance works again with command history syncing.
+- The download manager no longer always says it needs attention.
+- The close button turns red on hover.`,
+	},
+	{
 		version: '0.21.4',
 		date: '2026-09-17T00:00:00+00:00',
 		body: `### Changed

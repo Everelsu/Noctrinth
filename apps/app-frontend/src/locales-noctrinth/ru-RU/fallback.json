@@ -17,6 +17,12 @@
 	"app.appearance-settings.native-decorations.title": {
 		"message": "Системная рамка окна"
 	},
+	"app.behavior-settings.refocus-on-game-close.description": {
+		"message": "Выводить Noctrinth на передний план, когда Minecraft закрывается."
+	},
+	"app.behavior-settings.refocus-on-game-close.title": {
+		"message": "Возвращать фокус после закрытия Minecraft"
+	},
 	"app.behavior-settings.sync-across-devices.description": {
 		"message": "Использовать эти настройки поведения везде, где выполнен вход. Выключите, чтобы на этом устройстве были свои."
 	},
@@ -64,6 +70,9 @@
 	},
 	"app.download-manager.attention": {
 		"message": "Требует внимания"
+	},
+	"app.download-manager.bulk-update-content": {
+		"message": "Обновление {count, plural, one {# элемента} few {# элементов} many {# элементов} other {# элемента}}"
 	},
 	"app.download-manager.cancel": {
 		"message": "Отменить установку"
@@ -2447,6 +2456,12 @@
 	"content.metadata-filter.warnings": {
 		"message": "Предупреждения"
 	},
+	"content.page-layout.failed-to-load-changelog": {
+		"message": "Не удалось загрузить список изменений"
+	},
+	"content.page-layout.failed-to-load-updates": {
+		"message": "Не удалось загрузить доступные обновления"
+	},
 	"content.page-layout.filter.add": {
 		"message": "Фильтр"
 	},
@@ -3535,6 +3550,78 @@
 	},
 	"ui.pagination.previous-page": {
 		"message": "Предыдущая страница"
+	},
+	"update-all-modal.changelog-for": {
+		"message": "Список изменений {project}"
+	},
+	"update-all-modal.changelog-loaded": {
+		"message": "Список изменений загружен."
+	},
+	"update-all-modal.close-changelog": {
+		"message": "Закрыть список изменений"
+	},
+	"update-all-modal.current-version": {
+		"message": "Текущая версия"
+	},
+	"update-all-modal.empty": {
+		"message": "Обновлений нет."
+	},
+	"update-all-modal.header": {
+		"message": "Обновление проектов"
+	},
+	"update-all-modal.loading": {
+		"message": "Загрузка обновлений…"
+	},
+	"update-all-modal.loading-changelog": {
+		"message": "Загрузка списка изменений…"
+	},
+	"update-all-modal.new-version": {
+		"message": "Новая версия"
+	},
+	"update-all-modal.no-changelog": {
+		"message": "Для этой версии нет списка изменений."
+	},
+	"update-all-modal.no-compatible-updates": {
+		"message": "Совместимых обновлений нет."
+	},
+	"update-all-modal.no-version": {
+		"message": "Нет совместимых обновлений"
+	},
+	"update-all-modal.project": {
+		"message": "Проект"
+	},
+	"update-all-modal.project-list": {
+		"message": "Обновления проектов"
+	},
+	"update-all-modal.results": {
+		"message": "{count, plural, one {# проект готов к обновлению} few {# проекта готовы к обновлению} many {# проектов готовы к обновлению} other {# проекта готовы к обновлению}}"
+	},
+	"update-all-modal.select-all": {
+		"message": "Выбрать все проекты"
+	},
+	"update-all-modal.select-project": {
+		"message": "Выбрать {project} для обновления"
+	},
+	"update-all-modal.select-version": {
+		"message": "Новая версия {project}"
+	},
+	"update-all-modal.update": {
+		"message": "Обновить {count, plural, one {# проект} few {# проекта} many {# проектов} other {# проекта}}"
+	},
+	"update-all-modal.versions": {
+		"message": "Текущая версия / Новая версия"
+	},
+	"update-all-modal.view": {
+		"message": "Открыть"
+	},
+	"update-all-modal.view-changelog": {
+		"message": "Открыть список изменений {project}"
+	},
+	"update-all-modal.warning": {
+		"message": "Мы не можем гарантировать, что обновления безопасны для ваших миров. Просмотрите списки изменений и сделайте резервную копию."
+	},
+	"update-all-modal.warning-server": {
+		"message": "Мы не можем гарантировать, что обновления безопасны для вашего сервера. Просмотрите списки изменений и сделайте резервную копию."
 	},
 	"user.role.moderator": {
 		"message": "Модератор контента"

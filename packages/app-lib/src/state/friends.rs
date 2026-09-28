@@ -547,11 +547,20 @@ impl FriendsSocket {
             Either::Right(bytes) => Message::binary(bytes),
         };
 
-        let mut write_lock = write.write().await;
-        if let Some(ref mut write_half) = *write_lock {
-            write_half.send(serialized).await?;
-        }
-
-        Ok(())
+        // Launch and game exit wait on this, and a stalled connection never
+        // finishes a send on its own.
+        tokio::time::timeout(std::time::Duration::from_secs(10), async {
+            let mut write_lock = write.write().await;
+            if let Some(ref mut write_half) = *write_lock {
+                write_half.send(serialized).await?;
+            }
+            Ok::<_, crate::Error>(())
+        })
+        .await
+        .map_err(|_| {
+            ErrorKind::WSClosedError(
+                "Timed out sending to the friends socket".to_string(),
+            )
+        })?
     }
 }

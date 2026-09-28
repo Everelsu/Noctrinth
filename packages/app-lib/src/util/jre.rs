@@ -3,8 +3,8 @@ use crate::state::JavaVersion;
 use futures::prelude::*;
 use std::env;
 use std::path::PathBuf;
-use std::process::Command;
 use std::{collections::HashSet, path::Path};
+use tokio::process::Command;
 use tokio::task::JoinError;
 
 use crate::{State, get_resource_file};
@@ -274,12 +274,21 @@ pub async fn check_java_at_filepath(path: &Path) -> crate::Result<JavaVersion> {
     let (_temp, file_path) =
         get_resource_file!(env "JAVA_JARS_DIR" / "theseus.jar")?;
 
-    let output = Command::new(&java)
-        .arg("-cp")
-        .arg(file_path)
-        .arg("com.modrinth.theseus.JavaInfo")
-        .env_remove("_JAVA_OPTIONS")
-        .output()?;
+    // Checked on every launch, so a Java that never exits would hold the
+    // launch forever. A cold JVM behind an antivirus scan takes seconds, not
+    // this long.
+    let output = tokio::time::timeout(
+        std::time::Duration::from_secs(30),
+        Command::new(&java)
+            .arg("-cp")
+            .arg(file_path)
+            .arg("com.modrinth.theseus.JavaInfo")
+            .env_remove("_JAVA_OPTIONS")
+            .kill_on_drop(true)
+            .output(),
+    )
+    .await
+    .map_err(|_| JREError::FailedJavaCheck(java.clone()))??;
 
     let stdout = String::from_utf8_lossy(&output.stdout);
 

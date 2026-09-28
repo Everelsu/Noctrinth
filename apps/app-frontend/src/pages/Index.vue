@@ -98,7 +98,7 @@ function openPageContextMenu(event: MouseEvent) {
 		@contextmenu="openPageContextMenu"
 	>
 		<RecentWorldsList
-			v-if="recentInstances?.length > 0 && appSettings.getFeatureFlag('worlds_in_home')"
+			v-if="recentInstances?.length > 0 && appSettings.showJumpIn"
 			:recent-instances="recentInstances"
 		/>
 		<ModrinthMigrationBanner />

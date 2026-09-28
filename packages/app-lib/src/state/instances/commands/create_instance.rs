@@ -97,7 +97,7 @@ pub(crate) async fn create_instance(
         let launch_overrides =
             InstanceLaunchOverrides::empty(instance_id.clone());
 
-        let mut tx = state.pool.begin().await?;
+        let mut tx = state.pool.begin_with("BEGIN IMMEDIATE").await?;
         instance_rows::insert_instance(&instance, &mut tx).await?;
         instance_rows::insert_default_instance_sync_preferences(
             &instance_id,
@@ -269,8 +269,11 @@ fn content_source_kind(link: &InstanceLink) -> ContentSourceKind {
 }
 
 fn sanitize_instance_name(input: &str) -> String {
-    input.replace(
-        ['/', '\\', '?', '*', ':', '\'', '\"', '|', '<', '>', '!'],
-        "_",
-    )
+    input
+        .replace(
+            ['/', '\\', '?', '*', ':', '\'', '\"', '|', '<', '>', '!'],
+            "_",
+        )
+        .trim_end_matches(['.', ' '])
+        .to_string()
 }

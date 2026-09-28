@@ -166,7 +166,7 @@ const notificationManager = injectNotificationManager()
 const { formatMessage } = useVIntl()
 
 /** Matches the cap Modrinth enforces on `PATCH /user/:id/icon`. */
-const MAX_AVATAR_BYTES = 262144
+const MAX_AVATAR_BYTES = 524288
 /** Generous enough to stay sharp — the server rescales to 96px anyway. */
 const MAX_AVATAR_DIMENSION = 512
 /** Image formats the API will accept an extension for. */

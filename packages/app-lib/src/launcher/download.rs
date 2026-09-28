@@ -524,18 +524,34 @@ pub async fn download_version_info(
         .version_dir(&version_id)
         .join(format!("{version_id}.json"));
 
+    if let Some(loader) =
+        loader.filter(|loader| super::is_locally_installed_loader(loader))
+        && !path.exists()
+    {
+        return Err(crate::ErrorKind::LauncherError(format!(
+            "Loader version {} for Minecraft {} is no longer available",
+            loader.id, version.id
+        ))
+        .as_error());
+    }
+
     // A version cached before the launcher recorded which component each
     // library came from has to be rebuilt, or a version patch has no way to
-    // tell the game's libraries from the loader's.
-    let cached = if path.exists() && !force.unwrap_or(false) {
+    // tell the game's libraries from the loader's. A locally installed loader
+    // has nowhere to be rebuilt from, so its cache is taken as is.
+    let removed_loader = loader.is_some_and(super::is_locally_installed_loader);
+    let cached = if path.exists() && (!force.unwrap_or(false) || removed_loader)
+    {
         match io::read(&path).await {
             Ok(contents) => {
                 serde_json::from_slice::<GameVersionInfo>(&contents)
                     .ok()
                     .filter(|info| {
-                        info.libraries
-                            .iter()
-                            .all(|library| library.component.is_some())
+                        removed_loader
+                            || info
+                                .libraries
+                                .iter()
+                                .all(|library| library.component.is_some())
                     })
             }
             Err(_) => None,

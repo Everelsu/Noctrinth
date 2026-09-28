@@ -1,9 +1,9 @@
 use crate::database::models as db_models;
-use crate::database::models::categories::LinkPlatform;
 use crate::database::models::{project_item, version_item};
 use crate::database::{PgPool, ReadOnlyPgPool};
 use crate::file_hosting::FileHost;
 use crate::models::disclosures::ProjectDisclosureType;
+use crate::models::link_platform::LinkPlatform;
 use crate::models::projects::{
     Link, MonetizationStatus, Project, ProjectStatus, Version,
 };
@@ -20,6 +20,7 @@ use crate::util::error::Context as _;
 use actix_web::{HttpRequest, HttpResponse, delete, get, patch, post, web};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use strum::IntoEnumIterator;
 use validator::Validate;
 use xredis::RedisPool;
 
@@ -51,7 +52,7 @@ pub fn config(cfg: &mut actix_web::web::ServiceConfig) {
     );
 }
 
-/// Search projects.  
+/// Search projects.
 #[utoipa::path(
 	tag = "search",
     get,
@@ -174,7 +175,7 @@ pub struct RandomProjects {
     pub count: u32,
 }
 
-/// Get random projects.  
+/// Get random projects.
 #[utoipa::path(
 	tag = "projects",
     get,
@@ -222,7 +223,7 @@ pub async fn random_projects_get(
     }
 }
 
-/// Get multiple projects by ID or slug.  
+/// Get multiple projects by ID or slug.
 #[utoipa::path(
 	tag = "projects",
     get,
@@ -268,7 +269,7 @@ pub async fn projects_get(
     }
 }
 
-/// Get a project by ID or slug.  
+/// Get a project by ID or slug.
 #[utoipa::path(
 	context_path = "/project",
 	tag = "projects",
@@ -337,7 +338,7 @@ pub async fn project_get(
 }
 
 //checks the validity of a project id or slug
-/// Check that a project ID or slug exists.  
+/// Check that a project ID or slug exists.
 #[utoipa::path(
 	context_path = "/project",
 	tag = "projects",
@@ -372,7 +373,7 @@ struct DependencyInfo {
     pub versions: Vec<LegacyVersion>,
 }
 
-/// Get dependency projects and versions for a project.  
+/// Get dependency projects and versions for a project.
 #[utoipa::path(
 	context_path = "/project/{project_id}",
 	tag = "projects",
@@ -540,7 +541,7 @@ pub struct EditProject {
     pub monetization_status: Option<MonetizationStatus>,
 }
 
-/// Update a project.  
+/// Update a project.
 #[utoipa::path(
 	context_path = "/project",
 	tag = "projects",
@@ -624,17 +625,20 @@ pub async fn project_edit(
     // In v2, setting donation links resets all other donation links
     // (resetting to the new ones)
     if let Some(donation_urls) = v2_new_project.donation_urls {
+        crate::models::v2::projects::validate_donation_platforms(
+            &donation_urls,
+        )?;
         // Fetch current donation links from project so we know what to delete
         let fetched_example_project =
             project_item::DBProject::get(&info.0, &**pool, &redis)
                 .await
-                .wrap_api_err("fetching project from database")?;
+                .wrap_internal_err("fetching project from database")?;
         let donation_links = fetched_example_project
             .map(|x| {
                 x.urls
                     .into_iter()
                     .filter_map(|l| {
-                        if l.donation {
+                        if l.platform.is_donation() {
                             Some(Link::from(l)) // TODO: tests
                         } else {
                             None
@@ -662,7 +666,7 @@ pub async fn project_edit(
         categories: v2_new_project.categories,
         additional_categories: v2_new_project.additional_categories,
         license_url: v2_new_project.license_url,
-        link_urls: Some(new_links),
+        link_urls: (!new_links.is_empty()).then_some(new_links),
         license_id: v2_new_project.license_id,
         slug: v2_new_project.slug,
         status: v2_new_project.status,
@@ -704,7 +708,7 @@ pub async fn project_edit(
             &redis,
         )
         .await
-        .wrap_api_err("fetching project from database")?;
+        .wrap_internal_err("fetching project from database")?;
         let version_ids = project_item.map(|x| x.versions).unwrap_or_default();
         let versions =
             version_item::DBVersion::get_many(&version_ids, &**pool, &redis)
@@ -806,7 +810,7 @@ pub struct BulkEditProject {
     pub discord_url: Option<Option<String>>,
 }
 
-/// Bulk-edit multiple projects.  
+/// Bulk-edit multiple projects.
 #[utoipa::path(
 	tag = "projects",
     patch,
@@ -842,12 +846,12 @@ pub async fn projects_edit(
     // If we are *setting* donation links, we will set every possible donation link to None, as
     // setting will delete all of them then 're-add' the ones we want to keep
     if let Some(donation_url) = bulk_edit_project.donation_urls {
-        let link_platforms = LinkPlatform::list(&**pool, &redis)
-            .await
-            .wrap_internal_err("fetching link platform from Redis")?;
-        for link in link_platforms {
-            if link.donation {
-                link_urls.insert(link.name, None);
+        crate::models::v2::projects::validate_donation_platforms(
+            &donation_url,
+        )?;
+        for platform in LinkPlatform::iter() {
+            if platform.is_donation() {
+                link_urls.insert(platform.to_string(), None);
             }
         }
         // add
@@ -858,6 +862,9 @@ pub async fn projects_edit(
 
     // For every delete, we will set the link to None
     if let Some(donation_url) = bulk_edit_project.remove_donation_urls {
+        crate::models::v2::projects::validate_donation_platforms(
+            &donation_url,
+        )?;
         for donation_url in donation_url {
             link_urls.insert(donation_url.id, None);
         }
@@ -865,6 +872,9 @@ pub async fn projects_edit(
 
     // For every add, we will set the link to the new url
     if let Some(donation_url) = bulk_edit_project.add_donation_urls {
+        crate::models::v2::projects::validate_donation_platforms(
+            &donation_url,
+        )?;
         for donation_url in donation_url {
             link_urls.insert(donation_url.id, Some(donation_url.url));
         }
@@ -931,7 +941,7 @@ pub struct Extension {
     pub ext: String,
 }
 
-/// Change a project's icon.  
+/// Change a project's icon.
 #[utoipa::path(
 	context_path = "/project",
 	tag = "projects",
@@ -986,7 +996,7 @@ pub async fn project_icon_edit(
     .or_else(v2_reroute::flatten_404_error)
 }
 
-/// Delete a project's icon.  
+/// Delete a project's icon.
 #[utoipa::path(
 	context_path = "/project",
 	tag = "projects",
@@ -1039,7 +1049,7 @@ pub struct GalleryCreateQuery {
     pub ordering: Option<i64>,
 }
 
-/// Add a gallery image to a project.  
+/// Add a gallery image to a project.
 #[utoipa::path(
 	context_path = "/project",
 	tag = "projects",
@@ -1135,7 +1145,7 @@ pub struct GalleryEditQuery {
     pub ordering: Option<i64>,
 }
 
-/// Update a gallery image.  
+/// Update a gallery image.
 #[utoipa::path(
 	context_path = "/project",
 	tag = "projects",
@@ -1195,7 +1205,7 @@ pub struct GalleryDeleteQuery {
     pub url: String,
 }
 
-/// Delete a gallery image.  
+/// Delete a gallery image.
 #[utoipa::path(
 	context_path = "/project",
 	tag = "projects",
@@ -1239,7 +1249,7 @@ pub async fn delete_gallery_item(
     .or_else(v2_reroute::flatten_404_error)
 }
 
-/// Delete a project by ID or slug.  
+/// Delete a project by ID or slug.
 #[utoipa::path(
 	context_path = "/project",
 	tag = "projects",
@@ -1281,7 +1291,7 @@ pub async fn project_delete(
     .or_else(v2_reroute::flatten_404_error)
 }
 
-/// Follow a project.  
+/// Follow a project.
 #[utoipa::path(
 	context_path = "/project",
 	tag = "projects",
@@ -1314,7 +1324,7 @@ pub async fn project_follow(
         .or_else(v2_reroute::flatten_404_error)
 }
 
-/// Unfollow a project.  
+/// Unfollow a project.
 #[utoipa::path(
 	context_path = "/project",
 	tag = "projects",

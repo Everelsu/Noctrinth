@@ -35,6 +35,14 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.21.6+1',
+		date: '2026-09-29T00:00:00+00:00',
+		body: `### Fixed
+- Launching no longer hangs on "Launching..." while Discord is running but not answering, and turning Discord RPC off no longer connects to Discord at all. Thanks to [@loyslow-dev](https://github.com/loyslow-dev) for tracking it down ([#7](https://github.com/Everelsu/Noctrinth/issues/7)).
+- A Java that never exits no longer holds a launch forever; the check before launch gives up after 30 seconds.
+- A stalled friends connection no longer holds a launch or the end of a game.`,
+	},
+	{
 		version: '0.21.6',
 		date: '2026-09-28T00:00:00+00:00',
 		body: `### Added

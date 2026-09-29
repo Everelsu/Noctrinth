@@ -17,7 +17,13 @@ debugStartup('Frontend entry module evaluated')
 const app = createApp(App)
 setupErrorReporting(app, router)
 
-app.use(VueQueryPlugin)
+// Every query refetching whenever the window gets focus is a website's habit.
+// Here focus comes and goes each time someone switches between the launcher
+// and the game, and a round of IPC calls and API requests on every switch is
+// what the launcher stuttered on. What changes is invalidated by events.
+app.use(VueQueryPlugin, {
+	queryClientConfig: { defaultOptions: { queries: { refetchOnWindowFocus: false } } },
+})
 app.use(router)
 if (import.meta.env.DEV) {
 	void traceStartupStep('Initial router readiness', () => router.isReady()).catch(() => {})

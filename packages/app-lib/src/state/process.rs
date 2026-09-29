@@ -521,6 +521,42 @@ pub struct Log4jEvent {
     pub throwable: Option<String>,
 }
 
+/// The launcher's copy of what the game prints, held open for the run.
+///
+/// Opening and closing the file for every line is what it used to do, and a
+/// large pack prints tens of thousands of lines while it starts — each open
+/// one more file an antivirus stops to look at.
+struct GameLog {
+    path: std::path::PathBuf,
+    file: Option<std::fs::File>,
+}
+
+impl GameLog {
+    fn new(path: &Path) -> Self {
+        Self {
+            path: path.to_path_buf(),
+            file: None,
+        }
+    }
+
+    fn append(&mut self, line: &str) -> std::io::Result<()> {
+        let file = match &mut self.file {
+            Some(file) => file,
+            None => self.file.insert(
+                OpenOptions::new()
+                    .append(true)
+                    .create(true)
+                    .open(&self.path)?,
+            ),
+        };
+
+        // See `Process::append_to_log_file` for why this is censored.
+        file.write_all(
+            crate::api::logs::censor_session_ids(line.to_string()).as_bytes(),
+        )
+    }
+}
+
 impl Process {
     async fn process_output<R>(
         instance_id: &str,
@@ -533,6 +569,7 @@ impl Process {
         R: tokio::io::AsyncRead + Unpin,
     {
         let mut buf_reader = BufReader::new(reader);
+        let mut log = GameLog::new(log_path.as_ref());
 
         if xml_logging {
             let mut reader = Reader::from_reader(buf_reader);
@@ -626,10 +663,7 @@ impl Process {
                                 if let Some(formatted_log) =
                                     Self::format_log4j_entry(&current_event)
                                 {
-                                    if let Err(e) = Process::append_to_log_file(
-                                        &log_path,
-                                        &formatted_log,
-                                    ) {
+                                    if let Err(e) = log.append(&formatted_log) {
                                         tracing::error!(
                                             "Failed to write to log file: {}",
                                             e
@@ -638,10 +672,7 @@ impl Process {
 
                                     if let Some(ref throwable) =
                                         current_event.throwable
-                                        && let Err(e) =
-                                            Process::append_to_log_file(
-                                                &log_path, throwable,
-                                            )
+                                        && let Err(e) = log.append(throwable)
                                     {
                                         tracing::error!(
                                             "Failed to write throwable to log file: {}",
@@ -665,10 +696,7 @@ impl Process {
                                     if let Some(formatted_log) =
                                         Self::format_log4j_entry(&current_event)
                                         && let Err(e) =
-                                            Process::append_to_log_file(
-                                                &log_path,
-                                                &formatted_log,
-                                            )
+                                            log.append(&formatted_log)
                                     {
                                         tracing::error!(
                                             "Failed to write to log file: {}",
@@ -715,10 +743,7 @@ impl Process {
                             && !e.inplace_trim_start()
                             && let Ok(text) = e.xml_content()
                         {
-                            if let Err(e) = Process::append_to_log_file(
-                                &log_path,
-                                &format!("{text}\n"),
-                            ) {
+                            if let Err(e) = log.append(&format!("{text}\n")) {
                                 tracing::error!(
                                     "Failed to write to log file: {}",
                                     e
@@ -752,7 +777,7 @@ impl Process {
                 }
 
                 if !line.is_empty() {
-                    if let Err(e) = Self::append_to_log_file(&log_path, &line) {
+                    if let Err(e) = log.append(&line) {
                         tracing::warn!("Failed to write to log file: {}", e);
                     }
                     Self::emit_legacy_log(

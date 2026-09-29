@@ -45,8 +45,12 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 - It finds damaged mod jars, empty config files (a world's serverconfig too), the same mod installed twice, and Intel 13th and 14th generation processors known to become unstable.
 - An addon built for another version of the mod it extends is told apart from one whose dependency is not installed.
 - More causes recognised: an incomplete install, a JNA library the antivirus blocked, a broken KubeJS datapack, a damaged server config, FerriteCore's neighbour table, Spark's profiler on newer Java, and more ways a graphics driver goes down.
+- Keyboard shortcuts in the screenshots gallery: Ctrl+C copies the selected screenshots, or the focused one; Ctrl+A selects all of them, Delete deletes, Escape clears the selection.
+- Several screenshots copy as files, like Ctrl+C in Explorer, so pasting into a folder or a chat gets all of them. One still copies as an image.
 
 ### Changed
+- Switching between the launcher and the game no longer makes every open page reload its data. Each switch used to fire a round of requests, which is where the launcher stuttered with Minecraft running.
+- The launcher keeps the game's log file open while the game runs instead of reopening it for every line. A large pack prints tens of thousands of lines as it starts.
 - An instance without its own memory setting gets more for a large pack: 6 GB from 100 mods, 8 GB from 200, 10 GB from 300, as far as the computer can spare. A world in a large pack loading on 4 GB is what froze until Windows closed it.
 - A crash that ran out of memory offers a button that gives the instance more.
 

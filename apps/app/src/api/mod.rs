@@ -12,6 +12,7 @@ pub mod logs;
 pub mod metadata;
 pub mod minecraft_skins;
 pub mod mr_auth;
+pub mod noctrinth_clipboard;
 pub mod noctrinth_crash;
 pub mod noctrinth_curseforge;
 pub mod noctrinth_offline_auth;

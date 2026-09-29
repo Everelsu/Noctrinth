@@ -558,6 +558,14 @@ fn main() {
                     ),
             )
             .plugin(
+                "noctrinth-clipboard",
+                InlinedPlugin::new()
+                    .commands(&["clipboard_copy_files"])
+                    .default_permission(
+                        DefaultPermissionRule::AllowAllCommands,
+                    ),
+            )
+            .plugin(
                 "noctrinth-crash",
                 InlinedPlugin::new()
                     .commands(&["crash_analyze_instance", "crash_analyze_text"])

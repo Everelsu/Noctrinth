@@ -68,6 +68,7 @@ import {
 	set_screenshot_group_memberships,
 } from '@/helpers/instance'
 import { MAX_INSTANCE_GROUP_NAME_LENGTH } from '@/helpers/instance-groups'
+import { copyFilesToClipboard } from '@/helpers/noctrinth-clipboard'
 import {
 	instanceListQueryOptions,
 	instanceScreenshotsQueryOptions,
@@ -80,6 +81,7 @@ import ScreenshotDragGather from './drag-gather.vue'
 import ScreenshotDragPreview from './drag-preview.vue'
 import ScreenshotGroupSection from './group.vue'
 import ScreenshotToolbar from './toolbar.vue'
+import { useGalleryShortcuts } from './use-gallery-shortcuts'
 import { type ActiveScreenshotDrag, useScreenshotDragGather } from './use-screenshot-drag-gather'
 
 type ScreenshotSort = 'newest' | 'oldest' | 'name'
@@ -1254,6 +1256,60 @@ async function copyScreenshot(screenshot: InstanceScreenshot) {
 		handleError(error)
 	}
 }
+
+/** What a key acts on: the selection, or failing that the focused card. */
+function shortcutTargets(): InstanceScreenshot[] {
+	if (selectedScreenshots.value.length > 0) return selectedScreenshots.value
+	const card = (document.activeElement as HTMLElement | null)?.closest<HTMLElement>(
+		'[data-selection-key]',
+	)
+	const focused = card?.dataset.selectionKey
+		? screenshotBySelectionKey(card.dataset.selectionKey)
+		: undefined
+	return focused ? [focused] : []
+}
+
+/**
+ * One screenshot goes on the clipboard as an image; several go as files, which
+ * is the only way the clipboard carries more than one picture.
+ */
+async function copyScreenshots(targets: InstanceScreenshot[]) {
+	if (targets.length === 1) return copyScreenshot(targets[0])
+	try {
+		await copyFilesToClipboard(targets.map((screenshot) => screenshot.path))
+		for (const screenshot of targets) markScreenshotCopied(screenshot.id)
+	} catch {
+		await copyScreenshot(targets[0])
+	}
+}
+
+useGalleryShortcuts({
+	copy: () => {
+		const targets = shortcutTargets()
+		if (targets.length > 0) void copyScreenshots(targets)
+		return targets.length > 0
+	},
+	selectAll: () => {
+		if (bulkBusy.value || filteredScreenshots.value.length === 0) return false
+		selectedKeys.value = new Set(filteredScreenshots.value.map(getSelectionKey))
+		return true
+	},
+	remove: () => {
+		if (bulkBusy.value) return false
+		if (selectionActive.value) {
+			bulkDeleteModal.value?.show()
+			return true
+		}
+		const [focused] = shortcutTargets()
+		if (focused) requestDelete(focused)
+		return !!focused
+	},
+	clear: () => {
+		if (!selectionActive.value) return false
+		clearSelection()
+		return true
+	},
+})
 
 function markScreenshotCopied(id: string) {
 	copiedScreenshotIds.value = new Set([...copiedScreenshotIds.value, id])

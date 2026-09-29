@@ -225,7 +225,19 @@ async fn run_credentials(
         .or(settings.hooks.post_exit)
         .filter(|hook_command| !hook_command.is_empty());
 
-    let memory = context.launch_overrides.memory.unwrap_or(settings.memory);
+    let memory = match context.launch_overrides.memory {
+        Some(memory) => memory,
+        None => {
+            crate::api::crash_analysis::memory_for_pack(
+                &state
+                    .directories
+                    .instances_dir()
+                    .join(&context.instance.path),
+                settings.memory,
+            )
+            .await
+        }
+    };
     let resolution = context
         .launch_overrides
         .game_resolution

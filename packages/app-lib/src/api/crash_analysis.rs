@@ -24,6 +24,8 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 
 use crate::State;
+use crate::api::crash_culprits::{self, ModIndex};
+use crate::state::MemorySettings;
 use crate::util::io::{self, IOError};
 
 /// How much of a log is worth reading.
@@ -40,7 +42,21 @@ const LOG_TAIL_BYTES: u64 = 512 * 1024;
 const JVM_ERROR_HEAD_BYTES: u64 = 96 * 1024;
 
 /// How many findings are worth showing at once.
-const MAX_FINDINGS: usize = 8;
+const MAX_FINDINGS: usize = 10;
+
+/// How many mods a crash is allowed to blame at once. Past two, a list of
+/// names stops being a lead and starts being the mod list.
+const MAX_SUSPECTS: usize = 2;
+
+/// Written into the launcher's log of a run when the player stopped it, so a
+/// run that was ended on purpose is not read as one that crashed.
+pub const STOPPED_FROM_LAUNCHER: &str = "# Stopped from the launcher";
+
+/// The line the launcher ends its log of every run with.
+static EXIT_LINE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?m)^# Process exited with status: (?P<status>.+?)\s*$")
+        .expect("exit line pattern is valid")
+});
 
 /// How far from the log a crash report may have been written and still be about
 /// the same run.
@@ -76,6 +92,9 @@ pub enum CrashSourceKind {
     Log,
     /// `hs_err_pid*.log`, written by the JVM when it died.
     JvmError,
+    /// `logs/launcher_log.txt`: everything the game printed during the run,
+    /// written by the launcher, which also records how the process ended.
+    LauncherLog,
 }
 
 /// One thing that was recognised, and where.
@@ -102,10 +121,29 @@ pub struct CrashSourceFile {
     pub modified: u64,
 }
 
+/// How the last run of the game ended.
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct CrashExit {
+    /// As the operating system reported it: `exit code: 0xcfffffff`.
+    pub status: String,
+    pub success: bool,
+    /// The player stopped it from the launcher.
+    pub stopped: bool,
+}
+
+impl CrashExit {
+    /// A run that ended on its own, and not well.
+    pub fn crashed(&self) -> bool {
+        !self.success && !self.stopped
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct CrashDiagnosis {
     pub findings: Vec<CrashFinding>,
     pub sources: Vec<CrashSourceFile>,
+    /// Absent when the launcher has no record of the run ending.
+    pub exit: Option<CrashExit>,
 }
 
 impl CrashDiagnosis {
@@ -230,6 +268,16 @@ static RULES: &[Rule] = &[
         unless: None,
         kinds: &[],
     },
+    // The game's own libraries missing from the loader's point of view: the
+    // install is incomplete, not a mod.
+    Rule {
+        id: "install_incomplete",
+        severity: CrashSeverity::Critical,
+        pattern: r"Mod ID: '(?:minecraft|neoforge|forge)', Requested by: [^\n]*?Actual version: '\[MISSING\]'",
+        also: None,
+        unless: None,
+        kinds: &[],
+    },
     Rule {
         id: "forge_missing_dependency",
         severity: CrashSeverity::Critical,
@@ -249,7 +297,7 @@ static RULES: &[Rule] = &[
     Rule {
         id: "mod_for_other_version",
         severity: CrashSeverity::Warning,
-        pattern: r"java\.lang\.(?:NoSuchMethodError|NoClassDefFoundError|NoSuchFieldError): (?:Failed resolution of: )?(?P<symbol>[\w./$;()\[\]<>]*net[/.]minecraft[\w./$;()\[\]<>]*)",
+        pattern: r"java\.lang\.(?:NoSuchMethodError|NoClassDefFoundError|NoSuchFieldError): [^\n]*?(?P<symbol>net[/.]minecraft[\w./$;()\[\]<>]*)",
         also: None,
         unless: None,
         kinds: &[],
@@ -375,7 +423,7 @@ static RULES: &[Rule] = &[
     Rule {
         id: "language_provider_mismatch",
         severity: CrashSeverity::Critical,
-        pattern: r"(?:requires language provider (?P<provider>[\w]+):(?P<wanted>[\d.,\[\])(]+)|Missing or unsupported mandatory dependencies)",
+        pattern: r"(?:(?:needs|requires) language provider (?P<provider>[\w]+):(?P<wanted>[\d.,\[\])(]+)|Missing or unsupported mandatory dependencies)",
         also: None,
         unless: None,
         kinds: &[],
@@ -391,7 +439,7 @@ static RULES: &[Rule] = &[
     Rule {
         id: "oculus_without_embeddium",
         severity: CrashSeverity::Critical,
-        pattern: r"(?i)oculus[^\n]{0,60}?requires[^\n]{0,40}?(?:embeddium|rubidium)",
+        pattern: r"(?i)oculus[^\n]{0,60}?requires[^\n]{0,40}?(?:embeddium|rubidium)|net[/.]caffeinemc[/.]mods[/.]sodium[/.]api[/.](?:vertex[/.]buffer[/.]VertexBufferWriter|memory[/.]MemoryIntrinsics)",
         also: None,
         unless: None,
         kinds: &[],
@@ -399,7 +447,7 @@ static RULES: &[Rule] = &[
     Rule {
         id: "missing_indium",
         severity: CrashSeverity::Critical,
-        pattern: r"(?i)(?:requires[^\n]{0,40}?indium|Indium is required|fabric-renderer-api-v1[^\n]{0,60}?(?:missing|not (?:found|installed)))",
+        pattern: r"(?i)(?:requires[^\n]{0,40}?indium|Indium is required|No fabric renderer found|fabric-renderer-api-v1[^\n]{0,60}?(?:missing|not (?:found|installed)))",
         also: None,
         unless: None,
         kinds: &[],
@@ -415,7 +463,7 @@ static RULES: &[Rule] = &[
     Rule {
         id: "server_thread_stuck",
         severity: CrashSeverity::Critical,
-        pattern: r"(?:A single server tick took (?P<seconds>[\d.]+) seconds|Considering it to be crashed, server will forcibly shutdown|watchdog[^\n]{0,40}?(?:deadlock|stuck))",
+        pattern: r"(?:A single server tick (?:took|has taken) (?P<seconds>[\d.]+) seconds|Considering it to be crashed, server will forcibly shutdown|watchdog[^\n]{0,40}?(?:deadlock|stuck))",
         also: None,
         unless: None,
         kinds: &[],
@@ -423,7 +471,7 @@ static RULES: &[Rule] = &[
     Rule {
         id: "feature_order_cycle",
         severity: CrashSeverity::Critical,
-        pattern: r"(?i)(?:Feature order cycle found|Cycle while building feature order)",
+        pattern: r"(?i)(?:Feature order cycle found|Cycle while building feature order|A feature cycle was found)",
         also: None,
         unless: None,
         kinds: &[],
@@ -459,7 +507,7 @@ static RULES: &[Rule] = &[
     Rule {
         id: "corrupted_archive",
         severity: CrashSeverity::Critical,
-        pattern: r"(?:java\.util\.zip\.ZipException|Invalid CEN header|zip END header not found|error in opening zip file|java\.io\.EOFException)",
+        pattern: r"(?:java\.util\.zip\.ZipException|Invalid CEN header|zip END header not found|zip file is empty|error in opening zip file|Failed to create secure jar for|UnionFileSystem\$UncheckedIOException|java\.io\.EOFException)",
         also: None,
         unless: None,
         kinds: &[],
@@ -475,7 +523,7 @@ static RULES: &[Rule] = &[
     Rule {
         id: "file_locked",
         severity: CrashSeverity::Warning,
-        pattern: r"The process cannot access the file because it is being used by another process",
+        pattern: r"(?:FileSystemException: (?P<file>[^\n]+?): )?The process cannot access the file because it is being used by another process",
         also: None,
         unless: None,
         kinds: &[],
@@ -588,6 +636,132 @@ static RULES: &[Rule] = &[
         unless: None,
         kinds: &[CrashSourceKind::JvmError],
     },
+    // A class that is not where a mod expected it. The Minecraft case is the
+    // rule above; this is the one where the class belongs to another mod — an
+    // addon built for a different Create, say — or to a mod that is not
+    // installed at all. Which of the two it is, the jar index settles.
+    Rule {
+        id: "missing_class",
+        severity: CrashSeverity::Critical,
+        pattern: r"(?:java\.lang\.|throwables\.)(?P<exception>NoClassDefFoundError|ClassNotFoundException|NoSuchMethodError|NoSuchFieldError|ClassMetadataNotFoundException): [^\n]*?(?P<symbol>[a-z][\w$]*(?:[./][\w$]+){2,})",
+        also: None,
+        // Java's own messages for a class that failed to initialise say
+        // nothing about which mod is missing; the JNA rule below owns that one.
+        unless: Some(r"Could not initialize class com\.sun\.jna\."),
+        kinds: &[],
+    },
+    // A server config lives in the world's own folder, not in `config/`, and
+    // a game that went down while saving leaves it empty.
+    Rule {
+        id: "server_config_broken",
+        severity: CrashSeverity::Critical,
+        pattern: r"Failed loading config file (?P<file>[^\s]+) of type SERVER for modid (?P<mod_id>[\w\-]+)",
+        also: None,
+        unless: None,
+        kinds: &[],
+    },
+    Rule {
+        id: "config_truncated",
+        severity: CrashSeverity::Critical,
+        pattern: r"(?:ParsingException: Not enough data available|Failed loading config file (?P<file>[^\s]+))",
+        also: None,
+        unless: None,
+        kinds: &[],
+    },
+    Rule {
+        id: "ferritecore_neighbor_table",
+        severity: CrashSeverity::Critical,
+        pattern: r"UnsupportedOperationException: [^\n]{0,400}FerriteCore config",
+        also: None,
+        unless: None,
+        kinds: &[],
+    },
+    // JNA unpacks a native library into the temporary folder on first use; an
+    // antivirus or a locked-down temporary folder stops it.
+    Rule {
+        id: "jna_blocked",
+        severity: CrashSeverity::Critical,
+        pattern: r"NoClassDefFoundError: Could not initialize class com\.sun\.jna\.",
+        also: None,
+        unless: None,
+        kinds: &[],
+    },
+    Rule {
+        id: "kubejs_datapack",
+        severity: CrashSeverity::Critical,
+        pattern: r"Failed to parse (?P<file>[^\s]+) from pack KubeJS Resource Pack",
+        also: None,
+        unless: None,
+        kinds: &[],
+    },
+    Rule {
+        id: "gpu_driver_generic",
+        severity: CrashSeverity::Critical,
+        pattern: r"(?m)(?:nglMultiDrawElementsBaseVertex|^#\s+C\s+0x0000|^#\s+C\s+\[glfw\.dll)",
+        also: None,
+        unless: None,
+        kinds: &[CrashSourceKind::JvmError],
+    },
+    // Spark's profiler loads a native library that newer Java versions take
+    // down with them.
+    Rule {
+        id: "spark_profiler_crash",
+        severity: CrashSeverity::Critical,
+        pattern: r"libasyncProfiler\.so",
+        also: None,
+        unless: None,
+        kinds: &[CrashSourceKind::JvmError],
+    },
+    // How the process ended, which only the launcher saw. Each is skipped when
+    // the player stopped the run themselves.
+    Rule {
+        id: "exit_not_responding",
+        severity: CrashSeverity::Critical,
+        pattern: r"# Process exited with status: exit code: (?:0xcfffffff|-805306369)",
+        also: None,
+        unless: Some(STOPPED_FROM_LAUNCHER),
+        kinds: &[CrashSourceKind::LauncherLog],
+    },
+    Rule {
+        id: "exit_killed_by_system",
+        severity: CrashSeverity::Critical,
+        pattern: r"# Process exited with status: signal: 9 \(SIGKILL\)",
+        also: None,
+        unless: Some(STOPPED_FROM_LAUNCHER),
+        kinds: &[CrashSourceKind::LauncherLog],
+    },
+    Rule {
+        id: "exit_missing_system_library",
+        severity: CrashSeverity::Critical,
+        pattern: r"# Process exited with status: exit code: (?P<code>0xc0000135|0xc0000142|0xc000007b)",
+        also: None,
+        unless: Some(STOPPED_FROM_LAUNCHER),
+        kinds: &[CrashSourceKind::LauncherLog],
+    },
+    Rule {
+        id: "exit_stack_buffer_overrun",
+        severity: CrashSeverity::Warning,
+        pattern: r"# Process exited with status: exit code: 0xc0000409",
+        also: None,
+        unless: Some(STOPPED_FROM_LAUNCHER),
+        kinds: &[CrashSourceKind::LauncherLog],
+    },
+    Rule {
+        id: "exit_access_violation",
+        severity: CrashSeverity::Warning,
+        pattern: r"# Process exited with status: (?:exit code: 0xc0000005|signal: 11 \(SIGSEGV\))",
+        also: None,
+        unless: Some(STOPPED_FROM_LAUNCHER),
+        kinds: &[CrashSourceKind::LauncherLog],
+    },
+    Rule {
+        id: "exit_stack_overflow",
+        severity: CrashSeverity::Warning,
+        pattern: r"# Process exited with status: exit code: 0xc00000fd",
+        also: None,
+        unless: Some(STOPPED_FROM_LAUNCHER),
+        kinds: &[CrashSourceKind::LauncherLog],
+    },
 ];
 
 type CompiledRule = (Regex, Option<Regex>, Option<Regex>);
@@ -687,26 +861,33 @@ pub async fn analyze_instance(
 ) -> crate::Result<CrashDiagnosis> {
     let state = State::get().await?;
 
-    let instance_path: Option<String> =
-        sqlx::query_scalar("SELECT path FROM instances WHERE id = ?")
-            .bind(instance_id)
-            .fetch_optional(&state.pool)
-            .await?;
-    let Some(instance_path) = instance_path else {
+    let Some(context) =
+        crate::state::instances::commands::get_instance_launch_context(
+            instance_id,
+            &state.pool,
+        )
+        .await?
+    else {
         return Ok(CrashDiagnosis::default());
     };
+    let instance_path = context.instance.path.clone();
 
     let instance_dir = state.directories.instances_dir().join(&instance_path);
     let logs_dir = state.directories.instance_logs_dir(&instance_path);
     let crash_reports_dir = state.directories.crash_reports_dir(&instance_path);
 
     let mut diagnosis = CrashDiagnosis::default();
+    let mut texts: Vec<(CrashSourceKind, String, String)> = Vec::new();
 
-    // The log the instance last wrote is what the other two are dated against:
-    // the game writes a crash report as it goes down, moments after the last
-    // line of it.
+    // The launcher's own log is started over on every launch and ends with how
+    // the process did, so it is what everything else is dated against. The
+    // game's `latest.log` is not rewritten when Java fails before the game
+    // starts, and an older one would describe somebody else's crash.
+    let launcher_log = logs_dir.join("launcher_log.txt");
     let latest_log = logs_dir.join("latest.log");
-    let log_modified = if latest_log.is_file() {
+    let anchor = if launcher_log.is_file() {
+        Some(modified_seconds(&launcher_log).await)
+    } else if latest_log.is_file() {
         Some(modified_seconds(&latest_log).await)
     } else {
         None
@@ -718,10 +899,11 @@ pub async fn analyze_instance(
         name.starts_with("crash-") && name.ends_with(".txt")
     })
     .await
-        && is_same_run(&report, log_modified).await
+        && is_same_run(&report, anchor).await
     {
         read_into(
             &mut diagnosis,
+            &mut texts,
             &report,
             CrashSourceKind::CrashReport,
             ReadFrom::Start(LOG_TAIL_BYTES),
@@ -734,10 +916,11 @@ pub async fn analyze_instance(
         name.starts_with("hs_err_pid") && name.ends_with(".log")
     })
     .await
-        && is_same_run(&jvm_error, log_modified).await
+        && is_same_run(&jvm_error, anchor).await
     {
         read_into(
             &mut diagnosis,
+            &mut texts,
             &jvm_error,
             CrashSourceKind::JvmError,
             ReadFrom::Start(JVM_ERROR_HEAD_BYTES),
@@ -745,11 +928,23 @@ pub async fn analyze_instance(
         .await;
     }
 
-    // And the log itself, which is where anything the other two missed was
-    // printed on the way down.
-    if latest_log.is_file() {
+    if launcher_log.is_file() {
         read_into(
             &mut diagnosis,
+            &mut texts,
+            &launcher_log,
+            CrashSourceKind::LauncherLog,
+            ReadFrom::End(LOG_TAIL_BYTES),
+        )
+        .await;
+    }
+
+    // And the game's log, which is where anything the others missed was
+    // printed on the way down.
+    if latest_log.is_file() && is_same_run(&latest_log, anchor).await {
+        read_into(
+            &mut diagnosis,
+            &mut texts,
             &latest_log,
             CrashSourceKind::Log,
             ReadFrom::End(LOG_TAIL_BYTES),
@@ -757,8 +952,552 @@ pub async fn analyze_instance(
         .await;
     }
 
+    diagnosis.exit = texts
+        .iter()
+        .find(|(kind, _, _)| *kind == CrashSourceKind::LauncherLog)
+        .and_then(|(_, _, text)| exit_of(text));
+    let crashed = diagnosis.exit.as_ref().is_some_and(CrashExit::crashed);
+
+    if crashed || !diagnosis.findings.is_empty() {
+        let mods_dir = instance_dir.join("mods");
+        let index =
+            tokio::task::spawn_blocking(move || ModIndex::read(&mods_dir))
+                .await
+                .unwrap_or_default();
+
+        attribute(&mut diagnosis, &texts, &index, crashed);
+        advise_memory(
+            &mut diagnosis,
+            &instance_dir,
+            context.launch_overrides.memory,
+            &state,
+        )
+        .await;
+
+        if crashed {
+            find_empty_configs(&mut diagnosis, &instance_dir).await;
+            compare_with_working_mods(
+                &mut diagnosis,
+                &state,
+                &instance_path,
+                &instance_dir,
+            )
+            .await;
+            warn_about_unstable_cpu(&mut diagnosis);
+        }
+    }
+
     finish(&mut diagnosis);
     Ok(diagnosis)
+}
+
+/// How the run ended, from the line the launcher closed its log with.
+fn exit_of(launcher_log: &str) -> Option<CrashExit> {
+    let status = EXIT_LINE
+        .captures_iter(launcher_log)
+        .last()?
+        .name("status")?
+        .as_str()
+        .to_string();
+
+    Some(CrashExit {
+        success: status == "exit code: 0" || status == "exit status: 0",
+        stopped: launcher_log.contains(STOPPED_FROM_LAUNCHER),
+        status,
+    })
+}
+
+fn finding(
+    rule: &str,
+    severity: CrashSeverity,
+    source_name: &str,
+    evidence: String,
+    values: &[(&str, String)],
+) -> CrashFinding {
+    CrashFinding {
+        rule: rule.to_string(),
+        severity,
+        source: CrashSourceKind::LauncherLog,
+        source_name: source_name.to_string(),
+        evidence,
+        values: values
+            .iter()
+            .map(|(key, value)| (key.to_string(), value.clone()))
+            .collect(),
+    }
+}
+
+/// Puts a file to every finding that names a mod some other way, and names the
+/// mods the crash itself points at.
+fn attribute(
+    diagnosis: &mut CrashDiagnosis,
+    texts: &[(CrashSourceKind, String, String)],
+    index: &ModIndex,
+    crashed: bool,
+) {
+    let duplicates = index.duplicate_ids();
+
+    for finding in &mut diagnosis.findings {
+        let values = &mut finding.values;
+
+        let named = values
+            .get("mod_id")
+            .and_then(|id| index.by_id(id))
+            .or_else(|| {
+                values
+                    .get("config")
+                    .and_then(|config| index.by_mixin_config(config))
+            });
+        if let Some(jar) = named {
+            values.insert("mod_file".into(), jar.file.clone());
+            values.insert("mod_name".into(), jar.name.clone());
+        }
+
+        if let Some(owner) = values
+            .get("symbol")
+            .and_then(|symbol| index.by_symbol(symbol))
+        {
+            let (name, file) = (owner.name.clone(), owner.file.clone());
+            values.insert("owner_name".into(), name);
+            values.insert("owner_file".into(), file);
+        }
+
+        if finding.rule == "duplicate_mods" && !duplicates.is_empty() {
+            let files: Vec<String> = duplicates
+                .iter()
+                .flat_map(|(_, jars)| jars.iter().map(|jar| jar.file.clone()))
+                .collect();
+            values.insert("files".into(), files.join(", "));
+        }
+    }
+
+    if !crashed {
+        return;
+    }
+
+    // What the crash itself points at: the game's report when there is one,
+    // the log otherwise.
+    let source = [
+        CrashSourceKind::CrashReport,
+        CrashSourceKind::LauncherLog,
+        CrashSourceKind::Log,
+        CrashSourceKind::JvmError,
+    ]
+    .iter()
+    .find_map(|kind| {
+        texts.iter().find(|(text_kind, _, text)| {
+            text_kind == kind && !crash_culprits::crash_excerpt(text).is_empty()
+        })
+    });
+
+    if let Some((kind, name, text)) = source {
+        let excerpt = crash_culprits::crash_excerpt(text);
+        let named: Vec<String> = diagnosis
+            .findings
+            .iter()
+            .filter_map(|finding| finding.values.get("mod_file").cloned())
+            .collect();
+
+        for suspect in crash_culprits::suspects(excerpt, index, MAX_SUSPECTS)
+            .into_iter()
+            .filter(|suspect| !named.contains(&suspect.file))
+        {
+            let evidence = excerpt
+                .lines()
+                .find(|line| line.contains(suspect.clue.as_str()))
+                .map_or_else(
+                    || suspect.clue.clone(),
+                    |line| line.trim().to_string(),
+                );
+            let mut suspect_finding = finding(
+                "suspect_mod",
+                CrashSeverity::Warning,
+                name,
+                evidence,
+                &[
+                    ("mod_file", suspect.file),
+                    ("mod_name", suspect.name),
+                    ("clue", suspect.clue),
+                ],
+            );
+            suspect_finding.source = *kind;
+            diagnosis.findings.push(suspect_finding);
+        }
+    }
+
+    if !diagnosis
+        .findings
+        .iter()
+        .any(|finding| finding.rule == "duplicate_mods")
+    {
+        for (id, jars) in duplicates.iter().take(2) {
+            let files: Vec<&str> =
+                jars.iter().map(|jar| jar.file.as_str()).collect();
+            diagnosis.findings.push(finding(
+                "duplicate_mod_files",
+                CrashSeverity::Critical,
+                "mods",
+                files.join("\n"),
+                &[
+                    ("mod_id", id.clone()),
+                    ("mod_name", jars[0].name.clone()),
+                    ("files", files.join(", ")),
+                ],
+            ));
+        }
+    }
+
+    for file in index.broken.iter().take(3) {
+        diagnosis.findings.push(finding(
+            "broken_mod_file",
+            CrashSeverity::Critical,
+            "mods",
+            file.clone(),
+            &[("mod_file", file.clone())],
+        ));
+    }
+}
+
+/// How much memory a pack of this many mods wants to load a world without
+/// running out, in MiB.
+///
+/// Not a measurement: the usual advice for modded Minecraft, which is what
+/// packs of these sizes turn out to need in practice.
+pub fn recommended_memory_mb(mod_count: usize) -> u32 {
+    match mod_count {
+        0..100 => 4096,
+        100..200 => 6144,
+        200..300 => 8192,
+        _ => 10240,
+    }
+}
+
+/// The most that can be given to the game while leaving the system, and the
+/// launcher, enough to run.
+async fn memory_ceiling_mb() -> u32 {
+    let total_mb = crate::api::jre::get_max_memory()
+        .await
+        .map_or(0, |kib| kib / 1024) as u32;
+    total_mb.saturating_sub((total_mb / 4).max(3072))
+}
+
+async fn enabled_mod_files(mods_dir: &Path) -> Vec<String> {
+    let mut files = Vec::new();
+    let Ok(mut entries) = tokio::fs::read_dir(mods_dir).await else {
+        return files;
+    };
+    while let Ok(Some(entry)) = entries.next_entry().await {
+        let name = entry.file_name().to_string_lossy().to_string();
+        if name.ends_with(".jar") {
+            files.push(name);
+        }
+    }
+    files.sort();
+    files
+}
+
+/// The memory a launch uses when the instance does not set its own: the
+/// global default, raised to what a pack of this size needs when the machine
+/// has it.
+///
+/// A default is picked for a machine, not for a pack, and 4 GB that suits a
+/// light one is not enough for three hundred mods. Loading the world is where
+/// that shows: the game either runs out outright or spends so long collecting
+/// garbage that Windows decides it has stopped responding and closes it.
+pub async fn memory_for_pack(
+    instance_dir: &Path,
+    default: MemorySettings,
+) -> MemorySettings {
+    let mod_count = enabled_mod_files(&instance_dir.join("mods")).await.len();
+    let wanted =
+        recommended_memory_mb(mod_count).min(memory_ceiling_mb().await);
+
+    if wanted > default.maximum {
+        tracing::info!(
+            "Raising memory from {} MB to {wanted} MB for a pack of {mod_count} mods",
+            default.maximum
+        );
+        MemorySettings { maximum: wanted }
+    } else {
+        default
+    }
+}
+
+/// Offers more memory where the crash is one more memory would have avoided.
+async fn advise_memory(
+    diagnosis: &mut CrashDiagnosis,
+    instance_dir: &Path,
+    configured: Option<MemorySettings>,
+    state: &State,
+) {
+    const MEMORY_RULES: &[&str] = &[
+        "out_of_memory_heap",
+        "out_of_memory_metaspace",
+        "exit_not_responding",
+        "server_thread_stuck",
+    ];
+
+    if !diagnosis
+        .findings
+        .iter()
+        .any(|finding| MEMORY_RULES.contains(&finding.rule.as_str()))
+    {
+        return;
+    }
+
+    let current = match configured {
+        Some(memory) => memory.maximum,
+        None => match crate::state::Settings::get(&state.pool).await {
+            Ok(settings) => {
+                memory_for_pack(instance_dir, settings.memory).await.maximum
+            }
+            Err(_) => return,
+        },
+    };
+
+    let mod_count = enabled_mod_files(&instance_dir.join("mods")).await.len();
+    // Past what the pack should need, one more step is still worth offering
+    // while the machine has it: the rule of thumb is not the pack.
+    let recommended = recommended_memory_mb(mod_count)
+        .max(current + 2048)
+        .min(memory_ceiling_mb().await);
+
+    if recommended <= current {
+        return;
+    }
+
+    for finding in &mut diagnosis.findings {
+        if MEMORY_RULES.contains(&finding.rule.as_str()) {
+            finding
+                .values
+                .insert("recommended_mb".into(), recommended.to_string());
+            finding
+                .values
+                .insert("current_mb".into(), current.to_string());
+            finding
+                .values
+                .insert("mod_count".into(), mod_count.to_string());
+        }
+    }
+}
+
+/// A config file that is empty or zeroed, which is what a game that went down
+/// while saving leaves behind, and what a mod then refuses to start on.
+///
+/// Server configs are looked for too: those live in each world's
+/// `serverconfig/`, and a broken one stops that world opening while every other
+/// world loads fine.
+async fn find_empty_configs(
+    diagnosis: &mut CrashDiagnosis,
+    instance_dir: &Path,
+) {
+    const CONFIG_EXTENSIONS: &[&str] =
+        &["toml", "json", "json5", "cfg", "properties", "snbt"];
+
+    let mut pending = vec![instance_dir.join("config")];
+    if let Ok(mut worlds) =
+        tokio::fs::read_dir(instance_dir.join("saves")).await
+    {
+        while let Ok(Some(world)) = worlds.next_entry().await {
+            pending.push(world.path().join("serverconfig"));
+        }
+    }
+    let mut empty = Vec::new();
+
+    while let Some(dir) = pending.pop() {
+        let Ok(mut entries) = tokio::fs::read_dir(&dir).await else {
+            continue;
+        };
+        while let Ok(Some(entry)) = entries.next_entry().await {
+            let path = entry.path();
+            let Ok(file_type) = entry.file_type().await else {
+                continue;
+            };
+            if file_type.is_dir() {
+                pending.push(path);
+                continue;
+            }
+            let is_config = path
+                .extension()
+                .and_then(|extension| extension.to_str())
+                .is_some_and(|extension| {
+                    CONFIG_EXTENSIONS.contains(&extension)
+                });
+            if !is_config {
+                continue;
+            }
+
+            let Ok(bytes) = tokio::fs::read(&path).await else {
+                continue;
+            };
+            if bytes
+                .iter()
+                .all(|byte| *byte == 0 || byte.is_ascii_whitespace())
+            {
+                let relative = path
+                    .strip_prefix(instance_dir)
+                    .map_or_else(|_| path.clone(), Path::to_path_buf);
+                empty.push(relative.to_string_lossy().replace('\\', "/"));
+            }
+        }
+    }
+
+    empty.sort();
+    for file in empty.into_iter().take(3) {
+        diagnosis.findings.push(finding(
+            "config_file_empty",
+            CrashSeverity::Critical,
+            "config",
+            file.clone(),
+            &[("file", file)],
+        ));
+    }
+}
+
+fn working_mods_path(state: &State, instance_path: &str) -> PathBuf {
+    state
+        .directories
+        .caches_dir()
+        .join("noctrinth-working-mods")
+        .join(format!("{instance_path}.json"))
+}
+
+/// Writes down the mods an instance just ran with, after a run that ended
+/// cleanly, so that the next crash can say what has changed since.
+pub async fn remember_working_mods(instance_path: &str) {
+    let Ok(state) = State::get().await else {
+        return;
+    };
+    let instance_dir = state.directories.instances_dir().join(instance_path);
+    let mods = enabled_mod_files(&instance_dir.join("mods")).await;
+    let path = working_mods_path(&state, instance_path);
+
+    let result = async {
+        if let Some(parent) = path.parent() {
+            io::create_dir_all(parent).await?;
+        }
+        io::write(&path, serde_json::to_vec(&mods)?).await?;
+        Ok::<_, crate::Error>(())
+    }
+    .await;
+
+    if let Err(error) = result {
+        tracing::warn!(
+            "Could not remember the mods of {instance_path}: {error}"
+        );
+    }
+}
+
+/// What was added to and taken out of `mods/` since the last run that ended
+/// cleanly. A pack that worked yesterday and not today usually has its answer
+/// here, and it is the one thing no log can say.
+async fn compare_with_working_mods(
+    diagnosis: &mut CrashDiagnosis,
+    state: &State,
+    instance_path: &str,
+    instance_dir: &Path,
+) {
+    let Ok(bytes) =
+        tokio::fs::read(working_mods_path(state, instance_path)).await
+    else {
+        return;
+    };
+    let Ok(working) = serde_json::from_slice::<Vec<String>>(&bytes) else {
+        return;
+    };
+    let current = enabled_mod_files(&instance_dir.join("mods")).await;
+
+    let added: Vec<&String> = current
+        .iter()
+        .filter(|mod_file| !working.contains(mod_file))
+        .collect();
+    let removed: Vec<&String> = working
+        .iter()
+        .filter(|mod_file| !current.contains(mod_file))
+        .collect();
+    if added.is_empty() && removed.is_empty() {
+        return;
+    }
+
+    let list = |files: &[&String]| {
+        let mut shown: Vec<String> =
+            files.iter().take(8).map(|file| (*file).clone()).collect();
+        if files.len() > 8 {
+            shown.push(format!("+{}", files.len() - 8));
+        }
+        shown.join(", ")
+    };
+
+    let evidence = added
+        .iter()
+        .map(|file| format!("+ {file}"))
+        .chain(removed.iter().map(|file| format!("- {file}")))
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    diagnosis.findings.push(finding(
+        "mods_changed_since_working",
+        CrashSeverity::Warning,
+        "mods",
+        evidence,
+        &[
+            ("added", list(&added)),
+            ("removed", list(&removed)),
+            ("added_count", added.len().to_string()),
+            ("removed_count", removed.len().to_string()),
+        ],
+    ));
+}
+
+/// Intel's 13th and 14th generation desktop processors degrade under load
+/// until they crash in ways that look like anything else: Java, the driver, a
+/// random mod. When Java itself went down on one of those, it is worth saying,
+/// because no amount of changing mods will fix it.
+fn warn_about_unstable_cpu(diagnosis: &mut CrashDiagnosis) {
+    static AFFECTED: LazyLock<Regex> = LazyLock::new(|| {
+        Regex::new(
+            r"(?:13|14)th Gen Intel\(R\) Core\(TM\) (?P<model>i[579]-1[34]\d{2,3}(?:K|KF|KS|F|HX|T)?)(?:\s|$)",
+        )
+        .expect("cpu pattern is valid")
+    });
+    const NATIVE_CRASH_RULES: &[&str] = &[
+        "jvm_itself_failed",
+        "jvm_problematic_frame",
+        "exit_access_violation",
+        "exit_stack_buffer_overrun",
+    ];
+
+    if !diagnosis
+        .findings
+        .iter()
+        .any(|finding| NATIVE_CRASH_RULES.contains(&finding.rule.as_str()))
+    {
+        return;
+    }
+
+    let system = sysinfo::System::new_with_specifics(
+        sysinfo::RefreshKind::nothing()
+            .with_cpu(sysinfo::CpuRefreshKind::nothing()),
+    );
+    let Some(brand) = system
+        .cpus()
+        .first()
+        .map(|cpu| cpu.brand().trim().to_string())
+    else {
+        return;
+    };
+    let Some(captures) = AFFECTED.captures(&brand) else {
+        return;
+    };
+    let model = captures["model"].to_string();
+
+    diagnosis.findings.push(finding(
+        "intel_cpu_instability",
+        CrashSeverity::Warning,
+        "system",
+        brand,
+        &[("model", model)],
+    ));
 }
 
 /// The same, for text the caller already has — a log the player is looking at,
@@ -775,6 +1514,7 @@ pub fn analyze_text(
             name: source_name.to_string(),
             modified: 0,
         }],
+        exit: None,
     };
 
     finish(&mut diagnosis);
@@ -784,6 +1524,17 @@ pub fn analyze_text(
 /// Worst first, and no more than a screenful.
 fn finish(diagnosis: &mut CrashDiagnosis) {
     let order: Vec<&str> = RULES.iter().map(|rule| rule.id).collect();
+
+    // A class of the game's own is the rule for mods built for another
+    // version, not for one mod missing another.
+    diagnosis.findings.retain(|finding| {
+        finding.rule != "missing_class"
+            || !finding.values.get("symbol").is_some_and(|symbol| {
+                ["net/minecraft", "net.minecraft", "com/mojang", "com.mojang"]
+                    .iter()
+                    .any(|prefix| symbol.starts_with(prefix))
+            })
+    });
 
     diagnosis.findings.sort_by(|a, b| {
         b.severity.cmp(&a.severity).then_with(|| {
@@ -797,12 +1548,32 @@ fn finish(diagnosis: &mut CrashDiagnosis) {
         })
     });
 
+    // A rule speaks once, except where it is about a file: two broken jars are
+    // two things to fix.
     let mut seen = Vec::new();
     diagnosis.findings.retain(|finding| {
-        if seen.contains(&finding.rule) {
+        let file = match finding.rule.as_str() {
+            "suspect_mod" | "broken_mod_file" => finding.values.get("mod_file"),
+            "config_file_empty" => finding.values.get("file"),
+            _ => None,
+        };
+        let key = (finding.rule.clone(), file.cloned());
+        if seen.contains(&key) {
             return false;
         }
-        seen.push(finding.rule.clone());
+        seen.push(key);
+        true
+    });
+
+    // Two rules reading the same line are one thing that went wrong, told
+    // twice. The sort above put the more specific rule first.
+    let mut lines = Vec::new();
+    diagnosis.findings.retain(|finding| {
+        let key = (finding.source_name.clone(), finding.evidence.clone());
+        if lines.contains(&key) {
+            return false;
+        }
+        lines.push(key);
         true
     });
 
@@ -836,6 +1607,7 @@ enum ReadFrom {
 
 async fn read_into(
     diagnosis: &mut CrashDiagnosis,
+    texts: &mut Vec<(CrashSourceKind, String, String)>,
     path: &Path,
     kind: CrashSourceKind,
     from: ReadFrom,
@@ -849,9 +1621,10 @@ async fn read_into(
             diagnosis.findings.extend(findings_in(&text, kind, &name));
             diagnosis.sources.push(CrashSourceFile {
                 kind,
-                name,
+                name: name.clone(),
                 modified: modified_seconds(path).await,
             });
+            texts.push((kind, name, text));
         }
         Err(error) => {
             // A file that cannot be read says nothing about the crash, and
@@ -1075,6 +1848,85 @@ mod tests {
             diagnosis.findings[0].evidence,
             "[15:04:23] [main/ERROR]: java.lang.OutOfMemoryError: Java heap space"
         );
+    }
+
+    #[test]
+    fn a_game_windows_closed_for_not_responding_is_named() {
+        let log = "[12:00:00] [main/INFO]: Loading world\n\n# Process exited with status: exit code: 0xcfffffff\n";
+        assert!(
+            rules_matching(log, CrashSourceKind::LauncherLog)
+                .contains(&"exit_not_responding".to_string())
+        );
+
+        let exit = exit_of(log).expect("the exit line should be read");
+        assert!(exit.crashed());
+        assert_eq!(exit.status, "exit code: 0xcfffffff");
+    }
+
+    #[test]
+    fn a_run_the_player_stopped_is_not_a_crash() {
+        let log = "[12:00:00] [main/INFO]: Loading world\n\n# Stopped from the launcher\n\n# Process exited with status: signal: 9 (SIGKILL)\n";
+
+        assert!(rules_matching(log, CrashSourceKind::LauncherLog).is_empty());
+        assert!(
+            !exit_of(log)
+                .expect("the exit line should be read")
+                .crashed()
+        );
+    }
+
+    #[test]
+    fn a_clean_exit_is_success() {
+        let exit = exit_of("# Process exited with status: exit code: 0\n")
+            .expect("the exit line should be read");
+        assert!(exit.success && !exit.crashed());
+    }
+
+    #[test]
+    fn a_missing_class_from_another_mod_is_named_and_the_games_is_not() {
+        let addon = "java.lang.NoClassDefFoundError: com/simibubi/create/content/kinetics/base/KineticBlock";
+        let diagnosis = analyze_text(addon, CrashSourceKind::Log, "latest.log");
+        let finding = diagnosis
+            .findings
+            .iter()
+            .find(|finding| finding.rule == "missing_class")
+            .expect("the missing class should have been recognised");
+        assert_eq!(
+            finding.values["symbol"],
+            "com/simibubi/create/content/kinetics/base/KineticBlock"
+        );
+
+        let vanilla = "java.lang.NoSuchMethodError: 'void net.minecraft.world.level.Level.tick()'";
+        let rules: Vec<String> =
+            analyze_text(vanilla, CrashSourceKind::Log, "latest.log")
+                .findings
+                .into_iter()
+                .map(|finding| finding.rule)
+                .collect();
+        assert!(rules.contains(&"mod_for_other_version".to_string()));
+        assert!(!rules.contains(&"missing_class".to_string()));
+    }
+
+    #[test]
+    fn one_line_is_one_finding() {
+        let text = "Missing or unsupported mandatory dependencies:\n\tMod ID: 'minecraft', Requested by: 'create', Expected range: '[1.20.1]', Actual version: '[MISSING]'";
+        let rules: Vec<String> =
+            analyze_text(text, CrashSourceKind::Log, "latest.log")
+                .findings
+                .into_iter()
+                .map(|finding| finding.rule)
+                .collect();
+
+        assert!(rules.contains(&"install_incomplete".to_string()));
+        assert!(!rules.contains(&"forge_missing_dependency".to_string()));
+    }
+
+    #[test]
+    fn a_bigger_pack_is_given_more_memory() {
+        assert_eq!(recommended_memory_mb(40), 4096);
+        assert_eq!(recommended_memory_mb(150), 6144);
+        assert_eq!(recommended_memory_mb(250), 8192);
+        assert_eq!(recommended_memory_mb(400), 10240);
     }
 
     #[test]

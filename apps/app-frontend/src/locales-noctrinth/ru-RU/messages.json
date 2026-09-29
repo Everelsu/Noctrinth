@@ -185,6 +185,24 @@
 	"app.collection.visibility.unlisted": {
 		"message": "По ссылке"
 	},
+	"app.crash-modal.close": {
+		"message": "Закрыть"
+	},
+	"app.crash-modal.header": {
+		"message": "{instance} вылетел"
+	},
+	"app.crash-modal.nothing-found": {
+		"message": "Лаунчер не распознал причину. Подробности — в логе, оттуда же им можно поделиться."
+	},
+	"app.crash-modal.open-logs": {
+		"message": "Открыть логи"
+	},
+	"app.crash-modal.status": {
+		"message": "Статус завершения: {status}"
+	},
+	"app.crash.disable-mod": {
+		"message": "Отключить {mod}"
+	},
 	"app.crash.dismiss": {
 		"message": "Скрыть"
 	},
@@ -200,17 +218,44 @@
 	"app.crash.hide-evidence": {
 		"message": "Скрыть строку"
 	},
+	"app.crash.memory-hint": {
+		"message": "У игры было {current} ГБ на {mods} модов. Сборке такого размера обычно нужно {gb} ГБ, и у этого компьютера они есть."
+	},
+	"app.crash.memory-set": {
+		"message": "Выделено {gb} ГБ"
+	},
+	"app.crash.mod-disabled": {
+		"message": "{mod} отключён"
+	},
 	"app.crash.open-folder": {
 		"message": "Открыть папку сборки"
 	},
 	"app.crash.open-settings": {
 		"message": "Открыть настройки"
 	},
+	"app.crash.rule.broken-mod-file.fix": {
+		"message": "Это не читаемый архив — загрузка оборвалась. Отключите его и скачайте заново."
+	},
+	"app.crash.rule.broken-mod-file.title": {
+		"message": "{mod_file} повреждён"
+	},
 	"app.crash.rule.chunk-unreadable.fix": {
 		"message": "Сначала сделайте резервную копию мира. Один повреждённый файл региона можно удалить — он сгенерируется заново, потеряется только построенное там."
 	},
 	"app.crash.rule.chunk-unreadable.title": {
 		"message": "Часть мира не читается (чанк {chunk})"
+	},
+	"app.crash.rule.config-file-empty.fix": {
+		"message": "Игра упала, пока его сохраняла. Удалите его, и мод запишет файл заново с настройками по умолчанию."
+	},
+	"app.crash.rule.config-file-empty.title": {
+		"message": "{file} пустой"
+	},
+	"app.crash.rule.config-truncated.fix": {
+		"message": "Игра упала, пока его сохраняла. Удалите файл, названный в строке ниже, — он запишется заново с настройками по умолчанию."
+	},
+	"app.crash.rule.config-truncated.title": {
+		"message": "Файл настроек пустой или обрезан"
 	},
 	"app.crash.rule.config-unreadable.fix": {
 		"message": "Удалите этот файл и запустите игру снова — мод запишет новый со своими значениями по умолчанию."
@@ -245,11 +290,53 @@
 	"app.crash.rule.disk-full.title": {
 		"message": "На диске закончилось место"
 	},
+	"app.crash.rule.duplicate-mod-files.fix": {
+		"message": "Оставьте один файл, остальные удалите: {files}"
+	},
+	"app.crash.rule.duplicate-mod-files.title": {
+		"message": "{mod_name} установлен несколько раз"
+	},
 	"app.crash.rule.duplicate-mods.fix": {
 		"message": "Откройте папку модов и оставьте по одной копии каждого — обычно виноваты две версии одного файла."
 	},
 	"app.crash.rule.duplicate-mods.title": {
 		"message": "Один и тот же мод установлен несколько раз"
+	},
+	"app.crash.rule.exit-access-violation.fix": {
+		"message": "Чаще всего это драйвер видеокарты или оверлей. Обновите драйвер, отключите шейдеры и оверлеи и запустите снова."
+	},
+	"app.crash.rule.exit-access-violation.title": {
+		"message": "Нативный код уронил игру без отчёта"
+	},
+	"app.crash.rule.exit-killed-by-system.fix": {
+		"message": "У компьютера закончилась память целиком. Выделите игре меньше или закройте остальные программы."
+	},
+	"app.crash.rule.exit-killed-by-system.title": {
+		"message": "Система завершила игру, чтобы освободить память"
+	},
+	"app.crash.rule.exit-missing-system-library.fix": {
+		"message": "Установите последний Microsoft Visual C++ Redistributable (x64), затем дайте лаунчеру переустановить Java для этого инстанса."
+	},
+	"app.crash.rule.exit-missing-system-library.title": {
+		"message": "Java не смогла загрузить системную библиотеку ({code})"
+	},
+	"app.crash.rule.exit-not-responding.fix": {
+		"message": "Большие сборки подвисают при загрузке мира, и если в это время кликнуть по окну, Windows предлагает его закрыть. Не трогайте окно, пока мир грузится. Если игра зависла намертво — скорее всего, ей не хватило памяти."
+	},
+	"app.crash.rule.exit-not-responding.title": {
+		"message": "Windows закрыла игру, потому что она перестала отвечать"
+	},
+	"app.crash.rule.exit-stack-buffer-overrun.fix": {
+		"message": "Обычно это оверлей или запись экрана — MSI Afterburner, RivaTuner, OBS, оверлей Discord — либо драйвер видеокарты. Отключите оверлеи и обновите драйвер."
+	},
+	"app.crash.rule.exit-stack-buffer-overrun.title": {
+		"message": "Игру уронило что-то, что в неё встраивается"
+	},
+	"app.crash.rule.exit-stack-overflow.fix": {
+		"message": "Чаще всего два мода бесконечно вызывают друг друга. Посмотрите, какие моды менялись с последнего удачного запуска."
+	},
+	"app.crash.rule.exit-stack-overflow.title": {
+		"message": "У игры переполнился стек"
 	},
 	"app.crash.rule.fabric-missing-dependency.fix": {
 		"message": "Установите {dependency} или уберите {mod_name}."
@@ -269,6 +356,12 @@
 	"app.crash.rule.feature-order-cycle.title": {
 		"message": "Два мода на генерацию мира спорят, что идёт первым"
 	},
+	"app.crash.rule.ferritecore-neighbor-table.fix": {
+		"message": "Поставьте replaceNeighborLookup = false в config/ferritecore-mixin.toml, пока мод из строки ниже не исправят."
+	},
+	"app.crash.rule.ferritecore-neighbor-table.title": {
+		"message": "Мод конфликтует с экономией памяти FerriteCore"
+	},
 	"app.crash.rule.file-locked.fix": {
 		"message": "Закройте другие лаунчеры и ещё запущенные копии игры, и проверьте, не сканирует ли эту папку антивирус."
 	},
@@ -283,6 +376,9 @@
 	},
 	"app.crash.rule.gpu-driver-amd.title": {
 		"message": "Упал драйвер видеокарты AMD ({library})"
+	},
+	"app.crash.rule.gpu-driver-generic.title": {
+		"message": "Упал драйвер видеокарты"
 	},
 	"app.crash.rule.gpu-driver-intel.title": {
 		"message": "Упал драйвер видеокарты Intel ({library})"
@@ -299,11 +395,23 @@
 	"app.crash.rule.heap-too-large-to-start.title": {
 		"message": "Сборка попросила больше памяти, чем удалось зарезервировать ({size})"
 	},
+	"app.crash.rule.install-incomplete.fix": {
+		"message": "Загрузчик не нашёл сам Minecraft. Восстановите инстанс, чтобы лаунчер установил его заново."
+	},
+	"app.crash.rule.install-incomplete.title": {
+		"message": "Игра или загрузчик установлены не полностью"
+	},
 	"app.crash.rule.integrated-gpu-in-use.fix": {
 		"message": "Если в компьютере есть отдельная видеокарта, игра использует более слабую. Лаунчер может попросить Windows переключиться на другую."
 	},
 	"app.crash.rule.integrated-gpu-in-use.title": {
 		"message": "Игра работает на встроенном видеоядре ({renderer})"
+	},
+	"app.crash.rule.intel-cpu-instability.fix": {
+		"message": "Настольные процессоры Intel 13-го и 14-го поколений деградируют и падают под нагрузкой. Обновите BIOS материнской платы до версии с исправлением микрокода Intel; если причина в этом, замена модов не поможет."
+	},
+	"app.crash.rule.intel-cpu-instability.title": {
+		"message": "Этот процессор ({model}) известен нестабильностью"
 	},
 	"app.crash.rule.java-module-error.fix": {
 		"message": "Java не запускается, когда два файла объявляют один и тот же модуль. Ниже указано какой — найдите, в каких модах он лежит, и оставьте тот, что новее."
@@ -329,6 +437,12 @@
 	"app.crash.rule.java-unsupported-class.title": {
 		"message": "Мод собран под более новую Java, чем та, на которой запустились"
 	},
+	"app.crash.rule.jna-blocked.fix": {
+		"message": "Мешает антивирус или временная папка без прав на запись. Добавьте папку лаунчера в исключения антивируса и проверьте, что в папку TEMP Windows можно писать."
+	},
+	"app.crash.rule.jna-blocked.title": {
+		"message": "Библиотека не смогла распаковаться во временную папку"
+	},
 	"app.crash.rule.jvm-itself-failed.fix": {
 		"message": "Падение внутри самой Java — это либо неисправное железо, либо ошибка в этой сборке Java. Сначала проверьте память; если с ней всё в порядке, поставьте для этой сборки другую версию Java."
 	},
@@ -341,6 +455,12 @@
 	"app.crash.rule.jvm-signal.title": {
 		"message": "Процесс был остановлен сигналом {signal}"
 	},
+	"app.crash.rule.kubejs-datapack.fix": {
+		"message": "Файл создаёт скрипт из папки kubejs. Исправьте или уберите этот скрипт; скрипты сборки обычно ломаются после обновления одного из её модов."
+	},
+	"app.crash.rule.kubejs-datapack.title": {
+		"message": "Скрипт KubeJS создал сломанный файл датапака ({file})"
+	},
 	"app.crash.rule.language-provider-mismatch.fix": {
 		"message": "В строках ниже написано, что именно он хотел. Либо обновите загрузчик для этой сборки, либо возьмите сборку мода под тот загрузчик, что стоит сейчас."
 	},
@@ -352,6 +472,18 @@
 	},
 	"app.crash.rule.loader-suggestion.title": {
 		"message": "Загрузчик модов сам подсказал решение"
+	},
+	"app.crash.rule.missing-class-owner.fix": {
+		"message": "Он ожидал {symbol}, а в установленном {owner_name} этого нет. Аддон должен совпадать с версией мода, который он расширяет: обновите оба или откатите {owner_name} до версии, под которую сделан аддон."
+	},
+	"app.crash.rule.missing-class-owner.title": {
+		"message": "Мод собран под другую версию {owner_name}"
+	},
+	"app.crash.rule.missing-class.fix": {
+		"message": "Он искал {symbol}, и ни в одном установленном моде этого нет. Установите мод, от которого он зависит, или удалите тот, которому это нужно."
+	},
+	"app.crash.rule.missing-class.title": {
+		"message": "Моду нужно то, что не установлено"
 	},
 	"app.crash.rule.missing-indium.fix": {
 		"message": "Sodium не реализует интерфейс отрисовки, через который рисуют некоторые моды, а Indium его возвращает. Поставьте Indium для той же версии Minecraft."
@@ -400,6 +532,12 @@
 	},
 	"app.crash.rule.mod-incompatible.title": {
 		"message": "{mod_name} отказывается работать вместе с {conflict}"
+	},
+	"app.crash.rule.mods-changed-since-working.fix": {
+		"message": "Добавлено: {added_count}, удалено: {removed_count}. Если больше ничего здесь не объясняет краш, начните с них — список в строках ниже."
+	},
+	"app.crash.rule.mods-changed-since-working.title": {
+		"message": "Моды менялись с последнего запуска без краша"
 	},
 	"app.crash.rule.native-allocator.fix": {
 		"message": "Почти всегда это сбоящая память или её разгон. Прогоните тест ОЗУ и отключите XMP или EXPO в BIOS — посмотрите, прекратится ли."
@@ -479,6 +617,12 @@
 	"app.crash.rule.resource-location-invalid.title": {
 		"message": "В путь попало имя, которое игра не принимает"
 	},
+	"app.crash.rule.server-config-broken.fix": {
+		"message": "Он лежит в папке serverconfig этого мира, а не в config. Удалите файл и откройте мир снова — мод создаст новый."
+	},
+	"app.crash.rule.server-config-broken.title": {
+		"message": "Повреждён файл настроек мира ({file})"
+	},
 	"app.crash.rule.server-thread-stuck.fix": {
 		"message": "Что-то заняло столько времени, что игра перестала ждать — обычно генерация мира на медленном диске или мод, застрявший в цикле. В строках ниже видно, чем она была занята."
 	},
@@ -490,6 +634,18 @@
 	},
 	"app.crash.rule.software-renderer.title": {
 		"message": "Игра рисует без драйвера видеокарты ({renderer})"
+	},
+	"app.crash.rule.spark-profiler-crash.fix": {
+		"message": "Его нативный профайлер не работает на новых версиях Java. Обновите Spark или запускайте этот инстанс на Java 21."
+	},
+	"app.crash.rule.spark-profiler-crash.title": {
+		"message": "Процесс уронил профайлер Spark"
+	},
+	"app.crash.rule.suspect-mod.fix": {
+		"message": "Когда игра упала, выполнялся код этого мода. Сначала обновите его; если не поможет — отключите и запустите снова, чтобы убедиться."
+	},
+	"app.crash.rule.suspect-mod.title": {
+		"message": "Краш произошёл внутри {mod_name}"
 	},
 	"app.crash.rule.suspected-mods.fix": {
 		"message": "Отключите их по одному и запускайте игру после каждого."
@@ -508,6 +664,9 @@
 	},
 	"app.crash.rule.wrong-jdk-apple-silicon.title": {
 		"message": "Java не той сборки для этого Mac"
+	},
+	"app.crash.set-memory": {
+		"message": "Выделить {gb} ГБ"
 	},
 	"app.crash.show-evidence": {
 		"message": "Показать строку"

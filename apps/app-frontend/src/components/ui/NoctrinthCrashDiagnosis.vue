@@ -6,7 +6,15 @@
  * they captured. The words are here, so that they can be translated and so that
  * a fix can be a button rather than a sentence telling somebody where to look.
  */
-import { ExternalIcon, FolderOpenIcon, SettingsIcon, WrenchIcon } from '@modrinth/assets'
+import {
+	CheckIcon,
+	ExternalIcon,
+	FolderOpenIcon,
+	MemoryStickIcon,
+	PowerOffIcon,
+	SettingsIcon,
+	WrenchIcon,
+} from '@modrinth/assets'
 import {
 	Admonition,
 	Button,
@@ -17,6 +25,7 @@ import {
 } from '@modrinth/ui'
 import { computed, ref } from 'vue'
 
+import { edit, toggle_disable_project } from '@/helpers/instance'
 import type { CrashFinding, CrashSeverity } from '@/helpers/noctrinth-crash'
 import { showInstanceInFolder } from '@/helpers/utils.js'
 
@@ -25,6 +34,8 @@ const props = defineProps<{
 	findings: CrashFinding[]
 	/** Opens the instance's settings, on the tab a fix belongs to. */
 	onOpenSettings?: (tab?: number) => void
+	/** Hides the dismiss button, for where the diagnosis is the whole view. */
+	permanent?: boolean
 }>()
 
 const emit = defineEmits<{ dismiss: [] }>()
@@ -504,6 +515,209 @@ const messages = defineMessages({
 		defaultMessage:
 			'Each is waiting for the other, so no order exists. Remove one of the world-generation mods, or install a mod that resolves the ordering.',
 	},
+
+	disableMod: { id: 'app.crash.disable-mod', defaultMessage: 'Disable {mod}' },
+	modDisabled: { id: 'app.crash.mod-disabled', defaultMessage: '{mod} is disabled' },
+	setMemory: { id: 'app.crash.set-memory', defaultMessage: 'Give it {gb} GB' },
+	memorySet: { id: 'app.crash.memory-set', defaultMessage: 'Memory set to {gb} GB' },
+	memoryHint: {
+		id: 'app.crash.memory-hint',
+		defaultMessage:
+			'It had {current} GB for {mods} mods. {gb} GB is what a pack this size usually needs, and this computer has it to spare.',
+	},
+
+	suspect_mod: {
+		id: 'app.crash.rule.suspect-mod.title',
+		defaultMessage: 'The crash happened inside {mod_name}',
+	},
+	suspect_mod_fix: {
+		id: 'app.crash.rule.suspect-mod.fix',
+		defaultMessage:
+			'Its own code was running when the game went down. Update it first; if that changes nothing, disable it and launch again to be sure.',
+	},
+	missing_class: {
+		id: 'app.crash.rule.missing-class.title',
+		defaultMessage: 'A mod needs something that is not installed',
+	},
+	missing_class_fix: {
+		id: 'app.crash.rule.missing-class.fix',
+		defaultMessage:
+			'It looked for {symbol} and no installed mod has it. Install the mod it depends on, or remove the one that needs it.',
+	},
+	missing_class_owner: {
+		id: 'app.crash.rule.missing-class-owner.title',
+		defaultMessage: 'A mod was built for a different version of {owner_name}',
+	},
+	missing_class_owner_fix: {
+		id: 'app.crash.rule.missing-class-owner.fix',
+		defaultMessage:
+			'It expected {symbol}, which the installed {owner_name} does not have. An addon has to match the version of the mod it extends: update both, or roll {owner_name} back to what the addon was made for.',
+	},
+	server_config_broken: {
+		id: 'app.crash.rule.server-config-broken.title',
+		defaultMessage: 'A world’s settings file is damaged ({file})',
+	},
+	server_config_broken_fix: {
+		id: 'app.crash.rule.server-config-broken.fix',
+		defaultMessage:
+			'It lives in that world’s serverconfig folder, not in config. Delete the file and open the world again — the mod writes a fresh one.',
+	},
+	config_truncated: {
+		id: 'app.crash.rule.config-truncated.title',
+		defaultMessage: 'A settings file is empty or cut short',
+	},
+	config_truncated_fix: {
+		id: 'app.crash.rule.config-truncated.fix',
+		defaultMessage:
+			'The game went down while saving it. Delete the file named in the line below and it will be written again with defaults.',
+	},
+	ferritecore_neighbor_table: {
+		id: 'app.crash.rule.ferritecore-neighbor-table.title',
+		defaultMessage: 'A mod clashed with FerriteCore’s memory savings',
+	},
+	ferritecore_neighbor_table_fix: {
+		id: 'app.crash.rule.ferritecore-neighbor-table.fix',
+		defaultMessage:
+			'Set replaceNeighborLookup to false in config/ferritecore-mixin.toml until the mod named in the line below is fixed.',
+	},
+	install_incomplete: {
+		id: 'app.crash.rule.install-incomplete.title',
+		defaultMessage: 'The game or its loader is not fully installed',
+	},
+	install_incomplete_fix: {
+		id: 'app.crash.rule.install-incomplete.fix',
+		defaultMessage:
+			'The loader could not find Minecraft itself. Repair the instance so the launcher installs it again.',
+	},
+	jna_blocked: {
+		id: 'app.crash.rule.jna-blocked.title',
+		defaultMessage: 'A library could not unpack itself into the temporary folder',
+	},
+	jna_blocked_fix: {
+		id: 'app.crash.rule.jna-blocked.fix',
+		defaultMessage:
+			'An antivirus, or a temporary folder without write permission, stops it. Add the launcher folder to the antivirus exclusions and check that the Windows TEMP folder is writable.',
+	},
+	kubejs_datapack: {
+		id: 'app.crash.rule.kubejs-datapack.title',
+		defaultMessage: 'A KubeJS script produced a broken datapack file ({file})',
+	},
+	kubejs_datapack_fix: {
+		id: 'app.crash.rule.kubejs-datapack.fix',
+		defaultMessage:
+			'The file comes from a script in the kubejs folder. Fix or remove that script; a pack’s own scripts usually break after one of its mods is updated.',
+	},
+	gpu_driver_generic: {
+		id: 'app.crash.rule.gpu-driver-generic.title',
+		defaultMessage: 'The graphics driver crashed',
+	},
+	spark_profiler_crash: {
+		id: 'app.crash.rule.spark-profiler-crash.title',
+		defaultMessage: 'Spark’s profiler brought the process down',
+	},
+	spark_profiler_crash_fix: {
+		id: 'app.crash.rule.spark-profiler-crash.fix',
+		defaultMessage:
+			'Its native profiler does not work on newer Java. Update Spark, or run this instance on Java 21.',
+	},
+	exit_not_responding: {
+		id: 'app.crash.rule.exit-not-responding.title',
+		defaultMessage: 'Windows closed the game because it stopped responding',
+	},
+	exit_not_responding_fix: {
+		id: 'app.crash.rule.exit-not-responding.fix',
+		defaultMessage:
+			'Large packs freeze for a while when a world loads, and clicking the window then makes Windows offer to close it. Leave it alone while it loads. If it froze for good, it was most likely short of memory.',
+	},
+	exit_killed_by_system: {
+		id: 'app.crash.rule.exit-killed-by-system.title',
+		defaultMessage: 'The system ended the game to free memory',
+	},
+	exit_killed_by_system_fix: {
+		id: 'app.crash.rule.exit-killed-by-system.fix',
+		defaultMessage:
+			'The computer ran out of memory as a whole. Give the game less, or close what else is running.',
+	},
+	exit_missing_system_library: {
+		id: 'app.crash.rule.exit-missing-system-library.title',
+		defaultMessage: 'Java could not load a system library ({code})',
+	},
+	exit_missing_system_library_fix: {
+		id: 'app.crash.rule.exit-missing-system-library.fix',
+		defaultMessage:
+			'Install the latest Microsoft Visual C++ Redistributable (x64), then let the launcher reinstall Java for this instance.',
+	},
+	exit_stack_buffer_overrun: {
+		id: 'app.crash.rule.exit-stack-buffer-overrun.title',
+		defaultMessage: 'Something hooked into the game crashed it',
+	},
+	exit_stack_buffer_overrun_fix: {
+		id: 'app.crash.rule.exit-stack-buffer-overrun.fix',
+		defaultMessage:
+			'Usually an overlay or recorder hooking the game — MSI Afterburner, RivaTuner, OBS, the Discord overlay — or the graphics driver. Turn overlays off and update the driver.',
+	},
+	exit_access_violation: {
+		id: 'app.crash.rule.exit-access-violation.title',
+		defaultMessage: 'Native code crashed the game without a report',
+	},
+	exit_access_violation_fix: {
+		id: 'app.crash.rule.exit-access-violation.fix',
+		defaultMessage:
+			'Most often the graphics driver or an overlay. Update the driver, turn shaders and overlays off, and launch again.',
+	},
+	exit_stack_overflow: {
+		id: 'app.crash.rule.exit-stack-overflow.title',
+		defaultMessage: 'The game ran out of stack',
+	},
+	exit_stack_overflow_fix: {
+		id: 'app.crash.rule.exit-stack-overflow.fix',
+		defaultMessage:
+			'Two mods calling each other endlessly, most of the time. Look at the mods changed since it last worked.',
+	},
+	duplicate_mod_files: {
+		id: 'app.crash.rule.duplicate-mod-files.title',
+		defaultMessage: '{mod_name} is installed more than once',
+	},
+	duplicate_mod_files_fix: {
+		id: 'app.crash.rule.duplicate-mod-files.fix',
+		defaultMessage: 'Keep one of these and remove the rest: {files}',
+	},
+	broken_mod_file: {
+		id: 'app.crash.rule.broken-mod-file.title',
+		defaultMessage: '{mod_file} is damaged',
+	},
+	broken_mod_file_fix: {
+		id: 'app.crash.rule.broken-mod-file.fix',
+		defaultMessage:
+			'It is not a readable archive — a download that was cut off. Disable it and download it again.',
+	},
+	config_file_empty: {
+		id: 'app.crash.rule.config-file-empty.title',
+		defaultMessage: '{file} is empty',
+	},
+	config_file_empty_fix: {
+		id: 'app.crash.rule.config-file-empty.fix',
+		defaultMessage:
+			'The game went down while saving it. Delete it and the mod will write it again with defaults.',
+	},
+	mods_changed_since_working: {
+		id: 'app.crash.rule.mods-changed-since-working.title',
+		defaultMessage: 'Mods changed since this instance last ran without crashing',
+	},
+	mods_changed_since_working_fix: {
+		id: 'app.crash.rule.mods-changed-since-working.fix',
+		defaultMessage:
+			'Added: {added_count}, removed: {removed_count}. If nothing else here explains the crash, start with these — the list is in the lines below.',
+	},
+	intel_cpu_instability: {
+		id: 'app.crash.rule.intel-cpu-instability.title',
+		defaultMessage: 'This processor ({model}) is known to become unstable',
+	},
+	intel_cpu_instability_fix: {
+		id: 'app.crash.rule.intel-cpu-instability.fix',
+		defaultMessage:
+			'Intel 13th and 14th generation desktop processors degrade and crash under load. Update the motherboard BIOS to one with Intel’s microcode fix; no change to mods helps if this is the cause.',
+	},
 })
 
 /** Rules whose fix is a page of this launcher rather than a sentence. */
@@ -525,6 +739,76 @@ const ACTIONS: Record<string, 'settings' | 'folder'> = {
 	chunk_unreadable: 'folder',
 	wrong_jdk_apple_silicon: 'settings',
 	jvm_itself_failed: 'settings',
+	server_config_broken: 'folder',
+	config_truncated: 'folder',
+	config_file_empty: 'folder',
+	ferritecore_neighbor_table: 'folder',
+	kubejs_datapack: 'folder',
+	duplicate_mod_files: 'folder',
+	broken_mod_file: 'folder',
+	install_incomplete: 'folder',
+	spark_profiler_crash: 'settings',
+}
+
+/**
+ * Rules whose `mod_file` is the one to switch off. A rule that only names a
+ * mod in passing — the one a missing dependency belongs to, say — is not here.
+ */
+const DISABLE_RULES = new Set([
+	'suspect_mod',
+	'broken_mod_file',
+	'fabric_missing_dependency',
+	'fabric_wrong_dependency_version',
+	'forge_missing_dependency',
+	'neoforge_dependency_version',
+	'mod_incompatible',
+	'mixin_failed',
+	'mixin_injection_failed',
+])
+
+const disabled = ref(new Set<string>())
+const memorySetTo = ref<number | null>(null)
+const busy = ref(false)
+
+function gigabytes(mb: string | number | undefined): string {
+	const value = Number(mb) / 1024
+	return Number.isFinite(value) ? String(Math.round(value * 10) / 10) : '?'
+}
+
+function modToDisable(finding: CrashFinding): string | undefined {
+	return DISABLE_RULES.has(finding.rule) ? finding.values.mod_file : undefined
+}
+
+function modLabel(finding: CrashFinding): string {
+	return finding.values.mod_name ?? finding.values.mod_file ?? ''
+}
+
+async function disableMod(finding: CrashFinding) {
+	const file = modToDisable(finding)
+	if (!file || busy.value) return
+	busy.value = true
+	try {
+		await toggle_disable_project(props.instanceId, file, false)
+		disabled.value = new Set([...disabled.value, file])
+	} catch (error) {
+		handleError(error as Error)
+	} finally {
+		busy.value = false
+	}
+}
+
+async function giveMemory(finding: CrashFinding) {
+	const maximum = Number(finding.values.recommended_mb)
+	if (!Number.isFinite(maximum) || busy.value) return
+	busy.value = true
+	try {
+		await edit(props.instanceId, { memory: { maximum } })
+		memorySetTo.value = maximum
+	} catch (error) {
+		handleError(error as Error)
+	} finally {
+		busy.value = false
+	}
 }
 
 /** A class file version is its Java version plus forty-four. */
@@ -551,13 +835,28 @@ function messageFor(key: string, finding: CrashFinding): string | undefined {
 	return formatMessage(message, values(finding))
 }
 
+/** The message key a finding reads under, where one rule has two readings. */
+function keyOf(finding: CrashFinding): string {
+	if (finding.rule === 'missing_class' && finding.values.owner_name) return 'missing_class_owner'
+	return finding.rule
+}
+
 function titleOf(finding: CrashFinding): string {
-	return messageFor(finding.rule, finding) ?? finding.evidence
+	return messageFor(keyOf(finding), finding) ?? finding.evidence
 }
 
 function fixOf(finding: CrashFinding): string | undefined {
 	if (finding.rule.startsWith('gpu_driver_')) return messageFor('gpu_driver_fix', finding)
-	return messageFor(`${finding.rule}_fix`, finding)
+	return messageFor(`${keyOf(finding)}_fix`, finding)
+}
+
+function memoryHintOf(finding: CrashFinding): string | undefined {
+	if (!finding.values.recommended_mb) return undefined
+	return formatMessage(messages.memoryHint, {
+		current: gigabytes(finding.values.current_mb),
+		mods: finding.values.mod_count,
+		gb: gigabytes(finding.values.recommended_mb),
+	})
 }
 
 const worst = computed<CrashSeverity>(() =>
@@ -598,9 +897,39 @@ function runAction(finding: CrashFinding) {
 			<div v-for="finding in findings" :key="finding.rule" class="flex flex-col gap-1">
 				<span class="font-semibold text-contrast">{{ titleOf(finding) }}</span>
 				<span v-if="fixOf(finding)" class="text-secondary">{{ fixOf(finding) }}</span>
+				<span v-if="memoryHintOf(finding)" class="text-secondary">{{ memoryHintOf(finding) }}</span>
 
 				<div class="flex flex-wrap items-center gap-2 pt-1">
-					<Button v-if="ACTIONS[finding.rule] === 'settings'" size="sm" @click="runAction(finding)">
+					<template v-if="finding.values.recommended_mb">
+						<span v-if="memorySetTo" class="flex items-center gap-1 text-sm text-brand">
+							<CheckIcon aria-hidden="true" />
+							{{ formatMessage(messages.memorySet, { gb: gigabytes(memorySetTo) }) }}
+						</span>
+						<Button v-else size="sm" color="brand" :disabled="busy" @click="giveMemory(finding)">
+							<MemoryStickIcon aria-hidden="true" />
+							{{
+								formatMessage(messages.setMemory, { gb: gigabytes(finding.values.recommended_mb) })
+							}}
+						</Button>
+					</template>
+					<template v-if="modToDisable(finding)">
+						<span
+							v-if="disabled.has(modToDisable(finding)!)"
+							class="flex items-center gap-1 text-sm text-brand"
+						>
+							<CheckIcon aria-hidden="true" />
+							{{ formatMessage(messages.modDisabled, { mod: modLabel(finding) }) }}
+						</span>
+						<Button v-else size="sm" :disabled="busy" @click="disableMod(finding)">
+							<PowerOffIcon aria-hidden="true" />
+							{{ formatMessage(messages.disableMod, { mod: modLabel(finding) }) }}
+						</Button>
+					</template>
+					<Button
+						v-if="ACTIONS[finding.rule] === 'settings' && onOpenSettings"
+						size="sm"
+						@click="runAction(finding)"
+					>
 						<SettingsIcon aria-hidden="true" />
 						{{ formatMessage(messages.openSettings) }}
 					</Button>
@@ -630,7 +959,7 @@ function runAction(finding: CrashFinding) {
 				</Collapsible>
 			</div>
 
-			<div class="flex items-center gap-2">
+			<div v-if="!permanent" class="flex items-center gap-2">
 				<Button size="sm" type="transparent" @click="emit('dismiss')">
 					<ExternalIcon aria-hidden="true" class="rotate-90" />
 					{{ formatMessage(messages.dismiss) }}

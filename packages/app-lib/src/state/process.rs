@@ -459,6 +459,21 @@ impl ProcessManager {
 
     pub async fn kill(&self, id: Uuid) -> crate::Result<()> {
         if let Some(mut process) = self.processes.get_mut(&id) {
+            // Stopping a run ends it with the same code a crash would, so the
+            // crash reader is told which of the two this was.
+            if let Ok(state) = crate::State::get().await {
+                let log_path = state
+                    .directories
+                    .instance_logs_dir(&process.metadata.instance_path)
+                    .join(LAUNCHER_LOG_PATH);
+                let _ = Process::append_to_log_file(
+                    &log_path,
+                    &format!(
+                        "\n{}\n",
+                        crate::api::crash_analysis::STOPPED_FROM_LAUNCHER
+                    ),
+                );
+            }
             process.child.kill().await?;
         }
 
@@ -1066,6 +1081,21 @@ impl Process {
                 );
             }
         });
+
+        // Written before the finish is announced: the crash reader is asked
+        // about this run the moment it is, and reads how it ended from here.
+        let logs_folder = state.directories.instance_logs_dir(&instance_path);
+        let log_path = logs_folder.join(LAUNCHER_LOG_PATH);
+
+        if log_path.exists()
+            && let Err(e) = Process::append_to_log_file(
+                &log_path,
+                &format!("\n# Process exited with status: {mc_exit_status}\n"),
+            )
+        {
+            tracing::warn!("Failed to write exit status to log file: {}", e);
+        }
+
         emit_process(
             &instance_id,
             uuid,
@@ -1096,18 +1126,6 @@ impl Process {
             }
         });
 
-        let logs_folder = state.directories.instance_logs_dir(&instance_path);
-        let log_path = logs_folder.join(LAUNCHER_LOG_PATH);
-
-        if log_path.exists()
-            && let Err(e) = Process::append_to_log_file(
-                &log_path,
-                &format!("\n# Process exited with status: {mc_exit_status}\n"),
-            )
-        {
-            tracing::warn!("Failed to write exit status to log file: {}", e);
-        }
-
         let _ = state.discord_rpc.clear_to_default(true).await;
 
         let _ = state.friends_socket.update_status(None).await;
@@ -1125,6 +1143,9 @@ impl Process {
         }
 
         if mc_exit_status.success() {
+            crate::api::crash_analysis::remember_working_mods(&instance_path)
+                .await;
+
             // We do not wait on the post exist command to finish running! We let it spawn + run on its own.
             // This behaviour may be changed in the future
             if let Some(hook) = post_exit_command {

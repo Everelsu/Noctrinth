@@ -94,6 +94,7 @@ import ModpackAlreadyInstalledModal from '@/components/ui/modal/ModpackAlreadyIn
 import ModrinthAccountRequiredModal from '@/components/ui/modal/ModrinthAccountRequiredModal.vue'
 import UpdateToPlayModal from '@/components/ui/modal/UpdateToPlayModal.vue'
 import NavButton from '@/components/ui/NavButton.vue'
+import NoctrinthCrashModal from '@/components/ui/NoctrinthCrashModal.vue'
 import NoctrinthLogo from '@/components/ui/NoctrinthLogo.vue'
 import OnboardingChecklist from '@/components/ui/onboarding-checklist/index.vue'
 import PrideFundraiserBanner from '@/components/ui/PrideFundraiserBanner.vue'
@@ -2811,6 +2812,7 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 	<NotificationPanel :has-sidebar="sidebarVisible" />
 	<PopupNotificationPanel :has-sidebar="sidebarVisible" />
 	<ErrorModal ref="errorModal" />
+	<NoctrinthCrashModal />
 	<MinecraftAuthErrorModal ref="minecraftAuthErrorModal" />
 	<MinecraftRequiredModal ref="minecraftRequiredModal" />
 	<ContentInstallModal

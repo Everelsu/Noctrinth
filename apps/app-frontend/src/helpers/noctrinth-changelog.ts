@@ -37,10 +37,25 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
 		version: '0.21.6+1',
 		date: '2026-09-29T00:00:00+00:00',
-		body: `### Fixed
+		body: `### Added
+- A window comes up by itself when a game crashes, with what the launcher found and buttons that fix it, instead of waiting for someone to open the Logs tab.
+- The crash reader names the mod the crash happened in: classes in the stack trace, mixin configs and loader errors are matched to the jar in \`mods/\` they came from, with a button to disable it.
+- It reads how the game ended: closed by Windows for not responding, killed by the system for memory, a missing system library, or native code crashing without a report.
+- It says which mods were added or removed since the instance last ran without crashing.
+- It finds damaged mod jars, empty config files (a world's serverconfig too), the same mod installed twice, and Intel 13th and 14th generation processors known to become unstable.
+- An addon built for another version of the mod it extends is told apart from one whose dependency is not installed.
+- More causes recognised: an incomplete install, a JNA library the antivirus blocked, a broken KubeJS datapack, a damaged server config, FerriteCore's neighbour table, Spark's profiler on newer Java, and more ways a graphics driver goes down.
+
+### Changed
+- An instance without its own memory setting gets more for a large pack: 6 GB from 100 mods, 8 GB from 200, 10 GB from 300, as far as the computer can spare. A world in a large pack loading on 4 GB is what froze until Windows closed it.
+- A crash that ran out of memory offers a button that gives the instance more.
+
+### Fixed
 - Launching no longer hangs on "Launching..." while Discord is running but not answering, and turning Discord RPC off no longer connects to Discord at all. Thanks to [@loyslow-dev](https://github.com/loyslow-dev) for tracking it down ([#7](https://github.com/Everelsu/Noctrinth/issues/7)).
 - A Java that never exits no longer holds a launch forever; the check before launch gives up after 30 seconds.
-- A stalled friends connection no longer holds a launch or the end of a game.`,
+- A stalled friends connection no longer holds a launch or the end of a game.
+- A mod built for another version of Minecraft is recognised again in crashes on modern Java, which words the missing method differently.
+- A \`latest.log\` left over from an earlier run is no longer read as if it described a launch that failed before the game started.`,
 	},
 	{
 		version: '0.21.6',

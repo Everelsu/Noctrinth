@@ -14,7 +14,7 @@
 import { invoke } from '@tauri-apps/api/core'
 
 export type CrashSeverity = 'note' | 'warning' | 'critical'
-export type CrashSourceKind = 'crash_report' | 'log' | 'jvm_error'
+export type CrashSourceKind = 'crash_report' | 'log' | 'jvm_error' | 'launcher_log'
 
 export interface CrashFinding {
 	rule: string
@@ -31,12 +31,26 @@ export interface CrashSourceFile {
 	modified: number
 }
 
+/** How the last run ended, as the launcher saw it. */
+export interface CrashExit {
+	status: string
+	success: boolean
+	/** The player stopped it from the launcher. */
+	stopped: boolean
+}
+
 export interface CrashDiagnosis {
 	findings: CrashFinding[]
 	sources: CrashSourceFile[]
+	exit: CrashExit | null
 }
 
-const EMPTY: CrashDiagnosis = { findings: [], sources: [] }
+const EMPTY: CrashDiagnosis = { findings: [], sources: [], exit: null }
+
+/** A run that ended on its own, and not well. */
+export function crashed(diagnosis: CrashDiagnosis): boolean {
+	return !!diagnosis.exit && !diagnosis.exit.success && !diagnosis.exit.stopped
+}
 
 /** Reads the files the last run left behind and reports what it recognised. */
 export async function analyzeInstanceCrash(instanceId: string): Promise<CrashDiagnosis> {

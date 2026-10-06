@@ -121,21 +121,23 @@ const hoveringTest = ref(false)
 let hasInitialized = false
 
 watch(
-	[javaTestPath, optimalJava],
-	([newPath]) => {
-		if (newPath && optimalJava.value?.parsed_version) {
+	javaTestPath,
+	(newPath) => {
+		if (newPath) {
 			if (!hasInitialized) {
-				testJavaInstallation(newPath, optimalJava.value.parsed_version, false)
+				testJavaInstallation(newPath, null, false)
 				hasInitialized = true
 			} else {
-				testJavaInstallationDebounced(newPath, optimalJava.value.parsed_version)
+				testJavaInstallationDebounced(newPath, null)
 			}
 		}
 	},
 	{ immediate: true },
 )
 
-const javaDetectionModal = ref<{ show: (version: number, current: object) => void } | null>(null)
+const javaDetectionModal = ref<{ show: (version: number | null, current: object) => void } | null>(
+	null,
+)
 
 async function handleBrowseJava() {
 	const result = await open({ multiple: false })
@@ -145,7 +147,7 @@ async function handleBrowseJava() {
 }
 
 function handleDetectJava() {
-	javaDetectionModal.value?.show(optimalJava.value?.parsed_version, { path: javaPath.value })
+	javaDetectionModal.value?.show(null, { path: javaPath.value })
 }
 
 const overrideJavaArgs = ref((instance.value.extra_launch_args?.length ?? 0) > 0)
@@ -464,9 +466,6 @@ const messages = defineMessages({
 							<CoffeeIcon />
 						</div>
 						<div class="flex flex-col gap-2 flex-1 min-w-0">
-							<span class="font-semibold leading-none mt-2"
-								>Java {{ optimalJava?.parsed_version }}</span
-							>
 							<div class="flex gap-2 items-center">
 								<Input
 									:model-value="activePath"
@@ -508,7 +507,7 @@ const messages = defineMessages({
 												: undefined,
 									}"
 									class="!text-[var(--legacy-button-color,var(--color-base))] [&>svg]:!text-[var(--legacy-button-color,var(--color-primary))]"
-									@click="testJavaInstallation(activePath, optimalJava?.parsed_version, true)"
+									@click="testJavaInstallation(activePath, null, true)"
 									@mouseenter="hoveringTest = true"
 									@mouseleave="hoveringTest = false"
 								>

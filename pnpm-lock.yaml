@@ -4,7 +4,15 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+packageExtensionsChecksum: sha256-GmICvIni5Nch5wyrJ+6StQ+BPUkvMjJcmw6K5FzXkg0=
+
 patchedDependencies:
+  '@vue-email/markdown@0.0.7':
+    hash: 74b9a61c29070865eb56aae15f58d6974cf081e4239a6fce97d7085544381666
+    path: patches/@vue-email__markdown@0.0.7.patch
+  '@vue-email/tailwind@0.2.0':
+    hash: 2041a0234c35df17aa8af3c870f60638349e9b7be5f239a6ab15fe096858613c
+    path: patches/@vue-email__tailwind@0.2.0.patch
   readable-stream@2.3.8:
     hash: 3045f7adf989b4e668a4a13819b7285b0de186b79bbf22408acaf2a41c6eaa86
     path: patches/readable-stream@2.3.8.patch
@@ -766,6 +774,9 @@ importers:
       motion-v:
         specifier: ^2.2.1
         version: 2.2.1(@vueuse/core@11.3.0(vue@3.5.27(typescript@5.9.3)))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vue@3.5.27(typescript@5.9.3))
+      obscenity:
+        specifier: ^0.4.6
+        version: 0.4.6
       overlayscrollbars:
         specifier: ^2.15.1
         version: 2.15.1
@@ -8138,6 +8149,10 @@ packages:
     resolution: {integrity: sha512-W67iLl4J2EXEGTbfeHCffrjDfitvLANg0UlX3wFUUSTx92KXRFegMHUVgSqE+wvhAbi4WqjGg9czysTV2Epbew==}
     engines: {node: '>= 0.4'}
 
+  obscenity@0.4.6:
+    resolution: {integrity: sha512-pHk7kNN7j3L3zGhhGnwxjvXIGsPpLrcZl2r58fqWh/V/rH6b/dafscj2sMmAY+A/9/wPsocLmimgGk2DKeKsFQ==}
+    engines: {node: '>=18.0.0'}
+
   obug@2.1.1:
     resolution: {integrity: sha512-uTqF9MuPraAQ+IsnPf366RG4cP9RtUi7MLO1N3KEc+wb0a6yKpeL0lmk2IB1jY5KHPAlTc6T/JRdC/YqxHNwkQ==}
 
@@ -15006,13 +15021,13 @@ snapshots:
       '@vue-email/html': 0.0.3(vue@3.5.27(typescript@5.9.3))
       '@vue-email/img': 0.0.3(vue@3.5.27(typescript@5.9.3))
       '@vue-email/link': 0.0.3(vue@3.5.27(typescript@5.9.3))
-      '@vue-email/markdown': 0.0.7(vue@3.5.27(typescript@5.9.3))
+      '@vue-email/markdown': 0.0.7(patch_hash=74b9a61c29070865eb56aae15f58d6974cf081e4239a6fce97d7085544381666)(vue@3.5.27(typescript@5.9.3))
       '@vue-email/preview': 0.0.3(vue@3.5.27(typescript@5.9.3))
       '@vue-email/render': 0.0.9(typescript@5.9.3)
       '@vue-email/row': 0.0.3(vue@3.5.27(typescript@5.9.3))
       '@vue-email/section': 0.0.3(vue@3.5.27(typescript@5.9.3))
       '@vue-email/style': 0.0.3(vue@3.5.27(typescript@5.9.3))
-      '@vue-email/tailwind': 0.2.0(vue@3.5.27(typescript@5.9.3))
+      '@vue-email/tailwind': 0.2.0(patch_hash=2041a0234c35df17aa8af3c870f60638349e9b7be5f239a6ab15fe096858613c)(vue@3.5.27(typescript@5.9.3))
       '@vue-email/text': 0.0.3(vue@3.5.27(typescript@5.9.3))
       vue: 3.5.27(typescript@5.9.3)
     transitivePeerDependencies:
@@ -15050,10 +15065,11 @@ snapshots:
     dependencies:
       vue: 3.5.27(typescript@5.9.3)
 
-  '@vue-email/markdown@0.0.7(vue@3.5.27(typescript@5.9.3))':
+  '@vue-email/markdown@0.0.7(patch_hash=74b9a61c29070865eb56aae15f58d6974cf081e4239a6fce97d7085544381666)(vue@3.5.27(typescript@5.9.3))':
     dependencies:
       marked: 7.0.4
       vue: 3.5.27(typescript@5.9.3)
+      xss: 1.0.15
 
   '@vue-email/preview@0.0.3(vue@3.5.27(typescript@5.9.3))':
     dependencies:
@@ -15079,7 +15095,7 @@ snapshots:
     dependencies:
       vue: 3.5.27(typescript@5.9.3)
 
-  '@vue-email/tailwind@0.2.0(vue@3.5.27(typescript@5.9.3))':
+  '@vue-email/tailwind@0.2.0(patch_hash=2041a0234c35df17aa8af3c870f60638349e9b7be5f239a6ab15fe096858613c)(vue@3.5.27(typescript@5.9.3))':
     dependencies:
       vue: 3.5.27(typescript@5.9.3)
 
@@ -19053,6 +19069,8 @@ snapshots:
   object-hash@3.0.0: {}
 
   object-inspect@1.13.4: {}
+
+  obscenity@0.4.6: {}
 
   obug@2.1.1: {}
 

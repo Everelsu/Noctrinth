@@ -75,17 +75,7 @@
 		<template #actions>
 			<PageHeaderActions>
 				<Button
-					v-if="isInstalling"
-					type="colored"
-					color="brand"
-					size="xl"
-					native-type="button"
-					disabled
-				>
-					{{ formatMessage(commonMessages.installingLabel) }}
-				</Button>
-				<Button
-					v-else-if="playing"
+					v-if="playing"
 					type="colored"
 					color="red"
 					size="xl"
@@ -97,6 +87,16 @@
 					{{
 						stopping ? formatMessage(messages.stopping) : formatMessage(commonMessages.stopButton)
 					}}
+				</Button>
+				<Button
+					v-else-if="isInstalling"
+					type="colored"
+					color="brand"
+					size="xl"
+					native-type="button"
+					disabled
+				>
+					{{ formatMessage(commonMessages.installingLabel) }}
 				</Button>
 				<Button
 					v-else-if="instance.quarantined"
@@ -368,17 +368,12 @@ const emit = defineEmits<{
 	report: [event?: MouseEvent]
 }>()
 
-const installingStages = [
-	'installing',
-	'pack_installing',
-	'pack_installed',
-	'not_installed',
-	'minecraft_installing',
-]
+const installingStages = ['installing', 'pack_installing', 'minecraft_installing']
 
 const { formatMessage } = useVIntl()
 
 const isInstalling = computed(() => installingStages.includes(props.instance.install_stage))
+
 const loaderDisplayName = computed(() => formatLoaderLabel(props.instance.loader) as ServerLoader)
 const loaderLabel = computed(() =>
 	[loaderDisplayName.value, props.instance.game_version].filter(Boolean).join(' '),

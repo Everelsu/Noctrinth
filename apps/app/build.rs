@@ -124,6 +124,7 @@ fn main() {
                         "logs_get_live_log_buffer_for_process",
                         "logs_clear_live_log_buffer",
                         "logs_clear_live_log_buffer_for_process",
+                        "logs_log_webview",
                     ])
                     .default_permission(
                         DefaultPermissionRule::AllowAllCommands,
@@ -418,6 +419,8 @@ fn main() {
                         "open_path",
                         "show_launcher_logs_folder",
                         "show_app_db_backups_folder",
+                        "export_debug_info",
+                        "cancel_debug_info_export",
                         "progress_bars_list",
                         "get_opening_command",
                         "log_startup_event",

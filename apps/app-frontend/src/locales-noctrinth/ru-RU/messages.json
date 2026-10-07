@@ -1313,6 +1313,9 @@
 	"app.settings.tabs.changelog": {
 		"message": "Список изменений"
 	},
+	"app.skins.cape-from": {
+		"message": "Плащ из {source}"
+	},
 	"app.skins.ely.edit.texture-locked": {
 		"message": "На Ely.by текстура и скин — одно целое, так что заменить её здесь нельзя. Загрузите новую текстуру отдельным скином."
 	},

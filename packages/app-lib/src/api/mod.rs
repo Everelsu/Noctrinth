@@ -20,6 +20,7 @@ pub mod mr_auth;
 pub mod offline_auth;
 pub mod onboarding_checklist;
 pub mod pack;
+pub mod player_capes;
 pub mod process;
 pub mod reports;
 pub mod server_address;

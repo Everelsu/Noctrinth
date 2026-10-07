@@ -14,6 +14,7 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
             offline_get_default_user,
             offline_set_default_user,
             offline_preview_uuid,
+            offline_player_cape,
         ])
         .build()
 }
@@ -47,4 +48,14 @@ pub async fn offline_set_default_user(uuid: Uuid) -> Result<()> {
 #[tauri::command]
 pub fn offline_preview_uuid(username: &str) -> Option<Uuid> {
     offline_auth::preview_uuid(username)
+}
+
+/// The cape a name has anywhere that hands them out, for the skin preview.
+///
+/// See `theseus::player_capes` for where it looks, and in what order.
+#[tauri::command]
+pub async fn offline_player_cape(
+    username: &str,
+) -> Result<Option<theseus::player_capes::PlayerCape>> {
+    Ok(theseus::player_capes::cape_for_name(username).await?)
 }

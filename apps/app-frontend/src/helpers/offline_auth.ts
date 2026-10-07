@@ -39,3 +39,29 @@ export async function offline_set_default_user(uuid: string): Promise<void> {
 export async function offline_preview_uuid(username: string): Promise<string | null> {
 	return await invoke('plugin:noctrinth-offline-auth|offline_preview_uuid', { username })
 }
+
+export type PlayerCapeSource =
+	| 'local'
+	| 'ely_by'
+	| 'mojang'
+	| 'opti_fine'
+	| 'laby_mod'
+	| 'minecraft_capes'
+	| 'skin_mc'
+
+/**
+ * The cape a name has anywhere that hands them out, as a data URL, or null.
+ * See `packages/app-lib/src/api/player_capes.rs` for where it looks.
+ */
+export async function offline_player_cape(
+	username: string,
+): Promise<{ source: PlayerCapeSource; texture: string } | null> {
+	const cape = await invoke<{ source: PlayerCapeSource; png: number[] } | null>(
+		'plugin:noctrinth-offline-auth|offline_player_cape',
+		{ username },
+	)
+	if (!cape) return null
+	let binary = ''
+	for (const byte of cape.png) binary += String.fromCharCode(byte)
+	return { source: cape.source, texture: `data:image/png;base64,${btoa(binary)}` }
+}

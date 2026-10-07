@@ -555,6 +555,7 @@ fn main() {
                         "offline_get_default_user",
                         "offline_set_default_user",
                         "offline_preview_uuid",
+                        "offline_player_cape",
                     ])
                     .default_permission(
                         DefaultPermissionRule::AllowAllCommands,

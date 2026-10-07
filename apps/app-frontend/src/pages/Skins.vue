@@ -55,6 +55,7 @@ import {
 	uploadElySkin,
 	wearElySkin,
 } from '@/helpers/ely_skins'
+import { offline_player_cape, type PlayerCapeSource } from '@/helpers/offline_auth'
 import { cleanupUnusedPreviews } from '@/helpers/rendering/skin-previews'
 import type { Cape, Skin, SkinModel, SkinTextureUrl } from '@/helpers/skins.ts'
 import {
@@ -97,6 +98,7 @@ const USER_CHECK_INTERVAL_MS = 1_000
 const DEFAULT_SKIN_SECTION_SORT_ORDER = ['Default skins', 'Modrinth Pride']
 const EARS_NOTICE_PLACEHOLDER = '__EARS_MOD_NAME__'
 const messages = defineMessages({
+	capeFrom: { id: 'app.skins.cape-from', defaultMessage: 'Cape from {source}' },
 	modrinthPrideSection: {
 		id: 'app.skins.section.modrinth-pride',
 		defaultMessage: 'Modrinth Pride',
@@ -320,6 +322,39 @@ const elyAccount = computed<ElySelectedAccount | undefined>(() => {
 	}
 	return undefined
 })
+
+/** The selected account when it is only a name. */
+const offlineAccount = computed<ElySelectedAccount | undefined>(() => {
+	const selected = accountsCard.value?.selectedAccount as ElySelectedAccount | undefined
+	return selected?.auth_provider === 'offline' ? selected : undefined
+})
+
+/**
+ * The cape an offline name has anywhere that hands them out — a licensed
+ * player's own, OptiFine's, LabyMod's — so the preview wears what the game
+ * will, where the game can see it.
+ */
+const offlineCape = ref<{ source: PlayerCapeSource; texture: string } | null>(null)
+watch(
+	() => offlineAccount.value?.profile.name,
+	async (name) => {
+		offlineCape.value = null
+		if (!name) return
+		const cape = await offline_player_cape(name).catch(() => null)
+		if (offlineAccount.value?.profile.name === name) offlineCape.value = cape
+	},
+	{ immediate: true },
+)
+
+const CAPE_SOURCE_NAMES: Record<PlayerCapeSource, string> = {
+	local: 'Noctrinth',
+	ely_by: 'Ely.by',
+	mojang: 'Minecraft',
+	opti_fine: 'OptiFine',
+	laby_mod: 'LabyMod',
+	minecraft_capes: 'MinecraftCapes',
+	skin_mc: 'SkinMC',
+}
 
 /** Bumped when the embedded Ely.by skin window closes to refetch the texture. */
 const elySkinRefresh = ref(0)
@@ -953,9 +988,16 @@ const skinTexture = computedAsync(async () => {
 		return ''
 	}
 })
-const capeTexture = computed(() => currentCape.value?.texture)
+const capeTexture = computed(
+	() =>
+		currentCape.value?.texture ?? (offlineAccount.value ? offlineCape.value?.texture : undefined),
+)
 const skinVariant = computed(() => selectedSkin.value?.variant)
-const skinNametag = computed(() => (appSettings.hideNametagSkinsPage ? undefined : username.value))
+const skinNametag = computed(() =>
+	appSettings.hideNametagSkinsPage
+		? undefined
+		: (username.value ?? offlineAccount.value?.profile.name),
+)
 const isSkinManagementReadOnly = computed(
 	() =>
 		!!currentUser.value &&
@@ -1799,7 +1841,20 @@ async function checkUserChanges() {
 					:ears-enabled="earsFeaturesEnabled"
 					@ears-features-detected="selectedSkinHasEarsFeatures = $event"
 				>
-					<template v-if="hasPendingSkinChange" #nametag-badge>
+					<template v-if="!hasPendingSkinChange && offlineAccount && offlineCape" #nametag-badge>
+						<Transition name="nm-pop" appear>
+							<span
+								class="rounded-full border border-solid border-surface-5 bg-surface-3 px-3 py-1 text-sm font-medium text-secondary"
+							>
+								{{
+									formatMessage(messages.capeFrom, {
+										source: CAPE_SOURCE_NAMES[offlineCape.source],
+									})
+								}}
+							</span>
+						</Transition>
+					</template>
+					<template v-else-if="hasPendingSkinChange" #nametag-badge>
 						<div
 							class="flex items-center justify-center gap-1.5 rounded-full border border-solid border-brand-blue bg-bg-blue px-3 py-1 text-base font-semibold leading-6 text-brand-blue"
 						>

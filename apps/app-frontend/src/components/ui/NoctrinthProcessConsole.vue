@@ -9,7 +9,7 @@
 -->
 <template>
 	<div class="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
-		<div class="flex items-center gap-2 text-sm">
+		<div v-if="showHeader !== false" class="flex items-center gap-2 text-sm">
 			<OnlineIndicatorIcon />
 			<span class="text-contrast">{{ accountName }}</span>
 			<span class="text-secondary">{{
@@ -23,13 +23,15 @@
 <script setup lang="ts">
 import { OnlineIndicatorIcon } from '@modrinth/assets'
 import { ConsolePageLayout, defineMessages, provideConsoleManager, useVIntl } from '@modrinth/ui'
-import { computed, onMounted, ref, shallowRef, triggerRef, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, shallowRef, triggerRef, watch } from 'vue'
 
 import { useAppEvent } from '@/composables/use-app-event'
 import { useProcessConsole } from '@/composables/useInstanceConsole'
 
 const props = defineProps<{
 	process: { uuid: string; account_name?: string; start_time?: string }
+	/** Off where the copy is already named, as on a tab. */
+	showHeader?: boolean
 }>()
 
 const { formatMessage } = useVIntl()
@@ -45,7 +47,8 @@ const messages = defineMessages({
 	},
 })
 
-const { console: liveConsole, hydrate, clear } = useProcessConsole(props.process.uuid)
+const { console: liveConsole, hydrate, clear, release } = useProcessConsole(props.process.uuid)
+onBeforeUnmount(release)
 
 const accountName = computed(
 	() => props.process.account_name || formatMessage(messages.unknownAccount),

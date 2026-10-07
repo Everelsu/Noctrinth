@@ -28,6 +28,14 @@ interface InstanceConsoleEntry {
 
 const instances = new Map<string, InstanceConsoleEntry>()
 
+/**
+ * Consoles that stopped hearing new lines: the page holding their listener
+ * went away while the game kept printing. The next page to show one reads it
+ * back whole from the launcher's buffer, instead of carrying on from where it
+ * left off with whatever was printed in between missing.
+ */
+const detached = new Set<string>()
+
 function getOrCreate(instanceId: string): InstanceConsoleEntry {
 	let entry = instances.get(instanceId)
 	if (entry) return entry
@@ -44,9 +52,12 @@ function getOrCreate(instanceId: string): InstanceConsoleEntry {
 
 async function hydrate(instanceId: string): Promise<void> {
 	const entry = getOrCreate(instanceId)
-	if (entry.liveConsole.output.value.length > 0) return
+	const key = `instance:${instanceId}`
+	if (entry.liveConsole.output.value.length > 0 && !detached.has(key)) return
+	detached.delete(key)
 
 	const buffer = await get_live_log_buffer(instanceId)
+	entry.liveConsole.clear()
 	if (buffer) {
 		entry.liveConsole.addLegacyLog(buffer)
 	}
@@ -114,10 +125,15 @@ export function useProcessConsole(processUuid: string) {
 	return {
 		console,
 		hydrate: async () => {
-			if (console.output.value.length > 0) return
+			const key = `process:${processUuid}`
+			if (console.output.value.length > 0 && !detached.has(key)) return
+			detached.delete(key)
 			const buffer = await get_live_log_buffer_for_process(processUuid)
+			console.clear()
 			if (buffer) console.addLegacyLog(buffer)
 		},
+		/** The listener feeding this console is going away. */
+		release: () => detached.add(`process:${processUuid}`),
 		clear: async () => {
 			console.clear()
 			await clear_log_buffer_for_process(processUuid).catch((error) => {
@@ -138,5 +154,7 @@ export function useInstanceConsole(instanceId: string) {
 		invalidate: () => invalidate(instanceId),
 		clearLive: () => clearLive(instanceId),
 		destroy: () => destroy(instanceId),
+		/** The listener feeding the live console is going away. */
+		release: () => detached.add(`instance:${instanceId}`),
 	}
 }

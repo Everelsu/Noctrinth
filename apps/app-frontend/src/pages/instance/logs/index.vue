@@ -18,9 +18,7 @@
 			running twice, so each copy gets its own. One copy, or none, is the page
 			as it has always been: the live log alongside every log kept on disk.
 		-->
-		<div v-if="runningCopies.length > 1" class="flex min-h-0 flex-1 gap-4">
-			<NoctrinthProcessConsole v-for="copy in runningCopies" :key="copy.uuid" :process="copy" />
-		</div>
+		<NoctrinthCopiesConsole v-if="runningCopies.length > 1" :copies="runningCopies" />
 		<ConsolePageLayout v-else />
 	</div>
 </template>
@@ -35,10 +33,10 @@ import {
 	useVIntl,
 } from '@modrinth/ui'
 import { useQuery } from '@tanstack/vue-query'
-import { computed, ref, shallowRef, triggerRef, watch, watchEffect } from 'vue'
+import { computed, onBeforeUnmount, ref, shallowRef, triggerRef, watch, watchEffect } from 'vue'
 
+import NoctrinthCopiesConsole from '@/components/ui/NoctrinthCopiesConsole.vue'
 import NoctrinthCrashDiagnosis from '@/components/ui/NoctrinthCrashDiagnosis.vue'
-import NoctrinthProcessConsole from '@/components/ui/NoctrinthProcessConsole.vue'
 import { useAppEvent } from '@/composables/use-app-event'
 import { useInstanceConsole } from '@/composables/useInstanceConsole'
 import { delete_logs_by_filename, get_output_by_filename } from '@/helpers/logs.js'
@@ -66,7 +64,9 @@ const {
 	getHistoricalContent,
 	invalidate,
 	clearLive,
+	release,
 } = useInstanceConsole(instanceId.value)
+onBeforeUnmount(release)
 
 const consoleHydrationQuery = useQuery({
 	queryKey: computed(() => instanceKeys.console(instanceId.value)),

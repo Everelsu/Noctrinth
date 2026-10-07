@@ -1069,7 +1069,10 @@ pub async fn launch_minecraft(
             .as_error());
         }
     }
-    if crate::state::instance_has_running_process(&instance.id, &state).await? {
+    if !additional
+        && crate::state::instance_has_running_process(&instance.id, &state)
+            .await?
+    {
         return Err(crate::ErrorKind::LauncherError(format!(
             "Instance {} is already running",
             instance.id
@@ -1331,7 +1334,10 @@ pub async fn launch_minecraft(
     let _store_lease = state.content_store.lease().await;
     state.content_store.recover(Some(&instance.id)).await?;
     // state.content_store.validate_instance(instance).await?;
-    if crate::state::instance_has_running_process(&instance.id, &state).await? {
+    if !additional
+        && crate::state::instance_has_running_process(&instance.id, &state)
+            .await?
+    {
         return Err(crate::ErrorKind::LauncherError(format!(
             "Instance {} is already running",
             instance.id

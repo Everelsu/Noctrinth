@@ -74,6 +74,9 @@
 	"app.changelog.author": {
 		"message": "Автор"
 	},
+	"app.changelog.installed": {
+		"message": "Установлена"
+	},
 	"app.changelog.modrinth-note": {
 		"message": "Показаны недавние выпуски. Полный список изменений приложения Modrinth доступен на их сайте."
 	},
@@ -91,6 +94,9 @@
 	},
 	"app.changelog.source.noctrinth": {
 		"message": "Noctrinth"
+	},
+	"app.changelog.support": {
+		"message": "Поддержать на Boosty"
 	},
 	"app.collection.create.created": {
 		"message": "Коллекция создана"

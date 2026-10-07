@@ -2,9 +2,10 @@
 import { ExternalIcon } from '@modrinth/assets'
 import { getChangelog } from '@modrinth/blog'
 import { Button, Chips, defineMessages, useVIntl } from '@modrinth/ui'
+import { getVersion } from '@tauri-apps/api/app'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import dayjs from 'dayjs'
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 import { NOCTRINTH_CHANGELOG } from '@/helpers/noctrinth-changelog'
 import { renderChangelog } from '@/helpers/render-changelog'
@@ -14,8 +15,24 @@ const { formatMessage } = useVIntl()
 /** Landing page of the fork's author, linked from the changelog header. */
 const AUTHOR_URL = 'https://everelsu.github.io/RelsevLink/'
 
+/** Where whoever wants to can support the fork. Offered once, quietly, beside the author. */
+const BOOSTY_URL = 'https://boosty.to/relsev'
+
+/** The version this build is, to mark it in the list. */
+const installedVersion = ref<string | null>(null)
+onMounted(async () => {
+	installedVersion.value = await getVersion().catch(() => null)
+})
+
+/** Whether an entry is the version running now; a build number after `+` is the same release. */
+function isInstalled(version: string | undefined): boolean {
+	return !!version && !!installedVersion.value && version.split('+')[0] === installedVersion.value
+}
+
 const messages = defineMessages({
 	author: { id: 'app.changelog.author', defaultMessage: 'Author' },
+	support: { id: 'app.changelog.support', defaultMessage: 'Support on Boosty' },
+	installed: { id: 'app.changelog.installed', defaultMessage: 'Installed' },
 	sourceNoctrinth: { id: 'app.changelog.source.noctrinth', defaultMessage: 'Noctrinth' },
 	sourceModrinth: { id: 'app.changelog.source.modrinth', defaultMessage: 'Modrinth' },
 	modrinthNote: {
@@ -149,21 +166,42 @@ const entries = computed<ChangelogEntry[]>(() =>
 				:capitalize="false"
 				never-empty
 			/>
-			<Button size="sm" @click="openUrl(AUTHOR_URL)">
-				{{ formatMessage(messages.author) }}
-				<ExternalIcon aria-hidden="true" />
-			</Button>
+			<div class="flex items-center gap-1.5">
+				<Button size="sm" @click="openUrl(AUTHOR_URL)">
+					{{ formatMessage(messages.author) }}
+					<ExternalIcon aria-hidden="true" />
+				</Button>
+				<button
+					v-tooltip="formatMessage(messages.support)"
+					type="button"
+					class="nm-press grid size-8 cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-secondary opacity-70 transition-all hover:bg-surface-4 hover:text-contrast hover:opacity-100 focus-visible:opacity-100"
+					:aria-label="formatMessage(messages.support)"
+					@click="openUrl(BOOSTY_URL)"
+				>
+					<svg viewBox="0 0 24 24" class="size-4" fill="currentColor" aria-hidden="true">
+						<path
+							d="M2.661 14.337 6.801 0h6.362L11.88 4.444l-.038.077-3.378 11.733h3.15c-1.321 3.289-2.35 5.867-3.086 7.733-5.816-.063-7.442-4.228-6.02-9.155M8.554 24l7.67-11.035h-3.25l2.83-7.073c4.852.508 7.137 4.33 5.791 8.952C20.16 19.81 14.344 24 8.68 24h-.127z"
+						/>
+					</svg>
+				</button>
+			</div>
 		</div>
 
 		<section
 			v-for="(entry, entryIdx) in entries"
 			:key="`${entry.version ?? ''}-${entry.date ?? ''}-${entryIdx}`"
-			class="flex flex-col gap-3"
+			class="changelog-entry flex flex-col gap-3"
 		>
-			<div class="flex items-baseline gap-2">
+			<div class="flex flex-wrap items-center gap-2">
 				<h2 class="m-0 text-xl font-bold text-contrast">
 					{{ entry.version ? `v${entry.version}` : entry.date }}
 				</h2>
+				<span
+					v-if="isInstalled(entry.version)"
+					class="rounded-full border border-solid border-brand bg-brand-highlight px-2 py-0.5 text-xs font-semibold text-brand"
+				>
+					{{ formatMessage(messages.installed) }}
+				</span>
 				<span v-if="entry.version && entry.date" class="text-sm text-secondary">
 					{{ entry.date }}
 				</span>
@@ -203,6 +241,54 @@ const entries = computed<ChangelogEntry[]>(() =>
 	</div>
 </template>
 <style scoped lang="scss">
+.changelog-entry + .changelog-entry {
+	padding-top: 1.25rem;
+	border-top: 1px solid var(--surface-5);
+}
+
+/*
+ * Rendered markdown has no classes to hang utilities on, so the body is styled
+ * here: links in the brand colour so they read as links, code as code, and
+ * list items with room between them.
+ */
+:deep(.changelog-body a) {
+	color: var(--color-brand);
+	font-weight: 500;
+	text-decoration: underline;
+	text-decoration-color: color-mix(in srgb, var(--color-brand) 40%, transparent);
+	text-underline-offset: 2px;
+	transition: text-decoration-color 120ms ease-out;
+}
+
+:deep(.changelog-body a:hover) {
+	text-decoration-color: currentColor;
+}
+
+:deep(.changelog-body code) {
+	padding: 0.05rem 0.35rem;
+	border-radius: 0.375rem;
+	background: var(--surface-4);
+	color: var(--color-contrast);
+	font-size: 0.85em;
+}
+
+:deep(.changelog-body ul) {
+	margin: 0;
+	padding-left: 1.25rem;
+}
+
+:deep(.changelog-body li + li) {
+	margin-top: 0.35rem;
+}
+
+:deep(.changelog-body li::marker) {
+	color: var(--color-secondary);
+}
+
+:deep(.changelog-body p) {
+	margin: 0;
+}
+
 /*
  * Screenshots arrive at whatever size they were taken, which is wider than this
  * panel — a window capture on a high-density display more than twice as wide.

@@ -35,6 +35,30 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.21.8',
+		date: '2026-10-07T00:00:00+00:00',
+		body: `### Added
+- An "Export debug info" button in Resource management that gathers what support needs to look into a problem.
+- 34 more official skins in the skin selector, from the Minecraft Dungeons hero packs.
+- An instance running more than once shows its copies' consoles behind tabs named after each account, or side by side.
+
+### Changed
+- Synced with upstream Modrinth (0.21.6 → 0.21.8).
+- The crash panel is rebuilt: one card with the likely causes in order of how bad they are, what the game itself said under the heading, and the rest folded away past three.
+- A custom Java in an instance's settings can be any version, not only the one the instance would pick.
+- Update all with a single project uses the normal update window.
+
+### Fixed
+- Launching a second copy of a running instance works again; a check added upstream refused it as already running.
+- A class a mod only checks for — whether another mod is installed — is no longer reported as what crashed the game. Those rules now read only the crash itself.
+- Leaving the Logs tab while a game runs and coming back no longer loses what it printed in between.
+- Instances whose files the content store cannot link no longer retry adopting every file before each launch, which filled the launcher's log with hundreds of warnings.
+- Download manager tasks no longer get stuck on "Pending...", and failed installs of a deleted instance no longer freeze the app on launch.
+- Several Update all failures: two files of the same project, "modpack data invalid", and a single project.
+- Disabling content no longer resets its "Date added".
+- The window no longer grows on Windows.`,
+	},
+	{
 		version: '0.21.6+1',
 		date: '2026-09-29T00:00:00+00:00',
 		body: `### Added

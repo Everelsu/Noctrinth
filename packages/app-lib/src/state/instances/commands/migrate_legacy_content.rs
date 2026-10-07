@@ -80,6 +80,22 @@ pub(crate) async fn migrate_legacy_content(
                 && !duplicates.contains(canonical)
                 && !managed_paths.contains(canonical)
         });
+        // Adoption is linking a file into the store. Where no link can be
+        // made — upstream has them switched off for now — every file would be
+        // tried and deferred again before every launch, a warning each.
+        if let Some(first) = scanned.first() {
+            let probe = state
+                .content_store
+                .instance_path(&instance.path, &first.relative_path)
+                .await?;
+            if !state.content_store.can_share_content(&probe).await? {
+                tracing::debug!(
+                    instance_id,
+                    "Content links are unavailable here; legacy adoption skipped"
+                );
+                scanned.clear();
+            }
+        }
         (scanned, normalized)
     };
     for scanned in scanned {

@@ -1533,6 +1533,65 @@ pub fn analyze_text(
     diagnosis
 }
 
+/// The same, for a file of one instance's the player picked out — an older
+/// crash report, say — read against that instance's mods, so the mod it points
+/// at is named and can be switched off as it would be for the latest run.
+pub async fn analyze_text_for_instance(
+    instance_id: &str,
+    text: &str,
+    kind: CrashSourceKind,
+    source_name: &str,
+) -> crate::Result<CrashDiagnosis> {
+    let mut diagnosis = CrashDiagnosis {
+        findings: findings_in(text, kind, source_name),
+        sources: vec![CrashSourceFile {
+            kind,
+            name: source_name.to_string(),
+            modified: 0,
+        }],
+        exit: None,
+    };
+
+    let state = State::get().await?;
+    if let Some(context) =
+        crate::state::instances::commands::get_instance_launch_context(
+            instance_id,
+            &state.pool,
+        )
+        .await?
+    {
+        let instance_dir = state
+            .directories
+            .instances_dir()
+            .join(&context.instance.path);
+        let mods_dir = instance_dir.join("mods");
+        let index =
+            tokio::task::spawn_blocking(move || ModIndex::read(&mods_dir))
+                .await
+                .unwrap_or_default();
+
+        // A crash report is a crash by definition; any other file only gets
+        // its findings given files, not a culprit read out of its traces.
+        let texts = [(kind, source_name.to_string(), text.to_string())];
+        attribute(
+            &mut diagnosis,
+            &texts,
+            &index,
+            kind == CrashSourceKind::CrashReport,
+        );
+        advise_memory(
+            &mut diagnosis,
+            &instance_dir,
+            context.launch_overrides.memory,
+            &state,
+        )
+        .await;
+    }
+
+    finish(&mut diagnosis);
+    Ok(diagnosis)
+}
+
 /// Worst first, and no more than a screenful.
 fn finish(diagnosis: &mut CrashDiagnosis) {
     let order: Vec<&str> = RULES.iter().map(|rule| rule.id).collect();

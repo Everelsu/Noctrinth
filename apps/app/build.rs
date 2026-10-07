@@ -572,7 +572,11 @@ fn main() {
             .plugin(
                 "noctrinth-crash",
                 InlinedPlugin::new()
-                    .commands(&["crash_analyze_instance", "crash_analyze_text"])
+                    .commands(&[
+                        "crash_analyze_instance",
+                        "crash_analyze_text",
+                        "crash_analyze_file",
+                    ])
                     .default_permission(
                         DefaultPermissionRule::AllowAllCommands,
                     ),

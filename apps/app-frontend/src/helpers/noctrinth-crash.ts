@@ -71,10 +71,20 @@ export async function analyzeCrashText(
 	text: string,
 	kind: CrashSourceKind,
 	sourceName: string,
+	/** The instance the file belongs to, so a culprit can be named from its mods. */
+	instanceId?: string,
 ): Promise<CrashDiagnosis> {
 	if (!text.trim()) return EMPTY
 
 	try {
+		if (instanceId) {
+			return await invoke<CrashDiagnosis>('plugin:noctrinth-crash|crash_analyze_file', {
+				instanceId,
+				text,
+				kind,
+				sourceName,
+			})
+		}
 		return await invoke<CrashDiagnosis>('plugin:noctrinth-crash|crash_analyze_text', {
 			text,
 			kind,

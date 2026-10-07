@@ -12,6 +12,7 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
         .invoke_handler(tauri::generate_handler![
             crash_analyze_instance,
             crash_analyze_text,
+            crash_analyze_file,
         ])
         .build()
 }
@@ -34,4 +35,22 @@ pub async fn crash_analyze_text(
     source_name: String,
 ) -> Result<CrashDiagnosis> {
     Ok(crash_analysis::analyze_text(&text, kind, &source_name))
+}
+
+/// The same rules against a file of one instance's, with that instance's mods
+/// to name a culprit from.
+#[tauri::command]
+pub async fn crash_analyze_file(
+    instance_id: &str,
+    text: String,
+    kind: CrashSourceKind,
+    source_name: String,
+) -> Result<CrashDiagnosis> {
+    Ok(crash_analysis::analyze_text_for_instance(
+        instance_id,
+        &text,
+        kind,
+        &source_name,
+    )
+    .await?)
 }

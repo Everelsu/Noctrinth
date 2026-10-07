@@ -177,6 +177,7 @@ async function diagnoseText(output, logType, filename) {
 		output,
 		logType === 'CrashReport' ? 'crash_report' : 'log',
 		filename,
+		instanceId.value,
 	)
 	localFindings.value = diagnosis.findings
 }

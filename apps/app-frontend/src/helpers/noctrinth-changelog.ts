@@ -41,6 +41,8 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 - An "Export debug info" button in Resource management that gathers what support needs to look into a problem.
 - 34 more official skins in the skin selector, from the Minecraft Dungeons hero packs.
 - An instance running more than once shows its copies' consoles behind tabs named after each account, or side by side.
+- The skin preview of an offline account wears the cape its name has: a licensed player's official one, or one from OptiFine, LabyMod, MinecraftCapes or SkinMC, with where it came from shown under the name.
+- Motion in the style of the download manager's button: the Play, Starting and Stop states slide into one another with a spinner while starting or stopping, the running instance in the top bar breathes and slides in, and the crash panel rises in with its causes one after another.
 
 ### Changed
 - Synced with upstream Modrinth (0.21.6 → 0.21.8).

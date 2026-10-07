@@ -74,79 +74,83 @@
 
 		<template #actions>
 			<PageHeaderActions>
-				<Button
-					v-if="playing"
-					type="colored"
-					color="red"
-					size="xl"
-					native-type="button"
-					:disabled="stopping"
-					@click="emit('stop')"
-				>
-					<StopCircleIcon />
-					{{
-						stopping ? formatMessage(messages.stopping) : formatMessage(commonMessages.stopButton)
-					}}
-				</Button>
-				<Button
-					v-else-if="isInstalling"
-					type="colored"
-					color="brand"
-					size="xl"
-					native-type="button"
-					disabled
-				>
-					{{ formatMessage(commonMessages.installingLabel) }}
-				</Button>
-				<Button
-					v-else-if="instance.quarantined"
-					v-tooltip="formatMessage(messages.lockedPlayTooltip)"
-					type="colored"
-					color="brand"
-					size="xl"
-					native-type="button"
-					disabled
-				>
-					<PlayIcon />
-					{{ formatMessage(commonMessages.playButton) }}
-				</Button>
-				<Button
-					v-else-if="instance.install_stage !== 'installed'"
-					type="colored"
-					color="brand"
-					size="xl"
-					native-type="button"
-					@click="emit('repair')"
-				>
-					<DownloadIcon />
-					{{ formatMessage(messages.repair) }}
-				</Button>
-				<SplitButton
-					v-else-if="!loading && isServerInstance"
-					type="colored"
-					color="brand"
-					size="xl"
-					:options="serverPlayOptions"
-					:menu-label="formatMessage(messages.launchInstance)"
-					@click="emit('playServer')"
-				>
-					<PlayIcon />
-					{{ formatMessage(commonMessages.playButton) }}
-				</SplitButton>
-				<Button
-					v-else-if="!loading"
-					type="colored"
-					color="brand"
-					size="xl"
-					native-type="button"
-					@click="emit('play')"
-				>
-					<PlayIcon />
-					{{ formatMessage(commonMessages.playButton) }}
-				</Button>
-				<Button v-else type="colored" color="brand" size="xl" native-type="button" disabled>{{
-					formatMessage(messages.starting)
-				}}</Button>
+				<Transition name="nm-swap-seq" mode="out-in">
+					<Button
+						v-if="playing"
+						type="colored"
+						color="red"
+						size="xl"
+						native-type="button"
+						:disabled="stopping"
+						@click="emit('stop')"
+					>
+						<LoaderSpinnerIcon v-if="stopping" class="motion-safe:animate-spin" />
+						<StopCircleIcon v-else />
+						{{
+							stopping ? formatMessage(messages.stopping) : formatMessage(commonMessages.stopButton)
+						}}
+					</Button>
+					<Button
+						v-else-if="isInstalling"
+						type="colored"
+						color="brand"
+						size="xl"
+						native-type="button"
+						disabled
+					>
+						{{ formatMessage(commonMessages.installingLabel) }}
+					</Button>
+					<Button
+						v-else-if="instance.quarantined"
+						v-tooltip="formatMessage(messages.lockedPlayTooltip)"
+						type="colored"
+						color="brand"
+						size="xl"
+						native-type="button"
+						disabled
+					>
+						<PlayIcon />
+						{{ formatMessage(commonMessages.playButton) }}
+					</Button>
+					<Button
+						v-else-if="instance.install_stage !== 'installed'"
+						type="colored"
+						color="brand"
+						size="xl"
+						native-type="button"
+						@click="emit('repair')"
+					>
+						<DownloadIcon />
+						{{ formatMessage(messages.repair) }}
+					</Button>
+					<SplitButton
+						v-else-if="!loading && isServerInstance"
+						type="colored"
+						color="brand"
+						size="xl"
+						:options="serverPlayOptions"
+						:menu-label="formatMessage(messages.launchInstance)"
+						@click="emit('playServer')"
+					>
+						<PlayIcon />
+						{{ formatMessage(commonMessages.playButton) }}
+					</SplitButton>
+					<Button
+						v-else-if="!loading"
+						type="colored"
+						color="brand"
+						size="xl"
+						native-type="button"
+						@click="emit('play')"
+					>
+						<PlayIcon />
+						{{ formatMessage(commonMessages.playButton) }}
+					</Button>
+					<Button v-else type="colored" color="brand" size="xl" native-type="button" disabled>
+						<LoaderSpinnerIcon class="motion-safe:animate-spin" />
+						{{ formatMessage(messages.starting) }}
+					</Button>
+				</Transition>
 
 				<!-- Outside the chain above, so that it stands beside Stop rather than instead of it. -->
 				<IconButton
@@ -191,6 +195,7 @@ import {
 	DownloadIcon,
 	ExternalIcon,
 	FolderOpenIcon,
+	LoaderSpinnerIcon,
 	LockIcon,
 	MoreVerticalIcon,
 	PackageIcon,

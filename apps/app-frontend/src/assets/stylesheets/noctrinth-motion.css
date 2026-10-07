@@ -1,0 +1,168 @@
+/*
+ * The launcher's motion, after the download manager's button: things that
+ * change slide in from below and leave upwards, icons pop in at scale, lists
+ * arrive one after another, and a running thing breathes. Every class here is
+ * meant for Vue's <Transition> / <TransitionGroup> by name.
+ *
+ * Nothing moves for someone who has asked their system for less motion.
+ */
+
+:root {
+	--nm-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+	--nm-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* A label or value replaced by another: the old one leaves up, the new one rises in. */
+.nm-swap-enter-active,
+.nm-swap-leave-active {
+	transition:
+		transform 180ms var(--nm-ease-out),
+		opacity 160ms ease-out;
+}
+.nm-swap-leave-active {
+	position: absolute;
+}
+.nm-swap-enter-from {
+	transform: translateY(6px);
+	opacity: 0;
+}
+.nm-swap-leave-to {
+	transform: translateY(-6px);
+	opacity: 0;
+}
+
+/* The same, one after the other (mode="out-in"), for content that sizes its container. */
+.nm-swap-seq-enter-active,
+.nm-swap-seq-leave-active {
+	transition:
+		transform 160ms var(--nm-ease-out),
+		opacity 140ms ease-out;
+}
+.nm-swap-seq-enter-from {
+	transform: translateY(6px);
+	opacity: 0;
+}
+.nm-swap-seq-leave-to {
+	transform: translateY(-6px);
+	opacity: 0;
+}
+
+/* An icon or a badge appearing or changing. */
+.nm-pop-enter-active {
+	transition:
+		transform 260ms var(--nm-spring),
+		opacity 160ms ease-out;
+}
+.nm-pop-leave-active {
+	transition:
+		transform 140ms ease-in,
+		opacity 140ms ease-in;
+}
+.nm-pop-leave-active {
+	position: absolute;
+}
+.nm-pop-enter-from,
+.nm-pop-leave-to {
+	transform: scale(0.7);
+	opacity: 0;
+}
+
+/* Items of a list arriving one after another; set --nm-index on each. */
+.nm-list-enter-active {
+	transition:
+		transform 320ms var(--nm-ease-out),
+		opacity 240ms ease-out;
+	transition-delay: calc(min(var(--nm-index, 0), 8) * 45ms);
+}
+.nm-list-leave-active {
+	transition:
+		transform 160ms ease-in,
+		opacity 140ms ease-in;
+}
+.nm-list-enter-from {
+	transform: translateY(10px);
+	opacity: 0;
+}
+.nm-list-leave-to {
+	transform: translateY(-4px);
+	opacity: 0;
+}
+.nm-list-move {
+	transition: transform 260ms var(--nm-ease-out);
+}
+
+/* A whole panel coming into view. */
+.nm-rise-enter-active {
+	transition:
+		transform 360ms var(--nm-ease-out),
+		opacity 260ms ease-out;
+}
+.nm-rise-leave-active {
+	transition:
+		transform 180ms ease-in,
+		opacity 160ms ease-in;
+}
+.nm-rise-enter-from {
+	transform: translateY(12px) scale(0.985);
+	opacity: 0;
+}
+.nm-rise-leave-to {
+	transform: translateY(-6px) scale(0.99);
+	opacity: 0;
+}
+
+/* Something running: a ring that grows out of it and fades. */
+.nm-live {
+	position: relative;
+	display: inline-flex;
+}
+.nm-live::after {
+	content: '';
+	position: absolute;
+	/* The dot of the online indicator, inside its 3px ring. */
+	inset: 17%;
+	border-radius: 9999px;
+	background: var(--color-brand);
+	opacity: 0.45;
+	animation: nm-live-ring 1.8s var(--nm-ease-out) infinite;
+	pointer-events: none;
+}
+@keyframes nm-live-ring {
+	from {
+		transform: scale(1);
+		opacity: 0.45;
+	}
+	to {
+		transform: scale(2.4);
+		opacity: 0;
+	}
+}
+
+/* A press that gives a little. */
+.nm-press {
+	transition: transform 120ms var(--nm-ease-out);
+}
+.nm-press:active {
+	transform: scale(0.96);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.nm-swap-enter-active,
+	.nm-swap-leave-active,
+	.nm-swap-seq-enter-active,
+	.nm-swap-seq-leave-active,
+	.nm-pop-enter-active,
+	.nm-pop-leave-active,
+	.nm-list-enter-active,
+	.nm-list-leave-active,
+	.nm-list-move,
+	.nm-rise-enter-active,
+	.nm-rise-leave-active,
+	.nm-press {
+		transition: none;
+	}
+	.nm-live::after {
+		animation: none;
+		display: none;
+	}
+}

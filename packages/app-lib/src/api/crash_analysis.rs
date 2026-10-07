@@ -173,6 +173,12 @@ struct Rule {
     kinds: &'static [CrashSourceKind],
 }
 
+/// Rules about an exception, which a log is full of whether or not it is the
+/// one the game died of: a mod checking whether another is installed throws a
+/// `ClassNotFoundException` it expects, and prints it. These read only the
+/// crash itself — see `crash_culprits::crash_excerpt`.
+const EXCERPT_ONLY: &[&str] = &["missing_class", "mod_for_other_version"];
+
 /// The rules, in the order their findings are shown when they tie on severity.
 static RULES: &[Rule] = &[
     // What the game itself said, which is a headline rather than a diagnosis.
@@ -788,7 +794,7 @@ static COMPILED: LazyLock<Vec<CompiledRule>> = LazyLock::new(|| {
 /// A rule speaks once per file, on the first line it matched: a mixin failure
 /// that took ten mods down with it is one thing that went wrong, not ten.
 pub fn findings_in(
-    text: &str,
+    full_text: &str,
     kind: CrashSourceKind,
     source_name: &str,
 ) -> Vec<CrashFinding> {
@@ -798,6 +804,12 @@ pub fn findings_in(
         if !rule.kinds.is_empty() && !rule.kinds.contains(&kind) {
             continue;
         }
+
+        let text = if EXCERPT_ONLY.contains(&rule.id) {
+            crash_culprits::crash_excerpt(full_text)
+        } else {
+            full_text
+        };
 
         if let Some(also) = also
             && !also.is_match(text)
@@ -1884,7 +1896,7 @@ mod tests {
 
     #[test]
     fn a_missing_class_from_another_mod_is_named_and_the_games_is_not() {
-        let addon = "java.lang.NoClassDefFoundError: com/simibubi/create/content/kinetics/base/KineticBlock";
+        let addon = "java.lang.NoClassDefFoundError: com/simibubi/create/content/kinetics/base/KineticBlock\n\tat com.example.addon.Belt.<init>(Belt.java:1)";
         let diagnosis = analyze_text(addon, CrashSourceKind::Log, "latest.log");
         let finding = diagnosis
             .findings
@@ -1896,7 +1908,7 @@ mod tests {
             "com/simibubi/create/content/kinetics/base/KineticBlock"
         );
 
-        let vanilla = "java.lang.NoSuchMethodError: 'void net.minecraft.world.level.Level.tick()'";
+        let vanilla = "java.lang.NoSuchMethodError: 'void net.minecraft.world.level.Level.tick()'\n\tat com.example.mod.Ticker.run(Ticker.java:1)";
         let rules: Vec<String> =
             analyze_text(vanilla, CrashSourceKind::Log, "latest.log")
                 .findings
@@ -1904,6 +1916,21 @@ mod tests {
                 .map(|finding| finding.rule)
                 .collect();
         assert!(rules.contains(&"mod_for_other_version".to_string()));
+        assert!(!rules.contains(&"missing_class".to_string()));
+    }
+
+    #[test]
+    fn a_class_a_mod_only_checked_for_is_not_the_crash() {
+        // A mod asking whether Xaero's Minimap is installed, early in a 1.7.10
+        // log, and the crash that actually ended the run at the bottom.
+        let log = "[10:00:01] [Client thread/INFO]: Looking for Xaero's Minimap\njava.lang.ClassNotFoundException: xaero.minimap.XaeroMinimap\n\tat java.net.URLClassLoader.findClass(URLClassLoader.java:1)\n\tat com.example.compat.Probe.check(Probe.java:2)\n[10:12:47] [Server thread/ERROR]: Encountered an unexpected exception\njava.lang.NullPointerException\n\tat com.uky.graves.GraveHandler.onTick(GraveHandler.java:3)\n";
+        let rules: Vec<String> =
+            analyze_text(log, CrashSourceKind::LauncherLog, "launcher_log.txt")
+                .findings
+                .into_iter()
+                .map(|finding| finding.rule)
+                .collect();
+
         assert!(!rules.contains(&"missing_class".to_string()));
     }
 

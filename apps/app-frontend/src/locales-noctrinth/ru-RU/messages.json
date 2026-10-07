@@ -209,8 +209,11 @@
 	"app.crash.found-in": {
 		"message": "В файле {file}"
 	},
-	"app.crash.header": {
-		"message": "Лаунчер кое-что нашёл в этом падении"
+	"app.crash.game-said": {
+		"message": "Игра сообщила: {description}"
+	},
+	"app.crash.header-count": {
+		"message": "{count, plural, one {Лаунчер нашёл вероятную причину} few {Лаунчер нашёл # вероятные причины} many {Лаунчер нашёл # вероятных причин} other {Лаунчер нашёл # вероятной причины}}"
 	},
 	"app.crash.header-note": {
 		"message": "Об этом запуске стоит знать"
@@ -670,6 +673,12 @@
 	},
 	"app.crash.show-evidence": {
 		"message": "Показать строку"
+	},
+	"app.crash.show-less": {
+		"message": "Свернуть"
+	},
+	"app.crash.show-more": {
+		"message": "Показать ещё {count}"
 	},
 	"app.error-modal.copy-debug-info": {
 		"message": "Скопировать отладочную информацию"
@@ -1730,11 +1739,20 @@
 	"instance.badge.shared.label": {
 		"message": "Информация об общей сборке"
 	},
+	"instance.console.copies-running": {
+		"message": "{count, plural, one {Запущена # копия} few {Запущено # копии} many {Запущено # копий} other {Запущено # копии}}"
+	},
 	"instance.console.copy-started-at": {
 		"message": "запущена в {time}"
 	},
 	"instance.console.copy-unknown-account": {
 		"message": "Неизвестный аккаунт"
+	},
+	"instance.console.one-at-a-time": {
+		"message": "По одной"
+	},
+	"instance.console.side-by-side": {
+		"message": "Рядом"
 	},
 	"instance.metadata.loader-tooltip": {
 		"message": "Загрузчик модов и версия Minecraft"

@@ -4,18 +4,10 @@
 		class="flex flex-col gap-3 bg-button-bg border border-solid border-surface-5 rounded-xl p-3 mt-2"
 	>
 		<span>{{ formatMessage(messages.notSignedIn) }}</span>
-		<Button type="colored" color="brand" :disabled="loginDisabled" @click="login()">
+		<Button type="colored" color="brand" :disabled="loginDisabled" @click="emit('add-account')">
 			<LogInIcon v-if="!loginDisabled" />
 			<SpinnerIcon v-else class="animate-spin" />
 			{{ formatMessage(messages.signInToMinecraft) }}
-		</Button>
-		<Button @click="elyLoginModal?.show()">
-			<LogInIcon />
-			{{ formatMessage(messages.addElyAccount) }}
-		</Button>
-		<Button @click="offlineModal?.show()">
-			<LogInIcon />
-			{{ formatMessage(messages.addOfflineAccount) }}
 		</Button>
 	</div>
 	<Accordion
@@ -94,26 +86,11 @@
 					v-if="allAccounts.length > 0"
 					class="w-full !bg-button-bg !text-primary ![box-shadow:var(--shadow-button)]"
 					:disabled="loginDisabled"
-					@click="login()"
+					@click="emit('add-account')"
 				>
-					<PlusIcon />
+					<SpinnerIcon v-if="loginDisabled" class="animate-spin" />
+					<PlusIcon v-else />
 					{{ formatMessage(messages.addAccount) }}
-				</Button>
-				<Button
-					v-if="allAccounts.length > 0"
-					class="w-full !bg-button-bg !text-primary ![box-shadow:var(--shadow-button)]"
-					@click="elyLoginModal?.show()"
-				>
-					<PlusIcon />
-					{{ formatMessage(messages.addElyAccount) }}
-				</Button>
-				<Button
-					v-if="allAccounts.length > 0"
-					class="w-full !bg-button-bg !text-primary ![box-shadow:var(--shadow-button)]"
-					@click="offlineModal?.show()"
-				>
-					<PlusIcon />
-					{{ formatMessage(messages.addOfflineAccount) }}
 				</Button>
 			</div>
 		</div>
@@ -157,6 +134,7 @@ import {
 	users,
 } from '@/helpers/auth'
 import {
+	ely_device_login,
 	ely_get_default_user,
 	ely_get_users,
 	ely_logout,
@@ -180,6 +158,8 @@ const { handleError } = injectNotificationManager()
 
 const emit = defineEmits<{
 	change: []
+	/** One button for every kind of account; the parent asks which. */
+	'add-account': []
 }>()
 
 type MinecraftCredential = {
@@ -368,7 +348,7 @@ defineExpose({
 	login,
 	// So anything offering a choice of account — the getting started checklist,
 	// for one — can open the Ely.by dialog this card owns.
-	showElyLogin: () => elyLoginModal.value?.show(),
+	showElyLogin: loginEly,
 	showOfflineLogin: () => offlineModal.value?.show(),
 	loginDisabled,
 	selectedAccount,
@@ -480,6 +460,26 @@ async function login() {
 
 	trackEvent('AccountLogIn')
 	loginDisabled.value = false
+}
+
+/**
+ * Opens Ely.by's sign-in window straight away, the way Microsoft's opens. The
+ * password form is only for when that window cannot do it.
+ */
+async function loginEly() {
+	loginDisabled.value = true
+	try {
+		const credentials = await ely_device_login()
+		if (credentials) {
+			await refreshValues()
+			await setAccount(credentials)
+			trackEvent('AccountLogIn')
+		}
+	} catch (error) {
+		elyLoginModal.value?.showWithError(error)
+	} finally {
+		loginDisabled.value = false
+	}
 }
 
 async function logoutAccount(account: AnyCredential) {

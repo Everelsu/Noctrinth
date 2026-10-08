@@ -44,7 +44,9 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 ### Changed
 - The launch button is one shape that flows between Play, Starting, Installing and Stop, changing width and colour on a spring while the label melts from one into the next. The button for a second copy runs out of Stop like a drop and comes away, and runs back in when the game closes.
 - In the skin preview the nametag stays above the head through every turn, tilt and zoom, and turns with the model like a sign. The shadow tilts with the floor, and the hint under the feet says the wheel zooms.
-- The splash opens already painted in the theme's colour instead of flashing black first, comes in with a fade, and its bar eases forward instead of racing to the end and stalling there.
+- The splash screen is redrawn to stay smooth while the app starts behind it: the bar and the fade out run on the compositor, so a busy start no longer freezes them, and the window opens already painted instead of flashing black. It takes its colours from the theme and the accent, with a grey cube behind them, so a light theme or a non-purple accent no longer shows a lavender splash that then changes colour as it fades.
+- One "Add account" button asks which kind of account to add, instead of three buttons in a row.
+- Adding an Ely.by account opens Ely.by's sign-in in a window, the way a Microsoft account does, with the code already filled in. It is the device sign-in [AstralRinth](https://git.xorison.dev/didirus/AstralRinth) uses; the password form is still there if the window cannot do it.
 - The "Cannot reach authentication servers" banner can be dismissed, has a button to check again, rechecks every thirty seconds until the servers answer, and says that offline and Ely.by accounts are not affected. A single dropped request no longer raises it.
 
 ### Fixed

@@ -5,7 +5,8 @@ use uuid::Uuid;
 // half that owns a window — so the pieces it needs are re-exported here rather
 // than left inside a private module.
 pub use crate::state::ely_oauth::{
-    ElyAuthorizationRequest, ElyRedirect, read_redirect,
+    ElyAuthorizationRequest, ElyDeviceFlow, ElyDevicePoll, ElyRedirect,
+    read_redirect,
 };
 
 pub async fn login(
@@ -44,9 +45,32 @@ pub async fn finish_oauth(
     code: &str,
     verifier: &str,
 ) -> crate::Result<ElyCredentials> {
-    let state = crate::State::get().await?;
     let tokens = crate::state::ely_oauth::exchange_code(code, verifier).await?;
+    save_oauth_account(tokens).await
+}
 
+/// Starts a sign-in the player approves on Ely.by's code page.
+pub async fn begin_device() -> crate::Result<ElyDeviceFlow> {
+    crate::state::ely_oauth::begin_device().await
+}
+
+/// Asks whether the code has been approved, and saves the account once it has.
+/// What comes back short of that is why there is no account yet.
+pub async fn poll_device(
+    device_code: &str,
+) -> crate::Result<Result<ElyCredentials, ElyDevicePoll>> {
+    match crate::state::ely_oauth::poll_device(device_code).await? {
+        ElyDevicePoll::Signed(tokens) => {
+            Ok(Ok(save_oauth_account(tokens).await?))
+        }
+        other => Ok(Err(other)),
+    }
+}
+
+async fn save_oauth_account(
+    tokens: crate::state::ely_oauth::ElyOauthTokens,
+) -> crate::Result<ElyCredentials> {
+    let state = crate::State::get().await?;
     let creds = ElyCredentials {
         uuid: tokens.uuid,
         username: tokens.username,

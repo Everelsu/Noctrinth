@@ -9,7 +9,7 @@
  * install shows — went straight to Microsoft, leaving no way in for anybody
  * else.
  */
-import { LogInIcon, UserIcon } from '@modrinth/assets'
+import { MicrosoftColorIcon, UserIcon } from '@modrinth/assets'
 import { Button, defineMessages, NewModal, useVIntl } from '@modrinth/ui'
 import { ref } from 'vue'
 
@@ -84,7 +84,7 @@ defineExpose({
 					native-type="button"
 					@click="choose('microsoft')"
 				>
-					<LogInIcon aria-hidden="true" />
+					<span class="provider-mark bg-white"><MicrosoftColorIcon aria-hidden="true" /></span>
 					<span class="flex min-w-0 flex-col items-start">
 						<span class="font-semibold leading-5">{{ formatMessage(messages.microsoft) }}</span>
 						<span class="text-sm font-normal leading-5 opacity-80">
@@ -98,7 +98,7 @@ defineExpose({
 					native-type="button"
 					@click="choose('ely')"
 				>
-					<LogInIcon aria-hidden="true" />
+					<span class="provider-mark ely-mark" aria-hidden="true">E</span>
 					<span class="flex min-w-0 flex-col items-start">
 						<span class="font-semibold leading-5">{{ formatMessage(messages.ely) }}</span>
 						<span class="text-sm font-normal leading-5 text-secondary">
@@ -112,7 +112,7 @@ defineExpose({
 					native-type="button"
 					@click="choose('offline')"
 				>
-					<UserIcon aria-hidden="true" />
+					<span class="provider-mark bg-surface-4"><UserIcon aria-hidden="true" /></span>
 					<span class="flex min-w-0 flex-col items-start">
 						<span class="font-semibold leading-5">{{ formatMessage(messages.offline) }}</span>
 						<span class="text-sm font-normal leading-5 text-secondary">
@@ -124,3 +124,28 @@ defineExpose({
 		</div>
 	</NewModal>
 </template>
+
+<style scoped>
+.provider-mark {
+	display: flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 2rem;
+	height: 2rem;
+	border-radius: 0.5rem;
+
+	svg {
+		width: 1.25rem;
+		height: 1.25rem;
+	}
+}
+
+/* Ely.by's own green, as its mark wears it. */
+.ely-mark {
+	background: #207e5c;
+	color: #fff;
+	font-weight: 800;
+	font-size: 1.1rem;
+}
+</style>

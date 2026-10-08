@@ -48,6 +48,9 @@ const AUTHORIZE_URL: &str = "https://account.ely.by/oauth2/v1";
 /// Where the code is traded for a token.
 const TOKEN_URL: &str = "https://account.ely.by/api/oauth2/v1/token";
 
+/// Where a device sign-in starts.
+const DEVICE_CODE_URL: &str = "https://account.ely.by/api/oauth2/v1/devicecode";
+
 /// Who the token belongs to.
 const ACCOUNT_INFO_URL: &str = "https://account.ely.by/api/account/v1/info";
 
@@ -190,6 +193,115 @@ pub fn read_redirect(url: &str, expected_state: &str) -> Option<ElyRedirect> {
     }
 }
 
+/// A device sign-in: the player approves it on Ely.by's code page while the
+/// launcher asks the token endpoint whether they have yet.
+///
+/// This is how AstralRinth signs in with Ely.by, and it is what makes the page
+/// usable at all: the code page loads in the sign-in window where the
+/// authorization page with a redirect would not finish, and there is no
+/// redirect to catch, so the window only has to stay open.
+pub struct ElyDeviceFlow {
+    pub device_code: String,
+    /// The code page with the code already filled in.
+    pub verification_url: String,
+    pub expires_in: i64,
+    pub interval: u64,
+}
+
+pub enum ElyDevicePoll {
+    Pending,
+    SlowDown,
+    Denied,
+    Expired,
+    Signed(ElyOauthTokens),
+}
+
+#[derive(Deserialize)]
+struct DeviceCodeResponse {
+    device_code: String,
+    user_code: String,
+    verification_uri: String,
+    expires_in: i64,
+    interval: Option<u64>,
+}
+
+/// Asks Ely.by for a code for the player to approve.
+pub async fn begin_device() -> crate::Result<ElyDeviceFlow> {
+    let (status, body) = post_form(
+        DEVICE_CODE_URL,
+        &[("client_id", CLIENT_ID), ("scope", SCOPES)],
+    )
+    .await?;
+    if !status.is_success() {
+        return Err(refusal(status, &body));
+    }
+
+    let response: DeviceCodeResponse =
+        serde_json::from_str(&body).map_err(|e| {
+            crate::ErrorKind::OtherError(format!(
+                "Failed to parse the Ely.by device code: {e}"
+            ))
+        })?;
+
+    Ok(ElyDeviceFlow {
+        verification_url: verification_url(
+            &response.verification_uri,
+            &response.user_code,
+        )?,
+        device_code: response.device_code,
+        expires_in: response.expires_in,
+        interval: response.interval.unwrap_or(5).max(1),
+    })
+}
+
+/// Ely.by hands the page back over plain HTTP; it is opened over HTTPS, with
+/// the code in it so the player only has to confirm.
+fn verification_url(uri: &str, user_code: &str) -> crate::Result<String> {
+    let mut url = url::Url::parse(uri).map_err(|e| {
+        crate::ErrorKind::OtherError(format!(
+            "Invalid Ely.by verification address: {e}"
+        ))
+    })?;
+    if url.scheme() == "http" {
+        let _ = url.set_scheme("https");
+    }
+    url.query_pairs_mut().append_pair("user_code", user_code);
+    Ok(url.into())
+}
+
+/// Asks whether the player has approved the code yet.
+pub async fn poll_device(device_code: &str) -> crate::Result<ElyDevicePoll> {
+    let (status, body) = post_form(
+        TOKEN_URL,
+        &[
+            ("client_id", CLIENT_ID),
+            ("grant_type", "urn:ietf:params:oauth:grant-type:device_code"),
+            ("device_code", device_code),
+        ],
+    )
+    .await?;
+
+    if !status.is_success() {
+        let error = serde_json::from_str::<serde_json::Value>(&body)
+            .ok()
+            .and_then(|value| value["error"].as_str().map(String::from));
+        return match error.as_deref() {
+            Some("authorization_pending") => Ok(ElyDevicePoll::Pending),
+            Some("slow_down") => Ok(ElyDevicePoll::SlowDown),
+            Some("access_denied") => Ok(ElyDevicePoll::Denied),
+            Some("expired_token") => Ok(ElyDevicePoll::Expired),
+            _ => Err(refusal(status, &body)),
+        };
+    }
+
+    let tokens: TokenResponse = serde_json::from_str(&body).map_err(|e| {
+        crate::ErrorKind::OtherError(format!(
+            "Failed to parse the Ely.by token response: {e}"
+        ))
+    })?;
+    Ok(ElyDevicePoll::Signed(identify(tokens).await?))
+}
+
 #[derive(Deserialize)]
 struct TokenResponse {
     access_token: String,
@@ -224,6 +336,11 @@ pub async fn exchange_code(
     ])
     .await?;
 
+    identify(tokens).await
+}
+
+/// Asks whose a fresh token is.
+async fn identify(tokens: TokenResponse) -> crate::Result<ElyOauthTokens> {
     let info = account_info(&tokens.access_token).await?;
     let uuid = Uuid::parse_str(&info.uuid).map_err(|e| {
         crate::ErrorKind::OtherError(format!("Invalid UUID from Ely.by: {e}"))
@@ -265,9 +382,12 @@ pub async fn refresh(refresh_token: &str) -> crate::Result<ElyOauthTokens> {
     })
 }
 
-async fn post_token(form: &[(&str, &str)]) -> crate::Result<TokenResponse> {
+async fn post_form(
+    url: &str,
+    form: &[(&str, &str)],
+) -> crate::Result<(reqwest::StatusCode, String)> {
     let response = INSECURE_REQWEST_CLIENT
-        .post(TOKEN_URL)
+        .post(url)
         .form(form)
         .send()
         .await
@@ -284,23 +404,33 @@ async fn post_token(form: &[(&str, &str)]) -> crate::Result<TokenResponse> {
         ))
     })?;
 
-    if !status.is_success() {
-        // Ely.by answers with OAuth's own error shape, which names the problem
-        // far better than the status does.
-        let described = serde_json::from_str::<serde_json::Value>(&body)
-            .ok()
-            .and_then(|value| {
-                value["error_description"]
-                    .as_str()
-                    .or_else(|| value["error"].as_str())
-                    .map(String::from)
-            })
-            .unwrap_or_else(|| format!("HTTP {status}"));
+    Ok((status, body))
+}
 
-        return Err(crate::ErrorKind::OtherError(format!(
-            "Ely.by refused the sign-in: {described}"
-        ))
-        .into());
+/// Ely.by answers with OAuth's own error shape, which names the problem far
+/// better than the status does.
+fn refusal(status: reqwest::StatusCode, body: &str) -> crate::Error {
+    let described = serde_json::from_str::<serde_json::Value>(body)
+        .ok()
+        .and_then(|value| {
+            value["error_description"]
+                .as_str()
+                .or_else(|| value["message"].as_str())
+                .or_else(|| value["error"].as_str())
+                .map(String::from)
+        })
+        .unwrap_or_else(|| format!("HTTP {status}"));
+
+    crate::ErrorKind::OtherError(format!(
+        "Ely.by refused the sign-in: {described}"
+    ))
+    .into()
+}
+
+async fn post_token(form: &[(&str, &str)]) -> crate::Result<TokenResponse> {
+    let (status, body) = post_form(TOKEN_URL, form).await?;
+    if !status.is_success() {
+        return Err(refusal(status, &body));
     }
 
     serde_json::from_str(&body).map_err(|e| {
@@ -365,6 +495,14 @@ mod tests {
         );
         assert_ne!(pkce.verifier, PkcePair::generate().verifier);
         assert!(!pkce.challenge.contains('='));
+    }
+
+    #[test]
+    fn the_code_page_opens_over_https_with_the_code_filled_in() {
+        assert_eq!(
+            verification_url("http://account.ely.by/code", "LDRRDHLM").unwrap(),
+            "https://account.ely.by/code?user_code=LDRRDHLM"
+        );
     }
 
     #[test]

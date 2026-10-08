@@ -29,6 +29,15 @@ export async function ely_oauth_login(): Promise<ElyCredentials | null> {
 	return await invoke('plugin:ely-auth|ely_oauth_login')
 }
 
+/**
+ * Signs in on Ely.by's code page, in a window like the Microsoft one, the way
+ * AstralRinth does. Null is the window closed, the sign-in declined, or the
+ * code run out.
+ */
+export async function ely_device_login(): Promise<ElyCredentials | null> {
+	return await invoke('plugin:ely-auth|ely_device_login')
+}
+
 export async function ely_logout(user: string): Promise<void> {
 	await invoke('plugin:ely-auth|ely_logout', { user })
 }

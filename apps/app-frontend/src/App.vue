@@ -2787,7 +2787,7 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 							{{ formatMessage(messages.playingAs) }}
 						</h3>
 						<suspense>
-							<AccountsCard ref="accounts" />
+							<AccountsCard ref="accounts" @add-account="accountProviderModal?.show()" />
 						</suspense>
 					</div>
 					<div

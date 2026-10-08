@@ -9,6 +9,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
         .invoke_handler(tauri::generate_handler![
             ely_login,
             ely_oauth_login,
+            ely_device_login,
             ely_logout,
             ely_get_users,
             ely_get_default_user,
@@ -39,6 +40,85 @@ const ELY_SIGN_IN_WINDOW_LABEL: &str = "ely-sign-in";
 
 /// How long the window is left open before the sign-in is given up on.
 const ELY_SIGN_IN_TIMEOUT_MINUTES: i64 = 10;
+
+/// Signs in on Ely.by's code page, in a window like the Microsoft one.
+///
+/// The device flow, as AstralRinth does it: the page opens with the code
+/// already in it, the player signs in and confirms, and the launcher asks the
+/// token endpoint every few seconds whether they have. Nothing has to be read
+/// out of the window, which is why this works where [`ely_oauth_login`]'s
+/// redirect page would not finish loading.
+///
+/// `Ok(None)` is the player closing the window, declining, or letting the code
+/// run out.
+#[tauri::command]
+pub async fn ely_device_login<R: Runtime>(
+    app: tauri::AppHandle<R>,
+) -> Result<Option<ElyCredentials>> {
+    use theseus::ely_auth::ElyDevicePoll;
+
+    let flow = ely_auth::begin_device().await?;
+    let start = chrono::Utc::now();
+    let mut interval = flow.interval;
+
+    if let Some(stale) = app.get_webview_window(ELY_SIGN_IN_WINDOW_LABEL) {
+        stale.close()?;
+    }
+
+    let window = tauri::WebviewWindowBuilder::new(
+        &app,
+        ELY_SIGN_IN_WINDOW_LABEL,
+        tauri::WebviewUrl::External(flow.verification_url.parse().map_err(
+            |_| {
+                theseus::ErrorKind::OtherError(
+                    "Could not build the Ely.by sign-in address".to_string(),
+                )
+                .as_error()
+            },
+        )?),
+    )
+    .title("Sign in with Ely.by")
+    .always_on_top(true)
+    .min_inner_size(500.0, 500.0)
+    .inner_size(1000.0, 700.0)
+    .focused(true)
+    .center()
+    .build()?;
+
+    window.request_user_attention(Some(tauri::UserAttentionType::Critical))?;
+
+    let deadline = chrono::Duration::seconds(flow.expires_in);
+    while chrono::Utc::now() - start < deadline {
+        // Checked twice a second, so closing the window ends the wait at once
+        // rather than at the next poll.
+        for _ in 0..interval * 2 {
+            if window.title().is_err() {
+                return Ok(None);
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+        }
+
+        match ely_auth::poll_device(&flow.device_code).await {
+            Ok(Ok(credentials)) => {
+                window.close()?;
+                return Ok(Some(credentials));
+            }
+            Ok(Err(ElyDevicePoll::SlowDown)) => interval += 5,
+            Ok(Err(ElyDevicePoll::Denied | ElyDevicePoll::Expired)) => {
+                window.close()?;
+                return Ok(None);
+            }
+            Ok(Err(_)) => {}
+            Err(error) => {
+                window.close()?;
+                return Err(error.into());
+            }
+        }
+    }
+
+    window.close()?;
+    Ok(None)
+}
 
 /// Signs in by sending the player to Ely.by's own page.
 ///

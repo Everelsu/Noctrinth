@@ -522,6 +522,7 @@ fn main() {
                     .commands(&[
                         "ely_login",
                         "ely_oauth_login",
+                        "ely_device_login",
                         "ely_logout",
                         "ely_get_users",
                         "ely_get_default_user",

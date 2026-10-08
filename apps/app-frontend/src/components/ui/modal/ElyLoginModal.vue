@@ -201,7 +201,7 @@ import { EyeIcon, EyeOffIcon, LogInIcon, SpinnerIcon, XIcon } from '@modrinth/as
 import { Admonition, Button, defineMessages, Input, NewModal, useVIntl } from '@modrinth/ui'
 import { ref } from 'vue'
 
-import { ely_login, ely_oauth_login, type ElyCredentials } from '@/helpers/ely_auth'
+import { ely_device_login, ely_login, type ElyCredentials } from '@/helpers/ely_auth'
 
 const { formatMessage } = useVIntl()
 
@@ -298,7 +298,7 @@ const modal = ref<InstanceType<typeof NewModal>>()
  * rebuild. Until then the password form is the way in, which is what it was
  * before any of this and what still works.
  */
-const PAGE_SIGN_IN_ENABLED = false
+const PAGE_SIGN_IN_ENABLED = true
 
 const mode = ref<'page' | 'password'>(PAGE_SIGN_IN_ENABLED ? 'page' : 'password')
 const username = ref('')
@@ -308,6 +308,12 @@ const needsTotp = ref(false)
 const showPassword = ref(false)
 const loading = ref(false)
 const errorMessage = ref('')
+
+/** Opens on the page sign-in with what went wrong already said. */
+function showWithError(error: unknown) {
+	show()
+	errorMessage.value = formatPageError(extractErrorMessage(error))
+}
 
 function show(event?: MouseEvent) {
 	mode.value = PAGE_SIGN_IN_ENABLED ? 'page' : 'password'
@@ -342,7 +348,7 @@ async function signInOnPage() {
 	loading.value = true
 	errorMessage.value = ''
 	try {
-		const credentials = await ely_oauth_login()
+		const credentials = await ely_device_login()
 		// Null is the player closing the window: leave the modal as it was, with
 		// nothing said, so trying again is one click and not a dismissed error.
 		if (credentials) {
@@ -408,7 +414,7 @@ function formatLoginError(msg: string): string {
 	return msg || formatMessage(messages.loginFailedGeneric)
 }
 
-defineExpose({ show, hide })
+defineExpose({ show, showWithError, hide })
 </script>
 
 <style scoped>

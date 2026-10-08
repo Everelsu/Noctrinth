@@ -387,8 +387,10 @@ export function createSwipeHandler(handlers: SwipeHandlers): SwipeHandle {
 }
 
 function resolveDirection(directionSign: number, invert: boolean): SwipeDirection {
-	// Windows default ("content follows fingers"): fingers-left → positive deltaX.
-	const fingersLeft = directionSign > 0
+	// Measured on a real precision touchpad in WebView2: fingers moving left
+	// arrive as negative deltaX. The Steam plugin this came from assumed the
+	// opposite, and the launcher shipped with left and right swapped.
+	const fingersLeft = directionSign < 0
 	const isBack = invert ? !fingersLeft : fingersLeft
 	return isBack ? 'back' : 'forward'
 }

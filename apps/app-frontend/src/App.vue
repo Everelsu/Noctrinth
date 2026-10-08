@@ -154,6 +154,7 @@ import {
 	removeUser,
 	setActive,
 } from '@/helpers/mr_auth.ts'
+import { prefetchRouteChunks, startProjectHoverPrefetch } from '@/helpers/noctrinth-prefetch'
 import { revealMainWindow } from '@/helpers/noctrinth-window-reveal'
 import { mergeUrlQuery, parseModrinthLink } from '@/helpers/project-links.ts'
 import { proxiedFetch as tauriFetch } from '@/helpers/proxy-fetch'
@@ -1710,6 +1711,8 @@ watch(
 
 onMounted(() => {
 	void revealMainWindow()
+	prefetchRouteChunks(router)
+	startProjectHoverPrefetch()
 
 	error.setErrorModal(errorModal.value)
 	error.setMinecraftAuthErrorModal(minecraftAuthErrorModal.value)

@@ -8,19 +8,19 @@
 	>
 		<div
 			data-skin-preview-debug="controls"
-			class="absolute left-0 right-0 z-10 flex items-center justify-center pointer-events-none transition-opacity duration-300"
+			class="skin-hints absolute left-0 right-0 z-10 flex items-center justify-center pointer-events-none transition-opacity duration-300"
 			:class="{ 'opacity-0': modelZoom > 1.05 }"
 			:style="previewControlsPositionStyle"
 		>
 			<span
-				class="flex items-center justify-center gap-3 text-sm font-medium leading-6 text-secondary"
+				class="skin-hints__row flex items-center justify-center gap-3 text-sm font-medium leading-6 text-secondary"
 			>
-				<span class="flex items-center gap-1.5">
+				<span class="flex items-center gap-1.5 whitespace-nowrap">
 					<MoveIcon class="size-4 shrink-0" />
 					{{ formatMessage(messages.dragToRotate) }}
 				</span>
-				<span class="h-4 w-px bg-surface-5" />
-				<span class="flex items-center gap-1.5">
+				<span class="skin-hints__divider h-4 w-px bg-surface-5" />
+				<span class="flex items-center gap-1.5 whitespace-nowrap">
 					<ChevronsUpDownIcon class="size-4 shrink-0" />
 					{{ formatMessage(messages.scrollToZoom) }}
 				</span>
@@ -503,6 +503,23 @@ defineExpose({
 </script>
 
 <style scoped lang="scss">
+/* A narrow preview, like the one in the edit dialog, stacks the two hints
+   rather than breaking each of them over three lines. */
+.skin-hints {
+	container-type: inline-size;
+}
+
+@container (max-width: 340px) {
+	.skin-hints__row {
+		flex-direction: column;
+		gap: 0;
+	}
+
+	.skin-hints__divider {
+		display: none;
+	}
+}
+
 .nametag-bg {
 	background:
 		linear-gradient(308.68deg, rgba(50, 50, 50, 0.2) -52.46%, rgba(100, 100, 100, 0.2) 94.75%),

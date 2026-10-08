@@ -11,6 +11,8 @@ import {
 } from '@/composables/use-app-settings.ts'
 import { get as getSettings, set as setSettings } from '@/helpers/settings.ts'
 
+import NoctrinthSplashCubeSettings from './NoctrinthSplashCubeSettings.vue'
+
 const { formatMessage } = useVIntl()
 
 const messages = defineMessages({
@@ -55,6 +57,7 @@ watch(
 </script>
 <template>
 	<div class="flex flex-col gap-2.5">
+		<NoctrinthSplashCubeSettings />
 		<Input
 			v-model="searchQuery"
 			type="search"

@@ -1,5 +1,11 @@
 <template>
-	<div v-if="!doneLoading" ref="splash" class="splash-screen" data-tauri-drag-region>
+	<div
+		v-if="!doneLoading"
+		ref="splash"
+		class="splash-screen"
+		:class="{ 'is-inverted': inverted }"
+		data-tauri-drag-region
+	>
 		<div class="splash-cube" aria-hidden="true"></div>
 		<div class="splash-glow" aria-hidden="true"></div>
 		<div class="splash-content" data-tauri-drag-region>
@@ -44,9 +50,12 @@ import { onMounted, ref, useTemplateRef, watch } from 'vue'
 
 import NoctrinthAppLogo from '@/assets/modrinth_app.svg?component'
 import { useAppEvent } from '@/composables/use-app-event'
+import { rollSplashCubeInverted } from '@/helpers/noctrinth-splash-cube'
 import { debugStartup } from '@/helpers/startup-debug'
 
 const splash = useTemplateRef('splash')
+/** Black on white or white on black: chosen in the flags tab, or now and then by chance. */
+const inverted = rollSplashCubeInverted()
 const doneLoading = ref(false)
 /** Set only when there is a real fraction to show; the crawl stands in otherwise. */
 const realProgress = ref(null)
@@ -145,6 +154,17 @@ useAppEvent('loading', (e) => {
 	--splash-cube-image: url('@/assets/loading/noctrinth-cube-light.webp');
 	--splash-cube-strength: 0.7;
 	--splash-glow-strength: 12%;
+}
+
+/* White on black, and below black on white. */
+.splash-screen.is-inverted {
+	--splash-cube-image: url('@/assets/loading/noctrinth-cube-light.webp');
+	--splash-cube-strength: 0.2;
+}
+
+:global(html.light-mode .splash-screen.is-inverted) {
+	--splash-cube-image: url('@/assets/loading/noctrinth-cube-dark.webp');
+	--splash-cube-strength: 0.95;
 }
 
 .splash-cube {

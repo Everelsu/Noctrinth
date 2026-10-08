@@ -1941,7 +1941,22 @@
 		"message": "Примерно {percentage}% Noctrinth доступно на этом языке."
 	},
 	"skin.preview.drag-to-rotate": {
-		"message": "Перетащите, чтобы повернуть"
+		"message": "Тяните, чтобы вращать"
+	},
+	"noctrinth.settings.splash-cube.title": {
+		"message": "Куб на заставке"
+	},
+	"noctrinth.settings.splash-cube.description": {
+		"message": "Какой куб показывает заставка при запуске. Применится со следующего запуска."
+	},
+	"noctrinth.settings.splash-cube.theme": {
+		"message": "По теме (изредка наоборот)"
+	},
+	"noctrinth.settings.splash-cube.inverted": {
+		"message": "Наоборот: чёрный на белом, белый на чёрном"
+	},
+	"noctrinth.settings.splash-cube.random": {
+		"message": "Случайно при каждом запуске"
 	},
 	"noctrinth.auth-servers.unreachable.retry": {
 		"message": "Проверить снова"
@@ -1950,6 +1965,6 @@
 		"message": "Пока они не ответят, вход и игра с аккаунтом Microsoft могут не работать. Оффлайн-аккаунтов и Ely.by это не касается."
 	},
 	"skin.preview.scroll-to-zoom": {
-		"message": "Колёсико — приблизить"
+		"message": "Колёсико — масштаб"
 	}
 }

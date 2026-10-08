@@ -1942,5 +1942,8 @@
 	},
 	"skin.preview.drag-to-rotate": {
 		"message": "Перетащите, чтобы повернуть"
+	},
+	"skin.preview.scroll-to-zoom": {
+		"message": "Колёсико — приблизить"
 	}
 }

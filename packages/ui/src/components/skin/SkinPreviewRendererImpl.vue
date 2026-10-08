@@ -8,14 +8,22 @@
 	>
 		<div
 			data-skin-preview-debug="controls"
-			class="absolute left-0 right-0 z-10 flex items-center justify-center pointer-events-none"
+			class="absolute left-0 right-0 z-10 flex items-center justify-center pointer-events-none transition-opacity duration-300"
+			:class="{ 'opacity-0': modelZoom > 1.05 }"
 			:style="previewControlsPositionStyle"
 		>
 			<span
-				class="flex items-center justify-center gap-1.5 text-base font-medium leading-6 text-primary"
+				class="flex items-center justify-center gap-3 text-sm font-medium leading-6 text-secondary"
 			>
-				<UnfoldHorizontalIcon class="size-5 shrink-0" />
-				{{ formatMessage(messages.dragToRotate) }}
+				<span class="flex items-center gap-1.5">
+					<UnfoldHorizontalIcon class="size-4 shrink-0" />
+					{{ formatMessage(messages.dragToRotate) }}
+				</span>
+				<span class="h-4 w-px bg-surface-5" />
+				<span class="flex items-center gap-1.5">
+					<ZoomInIcon class="size-4 shrink-0" />
+					{{ formatMessage(messages.scrollToZoom) }}
+				</span>
 			</span>
 		</div>
 		<div
@@ -74,14 +82,16 @@
 			</Suspense>
 
 			<Suspense>
-				<TresMesh
-					:position="animatedSpotlightPosition"
-					:rotation="[-Math.PI / 2, 0, 0]"
-					:scale="animatedSpotlightScale"
-				>
-					<TresCircleGeometry :args="[1, 128]" />
-					<TresShaderMaterial v-bind="radialSpotlightShader" />
-				</TresMesh>
+				<Group :rotation="[modelPitch, 0, 0]">
+					<TresMesh
+						:position="animatedSpotlightPosition"
+						:rotation="[-Math.PI / 2, 0, 0]"
+						:scale="animatedSpotlightScale"
+					>
+						<TresCircleGeometry :args="[1, 128]" />
+						<TresShaderMaterial v-bind="radialSpotlightShader" />
+					</TresMesh>
+				</Group>
 			</Suspense>
 
 			<TresPerspectiveCamera
@@ -102,7 +112,12 @@
 </template>
 
 <script setup lang="ts">
-import { ClassicPlayerModel, SlimPlayerModel, UnfoldHorizontalIcon } from '@modrinth/assets'
+import {
+	ClassicPlayerModel,
+	SlimPlayerModel,
+	UnfoldHorizontalIcon,
+	ZoomInIcon,
+} from '@modrinth/assets'
 import { TresCanvas } from '@tresjs/core'
 import * as THREE from 'three'
 import {
@@ -141,6 +156,10 @@ const messages = defineMessages({
 	dragToRotate: {
 		id: 'skin.preview.drag-to-rotate',
 		defaultMessage: 'Drag to rotate',
+	},
+	scrollToZoom: {
+		id: 'skin.preview.scroll-to-zoom',
+		defaultMessage: 'Scroll to zoom',
 	},
 })
 
@@ -308,6 +327,7 @@ function syncDamageFlashShaderMaterials() {
 
 const {
 	cameraConfig,
+	containerSize,
 	fitEnabled,
 	hasResolvedFit,
 	modelGroupPosition,
@@ -355,6 +375,17 @@ watch(
 	{ immediate: true },
 )
 watch(scene, syncDamageFlashShaderMaterials, { immediate: true })
+// The shadow tilts with the model now, so a pitch that shows the soles would
+// have it painted over them, seen from under the floor. It fades out first.
+const SHADOW_OPACITY = radialSpotlightShader.uniforms.innerOpacity.value
+watch(
+	modelPitch,
+	(pitch) => {
+		radialSpotlightShader.uniforms.innerOpacity.value =
+			SHADOW_OPACITY * Math.min(1, Math.max(0, 1 - pitch / (Math.PI / 4)))
+	},
+	{ immediate: true },
+)
 watch(damageFlashIntensity, syncDamageFlashShaderMaterials)
 
 onUnmounted(() => {
@@ -371,11 +402,64 @@ const { fontSize: nametagFontSize } = useDynamicFontSize({
 	fontFamily: 'inherit',
 })
 
-const nametagStyle = computed(() => ({
-	fontSize: nametagFontSize.value,
-	top: nametagTop.value,
-	transform: fitEnabled.value ? 'translate(-50%, calc(-100% - 0.75rem))' : 'translateX(-50%)',
-}))
+/**
+ * Where a point just above the head lands on screen, with every turn, tilt and zoom
+ * the model has. The nametag rides on it, so it stays above the head instead
+ * of above where the head was before the wheel moved it.
+ */
+/** Floats above the head in the scene, so tilting never sinks it into the crown. */
+const NAMETAG_LIFT = 0.1
+
+const headAnchor = computed(() => {
+	if (!fitEnabled.value) return null
+	const { width, height } = containerSize.value
+	const { fov, position, target } = cameraConfig.value
+	const camera = new THREE.PerspectiveCamera(fov, width / height, 0.1, 1000)
+	camera.position.set(...position)
+	camera.lookAt(...target)
+	camera.updateMatrixWorld(true)
+
+	const [offsetX, offsetY, offsetZ] = modelOffset.value
+	const [centerX, , centerZ] = modelCenter.value
+	const [scaleX, scaleY, scaleZ] = animatedModelGroupScale.value
+	const point = new THREE.Vector3(
+		(centerX + offsetX) * scaleX,
+		(visibleBounds.value.max[1] + offsetY + modelSize.value[1] * NAMETAG_LIFT) * scaleY,
+		(centerZ + offsetZ) * scaleZ,
+	)
+	point.applyEuler(new THREE.Euler(...animatedModelGroupRotation.value))
+	point.add(new THREE.Vector3(...animatedModelGroupPosition.value))
+	point.project(camera)
+
+	return { x: ((point.x + 1) / 2) * width, y: ((1 - point.y) / 2) * height }
+})
+
+/**
+ * Turned like a sign with the same words on both sides: it follows the model
+ * round until it is edge-on, then shows its other face rather than mirrored text.
+ */
+const nametagTurn = computed(() => {
+	const yaw = modelRotation.value - Math.PI * Math.round(modelRotation.value / Math.PI)
+	return `perspective(800px) rotateX(${modelPitch.value}rad) rotateY(${yaw}rad) scale(${modelZoom.value})`
+})
+
+const nametagStyle = computed(() => {
+	const anchor = headAnchor.value
+	if (!anchor) {
+		return {
+			fontSize: nametagFontSize.value,
+			top: nametagTop.value,
+			transform: 'translateX(-50%)',
+		}
+	}
+	return {
+		fontSize: nametagFontSize.value,
+		left: `${anchor.x}px`,
+		top: `${anchor.y}px`,
+		transform: `translate(-50%, -100%) ${nametagTurn.value}`,
+		transformOrigin: 'bottom center',
+	}
+})
 
 const animatedModelGroupRotation = computed<SkinPreviewTuple>(() => [
 	modelPitch.value,
@@ -397,9 +481,8 @@ const animatedModelGroupScale = computed<SkinPreviewTuple>(() => {
 // The shadow is a sibling of the model rather than a child of it, so none of
 // the movement above reaches it on its own: zoom in and it stayed the size it
 // was, nudge the model sideways on a click and it stayed where it was. It
-// follows the same values here, minus the two that would lift it off the floor
-// — a shadow that pitched with the model, or turned with it, would stop looking
-// like one.
+// follows the same values here. It tilts with the model's pitch too, as a floor
+// would under a camera orbiting it; turning is left out, the circle is round.
 const animatedSpotlightPosition = computed<SkinPreviewTuple>(() => {
 	const [x, y, z] = spotlightPosition.value
 	// The model is centred on the group's origin, so squashing it vertically

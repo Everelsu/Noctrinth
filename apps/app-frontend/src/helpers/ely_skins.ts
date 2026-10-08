@@ -165,7 +165,7 @@ export async function listElySkins(username: string): Promise<ElyUploadedSkin[]>
 /**
  * Puts one of the account's uploaded skins on.
  *
- * Ely.by has no skin API; this drives the website's own `/skins/wear` call from
+ * Ely.by has no skin API; this drives the website's own wear call from
  * inside the embedded window, which is where the site session lives. It cannot
  * report whether it worked — reload the texture to find out.
  */

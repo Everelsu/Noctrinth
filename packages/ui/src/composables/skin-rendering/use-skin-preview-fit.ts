@@ -567,6 +567,7 @@ export function useSkinPreviewFit({
 
 	return {
 		cameraConfig,
+		containerSize,
 		currentFraming,
 		fitEnabled,
 		hasResolvedFit,

@@ -208,19 +208,19 @@ pub async fn ely_current_skin_url(username: &str) -> Result<Option<String>> {
 
 /// The website call that puts a catalogue skin on the signed-in account.
 ///
-/// `/skins/wear` wants nothing but the skin ID and the website session cookie —
-/// there is no CSRF token — so it can be driven from inside the embedded
-/// webview, which is the only place that session exists.
+/// `PUT /api/legacy/users/skin` wants nothing but the skin ID and the website
+/// session cookie — there is no CSRF token — so it can be driven from inside
+/// the embedded webview, which is the only place that session exists.
 fn wear_skin_script(skin_id: u64) -> String {
     format!(
-        "fetch('https://ely.by/skins/wear', {{             method: 'POST',             credentials: 'same-origin',             headers: {{                 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',                 'X-Requested-With': 'XMLHttpRequest'             }},             body: 'skinId={skin_id}'         }}).catch(function () {{}});"
+        "fetch('https://ely.by/api/legacy/users/skin', {{             method: 'PUT',             credentials: 'same-origin',             headers: {{                 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',                 'X-Requested-With': 'XMLHttpRequest'             }},             body: 'skinId={skin_id}'         }}).catch(function () {{}});"
     )
 }
 
 /// Deletes one of the account's skins from the Ely.by catalogue.
 ///
-/// `POST /skins/remove/<id>` with an empty body and the site session; nothing
-/// else is required.
+/// `DELETE /api/legacy/skins/<id>` with an empty body and the site session;
+/// nothing else is required.
 #[tauri::command]
 pub async fn ely_remove_skin<R: Runtime>(
     app: tauri::AppHandle<R>,
@@ -229,21 +229,22 @@ pub async fn ely_remove_skin<R: Runtime>(
     run_in_skin_window(
         app,
         format!(
-            "fetch('https://ely.by/skins/remove/{skin_id}', {{                 method: 'POST',                 credentials: 'same-origin',                 headers: {{ 'X-Requested-With': 'XMLHttpRequest' }}             }}).catch(function () {{}});"
+            "fetch('https://ely.by/api/legacy/skins/{skin_id}', {{                 method: 'DELETE',                 credentials: 'same-origin',                 headers: {{ 'X-Requested-With': 'XMLHttpRequest' }}             }}).catch(function () {{}});"
         ),
     )
 }
 
 /// Uploads a PNG to the account's Ely.by catalogue and wears it.
 ///
-/// Two website calls in sequence, both needing the site session. `/skins/upload`
-/// takes a multipart body with a `file` field and answers with the new skin's
-/// edit URL, which is where its ID comes from; `/skins/wear` then puts it on.
+/// Two website calls in sequence, both needing the site session.
+/// `POST /api/legacy/skins` takes a multipart body with a `file` field and
+/// answers with the new skin's edit URL, which is where its ID comes from;
+/// `PUT /api/legacy/users/skin` then puts it on.
 /// Chaining them inside one injected script avoids needing a channel back out
 /// of the webview between the two.
 fn upload_skin_script(data_url: &str) -> String {
     format!(
-        "(async function () {{             try {{                 const blob = await (await fetch('{data_url}')).blob();                 const form = new FormData();                 form.append('file', new File([blob], 'skin.png', {{ type: 'image/png' }}));                 const uploaded = await fetch('https://ely.by/skins/upload', {{                     method: 'POST',                     credentials: 'same-origin',                     headers: {{ 'X-Requested-With': 'XMLHttpRequest' }},                     body: form                 }}).then(function (r) {{ return r.json(); }});                 const marker = '/skins/s';                 const at = String(uploaded.url || '').indexOf(marker);                 if (at < 0) return;                 const id = parseInt(String(uploaded.url).slice(at + marker.length), 10);                 if (!id) return;                 await fetch('https://ely.by/skins/wear', {{                     method: 'POST',                     credentials: 'same-origin',                     headers: {{                         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',                         'X-Requested-With': 'XMLHttpRequest'                     }},                     body: 'skinId=' + id                 }});             }} catch (e) {{}}         }})();"
+        "(async function () {{             try {{                 const blob = await (await fetch('{data_url}')).blob();                 const form = new FormData();                 form.append('file', new File([blob], 'skin.png', {{ type: 'image/png' }}));                 const uploaded = await fetch('https://ely.by/api/legacy/skins', {{                     method: 'POST',                     credentials: 'same-origin',                     headers: {{ 'X-Requested-With': 'XMLHttpRequest' }},                     body: form                 }}).then(function (r) {{ return r.json(); }});                 const marker = '/skins/s';                 const at = String(uploaded.url || '').indexOf(marker);                 if (at < 0) return;                 const id = parseInt(String(uploaded.url).slice(at + marker.length), 10);                 if (!id) return;                 await fetch('https://ely.by/api/legacy/users/skin', {{                     method: 'PUT',                     credentials: 'same-origin',                     headers: {{                         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',                         'X-Requested-With': 'XMLHttpRequest'                     }},                     body: 'skinId=' + id                 }});             }} catch (e) {{}}         }})();"
     )
 }
 
@@ -261,8 +262,7 @@ pub async fn ely_upload_skin<R: Runtime>(
 
 /// Rewrites a skin's details on Ely.by.
 ///
-/// `/skins/save/<id>` is the edit form's own endpoint, and it takes the whole
-/// form every time: posting only the changed field blanks the name, the
+/// The edit form's own endpoint takes the whole form every time: posting only the changed field blanks the name, the
 /// description, the tags and the rest. There is nowhere public to read those
 /// from — the catalogue listing carries neither name nor description — so the
 /// script reads the edit page first and sends everything back, changing only
@@ -296,7 +296,15 @@ fn edit_skin_script(
         const name = {name};
         const description = {description};
 
-        const body = new URLSearchParams();
+        // The site moves this endpoint around, so it is read off the form itself:
+        // its action, its method, and any field it carries that is not set below.
+        const form = new DOMParser()
+            .parseFromString(page, 'text/html')
+            .getElementById('formEditSkin');
+        const body = form ? new URLSearchParams(new FormData(form)) : new URLSearchParams();
+        const action = (form && form.getAttribute('action')) || '/api/legacy/skins/{skin_id}';
+        const method = form ? (form.dataset.method === 'PUT' ? 'PUT' : 'POST') : 'PUT';
+
         body.set('name', name === null ? (skin.name || '') : name);
         body.set('description', description === null ? (skin.description || '') : description);
         body.set('kind', String(skin.kind == null ? 0 : skin.kind));
@@ -304,8 +312,8 @@ fn edit_skin_script(
         body.set('tags', Array.isArray(skin.tags) ? skin.tags.join(',') : String(skin.tags || ''));
         body.set('isSlim', '{is_slim}');
 
-        await fetch('https://ely.by/skins/save/{skin_id}', {{
-            method: 'POST',
+        await fetch(new URL(action, 'https://ely.by').href, {{
+            method: method,
             credentials: 'same-origin',
             headers: {{
                 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',

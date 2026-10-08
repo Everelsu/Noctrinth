@@ -74,34 +74,24 @@
 
 		<template #actions>
 			<PageHeaderActions>
-				<Transition name="nm-swap-seq" mode="out-in">
+				<!--
+					Play, Starting, Installing and Stop are one shape that flows between
+					them, with the second copy's button running out of it; see
+					NoctrinthLaunchButton. What it does not cover keeps upstream's buttons.
+				-->
+				<NoctrinthLaunchButton
+					v-if="launchState"
+					:state="launchState"
+					:again-visible="playing && !isInstalling"
+					:again-disabled="loading"
+					:labels="launchLabels"
+					@play="emit('play')"
+					@stop="emit('stop')"
+					@again="emit('playAgain')"
+				/>
+				<Transition v-else name="nm-swap-seq" mode="out-in">
 					<Button
-						v-if="playing"
-						type="colored"
-						color="red"
-						size="xl"
-						native-type="button"
-						:disabled="stopping"
-						@click="emit('stop')"
-					>
-						<LoaderSpinnerIcon v-if="stopping" class="motion-safe:animate-spin" />
-						<StopCircleIcon v-else />
-						{{
-							stopping ? formatMessage(messages.stopping) : formatMessage(commonMessages.stopButton)
-						}}
-					</Button>
-					<Button
-						v-else-if="isInstalling"
-						type="colored"
-						color="brand"
-						size="xl"
-						native-type="button"
-						disabled
-					>
-						{{ formatMessage(commonMessages.installingLabel) }}
-					</Button>
-					<Button
-						v-else-if="instance.quarantined"
+						v-if="instance.quarantined"
 						v-tooltip="formatMessage(messages.lockedPlayTooltip)"
 						type="colored"
 						color="brand"
@@ -124,7 +114,7 @@
 						{{ formatMessage(messages.repair) }}
 					</Button>
 					<SplitButton
-						v-else-if="!loading && isServerInstance"
+						v-else
 						type="colored"
 						color="brand"
 						size="xl"
@@ -135,35 +125,7 @@
 						<PlayIcon />
 						{{ formatMessage(commonMessages.playButton) }}
 					</SplitButton>
-					<Button
-						v-else-if="!loading"
-						type="colored"
-						color="brand"
-						size="xl"
-						native-type="button"
-						@click="emit('play')"
-					>
-						<PlayIcon />
-						{{ formatMessage(commonMessages.playButton) }}
-					</Button>
-					<Button v-else type="colored" color="brand" size="xl" native-type="button" disabled>
-						<LoaderSpinnerIcon class="motion-safe:animate-spin" />
-						{{ formatMessage(messages.starting) }}
-					</Button>
 				</Transition>
-
-				<!-- Outside the chain above, so that it stands beside Stop rather than instead of it. -->
-				<IconButton
-					v-if="playing && !isInstalling"
-					v-tooltip="formatMessage(messages.playAgain)"
-					size="xl"
-					:label="formatMessage(messages.playAgain)"
-					native-type="button"
-					:disabled="loading"
-					@click="emit('playAgain')"
-				>
-					<PlayIcon />
-				</IconButton>
 
 				<IconButton
 					v-tooltip="formatMessage(messages.instanceSettings)"
@@ -195,14 +157,12 @@ import {
 	DownloadIcon,
 	ExternalIcon,
 	FolderOpenIcon,
-	LoaderSpinnerIcon,
 	LockIcon,
 	MoreVerticalIcon,
 	PackageIcon,
 	PlayIcon,
 	ReportIcon,
 	SettingsIcon,
-	StopCircleIcon,
 	TimerIcon,
 	UnknownIcon,
 } from '@modrinth/assets'
@@ -225,6 +185,7 @@ import {
 } from '@modrinth/ui'
 import { computed } from 'vue'
 
+import NoctrinthLaunchButton, { type LaunchState } from '@/components/ui/NoctrinthLaunchButton.vue'
 import type { GameInstance } from '@/helpers/types'
 
 import InstanceHeaderServerMetadata from './instance-page-header-server-metadata.vue'
@@ -410,6 +371,28 @@ const playtimeLabel = computed(() => {
 
 	return formatMessage(messages.playtimeSeconds, { seconds })
 })
+/**
+ * Which state the launch button is in, or null where an upstream button stands
+ * instead: a locked instance, one to repair, and a server's split button.
+ */
+const launchState = computed<LaunchState | null>(() => {
+	if (props.playing) return props.stopping ? 'stopping' : 'stop'
+	if (isInstalling.value) return 'installing'
+	if (props.instance.quarantined || props.instance.install_stage !== 'installed') return null
+	if (props.loading) return 'starting'
+	if (props.isServerInstance) return null
+	return 'play'
+})
+
+const launchLabels = computed(() => ({
+	play: formatMessage(commonMessages.playButton),
+	starting: formatMessage(messages.starting),
+	installing: formatMessage(commonMessages.installingLabel),
+	stop: formatMessage(commonMessages.stopButton),
+	stopping: formatMessage(messages.stopping),
+	again: formatMessage(messages.playAgain),
+}))
+
 const serverPlayOptions = computed<ButtonMenuOption[]>(() => [
 	{
 		id: 'launch_instance',

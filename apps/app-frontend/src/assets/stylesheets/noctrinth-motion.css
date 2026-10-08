@@ -47,6 +47,29 @@
 	opacity: 0;
 }
 
+/* A label that melts into the next: rises out through a blur while the new one settles in. */
+.nm-morph-enter-active,
+.nm-morph-leave-active {
+	transition:
+		transform 340ms var(--nm-spring),
+		opacity 220ms ease-out,
+		filter 260ms ease-out;
+}
+.nm-morph-leave-active {
+	position: absolute;
+	transition-duration: 200ms;
+}
+.nm-morph-enter-from {
+	transform: translateY(12px) scale(0.9);
+	opacity: 0;
+	filter: blur(6px);
+}
+.nm-morph-leave-to {
+	transform: translateY(-12px) scale(0.9);
+	opacity: 0;
+	filter: blur(6px);
+}
+
 /* An icon or a badge appearing or changing. */
 .nm-pop-enter-active {
 	transition:
@@ -151,6 +174,8 @@
 	.nm-swap-leave-active,
 	.nm-swap-seq-enter-active,
 	.nm-swap-seq-leave-active,
+	.nm-morph-enter-active,
+	.nm-morph-leave-active,
 	.nm-pop-enter-active,
 	.nm-pop-leave-active,
 	.nm-list-enter-active,

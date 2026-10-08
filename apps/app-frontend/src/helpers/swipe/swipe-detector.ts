@@ -65,15 +65,19 @@ const DECIDE_PX = 12
 /** Silence after a moving lift = the fingers left the touchpad. */
 const RELEASE_FAST_MS = 160
 /** Fingers at rest are likely still down (holding): give them a long grace window. */
-const RELEASE_HOLD_MS = 650
+const RELEASE_HOLD_MS = 400
 /** Below this speed (whole-swipes/s, ≈165px/s at default) the fingers count as resting. */
 const HOLD_VELOCITY = 0.15
 /** A decisive flick past the success formula commits immediately, like a browser fling. */
 const FLICK_COMMIT_VELOCITY = 1.2
 const GESTURE_GAP_MS = 1000
-/** Post-commit momentum tail must jump 1.6× to count as a new gesture… */
-const SPIKE_RATIO = 1.6
-/** …but after a cancel, gently resuming the drag (growing deltas) re-grabs it. */
+/**
+ * After a swipe navigates, everything until this much silence is that same
+ * swipe — fingers still moving, then the touchpad's own momentum — and none of
+ * it may navigate again. One swipe is one page.
+ */
+const POST_COMMIT_QUIET_MS = 350
+/** After a cancel, gently resuming the drag (growing deltas) re-grabs it. */
 const SPIKE_RESUME_RATIO = 1.15
 const SPIKE_MIN_PX = 30
 /** sensitivity 1-5 scales the whole-swipe distance; 3 = Firefox's exact 1100px. */
@@ -305,7 +309,11 @@ export function createSwipeHandler(handlers: SwipeHandlers): SwipeHandle {
 		const now = e.timeStamp || Date.now()
 		const gap = now - state.lastEventAt
 		state.lastEventAt = now
-		if (gap > GESTURE_GAP_MS) {
+		const quietMs =
+			state.phase === 'settled' && state.settleReason === 'commit'
+				? POST_COMMIT_QUIET_MS
+				: GESTURE_GAP_MS
+		if (gap > quietMs) {
 			if (state.phase === 'active') finishGesture(doc)
 			abortAnimation(doc)
 			toIdle()
@@ -355,14 +363,18 @@ export function createSwipeHandler(handlers: SwipeHandlers): SwipeHandle {
 			case 'animating':
 			case 'settled': {
 				if (state.settleReason === 'scroll' && state.phase === 'settled') return
+				// The rest of a swipe that navigated: swallowed whole, so that the
+				// page it went to neither navigates again nor scrolls sideways.
+				if (state.settleReason === 'commit' && state.phase === 'settled') {
+					e.preventDefault()
+					e.stopPropagation()
+					return
+				}
 				const magnitude = Math.hypot(effDx, effDy)
-				// After a commit the decaying momentum tail must not re-navigate,
-				// so a new gesture needs a sharp spike. After a cancel (including
-				// the spring-back) the deltas only need to be growing — resuming
-				// the drag re-grabs the gesture without a dead zone.
-				const cancelled = state.phase === 'animating' || state.settleReason === 'cancel'
-				const ratio = cancelled ? SPIKE_RESUME_RATIO : SPIKE_RATIO
-				if (magnitude >= SPIKE_MIN_PX && magnitude > state.lastTailMag * ratio) {
+				// After a cancel (including the spring-back) the deltas only need to
+				// be growing — resuming the drag re-grabs the gesture without a dead
+				// zone.
+				if (magnitude >= SPIKE_MIN_PX && magnitude > state.lastTailMag * SPIKE_RESUME_RATIO) {
 					if (state.phase === 'animating') abortAnimation(doc)
 					toIdle()
 					state.phase = 'deciding'

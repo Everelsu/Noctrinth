@@ -39,6 +39,7 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 		date: '2026-10-08T00:00:00+00:00',
 		body: `### Added
 - Two fingers across the touchpad go back and forward through pages, exactly the way Chrome does. An arrow slides out of the window's edge and lights up once the swipe is far enough; the page changes when the fingers lift, so pulling back before that cancels it. Scrolling up and down, and anything that scrolls sideways itself, are left alone.
+- A project's description can be translated into the launcher's language with one button, and back to the original with another, through Google Translate; links, formatting and code stay as they are. Settings → Language can make descriptions open translated. The idea is from [Celestial-Launcher](https://github.com/Wemsur/Celestial-Launcher).
 - The changelog here is read from the changelog site, so notes for releases since this build, and corrections to older ones, show up without an update. The copy that ships with the app is still there offline.
 
 ### Changed

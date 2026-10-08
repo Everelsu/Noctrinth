@@ -1,5 +1,8 @@
 <template>
-	<SharedLanguageSettings ref="languageSettings" product="app" :persist-locale="persistLocale" />
+	<div>
+		<SharedLanguageSettings ref="languageSettings" product="app" :persist-locale="persistLocale" />
+		<NoctrinthTranslationSettings />
+	</div>
 </template>
 
 <script setup lang="ts">
@@ -8,6 +11,8 @@ import { inject, onBeforeUnmount, onMounted, ref } from 'vue'
 
 import { get, set } from '@/helpers/settings.ts'
 import { appSettingsModalContextKey } from '@/providers/app-settings-modal'
+
+import NoctrinthTranslationSettings from './NoctrinthTranslationSettings.vue'
 
 const settingsModal = inject(appSettingsModalContextKey, null)
 const languageSettings = ref<InstanceType<typeof SharedLanguageSettings> | null>(null)

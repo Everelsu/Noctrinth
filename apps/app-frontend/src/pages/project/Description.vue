@@ -1,11 +1,13 @@
 <template>
 	<Card>
-		<ProjectPageDescription :description="project.body" />
+		<NoctrinthTranslatableDescription :description="project.body" />
 	</Card>
 </template>
 
 <script setup>
-import { Card, ProjectPageDescription } from '@modrinth/ui'
+import { Card } from '@modrinth/ui'
+
+import NoctrinthTranslatableDescription from '@/components/ui/NoctrinthTranslatableDescription.vue'
 
 defineProps({
 	project: {

@@ -68,6 +68,20 @@ pub(crate) fn censor_session_ids(s: String) -> String {
     out
 }
 
+/// Replaces a secret with its placeholder, unless there is nothing to replace.
+///
+/// An Ely.by account signed in through OAuth has no client token, and
+/// `str::replace` with an empty pattern matches between every two characters:
+/// every line of every log came out with the placeholder after each letter.
+/// Anything shorter than three characters is skipped for the same reason a
+/// one-letter nickname would be: it would redact half the log.
+fn redact(s: String, secret: &str, placeholder: &str) -> String {
+    if secret.trim().chars().count() < 3 {
+        return s;
+    }
+    s.replace(secret, placeholder)
+}
+
 #[derive(Serialize, Debug)] // Not deserialize
 #[serde(transparent)]
 pub struct CensoredString(String);
@@ -92,42 +106,56 @@ impl CensoredString {
         s = censor_session_ids(s);
 
         for credentials in ely_credentials {
-            s = s
-                .replace(&credentials.access_token, "{MINECRAFT_ACCESS_TOKEN}")
-                .replace(&credentials.client_token, "{MINECRAFT_CLIENT_TOKEN}")
-                .replace(&credentials.username, "{MINECRAFT_USERNAME}")
-                .replace(
-                    &credentials.uuid.as_simple().to_string(),
-                    "{MINECRAFT_UUID}",
-                )
-                .replace(
-                    &credentials.uuid.as_hyphenated().to_string(),
-                    "{MINECRAFT_UUID}",
-                );
+            s = redact(
+                s,
+                &credentials.access_token,
+                "{MINECRAFT_ACCESS_TOKEN}",
+            );
+            s = redact(
+                s,
+                &credentials.client_token,
+                "{MINECRAFT_CLIENT_TOKEN}",
+            );
+            s = redact(s, &credentials.username, "{MINECRAFT_USERNAME}");
+            s = redact(
+                s,
+                &credentials.uuid.as_simple().to_string(),
+                "{MINECRAFT_UUID}",
+            );
+            s = redact(
+                s,
+                &credentials.uuid.as_hyphenated().to_string(),
+                "{MINECRAFT_UUID}",
+            );
         }
 
         let username = whoami::username();
-        s = s
-            .replace(&format!("/{username}/"), "/{COMPUTER_USERNAME}/")
-            .replace(&format!("\\{username}\\"), "\\{COMPUTER_USERNAME}\\");
+        s = redact(s, &format!("/{username}/"), "/{COMPUTER_USERNAME}/");
+        s = redact(s, &format!("\\{username}\\"), "\\{COMPUTER_USERNAME}\\");
         for credentials in credentials_list {
             // Use the offline profile to guarantee that this function does not cause
             // Mojang API request, and is never delayed by a network request. The offline
             // profile is optimistically updated on upsert from time to time anyway
-            s = s
-                .replace(&credentials.access_token, "{MINECRAFT_ACCESS_TOKEN}")
-                .replace(
-                    &credentials.offline_profile.name,
-                    "{MINECRAFT_USERNAME}",
-                )
-                .replace(
-                    &credentials.offline_profile.id.as_simple().to_string(),
-                    "{MINECRAFT_UUID}",
-                )
-                .replace(
-                    &credentials.offline_profile.id.as_hyphenated().to_string(),
-                    "{MINECRAFT_UUID}",
-                );
+            s = redact(
+                s,
+                &credentials.access_token,
+                "{MINECRAFT_ACCESS_TOKEN}",
+            );
+            s = redact(
+                s,
+                &credentials.offline_profile.name,
+                "{MINECRAFT_USERNAME}",
+            );
+            s = redact(
+                s,
+                &credentials.offline_profile.id.as_simple().to_string(),
+                "{MINECRAFT_UUID}",
+            );
+            s = redact(
+                s,
+                &credentials.offline_profile.id.as_hyphenated().to_string(),
+                "{MINECRAFT_UUID}",
+            );
         }
 
         Self(s)
@@ -667,7 +695,24 @@ pub async fn get_generic_live_log_cursor(
 
 #[cfg(test)]
 mod tests {
-    use super::censor_session_ids;
+    use super::{censor_session_ids, redact};
+
+    /// An Ely.by OAuth account has no client token, and replacing "" put the
+    /// placeholder between every two characters of every log line.
+    #[test]
+    fn an_empty_secret_leaves_the_log_alone() {
+        let line = "[17:04:43] [main/INFO]: Loading tweak class".to_string();
+
+        assert_eq!(redact(line.clone(), "", "{MINECRAFT_CLIENT_TOKEN}"), line);
+        assert_eq!(
+            redact(line.clone(), "  ", "{MINECRAFT_CLIENT_TOKEN}"),
+            line
+        );
+        assert_eq!(
+            redact("token abc123 here".to_string(), "abc123", "{T}"),
+            "token {T} here"
+        );
+    }
 
     /// The line the game writes for itself, which is a working credential.
     #[test]

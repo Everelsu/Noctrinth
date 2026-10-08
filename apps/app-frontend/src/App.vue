@@ -96,6 +96,7 @@ import UpdateToPlayModal from '@/components/ui/modal/UpdateToPlayModal.vue'
 import NavButton from '@/components/ui/NavButton.vue'
 import NoctrinthCrashModal from '@/components/ui/NoctrinthCrashModal.vue'
 import NoctrinthLogo from '@/components/ui/NoctrinthLogo.vue'
+import NoctrinthSwipeNavigation from '@/components/ui/NoctrinthSwipeNavigation.vue'
 import OnboardingChecklist from '@/components/ui/onboarding-checklist/index.vue'
 import PrideFundraiserBanner from '@/components/ui/PrideFundraiserBanner.vue'
 import PromotionWrapper from '@/components/ui/PromotionWrapper.vue'
@@ -2813,6 +2814,7 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 	<PopupNotificationPanel :has-sidebar="sidebarVisible" />
 	<ErrorModal ref="errorModal" />
 	<NoctrinthCrashModal />
+	<NoctrinthSwipeNavigation />
 	<MinecraftAuthErrorModal ref="minecraftAuthErrorModal" />
 	<MinecraftRequiredModal ref="minecraftRequiredModal" />
 	<ContentInstallModal

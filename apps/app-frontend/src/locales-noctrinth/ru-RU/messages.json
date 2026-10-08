@@ -1947,22 +1947,13 @@
 		"message": "Перевести на {language}"
 	},
 	"noctrinth.translate.original": {
-		"message": "Показать оригинал"
+		"message": "Оригинал"
 	},
 	"noctrinth.translate.translating": {
 		"message": "Перевожу..."
 	},
-	"noctrinth.translate.translated-from": {
-		"message": "Переведено с языка «{language}» через Google"
-	},
 	"noctrinth.translate.failed": {
 		"message": "Не получилось перевести: {reason}"
-	},
-	"noctrinth.settings.auto-translate.title": {
-		"message": "Переводить описания автоматически"
-	},
-	"noctrinth.settings.auto-translate.description": {
-		"message": "Описания проектов будут открываться уже переведёнными на язык лаунчера через Google Переводчик. У каждого останется кнопка, чтобы вернуть оригинал."
 	},
 	"noctrinth.settings.splash-cube.title": {
 		"message": "Куб на заставке"
@@ -1987,5 +1978,59 @@
 	},
 	"skin.preview.scroll-to-zoom": {
 		"message": "Колёсико — масштаб"
+	},
+	"noctrinth.translate.source-language": {
+		"message": "Язык описания: {language}"
+	},
+	"noctrinth.translate.translated-by": {
+		"message": "Перевёл {service}"
+	},
+	"noctrinth.translate.retry": {
+		"message": "Попробовать снова"
+	},
+	"noctrinth.settings.translation.title": {
+		"message": "Перевод описаний"
+	},
+	"noctrinth.settings.translation.description": {
+		"message": "Предлагает перевести описание проекта на ваш язык, с переключателем обратно на оригинал."
+	},
+	"noctrinth.settings.translation.service": {
+		"message": "Сервис"
+	},
+	"noctrinth.settings.translation.google": {
+		"message": "Google Переводчик: бесплатно, без ключа"
+	},
+	"noctrinth.settings.translation.deepl": {
+		"message": "DeepL: естественнее, нужен свой бесплатный API-ключ"
+	},
+	"noctrinth.settings.translation.deepl-key": {
+		"message": "API-ключ DeepL"
+	},
+	"noctrinth.settings.translation.deepl-key-hint": {
+		"message": "Бесплатный ключ переводит 500 000 символов в месяц. Получить можно на"
+	},
+	"noctrinth.settings.translation.target": {
+		"message": "Переводить на"
+	},
+	"noctrinth.settings.translation.target-app": {
+		"message": "Язык лаунчера ({language})"
+	},
+	"noctrinth.settings.translation.skip": {
+		"message": "Языки, которые вы и так читаете"
+	},
+	"noctrinth.settings.translation.skip-hint": {
+		"message": "Описания на них останутся как есть."
+	},
+	"noctrinth.settings.translation.auto": {
+		"message": "Переводить сразу при открытии описания"
+	},
+	"noctrinth.settings.translation.precheck": {
+		"message": "Сначала определять язык и прятать кнопку, когда переводить нечего"
+	},
+	"noctrinth.settings.translation.test": {
+		"message": "Проверить сервис"
+	},
+	"noctrinth.settings.translation.test-ok": {
+		"message": "Работает, {milliseconds} мс: «{text}»"
 	}
 }

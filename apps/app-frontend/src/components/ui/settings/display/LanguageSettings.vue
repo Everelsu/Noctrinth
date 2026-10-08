@@ -1,7 +1,7 @@
 <template>
 	<div>
+		<NoctrinthTranslationSettings class="mb-6" />
 		<SharedLanguageSettings ref="languageSettings" product="app" :persist-locale="persistLocale" />
-		<NoctrinthTranslationSettings />
 	</div>
 </template>
 

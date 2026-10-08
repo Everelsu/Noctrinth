@@ -41,6 +41,12 @@
 					"url": "https://translate.googleapis.com/*"
 				},
 				{
+					"url": "https://api-free.deepl.com/*"
+				},
+				{
+					"url": "https://api.deepl.com/*"
+				},
+				{
 					"url": "https://fill.papermc.io/*"
 				},
 				{

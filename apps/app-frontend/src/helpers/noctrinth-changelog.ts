@@ -37,18 +37,13 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
 		version: '0.21.9',
 		date: '2026-10-08T12:00:00+00:00',
-		body: `### Changed
-- Synced with upstream Modrinth 0.21.9. Signing in to a Modrinth account can now come back to the launcher through a deep link, is better protected, and gets a session of its own, so signing out of the website no longer signs the launcher out at random. The "missing field synced_options" error is fixed.`,
-	},
-	{
-		version: '0.21.8+1',
-		date: '2026-10-08T00:00:00+00:00',
 		body: `### Added
 - Two fingers across the touchpad go back and forward through pages, exactly the way Chrome does. An arrow slides out of the window's edge and lights up once the swipe is far enough; the page changes when the fingers lift, so pulling back before that cancels it. Scrolling up and down, and anything that scrolls sideways itself, are left alone.
 - A project's description can be translated with one button and switched back to the original, the paragraphs washing over from one language to the other; links, formatting and code stay as they are. Settings → Language, at the top, picks the service (Google Translate, or DeepL on your own free key), the language to translate into, languages you read anyway, whether to translate as soon as a description opens, and whether to check the language first so the button stays away when there is nothing to translate; a test button tries the service out.
 - The changelog here is read from the changelog site, so notes for releases since this build, and corrections to older ones, show up without an update. The copy that ships with the app is still there offline.
 
 ### Changed
+- Synced with upstream Modrinth 0.21.9. Signing in to a Modrinth account can now come back to the launcher through a deep link, is better protected, and gets a session of its own, so signing out of the website no longer signs the launcher out at random. The "missing field synced_options" error is fixed.
 - The launch button is one shape that flows between Play, Starting, Installing and Stop, changing width and colour on a spring while the label melts from one into the next. The button for a second copy runs out of Stop like a drop and comes away, and runs back in when the game closes.
 - In the skin preview the nametag stays above the head through every turn, tilt and zoom, and turns with the model like a sign. The shadow tilts with the floor, and the hint under the feet says the wheel zooms.
 - The splash screen is redrawn to stay smooth while the app starts behind it: the bar and the fade out run on the compositor, so a busy start no longer freezes them, and the window opens already painted instead of flashing black. It takes its colours from the theme and the accent, with a grey cube behind them, so a light theme or a non-purple accent no longer shows a lavender splash that then changes colour as it fades.

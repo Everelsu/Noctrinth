@@ -35,6 +35,12 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.21.9',
+		date: '2026-10-08T12:00:00+00:00',
+		body: `### Changed
+- Synced with upstream Modrinth 0.21.9. Signing in to a Modrinth account can now come back to the launcher through a deep link, is better protected, and gets a session of its own, so signing out of the website no longer signs the launcher out at random. The "missing field synced_options" error is fixed.`,
+	},
+	{
 		version: '0.21.8+1',
 		date: '2026-10-08T00:00:00+00:00',
 		body: `### Added

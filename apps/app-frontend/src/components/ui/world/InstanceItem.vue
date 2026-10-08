@@ -281,30 +281,37 @@ function openContextMenu(event: MouseEvent) {
 					</div>
 				</div>
 				<div data-no-card-click class="flex gap-1 justify-end smart-clickable:allow-pointer-events">
-					<Button v-if="showStop" type="colored" color="red" @click="stop">
-						<StopCircleIcon aria-hidden="true" />
-						{{ formatMessage(commonMessages.stopButton) }}
-					</Button>
-					<Button
-						v-else
-						v-tooltip="
-							instance.quarantined
-								? formatMessage(messages.lockedTooltip)
-								: playing
-									? formatMessage(messages.alreadyOpenTooltip)
-									: null
-						"
-						:disabled="playDisabled"
-						type="colored"
-						color="brand"
-						@click="play"
-					>
-						<SpinnerIcon v-if="loading || installing" class="animate-spin" />
-						<PlayIcon v-else aria-hidden="true" />
-						{{
-							formatMessage(installing ? commonMessages.installingLabel : commonMessages.playButton)
-						}}
-					</Button>
+					<Transition name="nm-swap-seq" mode="out-in">
+						<Button v-if="showStop" type="colored" color="red" class="nm-press" @click="stop">
+							<StopCircleIcon aria-hidden="true" />
+							{{ formatMessage(commonMessages.stopButton) }}
+						</Button>
+						<Button
+							v-else
+							v-tooltip="
+								instance.quarantined
+									? formatMessage(messages.lockedTooltip)
+									: playing
+										? formatMessage(messages.alreadyOpenTooltip)
+										: null
+							"
+							:disabled="playDisabled"
+							type="colored"
+							color="brand"
+							class="nm-press nm-nudge"
+							@click="play"
+						>
+							<Transition name="nm-pop" mode="out-in">
+								<SpinnerIcon v-if="loading || installing" key="busy" class="animate-spin" />
+								<PlayIcon v-else key="play" aria-hidden="true" />
+							</Transition>
+							{{
+								formatMessage(
+									installing ? commonMessages.installingLabel : commonMessages.playButton,
+								)
+							}}
+						</Button>
+					</Transition>
 					<TeleportOverflowMenu
 						type="quiet"
 						:label="formatMessage(messages.moreOptions)"

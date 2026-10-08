@@ -161,6 +161,14 @@
 	}
 }
 
+/* An icon that leans towards where the button goes when it is hovered. */
+.nm-nudge svg {
+	transition: transform 220ms var(--nm-spring);
+}
+.nm-nudge:not(:disabled):hover svg:not(.animate-spin) {
+	transform: translateX(2px) scale(1.1);
+}
+
 /* A press that gives a little. */
 .nm-press {
 	transition: transform 120ms var(--nm-ease-out);
@@ -183,7 +191,8 @@
 	.nm-list-move,
 	.nm-rise-enter-active,
 	.nm-rise-leave-active,
-	.nm-press {
+	.nm-press,
+	.nm-nudge svg {
 		transition: none;
 	}
 	.nm-live::after {

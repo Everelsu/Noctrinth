@@ -644,27 +644,37 @@ function openContextMenu(event: MouseEvent) {
 					</template>
 				</div>
 				<div class="flex gap-1 justify-end smart-clickable:allow-pointer-events">
-					<Button
-						v-if="showPlayButton && showStop"
-						type="colored"
-						color="red"
-						@click="emit('stop')"
-					>
-						<StopCircleIcon aria-hidden="true" />
-						{{ formatMessage(commonMessages.stopButton) }}
-					</Button>
-					<Button
-						v-else-if="showPlayButton"
-						v-tooltip="playTooltip"
-						:disabled="playDisabled"
-						type="colored"
-						color="brand"
-						@click="emit('play')"
-					>
-						<SpinnerIcon v-if="startingInstance && playingWorld" class="animate-spin" />
-						<PlayIcon v-else aria-hidden="true" />
-						{{ formatMessage(commonMessages.playButton) }}
-					</Button>
+					<Transition name="nm-swap-seq" mode="out-in">
+						<Button
+							v-if="showPlayButton && showStop"
+							type="colored"
+							color="red"
+							class="nm-press"
+							@click="emit('stop')"
+						>
+							<StopCircleIcon aria-hidden="true" />
+							{{ formatMessage(commonMessages.stopButton) }}
+						</Button>
+						<Button
+							v-else-if="showPlayButton"
+							v-tooltip="playTooltip"
+							:disabled="playDisabled"
+							type="colored"
+							color="brand"
+							class="nm-press nm-nudge"
+							@click="emit('play')"
+						>
+							<Transition name="nm-pop" mode="out-in">
+								<SpinnerIcon
+									v-if="startingInstance && playingWorld"
+									key="busy"
+									class="animate-spin"
+								/>
+								<PlayIcon v-else key="play" aria-hidden="true" />
+							</Transition>
+							{{ formatMessage(commonMessages.playButton) }}
+						</Button>
+					</Transition>
 					<TeleportOverflowMenu
 						type="quiet"
 						:label="formatMessage(messages.moreOptions)"

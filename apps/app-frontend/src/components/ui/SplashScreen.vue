@@ -63,6 +63,7 @@ watch(
 				debugStartup('Splash dismissal deferred: new loading work')
 				return
 			}
+			loadingProgress.value = 100
 			doneLoading.value = true
 			debugStartup('Splash fade started', { displayedMs: Date.now() - mountedAt })
 		}, delay)
@@ -70,13 +71,18 @@ watch(
 	{ immediate: true },
 )
 
+/**
+ * Eases toward 95% and never quite reaches it, so a slow start keeps moving
+ * instead of racing to 95 in a quarter of a second and sitting there.
+ */
 function fakeLoadingIncrease() {
-	if (loadingProgress.value < 95) {
-		setTimeout(() => {
-			loadingProgress.value += 2
-			fakeLoadingIncrease()
-		}, 5)
+	const startedAt = Date.now()
+	const step = () => {
+		if (!loading.pending.value || doneLoading.value) return
+		loadingProgress.value = 95 * (1 - Math.exp(-(Date.now() - startedAt) / 1200))
+		setTimeout(step, 50)
 	}
+	step()
 }
 
 useAppEvent('loading', (e) => {
@@ -129,11 +135,52 @@ useAppEvent('loading', (e) => {
 }
 
 .splash-fade-leave-active {
-	transition: opacity 0.3s ease-in-out;
+	transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+
+	.app-logo-wrapper {
+		transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+	}
 }
 
 .splash-fade-leave-to {
 	opacity: 0;
+
+	.app-logo-wrapper {
+		transform: scale(1.04);
+	}
+}
+
+/* Comes in rather than appearing: the mark and bar rise, the cubes fade up. */
+.app-logo-wrapper > * {
+	animation: splash-rise 0.5s cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+.app-logo-wrapper > :nth-child(2) {
+	animation-delay: 0.08s;
+}
+
+.cube-bg::after {
+	animation: splash-fade-in 0.8s ease-out both;
+}
+
+@keyframes splash-rise {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+}
+
+@keyframes splash-fade-in {
+	from {
+		opacity: 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.app-logo-wrapper > *,
+	.cube-bg::after {
+		animation: none;
+	}
 }
 
 .app-logo-wrapper {

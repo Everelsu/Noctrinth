@@ -37,6 +37,7 @@ import {
 	AccountSwitchOverlay,
 	Admonition,
 	Avatar,
+	Button,
 	ButtonLink,
 	commonMessages,
 	commonSettingsMessages,
@@ -153,6 +154,7 @@ import {
 	removeUser,
 	setActive,
 } from '@/helpers/mr_auth.ts'
+import { revealMainWindow } from '@/helpers/noctrinth-window-reveal'
 import { mergeUrlQuery, parseModrinthLink } from '@/helpers/project-links.ts'
 import { proxiedFetch as tauriFetch } from '@/helpers/proxy-fetch'
 import {
@@ -541,15 +543,27 @@ const authServerQuery = useQuery({
 		authUnreachableDebug('Auth servers are reachable')
 		return true
 	},
-	refetchInterval: 5 * 60 * 1000, // 5 minutes
-	retry: false,
+	// Every five minutes while it answers, every thirty seconds once it does
+	// not, so the banner leaves soon after the servers come back.
+	refetchInterval: (query) => (query.state.status === 'error' ? 30 * 1000 : 5 * 60 * 1000),
+	// One dropped request is not an outage.
+	retry: 1,
+	retryDelay: 3000,
 	refetchOnWindowFocus: false,
 })
+
+const authUnreachableDismissed = ref(false)
+watch(
+	() => authServerQuery.isError.value,
+	(isError) => {
+		if (!isError) authUnreachableDismissed.value = false
+	},
+)
 
 const authUnreachable = computed(() => {
 	if (authServerQuery.isError.value && !authServerQuery.isLoading.value) {
 		console.warn('Failed to reach auth servers', authServerQuery.error.value)
-		return true
+		return !authUnreachableDismissed.value
 	}
 	return false
 })
@@ -651,6 +665,15 @@ const messages = defineMessages({
 		id: 'app.auth-servers.unreachable.body',
 		defaultMessage:
 			'Minecraft authentication servers may be down right now. Check your internet connection and try again later.',
+	},
+	authUnreachableScope: {
+		id: 'noctrinth.auth-servers.unreachable.scope',
+		defaultMessage:
+			'Signing in and playing with a Microsoft account may fail until then. Offline and Ely.by accounts are not affected.',
+	},
+	authUnreachableRetry: {
+		id: 'noctrinth.auth-servers.unreachable.retry',
+		defaultMessage: 'Check again',
 	},
 	adsConsentTitle: {
 		id: 'app.ads-consent.title',
@@ -1686,7 +1709,7 @@ watch(
 )
 
 onMounted(() => {
-	invoke('show_window')
+	void revealMainWindow()
 
 	error.setErrorModal(errorModal.value)
 	error.setMinecraftAuthErrorModal(minecraftAuthErrorModal.value)
@@ -2710,14 +2733,26 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 					v-html="renderString(criticalErrorMessage.body ?? '')"
 				></div>
 			</Admonition>
-			<Admonition
-				v-if="authUnreachable"
-				type="warning"
-				:header="formatMessage(messages.authUnreachableHeader)"
-				class="m-6 mb-0"
-			>
-				{{ formatMessage(messages.authUnreachableBody) }}
-			</Admonition>
+			<Transition name="nm-rise">
+				<Admonition
+					v-if="authUnreachable"
+					type="warning"
+					:header="formatMessage(messages.authUnreachableHeader)"
+					class="m-6 mb-0"
+					dismissible
+					inline-actions
+					@dismiss="authUnreachableDismissed = true"
+				>
+					{{ formatMessage(messages.authUnreachableBody) }}
+					{{ formatMessage(messages.authUnreachableScope) }}
+					<template #actions>
+						<Button :disabled="authServerQuery.isFetching.value" @click="authServerQuery.refetch()">
+							<RefreshCwIcon :class="{ 'animate-spin': authServerQuery.isFetching.value }" />
+							{{ formatMessage(messages.authUnreachableRetry) }}
+						</Button>
+					</template>
+				</Admonition>
+			</Transition>
 			<HostingUpdateRequired v-if="hostingUpdateRequired" />
 			<RouterView v-else v-slot="{ Component }">
 				<template v-if="Component">

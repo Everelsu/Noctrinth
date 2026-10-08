@@ -96,7 +96,17 @@ async fn initialize_state(
 // Should be call once Vue has mounted the app
 #[tracing::instrument(skip_all)]
 #[tauri::command]
-fn show_window(app: tauri::AppHandle) {
+fn show_window(app: tauri::AppHandle, background: Option<[u8; 3]>) {
+    // Painted in the theme's own background first, so the frame before the
+    // page's first paint is not WebView2's default black on a light theme.
+    if let (Some([r, g, b]), Some(webview)) =
+        (background, app.get_webview_window("main"))
+        && let Err(error) = webview
+            .set_background_color(Some(tauri::window::Color(r, g, b, 255)))
+    {
+        tracing::warn!("Cannot set the window background: {error}");
+    }
+
     // The frontend fires this from `onMounted` while its `initialize_state`
     // call is still in flight, so the two race. Panicking here aborts the whole
     // process (release builds are `panic = "abort"`) partway through init, and

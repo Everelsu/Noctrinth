@@ -16,12 +16,12 @@
 				class="flex items-center justify-center gap-3 text-sm font-medium leading-6 text-secondary"
 			>
 				<span class="flex items-center gap-1.5">
-					<UnfoldHorizontalIcon class="size-4 shrink-0" />
+					<MoveIcon class="size-4 shrink-0" />
 					{{ formatMessage(messages.dragToRotate) }}
 				</span>
 				<span class="h-4 w-px bg-surface-5" />
 				<span class="flex items-center gap-1.5">
-					<ZoomInIcon class="size-4 shrink-0" />
+					<ChevronsUpDownIcon class="size-4 shrink-0" />
 					{{ formatMessage(messages.scrollToZoom) }}
 				</span>
 			</span>
@@ -70,19 +70,19 @@
 			@pointerleave="onPointerUp"
 		>
 			<Suspense>
-				<Group
+				<TresGroup
 					:rotation="animatedModelGroupRotation"
 					:position="animatedModelGroupPosition"
 					:scale="animatedModelGroupScale"
 				>
-					<Group :position="modelOffset">
+					<TresGroup :position="modelOffset">
 						<primitive v-if="scene" :object="scene" />
-					</Group>
-				</Group>
+					</TresGroup>
+				</TresGroup>
 			</Suspense>
 
 			<Suspense>
-				<Group :rotation="[modelPitch, 0, 0]">
+				<TresGroup :rotation="[modelPitch, 0, 0]">
 					<TresMesh
 						:position="animatedSpotlightPosition"
 						:rotation="[-Math.PI / 2, 0, 0]"
@@ -91,7 +91,7 @@
 						<TresCircleGeometry :args="[1, 128]" />
 						<TresShaderMaterial v-bind="radialSpotlightShader" />
 					</TresMesh>
-				</Group>
+				</TresGroup>
 			</Suspense>
 
 			<TresPerspectiveCamera
@@ -112,12 +112,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-	ClassicPlayerModel,
-	SlimPlayerModel,
-	UnfoldHorizontalIcon,
-	ZoomInIcon,
-} from '@modrinth/assets'
+import { ChevronsUpDownIcon, ClassicPlayerModel, MoveIcon, SlimPlayerModel } from '@modrinth/assets'
 import { TresCanvas } from '@tresjs/core'
 import * as THREE from 'three'
 import {

@@ -67,7 +67,16 @@ export default defineConfig({
 		],
 	},
 	plugins: [
-		vue(),
+		vue({
+			template: {
+				compilerOptions: {
+					// What @tresjs/core's templateCompilerOptions does: the skin preview's
+					// Tres* tags are three.js objects for its renderer, not Vue components.
+					isCustomElement: (tag) =>
+						(tag.startsWith('Tres') && tag !== 'TresCanvas') || tag === 'primitive',
+				},
+			},
+		}),
 		svgLoader({
 			svgoConfig: {
 				plugins: [

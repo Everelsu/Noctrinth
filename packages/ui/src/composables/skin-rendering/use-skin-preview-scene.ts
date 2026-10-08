@@ -1,6 +1,5 @@
-import { useGLTF } from '@tresjs/cientos'
-import { useTexture } from '@tresjs/core'
 import * as THREE from 'three'
+import { type GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js'
 import {
 	type ComputedRef,
@@ -22,6 +21,30 @@ import {
 
 import type { SkinPreviewBounds, SkinPreviewTuple } from './types'
 import { applyEarsMod, isEarsModFeature, removeEarsMod } from './use-ears-mod-features'
+
+const TRANSPARENT_PIXEL =
+	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
+
+const gltfCache = new Map<string, Promise<GLTF>>()
+
+/**
+ * Plain three.js loading: cientos' useGLTF and Tres' useTexture register
+ * lifecycle hooks, and called after an await they only warn. The model's own
+ * image slots are placeholders the skin replaces, so they are not fetched.
+ */
+function loadGltf(src: string): Promise<GLTF> {
+	let promise = gltfCache.get(src)
+	if (!promise) {
+		const manager = new THREE.LoadingManager()
+		manager.setURLModifier((url) =>
+			url === src || url.startsWith('data:') ? url : TRANSPARENT_PIXEL,
+		)
+		promise = new GLTFLoader(manager).loadAsync(src)
+		promise.catch(() => gltfCache.delete(src))
+		gltfCache.set(src, promise)
+	}
+	return promise
+}
 
 const SKIN_LAYER_DEPTH_BIAS = -1
 
@@ -206,7 +229,7 @@ export function useSkinPreviewScene({
 
 		try {
 			isModelLoaded.value = false
-			const { scene: loadedScene, animations } = await useGLTF(src)
+			const { scene: loadedScene, animations } = await loadGltf(src)
 			const clonedScene = cloneSceneForRenderer(loadedScene)
 			if (isUnmounted || loadVersion !== modelLoadVersion) {
 				disposeSceneMaterials(clonedScene)
@@ -245,7 +268,7 @@ export function useSkinPreviewScene({
 			try {
 				return await loadSkinTexture(src)
 			} catch {
-				const tex = await useTexture([src])
+				const tex = await new THREE.TextureLoader().loadAsync(src)
 				tex.colorSpace = THREE.SRGBColorSpace
 				tex.flipY = false
 				tex.magFilter = THREE.NearestFilter

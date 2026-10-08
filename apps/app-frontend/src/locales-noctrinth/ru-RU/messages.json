@@ -1943,6 +1943,12 @@
 	"skin.preview.drag-to-rotate": {
 		"message": "Перетащите, чтобы повернуть"
 	},
+	"noctrinth.auth-servers.unreachable.retry": {
+		"message": "Проверить снова"
+	},
+	"noctrinth.auth-servers.unreachable.scope": {
+		"message": "Пока они не ответят, вход и игра с аккаунтом Microsoft могут не работать. Оффлайн-аккаунтов и Ely.by это не касается."
+	},
 	"skin.preview.scroll-to-zoom": {
 		"message": "Колёсико — приблизить"
 	}

@@ -44,6 +44,8 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 ### Changed
 - The launch button is one shape that flows between Play, Starting, Installing and Stop, changing width and colour on a spring while the label melts from one into the next. The button for a second copy runs out of Stop like a drop and comes away, and runs back in when the game closes.
 - In the skin preview the nametag stays above the head through every turn, tilt and zoom, and turns with the model like a sign. The shadow tilts with the floor, and the hint under the feet says the wheel zooms.
+- The splash opens already painted in the theme's colour instead of flashing black first, comes in with a fade, and its bar eases forward instead of racing to the end and stalling there.
+- The "Cannot reach authentication servers" banner can be dismissed, has a button to check again, rechecks every thirty seconds until the servers answer, and says that offline and Ely.by accounts are not affected. A single dropped request no longer raises it.
 
 ### Fixed
 - Opening an older crash report from the Logs tab names the mod it happened in too, with a button to disable it.

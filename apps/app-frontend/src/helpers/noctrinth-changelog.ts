@@ -57,6 +57,7 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 
 ### Fixed
 - Opening an older crash report from the Logs tab names the mod it happened in too, with a button to disable it.
+- The taskbar shows the accent's icon in the installed launcher too: a pinned launcher's button is drawn from its shortcut, not the window, so the launcher's own shortcuts on the taskbar, in the Start menu and on the desktop are now given the accent's icon as well, and get the original back with the theme's colour.
 - Instance logs no longer come out with a placeholder after every letter once an Ely.by account had signed in through its page: the log censor replaced that account's empty client token everywhere.
 - An Ely.by account's skins show up again, and wearing, uploading, editing and deleting them works: Ely.by moved its site's API to new addresses.`,
 	},

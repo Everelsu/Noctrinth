@@ -386,7 +386,7 @@ watch(
 		const preset = findAccentPreset(id)
 		if (preset) {
 			void import('@/helpers/noctrinth-window-icon').then(({ paintWindowIcon }) =>
-				paintWindowIcon(accentColorFor(preset)),
+				paintWindowIcon(accentColorFor(preset), preset.id === DEFAULT_ACCENT_PRESET),
 			)
 		}
 	},

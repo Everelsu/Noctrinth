@@ -1,58 +1,107 @@
 <template>
-	<Transition name="splash-fade" @after-leave="onAfterLeave">
-		<div v-if="!doneLoading" class="splash-screen" :class="`${theme.active}-mode`">
-			<div class="app-logo-wrapper" data-tauri-drag-region>
-				<NoctrinthAppLogo class="app-logo" />
-				<ProgressBar class="loading-bar" :progress="Math.min(loadingProgress, 100)" />
-				<span v-if="message">{{ message }}</span>
+	<div v-if="!doneLoading" ref="splash" class="splash-screen" data-tauri-drag-region>
+		<div class="splash-cube" aria-hidden="true"></div>
+		<div class="splash-glow" aria-hidden="true"></div>
+		<div class="splash-content" data-tauri-drag-region>
+			<NoctrinthAppLogo class="splash-logo" />
+			<div
+				class="splash-bar"
+				role="progressbar"
+				:aria-valuenow="realProgress ?? undefined"
+				aria-valuemin="0"
+				aria-valuemax="100"
+			>
+				<div
+					class="splash-bar__fill"
+					:class="{ 'is-real': realProgress !== null }"
+					:style="
+						realProgress !== null ? { transform: `scaleX(${realProgress / 100})` } : undefined
+					"
+				></div>
 			</div>
-			<div class="gradient-bg" data-tauri-drag-region></div>
-			<div class="cube-bg"></div>
-			<div class="base-bg"></div>
+			<span v-if="message" class="splash-message">{{ message }}</span>
 		</div>
-	</Transition>
+	</div>
 </template>
 
 <script setup>
+/**
+ * Drawn to stay smooth while the app it covers is starting up, which is when
+ * the main thread has the least time to give it.
+ *
+ * So nothing on it moves through the main thread: the bar crawls on a CSS
+ * animation of `transform`, and the exit is a Web Animation of `opacity` and
+ * `transform`, both of which the compositor runs however busy the page
+ * underneath is. The exit is not a Vue transition on purpose: that waits two
+ * frames of the main thread before it starts, which at startup is exactly
+ * where the page is busiest, and it froze there. Its colours come from
+ * the document's own theme and accent rather than a theme class of its own,
+ * so it is the same colour as what it uncovers, and the cube behind it is
+ * grey so that the accent is the only colour on it.
+ */
 import { injectLoadingState } from '@modrinth/ui'
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref, useTemplateRef, watch } from 'vue'
 
 import NoctrinthAppLogo from '@/assets/modrinth_app.svg?component'
-import ProgressBar from '@/components/ui/ProgressBar.vue'
 import { useAppEvent } from '@/composables/use-app-event'
-import { useTheme } from '@/composables/use-theme.ts'
 import { debugStartup } from '@/helpers/startup-debug'
 
-const theme = useTheme()
-
+const splash = useTemplateRef('splash')
 const doneLoading = ref(false)
-const loadingProgress = ref(0)
+/** Set only when there is a real fraction to show; the crawl stands in otherwise. */
+const realProgress = ref(null)
 const message = ref()
 
 const MIN_DISPLAY_MS = 500
+const FADE_MS = 320
+const EASING = 'cubic-bezier(0.4, 0, 0.2, 1)'
 const mountedAt = Date.now()
 
 const loading = injectLoadingState()
 onMounted(() => debugStartup('Splash mounted'))
 
 function onAfterLeave() {
+	doneLoading.value = true
 	debugStartup('Splash fade completed', { displayedMs: Date.now() - mountedAt })
 	loading.setEnabled(true)
+}
+
+/** Fills the bar, fades out and grows the mark a little, all started this very task. */
+function dismiss() {
+	const root = splash.value
+	if (!root?.animate) {
+		onAfterLeave()
+		return
+	}
+
+	const fill = root.querySelector('.splash-bar__fill')
+	fill?.animate([{ transform: getComputedStyle(fill).transform }, { transform: 'scaleX(1)' }], {
+		duration: 180,
+		easing: 'ease-out',
+		fill: 'forwards',
+	})
+	root
+		.querySelector('.splash-content')
+		?.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.03)' }], {
+			duration: FADE_MS,
+			easing: EASING,
+			fill: 'forwards',
+		})
+	root
+		.animate([{ opacity: 1 }, { opacity: 0 }], {
+			duration: FADE_MS,
+			easing: EASING,
+			fill: 'forwards',
+		})
+		.finished.then(onAfterLeave, onAfterLeave)
+	debugStartup('Splash fade started', { displayedMs: Date.now() - mountedAt })
 }
 
 watch(
 	[loading.barEnabled, loading.pending],
 	([barEnabled, pending]) => {
 		debugStartup('Splash loading state changed', { barEnabled, pending })
-		if (barEnabled) {
-			return
-		}
-
-		if (pending) {
-			loadingProgress.value = 0
-			fakeLoadingIncrease()
-			return
-		}
+		if (barEnabled || pending) return
 
 		const elapsed = Date.now() - mountedAt
 		const delay = Math.max(0, MIN_DISPLAY_MS - elapsed)
@@ -63,31 +112,15 @@ watch(
 				debugStartup('Splash dismissal deferred: new loading work')
 				return
 			}
-			loadingProgress.value = 100
-			doneLoading.value = true
-			debugStartup('Splash fade started', { displayedMs: Date.now() - mountedAt })
+			dismiss()
 		}, delay)
 	},
 	{ immediate: true },
 )
 
-/**
- * Eases toward 95% and never quite reaches it, so a slow start keeps moving
- * instead of racing to 95 in a quarter of a second and sitting there.
- */
-function fakeLoadingIncrease() {
-	const startedAt = Date.now()
-	const step = () => {
-		if (!loading.pending.value || doneLoading.value) return
-		loadingProgress.value = 95 * (1 - Math.exp(-(Date.now() - startedAt) / 1200))
-		setTimeout(step, 50)
-	}
-	step()
-}
-
 useAppEvent('loading', (e) => {
 	if (e.event.type === 'directory_move') {
-		loadingProgress.value = 100 * (e.fraction ?? 1)
+		realProgress.value = 100 * (e.fraction ?? 1)
 		message.value = 'Updating app directory...'
 	}
 })
@@ -98,162 +131,118 @@ useAppEvent('loading', (e) => {
 	position: fixed;
 	inset: 0;
 	z-index: 10000;
+	overflow: hidden;
+	background: var(--color-bg);
+	contain: strict;
+	will-change: opacity;
 
-	--splash-cube-image: url('@/assets/loading/cube.png');
+	--splash-cube-image: url('@/assets/loading/noctrinth-cube-dark.webp');
+	--splash-cube-strength: 0.5;
+	--splash-glow-strength: 16%;
+}
 
-	&.light-mode {
-		--splash-cube-image: url('@/assets/loading/cube-light.webp');
-	}
+:global(html.light-mode .splash-screen) {
+	--splash-cube-image: url('@/assets/loading/noctrinth-cube-light.webp');
+	--splash-cube-strength: 0.7;
+	--splash-glow-strength: 12%;
+}
+
+.splash-cube {
+	position: absolute;
+	inset: -40vh -40vw;
+	background: var(--splash-cube-image) center / contain no-repeat;
+	opacity: var(--splash-cube-strength);
+	will-change: opacity;
+	animation: splash-cube-in 0.9s ease-out both;
+}
+
+/* The accent, behind the mark: the one colour on the splash, so it matches. */
+.splash-glow {
+	position: absolute;
+	inset: 0;
+	background:
+		radial-gradient(
+			ellipse 55% 45% at 50% 50%,
+			color-mix(in srgb, var(--color-brand) var(--splash-glow-strength), transparent),
+			transparent 70%
+		),
+		linear-gradient(
+			180deg,
+			color-mix(in srgb, var(--color-bg) 10%, transparent) 0%,
+			var(--color-bg) 100%
+		);
+}
+
+.splash-content {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 1.25rem;
+	color: var(--color-contrast);
+	will-change: transform;
+}
+
+.splash-logo {
+	height: 2.25rem;
+	width: fit-content;
+}
+
+.splash-bar {
+	width: 18rem;
+	height: 0.375rem;
+	overflow: hidden;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--color-brand) 16%, transparent);
 }
 
 /*
- * The theme's own selector re-declares the whole palette on this element —
- * including the brand colour, which would beat the accent set on the document
- * and leave the mark and the bar purple on a window that is not. Taken back
- * from the accent's own variable, with the theme's purple as the fallback for
- * the preset that keeps it.
+ * Scaled rather than resized, so it is the compositor that moves it. Until
+ * there is a real fraction it crawls on its own: quickly at first, then ever
+ * more slowly towards the end it never reaches, the way a start that takes as
+ * long as it takes should look.
  */
-.splash-screen {
-	--color-purple: var(--noctrinth-accent, var(--color-purple-400));
-	--color-brand: var(--color-purple);
+.splash-bar__fill {
+	width: 100%;
+	height: 100%;
+	border-radius: inherit;
+	background: var(--color-brand);
+	transform-origin: left center;
+	transform: scaleX(0.04);
+	will-change: transform;
+	animation: splash-crawl 20s cubic-bezier(0.05, 0.75, 0.15, 1) forwards;
 
-	/*
-	 * The wash over the splash, which the theme writes in Modrinth's green. An
-	 * accent preset repaints it through `--splash-wash`, but the preset that
-	 * keeps the theme's own colour sets nothing at all — and that colour, here,
-	 * is the fork's purple and not upstream's green.
-	 */
-	--splash-tint-top: rgba(110, 45, 180, 0.15);
-	--splash-tint-bottom: rgba(20, 12, 35, 0.3);
-	--splash-overlay: rgba(22, 24, 28, 0.64);
-
-	&.light-mode {
-		--splash-tint-top: rgba(214, 185, 255, 0.465);
-		--splash-tint-bottom: rgba(199, 183, 255, 0.563);
-		--splash-overlay: rgba(216, 181, 255, 0.315);
+	&.is-real {
+		animation: none;
+		transition: transform 0.3s ease-out;
 	}
 }
 
-.splash-fade-leave-active {
-	transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-
-	.app-logo-wrapper {
-		transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-	}
+.splash-message {
+	font-size: 0.875rem;
+	color: var(--color-secondary);
 }
 
-.splash-fade-leave-to {
-	opacity: 0;
-
-	.app-logo-wrapper {
-		transform: scale(1.04);
-	}
-}
-
-/* Comes in rather than appearing: the mark and bar rise, the cubes fade up. */
-.app-logo-wrapper > * {
-	animation: splash-rise 0.5s cubic-bezier(0.2, 0, 0, 1) both;
-}
-
-.app-logo-wrapper > :nth-child(2) {
-	animation-delay: 0.08s;
-}
-
-.cube-bg::after {
-	animation: splash-fade-in 0.8s ease-out both;
-}
-
-@keyframes splash-rise {
+@keyframes splash-crawl {
 	from {
-		opacity: 0;
-		transform: translateY(8px);
+		transform: scaleX(0.04);
+	}
+	to {
+		transform: scaleX(0.92);
 	}
 }
 
-@keyframes splash-fade-in {
+@keyframes splash-cube-in {
 	from {
 		opacity: 0;
 	}
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.app-logo-wrapper > *,
-	.cube-bg::after {
+	.splash-cube {
 		animation: none;
 	}
-}
-
-.app-logo-wrapper {
-	position: absolute;
-	height: 100vh;
-	width: 100%;
-
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-items: center;
-
-	gap: 1rem;
-	color: var(--color-contrast);
-
-	z-index: 9998;
-}
-
-.app-logo {
-	height: 2.25rem;
-	width: fit-content;
-}
-
-.loading-bar {
-	max-width: 20rem;
-}
-
-.gradient-bg {
-	position: absolute;
-	height: 100vh;
-	width: 100vw;
-	// Named so the accent preset can repaint it; the fallback is the theme's own,
-	// which is where the purple came from.
-	background:
-		var(
-			--splash-wash,
-			linear-gradient(180deg, var(--splash-tint-top) 0%, var(--splash-tint-bottom) 97.29%)
-		),
-		linear-gradient(0deg, var(--splash-overlay), var(--splash-overlay));
-	z-index: 9997;
-}
-
-.cube-bg {
-	position: absolute;
-
-	left: 50%;
-	top: 50%;
-	transform: translate(-50%, -50%);
-
-	width: 180vw;
-	height: 180vh;
-	background-color: var(--color-bg);
-
-	z-index: 9996;
-
-	&::after {
-		content: '';
-		position: absolute;
-		inset: 0;
-		background: var(--splash-cube-image) center no-repeat;
-		background-size: contain;
-		opacity: var(--splash-cube-opacity);
-		mix-blend-mode: var(--splash-cube-blend);
-	}
-}
-
-.base-bg {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	background: var(--color-bg);
-	z-index: 9995;
 }
 </style>

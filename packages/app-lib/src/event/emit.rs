@@ -157,9 +157,7 @@ pub fn emit_loading(
 // emit_warning(message)
 pub async fn emit_warning(message: &str) -> crate::Result<()> {
     #[cfg(feature = "tauri")]
-    {
-        // Reached from the same deep link parsing as `emit_command`.
-        let event_state = crate::EventState::get_initialized().await?;
+    if let Some(event_state) = crate::EventState::try_get() {
         event_state.send(AppEvent::Warning(WarningPayload {
             message: message.to_string(),
         }))?;

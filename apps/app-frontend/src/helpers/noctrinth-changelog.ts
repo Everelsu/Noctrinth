@@ -38,7 +38,7 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 		version: '0.21.8+1',
 		date: '2026-10-08T00:00:00+00:00',
 		body: `### Added
-- Two fingers across the touchpad go back and forward through pages, exactly the way Chrome does — its own gesture logic, ported by way of [Two-Finger-Back](https://github.com/LucaSorvillo/Two-Finger-Back). An arrow slides out of the window's edge and lights up once the swipe is far enough; the page changes when the fingers lift, so pulling back before that cancels it. Scrolling up and down, and anything that scrolls sideways itself, are left alone.
+- Two fingers across the touchpad go back and forward through pages, exactly the way Chrome does. An arrow slides out of the window's edge and lights up once the swipe is far enough; the page changes when the fingers lift, so pulling back before that cancels it. Scrolling up and down, and anything that scrolls sideways itself, are left alone.
 - The changelog here is read from the changelog site, so notes for releases since this build, and corrections to older ones, show up without an update. The copy that ships with the app is still there offline.
 
 ### Changed
@@ -47,9 +47,10 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 - The splash screen is redrawn to stay smooth while the app starts behind it: the bar and the fade out run on the compositor, so a busy start no longer freezes them, and the window opens already painted instead of flashing black. It takes its colours from the theme and the accent, with a grey cube behind them, so a light theme or a non-purple accent no longer shows a lavender splash that then changes colour as it fades.
 - One "Add account" button asks which kind of account to add, instead of three buttons in a row.
 - Pages open faster: every page's code is loaded while the launcher is idle instead of on the first visit, and a project's details start loading while the pointer rests on its card, so opening it from Browse finds them ready.
-- The skin preview's hints fit a narrow preview, like the one in the edit dialog, on two tidy lines instead of breaking each over three.
+- The skin preview's hints fit a narrow preview, like the one in the edit dialog, on two tidy lines below the shadow instead of breaking each over three on top of it.
+- Clicking a big modpack's card opens its page straight away: the page no longer waits for every file in the instance to be scanned, and the mod list shows its own loading while it does. Lists of up to 150 mods are drawn whole, so a quick scroll no longer shows empty gaps.
 - The splash cube can be inverted, black on white or white on black, or picked at random each launch, from the developer flags. The default shows the inverted one now and then.
-- Adding an Ely.by account opens Ely.by's sign-in in a window, the way a Microsoft account does, with the code already filled in. It is the device sign-in [AstralRinth](https://git.xorison.dev/didirus/AstralRinth) uses; the password form is still there if the window cannot do it.
+- Adding an Ely.by account opens Ely.by's sign-in in a window, the way a Microsoft account does, with the code already filled in.
 - The "Cannot reach authentication servers" banner can be dismissed, has a button to check again, rechecks every thirty seconds until the servers answer, and says that offline and Ely.by accounts are not affected. A single dropped request no longer raises it.
 
 ### Fixed

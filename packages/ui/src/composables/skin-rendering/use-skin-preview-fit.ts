@@ -38,6 +38,7 @@ const FRAMING_PRESETS = {
 >
 
 const PREVIEW_CONTROLS_FOOT_OFFSET = 64
+const MODAL_CONTROLS_FOOT_OFFSET = 32
 const SUBTITLE_CONTROLS_OFFSET = 48
 const NAMETAG_HEAD_OFFSET = 16
 
@@ -334,6 +335,11 @@ export function useSkinPreviewFit({
 	)
 
 	const previewControlsPositionStyle = computed<CSSProperties>(() => {
+		// A dialog's preview pinned the hints a fixed share from its bottom, which is
+		// where the shadow is; they go under the feet there too, a little closer.
+		if (fitEnabled.value && currentFraming.value === 'modal' && modelFeetTop.value !== null) {
+			return { top: `${modelFeetTop.value + MODAL_CONTROLS_FOOT_OFFSET}px` }
+		}
 		if (!fitEnabled.value || currentFraming.value !== 'page' || previewControlsTop.value === null) {
 			return {
 				bottom: currentFraming.value === 'modal' ? '6%' : 'calc(15% + 64px)',

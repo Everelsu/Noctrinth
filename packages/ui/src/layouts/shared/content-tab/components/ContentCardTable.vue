@@ -90,12 +90,21 @@ const hasAnyActions = computed(() => {
 })
 
 // Virtualization
+//
+// Below this many rows the whole list is rendered, as Celestial-Launcher does:
+// virtualizing a list that fits in a few screens buys nothing and shows a hole
+// whenever a scroll outruns the buffer, and most modded instances are under it.
+const VIRTUALIZE_THRESHOLD = 150
+
+const isVirtualized = computed(() => props.virtualized && props.items.length > VIRTUALIZE_THRESHOLD)
+
 const { listContainer, totalHeight, visibleRange, visibleTop, visibleItems, scrollToIndex } =
 	useVirtualScroll(toRef(props, 'items'), {
 		itemHeight: 74,
-		bufferSize: 5,
+		// Roughly 900px of rows either side, which a drag or a touchpad cannot outrun.
+		bufferSize: 12,
 		initialItemCount: 20,
-		enabled: toRef(props, 'virtualized'),
+		enabled: isVirtualized,
 	})
 
 watch(
@@ -272,7 +281,7 @@ function handleSort(column: ContentCardTableSortColumn) {
 		</div>
 
 		<div
-			v-if="items.length > 0 && virtualized"
+			v-if="items.length > 0 && isVirtualized"
 			ref="listContainer"
 			role="rowgroup"
 			class="relative w-full"

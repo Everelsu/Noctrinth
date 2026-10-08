@@ -306,17 +306,15 @@ const processesQuery = useQuery(
 )
 const playing = computed(() => (processesQuery.data.value?.length ?? 0) > 0)
 
-async function ensureCriticalContent(targetInstanceId: string) {
-	await queryClient.ensureQueryData(
-		instanceContentQueryOptions(targetInstanceId, (error) => handleError(toError(error))),
-	)
-}
-
+/**
+ * Only the instance summary is awaited, as Celestial-Launcher does. The route's
+ * <Suspense> keeps the previous page on screen until this resolves, so the
+ * content list, which on a cold cache is a scan of every file in the instance,
+ * used to leave a click on a big modpack's card looking like it did nothing.
+ * The content tab shows its own loading state while the list lands.
+ */
 async function ensureCriticalInstanceData(targetInstanceId: string) {
-	await Promise.all([
-		queryClient.ensureQueryData(instanceDetailQueryOptions(targetInstanceId)),
-		ensureCriticalContent(targetInstanceId),
-	])
+	await queryClient.ensureQueryData(instanceDetailQueryOptions(targetInstanceId))
 }
 
 function isUnmanagedInstanceError(error: unknown) {

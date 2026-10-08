@@ -35,6 +35,19 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.21.8+1',
+		date: '2026-10-08T00:00:00+00:00',
+		body: `### Added
+- Two fingers across the touchpad go back and forward through pages, the way a browser does: an arrow grows out of the window's edge, a swipe goes through past a quarter of its length or on a quick flick, and a shorter one springs back. Scrolling up and down, and anything that scrolls sideways itself, are left alone.
+- The changelog here is read from the changelog site, so notes for releases since this build, and corrections to older ones, show up without an update. The copy that ships with the app is still there offline.
+
+### Changed
+- The launch button is one shape that flows between Play, Starting, Installing and Stop, changing width and colour on a spring while the label melts from one into the next. The button for a second copy runs out of Stop like a drop and comes away, and runs back in when the game closes.
+
+### Fixed
+- Opening an older crash report from the Logs tab names the mod it happened in too, with a button to disable it.`,
+	},
+	{
 		version: '0.21.8',
 		date: '2026-10-07T00:00:00+00:00',
 		body: `### Added

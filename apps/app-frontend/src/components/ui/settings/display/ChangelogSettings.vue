@@ -2,12 +2,14 @@
 import { ExternalIcon } from '@modrinth/assets'
 import { getChangelog } from '@modrinth/blog'
 import { Button, Chips, defineMessages, useVIntl } from '@modrinth/ui'
+import { useQuery } from '@tanstack/vue-query'
 import { getVersion } from '@tauri-apps/api/app'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import dayjs from 'dayjs'
 import { computed, onMounted, ref } from 'vue'
 
-import { NOCTRINTH_CHANGELOG } from '@/helpers/noctrinth-changelog'
+import { NOCTRINTH_CHANGELOG, type NoctrinthVersionEntry } from '@/helpers/noctrinth-changelog'
+import { proxiedFetch } from '@/helpers/proxy-fetch'
 import { renderChangelog } from '@/helpers/render-changelog'
 
 const { formatMessage } = useVIntl()
@@ -110,10 +112,43 @@ function parseBody(body: string): ChangelogSection[] {
 		.filter((section) => section.title || section.html)
 }
 
-// Noctrinth changelog — written in helpers/noctrinth-changelog.ts and shipped
-// with the build, the same way upstream's is.
+/** The same entries as published with the changelog site, from the same file. */
+const CHANGELOG_FEED = 'https://everelsu.github.io/Noctrinth/changelog.json'
+
+function isEntry(value: unknown): value is NoctrinthVersionEntry {
+	const entry = value as Partial<NoctrinthVersionEntry> | null
+	return (
+		typeof entry?.version === 'string' &&
+		typeof entry.date === 'string' &&
+		typeof entry.body === 'string'
+	)
+}
+
+/**
+ * The changelog as it stands on the site, which is newer than this build's
+ * whenever a release has come out since, or an entry was corrected. Written in
+ * helpers/noctrinth-changelog.ts either way — the site publishes that file — and
+ * the copy shipped with the build is what shows offline or until this arrives.
+ */
+const feed = useQuery({
+	queryKey: ['noctrinth-changelog-feed'],
+	queryFn: async () => {
+		const response = await proxiedFetch(CHANGELOG_FEED, {
+			connectTimeout: 8000,
+		})
+		if (!response.ok) throw new Error(`HTTP ${response.status}`)
+		const entries: unknown = await response.json()
+		if (!Array.isArray(entries) || !entries.every(isEntry) || entries.length === 0) {
+			throw new Error('The changelog feed is not a list of entries')
+		}
+		return entries as NoctrinthVersionEntry[]
+	},
+	staleTime: 10 * 60 * 1000,
+	retry: 1,
+})
+
 const noctrinthChangelog = computed<ChangelogEntry[]>(() =>
-	NOCTRINTH_CHANGELOG.map((entry) => ({
+	(feed.data.value ?? NOCTRINTH_CHANGELOG).map((entry) => ({
 		version: entry.version,
 		date: dayjs(entry.date).format('MMM D, YYYY'),
 		sections: parseBody(entry.body),

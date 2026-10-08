@@ -580,6 +580,17 @@ const HTML = `<!DOCTYPE html>
 
 mkdirSync(OUT_DIR, { recursive: true })
 writeFileSync(join(OUT_DIR, 'index.html'), HTML)
+// The same entries for the launcher to read, so a release's notes can be
+// corrected, or newer ones shown to an older build, without a rebuild. The app
+// still ships them too, and falls back to its own copy offline.
+writeFileSync(
+	join(OUT_DIR, 'changelog.json'),
+	JSON.stringify(
+		noctrinth.map(({ version, date, body }) => ({ version, date, body })),
+		null,
+		'	',
+	),
+)
 copyFileSync(LOGO_SRC, join(OUT_DIR, 'logo.svg'))
 
 // Screenshots live on the site rather than inside the installer, so an entry

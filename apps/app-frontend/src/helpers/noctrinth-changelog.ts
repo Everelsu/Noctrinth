@@ -38,7 +38,7 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 		version: '0.21.8+1',
 		date: '2026-10-08T00:00:00+00:00',
 		body: `### Added
-- Two fingers across the touchpad go back and forward through pages, the way a browser does: an arrow grows out of the window's edge, a swipe goes through past a quarter of its length or on a quick flick, and a shorter one springs back. Scrolling up and down, and anything that scrolls sideways itself, are left alone.
+- Two fingers across the touchpad go back and forward through pages, exactly the way Chrome does — its own gesture logic, ported by way of [Two-Finger-Back](https://github.com/LucaSorvillo/Two-Finger-Back). An arrow slides out of the window's edge and lights up once the swipe is far enough; the page changes when the fingers lift, so pulling back before that cancels it. Scrolling up and down, and anything that scrolls sideways itself, are left alone.
 - The changelog here is read from the changelog site, so notes for releases since this build, and corrections to older ones, show up without an update. The copy that ships with the app is still there offline.
 
 ### Changed

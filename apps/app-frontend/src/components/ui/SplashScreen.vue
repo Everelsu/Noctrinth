@@ -3,7 +3,7 @@
 		v-if="!doneLoading"
 		ref="splash"
 		class="splash-screen"
-		:class="{ 'is-inverted': inverted }"
+		:class="{ 'is-inverted': inverted, 'is-ready': themeReady }"
 		data-tauri-drag-region
 	>
 		<div class="splash-cube" aria-hidden="true"></div>
@@ -52,6 +52,7 @@ import { useRouter } from 'vue-router'
 import NoctrinthAppLogo from '@/assets/modrinth_app.svg?component'
 import { useAppEvent } from '@/composables/use-app-event'
 import { rollSplashCubeInverted } from '@/helpers/noctrinth-splash-cube'
+import { themeReady } from '@/helpers/noctrinth-window-reveal'
 import { debugStartup } from '@/helpers/startup-debug'
 
 const splash = useTemplateRef('splash')
@@ -192,13 +193,28 @@ useAppEvent('loading', (e) => {
 	--splash-cube-strength: 0.95;
 }
 
+/*
+ * Nothing is drawn until the settings' theme is known: the window is hidden
+ * until then anyway, and what was drawn in the cached theme only came back as
+ * a stale frame, a cube that vanished and a bar that started over. Once it is
+ * ready, everything starts once, in the right colours.
+ */
+.splash-screen:not(.is-ready) > * {
+	visibility: hidden;
+}
+
+.splash-screen.is-ready .splash-cube,
+.splash-screen.is-ready .splash-bar__fill {
+	animation-play-state: running;
+}
+
 .splash-cube {
 	position: absolute;
 	inset: -40vh -40vw;
 	background: var(--splash-cube-image) center / contain no-repeat;
 	opacity: var(--splash-cube-strength);
 	will-change: opacity;
-	animation: splash-cube-in 0.9s ease-out both;
+	animation: splash-cube-in 0.9s ease-out both paused;
 }
 
 /* The accent, behind the mark: the one colour on the splash, so it matches. */
@@ -257,7 +273,7 @@ useAppEvent('loading', (e) => {
 	transform-origin: left center;
 	transform: scaleX(0.04);
 	will-change: transform;
-	animation: splash-crawl 20s cubic-bezier(0.05, 0.75, 0.15, 1) forwards;
+	animation: splash-crawl 20s cubic-bezier(0.05, 0.75, 0.15, 1) forwards paused;
 
 	&.is-real {
 		animation: none;

@@ -155,7 +155,7 @@ import {
 	setActive,
 } from '@/helpers/mr_auth.ts'
 import { prefetchRouteChunks, startProjectHoverPrefetch } from '@/helpers/noctrinth-prefetch'
-import { revealMainWindow } from '@/helpers/noctrinth-window-reveal'
+import { markThemeSettled, revealMainWindow } from '@/helpers/noctrinth-window-reveal'
 import { mergeUrlQuery, parseModrinthLink } from '@/helpers/project-links.ts'
 import { proxiedFetch as tauriFetch } from '@/helpers/proxy-fetch'
 import {
@@ -864,6 +864,12 @@ async function setupApp() {
 		accent_tint_background,
 	} = await traceStartupStep('Read startup settings', getSettings)
 
+	// Before anything else that waits: the window opens once the splash is in
+	// these colours, rather than in whatever the last session left cached.
+	appTheme.preferred = theme
+	setAccentPreset(accent_preset, accent_tint_background)
+	markThemeSettled()
+
 	// Initialize locale from saved settings
 	if (locale) {
 		await traceStartupStep('Apply startup locale', () => setLocale(locale))
@@ -887,9 +893,7 @@ async function setupApp() {
 		)
 	}
 
-	appTheme.preferred = theme
 	appTheme.advancedRendering = advanced_rendering
-	setAccentPreset(accent_preset, accent_tint_background)
 	appTheme.syncAcrossDevices = sync_theme_across_devices
 	appSettings.syncBehaviorAcrossDevices = sync_behavior_across_devices
 	appSettings.syncFeaturesAcrossDevices = sync_features_across_devices

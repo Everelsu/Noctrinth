@@ -47,6 +47,7 @@
  */
 import { injectLoadingState } from '@modrinth/ui'
 import { onMounted, ref, useTemplateRef, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
 import NoctrinthAppLogo from '@/assets/modrinth_app.svg?component'
 import { useAppEvent } from '@/composables/use-app-event'
@@ -62,11 +63,12 @@ const realProgress = ref(null)
 const message = ref()
 
 const MIN_DISPLAY_MS = 500
-const FADE_MS = 320
+const FADE_MS = 420
 const EASING = 'cubic-bezier(0.4, 0, 0.2, 1)'
 const mountedAt = Date.now()
 
 const loading = injectLoadingState()
+const router = useRouter()
 onMounted(() => debugStartup('Splash mounted'))
 
 function onAfterLeave() {
@@ -106,25 +108,48 @@ function dismiss() {
 	debugStartup('Splash fade started', { displayedMs: Date.now() - mountedAt })
 }
 
-watch(
-	[loading.barEnabled, loading.pending],
-	([barEnabled, pending]) => {
-		debugStartup('Splash loading state changed', { barEnabled, pending })
-		if (barEnabled || pending) return
+/**
+ * When to go. Not the moment nothing is loading: at startup that is a gap of
+ * half a second between the app state landing and the router mounting the
+ * page, and leaving then faded the splash over an empty frame, came back for
+ * the page's own loading, and faded again from fully opaque. So it waits for
+ * the router to be ready, then for loading to stay quiet a little while, and
+ * then goes once.
+ */
+const QUIET_MS = 180
+let dismissing = false
+let routerReady = false
+let quietTimer = 0
 
-		const elapsed = Date.now() - mountedAt
-		const delay = Math.max(0, MIN_DISPLAY_MS - elapsed)
-		debugStartup('Splash dismissal scheduled', { delayMs: delay, displayedMs: elapsed })
+function scheduleDismissal() {
+	clearTimeout(quietTimer)
+	if (dismissing || !routerReady || loading.barEnabled.value || loading.pending.value) return
 
-		setTimeout(() => {
-			if (loading.pending.value) {
-				debugStartup('Splash dismissal deferred: new loading work')
-				return
-			}
-			dismiss()
-		}, delay)
+	const elapsed = Date.now() - mountedAt
+	const delay = Math.max(QUIET_MS, MIN_DISPLAY_MS - elapsed)
+	debugStartup('Splash dismissal scheduled', { delayMs: delay, displayedMs: elapsed })
+	quietTimer = window.setTimeout(() => {
+		if (dismissing || loading.pending.value) return
+		dismissing = true
+		// One frame for the page that has just rendered to be painted under it.
+		requestAnimationFrame(() => dismiss())
+	}, delay)
+}
+
+watch([loading.barEnabled, loading.pending], ([barEnabled, pending]) => {
+	debugStartup('Splash loading state changed', { barEnabled, pending })
+	scheduleDismissal()
+})
+
+router.isReady().then(
+	() => {
+		routerReady = true
+		scheduleDismissal()
 	},
-	{ immediate: true },
+	() => {
+		routerReady = true
+		scheduleDismissal()
+	},
 )
 
 useAppEvent('loading', (e) => {

@@ -9,9 +9,13 @@
 
 **English** · [Русский](README.ru.md)
 
-**Switching launchers? Your instances come with you — one click, nothing left behind.**
+**Ely.by, offline accounts and CurseForge packs, in the Modrinth App you already know.**
 
-🌙 A Modrinth App fork that speaks Ely.by, installs CurseForge packs, and imports your instances from six launchers 🚀
+🌙 A Modrinth App fork that speaks Ely.by, installs CurseForge packs and gives every player on an offline server their skin 🚀
+
+<a href="https://github.com/Everelsu/Noctrinth/releases/latest"><img src=".github/assets/readme/download-windows.svg" alt="Download for Windows" height="56"/></a>
+<a href="https://github.com/Everelsu/Noctrinth/releases/latest"><img src=".github/assets/readme/download-macos.svg" alt="Download for macOS" height="56"/></a>
+<a href="https://github.com/Everelsu/Noctrinth/releases/latest"><img src=".github/assets/readme/download-linux.svg" alt="Download for Linux" height="56"/></a>
 
 [Changelog](https://everelsu.github.io/Noctrinth/) · [Releases](https://github.com/Everelsu/Noctrinth/releases) · [Issues](https://github.com/Everelsu/Noctrinth/issues) · [Discussions](https://github.com/Everelsu/Noctrinth/discussions) · [Upstream](https://github.com/modrinth/code)
 
@@ -24,41 +28,56 @@
 <div align="center">
 <table>
 <tr>
-<td width="50%"><img src=".github/assets/screenshots/library.png" alt="Your instance library, with a live news feed and friends list" width="100%"/><br/><sub>Library — every instance, with an activity feed alongside</sub></td>
-<td width="50%"><img src=".github/assets/screenshots/ely-by-skins.png" alt="Managing an Ely.by skin from inside Noctrinth" width="100%"/><br/><sub>Ely.by skins, managed without leaving the launcher</sub></td>
+<td width="62%"><img src=".github/assets/screenshots/ely-by-skins.png" alt="An Ely.by account's saved skins in the skin selector" width="100%"/><br/><sub>Ely.by skins, worn and uploaded from the launcher</sub></td>
+<td width="38%"><img src=".github/assets/screenshots/accounts.png" alt="The add-account dialog offering Microsoft, Ely.by and offline accounts" width="100%"/><br/><sub>Microsoft, Ely.by or just a name</sub></td>
 </tr>
 </table>
 </div>
 
 ## Why Noctrinth
 
-The Modrinth App is a genuinely good launcher — but it only knows Microsoft accounts, only installs Modrinth's own `.mrpack` files, and shows you ads while you browse. If you play on Ely.by, keep a shelf of CurseForge zips, or sit behind a blocked connection, you end up running a second launcher just to cover the gaps.
-
-<div align="center">
-
-| Metric            | Value                                   |
-| ----------------- | --------------------------------------- |
-| Account providers | Microsoft **+ Ely.by**                  |
-| Import sources    | **6** launchers, including Modrinth App |
-| Ads               | **none**                                |
-
-</div>
+The Modrinth App is a genuinely good launcher, but it only knows Microsoft accounts, only installs Modrinth's own `.mrpack` files, and shows you ads while you browse. If you play on Ely.by or offline servers, keep a shelf of CurseForge zips, or sit behind a blocked connection, you end up running a second launcher to cover the gaps. Noctrinth covers them in the same app, and follows upstream release for release.
 
 ## What Noctrinth adds
 
-- **Ely.by accounts** — sign in alongside Microsoft, launch through authlib-injector, manage skins in an embedded window
-- **Modrinth App migration** — a banner spots an existing Modrinth App install and offers to bring instances over, all at once or hand-picked, optionally clearing them from the source once the copy lands
-- **CurseForge modpack `.zip` import** — install a pack straight from disk through the same job pipeline as everything else: queued, resumable, rolled back cleanly on failure
-- **Accent presets** — nine colours for the whole interface, from the splash screen and the window icon down to the loading bar, optionally tinting the surfaces with them
-- **Skins for every player** — offline servers send no skins at all, so everyone is Steve; the launcher looks them up by name from Ely.by and falls back to Mojang, without a mod on either side
-- **A skins folder of your own** — drop `<name>.png` in and that player wears it, ahead of any skin system, with `capes/` and `elytras/` beside it
-- **Two copies of one instance** — launch an instance that is already running as a second account, each with its own console on the Logs tab
-- **A shared `options.txt` profile** — pick the Minecraft options you want written into every instance on launch, and exclude the instances you don't
-- **Collections & followed projects** — browse, create and edit collections, plus a virtual collection of everything you follow
-- **Notifications** — Modrinth's notification feed, built into the app
-- **Proxy** — one URL (`http://`, `https://`, `socks5://`, `socks5h://`) routes every launcher request, for regions where Modrinth is blocked
-- **In-app changelog** — Noctrinth and Modrinth release notes side by side under Settings → Changelog
-- **Purple, ad-free** — Noctrinth branding throughout, with Modrinth's ads and upsells switched off
+### Accounts and skins
+
+- **Ely.by accounts**: sign in through Ely.by's own page, launch through authlib-injector, and browse, wear, upload and delete skins in the same grid the Microsoft account uses
+- **Offline accounts**: just a name, for singleplayer and offline-mode servers, wearing the cape that name has on OptiFine, LabyMod, MinecraftCapes or SkinMC
+- **Skins for every player**: offline servers send no skins, so everyone is Steve. The launcher looks each player up by name on Ely.by and Mojang, with no mod on either side
+- **Two copies of one instance**: launch a running instance again as another account, each copy with its own console
+
+<div align="center"><img src=".github/assets/screenshots/skin-preview.gif" alt="The skin preview turning, with the nametag staying above the head" width="280"/><br/><sub>The nametag turns with the model like a sign</sub></div>
+
+### Instances and content
+
+- **CurseForge modpack `.zip` install**: queued, resumable, rolled back cleanly on failure, with the pack's own icon
+- **CurseForge instances that arrive whole**: an import fetches the mods the folder is missing, and names every CurseForge file with its real title, author and icon
+- **Modrinth App migration**: a banner offers to bring Modrinth App instances over, all or hand-picked, optionally removing them from the source
+- **Library search language**: `@sodium` finds instances with a mod, `#shader` filters by type, `!outdated` by state, and `-` flips a term
+- **Modern Java for 1.7.10**: one click installs lwjgl3ify or Cleanroom with the launcher-side patches, and one click undoes it
+- **A graphics adapter per Java runtime** on Windows, for laptops that start the game on the wrong GPU
+- **Animated icons**: a GIF stays animated in the library and survives an `.mrpack` export
+
+<div align="center"><img src=".github/assets/screenshots/library-search.gif" alt="Typing @sodium into the library search narrows it to instances with Sodium" width="100%"/><br/><sub><code>@sodium</code> narrows the library to instances that have it</sub></div>
+
+### Around the app
+
+- **Description translation**: Google Translate, or DeepL with your own key, switched back to the original with one button
+- **Accent presets**: nine colours for the whole interface, the splash screen, the window and taskbar icons, optionally tinting the backgrounds too
+- **Touchpad navigation**: two fingers sideways go back and forward, the way Chrome does
+- **Collections and followed projects**, and **Modrinth notifications**, built into the app
+- **Proxy**: one URL (`http://`, `https://`, `socks5://`, `socks5h://`) for every launcher request, for regions where Modrinth is blocked
+- **No ads**: Modrinth's ads, consent popup and upsells are switched off
+
+<div align="center">
+<table>
+<tr>
+<td width="50%"><img src=".github/assets/screenshots/translate.gif" alt="A Chinese modpack description washing over into English and back" width="100%"/><br/><sub>A Chinese description, in English and back</sub></td>
+<td width="50%"><img src=".github/assets/screenshots/accents.gif" alt="Clicking through the nine accent presets recolours the settings window" width="100%"/><br/><sub>Nine accents, applied as you click</sub></td>
+</tr>
+</table>
+</div>
 
 ## Get started
 
@@ -75,11 +94,11 @@ Grab the installer for your platform from the [latest release](https://github.co
 Updates are signed and delivered automatically through GitHub Releases — no reinstalling.
 
 > [!NOTE]
-> Pre-release builds (`0.19.2-beta.1` and similar) are **not** served to the auto-updater. Install them by hand; the app will pick up the matching stable release as a normal update once it ships.
+> Pre-release builds (`0.21.10-beta.1` and similar) are **not** served to the auto-updater. Install them by hand; the app will pick up the matching stable release as a normal update once it ships.
 
 ### Bring your instances over
 
-Already on the Modrinth App? Open Noctrinth — a banner offers to import everything it finds. Prefer to choose? **Create instance → Import** lists Modrinth App next to Prism, MultiMC, ATLauncher, GDLauncher and CurseForge.
+Already on the Modrinth App? Open Noctrinth and a banner offers to import everything it finds. Prefer to choose? **Create instance → Import** lists Modrinth App next to Prism, MultiMC, ATLauncher, GDLauncher and CurseForge.
 
 ## Build from source
 
@@ -117,9 +136,9 @@ For architecture and infrastructure that isn't fork-specific, the [upstream repo
 
 ## Relationship with upstream
 
-Noctrinth syncs with [modrinth/code](https://github.com/modrinth/code) and pins its version to upstream's exactly — when Modrinth is on `0.19.1`, so is Noctrinth. Where both sides implement the same thing, upstream's version wins and the fork's is dropped. Fork-only work survives only where it doesn't collide.
+Noctrinth syncs with [modrinth/code](https://github.com/modrinth/code) and pins its version to upstream's exactly: when Modrinth is on `0.21.9`, so is Noctrinth. Where both sides implement the same thing, upstream's version wins and the fork's is dropped. That is how the fork's shared `options.txt` profile, screenshots tab and download cache went: upstream's settings sync, Screenshots page and content store do the same jobs better.
 
-Fast patches between upstream releases ship as semver pre-releases (`0.19.2-beta.1`), which sort above the current stable and below the next one — so testers roll onto the real release the moment it lands.
+A fix between upstream releases ships as a micropatch (`0.21.6+1`), which installs already on that version take as a normal update. Test builds ship as pre-releases (`0.21.10-beta.1`), which sort above the current stable and below the next one, so testers roll onto the real release the moment it lands.
 
 ## Contributing
 
@@ -127,7 +146,7 @@ Bug reports and pull requests are welcome — [open an issue](https://github.com
 
 Found a bug that isn't Noctrinth-specific? It belongs [upstream](https://github.com/modrinth/code/issues); fixing it there means everyone gets it, and it reaches this fork on the next sync.
 
-If Noctrinth helped you or something like that, [give it a star](https://github.com/Everelsu/Noctrinth/stargazers).
+If Noctrinth helped you, [give it a star](https://github.com/Everelsu/Noctrinth/stargazers).
 
 ## License
 

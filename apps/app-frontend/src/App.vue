@@ -132,6 +132,7 @@ import {
 	setActive,
 } from '@/helpers/mr_auth.ts'
 import { prefetchRouteChunks, startProjectHoverPrefetch } from '@/helpers/noctrinth-prefetch'
+import { cacheSplashCubeChoice } from '@/helpers/noctrinth-splash-cube'
 import { markThemeSettled, revealMainWindow } from '@/helpers/noctrinth-window-reveal'
 import { mergeUrlQuery, parseModrinthLink } from '@/helpers/project-links.ts'
 import { proxiedFetch as tauriFetch } from '@/helpers/proxy-fetch'
@@ -787,6 +788,7 @@ async function setupApp() {
 		pending_update_toast_for_version,
 		accent_preset,
 		accent_tint_background,
+		splash_cube,
 	} = await traceStartupStep('Read startup settings', getSettings)
 
 	// Before anything else that waits: the window opens once the splash is in
@@ -794,6 +796,7 @@ async function setupApp() {
 	appTheme.preferred = theme
 	setAccentPreset(accent_preset, accent_tint_background)
 	markThemeSettled()
+	cacheSplashCubeChoice(splash_cube)
 
 	// Initialize locale from saved settings
 	if (locale) {

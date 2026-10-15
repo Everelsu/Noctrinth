@@ -5,9 +5,9 @@ import { ref, watch } from 'vue'
 
 import {
 	readSplashCubeChoice,
+	saveSplashCubeChoice,
 	SPLASH_CUBE_CHOICES,
 	type SplashCubeChoice,
-	writeSplashCubeChoice,
 } from '@/helpers/noctrinth-splash-cube'
 
 const { formatMessage } = useVIntl()
@@ -30,7 +30,7 @@ const messages = defineMessages({
 })
 
 const choice = ref<SplashCubeChoice>(readSplashCubeChoice())
-watch(choice, writeSplashCubeChoice)
+watch(choice, saveSplashCubeChoice)
 </script>
 
 <template>

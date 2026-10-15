@@ -13,7 +13,8 @@ news/
   my-article/
     article.md       English, required
     article.ru.md    Russian, optional; falls back to English
-    thumbnail.png    the card picture, 16:9 (also .webp or .jpg)
+    thumbnail.webp   the card picture, 1920×1080 (also .png or .jpg): Modrinth's
+                     style, simplified UI over isometric blocks, in purple
     picture.png      anything the text shows, referenced as ![](picture.png)
 ```
 

@@ -105,6 +105,11 @@ pub struct Settings {
     /// the accent itself.
     pub accent_tint_background: bool,
 
+    /// Which cube the splash screen shows: `theme`, `inverted` or `random`.
+    /// The interface owns the list and caches the choice, since the splash
+    /// is drawn before settings load.
+    pub splash_cube: String,
+
     pub version: usize,
 }
 
@@ -152,6 +157,11 @@ impl Settings {
 
         let accent_tint_background: i64 =
             sqlx::query_scalar("SELECT accent_tint_background FROM settings")
+                .fetch_one(exec)
+                .await?;
+
+        let splash_cube: String =
+            sqlx::query_scalar("SELECT splash_cube FROM settings")
                 .fetch_one(exec)
                 .await?;
 
@@ -258,6 +268,7 @@ impl Settings {
             accent_preset: accent_preset
                 .unwrap_or_else(|| DEFAULT_ACCENT_PRESET.to_string()),
             accent_tint_background: accent_tint_background == 1,
+            splash_cube,
             sync_theme_across_devices: res.sync_theme_across_devices == 1,
             sync_behavior_across_devices: res.sync_behavior_across_devices == 1,
             sync_features_across_devices: res.sync_features_across_devices == 1,
@@ -427,6 +438,11 @@ impl Settings {
 
         sqlx::query("UPDATE settings SET accent_tint_background = $1")
             .bind(i64::from(self.accent_tint_background))
+            .execute(exec)
+            .await?;
+
+        sqlx::query("UPDATE settings SET splash_cube = $1")
+            .bind(&self.splash_cube)
             .execute(exec)
             .await?;
 

@@ -1,6 +1,10 @@
+import { get as getSettings, set as setSettings } from '@/helpers/settings.ts'
+
 /**
- * Which cube the splash shows. The splash is drawn before the settings are
- * read, so the choice lives in local storage, like the accent's mirror does.
+ * Which cube the splash shows. The choice is kept in the app's settings, and
+ * mirrored to local storage at startup, because the splash is drawn before the
+ * settings are read. The mirror alone was not enough: the dev server and the
+ * installed app are different origins, each with its own local storage.
  *
  * - `theme`: the cube matches the theme, dark on dark and light on light, and
  *   once in a while the other way round, as a small surprise.
@@ -26,12 +30,18 @@ export function readSplashCubeChoice(): SplashCubeChoice {
 	}
 }
 
-export function writeSplashCubeChoice(choice: SplashCubeChoice): void {
+/** Mirrors the saved choice for the next launch's splash. */
+export function cacheSplashCubeChoice(choice: string): void {
 	try {
 		localStorage.setItem(STORAGE_KEY, choice)
 	} catch (error) {
 		console.warn('Failed to remember the splash cube:', error)
 	}
+}
+
+export async function saveSplashCubeChoice(choice: SplashCubeChoice): Promise<void> {
+	cacheSplashCubeChoice(choice)
+	await setSettings({ ...(await getSettings()), splash_cube: choice })
 }
 
 /** Decided once per launch. */

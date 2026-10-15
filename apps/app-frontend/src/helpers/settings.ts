@@ -107,6 +107,9 @@ export type AppSettings = {
 	/** Whether that preset also tints the backgrounds it is drawn on. */
 	accent_tint_background: boolean
 
+	/** Which cube the splash screen shows; see `noctrinth-splash-cube.ts`. */
+	splash_cube: string
+
 	version: number
 }
 

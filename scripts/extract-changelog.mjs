@@ -7,6 +7,10 @@
 // Entries live in apps/app-frontend/src/helpers/noctrinth-changelog.ts, newest
 // first, and are read with the same parser the changelog site uses.
 //
+// A micropatch (`0.21.9+1`) goes out on its version's existing release, with
+// files named for the version alone, so its notes are that build's entry
+// followed by every earlier build of the same version.
+//
 // Usage:
 //   node scripts/extract-changelog.mjs <version> [output-file]
 //
@@ -14,7 +18,7 @@
 
 import { writeFileSync } from 'node:fs'
 
-import { findNoctrinthEntry, NOCTRINTH_CHANGELOG_SRC } from './lib/changelog-entries.mjs'
+import { NOCTRINTH_CHANGELOG_SRC, readEntries } from './lib/changelog-entries.mjs'
 
 const [, , versionArg, outputArg] = process.argv
 
@@ -24,25 +28,32 @@ if (!versionArg) {
 }
 
 const output = outputArg ?? 'RELEASE_BODY.md'
-const entry = findNoctrinthEntry(versionArg)
+const version = versionArg.split('+')[0]
+const entries = readEntries(NOCTRINTH_CHANGELOG_SRC)
+const start = entries.findIndex((entry) => entry.version === versionArg)
 
-if (!entry) {
+if (start === -1) {
 	console.error(
 		`No changelog entry for version ${versionArg} (looked in ${NOCTRINTH_CHANGELOG_SRC})`,
 	)
 	process.exit(1)
 }
 
-const body = entry.body.trim()
+const builds = entries.slice(start).filter((entry) => entry.version.split('+')[0] === version)
 
-if (!body) {
-	console.error(`The changelog entry for ${versionArg} is empty`)
+if (builds.some((entry) => !entry.body.trim())) {
+	console.error(`A changelog entry for ${version} is empty`)
 	process.exit(1)
 }
 
+const body =
+	builds.length === 1
+		? builds[0].body.trim()
+		: builds.map((entry) => `## ${entry.version}\n\n${entry.body.trim()}`).join('\n\n')
+
 const REPO = 'Everelsu/Noctrinth'
 const SITE = 'https://everelsu.github.io/Noctrinth'
-const tag = process.env.TAG || `v${versionArg}`
+const tag = process.env.TAG || `v${version}`
 // Pictures from main rather than the tag: the buttons are newer than some of
 // the releases they go on, and a tag from before them has none to show.
 const raw = (path) => `https://raw.githubusercontent.com/${REPO}/main/${path}`
@@ -54,12 +65,12 @@ const button = (os, label, file) =>
 const header = `<p align="center"><img src="${raw('.github/assets/noctrinth-banner.svg')}" alt="Noctrinth" width="100%"></p>
 
 <p align="center">
-${button('windows', 'Windows', `Noctrinth_${versionArg}_x64-setup.exe`)}
-${button('macos', 'macOS', `Noctrinth_${versionArg}_universal.dmg`)}
-${button('linux', 'Linux', `Noctrinth_${versionArg}_amd64.AppImage`)}
+${button('windows', 'Windows', `Noctrinth_${version}_x64-setup.exe`)}
+${button('macos', 'macOS', `Noctrinth_${version}_universal.dmg`)}
+${button('linux', 'Linux', `Noctrinth_${version}_amd64.AppImage`)}
 </p>
 
-<p align="center"><a href="${SITE}/news/">News</a> · <a href="${SITE}/changelog/#v${versionArg}">Changelog</a> · <a href="${download(`Noctrinth_${versionArg}_amd64.deb`)}">Linux .deb</a></p>
+<p align="center"><a href="${SITE}/news/">News</a> · <a href="${SITE}/changelog/#v${versionArg}">Changelog</a> · <a href="${download(`Noctrinth_${version}_amd64.deb`)}">Linux .deb</a></p>
 
 ---
 

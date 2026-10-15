@@ -35,6 +35,31 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.21.9+1',
+		date: '2026-10-15T12:00:00+00:00',
+		body: `### Added
+- Noctrinth's own news shows up in the News feed on the home page next to Modrinth's, in Russian when the launcher is. The articles live on the [new site](https://everelsu.github.io/Noctrinth/news/), which has the changelog on a page of its own now.
+- Stop on an instance running more than once asks which copy to stop, each named by its account and the time it started, or stops all of them.
+- In-game skins and capes come from more places: LittleSkin for skins, and LabyMod, MinecraftCapes and SkinMC for capes, after Mojang and OptiFine.
+
+### Changed
+- Synced with upstream Modrinth main: the "CancelledError" that popped up when opening an instance from the home page is gone, a failed database backup no longer stops the app, install backups are kept per job, and the install-to-play window says more when a modpack is missing.
+- Jump back in shows up to ten instances and worlds instead of five.
+- The button for another copy spins while that copy starts.
+- Minecraft starts sooner: Ely.by and offline accounts no longer wait on Mojang's profile servers, and a Java already checked is not checked again on every launch.
+- Skin lookups in game answer from the first source that has one instead of waiting on all of them, go through the launcher's proxy, and a source that is down is skipped for a while rather than slowing every player.
+- authlib-injector updates itself, and a download is checked against its checksum before it is used.
+- The "Cannot reach authentication servers" banner shows only for Microsoft accounts.
+
+### Fixed
+- Export debug info no longer fails with "os error 33" while the game is running.
+- Ely.by skins load again after a failed request instead of staying empty, and the cape shows in the skin preview.
+- Leaving an instance's page while it runs and coming back keeps its log.
+- Stopping one copy of an instance no longer shows the instance as stopped while another copy is still running.
+- The splash cube chosen in the developer flags no longer goes back to the default: it is kept in the launcher's settings instead of the webview's storage alone.
+- Closing the game no longer ends every session with an error about the launcher's connection to it.`,
+	},
+	{
 		version: '0.21.9',
 		date: '2026-10-08T12:00:00+00:00',
 		body: `### Added

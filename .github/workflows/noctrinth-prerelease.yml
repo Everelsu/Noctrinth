@@ -216,10 +216,9 @@ jobs:
           set -euo pipefail
           # Match the changelog entry by the VERSION file, the same source the
           # crate versions came from — independent of the tag name.
-          # VERSION may carry the build number of a rebuild after a `+`; the
-          # release number is the part in front of it.
+          # VERSION may carry the build number of a micropatch after a `+`,
+          # which has an entry of its own; the script reads both.
           VERSION=$(tr -d "[:space:]" < VERSION)
-          VERSION=${VERSION%%+*}
 
           if node scripts/extract-changelog.mjs "$VERSION" RELEASE_BODY.md; then
             echo "Updating release body for $TAG"

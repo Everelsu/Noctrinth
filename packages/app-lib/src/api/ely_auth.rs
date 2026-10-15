@@ -137,6 +137,24 @@ pub async fn users() -> crate::Result<Vec<ElyCredentials>> {
     ElyCredentials::get_all(&state.pool).await
 }
 
+/// Sends an Ely.by request, and once more if the first one did not get through.
+///
+/// Their servers, and whatever proxy sits in front of them, drop a connection
+/// or answer 5xx often enough that a single retry turns most of those into a
+/// normal load.
+async fn send_to_ely(
+    request: impl Fn() -> reqwest::RequestBuilder,
+) -> Result<reqwest::Response, reqwest::Error> {
+    match request().send().await {
+        Ok(resp) if !resp.status().is_server_error() => Ok(resp),
+        first => {
+            tracing::debug!("Retrying an Ely.by request after: {first:?}");
+            tokio::time::sleep(std::time::Duration::from_millis(400)).await;
+            request().send().await
+        }
+    }
+}
+
 /// Fetches the raw PNG skin texture for an Ely.by user from the public
 /// skin system. Returns the PNG bytes, or an error if the user has no
 /// custom skin (HTTP 404) or the request fails.
@@ -151,9 +169,7 @@ pub async fn get_skin_texture(username: &str) -> crate::Result<Vec<u8>> {
         chrono::Utc::now().timestamp_millis()
     );
 
-    let resp = INSECURE_REQWEST_CLIENT
-        .get(&url)
-        .send()
+    let resp = send_to_ely(|| INSECURE_REQWEST_CLIENT.get(&url))
         .await
         .map_err(|e| {
             crate::ErrorKind::OtherError(format!(
@@ -210,27 +226,18 @@ pub async fn list_uploaded_skins(
         urlencoding::encode(username)
     );
 
-    let request = || {
+    let resp = send_to_ely(|| {
         INSECURE_REQWEST_CLIENT
             .get(&url)
             .header("X-Requested-With", "XMLHttpRequest")
             .header("Accept", "application/json")
-            .send()
-    };
-
-    // The site is slow and sometimes drops a connection outright; a single
-    // retry turns most of those into a normal load.
-    let resp = match request().await {
-        Ok(resp) => resp,
-        Err(first) => {
-            tracing::debug!("Retrying the Ely.by skin listing after: {first}");
-            request().await.map_err(|e| {
-                crate::ErrorKind::OtherError(format!(
-                    "Failed to list Ely.by skins: {e}"
-                ))
-            })?
-        }
-    };
+    })
+    .await
+    .map_err(|e| {
+        crate::ErrorKind::OtherError(format!(
+            "Failed to list Ely.by skins: {e}"
+        ))
+    })?;
 
     if !resp.status().is_success() {
         return Err(crate::ErrorKind::OtherError(format!(
@@ -275,9 +282,7 @@ pub async fn get_current_skin_url(
         urlencoding::encode(username)
     );
 
-    let resp = INSECURE_REQWEST_CLIENT
-        .get(&url)
-        .send()
+    let resp = send_to_ely(|| INSECURE_REQWEST_CLIENT.get(&url))
         .await
         .map_err(|e| {
             crate::ErrorKind::OtherError(format!(
@@ -322,16 +327,13 @@ pub async fn get_texture_bytes(url: &str) -> crate::Result<Vec<u8>> {
         .into());
     }
 
-    let resp =
-        INSECURE_REQWEST_CLIENT
-            .get(parsed)
-            .send()
-            .await
-            .map_err(|e| {
-                crate::ErrorKind::OtherError(format!(
-                    "Failed to fetch the Ely.by texture: {e}"
-                ))
-            })?;
+    let resp = send_to_ely(|| INSECURE_REQWEST_CLIENT.get(parsed.clone()))
+        .await
+        .map_err(|e| {
+            crate::ErrorKind::OtherError(format!(
+                "Failed to fetch the Ely.by texture: {e}"
+            ))
+        })?;
 
     if !resp.status().is_success() {
         return Err(crate::ErrorKind::OtherError(format!(

@@ -385,6 +385,12 @@ impl Credentials {
         &self,
         cache_intent: OnlineProfileCacheIntent,
     ) -> Option<Arc<MinecraftProfile>> {
+        // Ely.by and offline accounts are handed over as credentials without a
+        // refresh token. Mojang has no profile behind their token, so asking only
+        // costs every launch a round trip that is refused.
+        if self.refresh_token.is_empty() {
+            return None;
+        }
         let max_age = cache_intent.max_age();
         let stale_profile = {
             let mut profile_cache = PROFILE_CACHE.lock().await;

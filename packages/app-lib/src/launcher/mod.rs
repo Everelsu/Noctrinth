@@ -1164,6 +1164,7 @@ pub async fn launch_minecraft(
             player_name: &credentials.offline_profile.name,
             local_dir,
             cache_file: state.directories.caches_dir().join("skins.json"),
+            proxy: crate::util::fetch::effective_proxy_url(),
         })
     } else {
         None

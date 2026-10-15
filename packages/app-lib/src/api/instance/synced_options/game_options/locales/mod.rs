@@ -213,9 +213,13 @@ async fn index_installed_sources(state: &State) -> crate::Result<()> {
         if super::super::sync_files_are_protected(&metadata) {
             continue;
         }
-        let document = match read_document(&options_path(&metadata, state))
-            .await
-        {
+        let path = options_path(&metadata, state);
+        // An instance that has never been launched has no options file yet.
+        // That is not a failure, and every index pass used to say it was.
+        if !tokio::fs::try_exists(&path).await.unwrap_or(false) {
+            continue;
+        }
+        let document = match read_document(&path).await {
             Ok((document, _)) => document,
             Err(error) => {
                 tracing::warn!(%error, instance_id = metadata.instance.id, "Game setting locales: options file read failed");

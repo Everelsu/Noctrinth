@@ -474,6 +474,17 @@ watch([os, isFullscreen], ([osName, fullscreen]) => {
 	document.documentElement.classList.toggle('mac-traffic-lights', osName === 'MacOS' && !fullscreen)
 })
 
+const sidebar = ref(null)
+const minecraftAccounts = computed(() => sidebar.value?.minecraftAccounts ?? null)
+
+// What the banner warns about is signing in and playing with a Microsoft
+// account. With an Ely.by or offline account selected nothing rides on it, so
+// it is not asked every thirty seconds and not shown.
+const microsoftAccountSelected = computed(() => {
+	const selected = minecraftAccounts.value?.selectedAccount
+	return !selected || !('auth_provider' in selected)
+})
+
 const authUnreachableDebug = useDebugLogger('AuthReachableChecker')
 const authServerQuery = useQuery({
 	queryKey: ['authServerReachability'],
@@ -489,6 +500,7 @@ const authServerQuery = useQuery({
 	retry: 1,
 	retryDelay: 3000,
 	refetchOnWindowFocus: false,
+	enabled: microsoftAccountSelected,
 })
 
 const authUnreachableDismissed = ref(false)
@@ -499,13 +511,20 @@ watch(
 	},
 )
 
-const authUnreachable = computed(() => {
-	if (authServerQuery.isError.value && !authServerQuery.isLoading.value) {
-		console.warn('Failed to reach auth servers', authServerQuery.error.value)
-		return !authUnreachableDismissed.value
-	}
-	return false
-})
+watch(
+	() => authServerQuery.error.value,
+	(error) => {
+		if (error) console.warn('Failed to reach auth servers', error)
+	},
+)
+
+const authUnreachable = computed(
+	() =>
+		microsoftAccountSelected.value &&
+		authServerQuery.isError.value &&
+		!authServerQuery.isLoading.value &&
+		!authUnreachableDismissed.value,
+)
 
 let unlistenEditMenu
 
@@ -1483,8 +1502,6 @@ onMounted(() => {
 })
 
 const accountProviderModal = ref(null)
-const sidebar = ref(null)
-const minecraftAccounts = computed(() => sidebar.value?.minecraftAccounts ?? null)
 provideMinecraftAccounts(minecraftAccounts)
 
 useAppEvent('command', handleCommand, appEvents)

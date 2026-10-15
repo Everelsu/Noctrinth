@@ -8,6 +8,8 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 
 /**
  * Mojang's own answer for a name, for the players a skin system does not have.
@@ -31,6 +33,11 @@ final class MojangSource implements SkinSource.Source {
     private static final int MAX_CACHED_IDS = 512;
 
     private static final Map<String, CachedId> IDS = new ConcurrentHashMap<>();
+
+    private static final MojangSource DEFAULT = new MojangSource();
+
+    /** Name lookups being made right now, for whoever asks about the same name meanwhile. */
+    private static final Map<String, FutureTask<String>> PENDING = new ConcurrentHashMap<>();
 
     private final String profilesUrl;
     private final String sessionUrl;
@@ -70,6 +77,14 @@ final class MojangSource implements SkinSource.Source {
     }
 
     /**
+     * The id Mojang issued for a name, or null when nobody owns it — for the sources that ask by
+     * id, from the same memory this source keeps.
+     */
+    static String idOf(String username) throws Exception {
+        return DEFAULT.id(username);
+    }
+
+    /**
      * The id behind a name, from memory where possible.
      *
      * <p>Every skin here costs two requests, and the first of them answers with something that
@@ -83,7 +98,7 @@ final class MojangSource implements SkinSource.Source {
             return cached.id;
         }
 
-        final String id = string(Http.getJson(profilesUrl + Http.encode(username)), "id");
+        final String id = lookUpOnce(username);
 
         // Remembered either way. A name Mojang has never heard of is every
         // player on an account system of their own, and every one of them would
@@ -97,6 +112,36 @@ final class MojangSource implements SkinSource.Source {
         IDS.put(username, new CachedId(id, now + ID_TTL_MS));
 
         return id;
+    }
+
+    /**
+     * Asks Mojang for a name's id, sharing the answer with whoever asks about the same name at the
+     * same time.
+     *
+     * <p>The cape services ask by id too, and they are all asked about a player at once: without
+     * this, one player walking into view costs Mojang's name lookup — the one with a tight limit —
+     * four requests instead of one.
+     */
+    private String lookUpOnce(String username) throws Exception {
+        final FutureTask<String> mine =
+                new FutureTask<>(() -> string(Http.getJson(profilesUrl + Http.encode(username)), "id"));
+        final FutureTask<String> running = PENDING.putIfAbsent(username, mine);
+        final FutureTask<String> answer = running == null ? mine : running;
+
+        if (running == null) {
+            try {
+                mine.run();
+            } finally {
+                PENDING.remove(username, mine);
+            }
+        }
+
+        try {
+            return answer.get();
+        } catch (ExecutionException failed) {
+            final Throwable cause = failed.getCause();
+            throw cause instanceof Exception ? (Exception) cause : failed;
+        }
     }
 
     /** The value of the {@code textures} property, or null if the profile carries none. */

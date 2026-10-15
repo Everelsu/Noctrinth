@@ -1,10 +1,10 @@
 //! A player's cape, by name, from every service that hands them out.
 //!
 //! The game itself finds capes through the agent in `theseus.jar`, by the same
-//! name, in the same order for the sources they share: the launcher's own
-//! folder, Ely.by, Mojang, OptiFine. The rest — LabyMod, MinecraftCapes,
-//! SkinMC — are capes their own mods draw, and are asked after those so the
-//! preview shows what the game would first.
+//! name and in the same order: the launcher's own folder, Ely.by, Mojang,
+//! LittleSkin, OptiFine, then LabyMod, MinecraftCapes and SkinMC — capes their
+//! own mods draw, which the agent hands to everyone else as well. The cape the
+//! preview shows is the one the game shows.
 //!
 //! The services asked by id want the id Mojang issued, so they only answer for
 //! a name somebody has bought; an offline name nobody owns has no cape there.
@@ -32,6 +32,7 @@ pub enum CapeSource {
     Local,
     ElyBy,
     Mojang,
+    LittleSkin,
     OptiFine,
     LabyMod,
     MinecraftCapes,
@@ -78,7 +79,9 @@ async fn find(name: &str) -> Option<PlayerCape> {
     let ely =
         get_png(format!("https://skinsystem.ely.by/cloaks/{encoded}.png"));
     let optifine = get_png(format!("https://optifine.net/capes/{encoded}.png"));
-    let (mojang_id, ely, optifine) = tokio::join!(mojang_id, ely, optifine);
+    let littleskin = littleskin_cape(&encoded);
+    let (mojang_id, ely, optifine, littleskin) =
+        tokio::join!(mojang_id, ely, optifine, littleskin);
 
     let (mojang, labymod, minecraft_capes, skinmc) = match &mojang_id {
         Some(id) => {
@@ -86,9 +89,7 @@ async fn find(name: &str) -> Option<PlayerCape> {
             tokio::join!(
                 mojang_cape(id),
                 get_png(format!("https://dl.labymod.net/capes/{dashed}")),
-                get_png(format!(
-                    "https://api.minecraftcapes.net/profile/{id}/cape"
-                )),
+                minecraft_capes_cape(id),
                 get_png(format!(
                     "https://skinmc.net/api/v1/skinmcCape/{dashed}"
                 )),
@@ -100,6 +101,7 @@ async fn find(name: &str) -> Option<PlayerCape> {
     [
         (CapeSource::ElyBy, ely),
         (CapeSource::Mojang, mojang),
+        (CapeSource::LittleSkin, littleskin),
         (CapeSource::OptiFine, optifine),
         (CapeSource::LabyMod, labymod),
         (CapeSource::MinecraftCapes, minecraft_capes),
@@ -137,6 +139,55 @@ async fn get_png(url: String) -> Option<Vec<u8>> {
     }
     let bytes = response.bytes().await.ok()?;
     bytes.starts_with(b"\x89PNG").then(|| bytes.to_vec())
+}
+
+/// The cape LittleSkin names for `name` in CustomSkinLoader's format.
+async fn littleskin_cape(encoded_name: &str) -> Option<Vec<u8>> {
+    let profile: serde_json::Value = REQWEST_CLIENT
+        .get(format!("https://littleskin.cn/csl/{encoded_name}.json"))
+        .timeout(REQUEST_TIMEOUT)
+        .send()
+        .await
+        .ok()?
+        .error_for_status()
+        .ok()?
+        .json()
+        .await
+        .ok()?;
+    let hash = profile
+        .get("cape")?
+        .as_str()
+        .filter(|hash| !hash.is_empty())?;
+    get_png(format!("https://littleskin.cn/textures/{hash}")).await
+}
+
+/// The cape a MinecraftCapes profile points at.
+///
+/// The service stopped serving the picture at `/profile/{id}/cape` and names
+/// its address in the profile instead; an animated cape only has the second.
+async fn minecraft_capes_cape(id: &str) -> Option<Vec<u8>> {
+    let profile: serde_json::Value = REQWEST_CLIENT
+        .get(format!("https://api.minecraftcapes.net/profile/{id}"))
+        .timeout(REQUEST_TIMEOUT)
+        .send()
+        .await
+        .ok()?
+        .error_for_status()
+        .ok()?
+        .json()
+        .await
+        .ok()?;
+    let url =
+        ["cape_url", "animated_cape_url"]
+            .into_iter()
+            .find_map(|key| {
+                profile
+                    .get(key)?
+                    .as_str()
+                    .filter(|url| !url.is_empty())
+                    .map(str::to_string)
+            })?;
+    get_png(url).await
 }
 
 /// The id Mojang gave the account that owns `name`, without dashes.
@@ -212,8 +263,9 @@ fn dashed(id: &str) -> String {
 /// The cape laid out the way the game's are: a canvas twice as wide as tall.
 ///
 /// OptiFine's are 46 by 22 — the game's 64 by 32 with the empty part cut off —
-/// and are put back in the corner of a full canvas. MinecraftCapes stacks the
-/// frames of an animated cape one under another; the first frame is the cape.
+/// and LabyMod's are the 22 by 17 of the cape alone; both are put back in the
+/// corner of a full canvas. MinecraftCapes stacks the frames of an animated
+/// cape one under another; the first frame is the cape.
 fn normalize(png: &[u8]) -> Option<Vec<u8>> {
     let image =
         image::load_from_memory_with_format(png, ImageFormat::Png).ok()?;
@@ -222,17 +274,19 @@ fn normalize(png: &[u8]) -> Option<Vec<u8>> {
         return None;
     }
 
-    let canvas =
-        if width % 46 == 0 && height % 22 == 0 && width / 46 == height / 22 {
-            let scale = width / 46;
-            let mut canvas = RgbaImage::new(64 * scale, 32 * scale);
-            image::imageops::overlay(&mut canvas, &image.to_rgba8(), 0, 0);
-            canvas
-        } else if height > width / 2 && height % (width / 2) == 0 {
-            image.crop_imm(0, 0, width, width / 2).to_rgba8()
-        } else {
-            image.to_rgba8()
-        };
+    let corner_scale = [(46, 22), (22, 17)].into_iter().find_map(|(w, h)| {
+        (width % w == 0 && height % h == 0 && width / w == height / h)
+            .then_some(width / w)
+    });
+    let canvas = if let Some(scale) = corner_scale {
+        let mut canvas = RgbaImage::new(64 * scale, 32 * scale);
+        image::imageops::overlay(&mut canvas, &image.to_rgba8(), 0, 0);
+        canvas
+    } else if height > width / 2 && height % (width / 2) == 0 {
+        image.crop_imm(0, 0, width, width / 2).to_rgba8()
+    } else {
+        image.to_rgba8()
+    };
 
     let mut out = Cursor::new(Vec::new());
     canvas.write_to(&mut out, ImageFormat::Png).ok()?;
@@ -259,6 +313,12 @@ mod tests {
     fn an_optifine_cape_goes_back_on_a_full_canvas() {
         assert_eq!(size(&normalize(&png(46, 22)).unwrap()), (64, 32));
         assert_eq!(size(&normalize(&png(92, 44)).unwrap()), (128, 64));
+    }
+
+    #[test]
+    fn a_labymod_cape_goes_back_on_a_full_canvas() {
+        assert_eq!(size(&normalize(&png(22, 17)).unwrap()), (64, 32));
+        assert_eq!(size(&normalize(&png(352, 272)).unwrap()), (1024, 512));
     }
 
     #[test]

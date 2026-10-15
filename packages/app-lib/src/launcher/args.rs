@@ -41,8 +41,14 @@ const TEMPORARY_REPLACE_CHAR: &str = "\n";
 /// listed that has one. A great many players have a cape there and nowhere
 /// else, and it is answered by name, which is what makes it work on a world
 /// opened to LAN — where nobody's id is the one Mojang issued.
-pub const UNIVERSAL_SKINS_SOURCE: &str =
-    "https://skinsystem.ely.by,mojang,optifine";
+///
+/// LittleSkin answers by name too, for the players who keep their skin there
+/// rather than on Ely.by, and is asked after Mojang so a licensed player's own
+/// skin still wins. LabyMod, MinecraftCapes and SkinMC come after OptiFine:
+/// capes their own mods draw, handed to everyone who does not have those mods. They are the same sources,
+/// in the same order, as the launcher's preview in `api/player_capes.rs`, so a
+/// cape seen there is the cape seen in game.
+pub const UNIVERSAL_SKINS_SOURCE: &str = "https://skinsystem.ely.by,mojang,littleskin,optifine,labymod,minecraftcapes,skinmc";
 
 /// Everything the agent in `theseus.jar` needs to look a skin up.
 ///
@@ -59,6 +65,9 @@ pub struct SkinLookup<'a> {
     /// Where answers are kept between runs, so a session does not start by
     /// looking everyone up again.
     pub cache_file: PathBuf,
+    /// The proxy the launcher's own requests take, for the lookups to take
+    /// too. Only the lookups: the game's own connections are left as they were.
+    pub proxy: Option<String>,
 }
 
 /// Builds the classpath for a launch.
@@ -283,6 +292,9 @@ pub fn get_jvm_arguments(
             format!("-Dnoctrinth.skins.local={}", skins.local_dir.display()),
             format!("-Dnoctrinth.skins.cache={}", skins.cache_file.display()),
         ]);
+        if let Some(proxy) = &skins.proxy {
+            parsed_arguments.push(format!("-Dnoctrinth.skins.proxy={proxy}"));
+        }
     }
 
     for arg in custom_args {

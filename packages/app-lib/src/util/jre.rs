@@ -271,6 +271,37 @@ pub async fn check_java_at_filepath(path: &Path) -> crate::Result<JavaVersion> {
         return Err(JREError::NoExecutable(java).into());
     };
 
+    // Starting a JVM to ask it its version costs up to a second, and every
+    // launch asks. The answer only changes when the executable does.
+    let stamp = std::fs::metadata(&java)
+        .ok()
+        .and_then(|meta| Some((meta.modified().ok()?, meta.len())));
+    if let Some(stamp) = stamp
+        && let Some((known, version)) = CHECKED_JAVA
+            .lock()
+            .ok()
+            .and_then(|map| map.get(&java).cloned())
+        && known == stamp
+    {
+        return Ok(version);
+    }
+    let checked = run_java_check(&java).await?;
+    if let (Some(stamp), Ok(mut map)) = (stamp, CHECKED_JAVA.lock()) {
+        map.insert(java, (stamp, checked.clone()));
+    }
+    Ok(checked)
+}
+
+type JavaStamp = (std::time::SystemTime, u64);
+
+static CHECKED_JAVA: std::sync::LazyLock<
+    std::sync::Mutex<
+        std::collections::HashMap<PathBuf, (JavaStamp, JavaVersion)>,
+    >,
+> = std::sync::LazyLock::new(Default::default);
+
+async fn run_java_check(java: &Path) -> crate::Result<JavaVersion> {
+    let java = java.to_path_buf();
     let (_temp, file_path) =
         get_resource_file!(env "JAVA_JARS_DIR" / "theseus.jar")?;
 

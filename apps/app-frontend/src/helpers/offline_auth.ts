@@ -44,6 +44,7 @@ export type PlayerCapeSource =
 	| 'local'
 	| 'ely_by'
 	| 'mojang'
+	| 'little_skin'
 	| 'opti_fine'
 	| 'laby_mod'
 	| 'minecraft_capes'

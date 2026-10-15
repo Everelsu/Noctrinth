@@ -203,6 +203,24 @@ pub fn set_proxy_url(url: Option<String>) {
     *PROXY_URL.write() = url.filter(|u| !u.trim().is_empty());
 }
 
+/// The proxy the launcher's own requests go through: the one set in the app,
+/// or else the one the environment names, which is what reqwest falls back to.
+pub fn effective_proxy_url() -> Option<String> {
+    PROXY_URL.read().clone().or_else(|| {
+        [
+            "HTTPS_PROXY",
+            "https_proxy",
+            "ALL_PROXY",
+            "all_proxy",
+            "HTTP_PROXY",
+            "http_proxy",
+        ]
+        .into_iter()
+        .find_map(|name| std::env::var(name).ok())
+        .filter(|url| !url.trim().is_empty())
+    })
+}
+
 const API_RETRY_AFTER_FALLBACK: Duration = Duration::from_secs(60);
 
 // This means the unit recovery time will be:

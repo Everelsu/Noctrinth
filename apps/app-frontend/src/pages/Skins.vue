@@ -349,6 +349,7 @@ const CAPE_SOURCE_NAMES: Record<PlayerCapeSource, string> = {
 	local: 'Noctrinth',
 	ely_by: 'Ely.by',
 	mojang: 'Minecraft',
+	little_skin: 'LittleSkin',
 	opti_fine: 'OptiFine',
 	laby_mod: 'LabyMod',
 	minecraft_capes: 'MinecraftCapes',

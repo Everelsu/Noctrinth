@@ -5,7 +5,6 @@ use std::fs::File;
 use std::io::{BufWriter, Read, Write};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_util::sync::CancellationToken;
 use zip::write::SimpleFileOptions;
 use zip::{CompressionMethod, ZipWriter};
@@ -48,38 +47,17 @@ pub async fn export_debug_info(
     };
     let directories = state.directories.clone();
     let database_files = tempfile::tempdir()?;
-    let transaction = tokio::select! {
+    // A consistent snapshot from SQLite itself, rather than copying app.db and
+    // its -wal/-shm files: on Windows SQLite holds byte-range locks on the -shm
+    // file, and reading it fails with ERROR_LOCK_VIOLATION (os error 33).
+    let snapshot = database_files.path().join("app.db");
+    tokio::select! {
         _ = cancel.cancelled() => return Ok(false),
-        transaction = state.pool.begin_with("BEGIN IMMEDIATE") => transaction?,
+        result = sqlx::query("VACUUM INTO ?")
+            .bind(snapshot.to_string_lossy().into_owned())
+            .execute(&state.pool) => { result?; }
     };
     let mut buffer = vec![0; 64 * 1024];
-    for name in ["app.db", "app.db-wal", "app.db-shm", "app.db-journal"] {
-        let source = directories.settings_dir.join(name);
-        let mut input = match tokio::fs::File::open(&source).await {
-            Ok(file) => file,
-            Err(error)
-                if name != "app.db"
-                    && error.kind() == std::io::ErrorKind::NotFound =>
-            {
-                continue;
-            }
-            Err(error) => return Err(IOError::with_path(error, &source).into()),
-        };
-        let mut output =
-            tokio::fs::File::create(database_files.path().join(name)).await?;
-        loop {
-            if cancel.is_cancelled() {
-                return Ok(false);
-            }
-            let count = input.read(&mut buffer).await?;
-            if count == 0 {
-                break;
-            }
-            output.write_all(&buffer[..count]).await?;
-        }
-        output.flush().await?;
-    }
-    transaction.rollback().await?;
 
     tokio::task::spawn_blocking(move || -> crate::Result<bool> {
         let parent = export_path.parent().ok_or_else(|| {

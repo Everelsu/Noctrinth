@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.FutureTask;
@@ -32,8 +33,9 @@ import java.util.concurrent.TimeoutException;
  * Mojang itself behind it for the licensed players Ely.by has never heard of.
  *
  * <p>Disabled unless the launcher sets {@code noctrinth.skins.source}. Its value is a list
- * separated by commas: the base URL of anything serving {@code /textures/{name}}, or the word
- * {@code mojang} for Mojang's own name lookup. The first one that has heard of the player wins,
+ * separated by commas: the base URL of anything serving {@code /textures/{name}}, the word
+ * {@code mojang} for Mojang's own name lookup, {@code littleskin}, or the name of a cape service: {@code optifine},
+ * {@code labymod}, {@code minecraftcapes}, {@code skinmc}. The first one that has heard of the player wins,
  * which is how a private skin server can sit in front of the public one — but they are all asked
  * at once rather than in turn, because the game does not wait for ever and the player who needs
  * the source at the end of the list is the one who would never be reached in time. See {@link
@@ -64,6 +66,14 @@ public final class SkinSource {
      * is the expensive one to repeat.
      */
     private static final long FRESH_MISS_MS = 60 * 1000L;
+
+    /**
+     * How soon a lookup that did not hear from every source is tried again.
+     *
+     * <p>Short: a source that hung or failed for a moment is the usual reason, and the player is
+     * on screen without their skin until it is.
+     */
+    private static final long RETRY_MS = 5 * 1000L;
 
     /**
      * How long a stale answer is still worth handing over.
@@ -110,9 +120,10 @@ public final class SkinSource {
     private static final long LATE_WAIT_MS = 20 * 1000L;
 
     /**
-     * How long a source that failed is left out of the next lookups.
+     * How long a source that could not be reached is left out of the next lookups.
      *
-     * <p>Only ever when somebody else can answer. A source that is down stays down for longer than
+     * <p>Only ever when somebody else can answer, and only for a source that is down: one that
+     * failed a single name is still asked about the next. See {@link Http}. A source that is down stays down for longer than
      * one player walks into view, and asking it again for every one of them costs a connection and
      * a wait each time — while the source that could have answered is the one being kept waiting.
      */
@@ -240,16 +251,23 @@ public final class SkinSource {
      * it is possible at all: what is abandoned here still finishes, and is still written down.
      */
     private static Map<String, Texture> fetchWithin(String username) {
-        final FutureTask<Map<String, Texture>> task = new FutureTask<>(() -> fetch(username));
+        final CompletableFuture<Map<String, Texture>> first = new CompletableFuture<>();
+        final Runnable work = () -> {
+            try {
+                fetch(username, first);
+            } finally {
+                first.complete(Collections.<String, Texture>emptyMap());
+            }
+        };
         try {
-            REFRESHERS.execute(task);
+            REFRESHERS.execute(work);
         } catch (Throwable rejected) {
             // Every thread is busy; there is nowhere to run this but here.
-            task.run();
+            work.run();
         }
 
         try {
-            return task.get(FIRST_WAIT_MS, TimeUnit.MILLISECONDS);
+            return first.get(FIRST_WAIT_MS, TimeUnit.MILLISECONDS);
         } catch (TimeoutException slow) {
             debug("Gave up waiting on " + username + "; the lookup is still going");
         } catch (Throwable t) {
@@ -276,6 +294,18 @@ public final class SkinSource {
 
     /** Asks every source at once, and remembers what the first one to know answered. */
     private static Map<String, Texture> fetch(String username) {
+        return fetch(username, null);
+    }
+
+    /**
+     * The same, handing whoever is waiting to draw this player what has arrived quickly.
+     *
+     * <p>{@code first} is completed with what the sources had between them after {@link
+     * #PER_SOURCE_WAIT_MS}, and the lookup then carries on for what was only slow. Waiting for that
+     * too is what used to put everyone on screen as Steve for their first sighting: with a cape
+     * service or two in the list, something is always still on its way when the game gives up.
+     */
+    private static Map<String, Texture> fetch(String username, CompletableFuture<Map<String, Texture>> first) {
         final List<Source> asked = healthy();
         final List<FutureTask<Map<String, Texture>>> answers = new ArrayList<>(asked.size());
 
@@ -291,29 +321,29 @@ public final class SkinSource {
             }
         }
 
-        // Quickly first, so that one source taking its time cannot keep the
-        // answer another one already has from the player waiting to be drawn.
-        Map<String, Texture> textures = collect(username, asked, answers, PER_SOURCE_WAIT_MS);
-
-        // Then patiently, for what was only slow. Whoever asked has long since
-        // been answered — the game waits no longer than FIRST_WAIT_MS — so this
-        // costs nobody anything and is what gets remembered.
-        //
-        // Run even when something was found, because a partial answer is now a
-        // thing that can happen: the skin arrived and the cape is still coming.
-        // Sources that have already finished return at once, so the wait is
-        // only ever for the ones that had not.
-        final Map<String, Texture> patient = collect(username, asked, answers, LATE_WAIT_MS);
-        if (patient.size() > textures.size()) {
-            textures = patient;
+        if (first != null) {
+            final boolean[] quickIncomplete = {false};
+            final Map<String, Texture> quick =
+                    collect(username, asked, answers, System.currentTimeMillis() + PER_SOURCE_WAIT_MS, quickIncomplete);
+            if (!quick.isEmpty()) {
+                store(username, quick, System.currentTimeMillis(), !quickIncomplete[0]);
+            }
+            first.complete(quick);
         }
 
-        store(username, textures, System.currentTimeMillis());
+        // Then patiently, for what was only slow, and that is what is
+        // remembered: it has heard from every source that answered at all, in
+        // the order they were listed, so it is never worse than the quick one.
+        final boolean[] incomplete = {false};
+        final Map<String, Texture> textures =
+                collect(username, asked, answers, System.currentTimeMillis() + LATE_WAIT_MS, incomplete);
+
+        store(username, textures, System.currentTimeMillis(), !incomplete[0]);
         return textures;
     }
 
     /**
-     * What the sources have between them, waiting no longer than {@code wait} on any one of them.
+     * What the sources have between them, waiting for none of them past {@code deadline}.
      *
      * <p>Taken a texture at a time rather than an answer at a time. A player's skin and their cape
      * do not have to come from the same place, and often cannot: a cape service knows nothing about
@@ -322,21 +352,35 @@ public final class SkinSource {
      * keeps the meaning the order always had — a skin server put in front of another still speaks
      * for a player they both know — and lets a source that only knows capes take part at all.
      *
-     * <p>Asked in the order they were listed however they finish.
+     * <p>Asked in the order they were listed however they finish. {@code incomplete} is set when a
+     * source failed or had not answered by the deadline, so that nothing here is mistaken for the
+     * player having no skin.
      */
     private static Map<String, Texture> collect(
-            String username, List<Source> asked, List<FutureTask<Map<String, Texture>>> answers, long wait) {
+            String username,
+            List<Source> asked,
+            List<FutureTask<Map<String, Texture>>> answers,
+            long deadline,
+            boolean[] incomplete) {
         final Map<String, Texture> merged = new LinkedHashMap<>();
 
         for (int i = 0; i < answers.size(); i++) {
             Map<String, Texture> answer = Collections.emptyMap();
             try {
-                answer = answers.get(i).get(wait, TimeUnit.MILLISECONDS);
+                final long wait = Math.max(0L, deadline - System.currentTimeMillis());
+                final Map<String, Texture> said = answers.get(i).get(wait, TimeUnit.MILLISECONDS);
+                if (said == null) {
+                    incomplete[0] = true;
+                } else {
+                    answer = said;
+                }
             } catch (TimeoutException slow) {
                 // Left running. Being slow is not being wrong, so this is not
                 // held against the source: only a failure is.
+                incomplete[0] = true;
                 debug("Gave up waiting on " + asked.get(i) + " for " + username);
             } catch (Throwable t) {
+                incomplete[0] = true;
                 debug("Failed to look up " + username + " at " + asked.get(i) + ": " + t);
             }
 
@@ -352,8 +396,11 @@ public final class SkinSource {
         return merged.isEmpty() ? Collections.emptyMap() : Collections.unmodifiableMap(merged);
     }
 
-    /** What one source has for a name, or nothing at all if it could not say. */
-    private static Map<String, Texture> ask(Source source, String username) {
+    /**
+     * What one source has for a name: empty when it has never heard of them, null when it could not
+     * say. The two are not the same answer — see {@link #store}.
+     */
+    static Map<String, Texture> ask(Source source, String username) {
         try {
             return source.textures(username);
         } catch (Http.RateLimited busy) {
@@ -363,13 +410,17 @@ public final class SkinSource {
             // server is busy enough to have hit the limit in the first place.
             debug("Rate limited by " + source + " for " + username + ": " + busy.getMessage());
             markUnhealthy(source, busy.retryAfterMs);
-            return Collections.emptyMap();
+            return null;
+        } catch (Http.Unreachable down) {
+            debug("Could not reach " + source + " for " + username + ": " + down.getMessage());
+            markUnhealthy(source, UNHEALTHY_MS);
+            return null;
         } catch (Throwable t) {
             // A skin is not worth interrupting the game over, whatever went
-            // wrong; another source may still know them.
+            // wrong; another source may still know them. Not held against the
+            // source either: it answered, only not for this name.
             debug("Failed to look up textures for " + username + " at " + source + ": " + t);
-            markUnhealthy(source, UNHEALTHY_MS);
-            return Collections.emptyMap();
+            return null;
         }
     }
 
@@ -388,6 +439,12 @@ public final class SkinSource {
         // Nobody is well: ask anyway, since the alternative is answering for
         // nobody at all until one of them recovers unasked.
         return healthy.isEmpty() ? SOURCES : healthy;
+    }
+
+    /** Whether a source is being left out of lookups right now. */
+    static boolean isBenched(Source source) {
+        final Long until = UNHEALTHY_UNTIL.get(source);
+        return until != null && until > System.currentTimeMillis();
     }
 
     private static void markUnhealthy(Source source, long forMs) {
@@ -458,7 +515,25 @@ public final class SkinSource {
         return textures;
     }
 
-    private static void store(String username, Map<String, Texture> textures, long now) {
+    /**
+     * Remembers what a lookup found.
+     *
+     * <p>A lookup that did not hear from every source is not the last word. What it found is put
+     * over what was known before rather than in its place, so a skin server that hangs for a moment
+     * cannot take a player's skin away, and a player nobody could answer for is looked at again in
+     * {@link #RETRY_MS} rather than being Steve for a minute.
+     */
+    static void store(String username, Map<String, Texture> found, long now, boolean complete) {
+        Map<String, Texture> textures = found;
+        if (!complete) {
+            final CachedTextures known = CACHE.get(username);
+            if (known != null && !known.textures.isEmpty()) {
+                final Map<String, Texture> merged = new LinkedHashMap<>(known.textures);
+                merged.putAll(found);
+                textures = Collections.unmodifiableMap(merged);
+            }
+        }
+
         if (CACHE.size() >= MAX_CACHED_NAMES) {
             CACHE.values().removeIf(entry -> entry.usableUntil <= now);
             if (CACHE.size() >= MAX_CACHED_NAMES) {
@@ -466,14 +541,24 @@ public final class SkinSource {
             }
         }
 
-        CACHE.put(
-                username,
-                new CachedTextures(
-                        textures, now, now + (textures.isEmpty() ? FRESH_MISS_MS : FRESH_MS), now + KEEP_MS));
+        CACHE.put(username, new CachedTextures(textures, now, now + freshFor(textures, complete), now + KEEP_MS));
 
         if (!textures.isEmpty()) {
             dirty = true;
         }
+    }
+
+    /** What is remembered for a name right now, or null. */
+    static Map<String, Texture> remembered(String username) {
+        final CachedTextures cached = CACHE.get(username);
+        return cached == null ? null : cached.textures;
+    }
+
+    private static long freshFor(Map<String, Texture> textures, boolean complete) {
+        if (!complete) {
+            return textures.isEmpty() ? RETRY_MS : Math.min(FRESH_MS, RETRY_MS * 3);
+        }
+        return textures.isEmpty() ? FRESH_MISS_MS : FRESH_MS;
     }
 
     private static Path cacheFile() {
@@ -650,6 +735,10 @@ public final class SkinSource {
                 // Kept beside the cache rather than among the skins put there by
                 // hand: these are fetched and converted, and nobody chose them.
                 sources.add(new OptiFineCapeSource(convertedTexturesDir()));
+            } else if (CustomSkinApiSource.named(entry) != null) {
+                sources.add(CustomSkinApiSource.named(entry));
+            } else if (CapeServiceSource.named(entry, convertedTexturesDir()) != null) {
+                sources.add(CapeServiceSource.named(entry, convertedTexturesDir()));
             } else {
                 sources.add(new SkinSystemSource(entry));
             }

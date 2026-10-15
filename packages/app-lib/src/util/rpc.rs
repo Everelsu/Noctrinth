@@ -177,6 +177,7 @@ impl RunningRpcServer {
                     let message: RpcMessage = match message {
                         None => break,
                         Some(Ok(message)) => serde_json::from_str(&message)?,
+                        Some(Err(LinesCodecError::Io(e))) if is_disconnect(&e) => break,
                         Some(Err(LinesCodecError::Io(e))) => Err(e)?,
                         Some(Err(LinesCodecError::MaxLineLengthExceeded)) => unreachable!(),
                     };
@@ -187,6 +188,7 @@ impl RunningRpcServer {
                 let json = serde_json::to_string(&message)?;
                 match socket.send(json).await {
                     Ok(()) => {}
+                    Err(LinesCodecError::Io(e)) if is_disconnect(&e) => break,
                     Err(LinesCodecError::Io(e)) => Err(e)?,
                     Err(LinesCodecError::MaxLineLengthExceeded) => {
                         unreachable!()
@@ -255,4 +257,18 @@ enum RpcMessageBody {
     Error {
         error: String,
     },
+}
+
+/// Whether an I/O error is the game going away rather than anything going wrong.
+///
+/// A closing game resets its end of the socket on Windows instead of shutting it
+/// down, so the end of every session read as a failed RPC server.
+fn is_disconnect(error: &std::io::Error) -> bool {
+    matches!(
+        error.kind(),
+        std::io::ErrorKind::ConnectionReset
+            | std::io::ErrorKind::ConnectionAborted
+            | std::io::ErrorKind::BrokenPipe
+            | std::io::ErrorKind::UnexpectedEof
+    )
 }

@@ -120,6 +120,7 @@
 		"ely-auth:default",
 		"window-icon:default",
 		"noctrinth-offline-auth:default",
+		"noctrinth-background:default",
 		"noctrinth-clipboard:default",
 		"noctrinth-crash:default",
 		"noctrinth-recovery:default",

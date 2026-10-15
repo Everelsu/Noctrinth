@@ -1,5 +1,6 @@
 import 'overlayscrollbars/overlayscrollbars.css'
 import '@/assets/stylesheets/noctrinth-motion.css'
+import '@/assets/stylesheets/noctrinth-themes.css'
 
 import { installTooltipDirective } from '@modrinth/ui'
 import { VueQueryPlugin } from '@tanstack/vue-query'

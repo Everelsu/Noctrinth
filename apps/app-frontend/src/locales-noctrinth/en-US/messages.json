@@ -1285,5 +1285,26 @@
 	},
 	"settings.language.coverage.app-tooltip": {
 		"message": "About {percentage}% of Noctrinth is available in this language."
+	},
+	"noctrinth.settings.background.title": {
+		"message": "Background picture"
+	},
+	"noctrinth.settings.background.description": {
+		"message": "A picture behind the launcher, showing through its frame. Cards on a page stay solid, so text on them is as easy to read as before."
+	},
+	"noctrinth.settings.background.choose": {
+		"message": "Choose picture"
+	},
+	"noctrinth.settings.background.change": {
+		"message": "Change picture"
+	},
+	"noctrinth.settings.background.remove": {
+		"message": "Remove"
+	},
+	"noctrinth.settings.background.blur.title": {
+		"message": "Blur the picture"
+	},
+	"noctrinth.settings.background.blur.description": {
+		"message": "Softens it, so it stays behind what is in front of it."
 	}
 }

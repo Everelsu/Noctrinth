@@ -984,9 +984,10 @@ const skinTexture = computedAsync(async () => {
 			handleError(error as Error)
 			return ''
 		}
-	} else {
-		return ''
 	}
+	// With no account there is no skin to load, and an empty source is what the
+	// renderer takes for "still loading" — so the preview stood empty for good.
+	return currentUser.value || offlineAccount.value ? '' : ELY_FALLBACK_SKIN
 })
 const capeTexture = computed(
 	() =>

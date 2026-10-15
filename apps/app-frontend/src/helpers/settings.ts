@@ -110,6 +110,9 @@ export type AppSettings = {
 	/** Which cube the splash screen shows; see `noctrinth-splash-cube.ts`. */
 	splash_cube: string
 
+	/** Whether the background picture chosen in Appearance is blurred. */
+	background_blur: boolean
+
 	version: number
 }
 

@@ -256,6 +256,11 @@ pub async fn begin_device() -> crate::Result<ElyDeviceFlow> {
 
 /// Ely.by hands the page back over plain HTTP; it is opened over HTTPS, with
 /// the code in it so the player only has to confirm.
+///
+/// `prompt=select_account` makes the page ask which account to confirm with,
+/// offering to sign in to another one. Without it the page confirms whoever
+/// the sign-in window is already signed in as, so a second account could never
+/// be added: it came back as the first one again.
 fn verification_url(uri: &str, user_code: &str) -> crate::Result<String> {
     let mut url = url::Url::parse(uri).map_err(|e| {
         crate::ErrorKind::OtherError(format!(
@@ -265,7 +270,9 @@ fn verification_url(uri: &str, user_code: &str) -> crate::Result<String> {
     if url.scheme() == "http" {
         let _ = url.set_scheme("https");
     }
-    url.query_pairs_mut().append_pair("user_code", user_code);
+    url.query_pairs_mut()
+        .append_pair("user_code", user_code)
+        .append_pair("prompt", "select_account");
     Ok(url.into())
 }
 
@@ -501,7 +508,7 @@ mod tests {
     fn the_code_page_opens_over_https_with_the_code_filled_in() {
         assert_eq!(
             verification_url("http://account.ely.by/code", "LDRRDHLM").unwrap(),
-            "https://account.ely.by/code?user_code=LDRRDHLM"
+            "https://account.ely.by/code?user_code=LDRRDHLM&prompt=select_account"
         );
     }
 

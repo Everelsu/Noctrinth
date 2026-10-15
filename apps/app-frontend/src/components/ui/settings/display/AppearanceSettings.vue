@@ -13,6 +13,7 @@ import {
 import { platform } from '@tauri-apps/plugin-os'
 import { computed, inject, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
+import NoctrinthBackgroundSettings from '@/components/ui/settings/display/NoctrinthBackgroundSettings.vue'
 import {
 	ACCENT_PRESETS,
 	accentColorFor,
@@ -286,6 +287,8 @@ provideAppearanceSettings({
 			/>
 		</div>
 	</div>
+
+	<NoctrinthBackgroundSettings />
 </template>
 
 <style scoped>

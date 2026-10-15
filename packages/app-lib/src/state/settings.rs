@@ -110,6 +110,9 @@ pub struct Settings {
     /// is drawn before settings load.
     pub splash_cube: String,
 
+    /// Whether the background picture is blurred.
+    pub background_blur: bool,
+
     pub version: usize,
 }
 
@@ -162,6 +165,11 @@ impl Settings {
 
         let splash_cube: String =
             sqlx::query_scalar("SELECT splash_cube FROM settings")
+                .fetch_one(exec)
+                .await?;
+
+        let background_blur: i64 =
+            sqlx::query_scalar("SELECT background_blur FROM settings")
                 .fetch_one(exec)
                 .await?;
 
@@ -269,6 +277,7 @@ impl Settings {
                 .unwrap_or_else(|| DEFAULT_ACCENT_PRESET.to_string()),
             accent_tint_background: accent_tint_background == 1,
             splash_cube,
+            background_blur: background_blur == 1,
             sync_theme_across_devices: res.sync_theme_across_devices == 1,
             sync_behavior_across_devices: res.sync_behavior_across_devices == 1,
             sync_features_across_devices: res.sync_features_across_devices == 1,
@@ -443,6 +452,11 @@ impl Settings {
 
         sqlx::query("UPDATE settings SET splash_cube = $1")
             .bind(&self.splash_cube)
+            .execute(exec)
+            .await?;
+
+        sqlx::query("UPDATE settings SET background_blur = $1")
+            .bind(i64::from(self.background_blur))
             .execute(exec)
             .await?;
 

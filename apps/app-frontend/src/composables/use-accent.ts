@@ -317,7 +317,14 @@ const tintBackground = ref(cached.tint)
 const theme = useTheme()
 
 /** The colour a preset is drawn in under the theme currently on screen. */
+/**
+ * The accent of a theme that is not purple, which is what "the theme's own"
+ * means there: the swatch, the window icon and the shortcuts show it.
+ */
+const THEME_ACCENTS: Record<string, string> = { retro: '#4d9227' }
+
 export function accentColorFor(preset: AccentPreset, active: string = theme.active): string {
+	if (preset.id === DEFAULT_ACCENT_PRESET && THEME_ACCENTS[active]) return THEME_ACCENTS[active]
 	return active === 'light' ? preset.light : preset.dark
 }
 
@@ -386,7 +393,12 @@ watch(
 		const preset = findAccentPreset(id)
 		if (preset) {
 			void import('@/helpers/noctrinth-window-icon').then(({ paintWindowIcon }) =>
-				paintWindowIcon(accentColorFor(preset), preset.id === DEFAULT_ACCENT_PRESET),
+				paintWindowIcon(
+					accentColorFor(preset),
+					// The shortcuts go back to the executable's icon only when that
+					// icon is the right colour, which it is not for a green theme.
+					preset.id === DEFAULT_ACCENT_PRESET && !THEME_ACCENTS[theme.active],
+				),
 			)
 		}
 	},

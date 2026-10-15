@@ -2038,5 +2038,26 @@
 	},
 	"noctrinth.instance.stop-all-copies": {
 		"message": "Остановить все копии"
+	},
+	"noctrinth.settings.background.title": {
+		"message": "Фоновая картинка"
+	},
+	"noctrinth.settings.background.description": {
+		"message": "Картинка за лаунчером, видная сквозь его рамку. Карточки на страницах остаются плотными, так что текст на них читается как раньше."
+	},
+	"noctrinth.settings.background.choose": {
+		"message": "Выбрать картинку"
+	},
+	"noctrinth.settings.background.change": {
+		"message": "Сменить картинку"
+	},
+	"noctrinth.settings.background.remove": {
+		"message": "Убрать"
+	},
+	"noctrinth.settings.background.blur.title": {
+		"message": "Размыть картинку"
+	},
+	"noctrinth.settings.background.blur.description": {
+		"message": "Смягчает её, чтобы она не спорила с тем, что поверх."
 	}
 }

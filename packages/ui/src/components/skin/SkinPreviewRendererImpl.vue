@@ -139,6 +139,7 @@ import {
 	useSkinPreviewControls,
 	useSkinPreviewFit,
 	useSkinPreviewLoading,
+	useSkinPreviewLook,
 	useSkinPreviewScene,
 } from '#ui/composables/skin-rendering'
 
@@ -315,6 +316,8 @@ const {
 	initializeAnimations,
 	cleanupAnimationState,
 })
+
+useSkinPreviewLook({ scene, container: skinPreviewContainer, modelRotation })
 
 function syncDamageFlashShaderMaterials() {
 	syncDamageFlashShader(scene.value, damageFlashIntensity.value)

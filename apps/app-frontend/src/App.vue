@@ -80,6 +80,7 @@ import ModpackAlreadyInstalledModal from '@/components/ui/modal/ModpackAlreadyIn
 import ModrinthAccountRequiredModal from '@/components/ui/modal/ModrinthAccountRequiredModal.vue'
 import UpdateToPlayModal from '@/components/ui/modal/UpdateToPlayModal.vue'
 import NavButton from '@/components/ui/NavButton.vue'
+import NoctrinthBackdrop from '@/components/ui/NoctrinthBackdrop.vue'
 import NoctrinthCrashModal from '@/components/ui/NoctrinthCrashModal.vue'
 import NoctrinthSwipeNavigation from '@/components/ui/NoctrinthSwipeNavigation.vue'
 import QuickInstanceSwitcher from '@/components/ui/QuickInstanceSwitcher.vue'
@@ -131,6 +132,7 @@ import {
 	removeUser,
 	setActive,
 } from '@/helpers/mr_auth.ts'
+import { loadBackground } from '@/helpers/noctrinth-background'
 import { prefetchRouteChunks, startProjectHoverPrefetch } from '@/helpers/noctrinth-prefetch'
 import { cacheSplashCubeChoice } from '@/helpers/noctrinth-splash-cube'
 import { markThemeSettled, revealMainWindow } from '@/helpers/noctrinth-window-reveal'
@@ -789,6 +791,7 @@ async function setupApp() {
 		accent_preset,
 		accent_tint_background,
 		splash_cube,
+		background_blur,
 	} = await traceStartupStep('Read startup settings', getSettings)
 
 	// Before anything else that waits: the window opens once the splash is in
@@ -797,6 +800,9 @@ async function setupApp() {
 	setAccentPreset(accent_preset, accent_tint_background)
 	markThemeSettled()
 	cacheSplashCubeChoice(splash_cube)
+	loadBackground(background_blur).catch((error) =>
+		console.warn('Failed to load the background picture:', error),
+	)
 
 	// Initialize locale from saved settings
 	if (locale) {
@@ -2230,6 +2236,7 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 	<SplashScreen v-if="!stateFailed" ref="splashScreen" data-tauri-drag-region />
 	<div id="teleports"></div>
 	<AccountSwitchOverlay :show="isSwitchingAccount" />
+	<NoctrinthBackdrop />
 	<div
 		v-if="stateInitialized"
 		class="app-grid-layout relative"

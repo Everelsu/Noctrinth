@@ -563,6 +563,18 @@ fn main() {
                     ),
             )
             .plugin(
+                "noctrinth-background",
+                InlinedPlugin::new()
+                    .commands(&[
+                        "background_set",
+                        "background_get",
+                        "background_clear",
+                    ])
+                    .default_permission(
+                        DefaultPermissionRule::AllowAllCommands,
+                    ),
+            )
+            .plugin(
                 "noctrinth-clipboard",
                 InlinedPlugin::new()
                     .commands(&["clipboard_copy_files"])

@@ -76,7 +76,7 @@ defineExpose({ focus: () => panel.value?.focus() })
 		role="dialog"
 		:aria-label="formatMessage(messages.tasks)"
 		tabindex="-1"
-		class="flex w-[360px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl bg-surface-3 ring-1 ring-inset ring-surface-5 outline-none"
+		class="download-manager-panel flex w-[360px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl bg-surface-3 ring-1 ring-inset ring-surface-5 outline-none"
 	>
 		<div class="flex h-14 shrink-0 items-center gap-2 p-4 shadow-[inset_0_-1px_0_var(--surface-5)]">
 			<span class="text-base font-semibold leading-6 text-contrast">

@@ -41,6 +41,8 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 - Noctrinth's own news shows up in the News feed on the home page next to Modrinth's, in Russian when the launcher is. The articles live on the [new site](https://everelsu.github.io/Noctrinth/news/), which has the changelog on a page of its own now.
 - Stop on an instance running more than once asks which copy to stop, each named by its account and the time it started, or stops all of them.
 - In-game skins and capes come from more places: LittleSkin for skins, and LabyMod, MinecraftCapes and SkinMC for capes, after Mojang and OptiFine.
+- A background picture behind the launcher, chosen in Settings → Appearance, blurred or not. The frame lets it through while the cards on a page stay solid. The idea is [Celestial Launcher](https://github.com/Wemsur/Celestial-Launcher)'s.
+- The player in the skin preview turns its head to follow the pointer, and looks ahead again once it stops.
 
 ### Changed
 - Synced with upstream Modrinth main: the "CancelledError" that popped up when opening an instance from the home page is gone, a failed database backup no longer stops the app, install backups are kept per job, and the install-to-play window says more when a modpack is missing.
@@ -52,6 +54,9 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 - The "Cannot reach authentication servers" banner shows only for Microsoft accounts.
 
 ### Fixed
+- The retro theme is green throughout: the sidebar, the dimmer behind dialogs, the loading bar and the window and taskbar icon no longer stay purple.
+- The skins page shows the default skin when no account is signed in, instead of an empty space.
+- More than one Ely.by account can be signed in: adding another one asks which account to sign in with, instead of signing the first one in again.
 - Export debug info no longer fails with "os error 33" while the game is running.
 - Ely.by skins load again after a failed request instead of staying empty, and the cape shows in the skin preview.
 - Leaving an instance's page while it runs and coming back keeps its log.

@@ -329,10 +329,10 @@ import { get as getCreds } from '@/helpers/mr_auth.ts'
 import { get_by_instance_id } from '@/helpers/process'
 import { get_categories, get_game_versions, get_loaders } from '@/helpers/tags'
 import { getServerAddress } from '@/helpers/worlds'
-import { provideBreadcrumbParent, useBreadcrumb } from '@/providers/breadcrumbs'
 import { injectContentInstall } from '@/providers/content-install'
 import { injectServerInstall } from '@/providers/server-install'
 import { createServerInstallContent } from '@/providers/setup/server-install-content'
+import { provideBreadcrumbParent, useBreadcrumb } from '@/shared/breadcrumbs'
 
 dayjs.extend(relativeTime)
 

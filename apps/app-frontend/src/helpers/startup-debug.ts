@@ -12,8 +12,8 @@
  * A start-up trace is a handful of lines a session and nothing is in it but
  * step names and milliseconds.
  */
-import { invoke } from '@tauri-apps/api/core'
 import { useDebugLogger } from '@modrinth/ui'
+import { invoke } from '@tauri-apps/api/core'
 
 const debug = useDebugLogger('Startup')
 

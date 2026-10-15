@@ -28,16 +28,15 @@ import { useQuery } from '@tanstack/vue-query'
 import { listen } from '@tauri-apps/api/event'
 import { type DragDropEvent, getCurrentWebview } from '@tauri-apps/api/webview'
 import { computedAsync } from '@vueuse/core'
-import type { Ref } from 'vue'
-import { computed, inject, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
 
 import EarsModIcon from '@/assets/skins/ears-mod.png'
-import type AccountsCard from '@/components/ui/AccountsCard.vue'
 import EditSkinModal from '@/components/ui/skin/EditSkinModal.vue'
 import NoctrinthElySkinModal from '@/components/ui/skin/NoctrinthElySkinModal.vue'
 import VirtualSkinSectionList from '@/components/ui/skin/VirtualSkinSectionList.vue'
 import { useAppSettings } from '@/composables/use-app-settings.ts'
 import { handleSevereError } from '@/composables/use-error.js'
+import { injectMinecraftAccounts } from '@/features/minecraft-accounts/context'
 import { trackEvent } from '@/helpers/analytics'
 import { check_reachable, get_default_user, login as login_flow, users } from '@/helpers/auth'
 import { ely_open_skin_window } from '@/helpers/ely_auth'
@@ -75,7 +74,7 @@ import {
 	set_custom_skin_order,
 } from '@/helpers/skins.ts'
 import { hasPride26Badge } from '@/helpers/user-campaigns.ts'
-import { useRootBreadcrumb } from '@/providers/breadcrumbs'
+import { useRootBreadcrumb } from '@/shared/breadcrumbs'
 import { appMessages } from '@/utils/app-messages'
 
 const { formatMessage } = useVIntl()
@@ -298,7 +297,7 @@ const skins = ref<Skin[]>([])
 const capes = ref<Cape[]>([])
 const offline = ref(!navigator.onLine)
 
-const accountsCard = inject('accountsCard') as Ref<typeof AccountsCard>
+const minecraftAccounts = injectMinecraftAccounts()
 const currentUser = ref(undefined)
 const currentUserId = ref<string | undefined>(undefined)
 
@@ -316,7 +315,7 @@ type ElySelectedAccount = {
  * preview rather than the Microsoft skin-management UI.
  */
 const elyAccount = computed<ElySelectedAccount | undefined>(() => {
-	const selected = accountsCard.value?.selectedAccount as ElySelectedAccount | undefined
+	const selected = minecraftAccounts.value?.selectedAccount as ElySelectedAccount | undefined
 	if (selected && selected.auth_provider === 'ely_by') {
 		return selected
 	}
@@ -325,7 +324,7 @@ const elyAccount = computed<ElySelectedAccount | undefined>(() => {
 
 /** The selected account when it is only a name. */
 const offlineAccount = computed<ElySelectedAccount | undefined>(() => {
-	const selected = accountsCard.value?.selectedAccount as ElySelectedAccount | undefined
+	const selected = minecraftAccounts.value?.selectedAccount as ElySelectedAccount | undefined
 	return selected?.auth_provider === 'offline' ? selected : undefined
 })
 
@@ -863,7 +862,7 @@ function openElySkinPage() {
 function refreshElySkin() {
 	clearElySkinCache()
 	elySkinRefresh.value++
-	void accountsCard.value?.refreshValues()
+	void minecraftAccounts.value?.refreshValues()
 }
 
 let unlistenElySkinWindow: UnlistenFn | null = null
@@ -1241,7 +1240,7 @@ function setLocallyEquippedSkin(skinToApply: Skin) {
 	originalSelectedSkin.value =
 		skins.value.find((skin) => skinsMatch(skin, skinToApply)) ?? skinToApply
 	selectedSkin.value = originalSelectedSkin.value
-	void accountsCard.value?.setEquippedSkin(originalSelectedSkin.value)
+	void minecraftAccounts.value?.setEquippedSkin(originalSelectedSkin.value)
 }
 
 function insertLocalSkin(savedSkin: Skin) {
@@ -1297,7 +1296,7 @@ function updateLocalSkin(savedSkin: Skin, applied: boolean, previousSkin?: Skin)
 
 		originalSelectedSkin.value = locallyEquippedSkin
 		selectedSkin.value = locallyEquippedSkin
-		void accountsCard.value?.setEquippedSkin(locallyEquippedSkin)
+		void minecraftAccounts.value?.setEquippedSkin(locallyEquippedSkin)
 	} else {
 		const locallySavedSkin =
 			skins.value.find((skin) => skin.texture_key === savedSkin.texture_key) ?? savedSkin
@@ -1388,7 +1387,7 @@ async function preserveExternalSkins(skinsToPersist: Skin[]) {
 
 		if (skinsMatchIgnoringSource(originalSelectedSkin.value, skin)) {
 			originalSelectedSkin.value = preservedSkin
-			void accountsCard.value?.setEquippedSkin(preservedSkin)
+			void minecraftAccounts.value?.setEquippedSkin(preservedSkin)
 		}
 
 		preservedSkins.push(preservedSkin)
@@ -1423,8 +1422,8 @@ function schedulePendingSkinRefresh() {
 			return
 		}
 
-		if (accountsCard.value) {
-			await accountsCard.value.refreshValues()
+		if (minecraftAccounts.value) {
+			await minecraftAccounts.value.refreshValues()
 		}
 
 		await loadCapes()
@@ -1493,15 +1492,15 @@ async function loadCurrentUser() {
 }
 
 async function login() {
-	accountsCard.value.setLoginDisabled(true)
+	minecraftAccounts.value?.setLoginDisabled(true)
 	const loggedIn = await login_flow().catch(handleSevereError)
 
-	if (loggedIn && accountsCard) {
-		await accountsCard.value.refreshValues()
+	if (loggedIn && minecraftAccounts.value) {
+		await minecraftAccounts.value.refreshValues()
 	}
 
 	trackEvent('AccountLogIn')
-	accountsCard.value.setLoginDisabled(false)
+	minecraftAccounts.value?.setLoginDisabled(false)
 }
 
 function openAddSkinFileBrowser() {
@@ -1769,7 +1768,7 @@ async function checkUserChanges() {
 	try {
 		const defaultId = await get_default_user()
 		if (defaultId !== currentUserId.value) {
-			await accountsCard.value?.refreshValues()
+			await minecraftAccounts.value?.refreshValues()
 			await loadCurrentUser()
 			await loadCapes()
 			await loadSkins()
@@ -2138,13 +2137,13 @@ async function checkUserChanges() {
 				</div>
 			</div>
 			<Button
-				v-show="accountsCard"
+				v-show="minecraftAccounts"
 				type="colored"
 				color="brand"
-				:disabled="accountsCard.loginDisabled"
+				:disabled="minecraftAccounts?.loginDisabled"
 				@click="login"
 			>
-				<SpinnerIcon v-if="accountsCard.loginDisabled" class="animate-spin" />
+				<SpinnerIcon v-if="minecraftAccounts?.loginDisabled" class="animate-spin" />
 				<WindowsIcon v-else />
 				{{ formatMessage(messages.signInButton) }}
 			</Button>

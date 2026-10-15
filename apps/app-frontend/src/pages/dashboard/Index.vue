@@ -3,7 +3,7 @@ import { UserIcon } from '@modrinth/assets'
 import { commonMessages, useVIntl } from '@modrinth/ui'
 import { useRoute } from 'vue-router'
 
-import { useRootBreadcrumb } from '@/providers/breadcrumbs'
+import { useRootBreadcrumb } from '@/shared/breadcrumbs'
 
 const { formatMessage } = useVIntl()
 const route = useRoute()

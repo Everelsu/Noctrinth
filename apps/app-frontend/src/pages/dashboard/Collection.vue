@@ -46,7 +46,7 @@ import {
 	unfollowProject,
 } from '@/helpers/modrinth-api'
 import { get as getCreds } from '@/helpers/mr_auth.ts'
-import { useRootBreadcrumb } from '@/providers/breadcrumbs'
+import { useRootBreadcrumb } from '@/shared/breadcrumbs'
 
 dayjs.extend(relativeTime)
 

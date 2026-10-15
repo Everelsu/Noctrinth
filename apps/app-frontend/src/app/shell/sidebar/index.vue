@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { defineMessages, useScrollIndicator, useVIntl } from '@modrinth/ui'
 import { OverlayScrollbars } from 'overlayscrollbars'
-import { computed, onMounted, onScopeDispose, ref } from 'vue'
+import { computed, onMounted, onScopeDispose, ref, watch } from 'vue'
 
 import { useTheme } from '@/composables/use-theme'
 import PrideFundraiserBanner from '@/features/campaigns/pride-fundraiser-banner.vue'
@@ -11,17 +11,35 @@ import type { MinecraftAccountsActions } from '@/features/minecraft-accounts/con
 import NewsSidebar from '@/features/news/news-sidebar.vue'
 import OnboardingChecklist from '@/features/onboarding/checklist.vue'
 import type { ModrinthCredentials } from '@/helpers/mr_auth'
+import { SIDEBAR_MOTION_MS } from '@/helpers/noctrinth-sidebar-motion'
 import { injectOnboardingChecklist } from '@/providers/onboarding-checklist'
 
 import Promotion from './promotion.vue'
 
-defineProps<{
+const props = defineProps<{
 	credentials: ModrinthCredentials | null | undefined
 	hasPlus: boolean
 	showAd: boolean
 	visible: boolean
 	requestSignIn: () => void
 }>()
+
+/**
+ * Noctrinth: the default content stays up until the column has finished
+ * closing (App.vue's `.app-contents` transition), so what slides away is the
+ * sidebar and not an empty panel.
+ */
+const contentVisible = ref(props.visible)
+let hideContentTimer: ReturnType<typeof setTimeout> | undefined
+watch(
+	() => props.visible,
+	(visible) => {
+		clearTimeout(hideContentTimer)
+		if (visible) contentVisible.value = true
+		else hideContentTimer = setTimeout(() => (contentVisible.value = false), SIDEBAR_MOTION_MS)
+	},
+)
+onScopeDispose(() => clearTimeout(hideContentTimer))
 
 const emit = defineEmits<{
 	'create-instance': []
@@ -109,7 +127,7 @@ const messages = defineMessages({
 					@login-modrinth="emit('login-modrinth')"
 				/>
 				<div id="sidebar-teleport-target" class="sidebar-teleport-content contents"></div>
-				<div class="sidebar-default-content hidden" :class="{ 'sidebar-enabled': visible }">
+				<div class="sidebar-default-content hidden" :class="{ 'sidebar-enabled': contentVisible }">
 					<div
 						v-show="hasLoggedIntoMinecraft"
 						class="p-4 border-0 border-b-[1px] border-[--brand-gradient-border] border-solid"

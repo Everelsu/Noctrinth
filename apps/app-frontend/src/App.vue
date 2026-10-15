@@ -134,6 +134,7 @@ import {
 } from '@/helpers/mr_auth.ts'
 import { loadBackground } from '@/helpers/noctrinth-background'
 import { prefetchRouteChunks, startProjectHoverPrefetch } from '@/helpers/noctrinth-prefetch'
+import { markSidebarMoving } from '@/helpers/noctrinth-sidebar-motion'
 import { cacheSplashCubeChoice } from '@/helpers/noctrinth-splash-cube'
 import { markThemeSettled, revealMainWindow } from '@/helpers/noctrinth-window-reveal'
 import { mergeUrlQuery, parseModrinthLink } from '@/helpers/project-links.ts'
@@ -253,6 +254,7 @@ const forceSidebar = computed(
 		route.path.startsWith('/user'),
 )
 const sidebarVisible = computed(() => sidebarToggled.value || forceSidebar.value)
+watch(sidebarVisible, (visible) => markSidebarMoving(visible))
 const hostingRouteActive = computed(() => route.path.startsWith('/hosting'))
 const hostingUpdateRequired = computed(
 	() =>
@@ -2621,16 +2623,16 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 
 	display: grid;
 	grid-template-columns: 1fr 0px;
-	// Мгновенное расширение контента — но только ПОСЛЕ того как сайдбар уехал
-	transition: grid-template-columns 0s 0.28s;
+	// The column itself opens and closes: the page narrows and widens in step
+	// with the sidebar sliding in, rather than jumping before or after it. The
+	// sidebar keeps its width and is uncovered by the column, which is the slide.
+	transition: grid-template-columns 0.42s var(--nm-sheet);
 
 	&.sidebar-enabled {
 		grid-template-columns: 1fr 300px;
-		// При показе — сразу сужаем контент, сайдбар въезжает поверх
-		transition: grid-template-columns 0s;
 
 		.app-sidebar {
-			transform: translateX(0);
+			opacity: 1;
 		}
 	}
 
@@ -2649,8 +2651,8 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 }
 
 .app-sidebar {
-	transform: translateX(300px);
-	transition: transform 0.28s ease-in-out;
+	opacity: 0;
+	transition: opacity 0.32s ease;
 }
 
 .disable-advanced-rendering {

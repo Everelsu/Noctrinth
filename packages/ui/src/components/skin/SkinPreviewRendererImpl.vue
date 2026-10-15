@@ -62,7 +62,7 @@
 				toneMapping: THREE.NoToneMapping,
 				toneMappingExposure: 10.0,
 			}"
-			class="transition-opacity duration-500"
+			class="object-contain transition-opacity duration-500"
 			:class="{ 'opacity-0': !isPreviewVisible, 'opacity-100': isPreviewVisible }"
 			@pointerdown="onPointerDown"
 			@pointermove="onPointerMove"

@@ -10,6 +10,31 @@
 :root {
 	--nm-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 	--nm-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+	/* Quick off the mark and long to settle, like a sheet drawn by hand. */
+	--nm-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/*
+ * Upstream's accordions — every folding section in the menus — open on a plain
+ * ease and clip their content in and out. Given the sheet's curve, with what is
+ * inside fading and settling as it is uncovered. The doubled class outranks the
+ * component's own scoped rule, whatever order the two stylesheets load in.
+ */
+@media (prefers-reduced-motion: no-preference) {
+	:root .accordion-content.accordion-content {
+		transition: grid-template-rows 0.4s var(--nm-sheet);
+	}
+
+	:root .accordion-content.accordion-content > div > * {
+		transition:
+			opacity 0.3s ease,
+			transform 0.4s var(--nm-sheet);
+	}
+
+	:root .accordion-content.accordion-content:not(.open) > div > * {
+		opacity: 0;
+		transform: translateY(-6px);
+	}
 }
 
 /* A label or value replaced by another: the old one leaves up, the new one rises in. */

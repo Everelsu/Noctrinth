@@ -2040,7 +2040,7 @@ async function checkUserChanges() {
 					:texture-src="elyPreviewTexture"
 					:variant="elyPreviewVariant"
 					:cape-src="elyCapeTexture"
-					:nametag="elyAccount.profile.name"
+					:nametag="appSettings.hideNametagSkinsPage ? undefined : elyAccount.profile.name"
 					:initial-rotation="Math.PI / 8"
 				>
 					<template v-if="elyHasPendingChange" #nametag-badge>

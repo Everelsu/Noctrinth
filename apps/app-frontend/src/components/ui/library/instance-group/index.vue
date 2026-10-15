@@ -33,6 +33,12 @@ import type {
 import { useLibrary } from '@/components/ui/library/use-library'
 import { useAppSettings } from '@/composables/use-app-settings.ts'
 import { FAVORITES_GROUP_ID, MAX_INSTANCE_GROUP_NAME_LENGTH } from '@/helpers/instance-groups'
+import {
+	SIDEBAR_MOTION_MS,
+	SIDEBAR_WIDTH,
+	sidebarMoving,
+	sidebarOpening,
+} from '@/helpers/noctrinth-sidebar-motion'
 
 const INSTANCE_GRID_OBSERVER_ACTIVATION_DELAY = 500
 
@@ -89,7 +95,31 @@ const {
 	viewportHeight,
 	syncScrollState,
 } = useScrollViewport()
-const { width: gridWidth } = useElementSize(instanceGridContent)
+const { width: measuredGridWidth } = useElementSize(instanceGridContent)
+/**
+ * Noctrinth: while the sidebar slides, the grid is laid out once for the width
+ * it is heading to and the cards travel there with it (see
+ * `noctrinth-sidebar-motion`), instead of being re-laid out every frame.
+ */
+const gridWidth = ref(measuredGridWidth.value)
+const cardsTravelling = ref(false)
+let cardsTravelTimer: ReturnType<typeof setTimeout> | undefined
+watch(measuredGridWidth, (width) => {
+	if (!sidebarMoving.value) gridWidth.value = width
+})
+watch(sidebarMoving, (moving) => {
+	clearTimeout(cardsTravelTimer)
+	if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) cardsTravelling.value = true
+	if (moving) {
+		const change = sidebarOpening.value ? -SIDEBAR_WIDTH : SIDEBAR_WIDTH
+		gridWidth.value = Math.max(0, measuredGridWidth.value + change)
+	} else {
+		// Where the guess was off — a page with a width of its own — the cards
+		// make up the difference on the same terms.
+		gridWidth.value = measuredGridWidth.value
+	}
+	cardsTravelTimer = setTimeout(() => (cardsTravelling.value = false), SIDEBAR_MOTION_MS)
+})
 const { width: windowWidth } = useWindowSize()
 const focusedInstanceId = ref<string | null>(null)
 const enteringInstanceIds = ref(new Set<string>())
@@ -120,12 +150,18 @@ watch(
 )
 const remSize = ref(16)
 const gap = computed(() => remSize.value * 0.75)
+/** Noctrinth: a compact card keeps one width; more room fits more of them. */
+const compactCardWidth = computed(() => remSize.value * 18)
 const columnCount = computed(() => {
-	const minWidth = remSize.value * (compactMode.value ? 15 : windowWidth.value < 1280 ? 8 : 10)
+	const minWidth = compactMode.value
+		? compactCardWidth.value
+		: remSize.value * (windowWidth.value < 1280 ? 8 : 10)
 	return Math.max(1, Math.floor((gridWidth.value + gap.value) / (minWidth + gap.value)))
 })
-const cardWidth = computed(
-	() => (gridWidth.value - gap.value * (columnCount.value - 1)) / columnCount.value,
+const cardWidth = computed(() =>
+	compactMode.value
+		? Math.min(compactCardWidth.value, gridWidth.value)
+		: (gridWidth.value - gap.value * (columnCount.value - 1)) / columnCount.value,
 )
 const cardHeight = computed(() =>
 	compactMode.value
@@ -164,6 +200,9 @@ const visibleInstances = computed(() => {
 function instancePosition(index: number) {
 	return {
 		position: 'absolute' as const,
+		transition: cardsTravelling.value
+			? `left ${SIDEBAR_MOTION_MS - 30}ms var(--nm-sheet), top ${SIDEBAR_MOTION_MS - 30}ms var(--nm-sheet), width ${SIDEBAR_MOTION_MS - 30}ms var(--nm-sheet)`
+			: undefined,
 		width: `${cardWidth.value}px`,
 		left: `${(index % columnCount.value) * (cardWidth.value + gap.value)}px`,
 		top: `${Math.floor(index / columnCount.value) * (cardHeight.value + gap.value)}px`,
@@ -476,6 +515,7 @@ function startInstanceGridResizeObserver() {
 
 onUnmounted(() => {
 	clearTimeout(cardMoveTimer)
+	clearTimeout(cardsTravelTimer)
 	stopInstanceGridResizeObserver()
 	libraryResizeObserver?.disconnect()
 })

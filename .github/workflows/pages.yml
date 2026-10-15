@@ -1,8 +1,8 @@
-name: Deploy Changelog Site
+name: Deploy Site
 
-# Builds the static changelog page from the app's own changelog and upstream's
-# (packages/blog/changelog.ts) and publishes it to GitHub Pages, along with the
-# screenshots the entries reference.
+# Builds the static site — the front page, the news from news/ with its feed for
+# the launcher, and the changelog from the app's own changelog and upstream's
+# (packages/blog/changelog.ts) — and publishes it to GitHub Pages.
 
 on:
   push:
@@ -13,6 +13,12 @@ on:
       - 'packages/blog/changelog.ts'
       - 'apps/app/icons/noctrinth.svg'
       - 'scripts/build-changelog-site.mjs'
+      - 'scripts/lib/**'
+      - 'news/**'
+      - '.github/assets/noctrinth-banner.svg'
+      - '.github/assets/social-preview.png'
+      - '.github/assets/screenshots/**'
+      - 'VERSION'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 

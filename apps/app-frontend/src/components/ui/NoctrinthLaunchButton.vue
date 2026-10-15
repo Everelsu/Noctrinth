@@ -84,7 +84,7 @@
 			as="button"
 			type="button"
 			class="launch-face absolute left-0 top-0 grid size-12 place-items-center rounded-full border-0 bg-transparent p-0"
-			:class="againDisabled ? 'cursor-default' : 'cursor-pointer'"
+			:class="[againDisabled ? 'cursor-default' : 'cursor-pointer', { 'again-busy': againBusy }]"
 			:style="{ color: colors.text, pointerEvents: againVisible ? 'auto' : 'none' }"
 			:initial="false"
 			:animate="{
@@ -99,7 +99,10 @@
 			:tabindex="againVisible ? 0 : -1"
 			@click="emit('again')"
 		>
-			<PlayIcon class="size-6" />
+			<Transition name="nm-pop" mode="out-in">
+				<LoaderSpinnerIcon v-if="againBusy" key="busy" class="size-6 motion-safe:animate-spin" />
+				<PlayIcon v-else key="play" class="size-6" />
+			</Transition>
 		</Motion>
 	</Motion>
 </template>
@@ -122,10 +125,12 @@ const props = defineProps<{
 	state: LaunchState
 	againVisible: boolean
 	againDisabled?: boolean
+	/** A second copy is on its way up: the drop spins until it is. */
+	againBusy?: boolean
 	labels: Record<LaunchState | 'again', string>
 }>()
 
-const emit = defineEmits<{ play: []; stop: []; again: [] }>()
+const emit = defineEmits<{ play: []; stop: [event: MouseEvent]; again: [] }>()
 
 const HEIGHT = 48
 /** Wider than the goo reaches at rest, so the drop comes away once it has run out. */
@@ -190,9 +195,9 @@ onBeforeUnmount(() => {
 	resizeObserver?.disconnect()
 })
 
-function onMainClick() {
+function onMainClick(event: MouseEvent) {
 	if (busy.value) return
-	if (props.state === 'stop') emit('stop')
+	if (props.state === 'stop') emit('stop', event)
 	else emit('play')
 }
 </script>
@@ -210,5 +215,31 @@ function onMainClick() {
 .launch-face:focus-visible {
 	outline: none;
 	box-shadow: 0 0 0 4px var(--color-brand-shadow, rgb(189 133 255 / 0.35));
+}
+
+/* The second copy starting: a ring breathes out of the drop until it is up. */
+.again-busy::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	border-radius: 9999px;
+	box-shadow: 0 0 0 0 var(--color-brand);
+	animation: again-ring 1.2s ease-out infinite;
+	pointer-events: none;
+}
+
+@keyframes again-ring {
+	from {
+		box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-brand) 55%, transparent);
+	}
+	to {
+		box-shadow: 0 0 0 10px transparent;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.again-busy::after {
+		animation: none;
+	}
 }
 </style>

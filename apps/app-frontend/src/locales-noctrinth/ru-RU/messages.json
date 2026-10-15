@@ -2032,5 +2032,11 @@
 	},
 	"noctrinth.settings.translation.test-ok": {
 		"message": "Работает, {milliseconds} мс: «{text}»"
+	},
+	"noctrinth.instance.stop-copy": {
+		"message": "Остановить {name} · {time}"
+	},
+	"noctrinth.instance.stop-all-copies": {
+		"message": "Остановить все копии"
 	}
 }

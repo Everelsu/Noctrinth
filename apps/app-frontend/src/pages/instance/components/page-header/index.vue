@@ -84,9 +84,10 @@
 					:state="launchState"
 					:again-visible="playing && !isInstalling"
 					:again-disabled="loading"
+					:again-busy="playing && loading"
 					:labels="launchLabels"
 					@play="emit('play')"
-					@stop="emit('stop')"
+					@stop="(event) => emit('stop', event)"
 					@again="emit('playAgain')"
 				/>
 				<Transition v-else name="nm-swap-seq" mode="out-in">
@@ -323,7 +324,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
 	repair: []
-	stop: []
+	stop: [event?: MouseEvent]
 	play: []
 	playAgain: []
 	playServer: []

@@ -64,7 +64,9 @@ const gameVersionsQuery = useQuery({
 })
 const gameVersions = computed(() => gameVersionsQuery.data.value ?? [])
 
-const MAX_JUMP_BACK_IN = 5
+// Noctrinth: room for a second column of five on a wide window; the handle still
+// takes it down to as few as anyone wants.
+const MAX_JUMP_BACK_IN = 10
 const MAX_NEW_INSTANCES = 3
 const ITEM_DRAG_DISTANCE = 92
 const STORAGE_KEY = 'modrinth-jump-back-in-count'

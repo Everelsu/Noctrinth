@@ -44,7 +44,7 @@
 				:ping="ping"
 				:minecraft-server="minecraftServer"
 				@repair="() => repairInstance()"
-				@stop="() => stopInstance('InstancePage')"
+				@stop="(event) => requestStop(event)"
 				@play="() => startInstance('InstancePage')"
 				@play-again="() => launchAnotherCopy('InstancePage')"
 				@play-server="() => handlePlayServer()"
@@ -148,6 +148,7 @@ import {
 	run,
 	sync_content_files,
 } from '@/helpers/instance'
+import { kill as killProcess } from '@/helpers/process'
 import { useSharedInstanceErrors } from '@/helpers/shared-instance-errors'
 import type { GameInstance } from '@/helpers/types'
 import { createInstanceShortcut, showInstanceInFolder } from '@/helpers/utils.js'
@@ -180,6 +181,12 @@ const { formatMessage } = useVIntl()
 const messages = defineMessages({
 	play: { id: 'app.instance.action.play', defaultMessage: 'Play' },
 	stop: { id: 'app.instance.action.stop', defaultMessage: 'Stop' },
+	stopCopy: { id: 'noctrinth.instance.stop-copy', defaultMessage: 'Stop {name} · {time}' },
+	stopAllCopies: { id: 'noctrinth.instance.stop-all-copies', defaultMessage: 'Stop every copy' },
+	unknownAccount: {
+		id: 'instance.console.copy-unknown-account',
+		defaultMessage: 'Unknown account',
+	},
 	addContent: { id: 'app.instance.action.add-content', defaultMessage: 'Add content' },
 	edit: { id: 'app.instance.action.edit', defaultMessage: 'Edit' },
 	copyPath: { id: 'app.instance.action.copy-path', defaultMessage: 'Copy path' },
@@ -305,7 +312,15 @@ const processesQuery = useQuery(
 	})),
 )
 const playing = computed(() => (processesQuery.data.value?.length ?? 0) > 0)
-
+/** Each running copy of this instance, oldest first, for choosing which to stop. */
+const runningCopies = computed(() =>
+	(processesQuery.data.value ?? [])
+		.filter(
+			(process): process is { uuid: string; account_name: string; start_time: string } =>
+				typeof process === 'object' && process !== null && 'uuid' in process,
+		)
+		.sort((a, b) => dayjs(a.start_time).diff(dayjs(b.start_time))),
+)
 /**
  * Only the instance summary is awaited, as Celestial-Launcher does. The route's
  * <Suspense> keeps the previous page on screen until this resolves, so the
@@ -580,7 +595,7 @@ const launchInstance = async (context: string) => {
 	loading.value = true
 	try {
 		await run(currentInstance.id)
-		queryClient.setQueryData(instanceKeys.processes(currentInstance.id), [true])
+		await processesQuery.refetch()
 	} catch (err) {
 		handleSevereError(err, { instanceId: currentInstance.id })
 	}
@@ -712,13 +727,56 @@ const launchAnotherCopy = async (context: string) => {
 	})
 }
 
+/**
+ * Stop with one copy running stops it. With several it asks which: each is
+ * named by its account and the time it started, which is what tells two
+ * copies on the same account apart, and every copy at once is the last choice.
+ */
+function requestStop(event?: MouseEvent) {
+	if (runningCopies.value.length < 2 || !event) {
+		void stopInstance('InstancePage')
+		return
+	}
+
+	const button = (event.currentTarget as HTMLElement | null)?.getBoundingClientRect()
+	const anchor = button
+		? new MouseEvent('click', { clientX: button.left, clientY: button.bottom + 6 })
+		: event
+	options.value?.open(anchor, [
+		...runningCopies.value.map((copy) => ({
+			id: `stop-${copy.uuid}`,
+			label: formatMessage(messages.stopCopy, {
+				name: copy.account_name || formatMessage(messages.unknownAccount),
+				time: dayjs(copy.start_time).format('HH:mm'),
+			}),
+			icon: StopCircleIcon,
+			action: () => void stopCopy(copy.uuid),
+		})),
+		{ type: 'divider' as const },
+		{
+			id: 'stop-all',
+			label: formatMessage(messages.stopAllCopies),
+			icon: StopCircleIcon,
+			tone: 'red' as const,
+			action: () => void stopInstance('InstancePageStopMenu'),
+		},
+	])
+}
+
+async function stopCopy(uuid: string) {
+	stopping.value = true
+	await killProcess(uuid).catch((error) => handleError(toError(error)))
+	await processesQuery.refetch()
+	stopping.value = false
+}
+
 const stopInstance = async (context: string) => {
 	const currentInstance = instance.value
 	if (!currentInstance) return
 	stopping.value = true
 	await kill(currentInstance.id).catch((error) => handleError(toError(error)))
-	stopping.value = false
 	queryClient.setQueryData(instanceKeys.processes(currentInstance.id), [])
+	stopping.value = false
 
 	trackEvent('InstanceStop', {
 		loader: currentInstance.loader,
@@ -937,12 +995,14 @@ useAppEvent('instance', async (event) => {
 
 useAppEvent('process', (event) => {
 	if (event.instance_id !== instanceId.value) return
+	// Read back rather than assumed: one copy of several finishing leaves the
+	// others running, and an empty list here showed Play while they still were.
 	if (event.event === 'finished') {
-		queryClient.setQueryData(instanceKeys.processes(event.instance_id), [])
+		void processesQuery.refetch()
 		useInstanceConsole(event.instance_id).invalidate()
 		void queryClient.invalidateQueries({ queryKey: instanceKeys.logs(event.instance_id) })
 	} else if (event.event === 'launched') {
-		queryClient.setQueryData(instanceKeys.processes(event.instance_id), [true])
+		void processesQuery.refetch()
 	}
 })
 

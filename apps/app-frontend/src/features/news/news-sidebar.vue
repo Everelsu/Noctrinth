@@ -2,8 +2,9 @@
 import { NewspaperIcon } from '@modrinth/assets'
 import { ButtonLink, defineMessages, NewsArticleCard, useVIntl } from '@modrinth/ui'
 import { useQuery } from '@tanstack/vue-query'
-import { watch } from 'vue'
+import { computed, watch } from 'vue'
 
+import { useNoctrinthNews } from './noctrinth-news'
 import { newsArticlesQueryOptions } from './queries'
 
 const { formatMessage } = useVIntl()
@@ -18,10 +19,14 @@ const messages = defineMessages({
 	},
 })
 
-const { data: news, error } = useQuery({
-	...newsArticlesQueryOptions(),
-	select: (articles) => articles.slice(0, 4),
-})
+const { data: modrinthNews, error } = useQuery(newsArticlesQueryOptions())
+// Noctrinth: its own articles mixed in with Modrinth's, newest first.
+const noctrinthNews = useNoctrinthNews()
+const news = computed(() =>
+	[...noctrinthNews.value, ...(modrinthNews.value ?? [])]
+		.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+		.slice(0, 4),
+)
 
 watch(error, (error) => {
 	if (error) console.error('Failed to fetch news articles', error)

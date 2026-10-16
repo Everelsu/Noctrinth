@@ -181,7 +181,10 @@ pub fn app_db_backup_dir() -> crate::Result<PathBuf> {
         ),
     )?;
 
-    Ok(base.join("Modrinth").join("Backups").join("app-db"))
+    // Noctrinth's own: upstream's `Modrinth` folder is the one Modrinth App
+    // backs up into too, and the two name their backups by the same version
+    // numbers, so a backup restored from there could be the other app's.
+    Ok(base.join("Noctrinth").join("Backups").join("app-db"))
 }
 
 async fn has_user_tables(conn: &mut SqliteConnection) -> crate::Result<bool> {

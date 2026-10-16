@@ -1329,7 +1329,7 @@
 		"message": "Загрузить новый скин"
 	},
 	"app.skins.ely.my-skins.empty": {
-		"message": "Пока ничего не загружено. Загрузите скин на Ely.by — и он появится здесь."
+		"message": "Пока ничего не загружено. Добавьте скин плиткой ниже или перетащите на неё PNG."
 	},
 	"app.skins.ely.my-skins.title": {
 		"message": "Ваши скины Ely.by"
@@ -2043,7 +2043,7 @@
 		"message": "Фоновая картинка"
 	},
 	"noctrinth.settings.background.description": {
-		"message": "Картинка за лаунчером, видная сквозь его рамку. Карточки на страницах остаются плотными, так что текст на них читается как раньше."
+		"message": "Картинка за лаунчером: видна сквозь его рамку и, немного, сквозь карточки на страницах."
 	},
 	"noctrinth.settings.background.choose": {
 		"message": "Выбрать картинку"
@@ -2059,5 +2059,35 @@
 	},
 	"noctrinth.settings.background.blur.description": {
 		"message": "Смягчает её, чтобы она не спорила с тем, что поверх."
+	},
+	"app.behavior-settings.refocus-on-game-close.description": {
+		"message": "Выводить Noctrinth на передний план при закрытии игры."
+	},
+	"app.screenshots.selection.global-export-filename": {
+		"message": "Скриншоты Noctrinth.zip"
+	},
+	"app.settings.game-options.compatibility.reason.launcher-controlled": {
+		"message": "Этим параметром управляют настройки запуска Noctrinth."
+	},
+	"app.settings.resource-management.debug-info.description": {
+		"message": "Экспортировать журналы приложения и диагностические данные в ZIP-файл, чтобы приложить его к сообщению о проблеме."
+	},
+	"app.settings.synced-options.game-settings.custom-empty": {
+		"message": "Настройки, добавленные модами, появятся здесь после того, как Noctrinth найдёт их в одной из сборок."
+	},
+	"app.settings.privacy.telemetry.description": {
+		"message": "Noctrinth не отправляет ни аналитику, ни данные об использовании, как бы ни стоял этот переключатель. Он оставлен, чтобы настройка переносилась из Modrinth App и обратно."
+	},
+	"noctrinth.settings.background.drop-hint": {
+		"message": "Или перетащите картинку на окно."
+	},
+	"noctrinth.settings.background.drop-here": {
+		"message": "Бросайте сюда"
+	},
+	"noctrinth.settings.background.dim.title": {
+		"message": "Затемнение картинки"
+	},
+	"noctrinth.settings.background.dim.description": {
+		"message": "Для яркой или пёстрой картинки, чтобы то, что поверх, легко читалось."
 	}
 }

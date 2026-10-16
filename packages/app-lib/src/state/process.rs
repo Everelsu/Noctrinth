@@ -450,31 +450,52 @@ impl ProcessManager {
         }
     }
 
+    /// Waits for the process to end.
+    ///
+    /// Polled rather than awaited on the child: awaiting it would hold the
+    /// map's lock for as long as the game runs, and everything else that looks
+    /// at running processes, the exit watcher included, would block on it.
     pub async fn wait_for(&self, id: Uuid) -> crate::Result<()> {
-        if let Some(mut process) = self.processes.get_mut(&id) {
-            process.child.wait().await?;
+        while let Some(None) = self.try_wait(id)? {
+            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
         }
         Ok(())
     }
 
+    /// Tells the process to end, and returns without waiting for it to.
+    ///
+    /// The exit watcher started with the process notices it is gone and does
+    /// the rest. Waiting here used to mean holding the map's lock until the
+    /// game had closed, which blocked that watcher, the running-instances list
+    /// and every other copy's stop behind it: stopping several copies at once
+    /// froze the launcher for as long as they took to close, one after another.
     pub async fn kill(&self, id: Uuid) -> crate::Result<()> {
+        let Some(instance_path) = self
+            .processes
+            .get(&id)
+            .map(|process| process.metadata.instance_path.clone())
+        else {
+            return Ok(());
+        };
+
+        // Stopping a run ends it with the same code a crash would, so the
+        // crash reader is told which of the two this was.
+        if let Ok(state) = crate::State::get().await {
+            let log_path = state
+                .directories
+                .instance_logs_dir(&instance_path)
+                .join(LAUNCHER_LOG_PATH);
+            let _ = Process::append_to_log_file(
+                &log_path,
+                &format!(
+                    "\n{}\n",
+                    crate::api::crash_analysis::STOPPED_FROM_LAUNCHER
+                ),
+            );
+        }
+
         if let Some(mut process) = self.processes.get_mut(&id) {
-            // Stopping a run ends it with the same code a crash would, so the
-            // crash reader is told which of the two this was.
-            if let Ok(state) = crate::State::get().await {
-                let log_path = state
-                    .directories
-                    .instance_logs_dir(&process.metadata.instance_path)
-                    .join(LAUNCHER_LOG_PATH);
-                let _ = Process::append_to_log_file(
-                    &log_path,
-                    &format!(
-                        "\n{}\n",
-                        crate::api::crash_analysis::STOPPED_FROM_LAUNCHER
-                    ),
-                );
-            }
-            process.child.kill().await?;
+            process.child.start_kill()?;
         }
 
         Ok(())

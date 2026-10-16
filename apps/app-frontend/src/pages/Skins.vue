@@ -264,8 +264,7 @@ const messages = defineMessages({
 	},
 	elyMySkinsEmpty: {
 		id: 'app.skins.ely.my-skins.empty',
-		defaultMessage:
-			'Nothing uploaded yet. Upload a skin on Ely.by and it will show up here to click on.',
+		defaultMessage: 'Nothing uploaded yet. Add a skin with the tile below, or drop a PNG onto it.',
 	},
 	elySkinsChangeButton: {
 		id: 'ely-skins.change-button',
@@ -616,7 +615,7 @@ async function uploadElySkinBytes(bytes: Uint8Array, isSlim?: boolean) {
 	elyWearingId.value = -1
 	const before = elyCurrentSkinUrl.value
 	try {
-		await uploadElySkin(`data:image/png;base64,${arrayBufferToBase64(bytes)}`)
+		await uploadElySkin(elyUsername(), `data:image/png;base64,${arrayBufferToBase64(bytes)}`)
 
 		// The upload URL is not known ahead of time, so this waits for the worn
 		// skin to become anything other than what it was.
@@ -655,7 +654,7 @@ async function applyModelToNewElySkin(isSlim: boolean | undefined) {
 	const uploaded = items.find((item) => sameTexture(item.skin_url, elyCurrentSkinUrl.value))
 	if (!uploaded || uploaded.is_slim === isSlim) return
 
-	await editElySkin(uploaded.id, { isSlim })
+	await editElySkin(username, uploaded.id, { isSlim })
 	await waitForElyModel(uploaded.id, isSlim)
 }
 
@@ -666,6 +665,16 @@ async function applyModelToNewElySkin(isSlim: boolean | undefined) {
  * no way to create one. Opening the site unprompted is worse than saying so:
  * the button in the header is there for when the user wants it.
  */
+/**
+ * The Ely.by account the writes are for. The backend refuses one when the
+ * site is signed in as somebody else, so it has to be told who that is.
+ */
+function elyUsername(): string {
+	const username = elyAccount.value?.profile.name
+	if (!username) throw new Error('No Ely.by account is selected')
+	return username
+}
+
 function reportElySignInNeeded() {
 	addNotification({
 		type: 'error',
@@ -713,7 +722,7 @@ async function saveElyEdit(skin: Skin, isSlim: boolean) {
 
 	elyEditSaving.value = true
 	try {
-		await editElySkin(id, { isSlim })
+		await editElySkin(elyUsername(), id, { isSlim })
 		if (await waitForElyModel(id, isSlim)) {
 			// The pending pick holds a copy of the old model, so it would show the
 			// wrong arms until the next click.
@@ -740,7 +749,7 @@ async function deleteElySkin(skin: Skin) {
 
 	elyWearingId.value = id
 	try {
-		await removeElySkin(id)
+		await removeElySkin(elyUsername(), id)
 		await new Promise((resolve) => setTimeout(resolve, 3000))
 		if (elyPendingSkin.value?.texture_key === skin.texture_key) {
 			elyPendingSkin.value = null
@@ -794,7 +803,7 @@ async function applyElySkin(skin: Skin) {
 
 	elyWearingId.value = id
 	try {
-		await wearElySkin(id)
+		await wearElySkin(elyUsername(), id)
 		const target = elySkins.value.find((entry) => entry.id === id)?.skin_url
 		if (await waitForElySkin(target)) {
 			elyPendingSkin.value = null
@@ -2101,7 +2110,6 @@ async function checkUserChanges() {
 					{{ formatMessage(messages.elyMySkinsEmpty) }}
 				</p>
 				<VirtualSkinSectionList
-					v-else
 					ref="elySkinSectionList"
 					:saved-skins="elySkinsAsSkins"
 					:default-skin-sections="[]"

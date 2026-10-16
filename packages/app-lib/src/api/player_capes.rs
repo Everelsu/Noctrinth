@@ -211,6 +211,19 @@ async fn mojang_id(name: &str) -> Option<String> {
 
 /// The official cape on that account, from the textures its profile carries.
 async fn mojang_cape(id: &str) -> Option<Vec<u8>> {
+    mojang_texture(id, "CAPE").await
+}
+
+/// The skin a licensed account wears, straight from Mojang.
+///
+/// For the launcher's own account list: the head services it used to ask
+/// cache by account and go on showing a skin long since changed.
+pub async fn mojang_skin(id: &str) -> Option<Vec<u8>> {
+    mojang_texture(&id.replace('-', ""), "SKIN").await
+}
+
+/// One of that account's textures, `SKIN` or `CAPE`, from its profile.
+async fn mojang_texture(id: &str, kind: &str) -> Option<Vec<u8>> {
     use base64::Engine;
 
     let profile: serde_json::Value = REQWEST_CLIENT
@@ -241,7 +254,9 @@ async fn mojang_cape(id: &str) -> Option<Vec<u8>> {
         .decode(packed)
         .ok()?;
     let textures: serde_json::Value = serde_json::from_slice(&decoded).ok()?;
-    let url = textures.pointer("/textures/CAPE/url")?.as_str()?;
+    let url = textures
+        .pointer(&format!("/textures/{kind}/url"))?
+        .as_str()?;
 
     get_png(url.replace("http://", "https://")).await
 }

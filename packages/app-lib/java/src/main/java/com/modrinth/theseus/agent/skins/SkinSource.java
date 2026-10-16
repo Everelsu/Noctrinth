@@ -226,6 +226,24 @@ public final class SkinSource {
      * map and the caller leaves the profile as it was.
      */
     public static Map<String, Texture> lookup(String username) {
+        return lookup(username, false);
+    }
+
+    /**
+     * The same, for a caller that is off the game's main thread and can wait for the whole
+     * answer.
+     *
+     * <p>The quick answer is what the sources had between them after a few seconds, and an empty
+     * one there often only means the skin system was slow. Handed to the game, that empty answer
+     * is final: it draws the default skin its UUID picks and keeps it for the session, and the
+     * real skin, arriving a moment later, only shows after a rejoin. So a caller that can wait
+     * gets the late answer instead of an empty early one.
+     */
+    public static Map<String, Texture> lookupPatiently(String username) {
+        return lookup(username, true);
+    }
+
+    private static Map<String, Texture> lookup(String username, boolean patient) {
         if (SOURCES.isEmpty() || !isPlausibleName(username)) {
             return Collections.emptyMap();
         }
@@ -233,15 +251,20 @@ public final class SkinSource {
         final long now = System.currentTimeMillis();
         final CachedTextures cached = CACHE.get(username);
         if (cached != null && cached.usableUntil > now) {
-            if (cached.freshUntil <= now) {
-                // Old enough to be worth another look, not old enough to make
-                // anyone wait for it.
-                refreshLater(username);
+            final boolean stale = cached.freshUntil <= now;
+            // An empty answer that is due another look is not worth handing over
+            // to someone who can wait for that look instead.
+            if (!(patient && stale && cached.textures.isEmpty())) {
+                if (stale) {
+                    // Old enough to be worth another look, not old enough to make
+                    // anyone wait for it.
+                    refreshLater(username);
+                }
+                return cached.textures;
             }
-            return cached.textures;
         }
 
-        return fetchWithin(username);
+        return fetchWithin(username, patient);
     }
 
     /**
@@ -250,13 +273,15 @@ public final class SkinSource {
      * <p>The work runs on this class's own threads rather than the caller's, so that giving up on
      * it is possible at all: what is abandoned here still finishes, and is still written down.
      */
-    private static Map<String, Texture> fetchWithin(String username) {
+    private static Map<String, Texture> fetchWithin(String username, boolean patient) {
         final CompletableFuture<Map<String, Texture>> first = new CompletableFuture<>();
+        final CompletableFuture<Map<String, Texture>> whole = new CompletableFuture<>();
         final Runnable work = () -> {
             try {
-                fetch(username, first);
+                whole.complete(fetch(username, first));
             } finally {
                 first.complete(Collections.<String, Texture>emptyMap());
+                whole.complete(Collections.<String, Texture>emptyMap());
             }
         };
         try {
@@ -267,13 +292,26 @@ public final class SkinSource {
         }
 
         try {
-            return first.get(FIRST_WAIT_MS, TimeUnit.MILLISECONDS);
+            final Map<String, Texture> quick = first.get(FIRST_WAIT_MS, TimeUnit.MILLISECONDS);
+            if (!quick.isEmpty() || !patient) {
+                return quick;
+            }
+        } catch (TimeoutException slow) {
+            debug("Gave up waiting on " + username + " for a quick answer; the lookup is still going");
+        } catch (Throwable t) {
+            debug("Failed to look up " + username + ": " + t);
+        }
+        if (!patient) {
+            return Collections.emptyMap();
+        }
+
+        try {
+            return whole.get(LATE_WAIT_MS, TimeUnit.MILLISECONDS);
         } catch (TimeoutException slow) {
             debug("Gave up waiting on " + username + "; the lookup is still going");
         } catch (Throwable t) {
             debug("Failed to look up " + username + ": " + t);
         }
-
         return Collections.emptyMap();
     }
 

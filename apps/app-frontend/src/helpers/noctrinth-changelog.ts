@@ -35,13 +35,35 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.21.9+2',
+		date: '2026-10-16T12:00:00+00:00',
+		body: `### Added
+- A background picture behind the launcher, chosen in Settings → Appearance, blurred or not. The frame lets it through, the cards on a page a little of it, and dialogs turn to frosted glass over it. The idea is [Celestial Launcher](https://github.com/Wemsur/Celestial-Launcher)'s.
+- The background picture can be dropped onto the window from Settings → Appearance, and darkened with a slider for a bright or busy one. Menus and tooltips over it turn to frosted glass too.
+
+### Changed
+- Hiding and showing the right sidebar is one smooth motion: the page narrows and widens along with it, the library's cards travel to their new places in step with it, and the sidebar keeps its contents until it is gone. The folding sections in menus open and close on the same curve, their contents fading in and out.
+- Synced with upstream Modrinth main again: a shortcut to an instance with a dot in its name keeps the whole name, the command history no longer syncs with that setting off, the files tab no longer reads a whole file into memory to download it, and on Linux the instance file watcher no longer floods the log.
+
+### Fixed
+- In the library's compact view the cards keep their size: more room fits more of them, instead of every card getting smaller to make space for another column.
+- Hide nametag hides the nametag on an Ely.by account's skin preview too.
+- Wearing, uploading, editing and deleting Ely.by skins only goes ahead when the Ely.by site is signed in as the selected account, and says so when it is not, so with several accounts a change never lands on another one.
+- In-game skins work on Minecraft 26.1 and later, where authlib renamed the classes the launcher hooks into and Ely.by and offline players all showed up as Steve.
+- Skins in game load faster and stop going missing: every texture, a licensed server's signed ones included, is fetched by the launcher through its proxy, over http and https at once, with retries, instead of once by the game straight from a CDN that is not always reachable. A stalled download no longer leaves a player as Steve for the session, which is how a licensed player came to see nobody's skin on Hypixel and not their own among offline ones.
+- A player seen for the first time no longer gets a default skin when the skin system is slow to answer: on 1.20.2 and later the game is given the full answer instead of an empty early one, so the right skin shows without a rejoin.
+- Stopping every copy of an instance no longer freezes the launcher until the games have closed, and the page shows them as stopping until they have, instead of offering Play while they are still running.
+- A skin can be added to an Ely.by account that has none yet: the add tile shows even when the list is empty.
+- A Microsoft account's head in the account list is cut from the skin Mojang has for it, instead of a head service that kept showing a changed skin as Steve.
+- Database backups are kept in a Noctrinth folder of their own, no longer in Modrinth App's, where the two apps' backups shared names and could be mixed up. The debug export, the screenshots archive and a few settings say Noctrinth instead of Modrinth App, and the telemetry switch says what is true: Noctrinth sends no analytics either way.`,
+	},
+	{
 		version: '0.21.9+1',
 		date: '2026-10-15T12:00:00+00:00',
 		body: `### Added
 - Noctrinth's own news shows up in the News feed on the home page next to Modrinth's, in Russian when the launcher is. The articles live on the [new site](https://everelsu.github.io/Noctrinth/news/), which has the changelog on a page of its own now.
 - Stop on an instance running more than once asks which copy to stop, each named by its account and the time it started, or stops all of them.
 - In-game skins and capes come from more places: LittleSkin for skins, and LabyMod, MinecraftCapes and SkinMC for capes, after Mojang and OptiFine.
-- A background picture behind the launcher, chosen in Settings → Appearance, blurred or not. The frame lets it through while the cards on a page stay solid. The idea is [Celestial Launcher](https://github.com/Wemsur/Celestial-Launcher)'s.
 - The player in the skin preview turns its head to follow the pointer, and looks ahead again once it stops.
 
 ### Changed

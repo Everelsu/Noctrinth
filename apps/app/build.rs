@@ -560,6 +560,7 @@ fn main() {
                         "offline_set_default_user",
                         "offline_preview_uuid",
                         "offline_player_cape",
+                        "mojang_player_skin",
                     ])
                     .default_permission(
                         DefaultPermissionRule::AllowAllCommands,

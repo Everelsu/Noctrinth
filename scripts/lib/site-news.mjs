@@ -2,7 +2,7 @@
 //
 // One folder per article under news/, the way Modrinth's own blog keeps them
 // (packages/blog): `article.md` with a title, summary and date at the top, an
-// optional `article.ru.md` in Russian, a `thumbnail.png` (or .webp/.jpg) and
+// optional `article.ru.md` in Russian, a `thumbnail.svg` (or .webp/.png/.jpg) and
 // any pictures the text shows. The site gets a page per article and a feed in
 // the same shape as modrinth.com/news/feed/articles.json, which is what the
 // launcher reads to put these in its News sidebar next to Modrinth's.
@@ -14,7 +14,7 @@ import { escapeHtml, parseFrontmatter, renderMarkdown } from './site-markdown.mj
 import { dateTag, icon, SITE_URL, t } from './site-style.mjs'
 
 export const NEWS_DIR = 'news'
-const THUMBNAIL_NAMES = ['thumbnail.webp', 'thumbnail.png', 'thumbnail.jpg']
+const THUMBNAIL_NAMES = ['thumbnail.svg', 'thumbnail.webp', 'thumbnail.png', 'thumbnail.jpg']
 
 function readArticleFile(path) {
 	if (!existsSync(path)) return null

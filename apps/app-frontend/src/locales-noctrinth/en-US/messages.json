@@ -768,7 +768,7 @@
 		"message": "Upload a new skin"
 	},
 	"app.skins.ely.my-skins.empty": {
-		"message": "Nothing uploaded yet. Upload a skin on Ely.by and it will show up here to click on."
+		"message": "Nothing uploaded yet. Add a skin with the tile below, or drop a PNG onto it."
 	},
 	"app.skins.ely.my-skins.title": {
 		"message": "Your Ely.by skins"
@@ -1290,7 +1290,7 @@
 		"message": "Background picture"
 	},
 	"noctrinth.settings.background.description": {
-		"message": "A picture behind the launcher, showing through its frame. Cards on a page stay solid, so text on them is as easy to read as before."
+		"message": "A picture behind the launcher, showing through its frame and, a little, through the cards on a page."
 	},
 	"noctrinth.settings.background.choose": {
 		"message": "Choose picture"
@@ -1306,5 +1306,35 @@
 	},
 	"noctrinth.settings.background.blur.description": {
 		"message": "Softens it, so it stays behind what is in front of it."
+	},
+	"app.behavior-settings.refocus-on-game-close.description": {
+		"message": "Bring Noctrinth to the foreground when Minecraft exits."
+	},
+	"app.screenshots.selection.global-export-filename": {
+		"message": "Noctrinth screenshots.zip"
+	},
+	"app.settings.game-options.compatibility.reason.launcher-controlled": {
+		"message": "This setting is managed by Noctrinth's launch settings."
+	},
+	"app.settings.resource-management.debug-info.description": {
+		"message": "Export app logs and diagnostic data to a ZIP file to attach to a bug report."
+	},
+	"app.settings.synced-options.game-settings.custom-empty": {
+		"message": "Settings added by mods will appear here after Noctrinth finds them in one of your instances."
+	},
+	"app.settings.privacy.telemetry.description": {
+		"message": "Noctrinth sends no analytics or usage data, whichever way this is set. The switch is kept so the setting carries over to and from Modrinth App."
+	},
+	"noctrinth.settings.background.drop-hint": {
+		"message": "Or drop a picture onto the window."
+	},
+	"noctrinth.settings.background.drop-here": {
+		"message": "Drop it here"
+	},
+	"noctrinth.settings.background.dim.title": {
+		"message": "Darken the picture"
+	},
+	"noctrinth.settings.background.dim.description": {
+		"message": "For a bright or busy picture, so what is over it stays easy to read."
 	}
 }

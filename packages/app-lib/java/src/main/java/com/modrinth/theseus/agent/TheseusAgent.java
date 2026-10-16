@@ -57,6 +57,8 @@ public final class TheseusAgent {
             final SessionServiceTransformer sessionService = new SessionServiceTransformer();
             transformers.put(SessionServiceTransformer.YGGDRASIL_CLASS, sessionService);
             transformers.put(SessionServiceTransformer.SESSION_SERVICE_CLASS, sessionService);
+            transformers.put(SessionServiceTransformer.SERVICES_SESSION_CLASS, sessionService);
+            transformers.put(SessionServiceTransformer.SESSION_SERVICE_10_CLASS, sessionService);
 
             // The player's own skin is on screen from the moment they spawn, so
             // it is the one worth having before anything asks.

@@ -763,10 +763,26 @@ function requestStop(event?: MouseEvent) {
 	])
 }
 
+/**
+ * Stopping only asks a game to close, so the page waits until the copies it
+ * stopped are gone rather than claiming they are. A game that will not close
+ * in time is left showing as running, which is what it is.
+ */
+async function waitForStopped(stopped: (process: unknown) => boolean) {
+	for (let attempt = 0; attempt < 40; attempt++) {
+		const { data } = await processesQuery.refetch()
+		if (!(data ?? []).some(stopped)) return
+		await new Promise((resolve) => setTimeout(resolve, 250))
+	}
+}
+
 async function stopCopy(uuid: string) {
 	stopping.value = true
 	await killProcess(uuid).catch((error) => handleError(toError(error)))
-	await processesQuery.refetch()
+	await waitForStopped(
+		(process) =>
+			typeof process === 'object' && process !== null && 'uuid' in process && process.uuid === uuid,
+	)
 	stopping.value = false
 }
 
@@ -775,7 +791,7 @@ const stopInstance = async (context: string) => {
 	if (!currentInstance) return
 	stopping.value = true
 	await kill(currentInstance.id).catch((error) => handleError(toError(error)))
-	queryClient.setQueryData(instanceKeys.processes(currentInstance.id), [])
+	await waitForStopped(() => true)
 	stopping.value = false
 
 	trackEvent('InstanceStop', {

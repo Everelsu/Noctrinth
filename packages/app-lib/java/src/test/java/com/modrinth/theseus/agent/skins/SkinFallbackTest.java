@@ -101,7 +101,7 @@ class SkinFallbackTest {
         final MinecraftProfileTexture skin = skinOf(getTextures(new GameProfile("Offline_One", false), true));
 
         assertNotNull(skin, "a profile with no textures should have come back with one");
-        assertEquals(LOOKED_UP_SKIN, skin.getUrl());
+        assertEquals(LOOKED_UP_SKIN, LocalTextures.sourceOf(skin.getUrl()));
         assertEquals("slim", skin.getMetadata("model"), "slim arms should survive the round trip");
         assertTrue(requestedPaths.contains("/textures/Offline_One"), "the lookup should go by name");
         assertTrue(
@@ -115,7 +115,7 @@ class SkinFallbackTest {
 
         assertEquals(
                 YggdrasilMinecraftSessionService.SERVER_SKIN,
-                skin.getUrl(),
+                LocalTextures.sourceOf(skin.getUrl()),
                 "a signed skin must not be second-guessed");
     }
 
@@ -129,7 +129,7 @@ class SkinFallbackTest {
         final MinecraftProfileTexture skin = skinOf(getTextures(GameProfile.unverifiable("Insecure_One"), true));
 
         assertNotNull(skin, "a profile whose textures could not be verified should still get one");
-        assertEquals(LOOKED_UP_SKIN, skin.getUrl());
+        assertEquals(LOOKED_UP_SKIN, LocalTextures.sourceOf(skin.getUrl()));
     }
 
     /** With nothing to put in its place, the caller has to see exactly what it would have seen. */
@@ -157,7 +157,7 @@ class SkinFallbackTest {
                 (MinecraftProfileTextures) getTextures(new GameProfile("Offline_Two", false));
 
         assertNotNull(textures.skin(), "a profile with no textures should have come back with one");
-        assertEquals(LOOKED_UP_SKIN, textures.skin().getUrl());
+        assertEquals(LOOKED_UP_SKIN, LocalTextures.sourceOf(textures.skin().getUrl()));
         assertNull(textures.cape(), "nothing was said about a cape");
         assertEquals(
                 MinecraftProfileTextures.SignatureState.SIGNED,
@@ -171,7 +171,8 @@ class SkinFallbackTest {
                 (MinecraftProfileTextures) getTextures(new GameProfile("Signed_Two", true));
 
         assertEquals(
-                YggdrasilMinecraftSessionService.SERVER_SKIN, textures.skin().getUrl());
+                YggdrasilMinecraftSessionService.SERVER_SKIN,
+                LocalTextures.sourceOf(textures.skin().getUrl()));
         assertEquals(MinecraftProfileTextures.SignatureState.SIGNED, textures.signatureState());
     }
 
@@ -184,7 +185,7 @@ class SkinFallbackTest {
                 .invoke(interfaceService, new GameProfile("Offline_Three", false));
 
         assertNotNull(textures.skin(), "the interface's default method should have been wrapped too");
-        assertEquals(LOOKED_UP_SKIN, textures.skin().getUrl());
+        assertEquals(LOOKED_UP_SKIN, LocalTextures.sourceOf(textures.skin().getUrl()));
     }
 
     @Test
@@ -195,7 +196,8 @@ class SkinFallbackTest {
                 .invoke(interfaceService, new GameProfile("Signed_Three", true));
 
         assertEquals(
-                YggdrasilMinecraftSessionService.SERVER_SKIN, textures.skin().getUrl());
+                YggdrasilMinecraftSessionService.SERVER_SKIN,
+                LocalTextures.sourceOf(textures.skin().getUrl()));
     }
 
     /**
@@ -211,7 +213,7 @@ class SkinFallbackTest {
         final MinecraftProfileTextures textures = unpackTextures(packed);
 
         assertNotNull(textures.skin(), "unpacking should have gone looking for a skin");
-        assertEquals(LOOKED_UP_SKIN, textures.skin().getUrl());
+        assertEquals(LOOKED_UP_SKIN, LocalTextures.sourceOf(textures.skin().getUrl()));
     }
 
     /**
@@ -224,7 +226,7 @@ class SkinFallbackTest {
         final MinecraftProfileTextures textures = unpackTextures(packed);
 
         assertNotNull(textures.skin(), "textures that were refused should have been replaced");
-        assertEquals(LOOKED_UP_SKIN, textures.skin().getUrl());
+        assertEquals(LOOKED_UP_SKIN, LocalTextures.sourceOf(textures.skin().getUrl()));
     }
 
     @Test
@@ -233,7 +235,7 @@ class SkinFallbackTest {
 
         assertEquals(
                 YggdrasilMinecraftSessionService.SERVER_SKIN,
-                unpackTextures(packed).skin().getUrl(),
+                LocalTextures.sourceOf(unpackTextures(packed).skin().getUrl()),
                 "a skin authlib was happy with must not be second-guessed");
     }
 

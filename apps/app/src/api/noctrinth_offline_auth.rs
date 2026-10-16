@@ -15,6 +15,7 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
             offline_set_default_user,
             offline_preview_uuid,
             offline_player_cape,
+            mojang_player_skin,
         ])
         .build()
 }
@@ -58,4 +59,11 @@ pub async fn offline_player_cape(
     username: &str,
 ) -> Result<Option<theseus::player_capes::PlayerCape>> {
     Ok(theseus::player_capes::cape_for_name(username).await?)
+}
+
+/// The skin a licensed account wears, as PNG bytes, for its head in the
+/// account list. `None` when Mojang has none to give.
+#[tauri::command]
+pub async fn mojang_player_skin(id: &str) -> Result<Option<Vec<u8>>> {
+    Ok(theseus::player_capes::mojang_skin(id).await)
 }

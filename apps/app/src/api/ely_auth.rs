@@ -304,14 +304,17 @@ fn wear_skin_script(skin_id: u64) -> String {
 #[tauri::command]
 pub async fn ely_remove_skin<R: Runtime>(
     app: tauri::AppHandle<R>,
+    username: String,
     skin_id: u64,
 ) -> Result<()> {
-    run_in_skin_window(
+    run_as_account(
         app,
+        &username,
         format!(
             "fetch('https://ely.by/api/legacy/skins/{skin_id}', {{                 method: 'DELETE',                 credentials: 'same-origin',                 headers: {{ 'X-Requested-With': 'XMLHttpRequest' }}             }}).catch(function () {{}});"
         ),
     )
+    .await
 }
 
 /// Uploads a PNG to the account's Ely.by catalogue and wears it.
@@ -335,9 +338,10 @@ fn upload_skin_script(data_url: &str) -> String {
 #[tauri::command]
 pub async fn ely_upload_skin<R: Runtime>(
     app: tauri::AppHandle<R>,
+    username: String,
     data_url: &str,
 ) -> Result<()> {
-    run_in_skin_window(app, upload_skin_script(data_url))
+    run_as_account(app, &username, upload_skin_script(data_url)).await
 }
 
 /// Rewrites a skin's details on Ely.by.
@@ -414,13 +418,15 @@ fn edit_skin_script(
 #[tauri::command]
 pub async fn ely_edit_skin<R: Runtime>(
     app: tauri::AppHandle<R>,
+    username: String,
     skin_id: u64,
     is_slim: bool,
     name: Option<String>,
     description: Option<String>,
 ) -> Result<()> {
-    run_in_skin_window(
+    run_as_account(
         app,
+        &username,
         edit_skin_script(
             skin_id,
             is_slim,
@@ -428,6 +434,7 @@ pub async fn ely_edit_skin<R: Runtime>(
             description.as_deref(),
         ),
     )
+    .await
 }
 
 /// Wears one of the account's uploaded skins.
@@ -444,9 +451,101 @@ pub async fn ely_edit_skin<R: Runtime>(
 #[tauri::command]
 pub async fn ely_wear_skin<R: Runtime>(
     app: tauri::AppHandle<R>,
+    username: String,
     skin_id: u64,
 ) -> Result<()> {
-    run_in_skin_window(app, wear_skin_script(skin_id))
+    run_as_account(app, &username, wear_skin_script(skin_id)).await
+}
+
+/// How long a website call has to answer before it is given up on.
+const ELY_SKIN_CALL_TIMEOUT: std::time::Duration =
+    std::time::Duration::from_secs(30);
+
+/// Runs a website call as `username`, and only as them.
+///
+/// Every write goes through the site session of the embedded window, and that
+/// session is whoever last signed in to ely.by there — with several Ely.by
+/// accounts in the launcher, not necessarily the one selected. So the script
+/// first asks the site who it is signed in as (every ely.by page carries it as
+/// `alight.service.currentUser`) and does nothing unless that is `username`.
+///
+/// The answer comes back through the window's address: the script sets a
+/// fragment carrying a fresh token, and this watches for it, the way the
+/// sign-in window is watched. A webview on a remote origin has no other way out.
+async fn run_as_account<R: Runtime>(
+    app: tauri::AppHandle<R>,
+    username: &str,
+    call: String,
+) -> Result<()> {
+    let token = uuid::Uuid::new_v4().simple().to_string();
+    let expected =
+        serde_json::to_string(username).unwrap_or_else(|_| "\"\"".into());
+    let call = call.trim_end().trim_end_matches(';');
+    let script = format!(
+        r#"(async function () {{
+    const report = function (result) {{ location.hash = 'noctrinth-{token}-' + result; }};
+    try {{
+        const page = await fetch('https://ely.by/', {{ credentials: 'same-origin' }}).then(function (r) {{ return r.text(); }});
+        const found = page.match(/alight\.service\.currentUser\s*=\s*(\{{[\s\S]*?\}});/);
+        const user = found ? JSON.parse(found[1]) : null;
+        if (!user || !user.id || user.status === 'guest') return report('guest');
+        if (String(user.nickname).toLowerCase() !== String({expected}).toLowerCase()) {{
+            return report('other-' + encodeURIComponent(user.nickname));
+        }}
+        await ({call});
+        report('done');
+    }} catch (e) {{
+        report('failed');
+    }}
+}})();"#
+    );
+
+    run_in_skin_window(app.clone(), script)?;
+
+    let marker = format!("noctrinth-{token}-");
+    let started = std::time::Instant::now();
+    let answer = loop {
+        let fragment = app
+            .get_webview_window(ELY_SKIN_WINDOW_LABEL)
+            .and_then(|window| window.url().ok())
+            .and_then(|url| url.fragment().map(str::to_string));
+        if let Some(answer) =
+            fragment.and_then(|f| f.strip_prefix(&marker).map(str::to_string))
+        {
+            break answer;
+        }
+        if started.elapsed() > ELY_SKIN_CALL_TIMEOUT {
+            return Err(theseus::ErrorKind::OtherError(
+                "Ely.by did not answer. Try again in a moment.".to_string(),
+            )
+            .as_error()
+            .into());
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+    };
+
+    let refusal = |message: String| -> Result<()> {
+        Err(theseus::ErrorKind::OtherError(message).as_error().into())
+    };
+    match answer.as_str() {
+        "done" => Ok(()),
+        "guest" => {
+            ely_open_skin_window(app).await?;
+            refusal(format!(
+                "The Ely.by site is not signed in. Sign in as {username} in the window that opened, then try again."
+            ))
+        }
+        other if other.starts_with("other-") => {
+            let signed_in = urlencoding::decode(&other["other-".len()..])
+                .map(|name| name.into_owned())
+                .unwrap_or_default();
+            ely_open_skin_window(app).await?;
+            refusal(format!(
+                "The Ely.by site is signed in as {signed_in}, not {username}, so nothing was changed. Sign out there and sign in as {username} in the window that opened, then try again."
+            ))
+        }
+        _ => refusal("Ely.by did not take the change.".to_string()),
+    }
 }
 
 /// Runs a script in the embedded Ely.by window, creating it hidden if it is not
@@ -477,8 +576,12 @@ fn run_in_skin_window<R: Runtime>(
     .inner_size(1080.0, 800.0)
     .center()
     .visible(false)
-    .on_page_load(move |window, _| {
-        if pending.swap(false, std::sync::atomic::Ordering::SeqCst) {
+    .on_page_load(move |window, payload| {
+        // Once the page is there: a script run as it starts would run against
+        // the blank document before it, with no ely.by session to call with.
+        if payload.event() == tauri::webview::PageLoadEvent::Finished
+            && pending.swap(false, std::sync::atomic::Ordering::SeqCst)
+        {
             window.eval(&script).ok();
         }
     })

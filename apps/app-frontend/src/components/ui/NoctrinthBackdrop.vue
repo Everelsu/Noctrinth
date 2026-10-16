@@ -3,9 +3,15 @@
  * The background picture, behind the whole window. While there is one, the
  * window's frame lets it through, and the cards on a page a little of it.
  */
-import { watchEffect } from 'vue'
+import { computed, watchEffect } from 'vue'
 
-import { backgroundBlur, backgroundUrl } from '@/helpers/noctrinth-background'
+import { backgroundBlur, backgroundDim, backgroundUrl } from '@/helpers/noctrinth-background'
+
+/** The darkening is a veil painted over the picture, in the same layer. */
+const backgroundImage = computed(() => {
+	const veil = `rgba(0, 0, 0, ${Math.min(100, Math.max(0, backgroundDim.value)) / 100})`
+	return `linear-gradient(${veil}, ${veil}), url(${backgroundUrl.value})`
+})
 
 watchEffect(() => {
 	document.documentElement.classList.toggle('noctrinth-backdrop-active', !!backgroundUrl.value)
@@ -19,7 +25,7 @@ watchEffect(() => {
 			:key="backgroundUrl"
 			class="noctrinth-backdrop"
 			:class="{ 'noctrinth-backdrop--blur': backgroundBlur }"
-			:style="{ backgroundImage: `url(${backgroundUrl})` }"
+			:style="{ backgroundImage }"
 		/>
 	</Transition>
 </template>
@@ -112,6 +118,15 @@ watchEffect(() => {
 	--surface-3: color-mix(in srgb, var(--noctrinth-solid-surface-3) 80%, transparent);
 	--color-raised-bg: var(--surface-3);
 	backdrop-filter: blur(24px) saturate(1.3);
+}
+
+/* Menus and tooltips too, a touch more solid: they are small and read fast. */
+:root.noctrinth-backdrop-active [role='menu'],
+:root.noctrinth-backdrop-active .v-popper--theme-dropdown .v-popper__inner,
+:root.noctrinth-backdrop-active .v-popper__inner.v-popper--theme-tooltip {
+	--surface-3: color-mix(in srgb, var(--noctrinth-solid-surface-3) 84%, transparent);
+	--_popper-arrow-bg: var(--surface-3);
+	backdrop-filter: blur(18px) saturate(1.3);
 }
 
 /* An open dropdown list is drawn inside the page; it stays solid to be read. */

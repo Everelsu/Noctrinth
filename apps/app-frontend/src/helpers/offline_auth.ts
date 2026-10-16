@@ -54,6 +54,21 @@ export type PlayerCapeSource =
  * The cape a name has anywhere that hands them out, as a data URL, or null.
  * See `packages/app-lib/src/api/player_capes.rs` for where it looks.
  */
+/**
+ * The skin a licensed account wears, straight from Mojang, as a `data:` URL —
+ * same-origin, so a head can be cut out of it on a canvas. `null` when there
+ * is none to give.
+ */
+export async function mojang_player_skin(id: string): Promise<string | null> {
+	const png = await invoke<number[] | null>('plugin:noctrinth-offline-auth|mojang_player_skin', {
+		id,
+	})
+	if (!png) return null
+	let binary = ''
+	for (const byte of png) binary += String.fromCharCode(byte)
+	return `data:image/png;base64,${btoa(binary)}`
+}
+
 export async function offline_player_cape(
 	username: string,
 ): Promise<{ source: PlayerCapeSource; texture: string } | null> {

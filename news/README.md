@@ -13,8 +13,7 @@ news/
   my-article/
     article.md       English, required
     article.ru.md    Russian, optional; falls back to English
-    thumbnail.webp   the card picture, 1920×1080 (also .png or .jpg): Modrinth's
-                     style, simplified UI over isometric blocks, in purple
+    thumbnail.svg    the card picture, 1920×1080 (also .webp, .png or .jpg)
     picture.png      anything the text shows, referenced as ![](picture.png)
 ```
 
@@ -33,6 +32,14 @@ The text, in Markdown: ## headings, - lists, **bold**, _italic_, `code`,
 
 `article.ru.md` has the same three fields in Russian. Add `unlisted: true` to keep an
 article off the site while it is being written.
+
+Thumbnails are drawn in Modrinth's blog style, in purple: a simplified picture of the
+thing over isometric blocks. `scripts/news-thumbnail.mjs` draws them; give a new article
+a scene of its own there (copy `new-site`) and run:
+
+```bash
+node scripts/news-thumbnail.mjs new-site news/new-site/thumbnail.svg
+```
 
 The site rebuilds itself when anything here changes on `main`. To look at it locally:
 

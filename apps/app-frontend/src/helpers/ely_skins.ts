@@ -144,14 +144,17 @@ export async function listElySkins(username: string): Promise<ElyUploadedSkin[]>
 }
 
 /**
- * Puts one of the account's uploaded skins on.
+ * Puts one of `username`'s uploaded skins on.
  *
  * Ely.by has no skin API; this drives the website's own wear call from
- * inside the embedded window, which is where the site session lives. It cannot
- * report whether it worked — reload the texture to find out.
+ * inside the embedded window, which is where the site session lives. Like
+ * every write here it refuses, with an error saying why, when the site is
+ * signed in as anyone but `username` — with several Ely.by accounts that is
+ * what keeps a change off the wrong one. Whether the site then took it is
+ * not reported; reload the texture to find out.
  */
-export async function wearElySkin(skinId: number): Promise<void> {
-	await invoke('plugin:ely-auth|ely_wear_skin', { skinId })
+export async function wearElySkin(username: string, skinId: number): Promise<void> {
+	await invoke('plugin:ely-auth|ely_wear_skin', { username, skinId })
 }
 
 /** Storage URL of the skin the account currently wears, if it has a custom one. */
@@ -187,13 +190,13 @@ export function getElyCatalogueTexture(url: string): Promise<string> {
  * lives. Like {@link wearElySkin} it cannot report the outcome — reload the
  * texture to find out.
  */
-export async function uploadElySkin(dataUrl: string): Promise<void> {
-	await invoke('plugin:ely-auth|ely_upload_skin', { dataUrl })
+export async function uploadElySkin(username: string, dataUrl: string): Promise<void> {
+	await invoke('plugin:ely-auth|ely_upload_skin', { username, dataUrl })
 }
 
-/** Removes one of the account's skins from the Ely.by catalogue. */
-export async function removeElySkin(skinId: number): Promise<void> {
-	await invoke('plugin:ely-auth|ely_remove_skin', { skinId })
+/** Removes one of `username`'s skins from the Ely.by catalogue. */
+export async function removeElySkin(username: string, skinId: number): Promise<void> {
+	await invoke('plugin:ely-auth|ely_remove_skin', { username, skinId })
 }
 
 /** What {@link editElySkin} can change. Anything left out stays as it is. */
@@ -212,8 +215,13 @@ export interface ElySkinEdit {
  * changed here. Like the rest of the Ely.by writes it runs inside the embedded
  * window and cannot report the outcome — re-read the listing to find out.
  */
-export async function editElySkin(skinId: number, edit: ElySkinEdit): Promise<void> {
+export async function editElySkin(
+	username: string,
+	skinId: number,
+	edit: ElySkinEdit,
+): Promise<void> {
 	await invoke('plugin:ely-auth|ely_edit_skin', {
+		username,
 		skinId,
 		isSlim: edit.isSlim,
 		name: edit.name ?? null,

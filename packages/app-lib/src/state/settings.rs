@@ -113,6 +113,9 @@ pub struct Settings {
     /// Whether the background picture is blurred.
     pub background_blur: bool,
 
+    /// How far the background picture is darkened, from 0 to 100.
+    pub background_dim: u32,
+
     pub version: usize,
 }
 
@@ -170,6 +173,11 @@ impl Settings {
 
         let background_blur: i64 =
             sqlx::query_scalar("SELECT background_blur FROM settings")
+                .fetch_one(exec)
+                .await?;
+
+        let background_dim: i64 =
+            sqlx::query_scalar("SELECT background_dim FROM settings")
                 .fetch_one(exec)
                 .await?;
 
@@ -278,6 +286,7 @@ impl Settings {
             accent_tint_background: accent_tint_background == 1,
             splash_cube,
             background_blur: background_blur == 1,
+            background_dim: background_dim.clamp(0, 100) as u32,
             sync_theme_across_devices: res.sync_theme_across_devices == 1,
             sync_behavior_across_devices: res.sync_behavior_across_devices == 1,
             sync_features_across_devices: res.sync_features_across_devices == 1,
@@ -457,6 +466,11 @@ impl Settings {
 
         sqlx::query("UPDATE settings SET background_blur = $1")
             .bind(i64::from(self.background_blur))
+            .execute(exec)
+            .await?;
+
+        sqlx::query("UPDATE settings SET background_dim = $1")
+            .bind(i64::from(self.background_dim.min(100)))
             .execute(exec)
             .await?;
 

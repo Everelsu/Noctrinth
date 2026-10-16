@@ -43,6 +43,15 @@ public final class SessionServiceTransformer extends ClassNodeTransformer {
     /** Where it lives from 1.20.2 on, as a default method nothing in the game calls any more. */
     public static final String SESSION_SERVICE_CLASS = "com/mojang/authlib/minecraft/MinecraftSessionService";
 
+    /**
+     * The same two, renamed in authlib 10 (Minecraft 26.1 on): the interface lost its
+     * {@code Minecraft} prefix and Yggdrasil's implementation became the services one. The methods
+     * are unchanged, and without these names the agent found nothing to wrap on those versions.
+     */
+    public static final String SERVICES_SESSION_CLASS = "com/mojang/authlib/services/MinecraftServicesSessionService";
+
+    public static final String SESSION_SERVICE_10_CLASS = "com/mojang/authlib/minecraft/SessionService";
+
     private static final String GAME_PROFILE = "Lcom/mojang/authlib/GameProfile;";
     private static final String PROPERTY = "Lcom/mojang/authlib/properties/Property;";
     private static final String THROWABLE = "java/lang/Throwable";

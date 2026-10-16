@@ -53,8 +53,11 @@ public final class SkinHooks {
      */
     public static Object fillTextures(Object result, Object profile) {
         try {
-            if (!SkinSource.isEnabled() || profile == null || hasTextures(result)) {
+            if (!SkinSource.isEnabled() || profile == null) {
                 return result;
+            }
+            if (hasTextures(result)) {
+                return relayed(result);
             }
 
             final String name = profileName(profile);
@@ -150,8 +153,11 @@ public final class SkinHooks {
      */
     public static Object unpackTextures(Object result, Object property) {
         try {
-            if (!SkinSource.isEnabled() || result == null || hasTextures(result)) {
+            if (!SkinSource.isEnabled() || result == null) {
                 return result;
+            }
+            if (hasTextures(result)) {
+                return relayed(result);
             }
 
             final String name = payloadName(propertyValue(property));
@@ -159,7 +165,9 @@ public final class SkinHooks {
                 return result;
             }
 
-            final Map<String, SkinSource.Texture> textures = SkinSource.lookup(name);
+            // Unpacking runs on the game's background threads, so this can wait for the
+            // whole answer rather than settle for an empty early one.
+            final Map<String, SkinSource.Texture> textures = SkinSource.lookupPatiently(name);
             final Object filled = textures.isEmpty() ? null : build(result.getClass(), loaderOf(result), textures);
             if (filled != null) {
                 SkinSource.debug("Filled in textures for " + name);
@@ -284,6 +292,99 @@ public final class SkinHooks {
         throw (T) failure;
     }
 
+    /**
+     * The same textures, fetched through the agent's relay.
+     *
+     * <p>For textures the server sent and authlib accepted: what they are and how they are signed
+     * stay exactly as they were, only where the game downloads them from changes. Left alone, the
+     * game fetches each one once from {@code textures.minecraft.net}, with no retry and without the
+     * proxy, and a player whose download stalled stays Steve for the session — which on a licensed
+     * server, from where that CDN is unreliable, was half the lobby, and slowly. Anything this
+     * cannot rebuild is handed back unchanged.
+     */
+    private static Object relayed(Object result) {
+        try {
+            if (result instanceof Map) {
+                final Map<Object, Object> copy = new java.util.LinkedHashMap<>();
+                for (final Map.Entry<?, ?> entry : ((Map<?, ?>) result).entrySet()) {
+                    copy.put(entry.getKey(), relayedTexture(entry.getValue()));
+                }
+                return copy;
+            }
+
+            Constructor<?> canonical = null;
+            for (final Constructor<?> candidate : result.getClass().getDeclaredConstructors()) {
+                if (canonical == null || candidate.getParameterTypes().length > canonical.getParameterTypes().length) {
+                    canonical = candidate;
+                }
+            }
+            if (canonical == null) {
+                return result;
+            }
+
+            // A record's components, read back in the order its canonical constructor takes them.
+            final Class<?>[] parameters = canonical.getParameterTypes();
+            final Object[] arguments = new Object[parameters.length];
+            final java.lang.reflect.Field[] fields = result.getClass().getDeclaredFields();
+            int next = 0;
+            for (final java.lang.reflect.Field field : fields) {
+                if (java.lang.reflect.Modifier.isStatic(field.getModifiers())) {
+                    continue;
+                }
+                if (next >= arguments.length || field.getType() != parameters[next]) {
+                    return result;
+                }
+                field.setAccessible(true);
+                final Object value = field.get(result);
+                arguments[next++] = TEXTURE_CLASS.equals(field.getType().getName()) ? relayedTexture(value) : value;
+            }
+            if (next != arguments.length) {
+                return result;
+            }
+
+            canonical.setAccessible(true);
+            return canonical.newInstance(arguments);
+        } catch (Throwable t) {
+            SkinSource.debug("Could not relay textures: " + t);
+            return result;
+        }
+    }
+
+    /** One texture, pointed at the relay; the same object when there is nothing to change. */
+    private static Object relayedTexture(Object texture) throws Exception {
+        if (texture == null) {
+            return null;
+        }
+
+        final String url = (String) texture.getClass().getMethod("getUrl").invoke(texture);
+        final String through = LocalTextures.relay(url);
+        if (through == null || through.equals(url)) {
+            return texture;
+        }
+
+        Map<?, ?> metadata = null;
+        try {
+            final java.lang.reflect.Field field = texture.getClass().getDeclaredField("metadata");
+            field.setAccessible(true);
+            metadata = (Map<?, ?>) field.get(texture);
+        } catch (NoSuchFieldException ignored) {
+            // A texture without metadata of its own: the plain one will do.
+        }
+
+        for (final Constructor<?> candidate : texture.getClass().getDeclaredConstructors()) {
+            final Class<?>[] parameters = candidate.getParameterTypes();
+            if (parameters.length == 2 && parameters[0] == String.class && parameters[1] == Map.class) {
+                candidate.setAccessible(true);
+                return candidate.newInstance(through, metadata);
+            }
+            if (parameters.length == 1 && parameters[0] == String.class && metadata == null) {
+                candidate.setAccessible(true);
+                return candidate.newInstance(through);
+            }
+        }
+        return texture;
+    }
+
     private static boolean hasTextures(Object result) throws Exception {
         if (result == null) {
             return false;
@@ -404,14 +505,18 @@ public final class SkinHooks {
             }
         }
 
+        // Through the agent's own relay rather than straight from wherever it is: the
+        // game would try once, without the proxy, and give up on the skin for the session.
+        final String url = LocalTextures.relay(texture.url);
+
         if (withMetadata != null) {
             withMetadata.setAccessible(true);
             // Slim arms and the like ride along in here.
-            return withMetadata.newInstance(texture.url, texture.metadata.isEmpty() ? null : texture.metadata);
+            return withMetadata.newInstance(url, texture.metadata.isEmpty() ? null : texture.metadata);
         }
         if (withUrl != null) {
             withUrl.setAccessible(true);
-            return withUrl.newInstance(texture.url);
+            return withUrl.newInstance(url);
         }
 
         return null;

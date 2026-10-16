@@ -794,6 +794,7 @@ async function setupApp() {
 		accent_tint_background,
 		splash_cube,
 		background_blur,
+		background_dim,
 	} = await traceStartupStep('Read startup settings', getSettings)
 
 	// Before anything else that waits: the window opens once the splash is in
@@ -802,7 +803,7 @@ async function setupApp() {
 	setAccentPreset(accent_preset, accent_tint_background)
 	markThemeSettled()
 	cacheSplashCubeChoice(splash_cube)
-	loadBackground(background_blur).catch((error) =>
+	loadBackground(background_blur, background_dim).catch((error) =>
 		console.warn('Failed to load the background picture:', error),
 	)
 

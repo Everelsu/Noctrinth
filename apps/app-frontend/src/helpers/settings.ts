@@ -113,6 +113,9 @@ export type AppSettings = {
 	/** Whether the background picture chosen in Appearance is blurred. */
 	background_blur: boolean
 
+	/** How far the background picture is darkened, from 0 to 100. */
+	background_dim: number
+
 	version: number
 }
 

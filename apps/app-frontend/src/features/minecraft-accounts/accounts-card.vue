@@ -143,13 +143,14 @@ import {
 } from '@/helpers/ely_auth'
 import { clearElySkinCache, getElyHeadUrl } from '@/helpers/ely_skins'
 import {
+	mojang_player_skin,
 	offline_get_default_user,
 	offline_remove,
 	offline_set_default_user,
 	offline_users,
 	type OfflineCredentials,
 } from '@/helpers/offline_auth'
-import { getPlayerHeadUrl } from '@/helpers/rendering/player-head'
+import { generatePlayerHeadBlob, getPlayerHeadUrl } from '@/helpers/rendering/player-head'
 import type { Skin } from '@/helpers/skins'
 import { get_available_skins } from '@/helpers/skins'
 
@@ -197,6 +198,26 @@ const offlineDefaultUser = ref<string | undefined>()
 const selectedProvider = ref<AccountProvider>('microsoft')
 const equippedSkin = ref<Skin | null>(null)
 const elyHeadCache = ref(new Map<string, string>())
+/**
+ * Microsoft accounts' heads, cut from the skin Mojang has for each. The head
+ * service asked before holds on to old skins for a long time, and showed a
+ * changed one as Steve.
+ */
+const microsoftHeadCache = ref(new Map<string, string>())
+
+function loadMicrosoftHeads() {
+	for (const account of accounts.value) {
+		const id = account.profile.id
+		if (microsoftHeadCache.value.has(id)) continue
+		mojang_player_skin(id)
+			.then(async (texture) => {
+				if (!texture) return
+				const blob = await generatePlayerHeadBlob(texture, 64)
+				microsoftHeadCache.value.set(id, URL.createObjectURL(blob))
+			})
+			.catch((error) => console.warn('Failed to render the head for', account.profile.name, error))
+	}
+}
 const elyLoginModal = ref<InstanceType<typeof ElyLoginModal>>()
 const offlineModal = ref<InstanceType<typeof OfflineAccountModal>>()
 
@@ -274,6 +295,7 @@ async function refreshValues() {
 	defaultUser.value = (await get_default_user().catch(handleError)) ?? undefined
 	const userList = await users().catch(handleError)
 	accounts.value = Array.isArray(userList) ? [...userList] : []
+	loadMicrosoftHeads()
 
 	// Ely.by accounts — isolated, optional, never blocks the above.
 	await loadElyAccounts()
@@ -364,7 +386,9 @@ const STEVE_HEAD_URL = 'https://launcher-files.modrinth.com/assets/steve_head.pn
  * so dashes are stripped here.
  */
 function microsoftHeadUrl(id: string): string {
-	return `https://mc-heads.net/avatar/${id.replace(/-/g, '')}/128`
+	return (
+		microsoftHeadCache.value.get(id) ?? `https://mc-heads.net/avatar/${id.replace(/-/g, '')}/128`
+	)
 }
 
 const avatarUrl = computed(() => {

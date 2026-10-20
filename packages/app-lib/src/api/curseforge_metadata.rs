@@ -1040,10 +1040,7 @@ mod tests {
 
         let mut file = tempfile::NamedTempFile::new().unwrap();
         std::io::Write::write_all(&mut file, &bytes).unwrap();
-        assert_eq!(
-            fingerprint_file(file.path()).unwrap(),
-            fingerprint(&bytes)
-        );
+        assert_eq!(fingerprint_file(file.path()).unwrap(), fingerprint(&bytes));
     }
 
     #[test]

@@ -562,7 +562,8 @@ pub struct Project {
 pub async fn get_project(id: &str) -> crate::Result<Project> {
     let state = State::get().await?;
     let id = parse_project_id(id)?;
-    let project: Data<ApiMod> = get(&format!("{API}/mods/{id}"), &state).await?;
+    let project: Data<ApiMod> =
+        get(&format!("{API}/mods/{id}"), &state).await?;
     let project = project.data;
 
     Ok(Project {
@@ -643,11 +644,10 @@ pub struct ProjectFile {
 impl From<ApiFile> for ProjectFile {
     fn from(file: ApiFile) -> Self {
         // CurseForge lists loaders among the game versions, by display name.
-        let (loaders, game_versions): (Vec<_>, Vec<_>) = file
-            .game_versions
-            .iter()
-            .cloned()
-            .partition(|version| loader_id(&version.to_lowercase()).is_some());
+        let (loaders, game_versions): (Vec<_>, Vec<_>) =
+            file.game_versions.iter().cloned().partition(|version| {
+                loader_id(&version.to_lowercase()).is_some()
+            });
         Self {
             id: file.id.to_string(),
             project_id: format!("{ID_PREFIX}{}", file.mod_id),
@@ -664,7 +664,9 @@ impl From<ApiFile> for ProjectFile {
             },
             game_versions: game_versions
                 .into_iter()
-                .filter(|version| version.chars().next().is_some_and(|c| c.is_ascii_digit()))
+                .filter(|version| {
+                    version.chars().next().is_some_and(|c| c.is_ascii_digit())
+                })
                 .collect(),
             loaders: loaders.into_iter().map(|l| l.to_lowercase()).collect(),
             date_published: file.file_date.clone(),
@@ -826,7 +828,9 @@ pub async fn install_project(
             Some(url) => {
                 install_file(instance_id, &file, url, &state).await?;
                 installed_ids.insert(file.mod_id.to_string());
-                outcome.installed.push(format!("{ID_PREFIX}{}", file.mod_id));
+                outcome
+                    .installed
+                    .push(format!("{ID_PREFIX}{}", file.mod_id));
             }
             None => {
                 let pending = curseforge_blocked::settle(
@@ -946,7 +950,8 @@ pub async fn check_pending_downloads(
     instance_id: &str,
 ) -> crate::Result<Vec<PendingFile>> {
     let state = State::get().await?;
-    let files = curseforge_blocked::check_downloads(instance_id, &state).await?;
+    let files =
+        curseforge_blocked::check_downloads(instance_id, &state).await?;
     Ok(curseforge_blocked::describe(files, &state).await)
 }
 

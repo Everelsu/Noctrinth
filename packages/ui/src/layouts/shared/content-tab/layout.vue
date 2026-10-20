@@ -1102,6 +1102,9 @@ const confirmUnlinkModal = ref<InstanceType<typeof ConfirmUnlinkModal>>()
 			</div>
 
 			<template v-else>
+				<!-- Noctrinth's own: a place above the list for notices about the
+				     content itself. Renders nothing when unused. -->
+				<slot name="notices" />
 				<ManagedContentCard
 					v-if="ctx.managedContent.value"
 					:data="ctx.managedContent.value.card"

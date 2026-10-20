@@ -1,7 +1,32 @@
 <template>
 	<ReadyTransition :pending="loading">
 		<ContentPageLayout :highlighted-item-id="highlightedItemId">
+			<template v-if="curseforgePending.length > 0" #notices>
+				<Admonition
+					type="warning"
+					:header="
+						formatMessage(messages.curseforgePendingHeader, { count: curseforgePending.length })
+					"
+					inline-actions
+					center-content
+				>
+					{{ formatMessage(messages.curseforgePendingBody) }}
+					<template #actions>
+						<ButtonStyled color="orange">
+							<button @click="curseforgePendingModal?.show(instance.id, curseforgePending)">
+								<DownloadIcon aria-hidden="true" />
+								{{ formatMessage(messages.curseforgePendingAction) }}
+							</button>
+						</ButtonStyled>
+					</template>
+				</Admonition>
+			</template>
 			<template #modals>
+				<CurseforgePendingFilesModal
+					ref="curseforgePendingModal"
+					@installed="onCurseforgeFilesInstalled"
+					@hide="refetchCurseforgePending"
+				/>
 				<SyncedContentModal ref="syncedContentModal" />
 				<UnknownFileWarningModal
 					ref="unknownFileWarningModal"
@@ -90,9 +115,17 @@
 
 <script setup lang="ts">
 import type { Labrinth } from '@modrinth/api-client'
-import { ClipboardCopyIcon, FolderOpenIcon, LockIcon, LockOpenIcon } from '@modrinth/assets'
 import {
+	ClipboardCopyIcon,
+	DownloadIcon,
+	FolderOpenIcon,
+	LockIcon,
+	LockOpenIcon,
+} from '@modrinth/assets'
+import {
+	Admonition,
 	type ButtonMenuOption,
+	ButtonStyled,
 	commonMessages,
 	ConfirmDisableModal,
 	ConfirmModpackUpdateModal,
@@ -124,6 +157,7 @@ import { openUrl } from '@tauri-apps/plugin-opener'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import CurseforgePendingFilesModal from '@/components/ui/curseforge/CurseforgePendingFilesModal.vue'
 import ExportModal from '@/components/ui/ExportModal.vue'
 import SyncedContentModal from '@/components/ui/instance/SyncedContentModal.vue'
 import ShareModalWrapper from '@/components/ui/modal/ShareModalWrapper.vue'
@@ -133,6 +167,7 @@ import { useAppEvent } from '@/composables/use-app-event'
 import { useAppSettings } from '@/composables/use-app-settings.ts'
 import { trackEvent } from '@/helpers/analytics'
 import { get_project_versions, get_version, get_version_many } from '@/helpers/cache.js'
+import { curseforgePendingFiles } from '@/helpers/curseforge'
 import { install_bulk_update_content } from '@/helpers/install'
 import {
 	add_project_from_path,
@@ -159,6 +194,20 @@ import { instanceContentQueryOptions, instanceKeys } from '../query-options'
 import { injectSharedInstance } from '../shared-instance-context'
 
 const messages = defineMessages({
+	curseforgePendingHeader: {
+		id: 'app.instance.content.curseforge-pending.header',
+		defaultMessage:
+			'{count, plural, one {# file needs} other {# files need}} to be downloaded by hand',
+	},
+	curseforgePendingBody: {
+		id: 'app.instance.content.curseforge-pending.body',
+		defaultMessage:
+			"Their authors don't let launchers download them, and they weren't found anywhere on this computer.",
+	},
+	curseforgePendingAction: {
+		id: 'app.instance.content.curseforge-pending.action',
+		defaultMessage: 'Download',
+	},
 	modpackContentHeader: {
 		id: 'app.instance.content.managed-content.modpack-header',
 		defaultMessage: 'Modpack content',
@@ -1779,8 +1828,31 @@ useAppEvent('instance', async (event) => {
 		!isBulkOperating.value
 	) {
 		await initProjects()
+		await refetchCurseforgePending()
 	}
 })
+
+// Noctrinth's own: CurseForge files this instance is waiting on because their
+// author keeps them off launchers. Asked for whenever the content is.
+const curseforgePendingModal = ref<InstanceType<typeof CurseforgePendingFilesModal> | null>(null)
+const curseforgePendingQuery = useQuery(
+	computed(() => ({
+		queryKey: ['curseforge', 'pending', instancePage.instanceId.value],
+		queryFn: () => curseforgePendingFiles(instancePage.instanceId.value),
+		enabled: !!instancePage.instanceId.value,
+		staleTime: 0,
+	})),
+)
+const curseforgePending = computed(() => curseforgePendingQuery.data.value ?? [])
+
+async function refetchCurseforgePending() {
+	await curseforgePendingQuery.refetch()
+}
+
+async function onCurseforgeFilesInstalled() {
+	await initProjects()
+	await refetchCurseforgePending()
+}
 
 onMounted(() => {
 	void getCurrentWebview()

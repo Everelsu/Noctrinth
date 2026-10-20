@@ -99,7 +99,11 @@ pub async fn describe(
             file.project_name = Some(project.name.clone());
             file.icon_url = project.icon_url.clone();
             file.download_page_url = project.website_url.as_ref().map(|url| {
-                format!("{}/download/{}", url.trim_end_matches('/'), file.file_id)
+                format!(
+                    "{}/download/{}",
+                    url.trim_end_matches('/'),
+                    file.file_id
+                )
             });
         }
     }
@@ -299,14 +303,14 @@ impl SearchRoot {
         .flat_map(crate::api::launcher_search::find_all)
         .chain(std::iter::once(state.directories.instances_dir()))
         .filter(|path| seen.insert(path.clone()))
-            .map(|path| {
-                Some(Self {
-                    path,
-                    depth: MAX_LAUNCHER_DEPTH,
-                    content_folders_only: true,
-                })
+        .map(|path| {
+            Some(Self {
+                path,
+                depth: MAX_LAUNCHER_DEPTH,
+                content_folders_only: true,
             })
-            .collect()
+        })
+        .collect()
     }
 }
 

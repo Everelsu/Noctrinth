@@ -73,7 +73,7 @@ pub fn set_api_key(key: Option<String>) {
     }
 }
 
-fn api_key() -> Option<String> {
+pub(crate) fn api_key() -> Option<String> {
     API_KEY.read().ok().and_then(|slot| slot.clone())
 }
 

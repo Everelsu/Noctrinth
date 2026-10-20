@@ -2,6 +2,8 @@
 pub mod cache;
 pub mod crash_analysis;
 pub mod crash_culprits;
+pub mod curseforge_blocked;
+pub mod curseforge_browse;
 pub mod curseforge_metadata;
 pub mod debug_info;
 pub mod ely_auth;

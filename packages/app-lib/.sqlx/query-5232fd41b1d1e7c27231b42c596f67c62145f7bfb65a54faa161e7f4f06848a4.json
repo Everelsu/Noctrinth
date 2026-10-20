@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        DELETE FROM curseforge_pending_files\n        WHERE instance_id = $1 AND file_id = $2\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "5232fd41b1d1e7c27231b42c596f67c62145f7bfb65a54faa161e7f4f06848a4"
+}

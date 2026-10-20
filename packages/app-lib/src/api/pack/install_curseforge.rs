@@ -10,10 +10,12 @@
 //!      creation-modal preview) knows the pack name, Minecraft version and
 //!      loader up-front,
 //!   2. `install_curseforge_pack_files_with_reporter` resolves every mod file
-//!      through the CurseForge API, downloads them concurrently (with a CDN
-//!      fallback for author-restricted files), records each as
-//!      `CurseForge`-sourced content, extracts `overrides/`, and installs
-//!      Minecraft — reporting phase/progress through the job reporter.
+//!      through the CurseForge API, downloads them concurrently, records each
+//!      as `CurseForge`-sourced content, extracts `overrides/`, and installs
+//!      Minecraft — reporting phase/progress through the job reporter. Files
+//!      whose author does not allow launcher downloads are left to
+//!      `curseforge_blocked`, which looks for them on disk and otherwise
+//!      leaves them for the user to download by hand.
 //!
 //! The pure zip-inspection helpers are also used by `install_from.rs` and the
 //! job runner to route a dropped `.zip` to the right format.
@@ -136,6 +138,8 @@ struct CfFileData {
     /// `None` when the author disabled third-party downloads.
     download_url: Option<String>,
     #[serde(default)]
+    file_length: Option<u64>,
+    #[serde(default)]
     hashes: Vec<CfFileHash>,
 }
 
@@ -154,32 +158,18 @@ impl CfFileData {
             .map(|h| h.value.as_str())
     }
 
-    /// Reconstruct the public CDN URL from the numeric file id — works even
-    /// when the author disabled API distribution (which only nulls
-    /// `download_url`). Same workaround MultiMC / Prism use.
-    fn cdn_fallback_url(&self) -> Option<String> {
-        if self.id < 1000 || self.file_name.is_empty() {
-            return None;
+    /// The file as one its author does not let launchers download, to be
+    /// looked for on disk instead.
+    fn as_blocked(&self) -> crate::api::curseforge_blocked::BlockedFile {
+        crate::api::curseforge_blocked::BlockedFile {
+            project_id: self.mod_id,
+            file_id: self.id,
+            file_name: self.file_name.clone(),
+            size: self.file_length.filter(|length| *length > 0),
+            sha1: self.sha1().map(str::to_string),
+            source_kind: ContentSourceKind::CurseForgeModpack,
+            disabled: false,
         }
-        let safe_name = self.file_name.replace(' ', "%20");
-        Some(format!(
-            "https://edge.forgecdn.net/files/{}/{}/{safe_name}",
-            self.id / 1000,
-            self.id % 1000
-        ))
-    }
-
-    fn download_candidates(&self) -> Vec<String> {
-        let mut urls = Vec::with_capacity(2);
-        if let Some(url) = &self.download_url {
-            urls.push(url.clone());
-        }
-        if let Some(url) = self.cdn_fallback_url()
-            && !urls.contains(&url)
-        {
-            urls.push(url);
-        }
-        urls
     }
 }
 
@@ -312,8 +302,11 @@ pub(crate) async fn install_curseforge_pack_files_with_reporter(
                 .build(),
         )
         .await?;
-    let resolved =
-        resolve_manifest_files(&state, &manifest, curseforge_api_key).await?;
+    let (resolved, blocked): (Vec<_>, Vec<_>) =
+        resolve_manifest_files(&state, &manifest, curseforge_api_key)
+            .await?
+            .into_iter()
+            .partition(|file| file.download_url.is_some());
 
     // Download every resolved mod file concurrently and record each as
     // CurseForge-sourced content. Failures are collected and reported
@@ -404,6 +397,25 @@ pub(crate) async fn install_curseforge_pack_files_with_reporter(
             total,
         ))
         .into());
+    }
+
+    // Noctrinth's own: the files CurseForge will not hand a launcher are
+    // looked for on disk, and whatever is not there waits for the user. The
+    // pack still installs; it is the content page that says what is missing.
+    if !blocked.is_empty() {
+        let pending = crate::api::curseforge_blocked::settle(
+            instance_id,
+            blocked.iter().map(CfFileData::as_blocked).collect(),
+            &state,
+        )
+        .await;
+        if !pending.is_empty() {
+            tracing::info!(
+                "{} file(s) of {} have to be downloaded by hand",
+                pending.len(),
+                manifest.name
+            );
+        }
     }
 
     extract_overrides(&pack_file, &manifest, instance_id, &reporter, &details)
@@ -542,17 +554,15 @@ async fn download_cf_file(
     download_meta: &DownloadMeta,
     instance_id: &str,
 ) -> crate::Result<()> {
-    let candidates = cf_file.download_candidates();
-    if candidates.is_empty() {
+    let Some(url) = cf_file.download_url.as_deref() else {
         return Err(crate::ErrorKind::InputError(format!(
-            "no download URL could be determined (file id {})",
+            "CurseForge gives no download URL for file {}",
             cf_file.id
         ))
         .into());
-    }
-    let mirrors: Vec<&str> = candidates.iter().map(String::as_str).collect();
+    };
     let bytes = fetch_mirrors(
-        &mirrors,
+        &[url],
         cf_file.sha1(),
         Some(download_meta),
         None,

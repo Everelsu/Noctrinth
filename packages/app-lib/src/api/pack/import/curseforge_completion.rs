@@ -155,34 +155,22 @@ impl ExpectedFile {
         })
     }
 
-    /// Rebuilds the public CDN URL from the numeric file id. CurseForge only
-    /// nulls `downloadUrl` for files whose author opted out of the *API*; the
-    /// CDN path stays reachable, which is the same fallback the fork's own
-    /// modpack installer already uses.
-    fn cdn_fallback_url(&self) -> Option<String> {
-        let id = self.file_id?;
-        if id < 1000 {
-            return None;
-        }
-        Some(format!(
-            "https://edge.forgecdn.net/files/{}/{}/{}",
-            id / 1000,
-            id % 1000,
-            self.file_name.replace(' ', "%20")
-        ))
-    }
-
-    fn download_candidates(&self) -> Vec<String> {
-        let mut urls = Vec::with_capacity(2);
-        if let Some(url) = &self.download_url {
-            urls.push(url.clone());
-        }
-        if let Some(url) = self.cdn_fallback_url()
-            && !urls.contains(&url)
-        {
-            urls.push(url);
-        }
-        urls
+    /// The file as one its author does not let launchers download, to be
+    /// looked for on disk instead. `None` when the manifest does not say which
+    /// CurseForge file it is, which leaves nothing to look for.
+    fn as_blocked(
+        &self,
+        disabled: bool,
+    ) -> Option<crate::api::curseforge_blocked::BlockedFile> {
+        Some(crate::api::curseforge_blocked::BlockedFile {
+            project_id: self.project_id?,
+            file_id: self.file_id?,
+            file_name: self.file_name.clone(),
+            size: self.length,
+            sha1: self.sha1.clone(),
+            source_kind: ContentSourceKind::CurseForge,
+            disabled,
+        })
     }
 }
 
@@ -281,17 +269,14 @@ async fn restore_one(
     expected: &ExpectedFile,
     disabled: bool,
 ) -> crate::Result<()> {
-    let candidates = expected.download_candidates();
-    if candidates.is_empty() {
+    let Some(url) = expected.download_url.as_deref() else {
         return Err(crate::ErrorKind::InputError(
             "CurseForge gives no way to download it".to_string(),
         )
         .into());
-    }
-
-    let mirrors = candidates.iter().map(String::as_str).collect::<Vec<_>>();
+    };
     let bytes = fetch::fetch_mirrors(
-        &mirrors,
+        &[url],
         expected.sha1.as_deref(),
         None,
         None,
@@ -388,6 +373,7 @@ pub(super) async fn restore_missing_addons(
 
     let total = missing.len() as u64;
     let mut failures = Vec::new();
+    let mut blocked = Vec::new();
 
     for (index, (expected, disabled, truncated)) in
         missing.into_iter().enumerate()
@@ -413,12 +399,25 @@ pub(super) async fn restore_missing_addons(
             );
         }
 
+        // A file its author keeps off launchers is looked for on disk with
+        // the others below, rather than fetched.
+        if expected.download_url.is_none()
+            && let Some(file) = expected.as_blocked(disabled)
+        {
+            blocked.push(file);
+            continue;
+        }
+
         if let Err(error) =
             restore_one(&state, instance_id, &expected, disabled).await
         {
             failures.push(format!("{} ({error})", expected.file_name));
         }
     }
+
+    // Whatever cannot be found waits for the user, and the content page says
+    // so; it is not a failure of the import.
+    crate::api::curseforge_blocked::settle(instance_id, blocked, &state).await;
 
     reporter
         .update(
@@ -608,22 +607,26 @@ mod tests {
     }
 
     #[test]
-    fn a_file_the_author_unlisted_is_still_on_the_cdn() {
+    fn a_file_the_author_keeps_off_launchers_is_looked_for_not_fetched() {
         let file = addon(
             r#"{
                 "addonID": 1,
-                "installedFile": { "id": 4712345, "fileName": "some mod.jar" }
+                "installedFile": {
+                    "id": 4712345,
+                    "fileName": "some mod.jar",
+                    "fileLength": 3,
+                    "hashes": [{ "value": "abc", "algo": 1 }]
+                }
             }"#,
         )
         .unwrap();
 
-        assert_eq!(
-            file.download_candidates(),
-            vec![
-                "https://edge.forgecdn.net/files/4712/345/some%20mod.jar"
-                    .to_string()
-            ]
-        );
+        assert!(file.download_url.is_none());
+        let blocked = file.as_blocked(true).unwrap();
+        assert_eq!(blocked.file_id, 4712345);
+        assert_eq!(blocked.size, Some(3));
+        assert_eq!(blocked.sha1.as_deref(), Some("abc"));
+        assert!(blocked.disabled);
     }
 
     #[test]
@@ -640,8 +643,7 @@ mod tests {
         )
         .unwrap();
 
-        // Nor is a file id too small to be a real one turned into a CDN path.
-        assert!(file.download_candidates().is_empty());
+        assert!(file.download_url.is_none());
     }
 
     #[test]

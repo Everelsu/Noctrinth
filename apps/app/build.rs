@@ -615,7 +615,21 @@ fn main() {
             .plugin(
                 "noctrinth-curseforge",
                 InlinedPlugin::new()
-                    .commands(&["curseforge_set_api_key"])
+                    .commands(&[
+                        "curseforge_set_api_key",
+                        "curseforge_set_options",
+                        "curseforge_clear_cache",
+                        "curseforge_search",
+                        "curseforge_get_categories",
+                        "curseforge_get_project",
+                        "curseforge_get_description",
+                        "curseforge_get_files",
+                        "curseforge_get_version",
+                        "curseforge_install_project",
+                        "curseforge_pending_files",
+                        "curseforge_check_pending_downloads",
+                        "curseforge_dismiss_pending_file",
+                    ])
                     .default_permission(
                         DefaultPermissionRule::AllowAllCommands,
                     ),

@@ -10,6 +10,20 @@ export interface FileItem {
 	readOnly?: boolean
 }
 
+/**
+ * What a file is, where the host knows: an installed project's mod or pack,
+ * drawn with that project's icon, name, version and author.
+ */
+export interface FileItemDescription {
+	/** Without one, the row keeps its file name and only takes the picture. */
+	title?: string
+	iconUrl?: string | null
+	version?: string | null
+	author?: { name: string; open?: () => void } | null
+	/** Opens the project's page. */
+	open?: () => void
+}
+
 export interface EditingFile {
 	name: string
 	path: string

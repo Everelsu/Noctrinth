@@ -106,6 +106,18 @@ pub enum CreatePackLocation {
         #[serde(default)]
         curseforge_api_key: Option<String>,
     },
+    // Noctrinth's own: a CurseForge modpack, downloaded inside the install
+    // job so it is in the task list, with its name and picture, from the
+    // moment it is asked for. `file_id` picks a file; without one the newest
+    // client file is used.
+    FromCurseforge {
+        project_id: String,
+        #[serde(default)]
+        file_id: Option<String>,
+        title: String,
+        #[serde(default)]
+        icon_url: Option<String>,
+    },
 }
 
 #[derive(Serialize, Deserialize)]
@@ -198,6 +210,31 @@ pub async fn get_instance_from_pack(
             }),
             ..Default::default()
         }),
+        // The pack's manifest sets the rest once it is downloaded.
+        CreatePackLocation::FromCurseforge {
+            project_id,
+            file_id,
+            title,
+            icon_url,
+        } => {
+            // Without it the instance reads "Vanilla 1.19.4" until the pack is
+            // downloaded; failing to ask only leaves that placeholder.
+            let (game_version, modloader) =
+                crate::api::curseforge_browse::modpack_target(
+                    &project_id,
+                    file_id.as_deref(),
+                )
+                .await
+                .unwrap_or_default();
+            let defaults = CreatePackInstance::default();
+            Ok(CreatePackInstance {
+                name: title,
+                icon_url,
+                game_version: game_version.unwrap_or(defaults.game_version),
+                modloader: modloader.unwrap_or(defaults.modloader),
+                ..defaults
+            })
+        }
         CreatePackLocation::FromFile {
             path,
             curseforge_api_key,

@@ -306,14 +306,69 @@ async fn list_content_inner(
     .await?;
     let files = files.into_iter().collect::<Vec<_>>();
 
-    content_files_to_content_items(
+    let mut items = content_files_to_content_items(
         &resolved.instance,
         resolved.content_set.loader,
         &files,
         cache_behaviour,
         state,
     )
+    .await?;
+    mark_curseforge_updates(&mut items, &resolved.content_set).await;
+    Ok(items)
+}
+
+/// Noctrinth's own: Modrinth's update check goes by file hash, which no
+/// CurseForge file has on Modrinth, so CurseForge is asked about those.
+/// Never fails the listing: without an answer the rows just show no update.
+async fn mark_curseforge_updates(
+    items: &mut [ContentItem],
+    content_set: &ContentSet,
+) {
+    let installed = items
+        .iter()
+        .filter(|item| {
+            item.update_version_id.is_none()
+                && item
+                    .source_kind
+                    .is_some_and(ContentSourceKind::has_curseforge_ids)
+        })
+        .filter_map(|item| {
+            Some((
+                item.project.as_ref()?.id.clone(),
+                item.version.as_ref()?.id.clone(),
+            ))
+        })
+        .collect::<Vec<_>>();
+    if installed.is_empty() {
+        return;
+    }
+    let updates = match crate::api::curseforge_browse::available_updates(
+        &installed,
+        &content_set.game_version,
+        content_set.loader.as_str(),
+    )
     .await
+    {
+        Ok(updates) => updates,
+        Err(error) => {
+            tracing::warn!("Could not check CurseForge for updates: {error}");
+            return;
+        }
+    };
+    for item in items {
+        let Some(update) = item
+            .project
+            .as_ref()
+            .and_then(|project| updates.get(&project.id))
+        else {
+            continue;
+        };
+        if item.version.as_ref().is_some_and(|v| &v.id != update) {
+            item.has_update = true;
+            item.update_version_id = Some(update.clone());
+        }
+    }
 }
 
 pub(crate) async fn list_linked_modpack_content(
@@ -993,10 +1048,22 @@ async fn content_files_to_content_items(
     };
     let project_ids = ids_of(false, false);
     let version_ids = ids_of(false, true);
-    let curseforge_project_ids = ids_of(true, false);
-    let curseforge_file_ids = ids_of(true, true);
+    let mut curseforge_project_ids = ids_of(true, false);
+    let mut curseforge_file_ids = ids_of(true, true);
 
-    let (meta, curseforge) = tokio::join!(
+    let instance_path = state.directories.instances_dir().join(&instance.path);
+    // Noctrinth's own: a file with no ids at all — dropped in by hand, or
+    // brought over from a launcher that never wrote them down — may still be
+    // a CurseForge file, and CurseForge can say which from its content.
+    let unidentified = files
+        .iter()
+        .filter(|(_, file)| file.metadata.is_none())
+        .map(|(_, file)| {
+            (file.hash.clone(), instance_path.join(&file.on_disk_path))
+        })
+        .collect::<Vec<_>>();
+
+    let (meta, (fingerprinted, curseforge)) = tokio::join!(
         resolve_metadata(
             &project_ids,
             &version_ids,
@@ -1004,11 +1071,34 @@ async fn content_files_to_content_items(
             &state.pool,
             &state.api_semaphore,
         ),
-        crate::api::curseforge_metadata::resolve(
-            &curseforge_project_ids,
-            &curseforge_file_ids,
-            state,
-        ),
+        async {
+            let fingerprinted =
+                crate::api::curseforge_metadata::identify(&unidentified, state)
+                    .await;
+            // From now on the entries themselves say what these files are.
+            if let Err(error) = crate::api::curseforge_metadata::adopt(
+                &instance.id,
+                &fingerprinted,
+                state,
+            )
+            .await
+            {
+                tracing::warn!(
+                    "Could not record recognised CurseForge files: {error}"
+                );
+            }
+            for ids in fingerprinted.values() {
+                curseforge_project_ids.insert(ids.project_id.clone());
+                curseforge_file_ids.insert(ids.version_id.clone());
+            }
+            let curseforge = crate::api::curseforge_metadata::resolve(
+                &curseforge_project_ids,
+                &curseforge_file_ids,
+                state,
+            )
+            .await;
+            (fingerprinted, curseforge)
+        },
     );
     let meta = meta?;
     let embedded_metadata =
@@ -1016,7 +1106,6 @@ async fn content_files_to_content_items(
             instance, loader, files, state,
         )
         .await?;
-    let instance_path = state.directories.instances_dir().join(&instance.path);
     let paths = files
         .iter()
         .map(|(_, file)| instance_path.join(&file.on_disk_path))
@@ -1055,17 +1144,20 @@ async fn content_files_to_content_items(
                 resolve_owner(project, &meta.teams, &meta.organizations)
             });
             // Noctrinth's own: what CurseForge answered, in the shape the row
-            // draws. Only reached for a file whose ids were CurseForge's, so
-            // it can never stand in for a Modrinth answer.
-            let curseforge_meta =
-                file.metadata.as_ref().filter(|_| is_curseforge(file)).map(
-                    |metadata| {
-                        (
-                            curseforge.projects.get(&metadata.project_id),
-                            curseforge.files.get(&metadata.version_id),
-                        )
-                    },
-                );
+            // draws. Only reached for a file whose ids were CurseForge's, or
+            // that had none and CurseForge recognised, so it can never stand
+            // in for a Modrinth answer.
+            let curseforge_meta = file
+                .metadata
+                .as_ref()
+                .filter(|_| is_curseforge(file))
+                .or_else(|| fingerprinted.get(&file.hash))
+                .map(|metadata| {
+                    (
+                        curseforge.projects.get(&metadata.project_id),
+                        curseforge.files.get(&metadata.version_id),
+                    )
+                });
             let curseforge_project =
                 curseforge_meta.and_then(|(project, _)| project);
             let curseforge_file = curseforge_meta.and_then(|(_, file)| file);

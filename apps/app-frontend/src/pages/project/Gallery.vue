@@ -8,7 +8,8 @@
 				<h3>{{ image.title }}</h3>
 				{{ image.description }}
 			</div>
-			<span class="gallery-time">
+			<!-- CurseForge screenshots carry no date. -->
+			<span v-if="image.created" class="gallery-time">
 				<CalendarIcon />
 				{{ formatDate(new Date(image.created)) }}
 			</span>

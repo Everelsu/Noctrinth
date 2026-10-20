@@ -2,6 +2,7 @@
 import {
 	CodeIcon,
 	CoffeeIcon,
+	CurseForgeIcon,
 	EyeOffIcon,
 	GaugeIcon,
 	HeartHandshakeIcon,
@@ -48,6 +49,7 @@ import LaunchHooksSettings from '@/features/settings/instance-defaults/launch-ho
 import WindowSettings from '@/features/settings/instance-defaults/window-settings.vue'
 import type { InstanceDefaultsTab } from '@/features/settings/settings-actions'
 import SyncingSettings from '@/features/settings/syncing/syncing-settings.vue'
+import CurseforgeSettings from '@/features/settings/system/CurseforgeSettings.vue'
 import ResourceManagementSettings from '@/features/settings/system/resource-management-settings/index.vue'
 import TroubleshootingSettings from '@/features/settings/system/troubleshooting-settings.vue'
 import { appSettingsKeys, appSettingsQueryOptions, set } from '@/helpers/settings.ts'
@@ -216,6 +218,15 @@ const tabs = [
 		category: tabCategories.system,
 		icon: WrenchIcon,
 		content: TroubleshootingSettings,
+	},
+	{
+		name: defineMessage({
+			id: 'app.settings.tabs.curseforge',
+			defaultMessage: 'CurseForge',
+		}),
+		category: tabCategories.system,
+		icon: CurseForgeIcon,
+		content: CurseforgeSettings,
 	},
 ]
 

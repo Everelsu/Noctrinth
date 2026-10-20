@@ -66,6 +66,7 @@ import { RouterView, useRoute, useRouter } from 'vue-router'
 import { useRouteLoading } from '@/app/runtime/use-route-loading'
 import AppSidebar from '@/app/shell/sidebar/index.vue'
 import AppTitleBar from '@/app/shell/title-bar/index.vue'
+import CurseforgePendingFilesModal from '@/components/ui/curseforge/CurseforgePendingFilesModal.vue'
 import ErrorModal from '@/components/ui/ErrorModal.vue'
 import HostingUpdateRequired from '@/components/ui/HostingUpdateRequired.vue'
 import AddServerToInstanceModal from '@/components/ui/install_flow/AddServerToInstanceModal.vue'
@@ -111,7 +112,7 @@ import {
 import { debugAnalytics, initAnalytics, trackEvent } from '@/helpers/analytics'
 import { check_reachable } from '@/helpers/auth.js'
 import { get_user, get_user_many, get_version } from '@/helpers/cache.js'
-import { registerCurseforgeApiKey } from '@/helpers/curseforge-key'
+import { applyCurseforgeSettings } from '@/helpers/curseforge-settings'
 import { gameSettingsQueryOptions } from '@/helpers/game-options'
 import {
 	install_create_modpack_instance,
@@ -248,6 +249,8 @@ const forceSidebar = computed(
 	() =>
 		route.path.startsWith('/browse') ||
 		route.path.startsWith('/project') ||
+		// Noctrinth's own: a CurseForge project's page has the same sidebar.
+		route.path.startsWith('/curseforge') ||
 		route.path.startsWith('/user'),
 )
 const sidebarVisible = computed(() => sidebarToggled.value || forceSidebar.value)
@@ -914,7 +917,7 @@ traceStartupStep('Initialize backend state', () => initialize_state(appEventChan
 		// the backend needs it to name installed CurseForge content. Nothing
 		// waits on it — a listing drawn before it lands simply has filenames in
 		// it, and redraws with names once the answers are cached.
-		void traceStartupStep('Register CurseForge key', registerCurseforgeApiKey).catch((err) =>
+		void traceStartupStep('Register CurseForge key', applyCurseforgeSettings).catch((err) =>
 			console.warn('Could not register the CurseForge key', err),
 		)
 		traceStartupStep('Initialize frontend state', setupApp).catch((err) => {
@@ -978,7 +981,12 @@ const errorModal = ref()
 const minecraftAuthErrorModal = ref()
 const minecraftRequiredModal = ref()
 
-const contentInstall = createContentInstall({ router, handleError, appEvents })
+const contentInstall = createContentInstall({
+	router,
+	handleError,
+	appEvents,
+	warn: (title, text) => addNotification({ title, text, type: 'warning' }),
+})
 provideContentInstall(contentInstall)
 const {
 	instances: contentInstallInstances,
@@ -1056,6 +1064,7 @@ const {
 } = serverInstall
 
 const modInstallModal = ref()
+const curseforgePendingModal = ref()
 const modpackAlreadyInstalledModal = ref()
 const contentInstallModpackAlreadyInstalledModal = ref()
 const addServerToInstanceModal = ref()
@@ -1508,6 +1517,7 @@ onMounted(() => {
 
 	setContentIncompatibilityWarningModal(incompatibilityWarningModal.value)
 	setContentInstallModal(modInstallModal.value)
+	contentInstall.setCurseforgePendingModal(curseforgePendingModal.value)
 	setContentInstallModpackAlreadyInstalledModal(contentInstallModpackAlreadyInstalledModal.value)
 	setModpackAlreadyInstalledModal(modpackAlreadyInstalledModal.value)
 	setServerAddServerToInstanceModal(addServerToInstanceModal.value)
@@ -2305,7 +2315,10 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 				:is-primary="(route) => route.path === '/'"
 				:is-subpage="
 					() =>
-						(route.path.startsWith('/browse') || route.path.startsWith('/project')) && route.query.i
+						(route.path.startsWith('/browse') ||
+							route.path.startsWith('/project') ||
+							route.path.startsWith('/curseforge')) &&
+						route.query.i
 				"
 			>
 				<PlayIcon class="ml-0.5" />
@@ -2315,7 +2328,10 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 				to="/browse/modpack"
 				:is-primary="() => route.path.startsWith('/browse') && !route.query.i && !route.query.sid"
 				:is-subpage="
-					(route) => route.path.startsWith('/project') && !route.query.i && !route.query.sid
+					(route) =>
+						(route.path.startsWith('/project') || route.path.startsWith('/curseforge')) &&
+						!route.query.i &&
+						!route.query.sid
 				"
 			>
 				<CompassIcon />
@@ -2552,6 +2568,7 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 		@create-anyway="handleModpackDuplicateCreateAnyway"
 		@go-to-instance="handleModpackDuplicateGoToInstance"
 	/>
+	<CurseforgePendingFilesModal ref="curseforgePendingModal" />
 	<AddServerToInstanceModal ref="addServerToInstanceModal" />
 	<ContentUpdaterModal
 		ref="incompatibilityWarningModal"

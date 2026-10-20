@@ -49,7 +49,11 @@ const SERVICE_NAMES = { google: 'Google', deepl: 'DeepL' } as const
 
 const locale = computed(() => String(unref(i18n.global.locale)))
 const target = computed(() => resolveTarget(locale.value))
-const originalHtml = computed(() => renderHighlightedString(props.description ?? ''))
+// Images and embeds load as they scroll into view and decode off the main
+// thread: a CurseForge description can carry dozens of large GIFs and videos.
+const lazyMedia = (html: string) =>
+	html.replace(/<(img|iframe)\b(?![^>]*\bloading=)/gi, '<$1 loading="lazy" decoding="async"')
+const originalHtml = computed(() => lazyMedia(renderHighlightedString(props.description ?? '')))
 
 const translation = ref<TranslatedHtml | null>(null)
 const showTranslated = ref(false)
@@ -201,7 +205,7 @@ watch(
 			<div
 				:key="showTranslated && translation ? 'translated' : 'original'"
 				class="markdown-body nt-body"
-				v-html="showTranslated && translation ? translation.html : originalHtml"
+				v-html="showTranslated && translation ? lazyMedia(translation.html) : originalHtml"
 			/>
 			<!-- eslint-enable vue/no-v-html -->
 		</Transition>

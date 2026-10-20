@@ -18,13 +18,49 @@
 				@click.stop
 				@update:model-value="emit('toggle-select')"
 			/>
-			<div class="pointer-events-none flex size-5 items-center justify-center">
+			<Avatar
+				v-if="description?.title || description?.iconUrl"
+				:src="description.iconUrl ?? undefined"
+				:alt="description.title ?? name"
+				size="2rem"
+				class="pointer-events-none shrink-0"
+			/>
+			<div v-else class="pointer-events-none flex size-5 items-center justify-center">
 				<component
 					:is="iconComponent"
 					class="size-5 group-hover:text-contrast group-focus:text-contrast"
 				/>
 			</div>
-			<div class="pointer-events-none flex flex-col truncate">
+			<div v-if="description?.title" class="flex flex-col truncate leading-tight">
+				<span class="truncate">
+					<button
+						v-if="description.open"
+						class="description-link font-semibold text-contrast"
+						@click.stop="description.open()"
+						@pointerdown.stop
+					>
+						{{ description.title }}
+					</button>
+					<span v-else class="font-semibold text-contrast">{{ description.title }}</span>
+				</span>
+				<span class="truncate text-xs text-secondary">
+					<template v-if="description.version">{{ description.version }} · </template>
+					<template v-if="description.author">
+						<button
+							v-if="description.author.open"
+							class="description-link"
+							@click.stop="description.author.open()"
+							@pointerdown.stop
+						>
+							{{ description.author.name }}
+						</button>
+						<span v-else>{{ description.author.name }}</span>
+						·
+					</template>
+					{{ name }}
+				</span>
+			</div>
+			<div v-else class="pointer-events-none flex flex-col truncate">
 				<span
 					class="pointer-events-none truncate group-hover:text-contrast group-focus:text-contrast"
 				>
@@ -89,6 +125,7 @@ import {
 } from '@modrinth/assets'
 import { computed, ref } from 'vue'
 
+import Avatar from '#ui/components/base/Avatar.vue'
 import type { ButtonMenuOption } from '#ui/components/base/buttons'
 import { TeleportOverflowMenu } from '#ui/components/base/buttons'
 import Checkbox from '#ui/components/base/Checkbox.vue'
@@ -108,7 +145,7 @@ import {
 	wasRecentDrag,
 } from '../composables/file-drag-state'
 import { injectFileManager } from '../providers/file-manager'
-import type { FileItem } from '../types'
+import type { FileItem, FileItemDescription } from '../types'
 import { joinDisplayPath } from '../utils'
 
 const { formatMessage } = useVIntl()
@@ -128,6 +165,7 @@ const messages = defineMessages({
 
 const props = defineProps<
 	FileItem & {
+		description?: FileItemDescription
 		index: number
 		isLast: boolean
 		selected: boolean
@@ -369,3 +407,21 @@ function handlePointerDown(e: PointerEvent) {
 	)
 }
 </script>
+
+<style scoped>
+.description-link {
+	pointer-events: auto;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+
+.description-link:hover,
+.description-link:focus-visible {
+	text-decoration: underline;
+}
+</style>

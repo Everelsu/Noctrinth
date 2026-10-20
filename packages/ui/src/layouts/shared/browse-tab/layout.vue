@@ -130,7 +130,7 @@ function getProjectCardTags(result: Labrinth.Search.v3.ResultSearchProject, disp
 	<template v-if="ctx.installContext?.value && ctx.variant !== 'web'">
 		<div
 			ref="stickyInstallHeaderRef"
-			class="sticky top-0 z-20 -mx-6 -mt-6 mb-4 rounded-tl-[--radius-xl] border-0 border-b border-solid bg-surface-1 px-6 py-4 border-surface-5"
+			class="browse-install-header sticky top-0 z-20 -mx-6 -mt-6 mb-4 rounded-tl-[--radius-xl] border-0 border-b border-solid bg-surface-1 px-6 py-4 border-surface-5"
 			:class="[isInstallHeaderStuck ? 'border-t' : '']"
 		>
 			<BrowseInstallHeader />
@@ -138,8 +138,18 @@ function getProjectCardTags(result: Labrinth.Search.v3.ResultSearchProject, disp
 	</template>
 	<SelectedProjectsFloatingBar v-if="ctx.installContext?.value && ctx.variant !== 'web'" />
 
+	<!-- Noctrinth's own: a place beside the type tabs for the app to choose
+	     where results come from. Renders exactly as before when unused. -->
+	<div v-if="$slots['tabs-end']" class="flex flex-wrap items-center justify-between gap-2">
+		<NavTabs
+			v-if="ctx.showProjectTypeTabs.value"
+			:links="ctx.selectableProjectTypes.value"
+			:replace="ctx.variant === 'app'"
+		/>
+		<slot name="tabs-end" />
+	</div>
 	<NavTabs
-		v-if="ctx.showProjectTypeTabs.value"
+		v-else-if="ctx.showProjectTypeTabs.value"
 		:links="ctx.selectableProjectTypes.value"
 		:replace="ctx.variant === 'app'"
 	/>

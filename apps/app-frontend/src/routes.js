@@ -135,6 +135,36 @@ export default new createRouter({
 				},
 			],
 		},
+		// Noctrinth's own: a CurseForge project, drawn with the same pieces as a
+		// Modrinth one. Description and gallery are the very same tabs.
+		{
+			path: '/curseforge/:id',
+			name: 'CurseforgeProject',
+			component: () => import('@/pages/curseforge/Index.vue'),
+			props: true,
+			children: [
+				{
+					path: '',
+					name: 'CurseforgeDescription',
+					component: () => import('@/pages/project/Description.vue'),
+				},
+				{
+					path: 'versions',
+					name: 'CurseforgeVersions',
+					component: () => import('@/pages/curseforge/Versions.vue'),
+				},
+				{
+					path: 'version/:version',
+					name: 'CurseforgeVersion',
+					component: () => import('@/pages/curseforge/Version.vue'),
+				},
+				{
+					path: 'gallery',
+					name: 'CurseforgeGallery',
+					component: () => import('@/pages/project/Gallery.vue'),
+				},
+			],
+		},
 		{
 			path: '/instance/:id',
 			name: 'Instance',

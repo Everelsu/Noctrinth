@@ -1,0 +1,32 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT sha1, project_id, file_id\n        FROM curseforge_fingerprint_cache\n        WHERE expires > $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "sha1",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "project_id",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "file_id",
+        "ordinal": 2,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "7bc0f562c307fc98f6f8e2347c6ddb0fec740296e5a346c3bed5b7b65acd633f"
+}

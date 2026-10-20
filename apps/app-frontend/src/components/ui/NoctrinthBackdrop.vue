@@ -120,6 +120,13 @@ watchEffect(() => {
 	backdrop-filter: blur(24px) saturate(1.3);
 }
 
+/* The header pinned over the browse results while adding to an instance: the
+   same frosted glass, so the picture shows and the results under it blur. */
+:root.noctrinth-backdrop-active .browse-install-header {
+	background-color: color-mix(in srgb, var(--color-bg) 55%, transparent);
+	backdrop-filter: blur(24px) saturate(1.3);
+}
+
 /* Menus and tooltips too, a touch more solid: they are small and read fast. */
 :root.noctrinth-backdrop-active [role='menu'],
 :root.noctrinth-backdrop-active .v-popper--theme-dropdown .v-popper__inner,

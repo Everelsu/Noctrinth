@@ -13,6 +13,7 @@ import type { BrowseInstallContentType, CardAction, ProjectType, Tags } from '@m
 import {
 	BrowsePageLayout,
 	BrowseSidebar,
+	Chips,
 	commonMessages,
 	ContextMenu,
 	CreationFlowModal,
@@ -43,7 +44,22 @@ import { useAppEvent } from '@/composables/use-app-event'
 import { useAppSettings } from '@/composables/use-app-settings.ts'
 import { get_project, get_search_results_v3, get_version_many } from '@/helpers/cache.js'
 import {
+	type BrowseSource,
+	CURSEFORGE_PROJECT_TYPES,
+	curseforgeCategoriesQueryOptions,
+	curseforgeEnabled,
+	curseforgeFilesIn,
+	curseforgeIdOf,
+	curseforgeKeys,
+	curseforgeProjectQueryOptions,
+	curseforgeSearch,
+	isCurseforgeId,
+} from '@/helpers/curseforge'
+import { curseforgeSettings } from '@/helpers/curseforge-settings'
+import {
+	get as getInstance,
 	get_installed_project_ids as getInstalledProjectIds,
+	get_linked_modpack_content,
 	getInstanceIconUrl,
 	list as listInstances,
 } from '@/helpers/instance'
@@ -352,7 +368,28 @@ async function refreshInstalledProjectIds() {
 	if (!ids) return
 
 	debugLog('installedProjectIds loaded', { count: ids.length })
-	installedProjectIds.value = ids
+	// Noctrinth's own: a CurseForge file's entry carries CurseForge's bare
+	// numeric id, while a CurseForge search hit is `cf-<id>`; both forms are
+	// kept so either one is recognised as installed.
+	// A pack from a CurseForge zip records its files only by fingerprint, so
+	// its listing is asked which CurseForge projects they are. A Modrinth
+	// pack's files carry their ids, so it is not asked.
+	const link = (await getInstance(targetInstanceId).catch(() => null))?.link
+	const packContent =
+		link && link.type !== 'modrinth_modpack'
+			? await queryClient
+					.fetchQuery({
+						queryKey: instanceKeys.linkedContent(targetInstanceId),
+						queryFn: () => get_linked_modpack_content(targetInstanceId),
+						staleTime: 30_000,
+					})
+					.catch(() => null)
+			: null
+	installedProjectIds.value = [
+		...ids,
+		...ids.filter((id) => /^\d+$/.test(id)).map(curseforgeIdOf),
+		...curseforgeFilesIn(packContent ?? []).map(([id]) => id),
+	]
 }
 
 async function initInstanceContext() {
@@ -613,9 +650,73 @@ const messages = defineMessages({
 		id: 'search.filter.locked.instance.sync',
 		defaultMessage: 'Sync with instance',
 	},
+	browseSourceLabel: {
+		id: 'app.browse.source.label',
+		defaultMessage: 'Where to browse',
+	},
 })
 
 const projectType = ref<ProjectType>(route.params.projectType as ProjectType)
+
+// Noctrinth's own: CurseForge as a second place to browse. Only offered when
+// the build has a key, only for the project types CurseForge has, and never
+// while adding to a server, whose flow is Modrinth's from end to end.
+const BROWSE_SOURCES: BrowseSource[] = ['modrinth', 'curseforge']
+const browseSource = ref<BrowseSource>(
+	curseforgeEnabled() &&
+		(route.query.src === 'cf' ||
+			(route.query.src === undefined && curseforgeSettings.defaultSource === 'curseforge'))
+		? 'curseforge'
+		: 'modrinth',
+)
+/** The source in the URL; only the one that is not the default is written. */
+function sourceQuery(source: BrowseSource) {
+	if (source === curseforgeSettings.defaultSource) return undefined
+	return source === 'curseforge' ? 'cf' : 'mr'
+}
+const curseforgeOffered = computed(
+	() =>
+		curseforgeEnabled() &&
+		!isServerContext.value &&
+		(CURSEFORGE_PROJECT_TYPES as readonly string[]).includes(projectType.value),
+)
+const isCurseforge = computed(() => curseforgeOffered.value && browseSource.value === 'curseforge')
+// The filters CurseForge can search by; every other one is hidden while
+// browsing it rather than silently ignored. Categories are CurseForge's own,
+// swapped in below.
+const CURSEFORGE_FILTER_TYPES = ['game_version', 'mod_loader', 'modpack_loader']
+const isCurseforgeFilterType = (id: string) =>
+	CURSEFORGE_FILTER_TYPES.includes(id) || id.startsWith('category_')
+
+// CurseForge's categories for the current type, in the shape the sidebar
+// draws Modrinth's in, so the very same filter list shows them.
+const curseforgeCategoriesQuery = useQuery(
+	computed(() => ({
+		...curseforgeCategoriesQueryOptions(projectType.value),
+		enabled: isCurseforge.value,
+	})),
+)
+// CurseForge's own categories, with their own names and pictures, in the
+// shape the sidebar draws Modrinth's in.
+const curseforgeCategories = computed(() => curseforgeCategoriesQuery.data.value ?? [])
+const browseTags: Ref<Tags> = computed(() =>
+	isCurseforge.value
+		? {
+				...tags.value,
+				categories: curseforgeCategories.value.map((category) => ({
+					icon: '',
+					icon_url: category.iconUrl,
+					name: category.name,
+					project_type: projectType.value,
+					header: 'categories',
+				})),
+			}
+		: tags.value,
+)
+
+function formatBrowseSource(source: BrowseSource) {
+	return source === 'curseforge' ? 'CurseForge' : 'Modrinth'
+}
 
 function resetInstanceContext() {
 	debugLog('instance context removed, resetting')
@@ -624,8 +725,8 @@ function resetInstanceContext() {
 	newlyInstalled.value = []
 	hiddenInstanceProjectIds.value = new Set()
 	hiddenInstanceProjectIdsInitialized.value = false
-	isServerInstance.value = false
-	browseBreadcrumb.reset()
+	// isServerInstance and the breadcrumbs follow the route by themselves; the
+	// old reset here named a breadcrumb that no longer exists and threw.
 	void refreshInstalledProjectIds()
 }
 
@@ -890,6 +991,10 @@ function getCardActions(
 		return getServerCardActions(result)
 	}
 
+	if (isCurseforgeId(result.project_id)) {
+		return getCurseforgeCardActions(result, currentProjectType)
+	}
+
 	const projectResult = result as Labrinth.Search.v3.ResultSearchProject & {
 		installed?: boolean
 		installing?: boolean
@@ -1053,6 +1158,87 @@ function getCardActions(
 	]
 }
 
+/**
+ * Noctrinth's own: the install button on a CurseForge result.
+ *
+ * It goes through the same install flow a Modrinth result does, so the user
+ * gets the same instance picker with its compatibility and "already
+ * installed" checks, the same incompatible-version warning, and a modpack
+ * becomes a new instance through the CurseForge pack installer.
+ */
+function getCurseforgeCardActions(
+	result: Labrinth.Search.v3.ResultSearchProject,
+	currentProjectType: string,
+): CardAction[] {
+	const projectResult = result as Labrinth.Search.v3.ResultSearchProject & { installed?: boolean }
+	const isModpack = currentProjectType === 'modpack'
+	const isInstalling = installingProjectIds.value.has(projectResult.project_id)
+	const isInstalled =
+		!isModpack && (projectResult.installed || allInstalledIds.value.has(projectResult.project_id))
+	const shouldUseInstallIcon = !!instance.value || isModpack
+
+	return [
+		{
+			key: 'install',
+			label: formatMessage(
+				isInstalling
+					? messages.installingToServer
+					: isInstalled
+						? commonMessages.installedLabel
+						: shouldUseInstallIcon
+							? commonMessages.installButton
+							: messages.addToAnInstance,
+			),
+			icon: isInstalling ? SpinnerIcon : isInstalled ? CheckIcon : PlusIcon,
+			iconClass: isInstalling ? 'animate-spin' : undefined,
+			disabled: isInstalled || isInstalling,
+			color: 'brand',
+			type: 'outlined',
+			onClick: async () => {
+				setProjectInstalling(projectResult.project_id, true)
+				try {
+					const selectedPreferences = getCurrentSelectedInstallPreferences(currentProjectType)
+					await installVersion(
+						projectResult.project_id,
+						null,
+						instance.value ? instance.value.id : null,
+						'SearchCard',
+						(versionId, installedProjectIds) => {
+							setProjectInstalling(projectResult.project_id, false)
+							if (versionId) {
+								onSearchResultsInstalled(installedProjectIds ?? [projectResult.project_id])
+							}
+						},
+						(profile) => {
+							router.push(`/instance/${profile}`)
+						},
+						{
+							preferredLoader: instance.value?.loader ?? selectedPreferences.loaders?.[0],
+							preferredGameVersion:
+								instance.value?.game_version ?? selectedPreferences.gameVersions?.[0],
+						},
+					)
+				} catch (err) {
+					setProjectInstalling(projectResult.project_id, false)
+					handleError(err)
+				}
+			},
+		},
+	]
+}
+
+/** Loads a CurseForge project's page ahead of a click on its card. */
+// Only a card the pointer rests on is loaded ahead, not every card it crosses.
+let hoverPrefetchTimer: ReturnType<typeof setTimeout> | undefined
+function prefetchCurseforgeProject(result: Labrinth.Search.v3.ResultSearchProject) {
+	clearTimeout(hoverPrefetchTimer)
+	if (!isCurseforgeId(result.project_id)) return
+	hoverPrefetchTimer = setTimeout(
+		() => void queryClient.prefetchQuery(curseforgeProjectQueryOptions(result.project_id)),
+		250,
+	)
+}
+
 function onSearchResultInstalled(id: string) {
 	if (isServerContext.value) {
 		markServerProjectInstalled(id)
@@ -1073,7 +1259,78 @@ function onSearchResultsInstalled(ids: string[]) {
 	newlyInstalled.value = Array.from(new Set([...newlyInstalled.value, ...ids]))
 }
 
+/**
+ * Noctrinth's own: the same search, asked of CurseForge.
+ *
+ * Paging, sort and the typed query come from the very request string a
+ * Modrinth search is sent; filters are read from the structured list instead,
+ * since CurseForge only understands a game version and loaders. What comes
+ * back is already in Labrinth's search-hit shape, so the cards cannot tell.
+ */
+async function searchCurseforge(requestParams: string) {
+	const params = new URLSearchParams(requestParams.replace(/^\?/, ''))
+	const provided = combinedProvidedFilters.value.filter(
+		(filter) => !searchState.overriddenProvidedFilterTypes.value.includes(filter.type),
+	)
+	const filters = [
+		...searchState.currentFilters.value.filter(
+			(filter) => !provided.some((p) => p.type === filter.type),
+		),
+		...provided,
+	].filter((filter) => !filter.negative)
+	const optionsOf = (...types: string[]) =>
+		filters.filter((filter) => types.includes(filter.type)).map((filter) => filter.option)
+	const categoryIds = filters
+		.filter((filter) => filter.type.startsWith('category_'))
+		.map((filter) => curseforgeCategories.value.find((c) => c.name === filter.option)?.id)
+		.filter((id): id is number => id !== undefined)
+
+	const query = {
+		query: params.get('query'),
+		project_type: projectType.value,
+		game_versions: optionsOf('game_version'),
+		loaders: optionsOf('mod_loader', 'modpack_loader'),
+		category_ids: categoryIds,
+		sort: params.get('index') ?? 'relevance',
+		offset: Number(params.get('offset') ?? 0),
+		limit: Number(params.get('limit') ?? 20),
+	}
+	const results = await queryClient.fetchQuery({
+		queryKey: ['search', 'curseforge', query],
+		queryFn: () => curseforgeSearch(query),
+		staleTime: 30_000,
+	})
+	// So a project's page can draw its header the moment its card is clicked.
+	for (const hit of results.hits) {
+		queryClient.setQueryData(curseforgeKeys.summary(hit.project_id), hit)
+	}
+
+	const installedIds = new Set([...newlyInstalled.value, ...(installedProjectIds.value ?? [])])
+	// CurseForge's search cannot leave projects out, so "hide installed" drops
+	// them from the page it answered, which then holds fewer than asked for.
+	const hideInstalled =
+		(instance.value || projectType.value === 'modpack') &&
+		(projectType.value === 'modpack' ? hideInstalledModpacks.value : instanceHideInstalled.value)
+	const hits = hideInstalled
+		? results.hits.filter((hit) => !hiddenInstanceProjectIds.value.has(hit.project_id))
+		: results.hits
+	return {
+		projectHits: hits.map((hit) => ({
+			...hit,
+			// CurseForge counts likes, not followers, so the card shows none.
+			follows: undefined as unknown as number,
+			installed: projectType.value !== 'modpack' && installedIds.has(hit.project_id),
+		})),
+		serverHits: [],
+		total_hits: results.total_hits,
+		per_page: results.hits_per_page,
+	}
+}
+
 async function search(requestParams: string) {
+	if (isCurseforge.value) {
+		return await searchCurseforge(requestParams)
+	}
 	debugLog('searching v3', requestParams)
 	const isServer = projectType.value === 'server'
 
@@ -1150,12 +1407,13 @@ const lockedFilterMessages = computed(() => ({
 
 const searchState = useBrowseSearch({
 	projectType,
-	tags,
+	tags: browseTags,
 	active: browseRouteActive,
 	providedFilters: combinedProvidedFilters,
 	search,
-	persistentQueryParams: ['i', 'ai', 'shi', 'sid', 'wid', 'from'],
+	persistentQueryParams: ['i', 'ai', 'shi', 'sid', 'wid', 'from', 'src'],
 	getExtraQueryParams: () => ({
+		src: sourceQuery(browseSource.value),
 		sid: serverIdQuery.value || undefined,
 		wid: effectiveServerWorldId.value || undefined,
 		ai: instanceHideInstalled.value ? 'true' : undefined,
@@ -1181,6 +1439,21 @@ watch(
 	},
 	{ deep: true },
 )
+
+watch(browseSource, async (source) => {
+	// The two have different categories, so none carries over; and pages do
+	// not line up between them, so a switch starts from the top.
+	searchState.currentFilters.value = searchState.currentFilters.value.filter(
+		(filter) => !filter.type.startsWith('category_'),
+	)
+	await searchState.setPage(1)
+	// The search only reruns by itself when its request changes, and the
+	// source is not part of the request, so it is rerun here.
+	await router.replace({
+		query: { ...route.query, src: sourceQuery(source) },
+	})
+	await searchState.refreshSearch()
+})
 
 watch(queuedServerInstallCount, (count) => {
 	if (count === 0) {
@@ -1257,15 +1530,29 @@ const dismissedPhotosensitivityFilterWarning = computed({
 })
 
 provideBrowseManager({
-	tags,
+	tags: browseTags,
 	projectType,
 	...searchState,
 	advancedFiltersCollapsed,
 	dismissedPhotosensitivityFilterWarning,
 	getProjectLink: (result: Labrinth.Search.v3.ResultSearchProject) => ({
-		path: `/project/${result.project_id ?? result.slug}`,
+		path: isCurseforgeId(result.project_id)
+			? `/curseforge/${result.project_id}`
+			: `/project/${result.project_id ?? result.slug}`,
 		query: getProjectBrowseQuery(),
 	}),
+	hiddenFilterTypes: computed(() =>
+		isCurseforge.value
+			? searchState.filters.value
+					.map((filter) => filter.id)
+					.filter((id) => !isCurseforgeFilterType(id))
+			: [],
+	),
+	onProjectHover: prefetchCurseforgeProject,
+	// CurseForge hands out at most 50 results a page.
+	maxResultsOptions: computed(() =>
+		isCurseforge.value ? [5, 10, 15, 20, 50] : [5, 10, 15, 20, 50, 100],
+	),
 	getServerProjectLink: (result: Labrinth.Search.v3.ResultSearchProject) => ({
 		path: `/project/${result.slug ?? result.project_id}`,
 		query: getProjectBrowseQuery(),
@@ -1332,6 +1619,17 @@ provideBrowseManager({
 <template>
 	<div class="flex flex-col gap-2 p-6">
 		<BrowsePageLayout>
+			<template v-if="curseforgeOffered" #tabs-end>
+				<Chips
+					v-model="browseSource"
+					:items="BROWSE_SOURCES"
+					:format-label="formatBrowseSource"
+					:capitalize="false"
+					:aria-label="formatMessage(messages.browseSourceLabel)"
+					size="small"
+					never-empty
+				/>
+			</template>
 			<template #after>
 				<ContextMenu ref="contextMenuRef" :label="formatMessage(messages.projectActionsLabel)">
 					<template #open_link="{ option }">

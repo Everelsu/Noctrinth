@@ -1,7 +1,34 @@
 <template>
 	<ReadyTransition :pending="loading">
 		<ContentPageLayout :highlighted-item-id="highlightedItemId">
+			<template v-if="curseforgePending.length > 0" #notices>
+				<Admonition
+					type="warning"
+					:header="
+						formatMessage(messages.curseforgePendingHeader, { count: curseforgePending.length })
+					"
+					inline-actions
+					center-content
+				>
+					{{ formatMessage(messages.curseforgePendingBody) }}
+					<template #actions>
+						<Button
+							type="colored"
+							color="orange"
+							@click="curseforgePendingModal?.show(instance.id, curseforgePending)"
+						>
+							<DownloadIcon aria-hidden="true" />
+							{{ formatMessage(messages.curseforgePendingAction) }}
+						</Button>
+					</template>
+				</Admonition>
+			</template>
 			<template #modals>
+				<CurseforgePendingFilesModal
+					ref="curseforgePendingModal"
+					@installed="onCurseforgeFilesInstalled"
+					@hide="refetchCurseforgePending"
+				/>
 				<SyncedContentModal ref="syncedContentModal" />
 				<UnknownFileWarningModal
 					ref="unknownFileWarningModal"
@@ -90,8 +117,16 @@
 
 <script setup lang="ts">
 import type { Labrinth } from '@modrinth/api-client'
-import { ClipboardCopyIcon, FolderOpenIcon, LockIcon, LockOpenIcon } from '@modrinth/assets'
 import {
+	ClipboardCopyIcon,
+	DownloadIcon,
+	FolderOpenIcon,
+	LockIcon,
+	LockOpenIcon,
+} from '@modrinth/assets'
+import {
+	Admonition,
+	Button,
 	type ButtonMenuOption,
 	commonMessages,
 	ConfirmDisableModal,
@@ -124,6 +159,7 @@ import { openUrl } from '@tauri-apps/plugin-opener'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import CurseforgePendingFilesModal from '@/components/ui/curseforge/CurseforgePendingFilesModal.vue'
 import ExportModal from '@/components/ui/ExportModal.vue'
 import SyncedContentModal from '@/components/ui/instance/SyncedContentModal.vue'
 import ShareModalWrapper from '@/components/ui/modal/ShareModalWrapper.vue'
@@ -133,6 +169,15 @@ import { useAppEvent } from '@/composables/use-app-event'
 import { useAppSettings } from '@/composables/use-app-settings.ts'
 import { trackEvent } from '@/helpers/analytics'
 import { get_project_versions, get_version, get_version_many } from '@/helpers/cache.js'
+import {
+	curseforgeForInstallFlow,
+	curseforgeGetFiles,
+	curseforgeIdOf,
+	curseforgePendingFiles,
+	type CurseforgeProject,
+	curseforgeVersionQueryOptions,
+	isCurseforgeContent,
+} from '@/helpers/curseforge'
 import { install_bulk_update_content } from '@/helpers/install'
 import {
 	add_project_from_path,
@@ -159,6 +204,20 @@ import { instanceContentQueryOptions, instanceKeys } from '../query-options'
 import { injectSharedInstance } from '../shared-instance-context'
 
 const messages = defineMessages({
+	curseforgePendingHeader: {
+		id: 'app.instance.content.curseforge-pending.header',
+		defaultMessage:
+			'{count, plural, one {# file needs} other {# files need}} to be downloaded by hand',
+	},
+	curseforgePendingBody: {
+		id: 'app.instance.content.curseforge-pending.body',
+		defaultMessage:
+			"Their authors don't let launchers download them, and they weren't found anywhere on this computer.",
+	},
+	curseforgePendingAction: {
+		id: 'app.instance.content.curseforge-pending.action',
+		defaultMessage: 'Download',
+	},
 	modpackContentHeader: {
 		id: 'app.instance.content.managed-content.modpack-header',
 		defaultMessage: 'Modpack content',
@@ -207,6 +266,46 @@ const messages = defineMessages({
 
 let savedModalState: ManagedContentModalState | null = null
 
+/**
+ * Noctrinth's own: a CurseForge row's files, in the shape the updater lists
+ * Modrinth versions in. Every game version, as Modrinth's list has, so its
+ * "show incompatible" means the same; a mod's only for this loader, which
+ * keeps the list to what could ever be picked. Changelogs come when a
+ * version is picked.
+ */
+async function curseforgeUpdaterVersions(item: ContentItem) {
+	const id = curseforgeIdOf(item.project!.id)
+	const isMod = item.project_type === 'mod'
+	const files = await curseforgeGetFiles(
+		id,
+		null,
+		isMod && instance.value.loader !== 'vanilla' ? instance.value.loader : null,
+	).catch((err) => {
+		handleError(err)
+		return []
+	})
+	const project = { id, project_type: isMod ? 'mod' : item.project_type } as CurseforgeProject
+	return curseforgeForInstallFlow(project, files).versions.map((version) => ({
+		...version,
+		changelog: null as unknown as string,
+	}))
+}
+
+/** A CurseForge file's changelog, kept like any other CurseForge answer. */
+async function curseforgeChangelog(projectId: string, fileId: string) {
+	const file = await queryClient.fetchQuery(
+		curseforgeVersionQueryOptions(curseforgeIdOf(projectId), fileId),
+	)
+	return file.changelog
+}
+
+/** Puts another version of a row in place: through CurseForge for its files. */
+function switchContentVersion(mod: ContentItem, versionId: string) {
+	return isCurseforgeContent(mod) && mod.project?.id
+		? installCurseforgeFile(instance.value.id, curseforgeIdOf(mod.project.id), versionId)
+		: switch_project_version_with_dependencies(instance.value.id, mod.file_path, versionId)
+}
+
 function contentOwnerLink(owner: ContentOwner): NonNullable<ContentOwner['link']> {
 	// Noctrinth's own: an author who is not a Modrinth user has no page in the
 	// app to route to, so their own is opened instead.
@@ -224,8 +323,12 @@ function contentOwnerLink(owner: ContentOwner): NonNullable<ContentOwner['link']
 
 const { formatMessage } = useVIntl()
 const { handleError, addNotification } = injectNotificationManager()
-const { installingItems, installRevisionByInstance, installFailureRevisionByInstance } =
-	injectContentInstall()
+const {
+	installingItems,
+	installRevisionByInstance,
+	installFailureRevisionByInstance,
+	installCurseforgeFile,
+} = injectContentInstall()
 const router = useRouter()
 const route = useRoute()
 const queryClient = useQueryClient()
@@ -977,6 +1080,9 @@ const bulkUpdateMutation = useMutation({
 async function bulkUpdateSelections(selections: UpdateAllSelection[]) {
 	if (isInstanceBusy.value || bulkUpdateMutation.isPending.value) return
 	const instanceId = instance.value.id
+	// Noctrinth's own: CurseForge rows are updated one by one through
+	// CurseForge; the bulk update only knows Modrinth versions.
+	const curseforgeUpdates: { item: ContentItem; versionId: string }[] = []
 	const updates = selections.flatMap((selection) => {
 		const item =
 			projects.value.find((project) => getContentItemId(project) === selection.id) ??
@@ -988,8 +1094,16 @@ async function bulkUpdateSelections(selections: UpdateAllSelection[]) {
 			item.version?.id === selection.version.id
 		)
 			return []
+		if (isCurseforgeContent(item)) {
+			curseforgeUpdates.push({ item, versionId: selection.version.id })
+			return []
+		}
 		return [{ project_path: item.file_path, version_id: selection.version.id }]
 	})
+	for (const { item, versionId } of curseforgeUpdates) {
+		await switchContentVersion(item, versionId).catch(handleError)
+	}
+	if (curseforgeUpdates.length > 0) await refreshContentState('must_revalidate')
 	if (!updates.length) return
 	await bulkUpdateMutation.mutateAsync({ instanceId, updates })
 }
@@ -1000,12 +1114,7 @@ async function updateProject(mod: ContentItem) {
 	if (!operation) return
 
 	try {
-		const updateVersionId = mod.update_version_id!
-		await switch_project_version_with_dependencies(
-			instance.value.id,
-			mod.file_path,
-			updateVersionId,
-		)
+		await switchContentVersion(mod, mod.update_version_id!)
 
 		trackEvent('InstanceProjectUpdate', {
 			loader: instance.value.loader,
@@ -1032,7 +1141,7 @@ async function switchProjectVersion(mod: ContentItem, version: Labrinth.Versions
 	const oldPath = mod.file_path
 
 	try {
-		await switch_project_version_with_dependencies(instance.value.id, oldPath, version.id)
+		await switchContentVersion({ ...mod, file_path: oldPath }, version.id)
 
 		trackEvent('InstanceProjectUpdate', {
 			loader: instance.value.loader,
@@ -1112,7 +1221,9 @@ async function handleUpdate(id: string) {
 	})
 	contentUpdaterModal.value?.show(initialVersionId)
 
-	const versions = await getUpdaterProjectVersions(item.project.id, initialVersionId)
+	const versions = isCurseforgeContent(item)
+		? await curseforgeUpdaterVersions(item)
+		: await getUpdaterProjectVersions(item.project.id, initialVersionId)
 
 	if (!isActiveUpdateRequest(requestId) || getContentItemId(updatingProject.value) !== itemId)
 		return
@@ -1159,6 +1270,9 @@ async function handleUpdate(id: string) {
 	})
 
 	updatingProjectVersions.value = versions
+	// Modrinth's versions come with their changelogs; CurseForge's are asked
+	// for, so the one the dialog opens on is asked for at once.
+	if (isCurseforgeContent(item) && preselectedVersion) void handleVersionSelect(preselectedVersion)
 }
 
 async function handleSwitchVersion(item: ContentItem) {
@@ -1179,7 +1293,9 @@ async function handleSwitchVersion(item: ContentItem) {
 	const initialVersionId = item.version.id
 	contentUpdaterModal.value?.show(initialVersionId, { switchMode: true })
 
-	const versions = await getUpdaterProjectVersions(item.project.id, initialVersionId)
+	const versions = isCurseforgeContent(item)
+		? await curseforgeUpdaterVersions(item)
+		: await getUpdaterProjectVersions(item.project.id, initialVersionId)
 
 	if (!isActiveUpdateRequest(requestId) || getContentItemId(updatingProject.value) !== itemId)
 		return
@@ -1187,6 +1303,8 @@ async function handleSwitchVersion(item: ContentItem) {
 	loadingVersions.value = false
 
 	updatingProjectVersions.value = versions
+	const current = versions.find((version) => version.id === initialVersionId)
+	if (isCurseforgeContent(item) && current) void handleVersionSelect(current)
 }
 
 async function handleManagedContentToggle(item: ContentItem, enabled: boolean) {
@@ -1348,6 +1466,19 @@ async function fetchAndSpliceVersion(
 	onError?: (err: unknown) => void,
 	requestId = activeUpdateRequestId.value,
 ) {
+	const updating = updatingProject.value
+	if (updating && isCurseforgeContent(updating) && updating.project?.id) {
+		const changelog = await curseforgeChangelog(updating.project.id, versionId).catch(
+			onError ?? (() => null),
+		)
+		const listed = updatingProjectVersions.value.find((version) => version.id === versionId)
+		if (!isActiveUpdateRequest(requestId) || changelog == null || !listed) return
+		updatingProjectVersions.value = mergeVersionIntoList(updatingProjectVersions.value, {
+			...listed,
+			changelog,
+		})
+		return
+	}
 	const fullVersion = (await get_version(versionId, cacheBehaviour).catch(
 		onError ?? (() => null),
 	)) as Labrinth.Versions.v2.Version | null
@@ -1657,6 +1788,15 @@ provideContentManager({
 	updateItem: handleUpdate,
 	bulkUpdateSelections,
 	bulkUpdatesInBackground: true,
+	// Noctrinth's own: CurseForge rows list CurseForge's files, never Modrinth's.
+	getItemVersions: (item: ContentItem) =>
+		isCurseforgeContent(item) && item.project?.id ? curseforgeUpdaterVersions(item) : null,
+	getItemChangelog: (itemId: string, versionId: string) => {
+		const item = projects.value.find((project) => getContentItemId(project) === itemId)
+		return item && isCurseforgeContent(item) && item.project?.id
+			? curseforgeChangelog(item.project.id, versionId)
+			: null
+	},
 	currentGameVersion: computed(() => instance.value.game_version),
 	currentLoader: computed(() => instance.value.loader),
 	runManagedContentPrimaryAction:
@@ -1680,26 +1820,37 @@ provideContentManager({
 			title: item.embedded_metadata?.name ?? item.file_name.replace('.disabled', ''),
 			icon_url: item.embedded_metadata?.icon_url ?? null,
 		},
-		// Noctrinth's own: a CurseForge project's id routes nowhere in the app,
-		// so the card links out to where the project actually lives. AutoLink
-		// opens a plain http(s) string externally.
-		projectLink: item.project?.external_url
-			? item.project.external_url
-			: item.project?.id
-				? { path: `/project/${item.project.id}`, query: { i: instancePage.instanceId.value } }
-				: undefined,
+		// Noctrinth's own: a CurseForge project opens its page in the app, like
+		// a Modrinth one; anything else from outside links out to where it
+		// lives. AutoLink opens a plain http(s) string externally.
+		projectLink:
+			isCurseforgeContent(item) && item.project?.id
+				? {
+						path: `/curseforge/${curseforgeIdOf(item.project.id)}`,
+						query: { i: instancePage.instanceId.value },
+					}
+				: item.project?.external_url
+					? item.project.external_url
+					: item.project?.id
+						? { path: `/project/${item.project.id}`, query: { i: instancePage.instanceId.value } }
+						: undefined,
 		version: item.version ?? {
 			id: item.file_name,
 			version_number: contentVersionLabel(item),
 			file_name: item.file_name,
 		},
 		versionLink:
-			item.project?.id && item.version?.id
+			isCurseforgeContent(item) && item.project?.id
 				? {
-						path: `/project/${item.project.id}/version/${item.version.id}`,
+						path: `/curseforge/${curseforgeIdOf(item.project.id)}/versions`,
 						query: { i: instancePage.instanceId.value },
 					}
-				: undefined,
+				: item.project?.id && item.version?.id
+					? {
+							path: `/project/${item.project.id}/version/${item.version.id}`,
+							query: { i: instancePage.instanceId.value },
+						}
+					: undefined,
 		owner: item.owner
 			? {
 					...item.owner,
@@ -1713,12 +1864,12 @@ provideContentManager({
 		locked: item.locked,
 		installing: item.installing,
 		hideDelete: !canDeleteContent(item),
-		// Changing version needs a version list, which only Modrinth content has.
+		// Changing version needs a version list: Modrinth's, or CurseForge's files.
 		hideSwitchVersion:
 			!canChangeContentVersion(item) ||
 			!item.project?.id ||
 			!item.version?.id ||
-			!!item.project?.external_url,
+			(!!item.project?.external_url && !isCurseforgeContent(item)),
 		hasUpdate: canUpdateProject(item) && !item.locked,
 	}),
 	showSharedContentFilter,
@@ -1786,8 +1937,31 @@ useAppEvent('instance', async (event) => {
 		!isBulkOperating.value
 	) {
 		await initProjects()
+		await refetchCurseforgePending()
 	}
 })
+
+// Noctrinth's own: CurseForge files this instance is waiting on because their
+// author keeps them off launchers. Asked for whenever the content is.
+const curseforgePendingModal = ref<InstanceType<typeof CurseforgePendingFilesModal> | null>(null)
+const curseforgePendingQuery = useQuery(
+	computed(() => ({
+		queryKey: ['curseforge', 'pending', instancePage.instanceId.value],
+		queryFn: () => curseforgePendingFiles(instancePage.instanceId.value),
+		enabled: !!instancePage.instanceId.value,
+		staleTime: 0,
+	})),
+)
+const curseforgePending = computed(() => curseforgePendingQuery.data.value ?? [])
+
+async function refetchCurseforgePending() {
+	await curseforgePendingQuery.refetch()
+}
+
+async function onCurseforgeFilesInstalled() {
+	await initProjects()
+	await refetchCurseforgePending()
+}
 
 onMounted(() => {
 	void getCurrentWebview()

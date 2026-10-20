@@ -65,6 +65,9 @@
 	"app.appearance-settings.minimize-launcher.description": {
 		"message": "Minimize Noctrinth when Minecraft starts."
 	},
+	"app.browse.source.label": {
+		"message": "Where to browse"
+	},
 	"app.changelog.author": {
 		"message": "Author"
 	},
@@ -179,6 +182,54 @@
 	"app.collection.visibility.unlisted": {
 		"message": "Unlisted"
 	},
+	"app.content-install.curseforge.missing-dependencies.text": {
+		"message": "These have no version for this instance and need to be added another way: {names}"
+	},
+	"app.content-install.curseforge.missing-dependencies.title": {
+		"message": "Installed without some of its dependencies"
+	},
+	"app.curseforge.pending.all-done": {
+		"message": "Everything is installed"
+	},
+	"app.curseforge.pending.description": {
+		"message": "{count, plural, one {This file's author doesn't} other {These files' authors don't}} let launchers download {count, plural, one {it} other {them}}. Download {count, plural, one {it} other {each one}} from CurseForge and it will be picked up from your Downloads folder automatically."
+	},
+	"app.curseforge.pending.done": {
+		"message": "Done"
+	},
+	"app.curseforge.pending.found": {
+		"message": "Installed"
+	},
+	"app.curseforge.pending.header": {
+		"message": "Download by hand"
+	},
+	"app.curseforge.pending.open-all": {
+		"message": "Open download pages"
+	},
+	"app.curseforge.pending.open-downloads": {
+		"message": "Open Downloads folder"
+	},
+	"app.curseforge.pending.open-page": {
+		"message": "Download"
+	},
+	"app.curseforge.pending.skip": {
+		"message": "Do without it"
+	},
+	"app.curseforge.pending.waiting": {
+		"message": "Watching your Downloads folder…"
+	},
+	"app.curseforge.project.add-favorite": {
+		"message": "Add to favorites"
+	},
+	"app.curseforge.project.load-error": {
+		"message": "This CurseForge project could not be loaded."
+	},
+	"app.curseforge.project.open-on-curseforge": {
+		"message": "Open on CurseForge"
+	},
+	"app.curseforge.project.remove-favorite": {
+		"message": "Remove from favorites"
+	},
 	"app.error-modal.copy-debug-info": {
 		"message": "Copy debug info"
 	},
@@ -292,6 +343,15 @@
 	},
 	"app.instance.add-content.install": {
 		"message": "Install content"
+	},
+	"app.instance.content.curseforge-pending.action": {
+		"message": "Download"
+	},
+	"app.instance.content.curseforge-pending.body": {
+		"message": "Their authors don't let launchers download them, and they weren't found anywhere on this computer."
+	},
+	"app.instance.content.curseforge-pending.header": {
+		"message": "{count, plural, one {# file needs} other {# files need}} to be downloaded by hand"
 	},
 	"app.instance.logs.live": {
 		"message": "Live Log"
@@ -761,6 +821,9 @@
 	"app.settings.tabs.changelog": {
 		"message": "Changelog"
 	},
+	"app.settings.tabs.curseforge": {
+		"message": "CurseForge"
+	},
 	"app.skins.ely.edit.texture-locked": {
 		"message": "Ely.by keeps a texture and its skin together, so this one cannot be swapped out. Upload the new texture as another skin instead."
 	},
@@ -1201,6 +1264,54 @@
 	},
 	"minecraft-account.label-microsoft": {
 		"message": "Microsoft account"
+	},
+	"noctrinth.settings.curseforge.check-updates": {
+		"message": "Check CurseForge for updates of its mods and packs"
+	},
+	"noctrinth.settings.curseforge.clear-cache": {
+		"message": "Forget CurseForge's answers"
+	},
+	"noctrinth.settings.curseforge.clear-cache-hint": {
+		"message": "They are kept for five minutes; this asks again right away."
+	},
+	"noctrinth.settings.curseforge.cleared": {
+		"message": "Forgotten"
+	},
+	"noctrinth.settings.curseforge.default-source": {
+		"message": "Browse opens on"
+	},
+	"noctrinth.settings.curseforge.description": {
+		"message": "Browse and install from CurseForge, recognise its files in your instances and keep them up to date. Off, and the launcher asks CurseForge nothing."
+	},
+	"noctrinth.settings.curseforge.no-key": {
+		"message": "This build has no CurseForge API key, so CurseForge is unavailable."
+	},
+	"noctrinth.settings.curseforge.recognize-files": {
+		"message": "Recognise mods added by hand or from other launchers by their fingerprint"
+	},
+	"noctrinth.settings.curseforge.release-type": {
+		"message": "Update to"
+	},
+	"noctrinth.settings.curseforge.release-type.alpha": {
+		"message": "Any file, alphas too"
+	},
+	"noctrinth.settings.curseforge.release-type.beta": {
+		"message": "Releases and betas"
+	},
+	"noctrinth.settings.curseforge.release-type.release": {
+		"message": "Releases only"
+	},
+	"noctrinth.settings.curseforge.search-other-launchers": {
+		"message": "Look for files kept off launchers in other launchers' instances, not only in Downloads"
+	},
+	"noctrinth.settings.curseforge.source.curseforge": {
+		"message": "CurseForge"
+	},
+	"noctrinth.settings.curseforge.source.modrinth": {
+		"message": "Modrinth"
+	},
+	"noctrinth.settings.curseforge.title": {
+		"message": "CurseForge"
 	},
 	"notifications.back": {
 		"message": "Back"

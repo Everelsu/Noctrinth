@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        INSERT INTO curseforge_pending_files (\n            instance_id, file_id, project_id, file_name, size, sha1,\n            source_kind, disabled, added\n        )\n        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)\n        ON CONFLICT(instance_id, file_id) DO UPDATE SET\n            project_id = excluded.project_id,\n            file_name = excluded.file_name,\n            size = excluded.size,\n            sha1 = excluded.sha1,\n            source_kind = excluded.source_kind,\n            disabled = excluded.disabled\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 9
+    },
+    "nullable": []
+  },
+  "hash": "5300bfef4de372bebbfd1cdd8c0b402a238dc09ff2d685f0eb4946c547bcf3ee"
+}

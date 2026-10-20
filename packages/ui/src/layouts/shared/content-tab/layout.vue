@@ -869,6 +869,7 @@ function getUpdateAllCandidates(items: ContentItem[]) {
 
 async function loadRecommendedUpdateVersions(items: ContentItem[]) {
 	const ids = [...new Set(items.map((item) => item.update_version_id!))].sort()
+	if (ids.length === 0) return new Map<string, Labrinth.Versions.v2.Version>()
 	const batches = await Promise.all(
 		chunk(ids, 100).map(async (batch) => {
 			try {
@@ -913,10 +914,28 @@ async function openUpdateAll(items: ContentItem[]) {
 	if (requestId !== updateAllRequestId) return
 	updateAllModal.value?.show()
 
-	const recommendedPromise = loadRecommendedUpdateVersions(candidates)
+	// Rows the host lists versions for itself never reach Modrinth's API.
+	const hostedVersions = new Map<string, Promise<Labrinth.Versions.v2.Version[]>>()
+	for (const item of candidates) {
+		const versions = ctx.getItemVersions?.(item)
+		if (versions) hostedVersions.set(getItemId(item), versions)
+	}
+	const modrinthCandidates = candidates.filter((item) => !hostedVersions.has(getItemId(item)))
+	const recommendedPromise = loadRecommendedUpdateVersions(modrinthCandidates)
 	const projectVersions = new Map<string, Labrinth.Versions.v2.Version[]>()
 	let failedToLoadVersions = false
-	const projectIds = [...new Set(candidates.map((item) => item.project!.id))]
+	const itemVersions = new Map<string, Labrinth.Versions.v2.Version[]>()
+	await Promise.all(
+		[...hostedVersions].map(async ([id, versions]) => {
+			try {
+				itemVersions.set(id, await versions)
+			} catch {
+				failedToLoadVersions = true
+			}
+		}),
+	)
+	if (requestId !== updateAllRequestId) return
+	const projectIds = [...new Set(modrinthCandidates.map((item) => item.project!.id))]
 	for (const batch of chunk(projectIds, 8)) {
 		await Promise.all(
 			batch.map(async (projectId) => {
@@ -942,7 +961,8 @@ async function openUpdateAll(items: ContentItem[]) {
 
 	updateAllItems.value = candidates.map((item) => {
 		const preferredVersionId = item.update_version_id!
-		const versions = projectVersions.get(item.project!.id) ?? []
+		const versions =
+			itemVersions.get(getItemId(item)) ?? projectVersions.get(item.project!.id) ?? []
 		const preferredVersion =
 			queryClient.getQueryData<Labrinth.Versions.v2.Version>([
 				'labrinth',
@@ -996,6 +1016,11 @@ async function openUpdateAll(items: ContentItem[]) {
 
 function preloadUpdateAllChangelog(selection: UpdateAllSelection) {
 	if (selection.version.changelog != null) return
+	const hosted = ctx.getItemChangelog?.(selection.id, selection.version.id)
+	if (hosted) {
+		void hosted.catch(() => undefined)
+		return
+	}
 	void queryClient.prefetchQuery({
 		queryKey: ['labrinth', 'version', 'v2', selection.version.id],
 		queryFn: () => client.labrinth.versions_v2.getVersion(selection.version.id),
@@ -1008,11 +1033,14 @@ async function loadUpdateAllChangelog(selection: UpdateAllSelection) {
 	const requestId = updateAllRequestId
 	loadingUpdateAllChangelog.value = true
 	try {
-		const version = await queryClient.fetchQuery({
-			queryKey: ['labrinth', 'version', 'v2', selection.version.id],
-			queryFn: () => client.labrinth.versions_v2.getVersion(selection.version.id),
-			staleTime: 5 * 60_000,
-		})
+		const hosted = ctx.getItemChangelog?.(selection.id, selection.version.id)
+		const version = hosted
+			? { ...selection.version, changelog: await hosted }
+			: await queryClient.fetchQuery({
+					queryKey: ['labrinth', 'version', 'v2', selection.version.id],
+					queryFn: () => client.labrinth.versions_v2.getVersion(selection.version.id),
+					staleTime: 5 * 60_000,
+				})
 		if (requestId !== updateAllRequestId) return
 		updateAllItems.value = updateAllItems.value.map((item) => ({
 			...item,
@@ -1102,6 +1130,9 @@ const confirmUnlinkModal = ref<InstanceType<typeof ConfirmUnlinkModal>>()
 			</div>
 
 			<template v-else>
+				<!-- Noctrinth's own: a place above the list for notices about the
+				     content itself. Renders nothing when unused. -->
+				<slot name="notices" />
 				<ManagedContentCard
 					v-if="ctx.managedContent.value"
 					:data="ctx.managedContent.value.card"

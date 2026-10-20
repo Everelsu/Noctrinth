@@ -7,6 +7,8 @@ import { createContext } from '.'
 
 export interface ImageViewerEditorContext {
 	loadEditorData: (source: ImageViewerEditorSource) => Promise<ImageViewerEditorData>
+	/** Loads an image by URL, for hosts the page itself may not fetch from. */
+	fetchImage?: (src: string) => Promise<Blob>
 	onShow?: () => void
 	onHide?: () => void
 }

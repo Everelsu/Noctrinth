@@ -1,0 +1,56 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT file_id, project_id, file_name, size, sha1, source_kind,\n               disabled\n        FROM curseforge_pending_files\n        WHERE instance_id = $1\n        ORDER BY added, file_name\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "file_id",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "project_id",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "file_name",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "size",
+        "ordinal": 3,
+        "type_info": "Integer"
+      },
+      {
+        "name": "sha1",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "source_kind",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "disabled",
+        "ordinal": 6,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "aa421c67b094fac1466180f572fbc54a151b36f21b30ea84e1488f1dc503da95"
+}

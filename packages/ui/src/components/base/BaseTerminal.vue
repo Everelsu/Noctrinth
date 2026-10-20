@@ -72,15 +72,14 @@ const props = withDefaults(
 	},
 )
 
-const FROG = [
-	'\x1B[32m     _    _ \x1B[37m',
-	'\x1B[32m    (o)--(o)      \x1B[37m',
-	'\x1B[32m   /.______.\\\x1B[37m',
-	'\x1B[32m   \\________/     \x1B[37m',
-	'\x1B[32m  ./        \\.    \x1B[37m',
-	'\x1B[32m ( .        , )\x1B[37m',
-	'\x1B[32m  \\ \\_\\\\ //_/ /\x1B[37m',
-	'\x1B[32m   ~~  ~~  ~~\x1B[37m',
+// Noctrinth's own: a night owl in the launcher's purple, eyes lit, in place of
+// Modrinth's frog.
+const OWL = [
+	'\x1B[35m      \\\x1B[37m',
+	'\x1B[35m       \\   ,___,\x1B[37m',
+	'\x1B[35m           [\x1B[33mO\x1B[35m.\x1B[33mo\x1B[35m]\x1B[37m',
+	'\x1B[35m           /)__)\x1B[37m',
+	'\x1B[35m        ----"--"----\x1B[37m',
 ]
 
 const BUBBLE_WIDTH = 56
@@ -104,7 +103,7 @@ function wrapWords(text: string, width: number): string[] {
 	return lines.length > 0 ? lines : ['']
 }
 
-/** The speech bubble the frog is saying, drawn to fit whatever it says. */
+/** The speech bubble the owl is saying, drawn to fit whatever it says. */
 function speechBubble(text: string): string[] {
 	const lines = wrapWords(text, BUBBLE_WIDTH)
 	const inner = Math.max(...lines.map((line) => line.length))
@@ -181,7 +180,7 @@ function writeEmptyState() {
 				? messages.instanceEmptyState
 				: undefined
 	if (emptyState) {
-		for (const line of [...speechBubble(formatMessage(emptyState)), ...FROG]) {
+		for (const line of [...speechBubble(formatMessage(emptyState)), ...OWL]) {
 			terminal.value.writeln(line)
 		}
 	}

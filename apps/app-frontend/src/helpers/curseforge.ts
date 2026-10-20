@@ -117,6 +117,66 @@ export interface CurseforgePendingFile {
 export interface CurseforgeInstallOutcome {
 	installed: string[]
 	pending: CurseforgePendingFile[]
+	missing_dependencies: { project_id: string; name: string | null; website_url: string | null }[]
+}
+
+/** The bare numeric id a CurseForge content entry stores. */
+export function curseforgeNumericId(id: string): string {
+	return id.startsWith(CURSEFORGE_ID_PREFIX) ? id.slice(CURSEFORGE_ID_PREFIX.length) : id
+}
+
+/**
+ * A CurseForge project and its files in the shapes the shared install flow
+ * reads a Modrinth project and its versions in, so the same instance picker,
+ * compatibility checks and incompatible-version warning serve both. Only the
+ * fields that flow reads are filled.
+ */
+export function curseforgeForInstallFlow(project: CurseforgeProject, files: CurseforgeFile[]) {
+	const versions = files
+		.slice()
+		.sort((a, b) => (b.date_published ?? '').localeCompare(a.date_published ?? ''))
+		.map((file) => ({
+			id: file.id,
+			project_id: project.id,
+			name: file.name,
+			version_number: file.name,
+			version_type: file.version_type,
+			game_versions: file.game_versions,
+			loaders: file.loaders,
+			date_published: file.date_published ?? '',
+			downloads: file.downloads,
+			changelog: '',
+			dependencies: [],
+			featured: false,
+			status: 'listed',
+			files: [
+				{
+					filename: file.file_name,
+					size: file.size ?? 0,
+					primary: true,
+					url: '',
+					hashes: {},
+				},
+			],
+		})) as unknown as Labrinth.Versions.v2.Version[]
+
+	return {
+		project: {
+			id: project.id,
+			slug: project.slug,
+			title: project.name,
+			description: project.summary,
+			icon_url: project.icon_url,
+			raw_icon_url: project.icon_url,
+			project_type: project.project_type,
+			organization: null,
+			team: undefined,
+			versions: versions.map((version) => version.id),
+			game_versions: project.game_versions,
+			loaders: project.loaders,
+		} as unknown as Labrinth.Projects.v2.Project,
+		versions,
+	}
 }
 
 const plugin = (command: string) => `plugin:noctrinth-curseforge|${command}`

@@ -27,35 +27,33 @@ import {
 import { useQuery, useQueryClient } from '@tanstack/vue-query'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { computed, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
-import CurseforgeInstancePickerModal from '@/components/ui/curseforge/CurseforgeInstancePickerModal.vue'
-import CurseforgePendingFilesModal from '@/components/ui/curseforge/CurseforgePendingFilesModal.vue'
 import InstanceIndicator from '@/components/ui/InstanceIndicator.vue'
 import {
 	curseforgeDescriptionQueryOptions,
-	curseforgeDownloadModpack,
 	curseforgeFilesQueryOptions,
 	curseforgeIdOf,
-	curseforgeInstallProject,
 	curseforgeKeys,
 	curseforgeProjectQueryOptions,
 	type CurseforgeSearchHit,
 } from '@/helpers/curseforge'
-import { install_create_modpack_instance, packLocationFromFile } from '@/helpers/install'
 import {
 	get as getInstance,
 	get_installed_project_ids as getInstalledProjectIds,
 } from '@/helpers/instance'
 import { get_game_versions, get_loaders } from '@/helpers/tags'
 import type { GameInstance } from '@/helpers/types'
+import { injectContentInstall } from '@/providers/content-install'
 
 const props = defineProps<{ id: string }>()
 
 const { handleError } = injectNotificationManager()
 const { formatMessage } = useVIntl()
 const route = useRoute()
+const router = useRouter()
 const queryClient = useQueryClient()
+const { install: installVersion } = injectContentInstall()
 
 const messages = defineMessages({
 	descriptionTab: { id: 'app.curseforge.project.description-tab', defaultMessage: 'Description' },
@@ -112,11 +110,6 @@ async function refreshInstance() {
 	}
 }
 watch(instanceId, refreshInstance, { immediate: true })
-
-const pickerModal = ref<InstanceType<typeof CurseforgeInstancePickerModal> | null>(null)
-const pendingModal = ref<InstanceType<typeof CurseforgePendingFilesModal> | null>(null)
-/** The file chosen on the versions tab, waiting for an instance to go into. */
-const pickedFileId = ref<string | null>(null)
 
 const projectType = computed(
 	() => project.value?.project_type ?? summary.value?.project_types[0] ?? 'mod',
@@ -197,50 +190,34 @@ const tabs = computed(() => [
 ])
 
 /**
- * Install the project, or one file of it. A modpack becomes a new instance
- * through the regular CurseForge pack installer; anything else goes into the
- * instance the page was opened from, or one the user picks.
+ * Install the project, or one file of it, through the same flow a Modrinth
+ * project's page uses: with its instance picker and compatibility checks when
+ * the page was not opened from an instance, its incompatible-version warning
+ * when it was, and a new instance for a modpack.
  */
 async function install(fileId: string | null = null) {
 	if (installing.value) return
-	if (isModpack.value) {
-		installing.value = true
-		try {
-			const path = await curseforgeDownloadModpack(props.id, fileId)
-			await install_create_modpack_instance(packLocationFromFile(path))
-		} catch (err) {
-			handleError(err)
-		} finally {
-			installing.value = false
-		}
-		return
-	}
-	if (!instanceId.value) {
-		pickedFileId.value = fileId
-		pickerModal.value?.show()
-		return
-	}
-	await installInto(instanceId.value, fileId)
-}
-
-async function installInto(targetInstanceId: string, fileId: string | null) {
 	installing.value = true
 	try {
-		const outcome = await curseforgeInstallProject(targetInstanceId, props.id, fileId)
-		if (outcome.pending.length > 0) {
-			pendingModal.value?.show(targetInstanceId, outcome.pending)
-		}
-		if (targetInstanceId === instanceId.value) await refreshInstance()
+		await installVersion(
+			props.id,
+			fileId,
+			instanceId.value,
+			'ProjectPage',
+			(versionId) => {
+				installing.value = false
+				if (versionId) void refreshInstance()
+			},
+			(createdInstanceId) => {
+				router.push(`/instance/${encodeURIComponent(createdInstanceId)}`)
+			},
+			{ showProjectInfo: !instanceId.value },
+		)
 	} catch (err) {
 		handleError(err)
 	} finally {
 		installing.value = false
 	}
-}
-
-function onInstancePicked(targetInstanceId: string) {
-	void installInto(targetInstanceId, pickedFileId.value)
-	pickedFileId.value = null
 }
 </script>
 
@@ -304,7 +281,5 @@ function onInstancePicked(targetInstanceId: string) {
 			<SpinnerIcon class="size-8 animate-spin text-secondary" />
 		</div>
 		<p v-else class="p-6 text-secondary">{{ formatMessage(messages.loadError) }}</p>
-		<CurseforgeInstancePickerModal ref="pickerModal" @pick="onInstancePicked" />
-		<CurseforgePendingFilesModal ref="pendingModal" />
 	</div>
 </template>

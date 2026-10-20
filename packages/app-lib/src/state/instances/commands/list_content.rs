@@ -1020,6 +1020,18 @@ async fn content_files_to_content_items(
             let fingerprinted =
                 crate::api::curseforge_metadata::identify(&unidentified, state)
                     .await;
+            // From now on the entries themselves say what these files are.
+            if let Err(error) = crate::api::curseforge_metadata::adopt(
+                &instance.id,
+                &fingerprinted,
+                state,
+            )
+            .await
+            {
+                tracing::warn!(
+                    "Could not record recognised CurseForge files: {error}"
+                );
+            }
             for ids in fingerprinted.values() {
                 curseforge_project_ids.insert(ids.project_id.clone());
                 curseforge_file_ids.insert(ids.version_id.clone());

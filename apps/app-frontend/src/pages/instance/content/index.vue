@@ -169,7 +169,7 @@ import { useAppEvent } from '@/composables/use-app-event'
 import { useAppSettings } from '@/composables/use-app-settings.ts'
 import { trackEvent } from '@/helpers/analytics'
 import { get_project_versions, get_version, get_version_many } from '@/helpers/cache.js'
-import { curseforgePendingFiles } from '@/helpers/curseforge'
+import { curseforgeIdOf, curseforgePendingFiles } from '@/helpers/curseforge'
 import { install_bulk_update_content } from '@/helpers/install'
 import {
 	add_project_from_path,
@@ -257,6 +257,19 @@ const messages = defineMessages({
 })
 
 let savedModalState: ManagedContentModalState | null = null
+
+/**
+ * Noctrinth's own: whether a row is a CurseForge project — installed from
+ * CurseForge, part of a CurseForge pack, or recognised as one by its
+ * fingerprint (whose entry is only marked so from the next listing on).
+ */
+function isCurseforgeContent(item: ContentItem) {
+	return (
+		item.source_kind === 'curseforge' ||
+		item.source_kind === 'curseforge_modpack' ||
+		!!item.project?.external_url?.startsWith('https://www.curseforge.com/')
+	)
+}
 
 function contentOwnerLink(owner: ContentOwner): NonNullable<ContentOwner['link']> {
 	// Noctrinth's own: an author who is not a Modrinth user has no page in the
@@ -1725,26 +1738,37 @@ provideContentManager({
 			title: item.embedded_metadata?.name ?? item.file_name.replace('.disabled', ''),
 			icon_url: item.embedded_metadata?.icon_url ?? null,
 		},
-		// Noctrinth's own: a CurseForge project's id routes nowhere in the app,
-		// so the card links out to where the project actually lives. AutoLink
-		// opens a plain http(s) string externally.
-		projectLink: item.project?.external_url
-			? item.project.external_url
-			: item.project?.id
-				? { path: `/project/${item.project.id}`, query: { i: instancePage.instanceId.value } }
-				: undefined,
+		// Noctrinth's own: a CurseForge project opens its page in the app, like
+		// a Modrinth one; anything else from outside links out to where it
+		// lives. AutoLink opens a plain http(s) string externally.
+		projectLink:
+			isCurseforgeContent(item) && item.project?.id
+				? {
+						path: `/curseforge/${curseforgeIdOf(item.project.id)}`,
+						query: { i: instancePage.instanceId.value },
+					}
+				: item.project?.external_url
+					? item.project.external_url
+					: item.project?.id
+						? { path: `/project/${item.project.id}`, query: { i: instancePage.instanceId.value } }
+						: undefined,
 		version: item.version ?? {
 			id: item.file_name,
 			version_number: contentVersionLabel(item),
 			file_name: item.file_name,
 		},
 		versionLink:
-			item.project?.id && item.version?.id
+			isCurseforgeContent(item) && item.project?.id
 				? {
-						path: `/project/${item.project.id}/version/${item.version.id}`,
+						path: `/curseforge/${curseforgeIdOf(item.project.id)}/versions`,
 						query: { i: instancePage.instanceId.value },
 					}
-				: undefined,
+				: item.project?.id && item.version?.id
+					? {
+							path: `/project/${item.project.id}/version/${item.version.id}`,
+							query: { i: instancePage.instanceId.value },
+						}
+					: undefined,
 		owner: item.owner
 			? {
 					...item.owner,

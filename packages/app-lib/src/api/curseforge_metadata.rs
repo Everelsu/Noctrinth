@@ -455,6 +455,53 @@ pub async fn identify(
     found
 }
 
+/// Write what [`identify`] found onto the instance's own content entries, so
+/// a recognised file stops being "local": it then counts as installed when
+/// that project is browsed for, opens its CurseForge page, and can be
+/// updated like any CurseForge mod.
+///
+/// Only entries that carry no ids and were added locally are touched; a file
+/// Modrinth or a pack already claimed is left exactly as it was.
+pub async fn adopt(
+    instance_id: &str,
+    found: &HashMap<String, FileMetadata>,
+    state: &State,
+) -> crate::Result<()> {
+    if found.is_empty() {
+        return Ok(());
+    }
+    let modified_at = Utc::now().timestamp();
+    let mut tx = state.pool.begin().await?;
+    for (sha1, ids) in found {
+        // ponytail: runtime-checked query, so adding it needs no offline
+        // sqlx data; switch to query! next time .sqlx is regenerated.
+        sqlx::query(
+            "
+            UPDATE instance_content_entries
+            SET project_id = ?, version_id = ?, source_kind = 'curseforge',
+                modified_at = ?
+            WHERE instance_id = ?
+                AND project_id IS NULL
+                AND source_kind = 'local'
+                AND file_id IN (
+                    SELECT id FROM instance_files
+                    WHERE instance_id = ? AND sha1 = ?
+                )
+            ",
+        )
+        .bind(&ids.project_id)
+        .bind(&ids.version_id)
+        .bind(modified_at)
+        .bind(instance_id)
+        .bind(instance_id)
+        .bind(sha1)
+        .execute(&mut *tx)
+        .await?;
+    }
+    tx.commit().await?;
+    Ok(())
+}
+
 async fn fetch_fingerprints(
     files: Vec<(String, PathBuf)>,
     key: &str,

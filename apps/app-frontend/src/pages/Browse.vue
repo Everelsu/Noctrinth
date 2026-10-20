@@ -39,8 +39,6 @@ import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import type { LocationQuery } from 'vue-router'
 import { useRoute, useRouter } from 'vue-router'
 
-import CurseforgeInstancePickerModal from '@/components/ui/curseforge/CurseforgeInstancePickerModal.vue'
-import CurseforgePendingFilesModal from '@/components/ui/curseforge/CurseforgePendingFilesModal.vue'
 import { useAppServerBrowse } from '@/composables/browse/use-app-server-browse'
 import { useAppEvent } from '@/composables/use-app-event'
 import { useAppSettings } from '@/composables/use-app-settings.ts'
@@ -51,15 +49,12 @@ import {
 	curseforgeAvailable,
 	curseforgeCategoriesQueryOptions,
 	curseforgeDescriptionQueryOptions,
-	curseforgeDownloadModpack,
 	curseforgeIdOf,
-	curseforgeInstallProject,
 	curseforgeKeys,
 	curseforgeProjectQueryOptions,
 	curseforgeSearch,
 	isCurseforgeId,
 } from '@/helpers/curseforge'
-import { install_create_modpack_instance, packLocationFromFile } from '@/helpers/install'
 import {
 	get_installed_project_ids as getInstalledProjectIds,
 	getInstanceIconUrl,
@@ -662,10 +657,6 @@ const isCurseforge = computed(() => curseforgeOffered.value && browseSource.valu
 const CURSEFORGE_FILTER_TYPES = ['game_version', 'mod_loader', 'modpack_loader']
 const isCurseforgeFilterType = (id: string) =>
 	CURSEFORGE_FILTER_TYPES.includes(id) || id.startsWith('category_')
-const curseforgePendingModal = ref<InstanceType<typeof CurseforgePendingFilesModal> | null>(null)
-const curseforgePickerModal = ref<InstanceType<typeof CurseforgeInstancePickerModal> | null>(null)
-/** The CurseForge project waiting for an instance to be picked for it. */
-const curseforgePickedProjectId = ref<string | null>(null)
 
 // CurseForge's categories for the current type, in the shape the sidebar
 // draws Modrinth's in, so the very same filter list shows them.
@@ -1137,11 +1128,10 @@ function getCardActions(
 /**
  * Noctrinth's own: the install button on a CurseForge result.
  *
- * Into an instance, the backend picks the newest file for the instance's game
- * version and loader and brings its required dependencies along. A modpack
- * is downloaded and handed to the same installer a dropped CurseForge zip
- * goes through. With no instance to add a mod to, the button opens the
- * project, whose page is where a version and an instance get chosen.
+ * It goes through the same install flow a Modrinth result does, so the user
+ * gets the same instance picker with its compatibility and "already
+ * installed" checks, the same incompatible-version warning, and a modpack
+ * becomes a new instance through the CurseForge pack installer.
  */
 function getCurseforgeCardActions(
 	result: Labrinth.Search.v3.ResultSearchProject,
@@ -1152,24 +1142,7 @@ function getCurseforgeCardActions(
 	const isInstalling = installingProjectIds.value.has(projectResult.project_id)
 	const isInstalled =
 		!isModpack && (projectResult.installed || allInstalledIds.value.has(projectResult.project_id))
-
-	if (!instance.value && !isModpack) {
-		return [
-			{
-				key: 'install',
-				label: formatMessage(isInstalling ? messages.installingToServer : messages.addToAnInstance),
-				icon: isInstalling ? SpinnerIcon : PlusIcon,
-				iconClass: isInstalling ? 'animate-spin' : undefined,
-				disabled: isInstalling,
-				color: 'brand',
-				type: 'outlined',
-				onClick: () => {
-					curseforgePickedProjectId.value = projectResult.project_id
-					curseforgePickerModal.value?.show()
-				},
-			},
-		]
-	}
+	const shouldUseInstallIcon = !!instance.value || isModpack
 
 	return [
 		{
@@ -1179,7 +1152,9 @@ function getCurseforgeCardActions(
 					? messages.installingToServer
 					: isInstalled
 						? commonMessages.installedLabel
-						: commonMessages.installButton,
+						: shouldUseInstallIcon
+							? commonMessages.installButton
+							: messages.addToAnInstance,
 			),
 			icon: isInstalling ? SpinnerIcon : isInstalled ? CheckIcon : PlusIcon,
 			iconClass: isInstalling ? 'animate-spin' : undefined,
@@ -1189,45 +1164,34 @@ function getCurseforgeCardActions(
 			onClick: async () => {
 				setProjectInstalling(projectResult.project_id, true)
 				try {
-					if (isModpack) {
-						const path = await curseforgeDownloadModpack(projectResult.project_id)
-						await install_create_modpack_instance(packLocationFromFile(path))
-						return
-					}
-					await installCurseforgeInto(instance.value!.id, projectResult.project_id)
+					const selectedPreferences = getCurrentSelectedInstallPreferences(currentProjectType)
+					await installVersion(
+						projectResult.project_id,
+						null,
+						instance.value ? instance.value.id : null,
+						'SearchCard',
+						(versionId, installedProjectIds) => {
+							setProjectInstalling(projectResult.project_id, false)
+							if (versionId) {
+								onSearchResultsInstalled(installedProjectIds ?? [projectResult.project_id])
+							}
+						},
+						(profile) => {
+							router.push(`/instance/${profile}`)
+						},
+						{
+							preferredLoader: instance.value?.loader ?? selectedPreferences.loaders?.[0],
+							preferredGameVersion:
+								instance.value?.game_version ?? selectedPreferences.gameVersions?.[0],
+						},
+					)
 				} catch (err) {
-					handleError(err)
-				} finally {
 					setProjectInstalling(projectResult.project_id, false)
+					handleError(err)
 				}
 			},
 		},
 	]
-}
-
-async function installCurseforgeInto(instanceId: string, projectId: string) {
-	const outcome = await curseforgeInstallProject(instanceId, projectId)
-	// Only marked installed when it went into the instance being browsed for.
-	if (outcome.installed.length > 0 && instanceId === instance.value?.id) {
-		onSearchResultsInstalled(outcome.installed)
-	}
-	if (outcome.pending.length > 0) {
-		curseforgePendingModal.value?.show(instanceId, outcome.pending)
-	}
-}
-
-async function onCurseforgeInstancePicked(instanceId: string) {
-	const projectId = curseforgePickedProjectId.value
-	curseforgePickedProjectId.value = null
-	if (!projectId) return
-	setProjectInstalling(projectId, true)
-	try {
-		await installCurseforgeInto(instanceId, projectId)
-	} catch (err) {
-		handleError(err)
-	} finally {
-		setProjectInstalling(projectId, false)
-	}
 }
 
 /** Loads a CurseForge project's page ahead of a click on its card. */
@@ -1634,8 +1598,6 @@ provideBrowseManager({
 			@browse-modpacks="() => {}"
 			@create="handleServerModpackFlowCreate"
 		/>
-		<CurseforgePendingFilesModal ref="curseforgePendingModal" />
-		<CurseforgeInstancePickerModal ref="curseforgePickerModal" @pick="onCurseforgeInstancePicked" />
 		<Teleport v-if="browseRouteActive" to="#sidebar-teleport-target">
 			<BrowseSidebar />
 		</Teleport>

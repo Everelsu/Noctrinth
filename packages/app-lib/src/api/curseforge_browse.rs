@@ -284,6 +284,20 @@ struct ApiFile {
     hashes: Vec<ApiHash>,
     #[serde(default)]
     dependencies: Vec<ApiDependency>,
+    /// A modpack's server files, listed alongside its client files.
+    #[serde(default)]
+    is_server_pack: Option<bool>,
+    /// False for a file CurseForge has pulled or not yet approved.
+    #[serde(default)]
+    is_available: Option<bool>,
+}
+
+impl ApiFile {
+    /// Whether this is a file a launcher should ever offer: CurseForge's own
+    /// app never installs a server pack or an unavailable file into a client.
+    fn is_installable(&self) -> bool {
+        self.is_server_pack != Some(true) && self.is_available != Some(false)
+    }
 }
 
 #[derive(Deserialize, Clone)]
@@ -823,7 +837,11 @@ pub async fn get_files(
         &state,
     )
     .await?;
-    Ok(files.into_iter().map(ProjectFile::from).collect())
+    Ok(files
+        .into_iter()
+        .filter(ApiFile::is_installable)
+        .map(ProjectFile::from)
+        .collect())
 }
 
 // ---------------------------------------------------------------------------
@@ -836,12 +854,25 @@ pub struct InstallOutcome {
     pub installed: Vec<String>,
     /// Files that have to be downloaded by hand before they are installed.
     pub pending: Vec<PendingFile>,
+    /// Required dependencies with no file for this instance, which have to
+    /// be found some other way — CurseForge's own app reports them the same.
+    pub missing_dependencies: Vec<MissingDependency>,
+}
+
+#[derive(Serialize, Debug)]
+pub struct MissingDependency {
+    pub project_id: String,
+    pub name: Option<String>,
+    pub website_url: Option<String>,
 }
 
 /// The newest file that fits the instance, preferring a release over a beta
 /// over an alpha.
 fn pick_file(files: Vec<ApiFile>) -> Option<ApiFile> {
-    let mut files = files;
+    let mut files = files
+        .into_iter()
+        .filter(ApiFile::is_installable)
+        .collect::<Vec<_>>();
     files.sort_by(|a, b| b.file_date.cmp(&a.file_date));
     files
         .iter()
@@ -883,7 +914,8 @@ pub async fn install_project(
         if !visited.insert(project_id) || depth > MAX_DEPENDENCY_DEPTH {
             continue;
         }
-        // A dependency already in the instance is left as it is.
+        // A dependency already in the instance is left as it is, as
+        // CurseForge's own installer does.
         if depth > 0 && installed_ids.contains(&project_id.to_string()) {
             continue;
         }
@@ -914,22 +946,44 @@ pub async fn install_project(
                     &state,
                 )
                 .await?;
-                pick_file(files).ok_or_else(|| {
-                    input(format!(
-                        "{} has no file for Minecraft {}{}",
-                        project.data.name,
-                        content_set.game_version,
-                        loader
-                            .and_then(loader_name)
-                            .map(|loader| format!(" with {loader}"))
-                            .unwrap_or_default()
-                    ))
-                })?
+                match pick_file(files) {
+                    Some(file) => file,
+                    // A dependency with nothing for this instance does not
+                    // stop the install; it is reported, with where to look.
+                    None if depth > 0 => {
+                        outcome.missing_dependencies.push(MissingDependency {
+                            project_id: format!("{ID_PREFIX}{project_id}"),
+                            website_url: project.data.website_url(),
+                            name: Some(project.data.name),
+                        });
+                        continue;
+                    }
+                    None => {
+                        return Err(input(format!(
+                            "{} has no file for Minecraft {}{}",
+                            project.data.name,
+                            content_set.game_version,
+                            loader
+                                .and_then(loader_name)
+                                .map(|loader| format!(" with {loader}"))
+                                .unwrap_or_default()
+                        )));
+                    }
+                }
             }
         };
 
+        if depth == 0 {
+            refuse_incompatible(&file, &installed_ids, &state).await?;
+            // Installing another version of something already there replaces
+            // it, rather than leaving two copies of the same mod side by side.
+            if installed_ids.contains(&project_id.to_string()) {
+                remove_installed(instance_id, project_id).await?;
+            }
+        }
+
         for dependency in &file.dependencies {
-            if dependency.relation_type == 3 {
+            if dependency.relation_type == RELATION_REQUIRED {
                 queue.push((dependency.mod_id, None, depth + 1));
             }
         }
@@ -963,6 +1017,71 @@ pub async fn install_project(
     outcome.pending =
         curseforge_blocked::describe(outcome.pending, &state).await;
     Ok(outcome)
+}
+
+/// CurseForge's relation types, as a file lists its dependencies.
+const RELATION_REQUIRED: i64 = 3;
+const RELATION_INCOMPATIBLE: i64 = 5;
+
+/// Refuse a file that says it cannot run beside something already in the
+/// instance, naming what is in the way.
+async fn refuse_incompatible(
+    file: &ApiFile,
+    installed_ids: &HashSet<String>,
+    state: &State,
+) -> crate::Result<()> {
+    let clashing = file
+        .dependencies
+        .iter()
+        .filter(|d| d.relation_type == RELATION_INCOMPATIBLE)
+        .map(|d| d.mod_id.to_string())
+        .filter(|id| installed_ids.contains(id))
+        .collect::<HashSet<_>>();
+    if clashing.is_empty() {
+        return Ok(());
+    }
+    let names = crate::api::curseforge_metadata::resolve(
+        &clashing,
+        &HashSet::new(),
+        state,
+    )
+    .await
+    .projects;
+    let mut listed = clashing
+        .iter()
+        .map(|id| names.get(id).map_or(id.clone(), |p| p.name.clone()))
+        .collect::<Vec<_>>();
+    listed.sort();
+    Err(input(format!(
+        "{} is incompatible with {}, which is already installed",
+        file.display_name,
+        listed.join(", ")
+    )))
+}
+
+/// Remove every file of a project from the instance, ahead of installing
+/// another version of it.
+async fn remove_installed(
+    instance_id: &str,
+    project_id: i64,
+) -> crate::Result<()> {
+    let wanted = project_id.to_string();
+    let paths = crate::api::instance::get_projects(instance_id, None)
+        .await?
+        .iter()
+        .filter(|entry| {
+            entry
+                .value()
+                .metadata
+                .as_ref()
+                .is_some_and(|metadata| metadata.project_id == wanted)
+        })
+        .map(|entry| entry.key().clone())
+        .collect::<Vec<_>>();
+    for path in paths {
+        crate::api::instance::remove_project(instance_id, &path).await?;
+    }
+    Ok(())
 }
 
 async fn install_file(
@@ -1160,9 +1279,8 @@ mod tests {
         assert!(parse_project_id("AANobbMI").is_err());
     }
 
-    #[test]
-    fn the_newest_release_wins_over_a_newer_beta() {
-        let file = |id, release_type, date: &str| ApiFile {
+    fn file(id: i64, release_type: i64, date: &str) -> ApiFile {
+        ApiFile {
             id,
             mod_id: 1,
             display_name: String::new(),
@@ -1175,7 +1293,13 @@ mod tests {
             game_versions: Vec::new(),
             hashes: Vec::new(),
             dependencies: Vec::new(),
-        };
+            is_server_pack: None,
+            is_available: None,
+        }
+    }
+
+    #[test]
+    fn the_newest_release_wins_over_a_newer_beta() {
         let picked = pick_file(vec![
             file(1, 1, "2024-01-01"),
             file(2, 2, "2024-03-01"),
@@ -1183,6 +1307,18 @@ mod tests {
         ])
         .unwrap();
         assert_eq!(picked.id, 3);
+    }
+
+    #[test]
+    fn a_server_pack_or_pulled_file_is_never_picked() {
+        let mut server = file(4, 1, "2024-05-01");
+        server.is_server_pack = Some(true);
+        let mut pulled = file(5, 1, "2024-06-01");
+        pulled.is_available = Some(false);
+
+        let picked =
+            pick_file(vec![file(1, 1, "2024-01-01"), server, pulled]).unwrap();
+        assert_eq!(picked.id, 1);
     }
 
     #[test]

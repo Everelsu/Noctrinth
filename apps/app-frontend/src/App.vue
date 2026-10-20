@@ -66,6 +66,7 @@ import { RouterView, useRoute, useRouter } from 'vue-router'
 import { useRouteLoading } from '@/app/runtime/use-route-loading'
 import AppSidebar from '@/app/shell/sidebar/index.vue'
 import AppTitleBar from '@/app/shell/title-bar/index.vue'
+import CurseforgePendingFilesModal from '@/components/ui/curseforge/CurseforgePendingFilesModal.vue'
 import ErrorModal from '@/components/ui/ErrorModal.vue'
 import HostingUpdateRequired from '@/components/ui/HostingUpdateRequired.vue'
 import AddServerToInstanceModal from '@/components/ui/install_flow/AddServerToInstanceModal.vue'
@@ -981,7 +982,12 @@ const errorModal = ref()
 const minecraftAuthErrorModal = ref()
 const minecraftRequiredModal = ref()
 
-const contentInstall = createContentInstall({ router, handleError, appEvents })
+const contentInstall = createContentInstall({
+	router,
+	handleError,
+	appEvents,
+	warn: (title, text) => addNotification({ title, text, type: 'warning' }),
+})
 provideContentInstall(contentInstall)
 const {
 	instances: contentInstallInstances,
@@ -1059,6 +1065,7 @@ const {
 } = serverInstall
 
 const modInstallModal = ref()
+const curseforgePendingModal = ref()
 const modpackAlreadyInstalledModal = ref()
 const contentInstallModpackAlreadyInstalledModal = ref()
 const addServerToInstanceModal = ref()
@@ -1506,6 +1513,7 @@ onMounted(() => {
 
 	setContentIncompatibilityWarningModal(incompatibilityWarningModal.value)
 	setContentInstallModal(modInstallModal.value)
+	contentInstall.setCurseforgePendingModal(curseforgePendingModal.value)
 	setContentInstallModpackAlreadyInstalledModal(contentInstallModpackAlreadyInstalledModal.value)
 	setModpackAlreadyInstalledModal(modpackAlreadyInstalledModal.value)
 	setServerAddServerToInstanceModal(addServerToInstanceModal.value)
@@ -2550,6 +2558,7 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 		@create-anyway="handleModpackDuplicateCreateAnyway"
 		@go-to-instance="handleModpackDuplicateGoToInstance"
 	/>
+	<CurseforgePendingFilesModal ref="curseforgePendingModal" />
 	<AddServerToInstanceModal ref="addServerToInstanceModal" />
 	<ContentUpdaterModal
 		ref="incompatibilityWarningModal"

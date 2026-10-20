@@ -50,6 +50,9 @@
 					"url": "https://fill.papermc.io/*"
 				},
 				{
+					"url": "https://media.forgecdn.net/*"
+				},
+				{
 					"url": "https://api.purpurmc.org/*"
 				},
 				{

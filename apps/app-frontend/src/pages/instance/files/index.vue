@@ -108,7 +108,32 @@ function normalizePath(path: string) {
 	return path.replace(/\\/g, '/').replace(/^\/+/, '')
 }
 
+// Pictures show themselves, as on the Screenshots tab. A row asks for its
+// thumbnail when first drawn; the list only draws the rows in view.
+const IMAGE_EXTENSIONS = /\.(png|jpe?g|webp|gif|bmp)$/i
+const thumbnails = ref(new Map<string, string>())
+const thumbnailsAsked = new Set<string>()
+let thumbnailQueue: Promise<void> = Promise.resolve()
+
+function thumbnailOf(file: FileItem): string | undefined {
+	const path = `${instanceRoot.value}/${normalizePath(file.path)}`
+	const known = thumbnails.value.get(path)
+	if (known || thumbnailsAsked.has(path)) return known
+	thumbnailsAsked.add(path)
+	thumbnailQueue = thumbnailQueue.then(async () => {
+		const url = await invoke<string>('plugin:utils|get_image_thumbnail', { path, size: 64 }).catch(
+			() => null,
+		)
+		if (url) thumbnails.value = new Map(thumbnails.value).set(path, url)
+	})
+	return undefined
+}
+
 function describeItem(file: FileItem): FileItemDescription | undefined {
+	if (file.type === 'file' && IMAGE_EXTENSIONS.test(file.name)) {
+		const iconUrl = thumbnailOf(file)
+		return iconUrl ? { iconUrl } : undefined
+	}
 	if (file.type !== 'file' || !inContentFolder.value) return undefined
 	const item = contentByPath.value.get(normalizePath(file.path))
 	const project = item?.project

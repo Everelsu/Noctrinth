@@ -1120,6 +1120,10 @@ pub async fn available_updates(
     if installed.is_empty() {
         return Ok(HashMap::new());
     }
+    let options = crate::api::curseforge_metadata::options();
+    if !options.check_updates {
+        return Ok(HashMap::new());
+    }
     let state = State::get().await?;
     let wanted_loader = loader_id(loader);
     let mut ids = installed.keys().copied().collect::<Vec<_>>();
@@ -1138,6 +1142,7 @@ pub async fn available_updates(
                 &project.latest_files_indexes,
                 game_version,
                 wanted_loader,
+                options.update_release_type,
             ) && installed
                 .get(&project.id)
                 .is_some_and(|&file| newest > file)
@@ -1149,26 +1154,32 @@ pub async fn available_updates(
     Ok(updates)
 }
 
-/// The newest file a project lists for this game version and loader: a
-/// release where there is one, otherwise whatever there is. A file naming no
-/// loader (a pack, or a mod from before loaders were tagged) fits any.
+/// The newest file a project lists for this game version and loader that is
+/// at least as stable as `release_type` (1 release, 2 beta, 3 alpha). A file
+/// naming no loader (a pack, or a mod from before loaders were tagged) fits
+/// any.
 fn newest_file(
     indexes: &[ApiFileIndex],
     game_version: &str,
     loader: Option<i64>,
+    release_type: i64,
 ) -> Option<i64> {
-    let newest = |release_only: bool| {
-        indexes
-            .iter()
-            .filter(|index| {
-                index.game_version == game_version
-                    && index.mod_loader.is_none_or(|l| Some(l) == loader)
-                    && (!release_only || index.release_type == 1)
-            })
-            .map(|index| index.file_id)
-            .max()
-    };
-    newest(true).or_else(|| newest(false))
+    indexes
+        .iter()
+        .filter(|index| {
+            index.game_version == game_version
+                && index.mod_loader.is_none_or(|l| Some(l) == loader)
+                && index.release_type <= release_type
+        })
+        .map(|index| index.file_id)
+        .max()
+}
+
+/// Forgets every CurseForge answer kept in memory.
+pub fn clear_cache() {
+    if let Ok(mut cache) = CACHE.lock() {
+        cache.clear();
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -1687,7 +1698,7 @@ mod tests {
     }
 
     #[test]
-    fn newest_file_prefers_a_release_for_the_instance() {
+    fn newest_file_keeps_to_the_wanted_release_type() {
         let index = |game_version: &str, mod_loader, file_id, release_type| {
             ApiFileIndex {
                 game_version: game_version.to_string(),
@@ -1702,15 +1713,17 @@ mod tests {
             index("1.21.1", Some(4), 20, 1),
             index("1.20.1", Some(6), 30, 1),
         ];
-        assert_eq!(newest_file(&indexes, "1.21.1", Some(6)), Some(10));
-        assert_eq!(newest_file(&indexes, "1.21.1", Some(4)), Some(20));
-        assert_eq!(newest_file(&indexes, "1.19.2", Some(6)), None);
-        // Only a beta for the version: the beta it is.
+        assert_eq!(newest_file(&indexes, "1.21.1", Some(6), 1), Some(10));
+        assert_eq!(newest_file(&indexes, "1.21.1", Some(6), 2), Some(12));
+        assert_eq!(newest_file(&indexes, "1.21.1", Some(4), 1), Some(20));
+        assert_eq!(newest_file(&indexes, "1.19.2", Some(6), 3), None);
+        // Only a beta for the version: an update only if betas are wanted.
         let beta_only = [index("1.21.1", Some(6), 12, 2)];
-        assert_eq!(newest_file(&beta_only, "1.21.1", Some(6)), Some(12));
+        assert_eq!(newest_file(&beta_only, "1.21.1", Some(6), 1), None);
+        assert_eq!(newest_file(&beta_only, "1.21.1", Some(6), 2), Some(12));
         // A pack names no loader and fits any instance.
         let pack = [index("1.21.1", None, 7, 1)];
-        assert_eq!(newest_file(&pack, "1.21.1", None), Some(7));
-        assert_eq!(newest_file(&pack, "1.21.1", Some(1)), Some(7));
+        assert_eq!(newest_file(&pack, "1.21.1", None, 1), Some(7));
+        assert_eq!(newest_file(&pack, "1.21.1", Some(1), 1), Some(7));
     }
 }

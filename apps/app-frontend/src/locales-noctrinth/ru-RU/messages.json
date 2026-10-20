@@ -1379,6 +1379,9 @@
 	"app.settings.tabs.changelog": {
 		"message": "Список изменений"
 	},
+	"app.settings.tabs.curseforge": {
+		"message": "CurseForge"
+	},
 	"app.skins.cape-from": {
 		"message": "Плащ из {source}"
 	},
@@ -2017,6 +2020,54 @@
 	},
 	"noctrinth.settings.splash-cube.title": {
 		"message": "Куб на заставке"
+	},
+	"noctrinth.settings.curseforge.check-updates": {
+		"message": "Проверять обновления модов и сборок с CurseForge"
+	},
+	"noctrinth.settings.curseforge.clear-cache": {
+		"message": "Сбросить кэш CurseForge"
+	},
+	"noctrinth.settings.curseforge.clear-cache-hint": {
+		"message": "Ответы хранятся пять минут; кнопка запрашивает их заново сразу."
+	},
+	"noctrinth.settings.curseforge.cleared": {
+		"message": "Сброшено"
+	},
+	"noctrinth.settings.curseforge.default-source": {
+		"message": "Обзор открывается на"
+	},
+	"noctrinth.settings.curseforge.description": {
+		"message": "Обзор и установка с CurseForge, распознавание его файлов в сборках и их обновление. Если выключить, лаунчер ничего не спрашивает у CurseForge."
+	},
+	"noctrinth.settings.curseforge.no-key": {
+		"message": "В этой сборке нет API-ключа CurseForge, поэтому CurseForge недоступен."
+	},
+	"noctrinth.settings.curseforge.recognize-files": {
+		"message": "Распознавать моды, добавленные вручную или из других лаунчеров, по отпечатку файла"
+	},
+	"noctrinth.settings.curseforge.release-type": {
+		"message": "Обновлять до"
+	},
+	"noctrinth.settings.curseforge.release-type.alpha": {
+		"message": "Любых файлов, включая альфы"
+	},
+	"noctrinth.settings.curseforge.release-type.beta": {
+		"message": "Релизов и бет"
+	},
+	"noctrinth.settings.curseforge.release-type.release": {
+		"message": "Только релизов"
+	},
+	"noctrinth.settings.curseforge.search-other-launchers": {
+		"message": "Искать файлы, закрытые для лаунчеров, и в сборках других лаунчеров, а не только в «Загрузках»"
+	},
+	"noctrinth.settings.curseforge.source.curseforge": {
+		"message": "CurseForge"
+	},
+	"noctrinth.settings.curseforge.source.modrinth": {
+		"message": "Modrinth"
+	},
+	"noctrinth.settings.curseforge.title": {
+		"message": "CurseForge"
 	},
 	"noctrinth.settings.splash-cube.description": {
 		"message": "Какой куб показывает заставка при запуске. Применится со следующего запуска."

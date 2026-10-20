@@ -12,6 +12,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { ref } from 'vue'
 
 import { CURSEFORGE_API_KEY } from './curseforge-key'
+import { curseforgeSettings } from './curseforge-settings'
 
 export const CURSEFORGE_ID_PREFIX = 'cf-'
 
@@ -26,7 +27,10 @@ export const CURSEFORGE_PROJECT_TYPES = [
 
 export type BrowseSource = 'modrinth' | 'curseforge'
 
-export const curseforgeAvailable = !!CURSEFORGE_API_KEY
+/** Whether CurseForge is offered: the build has a key and it is not turned off. */
+export function curseforgeEnabled(): boolean {
+	return !!CURSEFORGE_API_KEY && curseforgeSettings.enabled
+}
 
 export function isCurseforgeId(id: string | null | undefined): boolean {
 	return !!id && id.startsWith(CURSEFORGE_ID_PREFIX)
@@ -45,6 +49,24 @@ export function isCurseforgeContent(item: {
 		item.source_kind === 'curseforge' ||
 		item.source_kind === 'curseforge_modpack' ||
 		!!item.project?.external_url?.startsWith('https://www.curseforge.com/')
+	)
+}
+
+type ContentRow = Parameters<typeof isCurseforgeContent>[0] & {
+	project?: { id: string } | null
+	version?: { id: string } | null
+}
+
+/**
+ * The CurseForge projects among content rows, as (`cf-` id, file id) pairs.
+ * A pack installed from a CurseForge zip records its files only by
+ * fingerprint, so its listing is the one place that knows what they are.
+ */
+export function curseforgeFilesIn(rows: ContentRow[]): [string, string | null][] {
+	return rows.flatMap((row) =>
+		row.project?.id && isCurseforgeContent(row)
+			? [[curseforgeIdOf(row.project.id), row.version?.id ?? null] as [string, string | null]]
+			: [],
 	)
 }
 

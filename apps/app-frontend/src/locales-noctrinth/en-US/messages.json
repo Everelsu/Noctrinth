@@ -821,6 +821,9 @@
 	"app.settings.tabs.changelog": {
 		"message": "Changelog"
 	},
+	"app.settings.tabs.curseforge": {
+		"message": "CurseForge"
+	},
 	"app.skins.ely.edit.texture-locked": {
 		"message": "Ely.by keeps a texture and its skin together, so this one cannot be swapped out. Upload the new texture as another skin instead."
 	},
@@ -1261,6 +1264,54 @@
 	},
 	"minecraft-account.label-microsoft": {
 		"message": "Microsoft account"
+	},
+	"noctrinth.settings.curseforge.check-updates": {
+		"message": "Check CurseForge for updates of its mods and packs"
+	},
+	"noctrinth.settings.curseforge.clear-cache": {
+		"message": "Forget CurseForge's answers"
+	},
+	"noctrinth.settings.curseforge.clear-cache-hint": {
+		"message": "They are kept for five minutes; this asks again right away."
+	},
+	"noctrinth.settings.curseforge.cleared": {
+		"message": "Forgotten"
+	},
+	"noctrinth.settings.curseforge.default-source": {
+		"message": "Browse opens on"
+	},
+	"noctrinth.settings.curseforge.description": {
+		"message": "Browse and install from CurseForge, recognise its files in your instances and keep them up to date. Off, and the launcher asks CurseForge nothing."
+	},
+	"noctrinth.settings.curseforge.no-key": {
+		"message": "This build has no CurseForge API key, so CurseForge is unavailable."
+	},
+	"noctrinth.settings.curseforge.recognize-files": {
+		"message": "Recognise mods added by hand or from other launchers by their fingerprint"
+	},
+	"noctrinth.settings.curseforge.release-type": {
+		"message": "Update to"
+	},
+	"noctrinth.settings.curseforge.release-type.alpha": {
+		"message": "Any file, alphas too"
+	},
+	"noctrinth.settings.curseforge.release-type.beta": {
+		"message": "Releases and betas"
+	},
+	"noctrinth.settings.curseforge.release-type.release": {
+		"message": "Releases only"
+	},
+	"noctrinth.settings.curseforge.search-other-launchers": {
+		"message": "Look for files kept off launchers in other launchers' instances, not only in Downloads"
+	},
+	"noctrinth.settings.curseforge.source.curseforge": {
+		"message": "CurseForge"
+	},
+	"noctrinth.settings.curseforge.source.modrinth": {
+		"message": "Modrinth"
+	},
+	"noctrinth.settings.curseforge.title": {
+		"message": "CurseForge"
 	},
 	"notifications.back": {
 		"message": "Back"

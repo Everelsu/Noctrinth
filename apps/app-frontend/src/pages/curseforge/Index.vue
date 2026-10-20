@@ -49,13 +49,18 @@ import { useRoute, useRouter } from 'vue-router'
 import InstanceIndicator from '@/components/ui/InstanceIndicator.vue'
 import {
 	curseforgeDescriptionQueryOptions,
+	curseforgeFilesIn,
 	curseforgeIdOf,
 	curseforgeKeys,
 	curseforgeProjectQueryOptions,
 	type CurseforgeSearchHit,
 	useCurseforgeFavorites,
 } from '@/helpers/curseforge'
-import { get as getInstance, get_projects as getInstanceProjects } from '@/helpers/instance'
+import {
+	get as getInstance,
+	get_linked_modpack_content,
+	get_projects as getInstanceProjects,
+} from '@/helpers/instance'
 import { get_game_versions, get_loaders } from '@/helpers/tags'
 import type { GameInstance } from '@/helpers/types'
 import { injectContentInstall } from '@/providers/content-install'
@@ -130,13 +135,21 @@ async function refreshInstance() {
 			getInstanceProjects(instanceId.value),
 		])
 		instance.value = loaded
-		installedFiles.value = new Map(
-			Object.values(files).flatMap((file) =>
+		// A pack's own files, from a CurseForge zip, are known only to its listing.
+		const packFiles =
+			loaded?.link && loaded.link.type !== 'modrinth_modpack'
+				? curseforgeFilesIn(
+						(await get_linked_modpack_content(instanceId.value).catch(() => null)) ?? [],
+					)
+				: []
+		installedFiles.value = new Map([
+			...packFiles,
+			...Object.values(files).flatMap((file) =>
 				file.metadata && /^\d+$/.test(file.metadata.project_id)
-					? [[curseforgeIdOf(file.metadata.project_id), file.metadata.version_id ?? null]]
+					? [[curseforgeIdOf(file.metadata.project_id), file.metadata.version_id ?? null] as const]
 					: [],
 			),
-		)
+		])
 	} catch (err) {
 		handleError(err)
 	}

@@ -172,10 +172,10 @@ import { get_project_versions, get_version, get_version_many } from '@/helpers/c
 import {
 	curseforgeForInstallFlow,
 	curseforgeGetFiles,
-	curseforgeGetVersion,
 	curseforgeIdOf,
 	curseforgePendingFiles,
 	type CurseforgeProject,
+	curseforgeVersionQueryOptions,
 	isCurseforgeContent,
 } from '@/helpers/curseforge'
 import { install_bulk_update_content } from '@/helpers/install'
@@ -267,16 +267,19 @@ const messages = defineMessages({
 let savedModalState: ManagedContentModalState | null = null
 
 /**
- * Noctrinth's own: a CurseForge row's files for this instance, in the shape
- * the updater lists Modrinth versions in. Changelogs come when one is picked.
+ * Noctrinth's own: a CurseForge row's files, in the shape the updater lists
+ * Modrinth versions in. Every game version, as Modrinth's list has, so its
+ * "show incompatible" means the same; a mod's only for this loader, which
+ * keeps the list to what could ever be picked. Changelogs come when a
+ * version is picked.
  */
 async function curseforgeUpdaterVersions(item: ContentItem) {
 	const id = curseforgeIdOf(item.project!.id)
 	const isMod = item.project_type === 'mod'
 	const files = await curseforgeGetFiles(
 		id,
-		instance.value.game_version,
-		isMod ? instance.value.loader : null,
+		null,
+		isMod && instance.value.loader !== 'vanilla' ? instance.value.loader : null,
 	).catch((err) => {
 		handleError(err)
 		return []
@@ -286,6 +289,14 @@ async function curseforgeUpdaterVersions(item: ContentItem) {
 		...version,
 		changelog: null as unknown as string,
 	}))
+}
+
+/** A CurseForge file's changelog, kept like any other CurseForge answer. */
+async function curseforgeChangelog(projectId: string, fileId: string) {
+	const file = await queryClient.fetchQuery(
+		curseforgeVersionQueryOptions(curseforgeIdOf(projectId), fileId),
+	)
+	return file.changelog
 }
 
 /** Puts another version of a row in place: through CurseForge for its files. */
@@ -1259,6 +1270,9 @@ async function handleUpdate(id: string) {
 	})
 
 	updatingProjectVersions.value = versions
+	// Modrinth's versions come with their changelogs; CurseForge's are asked
+	// for, so the one the dialog opens on is asked for at once.
+	if (isCurseforgeContent(item) && preselectedVersion) void handleVersionSelect(preselectedVersion)
 }
 
 async function handleSwitchVersion(item: ContentItem) {
@@ -1289,6 +1303,8 @@ async function handleSwitchVersion(item: ContentItem) {
 	loadingVersions.value = false
 
 	updatingProjectVersions.value = versions
+	const current = versions.find((version) => version.id === initialVersionId)
+	if (isCurseforgeContent(item) && current) void handleVersionSelect(current)
 }
 
 async function handleManagedContentToggle(item: ContentItem, enabled: boolean) {
@@ -1452,14 +1468,14 @@ async function fetchAndSpliceVersion(
 ) {
 	const updating = updatingProject.value
 	if (updating && isCurseforgeContent(updating) && updating.project?.id) {
-		const file = await curseforgeGetVersion(curseforgeIdOf(updating.project.id), versionId).catch(
+		const changelog = await curseforgeChangelog(updating.project.id, versionId).catch(
 			onError ?? (() => null),
 		)
 		const listed = updatingProjectVersions.value.find((version) => version.id === versionId)
-		if (!isActiveUpdateRequest(requestId) || !file || !listed) return
+		if (!isActiveUpdateRequest(requestId) || changelog == null || !listed) return
 		updatingProjectVersions.value = mergeVersionIntoList(updatingProjectVersions.value, {
 			...listed,
-			changelog: file.changelog,
+			changelog,
 		})
 		return
 	}
@@ -1766,6 +1782,15 @@ provideContentManager({
 	updateItem: handleUpdate,
 	bulkUpdateSelections,
 	bulkUpdatesInBackground: true,
+	// Noctrinth's own: CurseForge rows list CurseForge's files, never Modrinth's.
+	getItemVersions: (item: ContentItem) =>
+		isCurseforgeContent(item) && item.project?.id ? curseforgeUpdaterVersions(item) : null,
+	getItemChangelog: (itemId: string, versionId: string) => {
+		const item = projects.value.find((project) => getContentItemId(project) === itemId)
+		return item && isCurseforgeContent(item) && item.project?.id
+			? curseforgeChangelog(item.project.id, versionId)
+			: null
+	},
 	currentGameVersion: computed(() => instance.value.game_version),
 	currentLoader: computed(() => instance.value.loader),
 	runManagedContentPrimaryAction:
@@ -1833,12 +1858,12 @@ provideContentManager({
 		locked: item.locked,
 		installing: item.installing,
 		hideDelete: !canDeleteContent(item),
-		// Changing version needs a version list, which only Modrinth content has.
+		// Changing version needs a version list: Modrinth's, or CurseForge's files.
 		hideSwitchVersion:
 			!canChangeContentVersion(item) ||
 			!item.project?.id ||
 			!item.version?.id ||
-			!!item.project?.external_url,
+			(!!item.project?.external_url && !isCurseforgeContent(item)),
 		hasUpdate: canUpdateProject(item) && !item.locked,
 	}),
 	showSharedContentFilter,

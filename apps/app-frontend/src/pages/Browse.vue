@@ -46,16 +46,20 @@ import { get_project, get_search_results_v3, get_version_many } from '@/helpers/
 import {
 	type BrowseSource,
 	CURSEFORGE_PROJECT_TYPES,
-	curseforgeAvailable,
 	curseforgeCategoriesQueryOptions,
+	curseforgeEnabled,
+	curseforgeFilesIn,
 	curseforgeIdOf,
 	curseforgeKeys,
 	curseforgeProjectQueryOptions,
 	curseforgeSearch,
 	isCurseforgeId,
 } from '@/helpers/curseforge'
+import { curseforgeSettings } from '@/helpers/curseforge-settings'
 import {
+	get as getInstance,
 	get_installed_project_ids as getInstalledProjectIds,
+	get_linked_modpack_content,
 	getInstanceIconUrl,
 	list as listInstances,
 } from '@/helpers/instance'
@@ -367,7 +371,25 @@ async function refreshInstalledProjectIds() {
 	// Noctrinth's own: a CurseForge file's entry carries CurseForge's bare
 	// numeric id, while a CurseForge search hit is `cf-<id>`; both forms are
 	// kept so either one is recognised as installed.
-	installedProjectIds.value = [...ids, ...ids.filter((id) => /^\d+$/.test(id)).map(curseforgeIdOf)]
+	// A pack from a CurseForge zip records its files only by fingerprint, so
+	// its listing is asked which CurseForge projects they are. A Modrinth
+	// pack's files carry their ids, so it is not asked.
+	const link = (await getInstance(targetInstanceId).catch(() => null))?.link
+	const packContent =
+		link && link.type !== 'modrinth_modpack'
+			? await queryClient
+					.fetchQuery({
+						queryKey: instanceKeys.linkedContent(targetInstanceId),
+						queryFn: () => get_linked_modpack_content(targetInstanceId),
+						staleTime: 30_000,
+					})
+					.catch(() => null)
+			: null
+	installedProjectIds.value = [
+		...ids,
+		...ids.filter((id) => /^\d+$/.test(id)).map(curseforgeIdOf),
+		...curseforgeFilesIn(packContent ?? []).map(([id]) => id),
+	]
 }
 
 async function initInstanceContext() {
@@ -641,11 +663,20 @@ const projectType = ref<ProjectType>(route.params.projectType as ProjectType)
 // while adding to a server, whose flow is Modrinth's from end to end.
 const BROWSE_SOURCES: BrowseSource[] = ['modrinth', 'curseforge']
 const browseSource = ref<BrowseSource>(
-	route.query.src === 'cf' && curseforgeAvailable ? 'curseforge' : 'modrinth',
+	curseforgeEnabled() &&
+		(route.query.src === 'cf' ||
+			(route.query.src === undefined && curseforgeSettings.defaultSource === 'curseforge'))
+		? 'curseforge'
+		: 'modrinth',
 )
+/** The source in the URL; only the one that is not the default is written. */
+function sourceQuery(source: BrowseSource) {
+	if (source === curseforgeSettings.defaultSource) return undefined
+	return source === 'curseforge' ? 'cf' : 'mr'
+}
 const curseforgeOffered = computed(
 	() =>
-		curseforgeAvailable &&
+		curseforgeEnabled() &&
 		!isServerContext.value &&
 		(CURSEFORGE_PROJECT_TYPES as readonly string[]).includes(projectType.value),
 )
@@ -1197,9 +1228,15 @@ function getCurseforgeCardActions(
 }
 
 /** Loads a CurseForge project's page ahead of a click on its card. */
+// Only a card the pointer rests on is loaded ahead, not every card it crosses.
+let hoverPrefetchTimer: ReturnType<typeof setTimeout> | undefined
 function prefetchCurseforgeProject(result: Labrinth.Search.v3.ResultSearchProject) {
+	clearTimeout(hoverPrefetchTimer)
 	if (!isCurseforgeId(result.project_id)) return
-	void queryClient.prefetchQuery(curseforgeProjectQueryOptions(result.project_id))
+	hoverPrefetchTimer = setTimeout(
+		() => void queryClient.prefetchQuery(curseforgeProjectQueryOptions(result.project_id)),
+		250,
+	)
 }
 
 function onSearchResultInstalled(id: string) {
@@ -1269,8 +1306,16 @@ async function searchCurseforge(requestParams: string) {
 	}
 
 	const installedIds = new Set([...newlyInstalled.value, ...(installedProjectIds.value ?? [])])
+	// CurseForge's search cannot leave projects out, so "hide installed" drops
+	// them from the page it answered, which then holds fewer than asked for.
+	const hideInstalled =
+		(instance.value || projectType.value === 'modpack') &&
+		(projectType.value === 'modpack' ? hideInstalledModpacks.value : instanceHideInstalled.value)
+	const hits = hideInstalled
+		? results.hits.filter((hit) => !hiddenInstanceProjectIds.value.has(hit.project_id))
+		: results.hits
 	return {
-		projectHits: results.hits.map((hit) => ({
+		projectHits: hits.map((hit) => ({
 			...hit,
 			// CurseForge counts likes, not followers, so the card shows none.
 			follows: undefined as unknown as number,
@@ -1368,7 +1413,7 @@ const searchState = useBrowseSearch({
 	search,
 	persistentQueryParams: ['i', 'ai', 'shi', 'sid', 'wid', 'from', 'src'],
 	getExtraQueryParams: () => ({
-		src: browseSource.value === 'curseforge' ? 'cf' : undefined,
+		src: sourceQuery(browseSource.value),
 		sid: serverIdQuery.value || undefined,
 		wid: effectiveServerWorldId.value || undefined,
 		ai: instanceHideInstalled.value ? 'true' : undefined,
@@ -1405,7 +1450,7 @@ watch(browseSource, async (source) => {
 	// The search only reruns by itself when its request changes, and the
 	// source is not part of the request, so it is rerun here.
 	await router.replace({
-		query: { ...route.query, src: source === 'curseforge' ? 'cf' : undefined },
+		query: { ...route.query, src: sourceQuery(source) },
 	})
 	await searchState.refreshSearch()
 })

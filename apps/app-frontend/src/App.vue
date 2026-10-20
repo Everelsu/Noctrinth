@@ -111,7 +111,7 @@ import {
 import { debugAnalytics, initAnalytics, trackEvent } from '@/helpers/analytics'
 import { check_reachable } from '@/helpers/auth.js'
 import { get_user, get_user_many, get_version } from '@/helpers/cache.js'
-import { registerCurseforgeApiKey } from '@/helpers/curseforge-key'
+import { applyCurseforgeSettings } from '@/helpers/curseforge-settings'
 import { gameSettingsQueryOptions } from '@/helpers/game-options'
 import {
 	install_create_modpack_instance,
@@ -920,7 +920,7 @@ traceStartupStep('Initialize backend state', () => initialize_state(appEventChan
 		// the backend needs it to name installed CurseForge content. Nothing
 		// waits on it — a listing drawn before it lands simply has filenames in
 		// it, and redraws with names once the answers are cached.
-		void traceStartupStep('Register CurseForge key', registerCurseforgeApiKey).catch((err) =>
+		void traceStartupStep('Register CurseForge key', applyCurseforgeSettings).catch((err) =>
 			console.warn('Could not register the CurseForge key', err),
 		)
 		traceStartupStep('Initialize frontend state', setupApp).catch((err) => {

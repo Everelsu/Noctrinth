@@ -1,3 +1,4 @@
+import type { Labrinth } from '@modrinth/api-client'
 import type { ComputedRef, Ref } from 'vue'
 
 import type { ButtonMenuOption } from '#ui/components/base/buttons'
@@ -76,6 +77,13 @@ export interface ContentManagerContext {
 		selections: UpdateAllSelection[],
 		onProgress?: (completed: number) => void,
 	) => Promise<void>
+	/**
+	 * The versions of a row whose project is not on Modrinth, for the updater.
+	 * Null leaves the row to Modrinth's API.
+	 */
+	getItemVersions?: (item: ContentItem) => Promise<Labrinth.Versions.v2.Version[]> | null
+	/** A version's changelog for such a row, by the row's id; null as above. */
+	getItemChangelog?: (itemId: string, versionId: string) => Promise<string> | null
 
 	// Managed-content actions (optional)
 	runManagedContentPrimaryAction?: (event?: MouseEvent) => void

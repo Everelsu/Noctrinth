@@ -291,26 +291,33 @@ impl SearchRoot {
 
     fn launchers(state: &State) -> Vec<Option<Self>> {
         let mut seen = HashSet::new();
-        [
-            ImportLauncherType::Curseforge,
-            ImportLauncherType::PrismLauncher,
-            ImportLauncherType::MultiMC,
-            ImportLauncherType::ATLauncher,
-            ImportLauncherType::GDLauncher,
-            ImportLauncherType::ModrinthApp,
-        ]
-        .into_iter()
-        .flat_map(crate::api::launcher_search::find_all)
-        .chain(std::iter::once(state.directories.instances_dir()))
-        .filter(|path| seen.insert(path.clone()))
-        .map(|path| {
-            Some(Self {
-                path,
-                depth: MAX_LAUNCHER_DEPTH,
-                content_folders_only: true,
+        let others = if crate::api::curseforge_metadata::options()
+            .search_other_launchers
+        {
+            vec![
+                ImportLauncherType::Curseforge,
+                ImportLauncherType::PrismLauncher,
+                ImportLauncherType::MultiMC,
+                ImportLauncherType::ATLauncher,
+                ImportLauncherType::GDLauncher,
+                ImportLauncherType::ModrinthApp,
+            ]
+        } else {
+            Vec::new()
+        };
+        others
+            .into_iter()
+            .flat_map(crate::api::launcher_search::find_all)
+            .chain(std::iter::once(state.directories.instances_dir()))
+            .filter(|path| seen.insert(path.clone()))
+            .map(|path| {
+                Some(Self {
+                    path,
+                    depth: MAX_LAUNCHER_DEPTH,
+                    content_folders_only: true,
+                })
             })
-        })
-        .collect()
+            .collect()
     }
 }
 

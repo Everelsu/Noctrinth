@@ -15,7 +15,8 @@ export interface FileItem {
  * drawn with that project's icon, name, version and author.
  */
 export interface FileItemDescription {
-	title: string
+	/** Without one, the row keeps its file name and only takes the picture. */
+	title?: string
 	iconUrl?: string | null
 	version?: string | null
 	author?: { name: string; open?: () => void } | null

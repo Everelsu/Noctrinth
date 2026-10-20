@@ -23,6 +23,8 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
     tauri::plugin::Builder::new("noctrinth-curseforge")
         .invoke_handler(tauri::generate_handler![
             curseforge_set_api_key,
+            curseforge_set_options,
+            curseforge_clear_cache,
             curseforge_search,
             curseforge_get_categories,
             curseforge_get_project,
@@ -40,6 +42,20 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
 #[tauri::command]
 pub async fn curseforge_set_api_key(key: Option<String>) -> Result<()> {
     curseforge_metadata::set_api_key(key);
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn curseforge_set_options(
+    options: curseforge_metadata::CurseforgeOptions,
+) -> Result<()> {
+    curseforge_metadata::set_options(options);
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn curseforge_clear_cache() -> Result<()> {
+    curseforge_browse::clear_cache();
     Ok(())
 }
 

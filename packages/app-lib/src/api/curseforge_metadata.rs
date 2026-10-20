@@ -77,6 +77,49 @@ pub(crate) fn api_key() -> Option<String> {
     API_KEY.read().ok().and_then(|slot| slot.clone())
 }
 
+/// What the CurseForge settings turned on. The frontend keeps them and hands
+/// them over at startup and on every change, as it does the key; turning
+/// CurseForge off altogether is handing over no key.
+#[derive(Clone, Copy, Debug, Deserialize)]
+#[serde(default)]
+pub struct CurseforgeOptions {
+    /// Recognise files that came with no ids by their fingerprint.
+    pub recognize_files: bool,
+    /// Ask CurseForge whether its files in an instance have newer ones.
+    pub check_updates: bool,
+    /// The least stable file an update may be: 1 release, 2 beta, 3 alpha,
+    /// as CurseForge's own app's preferred release type.
+    pub update_release_type: i64,
+    /// Look for a file kept off launchers in other launchers' instances too,
+    /// not only in Downloads and this launcher's.
+    pub search_other_launchers: bool,
+}
+
+const DEFAULT_OPTIONS: CurseforgeOptions = CurseforgeOptions {
+    recognize_files: true,
+    check_updates: true,
+    update_release_type: 1,
+    search_other_launchers: true,
+};
+
+impl Default for CurseforgeOptions {
+    fn default() -> Self {
+        DEFAULT_OPTIONS
+    }
+}
+
+static OPTIONS: RwLock<CurseforgeOptions> = RwLock::new(DEFAULT_OPTIONS);
+
+pub fn set_options(options: CurseforgeOptions) {
+    if let Ok(mut slot) = OPTIONS.write() {
+        *slot = options;
+    }
+}
+
+pub(crate) fn options() -> CurseforgeOptions {
+    OPTIONS.read().map_or(DEFAULT_OPTIONS, |slot| *slot)
+}
+
 /// A CurseForge project, reduced to what a content row draws.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CurseforgeProject {
@@ -411,7 +454,7 @@ pub async fn identify(
     files: &[(String, PathBuf)],
     state: &State,
 ) -> HashMap<String, FileMetadata> {
-    if files.is_empty() {
+    if files.is_empty() || !options().recognize_files {
         return HashMap::new();
     }
 

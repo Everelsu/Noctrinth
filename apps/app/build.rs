@@ -615,6 +615,8 @@ fn main() {
                 InlinedPlugin::new()
                     .commands(&[
                         "curseforge_set_api_key",
+                        "curseforge_set_options",
+                        "curseforge_clear_cache",
                         "curseforge_search",
                         "curseforge_get_categories",
                         "curseforge_get_project",

@@ -19,9 +19,9 @@
 				@update:model-value="emit('toggle-select')"
 			/>
 			<Avatar
-				v-if="description"
+				v-if="description?.title || description?.iconUrl"
 				:src="description.iconUrl ?? undefined"
-				:alt="description.title"
+				:alt="description.title ?? name"
 				size="2rem"
 				class="pointer-events-none shrink-0"
 			/>
@@ -31,7 +31,7 @@
 					class="size-5 group-hover:text-contrast group-focus:text-contrast"
 				/>
 			</div>
-			<div v-if="description" class="flex flex-col truncate leading-tight">
+			<div v-if="description?.title" class="flex flex-col truncate leading-tight">
 				<span class="truncate">
 					<button
 						v-if="description.open"

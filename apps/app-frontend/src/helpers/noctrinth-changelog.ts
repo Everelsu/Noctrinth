@@ -45,6 +45,7 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 - Settings are sorted into Display, Account, Instance defaults and System. Default Java and memory, window and launch hooks each have a tab of their own, Synced settings is called Syncing now, and Resource management is split into Resources and Troubleshooting.
 - Java installations, the Java runtimes Noctrinth downloads and the graphics card each one uses are all in the Java and memory tab; the proxy is in Resources, next to the app directory.
 - Instance settings are split into Instance and Game sections, and every Game tab has a button that opens the default settings it overrides.
+- The empty Logs tab is kept by a night owl under the moon instead of Modrinth's frog.
 - The settings windows' sidebar, backgrounds and scrollbars are refreshed, and one opened on a given tab scrolls its sidebar to it.
 
 ### Fixed

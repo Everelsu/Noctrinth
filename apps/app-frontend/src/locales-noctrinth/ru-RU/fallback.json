@@ -209,6 +209,15 @@
 	"app.features-settings.sync-across-devices.title": {
 		"message": "Синхронизировать эти настройки между устройствами"
 	},
+	"app.file-download.canceling": {
+		"message": "Отмена загрузки…"
+	},
+	"app.file-download.preparing": {
+		"message": "Подготовка загрузки…"
+	},
+	"app.file-download.waiting": {
+		"message": "Ожидание ответа сервера…"
+	},
 	"app.home.jump-back-in.actions.label": {
 		"message": "Действия со сборкой"
 	},
@@ -640,6 +649,12 @@
 	},
 	"app.modal.install-to-play.managed-content.modpack-header": {
 		"message": "Контент сборки модов"
+	},
+	"app.modal.install-to-play.unavailable-description": {
+		"message": "Версию сборки, которую использует этот сервер, сейчас нельзя скачать: её могли снять с публикации или она на проверке. Попробуйте позже или напишите владельцу сервера."
+	},
+	"app.modal.install-to-play.unavailable-header": {
+		"message": "Сборка этого сервера недоступна"
 	},
 	"app.nav.add-account": {
 		"message": "Добавить аккаунт"
@@ -1874,6 +1889,9 @@
 	"app.settings.game-options.validation.no-compatible-instances": {
 		"message": "Некоторые сборки не могут применить эту настройку"
 	},
+	"app.settings.privacy.discord-rich-presence.title": {
+		"message": "Статус в Discord"
+	},
 	"app.settings.resource-management.store.attention": {
 		"message": "Некоторые файлы всё ещё требуют внимания"
 	},
@@ -1945,6 +1963,12 @@
 	},
 	"app.settings.resource-management.store.verified": {
 		"message": "Проверка завершена"
+	},
+	"app.settings.sidebar.label.instance-defaults": {
+		"message": "Сборки по умолчанию"
+	},
+	"app.settings.sidebar.label.system": {
+		"message": "Система"
 	},
 	"app.settings.synced-options.choose-sync-source.command-history-title": {
 		"message": "Откуда взять историю команд"
@@ -2153,8 +2177,50 @@
 	"app.settings.tabs.features": {
 		"message": "Возможности"
 	},
+	"app.settings.tabs.java-and-memory": {
+		"message": "Java и память"
+	},
+	"app.settings.tabs.launch-hooks": {
+		"message": "Хуки запуска"
+	},
+	"app.settings.tabs.resources": {
+		"message": "Ресурсы"
+	},
 	"app.settings.tabs.synced-options": {
 		"message": "Синхронизация"
+	},
+	"app.settings.tabs.syncing": {
+		"message": "Синхронизация"
+	},
+	"app.settings.tabs.troubleshooting": {
+		"message": "Устранение неполадок"
+	},
+	"app.settings.tabs.window": {
+		"message": "Окно"
+	},
+	"app.settings.troubleshooting.clear-cache": {
+		"message": "Очистить кэш"
+	},
+	"app.settings.troubleshooting.clear-cache.confirm.title": {
+		"message": "Очистить кэш приложения?"
+	},
+	"app.settings.troubleshooting.report-ad.copied": {
+		"message": "Скопировано"
+	},
+	"app.settings.troubleshooting.report-ad.copy": {
+		"message": "Скопировать данные рекламы"
+	},
+	"app.settings.troubleshooting.report-ad.description": {
+		"message": "Увидели неуместную или оскорбительную рекламу? Скопируйте её данные, пока она на экране, и отправьте в <support>поддержку Modrinth</support>. Её проверят и уберут."
+	},
+	"app.settings.troubleshooting.report-ad.no-ad.text": {
+		"message": "Дождитесь, пока реклама загрузится, и попробуйте снова."
+	},
+	"app.settings.troubleshooting.report-ad.no-ad.title": {
+		"message": "Реклама не найдена"
+	},
+	"app.settings.troubleshooting.report-ad.title": {
+		"message": "Пожаловаться на рекламу"
 	},
 	"app.skins.demo.apply-tooltip": {
 		"message": "Войдите, чтобы применять скины."
@@ -2338,6 +2404,12 @@
 	},
 	"button.i-understand": {
 		"message": "Понятно"
+	},
+	"changelog.product.app": {
+		"message": "Приложение"
+	},
+	"changelog.product.hosting": {
+		"message": "Хостинг"
 	},
 	"content.card.frozen": {
 		"message": "Этот проект закреплён на текущей версии, пока его не открепят."
@@ -2942,6 +3014,15 @@
 	"instance.last-played": {
 		"message": "Последний запуск"
 	},
+	"instance.settings.defaults.open-app-settings": {
+		"message": "Настройки по умолчанию"
+	},
+	"instance.settings.sidebar.label.game": {
+		"message": "Игра"
+	},
+	"instance.settings.sidebar.label.instance": {
+		"message": "Сборка"
+	},
 	"instance.settings.synced-options.data-override": {
 		"message": "Отключите это исключение, чтобы править общие данные."
 	},
@@ -2977,6 +3058,18 @@
 	},
 	"instance.settings.tabs.general.icon": {
 		"message": "Иконка"
+	},
+	"instance.settings.tabs.hooks.default-settings-description": {
+		"message": "Сборка использует хуки запуска по умолчанию, пока вы не переопределите их здесь."
+	},
+	"instance.settings.tabs.hooks.label": {
+		"message": "Хуки запуска"
+	},
+	"instance.settings.tabs.java.default-settings-description": {
+		"message": "Сборка использует Java и память по умолчанию, пока вы не переопределите их здесь."
+	},
+	"instance.settings.tabs.java.label": {
+		"message": "Java и память"
 	},
 	"instance.settings.tabs.settings-overrides": {
 		"message": "Исключения синхронизации"
@@ -3028,6 +3121,15 @@
 	},
 	"instance.settings.tabs.synced-options.shared-settings.description": {
 		"message": "Игровые настройки можно использовать сразу в нескольких сборках. Что именно — выбирается в настройках приложения."
+	},
+	"instance.settings.tabs.syncing": {
+		"message": "Синхронизация"
+	},
+	"instance.settings.tabs.window.default-settings-description": {
+		"message": "Сборка использует настройки окна по умолчанию, пока вы не переопределите их здесь."
+	},
+	"instance.settings.tabs.window.label": {
+		"message": "Окно"
 	},
 	"instance.worlds.actions.label": {
 		"message": "Действия с миром"
@@ -3155,6 +3257,9 @@
 	"profile.button.shared-instances": {
 		"message": "Открыть общие сборки"
 	},
+	"project.about.links.donate.bmac": {
+		"message": "Buy Me a Coffee"
+	},
 	"project.disclosure.advertising.title": {
 		"message": "Содержит рекламу"
 	},
@@ -3226,6 +3331,15 @@
 	},
 	"project.status.archived.header": {
 		"message": "{title} в архиве"
+	},
+	"project.versions.column.downloads": {
+		"message": "Загрузки"
+	},
+	"project.versions.column.environment": {
+		"message": "Окружение"
+	},
+	"project.versions.column.published": {
+		"message": "Опубликована"
 	},
 	"project.versions.filter.channel": {
 		"message": "Канал"
@@ -3476,6 +3590,9 @@
 	"settings.display.sidebar.right-aligned-filters-sidebar.title": {
 		"message": "Панель фильтров справа на страницах поиска"
 	},
+	"settings.display.theme.oled": {
+		"message": "OLED"
+	},
 	"settings.display.theme.sync-across-devices": {
 		"message": "Синхронизировать тему между устройствами"
 	},
@@ -3628,5 +3745,8 @@
 	},
 	"user.role.modrinth-team": {
 		"message": "Команда Modrinth"
+	},
+	"version.uploaded-by": {
+		"message": "Загрузил"
 	}
 }

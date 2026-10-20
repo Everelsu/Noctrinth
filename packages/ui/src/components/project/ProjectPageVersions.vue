@@ -487,6 +487,7 @@ import { Button } from '#ui/components/base/buttons'
 
 import { useRelativeTime } from '../../composables'
 import { defineMessages, useVIntl } from '../../composables/i18n'
+import { commonMessages } from '../../utils/common-messages'
 import { formatTag } from '../../utils/tag-messages'
 import FloatingMenu from '../floating/FloatingMenu.vue'
 import { getEnvironmentFilterValue, getEnvironmentTags } from './settings/environment/environments'
@@ -561,17 +562,17 @@ const versionColumns = computed<TableColumn<VersionTableColumn>[]>(() => {
 		},
 		{
 			key: 'name',
-			label: 'Version',
+			label: formatMessage(commonMessages.versionLabel),
 			cellClass: '!overflow-visible py-3 pr-4 min-w-[7rem]',
 		},
 		{
 			key: 'gameVersions',
-			label: 'Game version',
+			label: formatMessage(commonMessages.gameVersionLabel),
 			cellClass: '!overflow-visible py-3 align-middle pr-2.5 min-w-0 max-w-[12rem]',
 		},
 		{
 			key: 'platforms',
-			label: 'Platform',
+			label: formatMessage(commonMessages.platformLabel),
 			cellClass: '!overflow-visible py-3 align-middle pr-2.5 min-w-0 max-w-[12rem]',
 		},
 	]
@@ -579,7 +580,7 @@ const versionColumns = computed<TableColumn<VersionTableColumn>[]>(() => {
 	if (props.showEnvironmentColumn) {
 		columns.push({
 			key: 'environment',
-			label: 'Environment',
+			label: formatMessage(messages.environmentColumn),
 			cellClass: `${visibleCellClass} min-w-0 max-w-[12rem]`,
 		})
 	}
@@ -587,13 +588,13 @@ const versionColumns = computed<TableColumn<VersionTableColumn>[]>(() => {
 	columns.push(
 		{
 			key: 'published',
-			label: 'Published',
+			label: formatMessage(messages.publishedColumn),
 			cellClass: '!overflow-visible align-middle pr-2.5 w-max',
 			width: '12%',
 		},
 		{
 			key: 'downloads',
-			label: 'Downloads',
+			label: formatMessage(messages.downloadsColumn),
 			cellClass: '!overflow-visible align-middle',
 			width: '12%',
 		},
@@ -775,6 +776,18 @@ function updateQuery(newQueries: Record<string, string | string[] | undefined | 
 }
 
 const messages = defineMessages({
+	environmentColumn: {
+		id: 'project.versions.column.environment',
+		defaultMessage: 'Environment',
+	},
+	publishedColumn: {
+		id: 'project.versions.column.published',
+		defaultMessage: 'Published',
+	},
+	downloadsColumn: {
+		id: 'project.versions.column.downloads',
+		defaultMessage: 'Downloads',
+	},
 	withheld: {
 		id: 'project.versions.version.withheld',
 		defaultMessage: 'Withheld',

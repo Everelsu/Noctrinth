@@ -258,6 +258,10 @@ const supplementaryResources = computed(() =>
 )
 
 const messages = defineMessages({
+	uploadedBy: {
+		id: 'version.uploaded-by',
+		defaultMessage: 'Uploaded by',
+	},
 	compatibility: {
 		id: 'version.section.compatibility',
 		defaultMessage: 'Compatibility',
@@ -363,7 +367,7 @@ const authorLink = computed(() =>
 					v-if="(author && authorLink) || loadingAuthor"
 					class="flex items-center gap-1 text-secondary"
 				>
-					Uploaded by
+					{{ formatMessage(messages.uploadedBy) }}
 					<AutoLink
 						v-if="author && authorLink"
 						:to="authorLink"

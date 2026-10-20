@@ -45,7 +45,6 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 - CurseForge mods get updates like Modrinth ones: the update badge, Update all, and switching versions with their changelogs.
 - A CurseForge tab in Settings: turn it off, choose where Discover opens, and set whether files are recognised, how far updates go (releases, betas or anything) and whether other launchers are searched for files kept off launchers.
 - In the Files tab, mods, resource packs and shaders show their project's icon, name, version and author, and screenshots a preview.
-- A "Report ad" action in Settings → Troubleshooting.
 
 ### Changed
 - Synced with upstream Modrinth 0.21.10: mods can be installed, enabled, disabled and removed while the instance is running, and translations are updated.

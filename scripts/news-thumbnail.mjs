@@ -101,6 +101,65 @@ const SCENES = {
 		})
 		return parts.join('')
 	},
+
+	/**
+	 * CurseForge back in the launcher: Discover with the source switch on
+	 * CurseForge, its cards in CurseForge's orange, and a returning arrow.
+	 */
+	'curseforge-is-back': () => {
+		const orange = '#f16436'
+		const parts = [
+			`<rect x="190" y="110" width="1540" height="1100" rx="48" fill="#17111f" fill-opacity="0.62" stroke="#fff" stroke-opacity="0.14" stroke-width="3"/>`,
+			// The launcher's sidebar.
+			`<rect x="190" y="110" width="120" height="1100" rx="48" fill="#fff" fill-opacity="0.04"/>`,
+			`<rect x="222" y="150" width="56" height="56" rx="16" fill="url(#brand)"/>`,
+			...[0, 1, 2, 3].map(
+				(k) =>
+					`<rect x="230" y="${260 + k * 90}" width="40" height="40" rx="12" fill="#fff" fill-opacity="${k === 0 ? 0.3 : 0.12}"/>`,
+			),
+			// Search and the source switch, set to CurseForge.
+			`<rect x="360" y="150" width="760" height="64" rx="32" fill="#fff" fill-opacity="0.07" stroke="#fff" stroke-opacity="0.12" stroke-width="3"/>`,
+			`<circle cx="400" cy="182" r="13" fill="none" stroke="#fff" stroke-opacity="0.35" stroke-width="5"/>`,
+			bar(432, 170, 300, 24, '#fff', 0.16),
+			`<rect x="1160" y="150" width="520" height="64" rx="32" fill="#fff" fill-opacity="0.06" stroke="#fff" stroke-opacity="0.12" stroke-width="3"/>`,
+			`<circle cx="1206" cy="182" r="13" fill="#3bd16f" fill-opacity="0.75"/>`,
+			bar(1232, 170, 150, 24, '#fff', 0.28),
+			`<rect x="1424" y="156" width="250" height="52" rx="26" fill="${orange}"/>`,
+			`<circle cx="1462" cy="182" r="13" fill="#2a0e05" fill-opacity="0.55"/>`,
+			bar(1488, 170, 160, 24, '#2a0e05', 0.55),
+		]
+		// Project cards, two rows of three, with CurseForge's orange icons.
+		const tints = ['#f16436', '#ff8a4c', '#e2502a', '#ff9f66', '#f47a3c', '#d9441f']
+		tints.forEach((tint, k) => {
+			const x = 360 + (k % 3) * 445
+			const y = 270 + Math.floor(k / 3) * 300
+			parts.push(
+				panel(x, y, 420, 270, 28),
+				`<rect x="${x + 28}" y="${y + 28}" width="96" height="96" rx="22" fill="${tint}" fill-opacity="0.85"/>`,
+				bar(x + 148, y + 40, [190, 220, 160, 200, 230, 180][k], 28, '#fff', 0.42),
+				bar(x + 148, y + 86, [130, 110, 150, 120, 100, 140][k], 20, '#fff', 0.2),
+				bar(x + 28, y + 156, 360, 20, '#fff', 0.16),
+				bar(x + 28, y + 190, [280, 300, 250, 320, 260, 290][k], 20, '#fff', 0.12),
+				`<rect x="${x + 276}" y="${y + 210}" width="116" height="40" rx="20" fill="#c78aff" fill-opacity="${k === 1 ? 0.95 : 0.5}"/>`,
+			)
+		})
+		// The returning arrow: an orange ring, nearly closed, with its head.
+		const cx = 1560
+		const cy = 900
+		const r = 150
+		const start = (-60 * Math.PI) / 180
+		const end = (225 * Math.PI) / 180
+		const sx = cx + r * Math.cos(start)
+		const sy = cy + r * Math.sin(start)
+		const ex = cx + r * Math.cos(end)
+		const ey = cy + r * Math.sin(end)
+		parts.push(
+			`<circle cx="${cx}" cy="${cy}" r="${r + 70}" fill="#17111f" fill-opacity="0.75" stroke="#fff" stroke-opacity="0.14" stroke-width="3"/>`,
+			`<path d="M ${sx.toFixed(1)} ${sy.toFixed(1)} A ${r} ${r} 0 1 1 ${ex.toFixed(1)} ${ey.toFixed(1)}" fill="none" stroke="url(#ember)" stroke-width="44" stroke-linecap="round"/>`,
+			`<polygon points="${(sx + 6).toFixed(1)},${(sy - 70).toFixed(1)} ${(sx + 78).toFixed(1)},${(sy + 22).toFixed(1)} ${(sx - 34).toFixed(1)},${(sy + 34).toFixed(1)}" fill="${orange}"/>`,
+		)
+		return parts.join('')
+	},
 }
 
 function thumbnail(scene, seed) {
@@ -109,6 +168,7 @@ function thumbnail(scene, seed) {
 <linearGradient id="shade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#140c22" stop-opacity="0"/><stop offset="1" stop-color="#0d0817" stop-opacity="0.75"/></linearGradient>
 <radialGradient id="glow" cx="0.3" cy="0.15" r="0.9"><stop offset="0" stop-color="#7d45d9" stop-opacity="0.22"/><stop offset="1" stop-color="#7d45d9" stop-opacity="0"/></radialGradient>
 <linearGradient id="brand" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0b3ff"/><stop offset="1" stop-color="#9a5cf0"/></linearGradient>
+<linearGradient id="ember" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff9f66"/><stop offset="1" stop-color="#e2502a"/></linearGradient>
 <linearGradient id="hero" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7a3fd1" stop-opacity="0.55"/><stop offset="1" stop-color="#3b1f6b" stop-opacity="0.35"/></linearGradient>
 </defs>
 <rect width="${W}" height="${H}" fill="#161022"/>

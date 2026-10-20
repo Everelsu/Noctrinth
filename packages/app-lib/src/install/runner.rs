@@ -1579,6 +1579,39 @@ async fn install_pack_inner(
             )
             .await?
         }
+        CreatePackLocation::FromCurseforge {
+            project_id,
+            file_id,
+            ..
+        } => {
+            reporter
+                .set_context(
+                    InstallErrorContext::new("download CurseForge modpack")
+                        .project_id(project_id.clone())
+                        .build(),
+                )
+                .await?;
+            let api_key = crate::api::curseforge_metadata::api_key()
+                .ok_or_else(|| {
+                    crate::ErrorKind::InputError(
+                        "This build has no CurseForge API key.".to_string(),
+                    )
+                })?;
+            let bytes = crate::api::curseforge_browse::download_modpack_bytes(
+                &project_id,
+                file_id,
+            )
+            .await?;
+            install_curseforge_pack_files_with_reporter(
+                bytes,
+                &api_key,
+                &instance_id,
+                reason,
+                reporter,
+            )
+            .await?;
+            return Ok(());
+        }
         CreatePackLocation::FromFile {
             path,
             curseforge_api_key,
@@ -1770,6 +1803,7 @@ async fn update_backup_scope(
                 ))
                 .await?
             }
+            CreatePackLocation::FromCurseforge { .. } => return Ok(None),
             CreatePackLocation::FromFile { path, .. } => {
                 // A CurseForge zip is not an mrpack and lists its overrides
                 // differently; backing up the whole instance is the safe answer.
@@ -1944,6 +1978,9 @@ fn set_initial_display(job_state: &mut InstallJobState) {
             match location {
                 CreatePackLocation::FromVersionId {
                     title, icon_url, ..
+                }
+                | CreatePackLocation::FromCurseforge {
+                    title, icon_url, ..
                 } => Some((title.clone(), icon_url.clone())),
                 CreatePackLocation::FromFile { path, .. } => {
                     Some((get_local_pack_instance(path).name, None))
@@ -2074,6 +2111,13 @@ pub(super) fn modpack_details(
             version_id: Some(version_id.clone()),
             title: Some(title.clone()),
         },
+        CreatePackLocation::FromCurseforge { title, .. } => {
+            InstallPhaseDetails::Modpack {
+                project_id: None,
+                version_id: None,
+                title: Some(title.clone()),
+            }
+        }
         CreatePackLocation::FromFile { .. } => InstallPhaseDetails::Modpack {
             project_id: None,
             version_id: None,

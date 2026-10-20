@@ -106,6 +106,18 @@ pub enum CreatePackLocation {
         #[serde(default)]
         curseforge_api_key: Option<String>,
     },
+    // Noctrinth's own: a CurseForge modpack, downloaded inside the install
+    // job so it is in the task list, with its name and picture, from the
+    // moment it is asked for. `file_id` picks a file; without one the newest
+    // client file is used.
+    FromCurseforge {
+        project_id: String,
+        #[serde(default)]
+        file_id: Option<String>,
+        title: String,
+        #[serde(default)]
+        icon_url: Option<String>,
+    },
 }
 
 #[derive(Serialize, Deserialize)]
@@ -196,6 +208,14 @@ pub async fn get_instance_from_pack(
                 project_id,
                 version_id,
             }),
+            ..Default::default()
+        }),
+        // The pack's manifest sets the rest once it is downloaded.
+        CreatePackLocation::FromCurseforge {
+            title, icon_url, ..
+        } => Ok(CreatePackInstance {
+            name: title,
+            icon_url,
             ..Default::default()
         }),
         CreatePackLocation::FromFile {

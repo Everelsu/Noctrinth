@@ -23,7 +23,6 @@ import {
 	get_version_many,
 } from '@/helpers/cache.js'
 import {
-	curseforgeDownloadModpack,
 	curseforgeForInstallFlow,
 	curseforgeGetFiles,
 	curseforgeGetProject,
@@ -36,7 +35,6 @@ import {
 	install_create_instance,
 	install_create_modpack_instance,
 	installJobInstanceId,
-	packLocationFromFile,
 	wait_for_install_job,
 } from '@/helpers/install'
 import {
@@ -1098,8 +1096,13 @@ export function createContentInstall(opts: {
 		const { project, versions } = await loadCurseforgeForInstall(projectId)
 
 		if (project.project_type === 'modpack') {
-			const path = await curseforgeDownloadModpack(projectId, versionId ?? null)
-			const job = await install_create_modpack_instance(packLocationFromFile(path))
+			const job = await install_create_modpack_instance({
+				type: 'fromCurseforge',
+				project_id: projectId,
+				file_id: versionId ?? null,
+				title: project.title,
+				icon_url: project.icon_url,
+			})
 			const createdId = installJobInstanceId(job)
 			if (createdId) createInstanceCallback(createdId)
 			callback(versionId ?? versions[0]?.id)

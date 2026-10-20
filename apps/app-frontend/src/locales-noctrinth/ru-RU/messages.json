@@ -71,6 +71,9 @@
 	"app.appearance-settings.minimize-launcher.description": {
 		"message": "Сворачивать окно лаунчера при запуске Minecraft."
 	},
+	"app.browse.source.label": {
+		"message": "Где искать"
+	},
 	"app.changelog.author": {
 		"message": "Автор"
 	},
@@ -190,6 +193,12 @@
 	},
 	"app.collection.visibility.unlisted": {
 		"message": "По ссылке"
+	},
+	"app.content-install.curseforge.missing-dependencies.text": {
+		"message": "Для этой сборки у них нет подходящих версий, их нужно добавить иначе: {names}"
+	},
+	"app.content-install.curseforge.missing-dependencies.title": {
+		"message": "Установлено без части зависимостей"
 	},
 	"app.crash-modal.close": {
 		"message": "Закрыть"
@@ -686,6 +695,42 @@
 	"app.crash.show-more": {
 		"message": "Показать ещё {count}"
 	},
+	"app.curseforge.pending.all-done": {
+		"message": "Всё установлено"
+	},
+	"app.curseforge.pending.description": {
+		"message": "{count, plural, one {Автор этого файла не разрешает} few {Авторы этих файлов не разрешают} many {Авторы этих файлов не разрешают} other {Авторы этих файлов не разрешают}} лаунчерам скачивать {count, plural, one {его} other {их}}. Скачайте {count, plural, one {его} other {каждый}} с CurseForge — лаунчер сам подхватит {count, plural, one {файл} other {файлы}} из папки «Загрузки»."
+	},
+	"app.curseforge.pending.done": {
+		"message": "Готово"
+	},
+	"app.curseforge.pending.found": {
+		"message": "Установлен"
+	},
+	"app.curseforge.pending.header": {
+		"message": "Скачайте вручную"
+	},
+	"app.curseforge.pending.open-all": {
+		"message": "Открыть страницы загрузки"
+	},
+	"app.curseforge.pending.open-downloads": {
+		"message": "Открыть «Загрузки»"
+	},
+	"app.curseforge.pending.open-page": {
+		"message": "Скачать"
+	},
+	"app.curseforge.pending.skip": {
+		"message": "Обойтись без него"
+	},
+	"app.curseforge.pending.waiting": {
+		"message": "Слежу за папкой «Загрузки»…"
+	},
+	"app.curseforge.project.load-error": {
+		"message": "Не удалось загрузить проект с CurseForge."
+	},
+	"app.curseforge.project.open-on-curseforge": {
+		"message": "Открыть на CurseForge"
+	},
 	"app.error-modal.copy-debug-info": {
 		"message": "Скопировать отладочную информацию"
 	},
@@ -811,6 +856,15 @@
 	},
 	"app.instance.add-content.install": {
 		"message": "Установить контент"
+	},
+	"app.instance.content.curseforge-pending.action": {
+		"message": "Скачать"
+	},
+	"app.instance.content.curseforge-pending.body": {
+		"message": "Их авторы не разрешают лаунчерам скачивать их, а на этом компьютере их не нашлось."
+	},
+	"app.instance.content.curseforge-pending.header": {
+		"message": "{count, plural, one {# файл нужно} few {# файла нужно} many {# файлов нужно} other {# файла нужно}} скачать вручную"
 	},
 	"app.instance.logs.live": {
 		"message": "Трансляция лога"

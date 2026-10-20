@@ -46,7 +46,12 @@ const versions = computed(() =>
 		version_number: file.name,
 		version_type: file.version_type,
 		game_versions: file.game_versions,
-		loaders: file.loaders,
+		// A mod file from before CurseForge tagged loaders is a Forge one, as
+		// CurseForge's own app takes it.
+		loaders:
+			file.loaders.length > 0 || (props.project.project_type ?? 'mod') !== 'mod'
+				? file.loaders
+				: ['forge'],
 		date_published: file.date_published ?? '',
 		downloads: file.downloads,
 		files: [{ filename: file.file_name, size: file.size ?? 0, primary: true }],

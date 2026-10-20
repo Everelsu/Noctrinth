@@ -621,7 +621,6 @@ fn main() {
                         "curseforge_get_description",
                         "curseforge_get_files",
                         "curseforge_install_project",
-                        "curseforge_download_modpack",
                         "curseforge_pending_files",
                         "curseforge_check_pending_downloads",
                         "curseforge_dismiss_pending_file",

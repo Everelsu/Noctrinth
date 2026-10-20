@@ -12,7 +12,14 @@
  * fills in as it arrives — usually already there, because the browse page
  * starts loading a project the moment its card is hovered.
  */
-import { CheckIcon, ExternalIcon, PlusIcon, SpinnerIcon } from '@modrinth/assets'
+import {
+	CalendarIcon,
+	CheckIcon,
+	ExternalIcon,
+	PlusIcon,
+	SpinnerIcon,
+	VersionIcon,
+} from '@modrinth/assets'
 import {
 	Button,
 	commonMessages,
@@ -22,8 +29,14 @@ import {
 	NavTabs,
 	ProjectPageHeader,
 	ProjectSidebarCompatibility,
+	ProjectSidebarCreators,
+	ProjectSidebarLinks,
+	ProjectSidebarTags,
+	useFormatDateTime,
+	useRelativeTime,
 	useVIntl,
 } from '@modrinth/ui'
+import { capitalizeString } from '@modrinth/utils'
 import { useQuery, useQueryClient } from '@tanstack/vue-query'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { computed, ref, watch } from 'vue'
@@ -31,6 +44,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import InstanceIndicator from '@/components/ui/InstanceIndicator.vue'
 import {
+	curseforgeCategoryTag,
 	curseforgeDescriptionQueryOptions,
 	curseforgeFilesQueryOptions,
 	curseforgeIdOf,
@@ -57,9 +71,10 @@ const queryClient = useQueryClient()
 const { install: installVersion } = injectContentInstall()
 
 const messages = defineMessages({
-	descriptionTab: { id: 'app.curseforge.project.description-tab', defaultMessage: 'Description' },
-	versionsTab: { id: 'app.curseforge.project.versions-tab', defaultMessage: 'Versions' },
-	galleryTab: { id: 'app.curseforge.project.gallery-tab', defaultMessage: 'Gallery' },
+	// The Modrinth project page's own ids, so their translations apply here too.
+	descriptionTab: { id: 'app.project.tab.description', defaultMessage: 'Description' },
+	versionsTab: { id: 'app.project.tab.versions', defaultMessage: 'Versions' },
+	galleryTab: { id: 'app.project.tab.gallery', defaultMessage: 'Gallery' },
 	openOnCurseforge: {
 		id: 'app.curseforge.project.open-on-curseforge',
 		defaultMessage: 'Open on CurseForge',
@@ -112,12 +127,20 @@ async function refreshInstance() {
 }
 watch(instanceId, refreshInstance, { immediate: true })
 
+const formatRelativeTime = useRelativeTime()
+const formatDateTime = useFormatDateTime({ dateStyle: 'long', timeStyle: 'short' })
+
 const projectType = computed(
 	() => project.value?.project_type ?? summary.value?.project_types[0] ?? 'mod',
 )
 const isModpack = computed(() => projectType.value === 'modpack')
 const installed = computed(() => !isModpack.value && installedIds.value.has(props.id))
 const websiteUrl = computed(() => project.value?.website_url ?? summary.value?.website_url ?? null)
+
+/** Its categories as the Modrinth tags they mean, where there is one. */
+const categoryTags = computed(() => [
+	...new Set((project.value?.categories ?? []).map((c) => curseforgeCategoryTag(c.name))),
+])
 
 /** The project in the shape the shared header reads. */
 const headerProject = computed(() => {
@@ -129,8 +152,9 @@ const headerProject = computed(() => {
 			icon_url: project.value.icon_url,
 			raw_icon_url: project.value.icon_url,
 			downloads: project.value.downloads,
-			followers: project.value.follows,
-			categories: [] as string[],
+			// CurseForge counts likes, not followers; the header leaves it out.
+			followers: undefined as unknown as number,
+			categories: categoryTags.value,
 		}
 	}
 	if (summary.value) {
@@ -141,8 +165,8 @@ const headerProject = computed(() => {
 			icon_url: summary.value.icon_url,
 			raw_icon_url: summary.value.icon_url,
 			downloads: summary.value.downloads,
-			followers: summary.value.follows,
-			categories: [] as string[],
+			followers: undefined as unknown as number,
+			categories: summary.value.categories.map(curseforgeCategoryTag),
 		}
 	}
 	return null
@@ -174,6 +198,47 @@ const sidebarProject = computed(() =>
 			}
 		: null,
 )
+/** What the shared links section reads; CurseForge's page is its site. */
+const linksProject = computed(() =>
+	project.value
+		? {
+				issues_url: project.value.issues_url ?? '',
+				source_url: project.value.source_url ?? '',
+				wiki_url: project.value.wiki_url ?? '',
+				discord_url: '',
+				site_url: project.value.website_url ?? undefined,
+				donation_urls: [],
+			}
+		: null,
+)
+
+/**
+ * Its authors in the shape the shared creators section reads. CurseForge
+ * lists the owner first and has no roles; each opens their CurseForge page.
+ */
+const creators = computed(() =>
+	(project.value?.authors ?? []).map((author, index) => ({
+		id: author.id ?? author.name,
+		team_id: '',
+		user: {
+			id: author.id ?? author.name,
+			username: author.name,
+			avatar_url: author.avatar_url ?? undefined,
+		},
+		role: '',
+		is_owner: index === 0,
+		accepted: true,
+		ordering: index,
+	})),
+)
+function authorLink(username: string) {
+	const author = project.value?.authors.find((a) => a.name === username)
+	return author?.url ?? project.value?.website_url ?? ''
+}
+
+const createdAt = computed(() => project.value?.date_created ?? null)
+const updatedAt = computed(() => project.value?.date_modified ?? null)
+
 /** What the shared Description and Gallery tabs read. */
 const tabProject = computed(() => ({
 	id: props.id,
@@ -193,6 +258,16 @@ const tabProject = computed(() => ({
 const tabSuffix = computed(() =>
 	instanceId.value ? `?i=${encodeURIComponent(instanceId.value)}` : '',
 )
+// Opened from an instance, the versions tab starts filtered to what fits it,
+// through the same g/l query its filters read.
+const versionsSuffix = computed(() => {
+	if (!instance.value) return tabSuffix.value
+	const params = new URLSearchParams({ i: instance.value.id, g: instance.value.game_version })
+	if (projectType.value === 'mod' && instance.value.loader !== 'vanilla') {
+		params.set('l', instance.value.loader)
+	}
+	return `?${params.toString()}`
+})
 const tabs = computed(() => [
 	{
 		label: formatMessage(messages.descriptionTab),
@@ -200,7 +275,7 @@ const tabs = computed(() => [
 	},
 	{
 		label: formatMessage(messages.versionsTab),
-		href: `/curseforge/${props.id}/versions${tabSuffix.value}`,
+		href: `/curseforge/${props.id}/versions${versionsSuffix.value}`,
 	},
 	{
 		label: formatMessage(messages.galleryTab),
@@ -250,6 +325,57 @@ async function install(fileId: string | null = null) {
 				:tags="{ loaders: allLoaders, gameVersions: allGameVersions }"
 				class="project-sidebar-section"
 			/>
+			<ProjectSidebarLinks
+				v-if="linksProject"
+				link-target="_blank"
+				:project="linksProject"
+				class="project-sidebar-section"
+			/>
+			<ProjectSidebarTags
+				v-if="categoryTags.length > 0"
+				:project="{ categories: categoryTags, additional_categories: [] }"
+				class="project-sidebar-section"
+			/>
+			<ProjectSidebarCreators
+				v-if="creators.length > 0"
+				:members="creators"
+				:org-link="() => ''"
+				:user-link="authorLink"
+				link-target="_blank"
+				user-link-target="_blank"
+				class="project-sidebar-section"
+			/>
+			<div v-if="createdAt || updatedAt" class="project-sidebar-section flex flex-col gap-3">
+				<h2 class="m-0 text-lg">{{ formatMessage(commonMessages.detailsLabel) }}</h2>
+				<div
+					class="flex flex-col gap-3 [&>div>svg]:mt-[1px] [&>div>svg]:shrink-0 [&>div]:flex [&>div]:items-start [&>div]:gap-2"
+				>
+					<div v-if="createdAt" v-tooltip="formatDateTime(createdAt)">
+						<CalendarIcon aria-hidden="true" />
+						<div>
+							{{
+								capitalizeString(
+									formatMessage(commonMessages.projectCreated, {
+										date: formatRelativeTime(createdAt),
+									}),
+								)
+							}}
+						</div>
+					</div>
+					<div v-if="updatedAt" v-tooltip="formatDateTime(updatedAt)">
+						<VersionIcon aria-hidden="true" />
+						<div>
+							{{
+								capitalizeString(
+									formatMessage(commonMessages.projectUpdated, {
+										date: formatRelativeTime(updatedAt),
+									}),
+								)
+							}}
+						</div>
+					</div>
+				</div>
+			</div>
 		</Teleport>
 		<div v-if="headerProject" class="flex flex-col gap-4 p-6">
 			<InstanceIndicator v-if="instance" :instance="instance" />

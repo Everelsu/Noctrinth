@@ -47,6 +47,101 @@ export interface CurseforgeSearchQuery {
 	limit: number
 }
 
+/**
+ * CurseForge categories that mean what a Modrinth tag means, by CurseForge's
+ * name for them, lowercased. Such a category is shown as that tag — with
+ * Modrinth's icon and the tag's translated name — everywhere a tag is shown.
+ * Only tags Modrinth actually has are listed; anything else keeps CurseForge's
+ * own name and picture.
+ */
+const CURSEFORGE_TO_MODRINTH_TAG: Record<string, string> = {
+	// Mods
+	'adventure and rpg': 'adventure',
+	'armor, tools, and weapons': 'equipment',
+	'api and library': 'library',
+	'world gen': 'worldgen',
+	biomes: 'worldgen',
+	cosmetic: 'decoration',
+	food: 'food',
+	magic: 'magic',
+	'utility & qol': 'utility',
+	'map and information': 'utility',
+	mobs: 'mobs',
+	performance: 'optimization',
+	'server utility': 'management',
+	storage: 'storage',
+	technology: 'technology',
+	tech: 'technology',
+	redstone: 'technology',
+	'player transport': 'transportation',
+	'energy, fluid, and item transport': 'transportation',
+	'twitch integration': 'social',
+	skyblock: 'skyblock',
+	// Modpacks
+	exploration: 'adventure',
+	'combat / pvp': 'combat',
+	hardcore: 'challenging',
+	'extra large': 'kitchen-sink',
+	'small / light': 'lightweight',
+	multiplayer: 'multiplayer',
+	quests: 'quests',
+	'sci-fi': 'technology',
+	'mini game': 'minigame',
+	// Resource packs
+	'16x': '16x',
+	'32x': '32x',
+	'64x': '64x',
+	'128x': '128x',
+	'256x': '256x',
+	'512x and higher': '512x+',
+	'photo realistic': 'realistic',
+	'font packs': 'fonts',
+	'mod support': 'modded',
+	medieval: 'themed',
+	traditional: 'vanilla-like',
+	// Shaders
+	fantasy: 'fantasy',
+	realistic: 'realistic',
+	vanilla: 'vanilla-like',
+}
+
+/** The name a CurseForge category is shown under. */
+export function curseforgeCategoryTag(name: string): string {
+	return CURSEFORGE_TO_MODRINTH_TAG[name.toLowerCase()] ?? name
+}
+
+export interface CurseforgeCategoryTag {
+	/** The Modrinth tag it is shown as, or CurseForge's own name. */
+	tag: string
+	/** CurseForge's picture, for a category that has no Modrinth icon. */
+	icon_url: string | null
+	/** Every CurseForge category shown under this tag. */
+	ids: number[]
+}
+
+/**
+ * A project type's CurseForge categories as the filter list shows them: one
+ * entry per tag, each searching every CurseForge category it stands for.
+ */
+export function curseforgeCategoryTags(categories: CurseforgeCategory[]): CurseforgeCategoryTag[] {
+	const byTag = new Map<string, CurseforgeCategoryTag>()
+	for (const category of categories) {
+		const tag = curseforgeCategoryTag(category.name)
+		const mapped = tag !== category.name
+		const entry = byTag.get(tag)
+		if (entry) {
+			entry.ids.push(category.id)
+		} else {
+			byTag.set(tag, {
+				tag,
+				icon_url: mapped ? null : category.iconUrl,
+				ids: [category.id],
+			})
+		}
+	}
+	return [...byTag.values()]
+}
+
 export interface CurseforgeCategory {
 	id: number
 	name: string
@@ -79,7 +174,10 @@ export interface CurseforgeProject {
 	follows: number
 	date_created: string | null
 	date_modified: string | null
-	authors: { name: string; url: string | null }[]
+	wiki_url: string | null
+	issues_url: string | null
+	source_url: string | null
+	authors: { id: string | null; name: string; url: string | null; avatar_url: string | null }[]
 	categories: { name: string; slug: string; icon_url: string | null }[]
 	gallery: {
 		url: string
@@ -267,14 +365,6 @@ export async function curseforgeInstallProject(
 ) {
 	return await invoke<CurseforgeInstallOutcome>(plugin('curseforge_install_project'), {
 		instanceId,
-		projectId,
-		fileId: fileId ?? null,
-	})
-}
-
-/** Downloads a modpack's zip; returns where it was saved. */
-export async function curseforgeDownloadModpack(projectId: string, fileId?: string | null) {
-	return await invoke<string>(plugin('curseforge_download_modpack'), {
 		projectId,
 		fileId: fileId ?? null,
 	})

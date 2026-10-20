@@ -15,7 +15,6 @@
 //! [`curseforge_blocked`]: crate::api::curseforge_blocked
 
 use std::collections::{HashMap, HashSet};
-use std::path::PathBuf;
 use std::sync::{LazyLock, Mutex};
 use std::time::{Duration, Instant};
 
@@ -226,9 +225,13 @@ struct ApiImage {
 #[serde(rename_all = "camelCase")]
 struct ApiAuthor {
     #[serde(default)]
+    id: Option<i64>,
+    #[serde(default)]
     name: String,
     #[serde(default)]
     url: Option<String>,
+    #[serde(default)]
+    avatar_url: Option<String>,
 }
 
 #[derive(Deserialize, Clone)]
@@ -247,6 +250,12 @@ struct ApiCategory {
 struct ApiLinks {
     #[serde(default)]
     website_url: Option<String>,
+    #[serde(default)]
+    wiki_url: Option<String>,
+    #[serde(default)]
+    issues_url: Option<String>,
+    #[serde(default)]
+    source_url: Option<String>,
 }
 
 #[derive(Deserialize, Clone)]
@@ -491,13 +500,12 @@ fn search_url(query: &SearchQuery) -> crate::Result<String> {
             .append_pair("classId", &class.to_string())
             .append_pair("index", &offset.to_string())
             .append_pair("pageSize", &limit.to_string());
-        // Asked to sort by relevance while searching for something, CurseForge
-        // is left to rank by the match itself, as its own app does.
-        if !(query.sort == "relevance" && text.is_some()) {
-            params
-                .append_pair("sortField", &sort_field(&query.sort).to_string())
-                .append_pair("sortOrder", "desc");
-        }
+        // CurseForge's public search has no relevance order; left without a
+        // sort it returns matches in an order that reads as random, so
+        // "relevance" is popularity among the matches.
+        params
+            .append_pair("sortField", &sort_field(&query.sort).to_string())
+            .append_pair("sortOrder", "desc");
         if let Some(text) = text {
             params.append_pair("searchFilter", text);
         }
@@ -667,8 +675,10 @@ pub struct ProjectCategory {
 
 #[derive(Serialize, Debug)]
 pub struct ProjectAuthor {
+    pub id: Option<String>,
     pub name: String,
     pub url: Option<String>,
+    pub avatar_url: Option<String>,
 }
 
 /// Everything the CurseForge project page draws above its tabs.
@@ -685,11 +695,19 @@ pub struct Project {
     pub follows: i64,
     pub date_created: Option<String>,
     pub date_modified: Option<String>,
+    pub wiki_url: Option<String>,
+    pub issues_url: Option<String>,
+    pub source_url: Option<String>,
     pub authors: Vec<ProjectAuthor>,
     pub categories: Vec<ProjectCategory>,
     pub gallery: Vec<ProjectImage>,
     pub loaders: Vec<String>,
     pub game_versions: Vec<String>,
+}
+
+/// A URL from CurseForge's data, kept only when it is one to follow.
+fn https_only(url: Option<String>) -> Option<String> {
+    url.filter(|url| url.starts_with("https://"))
 }
 
 pub async fn get_project(id: &str) -> crate::Result<Project> {
@@ -713,12 +731,23 @@ pub async fn get_project(id: &str) -> crate::Result<Project> {
         follows: project.thumbs_up_count,
         date_created: project.date_created,
         date_modified: project.date_modified,
+        wiki_url: https_only(
+            project.links.as_ref().and_then(|l| l.wiki_url.clone()),
+        ),
+        issues_url: https_only(
+            project.links.as_ref().and_then(|l| l.issues_url.clone()),
+        ),
+        source_url: https_only(
+            project.links.as_ref().and_then(|l| l.source_url.clone()),
+        ),
         authors: project
             .authors
             .into_iter()
             .map(|author| ProjectAuthor {
+                id: author.id.map(|id| id.to_string()),
                 name: author.name,
-                url: author.url.filter(|url| url.starts_with("https://")),
+                url: https_only(author.url),
+                avatar_url: https_only(author.avatar_url),
             })
             .collect(),
         categories: project
@@ -734,11 +763,16 @@ pub async fn get_project(id: &str) -> crate::Result<Project> {
             .screenshots
             .into_iter()
             .filter_map(|image| {
+                // CurseForge often repeats the title as the description,
+                // and the file name as both; the repeat is not drawn twice.
+                let description = image.description.filter(|d| {
+                    !d.trim().is_empty() && Some(d) != image.title.as_ref()
+                });
                 Some(ProjectImage {
                     url: image.url.filter(|url| url.starts_with("https://"))?,
                     thumbnail_url: image.thumbnail_url,
                     title: image.title,
-                    description: image.description,
+                    description,
                 })
             })
             .collect(),
@@ -810,17 +844,26 @@ impl From<ApiFile> for ProjectFile {
     }
 }
 
-async fn list_files(
+#[derive(Deserialize)]
+struct FilesPage {
+    data: Vec<ApiFile>,
+    #[serde(default)]
+    pagination: Option<ApiPagination>,
+}
+
+fn files_url(
     project_id: i64,
     game_version: Option<&str>,
     loader: Option<i64>,
-    state: &State,
-) -> crate::Result<Vec<ApiFile>> {
+    index: u32,
+) -> crate::Result<String> {
     let mut url = url::Url::parse(&format!("{API}/mods/{project_id}/files"))
         .map_err(|error| input(error.to_string()))?;
     {
         let mut params = url.query_pairs_mut();
-        params.append_pair("pageSize", &MAX_PAGE_SIZE.to_string());
+        params
+            .append_pair("pageSize", &MAX_PAGE_SIZE.to_string())
+            .append_pair("index", &index.to_string());
         if let Some(version) = game_version {
             params.append_pair("gameVersion", version);
         }
@@ -828,8 +871,54 @@ async fn list_files(
             params.append_pair("modLoaderType", &loader.to_string());
         }
     }
-    let files: Data<Vec<ApiFile>> = get(url.as_str(), state).await?;
-    Ok(files.data)
+    Ok(url.to_string())
+}
+
+/// The newest page of a project's files, which is what picking one for an
+/// instance needs.
+async fn list_files(
+    project_id: i64,
+    game_version: Option<&str>,
+    loader: Option<i64>,
+    state: &State,
+) -> crate::Result<Vec<ApiFile>> {
+    let page: FilesPage =
+        get(&files_url(project_id, game_version, loader, 0)?, state).await?;
+    Ok(page.data)
+}
+
+/// The most files the versions tab lists; a project with more shows its
+/// newest this many.
+const MAX_LISTED_FILES: u32 = 1000;
+
+/// Every file of a project, page by page, as the versions tab lists them.
+async fn list_all_files(
+    project_id: i64,
+    game_version: Option<&str>,
+    loader: Option<i64>,
+    state: &State,
+) -> crate::Result<Vec<ApiFile>> {
+    let first: FilesPage =
+        get(&files_url(project_id, game_version, loader, 0)?, state).await?;
+    let total = first
+        .pagination
+        .map_or(0, |p| p.total_count)
+        .min(MAX_LISTED_FILES);
+    let mut files = first.data;
+    // ponytail: the remaining pages are fetched together, bounded by the API
+    // semaphore; a project at the cap is ~20 requests, cached afterwards.
+    let rest = futures::future::try_join_all(
+        (MAX_PAGE_SIZE..total).step_by(MAX_PAGE_SIZE as usize).map(
+            |index| async move {
+                let url = files_url(project_id, game_version, loader, index)?;
+                let page: FilesPage = get(&url, state).await?;
+                Ok::<_, crate::Error>(page.data)
+            },
+        ),
+    )
+    .await?;
+    files.extend(rest.into_iter().flatten());
+    Ok(files)
 }
 
 pub async fn get_files(
@@ -839,7 +928,7 @@ pub async fn get_files(
 ) -> crate::Result<Vec<ProjectFile>> {
     let state = State::get().await?;
     let id = parse_project_id(id)?;
-    let files = list_files(
+    let files = list_all_files(
         id,
         game_version.as_deref(),
         loader.as_deref().and_then(loader_id),
@@ -1143,11 +1232,12 @@ async fn install_file(
 }
 
 /// Download a modpack's zip, for the regular CurseForge pack installer to
-/// install from. Returns where it was saved.
-pub async fn download_modpack(
+/// install from. Called from inside the install job, so the download is part
+/// of the task the user sees.
+pub async fn download_modpack_bytes(
     project_id: &str,
     file_id: Option<String>,
-) -> crate::Result<PathBuf> {
+) -> crate::Result<bytes::Bytes> {
     let state = State::get().await?;
     let project_id = parse_project_id(project_id)?;
     let file = match file_id {
@@ -1179,15 +1269,7 @@ pub async fn download_modpack(
         &state.pool,
     )
     .await?;
-    let folder = state.directories.caches_dir().join("curseforge-packs");
-    tokio::fs::create_dir_all(&folder)
-        .await
-        .map_err(|e| crate::util::io::IOError::with_path(e, &folder))?;
-    let path = folder.join(format!("{}.zip", file.id));
-    tokio::fs::write(&path, &bytes)
-        .await
-        .map_err(|e| crate::util::io::IOError::with_path(e, &path))?;
-    Ok(path)
+    Ok(bytes)
 }
 
 /// What an instance is still waiting on, described for the frontend.
@@ -1265,14 +1347,14 @@ mod tests {
     }
 
     #[test]
-    fn relevance_with_a_query_is_left_to_curseforge() {
+    fn relevance_is_popularity_among_the_matches() {
         let mut q = query("mod");
         q.sort = "relevance".to_string();
-        assert!(!search_url(&q).unwrap().contains("sortField"));
-
-        q.query = None;
         let params = params(&search_url(&q).unwrap());
         assert!(params.contains(&("sortField".to_string(), "2".to_string())));
+        assert!(
+            params.contains(&("searchFilter".to_string(), "jei".to_string()))
+        );
     }
 
     #[test]

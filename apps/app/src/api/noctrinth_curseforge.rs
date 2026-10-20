@@ -11,8 +11,6 @@
 //! installing into an instance, and the files an instance is waiting on
 //! because their author keeps them off launchers.
 
-use std::path::PathBuf;
-
 use crate::api::Result;
 use theseus::curseforge_blocked::PendingFile;
 use theseus::curseforge_browse::{
@@ -31,7 +29,6 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
             curseforge_get_description,
             curseforge_get_files,
             curseforge_install_project,
-            curseforge_download_modpack,
             curseforge_pending_files,
             curseforge_check_pending_downloads,
             curseforge_dismiss_pending_file,
@@ -86,14 +83,6 @@ pub async fn curseforge_install_project(
         curseforge_browse::install_project(&instance_id, &project_id, file_id)
             .await?,
     )
-}
-
-#[tauri::command]
-pub async fn curseforge_download_modpack(
-    project_id: String,
-    file_id: Option<String>,
-) -> Result<PathBuf> {
-    Ok(curseforge_browse::download_modpack(&project_id, file_id).await?)
 }
 
 #[tauri::command]

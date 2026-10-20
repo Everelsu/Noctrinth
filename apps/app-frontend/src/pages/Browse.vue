@@ -48,6 +48,8 @@ import {
 	CURSEFORGE_PROJECT_TYPES,
 	curseforgeAvailable,
 	curseforgeCategoriesQueryOptions,
+	curseforgeCategoryTag,
+	curseforgeCategoryTags,
 	curseforgeDescriptionQueryOptions,
 	curseforgeIdOf,
 	curseforgeKeys,
@@ -666,16 +668,19 @@ const curseforgeCategoriesQuery = useQuery(
 		enabled: isCurseforge.value,
 	})),
 )
-const curseforgeCategories = computed(() => curseforgeCategoriesQuery.data.value ?? [])
+// A CurseForge category that means what a Modrinth tag means is shown as that
+// tag, with its icon and translated name; the rest keep CurseForge's own.
+const curseforgeCategoryTagList = computed(() =>
+	curseforgeCategoryTags(curseforgeCategoriesQuery.data.value ?? []),
+)
 const browseTags: Ref<Tags> = computed(() =>
 	isCurseforge.value
 		? {
 				...tags.value,
-				categories: curseforgeCategories.value.map((category) => ({
+				categories: curseforgeCategoryTagList.value.map((category) => ({
 					icon: '',
-					// The sidebar shows CurseForge's own picture for it.
-					icon_url: category.iconUrl,
-					name: category.name,
+					icon_url: category.icon_url,
+					name: category.tag,
 					project_type: projectType.value,
 					header: 'categories',
 				})),
@@ -1246,8 +1251,9 @@ async function searchCurseforge(requestParams: string) {
 		filters.filter((filter) => types.includes(filter.type)).map((filter) => filter.option)
 	const categoryIds = filters
 		.filter((filter) => filter.type.startsWith('category_'))
-		.map((filter) => curseforgeCategories.value.find((c) => c.name === filter.option)?.id)
-		.filter((id): id is number => id !== undefined)
+		.flatMap(
+			(filter) => curseforgeCategoryTagList.value.find((c) => c.tag === filter.option)?.ids ?? [],
+		)
 
 	const query = {
 		query: params.get('query'),
@@ -1273,6 +1279,11 @@ async function searchCurseforge(requestParams: string) {
 	return {
 		projectHits: results.hits.map((hit) => ({
 			...hit,
+			// CurseForge counts likes, not followers, so the card shows none.
+			follows: undefined as unknown as number,
+			// Shown as the Modrinth tags they mean, where there is one.
+			categories: hit.categories.map(curseforgeCategoryTag),
+			display_categories: hit.display_categories.map(curseforgeCategoryTag),
 			installed: projectType.value !== 'modpack' && installedIds.has(hit.project_id),
 		})),
 		serverHits: [],

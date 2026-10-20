@@ -65,6 +65,9 @@
 	"app.appearance-settings.minimize-launcher.description": {
 		"message": "Minimize Noctrinth when Minecraft starts."
 	},
+	"app.browse.source.label": {
+		"message": "Where to browse"
+	},
 	"app.changelog.author": {
 		"message": "Author"
 	},
@@ -179,6 +182,48 @@
 	"app.collection.visibility.unlisted": {
 		"message": "Unlisted"
 	},
+	"app.content-install.curseforge.missing-dependencies.text": {
+		"message": "These have no version for this instance and need to be added another way: {names}"
+	},
+	"app.content-install.curseforge.missing-dependencies.title": {
+		"message": "Installed without some of its dependencies"
+	},
+	"app.curseforge.pending.all-done": {
+		"message": "Everything is installed"
+	},
+	"app.curseforge.pending.description": {
+		"message": "{count, plural, one {This file's author doesn't} other {These files' authors don't}} let launchers download {count, plural, one {it} other {them}}. Download {count, plural, one {it} other {each one}} from CurseForge and it will be picked up from your Downloads folder automatically."
+	},
+	"app.curseforge.pending.done": {
+		"message": "Done"
+	},
+	"app.curseforge.pending.found": {
+		"message": "Installed"
+	},
+	"app.curseforge.pending.header": {
+		"message": "Download by hand"
+	},
+	"app.curseforge.pending.open-all": {
+		"message": "Open download pages"
+	},
+	"app.curseforge.pending.open-downloads": {
+		"message": "Open Downloads folder"
+	},
+	"app.curseforge.pending.open-page": {
+		"message": "Download"
+	},
+	"app.curseforge.pending.skip": {
+		"message": "Do without it"
+	},
+	"app.curseforge.pending.waiting": {
+		"message": "Watching your Downloads folder…"
+	},
+	"app.curseforge.project.load-error": {
+		"message": "This CurseForge project could not be loaded."
+	},
+	"app.curseforge.project.open-on-curseforge": {
+		"message": "Open on CurseForge"
+	},
 	"app.error-modal.copy-debug-info": {
 		"message": "Copy debug info"
 	},
@@ -292,6 +337,15 @@
 	},
 	"app.instance.add-content.install": {
 		"message": "Install content"
+	},
+	"app.instance.content.curseforge-pending.action": {
+		"message": "Download"
+	},
+	"app.instance.content.curseforge-pending.body": {
+		"message": "Their authors don't let launchers download them, and they weren't found anywhere on this computer."
+	},
+	"app.instance.content.curseforge-pending.header": {
+		"message": "{count, plural, one {# file needs} other {# files need}} to be downloaded by hand"
 	},
 	"app.instance.logs.live": {
 		"message": "Live Log"

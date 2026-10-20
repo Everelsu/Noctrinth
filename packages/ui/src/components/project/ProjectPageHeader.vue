@@ -35,7 +35,10 @@
 						:label="formatMessage(messages.downloadsStat, { count: project.downloads })"
 						:tooltip="formatNumber(project.downloads)"
 					/>
+					<!-- Noctrinth's own: left out for a project whose source counts no
+					     followers (CurseForge's likes are not the same thing). -->
 					<PageHeaderMetadataNumberItem
+						v-if="project.followers !== undefined"
 						:icon="HeartIcon"
 						:value="project.followers"
 						:label="formatMessage(messages.followersStat, { count: project.followers })"

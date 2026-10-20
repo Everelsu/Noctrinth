@@ -45,6 +45,7 @@ import {
 import { get_game_versions, get_loaders } from '@/helpers/tags'
 import type { GameInstance } from '@/helpers/types'
 import { injectContentInstall } from '@/providers/content-install'
+import { provideBreadcrumbParent, useBreadcrumb } from '@/shared/breadcrumbs'
 
 const props = defineProps<{ id: string }>()
 
@@ -146,6 +147,21 @@ const headerProject = computed(() => {
 	}
 	return null
 })
+// The title bar names the project, as it does on a Modrinth project's page.
+const breadcrumb = useBreadcrumb({
+	slot: 'project',
+	id: () => `curseforge:${props.id}`,
+	label: () => headerProject.value?.title ?? props.id,
+	visual: () => ({
+		type: 'image' as const,
+		src: headerProject.value?.icon_url ?? undefined,
+		alt: headerProject.value?.title ?? props.id,
+		tintBy: props.id,
+	}),
+	to: () => route.fullPath,
+})
+provideBreadcrumbParent(breadcrumb)
+
 const sidebarProject = computed(() =>
 	project.value
 		? {
@@ -172,19 +188,23 @@ const tabProject = computed(() => ({
 	})),
 }))
 
-const tabQuery = computed(() => (instanceId.value ? { i: instanceId.value } : {}))
+// NavTabs reads its hrefs as strings, so the instance travels as a query
+// string rather than a route object.
+const tabSuffix = computed(() =>
+	instanceId.value ? `?i=${encodeURIComponent(instanceId.value)}` : '',
+)
 const tabs = computed(() => [
 	{
 		label: formatMessage(messages.descriptionTab),
-		href: { path: `/curseforge/${props.id}`, query: tabQuery.value },
+		href: `/curseforge/${props.id}${tabSuffix.value}`,
 	},
 	{
 		label: formatMessage(messages.versionsTab),
-		href: { path: `/curseforge/${props.id}/versions`, query: tabQuery.value },
+		href: `/curseforge/${props.id}/versions${tabSuffix.value}`,
 	},
 	{
 		label: formatMessage(messages.galleryTab),
-		href: { path: `/curseforge/${props.id}/gallery`, query: tabQuery.value },
+		href: `/curseforge/${props.id}/gallery${tabSuffix.value}`,
 		shown: (project.value?.gallery.length ?? 0) > 0,
 	},
 ])

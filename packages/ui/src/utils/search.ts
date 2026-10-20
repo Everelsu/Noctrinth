@@ -15,7 +15,7 @@ import {
 	SparklesIcon,
 } from '@modrinth/assets'
 import { sortedCategories } from '@modrinth/utils'
-import { type Component, computed, type Ref, ref, shallowRef, watch } from 'vue'
+import { type Component, computed, defineComponent, h, type Ref, ref, shallowRef, watch } from 'vue'
 import { type LocationQueryRaw, type LocationQueryValue, useRoute } from 'vue-router'
 
 import { defineMessage, defineMessages, useVIntl } from '../composables/i18n'
@@ -385,6 +385,32 @@ export function createDisclosureFilterOptions(
 	}))
 }
 
+// Noctrinth's own: a category that brings its own picture (CurseForge's do,
+// as `icon_url`) shows that picture instead of whichever Modrinth icon its
+// name happens to match. Built once per URL so the filter list does not
+// remount its icons on every recompute.
+const categoryImageIcons = new Map<string, Component>()
+
+function categoryImageIcon(category: Labrinth.Tags.v2.Category): Component | undefined {
+	const url = (category as { icon_url?: string | null }).icon_url
+	if (!url || !url.startsWith('https://')) return undefined
+	let icon = categoryImageIcons.get(url)
+	if (!icon) {
+		icon = defineComponent({
+			name: 'CategoryImageIcon',
+			setup: () => () =>
+				h('img', {
+					src: url,
+					alt: '',
+					loading: 'lazy',
+					class: 'rounded-sm object-contain',
+				}),
+		})
+		categoryImageIcons.set(url, icon)
+	}
+	return icon
+}
+
 export function useSearch(
 	projectTypes: Ref<ProjectType[]>,
 	tags: Ref<Tags>,
@@ -457,7 +483,7 @@ export function useSearch(
 			categoryFilters[filterTypeId].options.push({
 				id: category.name,
 				formatted_name: formatCategory(formatMessage, category.name),
-				icon: getCategoryIcon(category.name),
+				icon: categoryImageIcon(category) ?? getCategoryIcon(category.name),
 				value: `categories:${category.name}`,
 				method: category.header === 'resolutions' ? 'or' : 'and',
 			})

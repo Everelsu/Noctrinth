@@ -252,6 +252,8 @@ const forceSidebar = computed(
 	() =>
 		route.path.startsWith('/browse') ||
 		route.path.startsWith('/project') ||
+		// Noctrinth's own: a CurseForge project's page has the same sidebar.
+		route.path.startsWith('/curseforge') ||
 		route.path.startsWith('/user'),
 )
 const sidebarVisible = computed(() => sidebarToggled.value || forceSidebar.value)
@@ -2311,7 +2313,10 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 				:is-primary="(route) => route.path === '/'"
 				:is-subpage="
 					() =>
-						(route.path.startsWith('/browse') || route.path.startsWith('/project')) && route.query.i
+						(route.path.startsWith('/browse') ||
+							route.path.startsWith('/project') ||
+							route.path.startsWith('/curseforge')) &&
+						route.query.i
 				"
 			>
 				<PlayIcon class="ml-0.5" />
@@ -2321,7 +2326,10 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 				to="/browse/modpack"
 				:is-primary="() => route.path.startsWith('/browse') && !route.query.i && !route.query.sid"
 				:is-subpage="
-					(route) => route.path.startsWith('/project') && !route.query.i && !route.query.sid
+					(route) =>
+						(route.path.startsWith('/project') || route.path.startsWith('/curseforge')) &&
+						!route.query.i &&
+						!route.query.sid
 				"
 			>
 				<CompassIcon />

@@ -132,6 +132,16 @@ export function curseforgeNumericId(id: string): string {
  * fields that flow reads are filled.
  */
 export function curseforgeForInstallFlow(project: CurseforgeProject, files: CurseforgeFile[]) {
+	// What the shared compatibility check matches an instance's loader
+	// against. A mod file that names no loader is a Forge one, as CurseForge's
+	// own app takes it; anything that is not a mod runs on any loader, which
+	// the shared flow spells "minecraft".
+	const loadersOf = (file: CurseforgeFile) =>
+		file.loaders.length > 0
+			? file.loaders
+			: project.project_type === 'mod'
+				? ['forge']
+				: ['minecraft']
 	const versions = files
 		.slice()
 		.sort((a, b) => (b.date_published ?? '').localeCompare(a.date_published ?? ''))
@@ -142,7 +152,7 @@ export function curseforgeForInstallFlow(project: CurseforgeProject, files: Curs
 			version_number: file.name,
 			version_type: file.version_type,
 			game_versions: file.game_versions,
-			loaders: file.loaders,
+			loaders: loadersOf(file),
 			date_published: file.date_published ?? '',
 			downloads: file.downloads,
 			changelog: '',

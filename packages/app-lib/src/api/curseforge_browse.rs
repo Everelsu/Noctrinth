@@ -298,6 +298,15 @@ impl ApiFile {
     fn is_installable(&self) -> bool {
         self.is_server_pack != Some(true) && self.is_available != Some(false)
     }
+
+    /// Whether the file names no loader at all among its game versions, as
+    /// files from before CurseForge tagged loaders do.
+    fn has_no_loader_tag(&self) -> bool {
+        !self
+            .game_versions
+            .iter()
+            .any(|version| loader_id(&version.to_lowercase()).is_some())
+    }
 }
 
 #[derive(Deserialize, Clone)]
@@ -946,7 +955,23 @@ pub async fn install_project(
                     &state,
                 )
                 .await?;
-                match pick_file(files) {
+                let mut picked = pick_file(files);
+                // Files from before CurseForge tagged loaders carry none, and
+                // CurseForge's own app takes such a file for a Forge one.
+                if picked.is_none() && loader == loader_id("forge") {
+                    let untagged = list_files(
+                        project_id,
+                        Some(&content_set.game_version),
+                        None,
+                        &state,
+                    )
+                    .await?
+                    .into_iter()
+                    .filter(ApiFile::has_no_loader_tag)
+                    .collect();
+                    picked = pick_file(untagged);
+                }
+                match picked {
                     Some(file) => file,
                     // A dependency with nothing for this instance does not
                     // stop the install; it is reported, with where to look.
@@ -1307,6 +1332,17 @@ mod tests {
         ])
         .unwrap();
         assert_eq!(picked.id, 3);
+    }
+
+    #[test]
+    fn a_file_with_no_loader_tag_is_told_apart() {
+        let mut legacy = file(1, 1, "2016-01-01");
+        legacy.game_versions = vec!["1.12.2".to_string()];
+        let mut tagged = file(2, 1, "2024-01-01");
+        tagged.game_versions = vec!["1.20.1".to_string(), "Forge".to_string()];
+
+        assert!(legacy.has_no_loader_tag());
+        assert!(!tagged.has_no_loader_tag());
     }
 
     #[test]

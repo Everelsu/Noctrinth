@@ -673,6 +673,8 @@ const browseTags: Ref<Tags> = computed(() =>
 				...tags.value,
 				categories: curseforgeCategories.value.map((category) => ({
 					icon: '',
+					// The sidebar shows CurseForge's own picture for it.
+					icon_url: category.iconUrl,
 					name: category.name,
 					project_type: projectType.value,
 					header: 'categories',
@@ -1392,13 +1394,19 @@ watch(
 	{ deep: true },
 )
 
-watch(browseSource, () => {
+watch(browseSource, async (source) => {
 	// The two have different categories, so none carries over; and pages do
 	// not line up between them, so a switch starts from the top.
 	searchState.currentFilters.value = searchState.currentFilters.value.filter(
 		(filter) => !filter.type.startsWith('category_'),
 	)
-	void searchState.setPage(1)
+	await searchState.setPage(1)
+	// The search only reruns by itself when its request changes, and the
+	// source is not part of the request, so it is rerun here.
+	await router.replace({
+		query: { ...route.query, src: source === 'curseforge' ? 'cf' : undefined },
+	})
+	await searchState.refreshSearch()
 })
 
 watch(queuedServerInstallCount, (count) => {

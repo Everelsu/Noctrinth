@@ -35,6 +35,26 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.21.10',
+		date: '2026-10-20T12:00:00+00:00',
+		body: `### Added
+- A "Report ad" action in Settings → Troubleshooting.
+
+### Changed
+- Synced with upstream Modrinth 0.21.10: mods can be installed, enabled, disabled and removed while the instance is running, and translations are updated.
+- Settings are sorted into Display, Account, Instance defaults and System. Default Java and memory, window and launch hooks each have a tab of their own, Synced settings is called Syncing now, and Resource management is split into Resources and Troubleshooting.
+- Java installations, the Java runtimes Noctrinth downloads and the graphics card each one uses are all in the Java and memory tab; the proxy is in Resources, next to the app directory.
+- Instance settings are split into Instance and Game sections, and every Game tab has a button that opens the default settings it overrides.
+- The settings windows' sidebar, backgrounds and scrollbars are refreshed, and one opened on a given tab scrolls its sidebar to it.
+
+### Fixed
+- The update window on the Content tab no longer closes when another project finishes updating.
+- The Content tab and Discover keep their scroll position when coming back from a project page.
+- Joining a server whose modpack is unavailable or under review no longer opens a blank window.
+- On Linux the launcher no longer keeps a CPU core busy because of the database.
+- Beta and alpha versions are coloured the same everywhere.`,
+	},
+	{
 		version: '0.21.9+2',
 		date: '2026-10-16T12:00:00+00:00',
 		body: `### Added

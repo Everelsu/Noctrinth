@@ -7,7 +7,7 @@
 import { PlusIcon, SearchIcon } from '@modrinth/assets'
 import {
 	Avatar,
-	ButtonStyled,
+	Button,
 	defineMessages,
 	injectNotificationManager,
 	Input,
@@ -99,12 +99,10 @@ function pick(instance: GameInstance) {
 							{{ instance.loader }} {{ instance.game_version }}
 						</span>
 					</div>
-					<ButtonStyled color="brand" type="outlined">
-						<button @click="pick(instance)">
-							<PlusIcon aria-hidden="true" />
-							{{ formatMessage(messages.add) }}
-						</button>
-					</ButtonStyled>
+					<Button type="outlined" color="brand" @click="pick(instance)">
+						<PlusIcon aria-hidden="true" />
+						{{ formatMessage(messages.add) }}
+					</Button>
 				</li>
 			</ul>
 		</div>

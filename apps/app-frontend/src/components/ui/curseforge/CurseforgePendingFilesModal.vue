@@ -19,8 +19,8 @@ import {
 import {
 	Avatar,
 	Button,
-	ButtonStyled,
 	defineMessages,
+	IconButton,
 	injectNotificationManager,
 	NewModal,
 	useVIntl,
@@ -217,21 +217,23 @@ onBeforeUnmount(stopPolling)
 						<span class="truncate text-sm text-secondary">{{ file.file_name }}</span>
 					</div>
 					<template v-if="pendingIds.has(file.file_id)">
-						<ButtonStyled color="brand" type="outlined">
-							<button :disabled="!file.download_page_url" @click="openPage(file)">
-								<DownloadIcon aria-hidden="true" />
-								{{ formatMessage(messages.openPage) }}
-							</button>
-						</ButtonStyled>
-						<ButtonStyled circular type="transparent">
-							<button
-								v-tooltip="formatMessage(messages.skip)"
-								:aria-label="formatMessage(messages.skip)"
-								@click="skip(file)"
-							>
-								<XIcon aria-hidden="true" />
-							</button>
-						</ButtonStyled>
+						<Button
+							type="outlined"
+							color="brand"
+							:disabled="!file.download_page_url"
+							@click="openPage(file)"
+						>
+							<DownloadIcon aria-hidden="true" />
+							{{ formatMessage(messages.openPage) }}
+						</Button>
+						<IconButton
+							v-tooltip="formatMessage(messages.skip)"
+							type="quiet"
+							:label="formatMessage(messages.skip)"
+							@click="skip(file)"
+						>
+							<XIcon aria-hidden="true" />
+						</IconButton>
 					</template>
 					<span v-else class="flex items-center gap-1 font-semibold text-brand">
 						<CheckIcon aria-hidden="true" />
@@ -255,18 +257,14 @@ onBeforeUnmount(stopPolling)
 							<FolderOpenIcon aria-hidden="true" />
 							{{ formatMessage(messages.openDownloads) }}
 						</Button>
-						<ButtonStyled color="brand">
-							<button @click="openAllPages">
-								<ExternalIcon aria-hidden="true" />
-								{{ formatMessage(messages.openAll) }}
-							</button>
-						</ButtonStyled>
+						<Button type="colored" color="brand" @click="openAllPages">
+							<ExternalIcon aria-hidden="true" />
+							{{ formatMessage(messages.openAll) }}
+						</Button>
 					</template>
-					<ButtonStyled v-else color="brand">
-						<button @click="modal?.hide()">
-							{{ formatMessage(messages.done) }}
-						</button>
-					</ButtonStyled>
+					<Button v-else type="colored" color="brand" @click="modal?.hide()">
+						{{ formatMessage(messages.done) }}
+					</Button>
 				</div>
 			</div>
 		</div>

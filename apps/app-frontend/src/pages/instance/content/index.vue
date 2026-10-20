@@ -12,12 +12,14 @@
 				>
 					{{ formatMessage(messages.curseforgePendingBody) }}
 					<template #actions>
-						<ButtonStyled color="orange">
-							<button @click="curseforgePendingModal?.show(instance.id, curseforgePending)">
-								<DownloadIcon aria-hidden="true" />
-								{{ formatMessage(messages.curseforgePendingAction) }}
-							</button>
-						</ButtonStyled>
+						<Button
+							type="colored"
+							color="orange"
+							@click="curseforgePendingModal?.show(instance.id, curseforgePending)"
+						>
+							<DownloadIcon aria-hidden="true" />
+							{{ formatMessage(messages.curseforgePendingAction) }}
+						</Button>
 					</template>
 				</Admonition>
 			</template>
@@ -124,8 +126,8 @@ import {
 } from '@modrinth/assets'
 import {
 	Admonition,
+	Button,
 	type ButtonMenuOption,
-	ButtonStyled,
 	commonMessages,
 	ConfirmDisableModal,
 	ConfirmModpackUpdateModal,

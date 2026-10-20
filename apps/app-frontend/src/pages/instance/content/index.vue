@@ -169,7 +169,15 @@ import { useAppEvent } from '@/composables/use-app-event'
 import { useAppSettings } from '@/composables/use-app-settings.ts'
 import { trackEvent } from '@/helpers/analytics'
 import { get_project_versions, get_version, get_version_many } from '@/helpers/cache.js'
-import { curseforgeIdOf, curseforgePendingFiles } from '@/helpers/curseforge'
+import {
+	curseforgeForInstallFlow,
+	curseforgeGetFiles,
+	curseforgeGetVersion,
+	curseforgeIdOf,
+	curseforgePendingFiles,
+	type CurseforgeProject,
+	isCurseforgeContent,
+} from '@/helpers/curseforge'
 import { install_bulk_update_content } from '@/helpers/install'
 import {
 	add_project_from_path,
@@ -259,16 +267,32 @@ const messages = defineMessages({
 let savedModalState: ManagedContentModalState | null = null
 
 /**
- * Noctrinth's own: whether a row is a CurseForge project — installed from
- * CurseForge, part of a CurseForge pack, or recognised as one by its
- * fingerprint (whose entry is only marked so from the next listing on).
+ * Noctrinth's own: a CurseForge row's files for this instance, in the shape
+ * the updater lists Modrinth versions in. Changelogs come when one is picked.
  */
-function isCurseforgeContent(item: ContentItem) {
-	return (
-		item.source_kind === 'curseforge' ||
-		item.source_kind === 'curseforge_modpack' ||
-		!!item.project?.external_url?.startsWith('https://www.curseforge.com/')
-	)
+async function curseforgeUpdaterVersions(item: ContentItem) {
+	const id = curseforgeIdOf(item.project!.id)
+	const isMod = item.project_type === 'mod'
+	const files = await curseforgeGetFiles(
+		id,
+		instance.value.game_version,
+		isMod ? instance.value.loader : null,
+	).catch((err) => {
+		handleError(err)
+		return []
+	})
+	const project = { id, project_type: isMod ? 'mod' : item.project_type } as CurseforgeProject
+	return curseforgeForInstallFlow(project, files).versions.map((version) => ({
+		...version,
+		changelog: null as unknown as string,
+	}))
+}
+
+/** Puts another version of a row in place: through CurseForge for its files. */
+function switchContentVersion(mod: ContentItem, versionId: string) {
+	return isCurseforgeContent(mod) && mod.project?.id
+		? installCurseforgeFile(instance.value.id, curseforgeIdOf(mod.project.id), versionId)
+		: switch_project_version_with_dependencies(instance.value.id, mod.file_path, versionId)
 }
 
 function contentOwnerLink(owner: ContentOwner): NonNullable<ContentOwner['link']> {
@@ -288,8 +312,12 @@ function contentOwnerLink(owner: ContentOwner): NonNullable<ContentOwner['link']
 
 const { formatMessage } = useVIntl()
 const { handleError, addNotification } = injectNotificationManager()
-const { installingItems, installRevisionByInstance, installFailureRevisionByInstance } =
-	injectContentInstall()
+const {
+	installingItems,
+	installRevisionByInstance,
+	installFailureRevisionByInstance,
+	installCurseforgeFile,
+} = injectContentInstall()
 const router = useRouter()
 const route = useRoute()
 const queryClient = useQueryClient()
@@ -1041,6 +1069,9 @@ const bulkUpdateMutation = useMutation({
 async function bulkUpdateSelections(selections: UpdateAllSelection[]) {
 	if (isInstanceBusy.value || bulkUpdateMutation.isPending.value) return
 	const instanceId = instance.value.id
+	// Noctrinth's own: CurseForge rows are updated one by one through
+	// CurseForge; the bulk update only knows Modrinth versions.
+	const curseforgeUpdates: { item: ContentItem; versionId: string }[] = []
 	const updates = selections.flatMap((selection) => {
 		const item =
 			projects.value.find((project) => getContentItemId(project) === selection.id) ??
@@ -1052,8 +1083,16 @@ async function bulkUpdateSelections(selections: UpdateAllSelection[]) {
 			item.version?.id === selection.version.id
 		)
 			return []
+		if (isCurseforgeContent(item)) {
+			curseforgeUpdates.push({ item, versionId: selection.version.id })
+			return []
+		}
 		return [{ project_path: item.file_path, version_id: selection.version.id }]
 	})
+	for (const { item, versionId } of curseforgeUpdates) {
+		await switchContentVersion(item, versionId).catch(handleError)
+	}
+	if (curseforgeUpdates.length > 0) await refreshContentState('must_revalidate')
 	if (!updates.length) return
 	await bulkUpdateMutation.mutateAsync({ instanceId, updates })
 }
@@ -1064,12 +1103,7 @@ async function updateProject(mod: ContentItem) {
 	if (!operation) return
 
 	try {
-		const updateVersionId = mod.update_version_id!
-		await switch_project_version_with_dependencies(
-			instance.value.id,
-			mod.file_path,
-			updateVersionId,
-		)
+		await switchContentVersion(mod, mod.update_version_id!)
 
 		trackEvent('InstanceProjectUpdate', {
 			loader: instance.value.loader,
@@ -1096,7 +1130,7 @@ async function switchProjectVersion(mod: ContentItem, version: Labrinth.Versions
 	const oldPath = mod.file_path
 
 	try {
-		await switch_project_version_with_dependencies(instance.value.id, oldPath, version.id)
+		await switchContentVersion({ ...mod, file_path: oldPath }, version.id)
 
 		trackEvent('InstanceProjectUpdate', {
 			loader: instance.value.loader,
@@ -1176,7 +1210,9 @@ async function handleUpdate(id: string) {
 	})
 	contentUpdaterModal.value?.show(initialVersionId)
 
-	const versions = await getUpdaterProjectVersions(item.project.id, initialVersionId)
+	const versions = isCurseforgeContent(item)
+		? await curseforgeUpdaterVersions(item)
+		: await getUpdaterProjectVersions(item.project.id, initialVersionId)
 
 	if (!isActiveUpdateRequest(requestId) || getContentItemId(updatingProject.value) !== itemId)
 		return
@@ -1243,7 +1279,9 @@ async function handleSwitchVersion(item: ContentItem) {
 	const initialVersionId = item.version.id
 	contentUpdaterModal.value?.show(initialVersionId, { switchMode: true })
 
-	const versions = await getUpdaterProjectVersions(item.project.id, initialVersionId)
+	const versions = isCurseforgeContent(item)
+		? await curseforgeUpdaterVersions(item)
+		: await getUpdaterProjectVersions(item.project.id, initialVersionId)
 
 	if (!isActiveUpdateRequest(requestId) || getContentItemId(updatingProject.value) !== itemId)
 		return
@@ -1412,6 +1450,19 @@ async function fetchAndSpliceVersion(
 	onError?: (err: unknown) => void,
 	requestId = activeUpdateRequestId.value,
 ) {
+	const updating = updatingProject.value
+	if (updating && isCurseforgeContent(updating) && updating.project?.id) {
+		const file = await curseforgeGetVersion(curseforgeIdOf(updating.project.id), versionId).catch(
+			onError ?? (() => null),
+		)
+		const listed = updatingProjectVersions.value.find((version) => version.id === versionId)
+		if (!isActiveUpdateRequest(requestId) || !file || !listed) return
+		updatingProjectVersions.value = mergeVersionIntoList(updatingProjectVersions.value, {
+			...listed,
+			changelog: file.changelog,
+		})
+		return
+	}
 	const fullVersion = (await get_version(versionId, cacheBehaviour).catch(
 		onError ?? (() => null),
 	)) as Labrinth.Versions.v2.Version | null

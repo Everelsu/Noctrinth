@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import type { EditingFile, FileItem, UploadState } from '@modrinth/ui'
+import type {
+	ContentItem,
+	EditingFile,
+	FileItem,
+	FileItemDescription,
+	UploadState,
+} from '@modrinth/ui'
 import {
 	commonMessages,
 	defineMessages,
@@ -12,14 +18,17 @@ import {
 } from '@modrinth/ui'
 import { useQuery } from '@tanstack/vue-query'
 import { invoke } from '@tauri-apps/api/core'
+import { openUrl } from '@tauri-apps/plugin-opener'
 import { computed, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
 import { useAppEvent } from '@/composables/use-app-event'
-import { get_full_path } from '@/helpers/instance'
+import { curseforgeIdOf, isCurseforgeContent } from '@/helpers/curseforge'
+import { get_full_path, get_linked_modpack_content } from '@/helpers/instance'
 import { highlightInFolder } from '@/helpers/utils'
 
 import { injectInstancePage } from '../instance-context'
-import { instanceKeys } from '../query-options'
+import { instanceContentQueryOptions, instanceKeys } from '../query-options'
 
 const instancePage = injectInstancePage()
 const instanceId = instancePage.instanceId
@@ -61,6 +70,77 @@ const currentPath = ref('')
 const editingFile = ref<EditingFile | null>(null)
 
 debug('setup: start, instance.id =', instanceId.value)
+
+// Noctrinth's own: inside a content folder, a file the Content tab knows is
+// drawn as that project — icon, name, version and author, each opening its
+// page — from the same listing the Content tab reads, not a second one.
+const CONTENT_FOLDERS = ['mods', 'resourcepacks', 'shaderpacks']
+const router = useRouter()
+const inContentFolder = computed(() =>
+	CONTENT_FOLDERS.includes(currentPath.value.replace(/^\/+/, '').split('/')[0]),
+)
+const contentQuery = useQuery(
+	computed(() => ({
+		...instanceContentQueryOptions(instanceId.value),
+		enabled: !!instanceId.value && inContentFolder.value,
+	})),
+)
+const linkedContentQuery = useQuery(
+	computed(() => ({
+		queryKey: instanceKeys.linkedContent(instanceId.value),
+		networkMode: 'always' as const,
+		queryFn: () => get_linked_modpack_content(instanceId.value),
+		enabled: !!instanceId.value && inContentFolder.value && !!instancePage.instance.value?.link,
+	})),
+)
+const contentByPath = computed(() => {
+	const byPath = new Map<string, ContentItem>()
+	for (const item of [
+		...(linkedContentQuery.data.value ?? []),
+		...(contentQuery.data.value?.contentItems ?? []),
+	]) {
+		if (item.file_path && item.project) byPath.set(normalizePath(item.file_path), item)
+	}
+	return byPath
+})
+
+function normalizePath(path: string) {
+	return path.replace(/\\/g, '/').replace(/^\/+/, '')
+}
+
+function describeItem(file: FileItem): FileItemDescription | undefined {
+	if (file.type !== 'file' || !inContentFolder.value) return undefined
+	const item = contentByPath.value.get(normalizePath(file.path))
+	const project = item?.project
+	if (!item || !project) return undefined
+	const query = { i: instanceId.value }
+	const owner = item.owner
+	return {
+		title: project.title,
+		iconUrl: project.icon_url,
+		version: item.version?.version_number,
+		open: () => {
+			if (isCurseforgeContent(item)) {
+				void router.push({ path: `/curseforge/${curseforgeIdOf(project.id)}`, query })
+			} else if (project.external_url) {
+				void openUrl(project.external_url)
+			} else {
+				void router.push({ path: `/project/${project.id}`, query })
+			}
+		},
+		author: owner
+			? {
+					name: owner.name,
+					open: () => {
+						if (owner.external_url) void openUrl(owner.external_url)
+						else if (owner.type === 'user')
+							void router.push(`/user/${encodeURIComponent(owner.id)}`)
+						else void openUrl(`https://modrinth.com/organization/${owner.id}`)
+					},
+				}
+			: null,
+	}
+}
 
 async function listDirectory(dirPath: string): Promise<FileItem[]> {
 	return invoke('plugin:files|file_list', { instanceId: instanceId.value, path: dirPath })
@@ -304,6 +384,7 @@ watch(instanceId, async () => {
 
 provideFileManager({
 	isReadOnly,
+	describeItem,
 	readOnlyReason: computed(() => formatMessage(messages.readOnly)),
 	items,
 	loading,

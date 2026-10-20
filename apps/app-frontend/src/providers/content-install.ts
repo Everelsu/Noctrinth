@@ -154,6 +154,12 @@ type InstallTargetInstance = Pick<
 >
 
 export interface ContentInstallContext {
+	/** Installs a CurseForge file in place of its project's current one. */
+	installCurseforgeFile: (
+		instanceId: string,
+		projectId: string,
+		fileId: string,
+	) => Promise<string[]>
 	instances: Ref<ContentInstallInstance[]>
 	compatibleLoaders: Ref<string[]>
 	gameVersions: Ref<string[]>
@@ -433,6 +439,28 @@ export function createContentInstall(opts: {
 	}
 
 	/** Installs one CurseForge file with its dependencies; returns what went in. */
+	/**
+	 * Installs one CurseForge file, in place of whatever file of its project
+	 * the instance has, and says what is left to do by hand.
+	 */
+	async function installCurseforgeFile(instanceId: string, projectId: string, fileId: string) {
+		const outcome = await curseforgeInstallProject(instanceId, projectId, fileId)
+		if (outcome.pending.length > 0) {
+			curseforgePendingModalRef?.show(instanceId, outcome.pending)
+		}
+		if (outcome.missing_dependencies.length > 0) {
+			opts.warn?.(
+				formatMessage(curseforgeMissingDependenciesTitle),
+				formatMessage(curseforgeMissingDependenciesText, {
+					names: outcome.missing_dependencies
+						.map((dependency) => dependency.name ?? dependency.project_id)
+						.join(', '),
+				}),
+			)
+		}
+		return outcome.installed
+	}
+
 	async function installCurseforgeVersion(
 		instanceId: string,
 		project: Labrinth.Projects.v2.Project,
@@ -440,21 +468,7 @@ export function createContentInstall(opts: {
 	): Promise<string[]> {
 		addInstallingItem(instanceId, project, version)
 		try {
-			const outcome = await curseforgeInstallProject(instanceId, project.id, version.id)
-			if (outcome.pending.length > 0) {
-				curseforgePendingModalRef?.show(instanceId, outcome.pending)
-			}
-			if (outcome.missing_dependencies.length > 0) {
-				opts.warn?.(
-					formatMessage(curseforgeMissingDependenciesTitle),
-					formatMessage(curseforgeMissingDependenciesText, {
-						names: outcome.missing_dependencies
-							.map((dependency) => dependency.name ?? dependency.project_id)
-							.join(', '),
-					}),
-				)
-			}
-			return outcome.installed
+			return await installCurseforgeFile(instanceId, project.id, version.id)
 		} catch (err) {
 			markInstanceContentInstallFailed(instanceId)
 			throw err
@@ -1134,6 +1148,7 @@ export function createContentInstall(opts: {
 	}
 
 	return {
+		installCurseforgeFile,
 		instances,
 		compatibleLoaders,
 		gameVersions,

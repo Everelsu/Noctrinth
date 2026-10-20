@@ -694,8 +694,8 @@ function resetInstanceContext() {
 	newlyInstalled.value = []
 	hiddenInstanceProjectIds.value = new Set()
 	hiddenInstanceProjectIdsInitialized.value = false
-	isServerInstance.value = false
-	browseBreadcrumb.reset()
+	// isServerInstance and the breadcrumbs follow the route by themselves; the
+	// old reset here named a breadcrumb that no longer exists and threw.
 	void refreshInstalledProjectIds()
 }
 

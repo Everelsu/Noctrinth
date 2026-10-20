@@ -7,6 +7,7 @@ import type {
 	EditingFile,
 	ExtractDryRunResult,
 	FileItem,
+	FileItemDescription,
 	FileOperation,
 	UploadState,
 } from '../types'
@@ -46,6 +47,8 @@ export interface FileManagerContext {
 	busyTooltip?: Ref<string | undefined> | ComputedRef<string | undefined>
 	busyWarning?: Ref<string | null> | ComputedRef<string | null>
 	isReadOnly?: (path: string) => boolean
+	/** What a file is, for the row to draw instead of a bare file name. */
+	describeItem?: (item: FileItem) => FileItemDescription | undefined
 	readOnlyReason?: Ref<string> | ComputedRef<string>
 
 	extractFile?: (

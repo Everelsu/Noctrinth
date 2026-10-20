@@ -32,6 +32,22 @@ export function isCurseforgeId(id: string | null | undefined): boolean {
 	return !!id && id.startsWith(CURSEFORGE_ID_PREFIX)
 }
 
+/**
+ * Whether an instance's content row is a CurseForge project: installed from
+ * CurseForge, part of a CurseForge pack, or recognised as one by its
+ * fingerprint (whose entry is only marked so from the next listing on).
+ */
+export function isCurseforgeContent(item: {
+	source_kind?: string | null
+	project?: { external_url?: string | null } | null
+}): boolean {
+	return (
+		item.source_kind === 'curseforge' ||
+		item.source_kind === 'curseforge_modpack' ||
+		!!item.project?.external_url?.startsWith('https://www.curseforge.com/')
+	)
+}
+
 /** An installed content entry's CurseForge id, as the browse page writes it. */
 export function curseforgeIdOf(numericId: string): string {
 	return `${CURSEFORGE_ID_PREFIX}${numericId}`

@@ -87,6 +87,7 @@
 									:path="item.path"
 									:type="item.type"
 									:size="item.size"
+									:description="ctx.describeItem?.(item)"
 									:index="visibleRange.start + idx"
 									:is-last="visibleRange.start + idx === filteredItems.length - 1"
 									:selected="selectedItems.has(item.path)"

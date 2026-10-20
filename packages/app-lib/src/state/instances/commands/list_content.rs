@@ -306,14 +306,69 @@ async fn list_content_inner(
     .await?;
     let files = files.into_iter().collect::<Vec<_>>();
 
-    content_files_to_content_items(
+    let mut items = content_files_to_content_items(
         &resolved.instance,
         resolved.content_set.loader,
         &files,
         cache_behaviour,
         state,
     )
+    .await?;
+    mark_curseforge_updates(&mut items, &resolved.content_set).await;
+    Ok(items)
+}
+
+/// Noctrinth's own: Modrinth's update check goes by file hash, which no
+/// CurseForge file has on Modrinth, so CurseForge is asked about those.
+/// Never fails the listing: without an answer the rows just show no update.
+async fn mark_curseforge_updates(
+    items: &mut [ContentItem],
+    content_set: &ContentSet,
+) {
+    let installed = items
+        .iter()
+        .filter(|item| {
+            item.update_version_id.is_none()
+                && item
+                    .source_kind
+                    .is_some_and(ContentSourceKind::has_curseforge_ids)
+        })
+        .filter_map(|item| {
+            Some((
+                item.project.as_ref()?.id.clone(),
+                item.version.as_ref()?.id.clone(),
+            ))
+        })
+        .collect::<Vec<_>>();
+    if installed.is_empty() {
+        return;
+    }
+    let updates = match crate::api::curseforge_browse::available_updates(
+        &installed,
+        &content_set.game_version,
+        content_set.loader.as_str(),
+    )
     .await
+    {
+        Ok(updates) => updates,
+        Err(error) => {
+            tracing::warn!("Could not check CurseForge for updates: {error}");
+            return;
+        }
+    };
+    for item in items {
+        let Some(update) = item
+            .project
+            .as_ref()
+            .and_then(|project| updates.get(&project.id))
+        else {
+            continue;
+        };
+        if item.version.as_ref().is_some_and(|v| &v.id != update) {
+            item.has_update = true;
+            item.update_version_id = Some(update.clone());
+        }
+    }
 }
 
 pub(crate) async fn list_linked_modpack_content(

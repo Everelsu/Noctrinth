@@ -145,15 +145,37 @@ async fn get<T: for<'de> Deserialize<'de>>(
     url: &str,
     state: &State,
 ) -> crate::Result<T> {
-    if let Some(body) = cached(url) {
-        return Ok(serde_json::from_slice(&body)?);
+    request(Method::GET, url, None, state).await
+}
+
+/// A POST of `body`, cached like a GET: CurseForge's batch lookups only read.
+async fn post<T: for<'de> Deserialize<'de>>(
+    url: &str,
+    body: serde_json::Value,
+    state: &State,
+) -> crate::Result<T> {
+    request(Method::POST, url, Some(body), state).await
+}
+
+async fn request<T: for<'de> Deserialize<'de>>(
+    method: Method,
+    url: &str,
+    body: Option<serde_json::Value>,
+    state: &State,
+) -> crate::Result<T> {
+    let cache_key = match &body {
+        Some(body) => format!("{url} {body}"),
+        None => url.to_string(),
+    };
+    if let Some(cached) = cached(&cache_key) {
+        return Ok(serde_json::from_slice(&cached)?);
     }
     let key = key()?;
-    let body = fetch_advanced(
-        Method::GET,
+    let response = fetch_advanced(
+        method,
         url,
         None,
-        None,
+        body,
         Some(("x-api-key", &key)),
         None,
         None,
@@ -162,8 +184,8 @@ async fn get<T: for<'de> Deserialize<'de>>(
         &state.pool,
     )
     .await?;
-    let parsed = serde_json::from_slice(&body)?;
-    remember(url, &body);
+    let parsed = serde_json::from_slice(&response)?;
+    remember(&cache_key, &response);
     Ok(parsed)
 }
 
@@ -265,6 +287,11 @@ struct ApiFileIndex {
     game_version: String,
     #[serde(default)]
     mod_loader: Option<i64>,
+    #[serde(default)]
+    file_id: i64,
+    /// 1 release, 2 beta, 3 alpha.
+    #[serde(default)]
+    release_type: i64,
 }
 
 #[derive(Deserialize, Clone)]
@@ -1037,6 +1064,113 @@ pub async fn get_version(
     })
 }
 
+/// The game version and loader a CurseForge modpack's file says it runs on,
+/// for the instance drawn while the pack downloads; the pack's own manifest
+/// has the last word once it is in.
+pub async fn modpack_target(
+    project_id: &str,
+    file_id: Option<&str>,
+) -> crate::Result<(Option<String>, Option<ModLoader>)> {
+    let state = State::get().await?;
+    let id = parse_project_id(project_id)?;
+    let file = match file_id {
+        Some(file_id) => Some(
+            get::<Data<ApiFile>>(
+                &format!("{API}/mods/{id}/files/{file_id}"),
+                &state,
+            )
+            .await?
+            .data,
+        ),
+        None => pick_file(list_files(id, None, None, &state).await?),
+    };
+    let Some(file) = file.map(ProjectFile::from) else {
+        return Ok((None, None));
+    };
+    Ok((
+        file.game_versions.into_iter().next(),
+        file.loaders
+            .first()
+            .map(|loader| ModLoader::from_string(loader)),
+    ))
+}
+
+/// The most projects one batch lookup asks CurseForge about.
+const MAX_IDS_PER_REQUEST: usize = 500;
+
+/// Of the given installed CurseForge files, as (project id, file id) without
+/// the `cf-` prefix, the ones with a newer file for this game version and
+/// loader, mapped to that file's id.
+///
+/// CurseForge's own app checks the same way: one lookup of every project, and
+/// the newest file each lists for the instance's version and loader. A
+/// release is preferred; a beta or alpha only where the version has no
+/// release at all. CurseForge's file ids only grow, so a larger one is newer.
+pub async fn available_updates(
+    installed: &[(String, String)],
+    game_version: &str,
+    loader: &str,
+) -> crate::Result<HashMap<String, String>> {
+    let installed = installed
+        .iter()
+        .filter_map(|(project, file)| {
+            Some((project.parse::<i64>().ok()?, file.parse::<i64>().ok()?))
+        })
+        .collect::<HashMap<_, _>>();
+    if installed.is_empty() {
+        return Ok(HashMap::new());
+    }
+    let state = State::get().await?;
+    let wanted_loader = loader_id(loader);
+    let mut ids = installed.keys().copied().collect::<Vec<_>>();
+    ids.sort_unstable();
+
+    let mut updates = HashMap::new();
+    for chunk in ids.chunks(MAX_IDS_PER_REQUEST) {
+        let mods: Data<Vec<ApiMod>> = post(
+            &format!("{API}/mods"),
+            serde_json::json!({ "modIds": chunk }),
+            &state,
+        )
+        .await?;
+        for project in mods.data {
+            if let Some(newest) = newest_file(
+                &project.latest_files_indexes,
+                game_version,
+                wanted_loader,
+            ) && installed
+                .get(&project.id)
+                .is_some_and(|&file| newest > file)
+            {
+                updates.insert(project.id.to_string(), newest.to_string());
+            }
+        }
+    }
+    Ok(updates)
+}
+
+/// The newest file a project lists for this game version and loader: a
+/// release where there is one, otherwise whatever there is. A file naming no
+/// loader (a pack, or a mod from before loaders were tagged) fits any.
+fn newest_file(
+    indexes: &[ApiFileIndex],
+    game_version: &str,
+    loader: Option<i64>,
+) -> Option<i64> {
+    let newest = |release_only: bool| {
+        indexes
+            .iter()
+            .filter(|index| {
+                index.game_version == game_version
+                    && index.mod_loader.is_none_or(|l| Some(l) == loader)
+                    && (!release_only || index.release_type == 1)
+            })
+            .map(|index| index.file_id)
+            .max()
+    };
+    newest(true).or_else(|| newest(false))
+}
+
 // ---------------------------------------------------------------------------
 // Installing into an instance.
 
@@ -1550,5 +1684,33 @@ mod tests {
         assert_eq!(file.version_type, "beta");
         assert!(!file.launcher_download);
         assert_eq!(file.project_id, "cf-7");
+    }
+
+    #[test]
+    fn newest_file_prefers_a_release_for_the_instance() {
+        let index = |game_version: &str, mod_loader, file_id, release_type| {
+            ApiFileIndex {
+                game_version: game_version.to_string(),
+                mod_loader,
+                file_id,
+                release_type,
+            }
+        };
+        let indexes = [
+            index("1.21.1", Some(6), 10, 1),
+            index("1.21.1", Some(6), 12, 2),
+            index("1.21.1", Some(4), 20, 1),
+            index("1.20.1", Some(6), 30, 1),
+        ];
+        assert_eq!(newest_file(&indexes, "1.21.1", Some(6)), Some(10));
+        assert_eq!(newest_file(&indexes, "1.21.1", Some(4)), Some(20));
+        assert_eq!(newest_file(&indexes, "1.19.2", Some(6)), None);
+        // Only a beta for the version: the beta it is.
+        let beta_only = [index("1.21.1", Some(6), 12, 2)];
+        assert_eq!(newest_file(&beta_only, "1.21.1", Some(6)), Some(12));
+        // A pack names no loader and fits any instance.
+        let pack = [index("1.21.1", None, 7, 1)];
+        assert_eq!(newest_file(&pack, "1.21.1", None), Some(7));
+        assert_eq!(newest_file(&pack, "1.21.1", Some(1)), Some(7));
     }
 }

@@ -616,6 +616,7 @@ fn main() {
                     .commands(&[
                         "curseforge_set_api_key",
                         "curseforge_search",
+                        "curseforge_get_categories",
                         "curseforge_get_project",
                         "curseforge_get_description",
                         "curseforge_get_files",

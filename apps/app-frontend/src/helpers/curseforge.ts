@@ -41,9 +41,18 @@ export interface CurseforgeSearchQuery {
 	project_type: string
 	game_versions: string[]
 	loaders: string[]
+	category_ids: number[]
 	sort: string
 	offset: number
 	limit: number
+}
+
+export interface CurseforgeCategory {
+	id: number
+	name: string
+	slug: string
+	iconUrl: string | null
+	parentCategoryId: number | null
 }
 
 export type CurseforgeSearchHit = Labrinth.Search.v3.ResultSearchProject & {
@@ -116,9 +125,54 @@ export async function curseforgeSearch(query: CurseforgeSearchQuery) {
 	return await invoke<CurseforgeSearchResults>(plugin('curseforge_search'), { query })
 }
 
+export async function curseforgeGetCategories(projectType: string) {
+	return await invoke<CurseforgeCategory[]>(plugin('curseforge_get_categories'), { projectType })
+}
+
 export async function curseforgeGetProject(id: string) {
 	return await invoke<CurseforgeProject>(plugin('curseforge_get_project'), { id })
 }
+
+/**
+ * Query options shared by the browse page and a project's page, so a project
+ * hovered or clicked on the browse page is already loaded when its page
+ * opens. The backend caches CurseForge's answers too; these keep the frontend
+ * from even asking.
+ */
+const CURSEFORGE_STALE_TIME = 5 * 60 * 1000
+
+export const curseforgeKeys = {
+	/** A search hit, kept so a project's page can draw its header at once. */
+	summary: (id: string) => ['curseforge', 'summary', id] as const,
+	project: (id: string) => ['curseforge', 'project', id] as const,
+	description: (id: string) => ['curseforge', 'description', id] as const,
+	files: (id: string) => ['curseforge', 'files', id] as const,
+	categories: (projectType: string) => ['curseforge', 'categories', projectType] as const,
+}
+
+export const curseforgeProjectQueryOptions = (id: string) => ({
+	queryKey: curseforgeKeys.project(id),
+	queryFn: () => curseforgeGetProject(id),
+	staleTime: CURSEFORGE_STALE_TIME,
+})
+
+export const curseforgeDescriptionQueryOptions = (id: string) => ({
+	queryKey: curseforgeKeys.description(id),
+	queryFn: () => curseforgeGetDescription(id),
+	staleTime: CURSEFORGE_STALE_TIME,
+})
+
+export const curseforgeFilesQueryOptions = (id: string) => ({
+	queryKey: curseforgeKeys.files(id),
+	queryFn: () => curseforgeGetFiles(id),
+	staleTime: CURSEFORGE_STALE_TIME,
+})
+
+export const curseforgeCategoriesQueryOptions = (projectType: string) => ({
+	queryKey: curseforgeKeys.categories(projectType),
+	queryFn: () => curseforgeGetCategories(projectType),
+	staleTime: 60 * 60 * 1000,
+})
 
 export async function curseforgeGetDescription(id: string) {
 	return await invoke<string>(plugin('curseforge_get_description'), { id })

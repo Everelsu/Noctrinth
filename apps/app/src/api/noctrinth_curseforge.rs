@@ -16,7 +16,8 @@ use std::path::PathBuf;
 use crate::api::Result;
 use theseus::curseforge_blocked::PendingFile;
 use theseus::curseforge_browse::{
-    self, InstallOutcome, Project, ProjectFile, SearchQuery, SearchResults,
+    self, Category, InstallOutcome, Project, ProjectFile, SearchQuery,
+    SearchResults,
 };
 use theseus::curseforge_metadata;
 
@@ -25,6 +26,7 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
         .invoke_handler(tauri::generate_handler![
             curseforge_set_api_key,
             curseforge_search,
+            curseforge_get_categories,
             curseforge_get_project,
             curseforge_get_description,
             curseforge_get_files,
@@ -46,6 +48,13 @@ pub async fn curseforge_set_api_key(key: Option<String>) -> Result<()> {
 #[tauri::command]
 pub async fn curseforge_search(query: SearchQuery) -> Result<SearchResults> {
     Ok(curseforge_browse::search(query).await?)
+}
+
+#[tauri::command]
+pub async fn curseforge_get_categories(
+    project_type: String,
+) -> Result<Vec<Category>> {
+    Ok(curseforge_browse::get_categories(&project_type).await?)
 }
 
 #[tauri::command]

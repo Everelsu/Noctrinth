@@ -39,6 +39,7 @@ import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import type { LocationQuery } from 'vue-router'
 import { useRoute, useRouter } from 'vue-router'
 
+import CurseforgeInstancePickerModal from '@/components/ui/curseforge/CurseforgeInstancePickerModal.vue'
 import CurseforgePendingFilesModal from '@/components/ui/curseforge/CurseforgePendingFilesModal.vue'
 import { useAppServerBrowse } from '@/composables/browse/use-app-server-browse'
 import { useAppEvent } from '@/composables/use-app-event'
@@ -48,9 +49,13 @@ import {
 	type BrowseSource,
 	CURSEFORGE_PROJECT_TYPES,
 	curseforgeAvailable,
+	curseforgeCategoriesQueryOptions,
+	curseforgeDescriptionQueryOptions,
 	curseforgeDownloadModpack,
 	curseforgeIdOf,
 	curseforgeInstallProject,
+	curseforgeKeys,
+	curseforgeProjectQueryOptions,
 	curseforgeSearch,
 	isCurseforgeId,
 } from '@/helpers/curseforge'
@@ -633,10 +638,6 @@ const messages = defineMessages({
 		id: 'app.browse.source.label',
 		defaultMessage: 'Where to browse',
 	},
-	viewProject: {
-		id: 'app.browse.curseforge.view-project',
-		defaultMessage: 'View',
-	},
 })
 
 const projectType = ref<ProjectType>(route.params.projectType as ProjectType)
@@ -656,9 +657,38 @@ const curseforgeOffered = computed(
 )
 const isCurseforge = computed(() => curseforgeOffered.value && browseSource.value === 'curseforge')
 // The filters CurseForge can search by; every other one is hidden while
-// browsing it rather than silently ignored.
+// browsing it rather than silently ignored. Categories are CurseForge's own,
+// swapped in below.
 const CURSEFORGE_FILTER_TYPES = ['game_version', 'mod_loader', 'modpack_loader']
+const isCurseforgeFilterType = (id: string) =>
+	CURSEFORGE_FILTER_TYPES.includes(id) || id.startsWith('category_')
 const curseforgePendingModal = ref<InstanceType<typeof CurseforgePendingFilesModal> | null>(null)
+const curseforgePickerModal = ref<InstanceType<typeof CurseforgeInstancePickerModal> | null>(null)
+/** The CurseForge project waiting for an instance to be picked for it. */
+const curseforgePickedProjectId = ref<string | null>(null)
+
+// CurseForge's categories for the current type, in the shape the sidebar
+// draws Modrinth's in, so the very same filter list shows them.
+const curseforgeCategoriesQuery = useQuery(
+	computed(() => ({
+		...curseforgeCategoriesQueryOptions(projectType.value),
+		enabled: isCurseforge.value,
+	})),
+)
+const curseforgeCategories = computed(() => curseforgeCategoriesQuery.data.value ?? [])
+const browseTags: Ref<Tags> = computed(() =>
+	isCurseforge.value
+		? {
+				...tags.value,
+				categories: curseforgeCategories.value.map((category) => ({
+					icon: '',
+					name: category.name,
+					project_type: projectType.value,
+					header: 'categories',
+				})),
+			}
+		: tags.value,
+)
 
 function formatBrowseSource(source: BrowseSource) {
 	return source === 'curseforge' ? 'CurseForge' : 'Modrinth'
@@ -1127,15 +1157,15 @@ function getCurseforgeCardActions(
 		return [
 			{
 				key: 'install',
-				label: formatMessage(messages.viewProject),
-				icon: GlobeIcon,
+				label: formatMessage(isInstalling ? messages.installingToServer : messages.addToAnInstance),
+				icon: isInstalling ? SpinnerIcon : PlusIcon,
+				iconClass: isInstalling ? 'animate-spin' : undefined,
+				disabled: isInstalling,
 				color: 'brand',
 				type: 'outlined',
 				onClick: () => {
-					router.push({
-						path: `/curseforge/${projectResult.project_id}`,
-						query: getProjectBrowseQuery(),
-					})
+					curseforgePickedProjectId.value = projectResult.project_id
+					curseforgePickerModal.value?.show()
 				},
 			},
 		]
@@ -1164,14 +1194,7 @@ function getCurseforgeCardActions(
 						await install_create_modpack_instance(packLocationFromFile(path))
 						return
 					}
-					const instanceId = instance.value!.id
-					const outcome = await curseforgeInstallProject(instanceId, projectResult.project_id)
-					if (outcome.installed.length > 0) {
-						onSearchResultsInstalled(outcome.installed)
-					}
-					if (outcome.pending.length > 0) {
-						curseforgePendingModal.value?.show(instanceId, outcome.pending)
-					}
+					await installCurseforgeInto(instance.value!.id, projectResult.project_id)
 				} catch (err) {
 					handleError(err)
 				} finally {
@@ -1180,6 +1203,38 @@ function getCurseforgeCardActions(
 			},
 		},
 	]
+}
+
+async function installCurseforgeInto(instanceId: string, projectId: string) {
+	const outcome = await curseforgeInstallProject(instanceId, projectId)
+	// Only marked installed when it went into the instance being browsed for.
+	if (outcome.installed.length > 0 && instanceId === instance.value?.id) {
+		onSearchResultsInstalled(outcome.installed)
+	}
+	if (outcome.pending.length > 0) {
+		curseforgePendingModal.value?.show(instanceId, outcome.pending)
+	}
+}
+
+async function onCurseforgeInstancePicked(instanceId: string) {
+	const projectId = curseforgePickedProjectId.value
+	curseforgePickedProjectId.value = null
+	if (!projectId) return
+	setProjectInstalling(projectId, true)
+	try {
+		await installCurseforgeInto(instanceId, projectId)
+	} catch (err) {
+		handleError(err)
+	} finally {
+		setProjectInstalling(projectId, false)
+	}
+}
+
+/** Loads a CurseForge project's page ahead of a click on its card. */
+function prefetchCurseforgeProject(result: Labrinth.Search.v3.ResultSearchProject) {
+	if (!isCurseforgeId(result.project_id)) return
+	void queryClient.prefetchQuery(curseforgeProjectQueryOptions(result.project_id))
+	void queryClient.prefetchQuery(curseforgeDescriptionQueryOptions(result.project_id))
 }
 
 function onSearchResultInstalled(id: string) {
@@ -1223,12 +1278,17 @@ async function searchCurseforge(requestParams: string) {
 	].filter((filter) => !filter.negative)
 	const optionsOf = (...types: string[]) =>
 		filters.filter((filter) => types.includes(filter.type)).map((filter) => filter.option)
+	const categoryIds = filters
+		.filter((filter) => filter.type.startsWith('category_'))
+		.map((filter) => curseforgeCategories.value.find((c) => c.name === filter.option)?.id)
+		.filter((id): id is number => id !== undefined)
 
 	const query = {
 		query: params.get('query'),
 		project_type: projectType.value,
 		game_versions: optionsOf('game_version'),
 		loaders: optionsOf('mod_loader', 'modpack_loader'),
+		category_ids: categoryIds,
 		sort: params.get('index') ?? 'relevance',
 		offset: Number(params.get('offset') ?? 0),
 		limit: Number(params.get('limit') ?? 20),
@@ -1238,6 +1298,10 @@ async function searchCurseforge(requestParams: string) {
 		queryFn: () => curseforgeSearch(query),
 		staleTime: 30_000,
 	})
+	// So a project's page can draw its header the moment its card is clicked.
+	for (const hit of results.hits) {
+		queryClient.setQueryData(curseforgeKeys.summary(hit.project_id), hit)
+	}
 
 	const installedIds = new Set([...newlyInstalled.value, ...(installedProjectIds.value ?? [])])
 	return {
@@ -1331,7 +1395,7 @@ const lockedFilterMessages = computed(() => ({
 
 const searchState = useBrowseSearch({
 	projectType,
-	tags,
+	tags: browseTags,
 	active: browseRouteActive,
 	providedFilters: combinedProvidedFilters,
 	search,
@@ -1365,7 +1429,11 @@ watch(
 )
 
 watch(browseSource, () => {
-	// Pages do not line up between the two, so a switch starts from the top.
+	// The two have different categories, so none carries over; and pages do
+	// not line up between them, so a switch starts from the top.
+	searchState.currentFilters.value = searchState.currentFilters.value.filter(
+		(filter) => !filter.type.startsWith('category_'),
+	)
 	void searchState.setPage(1)
 })
 
@@ -1444,7 +1512,7 @@ const dismissedPhotosensitivityFilterWarning = computed({
 })
 
 provideBrowseManager({
-	tags,
+	tags: browseTags,
 	projectType,
 	...searchState,
 	advancedFiltersCollapsed,
@@ -1459,9 +1527,10 @@ provideBrowseManager({
 		isCurseforge.value
 			? searchState.filters.value
 					.map((filter) => filter.id)
-					.filter((id) => !CURSEFORGE_FILTER_TYPES.includes(id))
+					.filter((id) => !isCurseforgeFilterType(id))
 			: [],
 	),
+	onProjectHover: prefetchCurseforgeProject,
 	// CurseForge hands out at most 50 results a page.
 	maxResultsOptions: computed(() =>
 		isCurseforge.value ? [5, 10, 15, 20, 50] : [5, 10, 15, 20, 50, 100],
@@ -1566,6 +1635,7 @@ provideBrowseManager({
 			@create="handleServerModpackFlowCreate"
 		/>
 		<CurseforgePendingFilesModal ref="curseforgePendingModal" />
+		<CurseforgeInstancePickerModal ref="curseforgePickerModal" @pick="onCurseforgeInstancePicked" />
 		<Teleport v-if="browseRouteActive" to="#sidebar-teleport-target">
 			<BrowseSidebar />
 		</Teleport>

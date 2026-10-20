@@ -6,6 +6,11 @@
  * header, compatibility sidebar, tabs, description and gallery — so a project
  * found on CurseForge looks like any other. What CurseForge does not have
  * (followers as Modrinth counts them, a team, licences) is simply not drawn.
+ *
+ * Nothing here waits before the page is drawn. The header comes straight from
+ * the search hit that was clicked, if there was one, and everything else
+ * fills in as it arrives — usually already there, because the browse page
+ * starts loading a project the moment its card is hovered.
  */
 import { CheckIcon, ExternalIcon, PlusIcon, SpinnerIcon } from '@modrinth/assets'
 import {
@@ -19,6 +24,7 @@ import {
 	ProjectSidebarCompatibility,
 	useVIntl,
 } from '@modrinth/ui'
+import { useQuery, useQueryClient } from '@tanstack/vue-query'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
@@ -27,14 +33,14 @@ import CurseforgeInstancePickerModal from '@/components/ui/curseforge/Curseforge
 import CurseforgePendingFilesModal from '@/components/ui/curseforge/CurseforgePendingFilesModal.vue'
 import InstanceIndicator from '@/components/ui/InstanceIndicator.vue'
 import {
+	curseforgeDescriptionQueryOptions,
 	curseforgeDownloadModpack,
-	type CurseforgeFile,
-	curseforgeGetDescription,
-	curseforgeGetFiles,
-	curseforgeGetProject,
+	curseforgeFilesQueryOptions,
 	curseforgeIdOf,
 	curseforgeInstallProject,
-	type CurseforgeProject,
+	curseforgeKeys,
+	curseforgeProjectQueryOptions,
+	type CurseforgeSearchHit,
 } from '@/helpers/curseforge'
 import { install_create_modpack_instance, packLocationFromFile } from '@/helpers/install'
 import {
@@ -49,6 +55,7 @@ const props = defineProps<{ id: string }>()
 const { handleError } = injectNotificationManager()
 const { formatMessage } = useVIntl()
 const route = useRoute()
+const queryClient = useQueryClient()
 
 const messages = defineMessages({
 	descriptionTab: { id: 'app.curseforge.project.description-tab', defaultMessage: 'Description' },
@@ -64,76 +71,88 @@ const messages = defineMessages({
 	},
 })
 
-const project = ref<CurseforgeProject | null>(null)
-const description = ref('')
-const files = ref<CurseforgeFile[]>([])
+const projectQuery = useQuery(computed(() => curseforgeProjectQueryOptions(props.id)))
+const descriptionQuery = useQuery(computed(() => curseforgeDescriptionQueryOptions(props.id)))
+const filesQuery = useQuery(computed(() => curseforgeFilesQueryOptions(props.id)))
+const project = computed(() => projectQuery.data.value ?? null)
+/** The search hit that led here, enough to draw the header while loading. */
+const summary = computed(
+	() => queryClient.getQueryData<CurseforgeSearchHit>(curseforgeKeys.summary(props.id)) ?? null,
+)
+
+const allLoaders = ref<unknown[]>([])
+const allGameVersions = ref<unknown[]>([])
+get_loaders()
+	.then((loaders) => (allLoaders.value = loaders ?? []))
+	.catch(handleError)
+get_game_versions()
+	.then((versions) => (allGameVersions.value = versions ?? []))
+	.catch(handleError)
+
+const instanceId = computed(() => (typeof route.query.i === 'string' ? route.query.i : null))
 const instance = ref<GameInstance | null>(null)
 const installedIds = ref<Set<string>>(new Set())
 const installing = ref(false)
-const loadFailed = ref(false)
-const [allLoaders, allGameVersions] = await Promise.all([
-	get_loaders().catch(handleError).then(ref),
-	get_game_versions().catch(handleError).then(ref),
-])
+
+async function refreshInstance() {
+	if (!instanceId.value) {
+		instance.value = null
+		installedIds.value = new Set()
+		return
+	}
+	try {
+		const [loaded, ids] = await Promise.all([
+			getInstance(instanceId.value),
+			getInstalledProjectIds(instanceId.value),
+		])
+		instance.value = loaded
+		installedIds.value = new Set(ids.filter((id) => /^\d+$/.test(id)).map(curseforgeIdOf))
+	} catch (err) {
+		handleError(err)
+	}
+}
+watch(instanceId, refreshInstance, { immediate: true })
 
 const pickerModal = ref<InstanceType<typeof CurseforgeInstancePickerModal> | null>(null)
 const pendingModal = ref<InstanceType<typeof CurseforgePendingFilesModal> | null>(null)
 /** The file chosen on the versions tab, waiting for an instance to go into. */
 const pickedFileId = ref<string | null>(null)
 
-const instanceId = computed(() => (typeof route.query.i === 'string' ? route.query.i : null))
-const isModpack = computed(() => project.value?.project_type === 'modpack')
-const installed = computed(
-	() => !isModpack.value && !!project.value && installedIds.value.has(project.value.id),
+const projectType = computed(
+	() => project.value?.project_type ?? summary.value?.project_types[0] ?? 'mod',
 )
+const isModpack = computed(() => projectType.value === 'modpack')
+const installed = computed(() => !isModpack.value && installedIds.value.has(props.id))
+const websiteUrl = computed(() => project.value?.website_url ?? summary.value?.website_url ?? null)
 
-async function load() {
-	loadFailed.value = false
-	try {
-		const [loaded, body, loadedFiles, loadedInstance] = await Promise.all([
-			curseforgeGetProject(props.id),
-			curseforgeGetDescription(props.id).catch(() => ''),
-			curseforgeGetFiles(props.id).catch(() => []),
-			instanceId.value ? getInstance(instanceId.value) : Promise.resolve(null),
-		])
-		project.value = loaded
-		description.value = body
-		files.value = loadedFiles
-		instance.value = loadedInstance
-		await refreshInstalled()
-	} catch (err) {
-		loadFailed.value = true
-		handleError(err)
+/** The project in the shape the shared header reads. */
+const headerProject = computed(() => {
+	if (project.value) {
+		return {
+			id: project.value.id,
+			title: project.value.name,
+			description: project.value.summary,
+			icon_url: project.value.icon_url,
+			raw_icon_url: project.value.icon_url,
+			downloads: project.value.downloads,
+			followers: project.value.follows,
+			categories: [] as string[],
+		}
 	}
-}
-
-async function refreshInstalled() {
-	if (!instanceId.value) {
-		installedIds.value = new Set()
-		return
+	if (summary.value) {
+		return {
+			id: summary.value.project_id,
+			title: summary.value.name,
+			description: summary.value.summary,
+			icon_url: summary.value.icon_url,
+			raw_icon_url: summary.value.icon_url,
+			downloads: summary.value.downloads,
+			followers: summary.value.follows,
+			categories: [] as string[],
+		}
 	}
-	const ids = await getInstalledProjectIds(instanceId.value).catch(() => [] as string[])
-	installedIds.value = new Set(ids.filter((id) => /^\d+$/.test(id)).map(curseforgeIdOf))
-}
-
-await load()
-watch(() => props.id, load)
-
-/** The project in the shapes the shared header and sidebar read. */
-const headerProject = computed(() =>
-	project.value
-		? {
-				id: project.value.id,
-				title: project.value.name,
-				description: project.value.summary,
-				icon_url: project.value.icon_url,
-				raw_icon_url: project.value.icon_url,
-				downloads: project.value.downloads,
-				followers: project.value.follows,
-				categories: [] as string[],
-			}
-		: null,
-)
+	return null
+})
 const sidebarProject = computed(() =>
 	project.value
 		? {
@@ -147,22 +166,18 @@ const sidebarProject = computed(() =>
 		: null,
 )
 /** What the shared Description and Gallery tabs read. */
-const tabProject = computed(() =>
-	project.value
-		? {
-				id: project.value.id,
-				project_type: project.value.project_type,
-				body: description.value,
-				gallery: project.value.gallery.map((image) => ({
-					url: image.url,
-					raw_url: image.url,
-					title: image.title,
-					description: image.description,
-					created: null,
-				})),
-			}
-		: null,
-)
+const tabProject = computed(() => ({
+	id: props.id,
+	project_type: projectType.value,
+	body: descriptionQuery.data.value ?? '',
+	gallery: (project.value?.gallery ?? []).map((image) => ({
+		url: image.url,
+		raw_url: image.url,
+		title: image.title,
+		description: image.description,
+		created: null,
+	})),
+}))
 
 const tabQuery = computed(() => (instanceId.value ? { i: instanceId.value } : {}))
 const tabs = computed(() => [
@@ -187,11 +202,11 @@ const tabs = computed(() => [
  * instance the page was opened from, or one the user picks.
  */
 async function install(fileId: string | null = null) {
-	if (!project.value || installing.value) return
+	if (installing.value) return
 	if (isModpack.value) {
 		installing.value = true
 		try {
-			const path = await curseforgeDownloadModpack(project.value.id, fileId)
+			const path = await curseforgeDownloadModpack(props.id, fileId)
 			await install_create_modpack_instance(packLocationFromFile(path))
 		} catch (err) {
 			handleError(err)
@@ -209,14 +224,13 @@ async function install(fileId: string | null = null) {
 }
 
 async function installInto(targetInstanceId: string, fileId: string | null) {
-	if (!project.value) return
 	installing.value = true
 	try {
-		const outcome = await curseforgeInstallProject(targetInstanceId, project.value.id, fileId)
+		const outcome = await curseforgeInstallProject(targetInstanceId, props.id, fileId)
 		if (outcome.pending.length > 0) {
 			pendingModal.value?.show(targetInstanceId, outcome.pending)
 		}
-		if (targetInstanceId === instanceId.value) await refreshInstalled()
+		if (targetInstanceId === instanceId.value) await refreshInstance()
 	} catch (err) {
 		handleError(err)
 	} finally {
@@ -231,15 +245,16 @@ function onInstancePicked(targetInstanceId: string) {
 </script>
 
 <template>
-	<div v-if="project && headerProject && tabProject">
+	<div>
 		<Teleport to="#sidebar-teleport-target">
 			<ProjectSidebarCompatibility
+				v-if="sidebarProject"
 				:project="sidebarProject"
 				:tags="{ loaders: allLoaders, gameVersions: allGameVersions }"
 				class="project-sidebar-section"
 			/>
 		</Teleport>
-		<div class="flex flex-col gap-4 p-6">
+		<div v-if="headerProject" class="flex flex-col gap-4 p-6">
 			<InstanceIndicator v-if="instance" :instance="instance" />
 			<ProjectPageHeader :project="headerProject">
 				<template #actions>
@@ -263,12 +278,12 @@ function onInstancePicked(targetInstanceId: string) {
 						}}
 					</Button>
 					<IconButton
-						v-if="project.website_url"
+						v-if="websiteUrl"
 						v-tooltip="formatMessage(messages.openOnCurseforge)"
 						type="quiet"
 						size="xl"
 						:label="formatMessage(messages.openOnCurseforge)"
-						@click="openUrl(project.website_url)"
+						@click="openUrl(websiteUrl)"
 					>
 						<ExternalIcon />
 					</IconButton>
@@ -277,15 +292,19 @@ function onInstancePicked(targetInstanceId: string) {
 			<NavTabs :links="tabs" />
 			<RouterView
 				:project="tabProject"
-				:files="files"
+				:files="filesQuery.data.value ?? []"
+				:files-loading="filesQuery.isPending.value"
 				:instance="instance"
 				:installed="installed"
 				:installing="installing"
 				:install="install"
 			/>
 		</div>
+		<div v-else-if="projectQuery.isPending.value" class="flex justify-center p-12">
+			<SpinnerIcon class="size-8 animate-spin text-secondary" />
+		</div>
+		<p v-else class="p-6 text-secondary">{{ formatMessage(messages.loadError) }}</p>
 		<CurseforgeInstancePickerModal ref="pickerModal" @pick="onInstancePicked" />
 		<CurseforgePendingFilesModal ref="pendingModal" />
 	</div>
-	<p v-else-if="loadFailed" class="p-6 text-secondary">{{ formatMessage(messages.loadError) }}</p>
 </template>

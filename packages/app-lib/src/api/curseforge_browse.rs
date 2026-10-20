@@ -14,8 +14,10 @@
 //! [`curseforge_metadata::api_key`]: crate::api::curseforge_metadata
 //! [`curseforge_blocked`]: crate::api::curseforge_blocked
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
+use std::sync::{LazyLock, Mutex};
+use std::time::{Duration, Instant};
 
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
@@ -110,10 +112,43 @@ fn key() -> crate::Result<String> {
     })
 }
 
+/// How long a CurseForge answer is reused. Long enough that going back to
+/// the results, opening a project twice or paging back costs nothing; short
+/// enough that a new upload shows up within minutes.
+const CACHE_TTL: Duration = Duration::from_secs(5 * 60);
+/// Past this many answers the cache is emptied rather than tracked further.
+const CACHE_MAX_ENTRIES: usize = 512;
+
+static CACHE: LazyLock<Mutex<HashMap<String, (Instant, bytes::Bytes)>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
+
+fn cached(url: &str) -> Option<bytes::Bytes> {
+    let cache = CACHE.lock().ok()?;
+    let (at, body) = cache.get(url)?;
+    (at.elapsed() < CACHE_TTL).then(|| body.clone())
+}
+
+fn remember(url: &str, body: &bytes::Bytes) {
+    if let Ok(mut cache) = CACHE.lock() {
+        if cache.len() >= CACHE_MAX_ENTRIES {
+            // ponytail: drops everything at once; an LRU if this ever thrashes.
+            cache.clear();
+        }
+        cache.insert(url.to_string(), (Instant::now(), body.clone()));
+    }
+}
+
+/// A GET against CurseForge's API, answered from the cache when it can be.
+///
+/// Goes through the API semaphore rather than the download one, so browsing
+/// stays quick while a modpack is downloading hundreds of files.
 async fn get<T: for<'de> Deserialize<'de>>(
     url: &str,
     state: &State,
 ) -> crate::Result<T> {
+    if let Some(body) = cached(url) {
+        return Ok(serde_json::from_slice(&body)?);
+    }
     let key = key()?;
     let body = fetch_advanced(
         Method::GET,
@@ -124,11 +159,13 @@ async fn get<T: for<'de> Deserialize<'de>>(
         None,
         None,
         None,
-        &state.fetch_semaphore,
+        &state.api_semaphore,
         &state.pool,
     )
     .await?;
-    Ok(serde_json::from_slice(&body)?)
+    let parsed = serde_json::from_slice(&body)?;
+    remember(url, &body);
+    Ok(parsed)
 }
 
 #[derive(Deserialize)]
@@ -352,6 +389,9 @@ pub struct SearchQuery {
     pub game_versions: Vec<String>,
     #[serde(default)]
     pub loaders: Vec<String>,
+    /// CurseForge category ids, as listed by [`get_categories`].
+    #[serde(default)]
+    pub category_ids: Vec<i64>,
     #[serde(default)]
     pub sort: String,
     #[serde(default)]
@@ -359,6 +399,11 @@ pub struct SearchQuery {
     #[serde(default)]
     pub limit: u32,
 }
+
+/// CurseForge filters on at most this many game versions, loaders and
+/// categories at once.
+const MAX_GAME_VERSIONS: usize = 4;
+const MAX_CATEGORIES: usize = 10;
 
 /// A Labrinth v3 search hit, with the fields CurseForge can fill.
 #[derive(Serialize, Debug)]
@@ -411,23 +456,49 @@ fn search_url(query: &SearchQuery) -> crate::Result<String> {
 
     let mut url = url::Url::parse(&format!("{API}/mods/search"))
         .map_err(|error| input(error.to_string()))?;
+    let text = query
+        .query
+        .as_deref()
+        .map(str::trim)
+        .filter(|text| !text.is_empty());
     {
         let mut params = url.query_pairs_mut();
         params
             .append_pair("gameId", &MINECRAFT.to_string())
             .append_pair("classId", &class.to_string())
-            .append_pair("sortField", &sort_field(&query.sort).to_string())
-            .append_pair("sortOrder", "desc")
             .append_pair("index", &offset.to_string())
             .append_pair("pageSize", &limit.to_string());
-        if let Some(text) = query.query.as_deref().map(str::trim)
-            && !text.is_empty()
-        {
+        // Asked to sort by relevance while searching for something, CurseForge
+        // is left to rank by the match itself, as its own app does.
+        if !(query.sort == "relevance" && text.is_some()) {
+            params
+                .append_pair("sortField", &sort_field(&query.sort).to_string())
+                .append_pair("sortOrder", "desc");
+        }
+        if let Some(text) = text {
             params.append_pair("searchFilter", text);
         }
-        // CurseForge filters on one game version only.
-        if let Some(version) = query.game_versions.first() {
-            params.append_pair("gameVersion", version);
+        let versions = query
+            .game_versions
+            .iter()
+            .take(MAX_GAME_VERSIONS)
+            .collect::<Vec<_>>();
+        if !versions.is_empty() {
+            params.append_pair(
+                "gameVersions",
+                &serde_json::to_string(&versions)?,
+            );
+        }
+        let categories = query
+            .category_ids
+            .iter()
+            .take(MAX_CATEGORIES)
+            .collect::<Vec<_>>();
+        if !categories.is_empty() {
+            params.append_pair(
+                "categoryIds",
+                &serde_json::to_string(&categories)?,
+            );
         }
         // Loaders mean nothing to resource packs, shaders and data packs.
         if class == 6 || class == 4471 {
@@ -465,6 +536,45 @@ pub async fn search(query: SearchQuery) -> crate::Result<SearchResults> {
         total_hits: response.pagination.total_count.min(MAX_SEARCH_WINDOW),
         hits_per_page: limit,
     })
+}
+
+/// A CurseForge category, to filter a search by.
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct Category {
+    pub id: i64,
+    pub name: String,
+    #[serde(default)]
+    pub slug: String,
+    #[serde(default)]
+    pub icon_url: Option<String>,
+    #[serde(default)]
+    pub parent_category_id: Option<i64>,
+    #[serde(default, skip_serializing)]
+    is_class: Option<bool>,
+}
+
+/// The categories CurseForge files projects of this type under, as its own
+/// app lists them in its filters.
+pub async fn get_categories(
+    project_type: &str,
+) -> crate::Result<Vec<Category>> {
+    let state = State::get().await?;
+    let class = class_id(project_type).ok_or_else(|| {
+        input(format!("CurseForge has no {project_type} projects"))
+    })?;
+    let categories: Data<Vec<Category>> = get(
+        &format!("{API}/categories?gameId={MINECRAFT}&classId={class}"),
+        &state,
+    )
+    .await?;
+    let mut categories = categories
+        .data
+        .into_iter()
+        .filter(|category| category.is_class != Some(true))
+        .collect::<Vec<_>>();
+    categories.sort_by(|a, b| a.name.cmp(&b.name));
+    Ok(categories)
 }
 
 fn search_hit(project: ApiMod, project_type: &str) -> SearchHit {
@@ -973,6 +1083,7 @@ mod tests {
             project_type: project_type.to_string(),
             game_versions: vec!["1.20.1".to_string(), "1.20".to_string()],
             loaders: vec!["fabric".to_string(), "iris".to_string()],
+            category_ids: vec![406, 420],
             sort: "downloads".to_string(),
             offset: 40,
             limit: 20,
@@ -1000,12 +1111,24 @@ mod tests {
         assert_eq!(get("gameId"), Some("432"));
         assert_eq!(get("classId"), Some("6"));
         assert_eq!(get("searchFilter"), Some("jei"));
-        assert_eq!(get("gameVersion"), Some("1.20.1"));
+        assert_eq!(get("gameVersions"), Some(r#"["1.20.1","1.20"]"#));
+        assert_eq!(get("categoryIds"), Some("[406,420]"));
         // Only loaders CurseForge knows are sent.
         assert_eq!(get("modLoaderTypes"), Some("[4]"));
         assert_eq!(get("sortField"), Some("6"));
         assert_eq!(get("index"), Some("40"));
         assert_eq!(get("pageSize"), Some("20"));
+    }
+
+    #[test]
+    fn relevance_with_a_query_is_left_to_curseforge() {
+        let mut q = query("mod");
+        q.sort = "relevance".to_string();
+        assert!(!search_url(&q).unwrap().contains("sortField"));
+
+        q.query = None;
+        let params = params(&search_url(&q).unwrap());
+        assert!(params.contains(&("sortField".to_string(), "2".to_string())));
     }
 
     #[test]

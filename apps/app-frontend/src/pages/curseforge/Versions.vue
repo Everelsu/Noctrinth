@@ -4,7 +4,7 @@
  * Modrinth project uses. A file whose author keeps it off launchers is still
  * installable: it is then downloaded by hand, through the pending-files modal.
  */
-import { DownloadIcon } from '@modrinth/assets'
+import { DownloadIcon, SpinnerIcon } from '@modrinth/assets'
 import {
 	commonMessages,
 	IconButton,
@@ -20,6 +20,7 @@ import { get_game_versions, get_loaders } from '@/helpers/tags.js'
 const props = defineProps<{
 	project: { id: string; project_type?: string }
 	files: CurseforgeFile[]
+	filesLoading?: boolean
 	install: (fileId: string | null) => Promise<void>
 	installing: boolean
 }>()
@@ -27,10 +28,14 @@ const props = defineProps<{
 const { formatMessage } = useVIntl()
 const { handleError } = injectNotificationManager()
 
-const [loaders, gameVersions] = await Promise.all([
-	get_loaders().catch(handleError).then(ref),
-	get_game_versions().catch(handleError).then(ref),
-])
+const loaders = ref([])
+const gameVersions = ref([])
+get_loaders()
+	.then((value) => (loaders.value = value ?? []))
+	.catch(handleError)
+get_game_versions()
+	.then((value) => (gameVersions.value = value ?? []))
+	.catch(handleError)
 
 /** Each file in the shape the shared versions table reads. */
 const versions = computed(() =>
@@ -50,7 +55,11 @@ const versions = computed(() =>
 </script>
 
 <template>
+	<div v-if="filesLoading && files.length === 0" class="flex justify-center p-12">
+		<SpinnerIcon class="size-8 animate-spin text-secondary" />
+	</div>
 	<ProjectPageVersions
+		v-else
 		:loaders="loaders"
 		:game-versions="gameVersions"
 		:versions="versions"

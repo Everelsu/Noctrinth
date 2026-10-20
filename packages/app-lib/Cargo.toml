@@ -41,6 +41,7 @@ encoding_rs = { workspace = true }
 enumset = { workspace = true }
 eyre = { workspace = true }
 flate2 = { workspace = true }
+tar = { workspace = true }
 fs4 = { workspace = true, features = ["tokio"] }
 futures = { workspace = true, features = ["alloc", "async-await"] }
 futures-lite = { workspace = true }

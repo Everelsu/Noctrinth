@@ -12,6 +12,7 @@ pub mod gpu;
 pub mod handler;
 pub mod instance;
 pub mod instance_recovery;
+pub mod java_providers;
 pub mod jre;
 pub mod launcher_search;
 pub mod logs;

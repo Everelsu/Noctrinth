@@ -12,6 +12,9 @@ export default new createRouter({
 			path: '/',
 			name: 'Home',
 			component: () => import('@/pages/Index.vue'),
+			meta: {
+				manualScroll: true,
+			},
 		},
 		{
 			path: '/hosting/manage/',
@@ -54,6 +57,9 @@ export default new createRouter({
 			path: '/browse/:projectType',
 			name: 'Discover content',
 			component: () => import('@/pages/Browse.vue'),
+			meta: {
+				saveScroll: true,
+			},
 		},
 		{
 			path: '/dashboard',
@@ -148,11 +154,17 @@ export default new createRouter({
 					path: '',
 					name: 'InstanceContent',
 					component: () => import('@/pages/instance/content/index.vue'),
+					meta: {
+						saveScroll: true,
+					},
 				},
 				{
 					path: 'projects/:type',
 					name: 'InstanceContentFilter',
 					component: () => import('@/pages/instance/content/index.vue'),
+					meta: {
+						saveScroll: true,
+					},
 				},
 				{
 					path: 'files',
@@ -177,13 +189,4 @@ export default new createRouter({
 	],
 	linkActiveClass: 'router-link-active',
 	linkExactActiveClass: 'router-link-exact-active',
-	scrollBehavior(to, from) {
-		if (to.path === from.path || to.name === 'Home') return
-		// Sometimes Vue's scroll behavior is not working as expected, so we need to manually scroll to top (especially on Linux)
-		document.querySelector('.app-viewport')?.scrollTo(0, 0)
-		return {
-			el: '.app-viewport',
-			top: 0,
-		}
-	},
 })

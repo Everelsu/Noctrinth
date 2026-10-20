@@ -1284,7 +1284,37 @@
 		"message": "Browse and install from CurseForge, recognise its files in your instances and keep them up to date. Off, and the launcher asks CurseForge nothing."
 	},
 	"noctrinth.settings.curseforge.no-key": {
-		"message": "This build has no CurseForge API key, so CurseForge is unavailable."
+		"message": "This build has no CurseForge API key. Add your own below to use CurseForge."
+	},
+	"noctrinth.settings.curseforge.own-key": {
+		"message": "Your own API key"
+	},
+	"noctrinth.settings.curseforge.own-key.check": {
+		"message": "Check"
+	},
+	"noctrinth.settings.curseforge.own-key.check-and-save": {
+		"message": "Check and save"
+	},
+	"noctrinth.settings.curseforge.own-key.check-failed": {
+		"message": "Could not reach CurseForge to check the key"
+	},
+	"noctrinth.settings.curseforge.own-key.forget": {
+		"message": "Forget my key"
+	},
+	"noctrinth.settings.curseforge.own-key.hint": {
+		"message": "Used instead of the built-in one and kept on this computer. Sign in to the CurseForge console and copy a key from its API keys page:"
+	},
+	"noctrinth.settings.curseforge.own-key.invalid": {
+		"message": "CurseForge does not accept this key"
+	},
+	"noctrinth.settings.curseforge.own-key.ok": {
+		"message": "CurseForge accepts the key"
+	},
+	"noctrinth.settings.curseforge.own-key.placeholder": {
+		"message": "Your key is saved"
+	},
+	"noctrinth.settings.curseforge.own-key.saved": {
+		"message": "CurseForge accepts the key; it is saved"
 	},
 	"noctrinth.settings.curseforge.recognize-files": {
 		"message": "Recognise mods added by hand or from other launchers by their fingerprint"

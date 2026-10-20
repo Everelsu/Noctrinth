@@ -239,6 +239,10 @@ pub async fn get_instance_from_pack(
             path,
             curseforge_api_key,
         } => {
+            // The user's own key, when there is one, before the build's.
+            let curseforge_api_key =
+                crate::api::curseforge_metadata::user_key()
+                    .or(curseforge_api_key);
             // Detect what kind of modpack this is so we can fail BEFORE the
             // frontend creates an empty profile that we'd then have to delete
             // out from under the user. The two recognised formats:

@@ -1616,6 +1616,10 @@ async fn install_pack_inner(
             path,
             curseforge_api_key,
         } => {
+            // The user's own key, when there is one, before the build's.
+            let curseforge_api_key =
+                crate::api::curseforge_metadata::user_key()
+                    .or(curseforge_api_key);
             reporter
                 .set_context(
                     InstallErrorContext::new("read local modpack file")

@@ -53,7 +53,8 @@ export type CreatePackLocation = PackLocationVersionId | PackLocationFile | Pack
 /**
  * Build a `fromFile` pack location. Always stamps the CurseForge API key so a
  * CurseForge modpack zip picked from disk can be resolved by the backend —
- * without it the preview/install fails even when the key is configured.
+ * without it the preview/install fails even when the key is configured. The
+ * backend prefers the user's own key, when there is one, to this one.
  */
 export function packLocationFromFile(path: string): PackLocationFile {
 	return {

@@ -377,6 +377,8 @@ impl State {
         // clients are built lazily once and bake the proxy in at that point.
         crate::util::fetch::set_proxy_url(settings.proxy_url.clone());
 
+        crate::api::curseforge_metadata::load_user_key(&pool).await?;
+
         let fetch_semaphore =
             FetchSemaphore(Semaphore::new(settings.max_concurrent_downloads));
         let io_semaphore =

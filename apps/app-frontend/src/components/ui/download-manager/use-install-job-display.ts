@@ -6,6 +6,11 @@ import type { InstallJobSnapshot, InstallProgress } from '@/helpers/install'
 const messages = defineMessages({
 	paused: { id: 'app.download-manager.paused', defaultMessage: 'Paused' },
 	canceling: { id: 'app.download-manager.canceling', defaultMessage: 'Canceling installation…' },
+	rateLimited: {
+		id: 'app.download-manager.rate-limited',
+		defaultMessage:
+			'Modrinth asked to slow down, resuming in {seconds, plural, one {# second} other {# seconds}}',
+	},
 	unknownInstance: {
 		id: 'app.action-bar.install.unknown-instance',
 		defaultMessage: 'Unknown instance',
@@ -302,6 +307,9 @@ export function useInstallJobDisplay() {
 		}
 		if (job.canceling) return formatMessage(messages.canceling)
 		if (job.paused) return formatMessage(messages.paused)
+		if (job.rate_limit_wait_seconds) {
+			return formatMessage(messages.rateLimited, { seconds: job.rate_limit_wait_seconds })
+		}
 		if (job.phase === 'preparing_java' && job.details.type === 'java') {
 			return formatMessage(javaStepMessages[job.details.step], {
 				version: job.details.major_version,

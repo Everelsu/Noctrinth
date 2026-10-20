@@ -730,6 +730,14 @@ async fn dependency_closure(
             continue;
         }
 
+        prefetch_dependency_versions(
+            &version.dependencies,
+            content_set,
+            state,
+            &mut version_cache,
+        )
+        .await?;
+
         for dependency in &version.dependencies {
             if !is_required_dependency(dependency, content_set) {
                 continue;
@@ -800,6 +808,43 @@ async fn resolve_dependency_version(
     versions.sort_by_key(|version| Reverse(version.date_published));
 
     Ok(find_preferred_dependency_version(&versions, content_set))
+}
+
+/// Fetches every pinned dependency version not looked up yet in one request,
+/// rather than one request per dependency.
+async fn prefetch_dependency_versions(
+    dependencies: &[Dependency],
+    content_set: &ContentSet,
+    state: &State,
+    version_cache: &mut HashMap<String, Option<Version>>,
+) -> crate::Result<()> {
+    let version_ids = dependencies
+        .iter()
+        .filter(|dependency| is_required_dependency(dependency, content_set))
+        .filter_map(|dependency| dependency.version_id.as_deref())
+        .filter(|version_id| !version_cache.contains_key(*version_id))
+        .collect::<HashSet<_>>()
+        .into_iter()
+        .collect::<Vec<_>>();
+    if version_ids.is_empty() {
+        return Ok(());
+    }
+
+    let versions = CachedEntry::get_version_many(
+        &version_ids,
+        Some(CacheBehaviour::MustRevalidate),
+        &state.pool,
+        &state.api_semaphore,
+    )
+    .await?;
+    for version_id in version_ids {
+        version_cache.insert(version_id.to_string(), None);
+    }
+    for version in versions {
+        version_cache.insert(version.id.clone(), Some(version));
+    }
+
+    Ok(())
 }
 
 async fn cached_version(

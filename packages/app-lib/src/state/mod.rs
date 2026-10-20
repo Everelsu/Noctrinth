@@ -234,8 +234,10 @@ impl State {
 				).await {
 					Ok(instances) => {
 						for instance in instances {
-							if let Err(error) = instances::commands::migrate_legacy_content(
-								&instance.id, state, true,
+							if let Err(error) = crate::util::fetch::patiently(
+								instances::commands::migrate_legacy_content(
+									&instance.id, state, true,
+								),
 							).await {
 								tracing::warn!(
 									instance_id = %instance.id,

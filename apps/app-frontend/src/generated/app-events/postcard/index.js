@@ -459,6 +459,7 @@ function deserialize_INSTALL_JOB_SNAPSHOT(d) {
         status: deserialize_INSTALL_JOB_STATUS(d),
         paused: d.deserialize_bool(),
         canceling: d.deserialize_bool(),
+        rate_limit_wait_seconds: (d.deserialize_number(U32_BYTES, false) === 0) ? undefined : d.deserialize_number(U32_BYTES, false),
         can_pause: d.deserialize_bool(),
         can_cancel: d.deserialize_bool(),
         target: deserialize_INSTALL_TARGET(d),

@@ -15,9 +15,12 @@
 import {
 	CalendarIcon,
 	CheckIcon,
+	ClipboardCopyIcon,
+	DownloadIcon,
 	ExternalIcon,
-	PlusIcon,
+	MoreVerticalIcon,
 	SpinnerIcon,
+	StarIcon,
 	VersionIcon,
 } from '@modrinth/assets'
 import {
@@ -32,6 +35,7 @@ import {
 	ProjectSidebarCreators,
 	ProjectSidebarLinks,
 	ProjectSidebarTags,
+	TeleportOverflowMenu,
 	useFormatDateTime,
 	useRelativeTime,
 	useVIntl,
@@ -44,18 +48,14 @@ import { useRoute, useRouter } from 'vue-router'
 
 import InstanceIndicator from '@/components/ui/InstanceIndicator.vue'
 import {
-	curseforgeCategoryTag,
 	curseforgeDescriptionQueryOptions,
-	curseforgeFilesQueryOptions,
 	curseforgeIdOf,
 	curseforgeKeys,
 	curseforgeProjectQueryOptions,
 	type CurseforgeSearchHit,
+	useCurseforgeFavorites,
 } from '@/helpers/curseforge'
-import {
-	get as getInstance,
-	get_installed_project_ids as getInstalledProjectIds,
-} from '@/helpers/instance'
+import { get as getInstance, get_projects as getInstanceProjects } from '@/helpers/instance'
 import { get_game_versions, get_loaders } from '@/helpers/tags'
 import type { GameInstance } from '@/helpers/types'
 import { injectContentInstall } from '@/providers/content-install'
@@ -63,7 +63,7 @@ import { provideBreadcrumbParent, useBreadcrumb } from '@/shared/breadcrumbs'
 
 const props = defineProps<{ id: string }>()
 
-const { handleError } = injectNotificationManager()
+const { handleError, addNotification } = injectNotificationManager()
 const { formatMessage } = useVIntl()
 const route = useRoute()
 const router = useRouter()
@@ -79,6 +79,16 @@ const messages = defineMessages({
 		id: 'app.curseforge.project.open-on-curseforge',
 		defaultMessage: 'Open on CurseForge',
 	},
+	moreOptions: { id: 'app.project.more-options', defaultMessage: 'More options' },
+	linkCopied: { id: 'app.project.copy-link.copied', defaultMessage: 'Link copied to clipboard' },
+	addFavorite: {
+		id: 'app.curseforge.project.add-favorite',
+		defaultMessage: 'Add to favorites',
+	},
+	removeFavorite: {
+		id: 'app.curseforge.project.remove-favorite',
+		defaultMessage: 'Remove from favorites',
+	},
 	loadError: {
 		id: 'app.curseforge.project.load-error',
 		defaultMessage: 'This CurseForge project could not be loaded.',
@@ -87,7 +97,6 @@ const messages = defineMessages({
 
 const projectQuery = useQuery(computed(() => curseforgeProjectQueryOptions(props.id)))
 const descriptionQuery = useQuery(computed(() => curseforgeDescriptionQueryOptions(props.id)))
-const filesQuery = useQuery(computed(() => curseforgeFilesQueryOptions(props.id)))
 const project = computed(() => projectQuery.data.value ?? null)
 /** The search hit that led here, enough to draw the header while loading. */
 const summary = computed(
@@ -105,22 +114,29 @@ get_game_versions()
 
 const instanceId = computed(() => (typeof route.query.i === 'string' ? route.query.i : null))
 const instance = ref<GameInstance | null>(null)
-const installedIds = ref<Set<string>>(new Set())
+/** Each CurseForge project in the instance, by `cf-` id, to its file id. */
+const installedFiles = ref<Map<string, string | null>>(new Map())
 const installing = ref(false)
 
 async function refreshInstance() {
 	if (!instanceId.value) {
 		instance.value = null
-		installedIds.value = new Set()
+		installedFiles.value = new Map()
 		return
 	}
 	try {
-		const [loaded, ids] = await Promise.all([
+		const [loaded, files] = await Promise.all([
 			getInstance(instanceId.value),
-			getInstalledProjectIds(instanceId.value),
+			getInstanceProjects(instanceId.value),
 		])
 		instance.value = loaded
-		installedIds.value = new Set(ids.filter((id) => /^\d+$/.test(id)).map(curseforgeIdOf))
+		installedFiles.value = new Map(
+			Object.values(files).flatMap((file) =>
+				file.metadata && /^\d+$/.test(file.metadata.project_id)
+					? [[curseforgeIdOf(file.metadata.project_id), file.metadata.version_id ?? null]]
+					: [],
+			),
+		)
 	} catch (err) {
 		handleError(err)
 	}
@@ -134,12 +150,13 @@ const projectType = computed(
 	() => project.value?.project_type ?? summary.value?.project_types[0] ?? 'mod',
 )
 const isModpack = computed(() => projectType.value === 'modpack')
-const installed = computed(() => !isModpack.value && installedIds.value.has(props.id))
+const installed = computed(() => !isModpack.value && installedFiles.value.has(props.id))
+const installedVersion = computed(() => installedFiles.value.get(props.id) ?? null)
 const websiteUrl = computed(() => project.value?.website_url ?? summary.value?.website_url ?? null)
 
-/** Its categories as the Modrinth tags they mean, where there is one. */
+/** Its CurseForge categories, by CurseForge's own names. */
 const categoryTags = computed(() => [
-	...new Set((project.value?.categories ?? []).map((c) => curseforgeCategoryTag(c.name))),
+	...new Set((project.value?.categories ?? []).map((c) => c.name)),
 ])
 
 /** The project in the shape the shared header reads. */
@@ -166,7 +183,7 @@ const headerProject = computed(() => {
 			raw_icon_url: summary.value.icon_url,
 			downloads: summary.value.downloads,
 			followers: undefined as unknown as number,
-			categories: summary.value.categories.map(curseforgeCategoryTag),
+			categories: summary.value.categories,
 		}
 	}
 	return null
@@ -239,10 +256,13 @@ function authorLink(username: string) {
 const createdAt = computed(() => project.value?.date_created ?? null)
 const updatedAt = computed(() => project.value?.date_modified ?? null)
 
-/** What the shared Description and Gallery tabs read. */
+/** What the shared Description and Gallery tabs, and the versions tabs, read. */
 const tabProject = computed(() => ({
 	id: props.id,
+	title: headerProject.value?.title ?? '',
 	project_type: projectType.value,
+	website_url: websiteUrl.value,
+	authors: project.value?.authors ?? [],
 	body: descriptionQuery.data.value ?? '',
 	gallery: (project.value?.gallery ?? []).map((image) => ({
 		url: image.url,
@@ -281,6 +301,39 @@ const tabs = computed(() => [
 		label: formatMessage(messages.galleryTab),
 		href: `/curseforge/${props.id}/gallery${tabSuffix.value}`,
 		shown: (project.value?.gallery.length ?? 0) > 0,
+	},
+])
+
+const { isFavorite, toggleFavorite } = useCurseforgeFavorites()
+const favorite = computed(() => isFavorite(props.id))
+
+async function copyProjectLink() {
+	if (!websiteUrl.value) return
+	try {
+		await navigator.clipboard.writeText(websiteUrl.value)
+		addNotification({
+			title: formatMessage(messages.linkCopied),
+			text: websiteUrl.value,
+			type: 'success',
+		})
+	} catch (err) {
+		handleError(err)
+	}
+}
+
+/** The header's ⋮ menu, as a Modrinth project's page has it. */
+const moreActions = computed(() => [
+	{
+		id: 'copy-link',
+		label: formatMessage(commonMessages.copyLinkButton),
+		icon: ClipboardCopyIcon,
+		action: copyProjectLink,
+	},
+	{
+		id: 'open-in-browser',
+		label: formatMessage(messages.openOnCurseforge),
+		icon: ExternalIcon,
+		action: () => websiteUrl.value && openUrl(websiteUrl.value),
 	},
 ])
 
@@ -391,7 +444,7 @@ async function install(fileId: string | null = null) {
 					>
 						<SpinnerIcon v-if="installing" class="animate-spin" />
 						<CheckIcon v-else-if="installed" />
-						<PlusIcon v-else />
+						<DownloadIcon v-else />
 						{{
 							installed
 								? formatMessage(commonMessages.installedLabel)
@@ -401,24 +454,31 @@ async function install(fileId: string | null = null) {
 						}}
 					</Button>
 					<IconButton
-						v-if="websiteUrl"
-						v-tooltip="formatMessage(messages.openOnCurseforge)"
+						v-tooltip="formatMessage(favorite ? messages.removeFavorite : messages.addFavorite)"
 						type="quiet"
 						size="xl"
-						:label="formatMessage(messages.openOnCurseforge)"
-						@click="openUrl(websiteUrl)"
+						:label="formatMessage(favorite ? messages.removeFavorite : messages.addFavorite)"
+						@click="toggleFavorite(props.id)"
 					>
-						<ExternalIcon />
+						<StarIcon :class="favorite ? 'fill-current text-brand-orange' : ''" />
 					</IconButton>
+					<TeleportOverflowMenu
+						v-if="websiteUrl"
+						type="quiet"
+						size="xl"
+						:label="formatMessage(messages.moreOptions)"
+						:options="moreActions"
+					>
+						<MoreVerticalIcon />
+					</TeleportOverflowMenu>
 				</template>
 			</ProjectPageHeader>
 			<NavTabs :links="tabs" />
 			<RouterView
 				:project="tabProject"
-				:files="filesQuery.data.value ?? []"
-				:files-loading="filesQuery.isPending.value"
 				:instance="instance"
 				:installed="installed"
+				:installed-version="installedVersion"
 				:installing="installing"
 				:install="install"
 			/>
@@ -429,3 +489,10 @@ async function install(fileId: string | null = null) {
 		<p v-else class="p-6 text-secondary">{{ formatMessage(messages.loadError) }}</p>
 	</div>
 </template>
+
+<style scoped lang="scss">
+// The same sections, spacing and dividers as a Modrinth project's sidebar.
+.project-sidebar-section {
+	@apply flex flex-col gap-2 border-0 border-b-[1px] border-solid border-[--brand-gradient-border] p-4;
+}
+</style>

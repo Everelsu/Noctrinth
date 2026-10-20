@@ -14,8 +14,8 @@
 use crate::api::Result;
 use theseus::curseforge_blocked::PendingFile;
 use theseus::curseforge_browse::{
-    self, Category, InstallOutcome, Project, ProjectFile, SearchQuery,
-    SearchResults,
+    self, Category, InstallOutcome, Project, ProjectFile, ProjectVersion,
+    SearchQuery, SearchResults,
 };
 use theseus::curseforge_metadata;
 
@@ -28,6 +28,7 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
             curseforge_get_project,
             curseforge_get_description,
             curseforge_get_files,
+            curseforge_get_version,
             curseforge_install_project,
             curseforge_pending_files,
             curseforge_check_pending_downloads,
@@ -71,6 +72,14 @@ pub async fn curseforge_get_files(
     loader: Option<String>,
 ) -> Result<Vec<ProjectFile>> {
     Ok(curseforge_browse::get_files(&id, game_version, loader).await?)
+}
+
+#[tauri::command]
+pub async fn curseforge_get_version(
+    id: String,
+    file_id: String,
+) -> Result<ProjectVersion> {
+    Ok(curseforge_browse::get_version(&id, &file_id).await?)
 }
 
 #[tauri::command]

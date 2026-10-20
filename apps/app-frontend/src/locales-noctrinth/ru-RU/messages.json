@@ -725,11 +725,17 @@
 	"app.curseforge.pending.waiting": {
 		"message": "Слежу за папкой «Загрузки»…"
 	},
+	"app.curseforge.project.add-favorite": {
+		"message": "Добавить в избранное"
+	},
 	"app.curseforge.project.load-error": {
 		"message": "Не удалось загрузить проект с CurseForge."
 	},
 	"app.curseforge.project.open-on-curseforge": {
 		"message": "Открыть на CurseForge"
+	},
+	"app.curseforge.project.remove-favorite": {
+		"message": "Убрать из избранного"
 	},
 	"app.error-modal.copy-debug-info": {
 		"message": "Скопировать отладочную информацию"

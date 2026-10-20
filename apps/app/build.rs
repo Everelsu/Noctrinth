@@ -620,6 +620,7 @@ fn main() {
                         "curseforge_get_project",
                         "curseforge_get_description",
                         "curseforge_get_files",
+                        "curseforge_get_version",
                         "curseforge_install_project",
                         "curseforge_pending_files",
                         "curseforge_check_pending_downloads",

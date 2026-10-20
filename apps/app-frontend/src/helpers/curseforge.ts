@@ -9,6 +9,7 @@
 
 import type { Labrinth } from '@modrinth/api-client'
 import { invoke } from '@tauri-apps/api/core'
+import { ref } from 'vue'
 
 import { CURSEFORGE_API_KEY } from './curseforge-key'
 
@@ -45,101 +46,6 @@ export interface CurseforgeSearchQuery {
 	sort: string
 	offset: number
 	limit: number
-}
-
-/**
- * CurseForge categories that mean what a Modrinth tag means, by CurseForge's
- * name for them, lowercased. Such a category is shown as that tag — with
- * Modrinth's icon and the tag's translated name — everywhere a tag is shown.
- * Only tags Modrinth actually has are listed; anything else keeps CurseForge's
- * own name and picture.
- */
-const CURSEFORGE_TO_MODRINTH_TAG: Record<string, string> = {
-	// Mods
-	'adventure and rpg': 'adventure',
-	'armor, tools, and weapons': 'equipment',
-	'api and library': 'library',
-	'world gen': 'worldgen',
-	biomes: 'worldgen',
-	cosmetic: 'decoration',
-	food: 'food',
-	magic: 'magic',
-	'utility & qol': 'utility',
-	'map and information': 'utility',
-	mobs: 'mobs',
-	performance: 'optimization',
-	'server utility': 'management',
-	storage: 'storage',
-	technology: 'technology',
-	tech: 'technology',
-	redstone: 'technology',
-	'player transport': 'transportation',
-	'energy, fluid, and item transport': 'transportation',
-	'twitch integration': 'social',
-	skyblock: 'skyblock',
-	// Modpacks
-	exploration: 'adventure',
-	'combat / pvp': 'combat',
-	hardcore: 'challenging',
-	'extra large': 'kitchen-sink',
-	'small / light': 'lightweight',
-	multiplayer: 'multiplayer',
-	quests: 'quests',
-	'sci-fi': 'technology',
-	'mini game': 'minigame',
-	// Resource packs
-	'16x': '16x',
-	'32x': '32x',
-	'64x': '64x',
-	'128x': '128x',
-	'256x': '256x',
-	'512x and higher': '512x+',
-	'photo realistic': 'realistic',
-	'font packs': 'fonts',
-	'mod support': 'modded',
-	medieval: 'themed',
-	traditional: 'vanilla-like',
-	// Shaders
-	fantasy: 'fantasy',
-	realistic: 'realistic',
-	vanilla: 'vanilla-like',
-}
-
-/** The name a CurseForge category is shown under. */
-export function curseforgeCategoryTag(name: string): string {
-	return CURSEFORGE_TO_MODRINTH_TAG[name.toLowerCase()] ?? name
-}
-
-export interface CurseforgeCategoryTag {
-	/** The Modrinth tag it is shown as, or CurseForge's own name. */
-	tag: string
-	/** CurseForge's picture, for a category that has no Modrinth icon. */
-	icon_url: string | null
-	/** Every CurseForge category shown under this tag. */
-	ids: number[]
-}
-
-/**
- * A project type's CurseForge categories as the filter list shows them: one
- * entry per tag, each searching every CurseForge category it stands for.
- */
-export function curseforgeCategoryTags(categories: CurseforgeCategory[]): CurseforgeCategoryTag[] {
-	const byTag = new Map<string, CurseforgeCategoryTag>()
-	for (const category of categories) {
-		const tag = curseforgeCategoryTag(category.name)
-		const mapped = tag !== category.name
-		const entry = byTag.get(tag)
-		if (entry) {
-			entry.ids.push(category.id)
-		} else {
-			byTag.set(tag, {
-				tag,
-				icon_url: mapped ? null : category.iconUrl,
-				ids: [category.id],
-			})
-		}
-	}
-	return [...byTag.values()]
 }
 
 export interface CurseforgeCategory {
@@ -201,6 +107,20 @@ export interface CurseforgeFile {
 	downloads: number
 	size: number | null
 	launcher_download: boolean
+}
+
+/** One file with what its own page shows besides the versions list. */
+export interface CurseforgeVersion extends CurseforgeFile {
+	/** HTML, as CurseForge stores it. */
+	changelog: string
+	dependencies: {
+		project_id: string
+		dependency_type: 'required' | 'optional' | 'incompatible' | 'embedded'
+		name: string | null
+		slug: string | null
+		icon_url: string | null
+		project_type: string
+	}[]
 }
 
 export interface CurseforgePendingFile {
@@ -315,6 +235,7 @@ export const curseforgeKeys = {
 	project: (id: string) => ['curseforge', 'project', id] as const,
 	description: (id: string) => ['curseforge', 'description', id] as const,
 	files: (id: string) => ['curseforge', 'files', id] as const,
+	version: (id: string, fileId: string) => ['curseforge', 'version', id, fileId] as const,
 	categories: (projectType: string) => ['curseforge', 'categories', projectType] as const,
 }
 
@@ -333,6 +254,12 @@ export const curseforgeDescriptionQueryOptions = (id: string) => ({
 export const curseforgeFilesQueryOptions = (id: string) => ({
 	queryKey: curseforgeKeys.files(id),
 	queryFn: () => curseforgeGetFiles(id),
+	staleTime: CURSEFORGE_STALE_TIME,
+})
+
+export const curseforgeVersionQueryOptions = (id: string, fileId: string) => ({
+	queryKey: curseforgeKeys.version(id, fileId),
+	queryFn: () => curseforgeGetVersion(id, fileId),
 	staleTime: CURSEFORGE_STALE_TIME,
 })
 
@@ -356,6 +283,15 @@ export async function curseforgeGetFiles(
 		gameVersion: gameVersion ?? null,
 		loader: loader ?? null,
 	})
+}
+
+export async function curseforgeGetVersion(id: string, fileId: string) {
+	return await invoke<CurseforgeVersion>(plugin('curseforge_get_version'), { id, fileId })
+}
+
+/** A file's page on CurseForge's site. */
+export function curseforgeFileUrl(websiteUrl: string, fileId: string): string {
+	return `${websiteUrl.replace(/\/$/, '')}/files/${fileId}`
 }
 
 export async function curseforgeInstallProject(
@@ -385,4 +321,36 @@ export async function curseforgeCheckPendingDownloads(instanceId: string) {
 
 export async function curseforgeDismissPendingFile(instanceId: string, fileId: string) {
 	await invoke(plugin('curseforge_dismiss_pending_file'), { instanceId, fileId })
+}
+
+/**
+ * CurseForge projects starred from their page. Kept on this computer: there
+ * is no CurseForge account to keep them in, as CurseForge's own app has.
+ */
+const FAVORITES_KEY = 'noctrinth.curseforge.favorites'
+const favorites = ref<Set<string>>(readFavorites())
+
+function readFavorites(): Set<string> {
+	try {
+		const stored = JSON.parse(localStorage.getItem(FAVORITES_KEY) ?? '[]')
+		return new Set(Array.isArray(stored) ? stored.filter((id) => typeof id === 'string') : [])
+	} catch {
+		return new Set()
+	}
+}
+
+export function useCurseforgeFavorites() {
+	return {
+		isFavorite: (id: string) => favorites.value.has(id),
+		toggleFavorite(id: string) {
+			const next = new Set(favorites.value)
+			if (!next.delete(id)) next.add(id)
+			favorites.value = next
+			try {
+				localStorage.setItem(FAVORITES_KEY, JSON.stringify([...next]))
+			} catch {
+				// Not remembered past this session; nothing else depends on it.
+			}
+		},
+	}
 }

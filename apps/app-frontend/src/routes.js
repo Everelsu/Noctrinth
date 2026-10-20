@@ -148,6 +148,11 @@ export default new createRouter({
 					component: () => import('@/pages/curseforge/Versions.vue'),
 				},
 				{
+					path: 'version/:version',
+					name: 'CurseforgeVersion',
+					component: () => import('@/pages/curseforge/Version.vue'),
+				},
+				{
 					path: 'gallery',
 					name: 'CurseforgeGallery',
 					component: () => import('@/pages/project/Gallery.vue'),

@@ -599,10 +599,15 @@ pub async fn get_categories(
         &state,
     )
     .await?;
+    // Only the top level, as CurseForge's own app lists them: below it are
+    // hundreds of per-mod subcategories ("Applied Energistics 2", ...).
     let mut categories = categories
         .data
         .into_iter()
-        .filter(|category| category.is_class != Some(true))
+        .filter(|category| {
+            category.is_class != Some(true)
+                && category.parent_category_id == Some(class)
+        })
         .collect::<Vec<_>>();
     categories.sort_by(|a, b| a.name.cmp(&b.name));
     Ok(categories)
@@ -889,7 +894,7 @@ async fn list_files(
 
 /// The most files the versions tab lists; a project with more shows its
 /// newest this many.
-const MAX_LISTED_FILES: u32 = 1000;
+const MAX_LISTED_FILES: u32 = 250;
 
 /// Every file of a project, page by page, as the versions tab lists them.
 async fn list_all_files(
@@ -940,6 +945,96 @@ pub async fn get_files(
         .filter(ApiFile::is_installable)
         .map(ProjectFile::from)
         .collect())
+}
+
+/// A project another file needs, or cannot run beside, as a version's page
+/// lists it.
+#[derive(Serialize, Debug)]
+pub struct VersionDependency {
+    pub project_id: String,
+    /// `required`, `optional`, `incompatible` or `embedded`, as Modrinth
+    /// names them.
+    pub dependency_type: &'static str,
+    pub name: Option<String>,
+    pub slug: Option<String>,
+    pub icon_url: Option<String>,
+    pub project_type: &'static str,
+}
+
+/// One file of a project with what its own page shows besides the list's
+/// columns.
+#[derive(Serialize, Debug)]
+pub struct ProjectVersion {
+    #[serde(flatten)]
+    pub file: ProjectFile,
+    /// HTML, as CurseForge stores it.
+    pub changelog: String,
+    pub dependencies: Vec<VersionDependency>,
+}
+
+/// CurseForge's relation type as Modrinth names it; tools are not listed.
+fn dependency_type(relation_type: i64) -> Option<&'static str> {
+    match relation_type {
+        1 | 6 => Some("embedded"),
+        2 => Some("optional"),
+        RELATION_REQUIRED => Some("required"),
+        RELATION_INCOMPATIBLE => Some("incompatible"),
+        _ => None,
+    }
+}
+
+pub async fn get_version(
+    id: &str,
+    file_id: &str,
+) -> crate::Result<ProjectVersion> {
+    let state = State::get().await?;
+    let id = parse_project_id(id)?;
+    let file_id: i64 = file_id
+        .parse()
+        .map_err(|_| input(format!("Not a CurseForge file id: {file_id}")))?;
+    let file_url = format!("{API}/mods/{id}/files/{file_id}");
+    let changelog_url = format!("{file_url}/changelog");
+    let (file, changelog) = futures::try_join!(
+        get::<Data<ApiFile>>(&file_url, &state),
+        get::<Data<String>>(&changelog_url, &state),
+    )?;
+    let file = file.data;
+
+    // A dependency whose project is gone is still listed, by its id.
+    let dependencies = futures::future::join_all(
+        file.dependencies
+            .iter()
+            .filter_map(|d| Some((d.mod_id, dependency_type(d.relation_type)?)))
+            .map(|(mod_id, dependency_type)| {
+                let state = &state;
+                async move {
+                    let project = get::<Data<ApiMod>>(
+                        &format!("{API}/mods/{mod_id}"),
+                        state,
+                    )
+                    .await
+                    .ok()
+                    .map(|project| project.data);
+                    VersionDependency {
+                        project_id: format!("{ID_PREFIX}{mod_id}"),
+                        dependency_type,
+                        icon_url: project.as_ref().and_then(ApiMod::icon_url),
+                        project_type: project_type_of(
+                            project.as_ref().and_then(|p| p.class_id),
+                        ),
+                        slug: project.as_ref().and_then(|p| p.slug.clone()),
+                        name: project.map(|p| p.name),
+                    }
+                }
+            }),
+    )
+    .await;
+
+    Ok(ProjectVersion {
+        file: file.into(),
+        changelog: changelog.data,
+        dependencies,
+    })
 }
 
 // ---------------------------------------------------------------------------

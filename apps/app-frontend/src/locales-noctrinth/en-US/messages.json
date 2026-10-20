@@ -218,11 +218,17 @@
 	"app.curseforge.pending.waiting": {
 		"message": "Watching your Downloads folder…"
 	},
+	"app.curseforge.project.add-favorite": {
+		"message": "Add to favorites"
+	},
 	"app.curseforge.project.load-error": {
 		"message": "This CurseForge project could not be loaded."
 	},
 	"app.curseforge.project.open-on-curseforge": {
 		"message": "Open on CurseForge"
+	},
+	"app.curseforge.project.remove-favorite": {
+		"message": "Remove from favorites"
 	},
 	"app.error-modal.copy-debug-info": {
 		"message": "Copy debug info"

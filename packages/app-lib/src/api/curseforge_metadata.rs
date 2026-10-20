@@ -28,6 +28,7 @@ use std::collections::{HashMap, HashSet};
 use std::io::{Read, Seek};
 use std::path::{Path, PathBuf};
 use std::sync::RwLock;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use chrono::{DateTime, Duration, Utc};
 use reqwest::Method;
@@ -50,31 +51,116 @@ const CACHE_DAYS: i64 = 7;
 /// The most ids CurseForge accepts in one bulk request.
 const MAX_IDS_PER_REQUEST: usize = 500;
 
-/// The key the frontend was built with, handed over once at startup.
+/// The key the frontend was built with, handed over at startup and on every
+/// change of the settings.
 ///
 /// It lives here rather than in `State` because it is not part of the
 /// launcher's own state: it is a build-time constant of the frontend's, and
-/// the backend is simply told what it is. `None` means CurseForge cannot be
-/// asked anything, which is a perfectly ordinary way for a build to be
-/// configured and must stay silent rather than erroring.
+/// the backend is simply told what it is. No key at all means CurseForge
+/// cannot be asked anything, which is a perfectly ordinary way for a build to
+/// be configured and must stay silent rather than erroring.
 static API_KEY: RwLock<Option<String>> = RwLock::new(None);
 
-/// Called once from the frontend at startup.
-pub fn set_api_key(key: Option<String>) {
-    let key = key
-        .map(|key| key.trim().to_string())
-        .filter(|k| !k.is_empty());
+/// The user's own key, from the CurseForge settings. It is used instead of the
+/// built-in one, and makes a build without one usable. Kept in the database,
+/// where the launcher keeps its other credentials, and read at startup.
+static USER_KEY: RwLock<Option<String>> = RwLock::new(None);
+
+/// Whether CurseForge is on. Off, and there is no key whatever was handed over.
+static ENABLED: AtomicBool = AtomicBool::new(false);
+
+/// Minecraft's own entry: the cheapest request a key can be checked with.
+const GAME_ENDPOINT: &str = "https://api.curseforge.com/v1/games/432";
+
+fn clean_key(key: Option<String>) -> Option<String> {
+    key.map(|key| key.trim().to_string())
+        .filter(|k| !k.is_empty())
+}
+
+/// Called from the frontend at startup and whenever the settings change.
+pub fn set_api_key(key: Option<String>, enabled: bool) {
     let had_key = api_key().is_some();
     if let Ok(mut slot) = API_KEY.write() {
-        *slot = key;
+        *slot = clean_key(key);
     }
+    ENABLED.store(enabled, Ordering::Relaxed);
     if !had_key && api_key().is_some() {
         tracing::debug!("CurseForge metadata lookups are available");
     }
 }
 
+/// The key requests are made with: the user's if there is one.
 pub(crate) fn api_key() -> Option<String> {
-    API_KEY.read().ok().and_then(|slot| slot.clone())
+    if !ENABLED.load(Ordering::Relaxed) {
+        return None;
+    }
+    user_key().or_else(|| API_KEY.read().ok().and_then(|slot| slot.clone()))
+}
+
+/// The user's own key, whether or not CurseForge is on.
+pub(crate) fn user_key() -> Option<String> {
+    USER_KEY.read().ok().and_then(|slot| slot.clone())
+}
+
+pub fn has_user_key() -> bool {
+    user_key().is_some()
+}
+
+fn put_user_key(key: Option<String>) {
+    if let Ok(mut slot) = USER_KEY.write() {
+        *slot = key;
+    }
+}
+
+/// Reads the user's key from the database; called once while the state is
+/// being set up. A runtime-checked query, so the sqlx offline cache does not
+/// need regenerating for a fork-only column.
+pub(crate) async fn load_user_key(
+    exec: impl sqlx::Executor<'_, Database = sqlx::Sqlite>,
+) -> crate::Result<()> {
+    let key: Option<String> =
+        sqlx::query_scalar("SELECT curseforge_api_key FROM settings")
+            .fetch_one(exec)
+            .await?;
+    put_user_key(clean_key(key));
+    Ok(())
+}
+
+/// Keeps the user's key, or forgets it with `None`.
+pub async fn set_user_key(key: Option<String>) -> crate::Result<()> {
+    let key = clean_key(key);
+    let state = State::get().await?;
+    sqlx::query("UPDATE settings SET curseforge_api_key = $1")
+        .bind(&key)
+        .execute(&state.pool)
+        .await?;
+    put_user_key(key);
+    Ok(())
+}
+
+/// Whether CurseForge accepts a key, by one cheap request. `None` checks the
+/// user's saved key. Only a refusal counts as a bad key; anything else that
+/// goes wrong, the network included, is an error rather than an answer.
+pub async fn check_key(key: Option<String>) -> crate::Result<bool> {
+    let Some(key) = clean_key(key).or_else(user_key) else {
+        return Ok(false);
+    };
+    // Straight through the client rather than `fetch_advanced`, whose span
+    // would carry the key into the log, and whose retries a refusal does not
+    // deserve.
+    let response = crate::util::fetch::REQWEST_CLIENT
+        .get(GAME_ENDPOINT)
+        .header("x-api-key", key)
+        .send()
+        .await?;
+    if matches!(
+        response.status(),
+        reqwest::StatusCode::UNAUTHORIZED | reqwest::StatusCode::FORBIDDEN
+    ) {
+        return Ok(false);
+    }
+    response.error_for_status()?;
+    Ok(true)
 }
 
 /// What the CurseForge settings turned on. The frontend keeps them and hands
@@ -1163,14 +1249,26 @@ mod tests {
     }
 
     #[test]
-    fn a_key_that_is_only_whitespace_counts_as_no_key() {
-        set_api_key(Some("   ".to_string()));
+    fn whitespace_is_no_key_the_users_key_wins_and_off_is_none() {
+        set_api_key(Some("   ".to_string()), true);
         assert!(api_key().is_none());
 
-        set_api_key(Some("real-key".to_string()));
+        set_api_key(Some("real-key".to_string()), true);
         assert_eq!(api_key().as_deref(), Some("real-key"));
 
-        set_api_key(None);
+        set_api_key(None, true);
         assert!(api_key().is_none());
+
+        // The same test, since the keys are process-wide.
+        set_api_key(Some("built-in".to_string()), true);
+        put_user_key(clean_key(Some(" mine ".to_string())));
+        assert_eq!(api_key().as_deref(), Some("mine"));
+
+        set_api_key(Some("built-in".to_string()), false);
+        assert!(api_key().is_none());
+
+        put_user_key(None);
+        set_api_key(Some("built-in".to_string()), true);
+        assert_eq!(api_key().as_deref(), Some("built-in"));
     }
 }

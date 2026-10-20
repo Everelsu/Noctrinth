@@ -1,10 +1,12 @@
 /**
  * Noctrinth's own: the CurseForge settings. Kept in local storage, like the
  * translation settings; what the backend acts on is handed to it at startup
- * and on every change, as the key is.
+ * and on every change, as the key is. A key the user brought is the
+ * exception: the backend keeps it in its database, with the launcher's other
+ * credentials, and never hands it back.
  */
 import { invoke } from '@tauri-apps/api/core'
-import { reactive, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 
 import { CURSEFORGE_API_KEY } from './curseforge-key'
 
@@ -48,13 +50,25 @@ function load(): CurseforgeSettings {
 
 export const curseforgeSettings = reactive<CurseforgeSettings>(load())
 
+/** Whether the user saved a key of their own; the key itself stays in the backend. */
+export const hasUserCurseforgeKey = ref(false)
+
+/** Whether CurseForge can be asked anything: the build has a key, or the user brought one. */
+export const curseforgeKeyAvailable = computed(
+	() => !!CURSEFORGE_API_KEY || hasUserCurseforgeKey.value,
+)
+
 const RELEASE_TYPE_IDS: Record<CurseforgeReleaseType, number> = { release: 1, beta: 2, alpha: 3 }
 
-/** Hands the backend the key, or none when CurseForge is off, and the options. */
+/** Hands the backend the build's key, whether CurseForge is on, and the options. */
 export async function applyCurseforgeSettings(): Promise<void> {
 	await invoke('plugin:noctrinth-curseforge|curseforge_set_api_key', {
-		key: (curseforgeSettings.enabled && CURSEFORGE_API_KEY) || null,
+		key: CURSEFORGE_API_KEY || null,
+		enabled: curseforgeSettings.enabled,
 	})
+	hasUserCurseforgeKey.value = await invoke<boolean>(
+		'plugin:noctrinth-curseforge|curseforge_has_user_key',
+	)
 	await invoke('plugin:noctrinth-curseforge|curseforge_set_options', {
 		options: {
 			recognize_files: curseforgeSettings.recognizeFiles,
@@ -63,6 +77,17 @@ export async function applyCurseforgeSettings(): Promise<void> {
 			search_other_launchers: curseforgeSettings.searchOtherLaunchers,
 		},
 	})
+}
+
+/** Whether CurseForge accepts a key; `null` checks the saved one. */
+export async function checkCurseforgeKey(key: string | null): Promise<boolean> {
+	return await invoke<boolean>('plugin:noctrinth-curseforge|curseforge_check_key', { key })
+}
+
+/** Keeps the user's own key, used instead of the build's, or forgets it with `null`. */
+export async function setUserCurseforgeKey(key: string | null): Promise<void> {
+	await invoke('plugin:noctrinth-curseforge|curseforge_set_user_key', { key })
+	hasUserCurseforgeKey.value = !!key
 }
 
 export async function clearCurseforgeCache(): Promise<void> {

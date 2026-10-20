@@ -2040,7 +2040,37 @@
 		"message": "Обзор и установка с CurseForge, распознавание его файлов в сборках и их обновление. Если выключить, лаунчер ничего не спрашивает у CurseForge."
 	},
 	"noctrinth.settings.curseforge.no-key": {
-		"message": "В этой сборке нет API-ключа CurseForge, поэтому CurseForge недоступен."
+		"message": "В этой сборке нет API-ключа CurseForge. Добавьте свой ниже, чтобы пользоваться CurseForge."
+	},
+	"noctrinth.settings.curseforge.own-key": {
+		"message": "Свой API-ключ"
+	},
+	"noctrinth.settings.curseforge.own-key.check": {
+		"message": "Проверить"
+	},
+	"noctrinth.settings.curseforge.own-key.check-and-save": {
+		"message": "Проверить и сохранить"
+	},
+	"noctrinth.settings.curseforge.own-key.check-failed": {
+		"message": "Не удалось связаться с CurseForge, чтобы проверить ключ"
+	},
+	"noctrinth.settings.curseforge.own-key.forget": {
+		"message": "Забыть мой ключ"
+	},
+	"noctrinth.settings.curseforge.own-key.hint": {
+		"message": "Используется вместо встроенного и хранится на этом компьютере. Войдите в консоль CurseForge и скопируйте ключ со страницы API keys:"
+	},
+	"noctrinth.settings.curseforge.own-key.invalid": {
+		"message": "CurseForge не принимает этот ключ"
+	},
+	"noctrinth.settings.curseforge.own-key.ok": {
+		"message": "CurseForge принимает ключ"
+	},
+	"noctrinth.settings.curseforge.own-key.placeholder": {
+		"message": "Ваш ключ сохранён"
+	},
+	"noctrinth.settings.curseforge.own-key.saved": {
+		"message": "CurseForge принимает ключ, он сохранён"
 	},
 	"noctrinth.settings.curseforge.recognize-files": {
 		"message": "Распознавать моды, добавленные вручную или из других лаунчеров, по отпечатку файла"

@@ -813,7 +813,7 @@ where
 
 /// Downloads a file with retry and checksum functionality, and a specific
 /// [`reqwest::Client`].
-#[tracing::instrument(skip(json_body, semaphore))]
+#[tracing::instrument(skip(json_body, header, semaphore))]
 #[allow(clippy::too_many_arguments)]
 pub async fn fetch_advanced(
     method: Method,
@@ -843,7 +843,7 @@ pub async fn fetch_advanced(
     .await
 }
 
-#[tracing::instrument(skip(body, semaphore))]
+#[tracing::instrument(skip(body, header, semaphore))]
 #[allow(clippy::too_many_arguments)]
 pub async fn fetch_advanced_bytes(
     method: Method,
@@ -872,7 +872,7 @@ pub async fn fetch_advanced_bytes(
     .await
 }
 
-#[tracing::instrument(skip(json_body, semaphore, progress))]
+#[tracing::instrument(skip(json_body, header, semaphore, progress))]
 #[allow(clippy::too_many_arguments)]
 pub async fn fetch_advanced_with_progress(
     method: Method,
@@ -906,7 +906,7 @@ pub async fn fetch_advanced_with_progress(
 }
 
 /// Downloads a file with retry and checksum functionality
-#[tracing::instrument(skip(json_body, semaphore))]
+#[tracing::instrument(skip(json_body, header, semaphore))]
 #[allow(clippy::too_many_arguments)]
 pub async fn fetch_advanced_with_client(
     method: Method,
@@ -940,7 +940,7 @@ pub async fn fetch_advanced_with_client(
 }
 
 #[tracing::instrument(skip(
-    json_body, bytes_body, semaphore, client, progress
+    json_body, bytes_body, header, semaphore, client, progress
 ))]
 #[allow(clippy::too_many_arguments)]
 async fn fetch_advanced_with_client_and_progress(

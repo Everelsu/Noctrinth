@@ -2,10 +2,11 @@
 //!
 //! `curseforge_set_api_key` hands the backend the key the frontend was built
 //! with. The key is a build-time constant of the frontend's — vite bakes it
-//! into the bundle — so the frontend says once at startup what it is and the
-//! backend keeps it. Passing `null` is meaningful: a build configured without
-//! a key says so, and CurseForge lookups quietly do nothing rather than
-//! failing anything.
+//! into the bundle — so the frontend says at startup what it is, and whether
+//! CurseForge is on, and the backend keeps it. Passing `null` is meaningful: a
+//! build configured without a key says so, and CurseForge lookups quietly do
+//! nothing rather than failing anything — unless the user brought a key of
+//! their own, which the backend keeps and the frontend never reads back.
 //!
 //! The rest are the browse page's: searching CurseForge, a project's page,
 //! installing into an instance, and the files an instance is waiting on
@@ -23,6 +24,9 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
     tauri::plugin::Builder::new("noctrinth-curseforge")
         .invoke_handler(tauri::generate_handler![
             curseforge_set_api_key,
+            curseforge_has_user_key,
+            curseforge_set_user_key,
+            curseforge_check_key,
             curseforge_set_options,
             curseforge_clear_cache,
             curseforge_search,
@@ -40,9 +44,27 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
 }
 
 #[tauri::command]
-pub async fn curseforge_set_api_key(key: Option<String>) -> Result<()> {
-    curseforge_metadata::set_api_key(key);
+pub async fn curseforge_set_api_key(
+    key: Option<String>,
+    enabled: bool,
+) -> Result<()> {
+    curseforge_metadata::set_api_key(key, enabled);
     Ok(())
+}
+
+#[tauri::command]
+pub async fn curseforge_has_user_key() -> Result<bool> {
+    Ok(curseforge_metadata::has_user_key())
+}
+
+#[tauri::command]
+pub async fn curseforge_set_user_key(key: Option<String>) -> Result<()> {
+    Ok(curseforge_metadata::set_user_key(key).await?)
+}
+
+#[tauri::command]
+pub async fn curseforge_check_key(key: Option<String>) -> Result<bool> {
+    Ok(curseforge_metadata::check_key(key).await?)
 }
 
 #[tauri::command]

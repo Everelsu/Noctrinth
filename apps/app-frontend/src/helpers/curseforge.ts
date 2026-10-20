@@ -2,7 +2,8 @@
  * Noctrinth's own: CurseForge as a second source on the browse page.
  *
  * Everything here goes through the backend, which talks to CurseForge's
- * public API with the key the build was configured with. A CurseForge
+ * public API with the user's own key, or else the one the build was
+ * configured with. A CurseForge
  * project's id always carries the `cf-` prefix on the frontend, so it can never
  * be taken for a Modrinth id by anything that reads it later.
  */
@@ -11,8 +12,7 @@ import type { Labrinth } from '@modrinth/api-client'
 import { invoke } from '@tauri-apps/api/core'
 import { ref } from 'vue'
 
-import { CURSEFORGE_API_KEY } from './curseforge-key'
-import { curseforgeSettings } from './curseforge-settings'
+import { curseforgeKeyAvailable, curseforgeSettings } from './curseforge-settings'
 
 export const CURSEFORGE_ID_PREFIX = 'cf-'
 
@@ -27,9 +27,9 @@ export const CURSEFORGE_PROJECT_TYPES = [
 
 export type BrowseSource = 'modrinth' | 'curseforge'
 
-/** Whether CurseForge is offered: the build has a key and it is not turned off. */
+/** Whether CurseForge is offered: there is a key and it is not turned off. */
 export function curseforgeEnabled(): boolean {
-	return !!CURSEFORGE_API_KEY && curseforgeSettings.enabled
+	return curseforgeKeyAvailable.value && curseforgeSettings.enabled
 }
 
 export function isCurseforgeId(id: string | null | undefined): boolean {

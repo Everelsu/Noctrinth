@@ -70,7 +70,7 @@ impl InstallJobRecord {
     }
 
     pub fn snapshot(&self) -> InstallJobSnapshot {
-        let (paused, canceling, controllable) =
+        let (paused, canceling, controllable, rate_limit_wait_seconds) =
             super::control::snapshot(self.id);
         let active = matches!(
             self.status,
@@ -90,6 +90,7 @@ impl InstallJobRecord {
             status: self.status,
             paused: active && paused,
             canceling: active && canceling,
+            rate_limit_wait_seconds: rate_limit_wait_seconds.filter(|_| active),
             can_pause: active && controllable,
             can_cancel: active && controllable,
             target: self.state.target.clone(),

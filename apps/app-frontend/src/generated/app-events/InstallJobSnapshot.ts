@@ -8,4 +8,8 @@ import type { InstallPhaseId } from "./InstallPhaseId";
 import type { InstallProgress } from "./InstallProgress";
 import type { InstallTarget } from "./InstallTarget";
 
-export type InstallJobSnapshot = { content_count: number | null, job_id: string, instance_id: string | null, kind: InstallJobKind, status: InstallJobStatus, paused: boolean, canceling: boolean, can_pause: boolean, can_cancel: boolean, target: InstallTarget, phase: InstallPhaseId, progress: InstallProgress | null, details: InstallPhaseDetails, display: InstallJobDisplay | null, error: InstallErrorView | null, rollback_error: InstallErrorView | null, created: string, modified: string, finished: string | null, };
+export type InstallJobSnapshot = { content_count: number | null, job_id: string, instance_id: string | null, kind: InstallJobKind, status: InstallJobStatus, paused: boolean, canceling: boolean, 
+/**
+ * Seconds left while the job sits out a Modrinth API rate limit.
+ */
+rate_limit_wait_seconds: number | null, can_pause: boolean, can_cancel: boolean, target: InstallTarget, phase: InstallPhaseId, progress: InstallProgress | null, details: InstallPhaseDetails, display: InstallJobDisplay | null, error: InstallErrorView | null, rollback_error: InstallErrorView | null, created: string, modified: string, finished: string | null, };

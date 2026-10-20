@@ -737,6 +737,9 @@
 	"app.curseforge.project.remove-favorite": {
 		"message": "Убрать из избранного"
 	},
+	"app.download-manager.rate-limited": {
+		"message": "Modrinth просит подождать, продолжим через {seconds, plural, one {# секунду} few {# секунды} other {# секунд}}"
+	},
 	"app.error-modal.copy-debug-info": {
 		"message": "Скопировать отладочную информацию"
 	},

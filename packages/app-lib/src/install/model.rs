@@ -721,6 +721,8 @@ pub struct InstallJobSnapshot {
     pub status: InstallJobStatus,
     pub paused: bool,
     pub canceling: bool,
+    /// Seconds left while the job sits out a Modrinth API rate limit.
+    pub rate_limit_wait_seconds: Option<u32>,
     pub can_pause: bool,
     pub can_cancel: bool,
     pub target: InstallTarget,

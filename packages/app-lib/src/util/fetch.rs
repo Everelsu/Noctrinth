@@ -345,6 +345,60 @@ impl ApiRateLimit {
 static GLOBAL_API_RATE_LIMIT: LazyLock<ApiRateLimit> =
     LazyLock::new(ApiRateLimit::new);
 
+/// How long, in all, one request from patient work may sit out rate limits
+/// before it gives up with [`ErrorKind::Ratelimited`].
+const RATE_LIMIT_PATIENCE: Duration = Duration::from_secs(5 * 60);
+
+tokio::task_local! {
+    static PATIENT: ();
+}
+
+/// Runs background work whose Modrinth API requests should wait out rate
+/// limits (honouring `Retry-After`) instead of failing fast. Install jobs are
+/// always patient; anything else fails fast, so the UI can say so at once.
+pub async fn patiently<F: Future>(future: F) -> F::Output {
+    PATIENT.scope((), future).await
+}
+
+fn rate_limit_patience() -> Duration {
+    if PATIENT.try_with(|_| ()).is_ok()
+        || crate::install::control::CURRENT_INSTALL
+            .try_with(|_| ())
+            .is_ok()
+    {
+        RATE_LIMIT_PATIENCE
+    } else {
+        Duration::ZERO
+    }
+}
+
+/// Sleeps out a [`ErrorKind::Ratelimited`] error if what is left of
+/// `patience` covers it, or hands the error back.
+async fn wait_out_rate_limit(
+    error: crate::Error,
+    patience: &mut Duration,
+) -> crate::Result<()> {
+    let wait = match error.raw.as_ref() {
+        ErrorKind::Ratelimited { retry_in_seconds } => {
+            Duration::from_secs((*retry_in_seconds).max(1))
+        }
+        _ => return Err(error),
+    };
+    if wait > *patience {
+        return Err(error);
+    }
+    *patience -= wait;
+
+    info!(?wait, "Rate limited; waiting before retrying");
+    match crate::install::control::CURRENT_INSTALL.try_with(Clone::clone) {
+        Ok(control) => control.wait_out_rate_limit(wait).await,
+        Err(_) => {
+            tokio::time::sleep(wait).await;
+            Ok(())
+        }
+    }
+}
+
 fn parse_retry_after(value: &str, now: SystemTime) -> Option<Duration> {
     if let Ok(seconds) = value.parse::<u64>() {
         return Some(Duration::from_secs(seconds));
@@ -1019,51 +1073,60 @@ async fn fetch_advanced_with_target(
     let download_meta_header = download_meta
         .map(|m| (DOWNLOAD_META_HEADER.to_string(), m.to_header_value()));
 
+    let mut patience = rate_limit_patience();
+
     for attempt in 1..=(FETCH_ATTEMPTS + 1) {
-        if is_api_url {
-            GLOBAL_API_RATE_LIMIT.check()?;
-        }
+        // Rate limits are waited out in here without spending an attempt.
+        let result = loop {
+            if is_api_url {
+                while let Err(error) = GLOBAL_API_RATE_LIMIT.check() {
+                    wait_out_rate_limit(error, &mut patience).await?;
+                }
+            }
 
-        if let Some(fence_key) = fence_key
-            && GLOBAL_FETCH_FENCE.is_blocked(fence_key)
-        {
-            return Err(ErrorKind::ApiIsDownError(
-                GLOBAL_FETCH_FENCE.latest_block_minutes(),
-            )
-            .into());
-        }
+            if let Some(fence_key) = fence_key
+                && GLOBAL_FETCH_FENCE.is_blocked(fence_key)
+            {
+                return Err(ErrorKind::ApiIsDownError(
+                    GLOBAL_FETCH_FENCE.latest_block_minutes(),
+                )
+                .into());
+            }
 
-        let mut req = client.request(method.clone(), url);
+            let mut req = client.request(method.clone(), url);
 
-        if let Some(body) = &json_body {
-            req = req.json(body);
-        } else if let Some(body) = bytes_body.clone() {
-            req = req.body(body);
-        }
+            if let Some(body) = &json_body {
+                req = req.json(body);
+            } else if let Some(body) = bytes_body.clone() {
+                req = req.body(body);
+            }
 
-        if let Some(header) = header {
-            req = req.header(header.0, header.1);
-        }
+            if let Some(header) = header {
+                req = req.header(header.0, header.1);
+            }
 
-        if let Some(ref creds) = creds {
-            req = req.header("Authorization", &creds.session);
-        }
+            if let Some(ref creds) = creds {
+                req = req.header("Authorization", &creds.session);
+            }
 
-        if let Some((name, value)) = &download_meta_header {
-            tracing::debug!("Sending download analytics: {value}");
-            req = req.header(name.as_str(), value.as_str());
-        }
+            if let Some((name, value)) = &download_meta_header {
+                tracing::debug!("Sending download analytics: {value}");
+                req = req.header(name.as_str(), value.as_str());
+            }
 
-        let result = crate::install::control::download_step(req.send()).await?;
+            let result =
+                crate::install::control::download_step(req.send()).await?;
+            if is_api_url
+                && let Ok(resp) = &result
+                && let Some(error) = GLOBAL_API_RATE_LIMIT.handle_response(resp)
+            {
+                wait_out_rate_limit(error.into(), &mut patience).await?;
+                continue;
+            }
+            break result;
+        };
         match result {
             Ok(resp) => {
-                if is_api_url
-                    && let Some(error) =
-                        GLOBAL_API_RATE_LIMIT.handle_response(&resp)
-                {
-                    return Err(error.into());
-                }
-
                 if resp.status().is_server_error() {
                     if let Some(fence_key) = fence_key {
                         GLOBAL_FETCH_FENCE.record_fail(fence_key);
@@ -1326,6 +1389,48 @@ pub async fn sha1_file_async_with_progress(
 mod tests {
     use super::*;
     use chrono::{TimeDelta, Utc};
+
+    #[tokio::test]
+    async fn test_patient_requests_wait_out_rate_limit() {
+        let limit = ApiRateLimit::new();
+        limit.block_for(Duration::from_millis(1500));
+
+        // Fail fast without patience, as interactive requests do.
+        let error = limit.check().unwrap_err();
+        assert!(matches!(
+            error.raw.as_ref(),
+            ErrorKind::Ratelimited {
+                retry_in_seconds: 2
+            }
+        ));
+        let mut patience = rate_limit_patience();
+        assert_eq!(patience, Duration::ZERO);
+        assert!(
+            wait_out_rate_limit(error, &mut patience).await.is_err(),
+            "a request without patience must not wait"
+        );
+
+        // Patient work waits until the block is over, then gets through.
+        let started = Instant::now();
+        patiently(async {
+            let mut patience = rate_limit_patience();
+            while let Err(error) = limit.check() {
+                wait_out_rate_limit(error, &mut patience).await.unwrap();
+            }
+            assert_eq!(patience, RATE_LIMIT_PATIENCE - Duration::from_secs(2));
+        })
+        .await;
+        assert!(started.elapsed() >= Duration::from_millis(1500));
+
+        // A wait longer than what is left of the patience gives up.
+        limit.block_for(Duration::from_secs(10));
+        let mut patience = Duration::from_secs(5);
+        assert!(
+            wait_out_rate_limit(limit.check().unwrap_err(), &mut patience)
+                .await
+                .is_err()
+        );
+    }
 
     #[test]
     fn test_fence_block_after_4_fails() {

@@ -1346,6 +1346,27 @@
 	"noctrinth.settings.curseforge.title": {
 		"message": "CurseForge"
 	},
+	"noctrinth.settings.java-provider.auto": {
+		"message": "Automatically: Azul, then Temurin, then Mojang, then the BMCLAPI mirror"
+	},
+	"noctrinth.settings.java-provider.azul": {
+		"message": "Azul Zulu"
+	},
+	"noctrinth.settings.java-provider.description": {
+		"message": "Where the launcher gets Java when an instance needs one it does not have. Every download is checked against the checksum its source publishes."
+	},
+	"noctrinth.settings.java-provider.mojang": {
+		"message": "Mojang, the Java the official launcher uses"
+	},
+	"noctrinth.settings.java-provider.mojang-mirror": {
+		"message": "Mojang's Java through the BMCLAPI mirror, a third-party service"
+	},
+	"noctrinth.settings.java-provider.temurin": {
+		"message": "Eclipse Temurin"
+	},
+	"noctrinth.settings.java-provider.title": {
+		"message": "Download Java from"
+	},
 	"notifications.back": {
 		"message": "Back"
 	},

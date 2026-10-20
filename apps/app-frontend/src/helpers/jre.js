@@ -86,6 +86,7 @@ export async function set_gpu_preference(path, preference) {
  *   java_path: string,
  *   name: string,
  *   major_version: number | null,
+ *   provider: 'azul' | 'temurin' | 'mojang' | null,
  *   size_bytes: number,
  *   in_use: boolean,
  * }} InstalledRuntime

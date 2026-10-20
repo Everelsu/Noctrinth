@@ -2102,6 +2102,27 @@
 	"noctrinth.settings.curseforge.title": {
 		"message": "CurseForge"
 	},
+	"noctrinth.settings.java-provider.auto": {
+		"message": "Автоматически: Azul, затем Temurin, затем Mojang, затем зеркало BMCLAPI"
+	},
+	"noctrinth.settings.java-provider.azul": {
+		"message": "Azul Zulu"
+	},
+	"noctrinth.settings.java-provider.description": {
+		"message": "Откуда лаунчер берёт Java, когда сборке нужна версия, которой ещё нет. Каждая загрузка сверяется с контрольной суммой, которую публикует источник."
+	},
+	"noctrinth.settings.java-provider.mojang": {
+		"message": "Mojang — та же Java, что у официального лаунчера"
+	},
+	"noctrinth.settings.java-provider.mojang-mirror": {
+		"message": "Java от Mojang через зеркало BMCLAPI (сторонний сервис)"
+	},
+	"noctrinth.settings.java-provider.temurin": {
+		"message": "Eclipse Temurin"
+	},
+	"noctrinth.settings.java-provider.title": {
+		"message": "Откуда скачивать Java"
+	},
 	"noctrinth.settings.splash-cube.description": {
 		"message": "Какой куб показывает заставка при запуске. Применится со следующего запуска."
 	},

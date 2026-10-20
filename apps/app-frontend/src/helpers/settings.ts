@@ -110,6 +110,12 @@ export type AppSettings = {
 	/** Which cube the splash screen shows; see `noctrinth-splash-cube.ts`. */
 	splash_cube: string
 
+	/**
+	 * Where Java is downloaded from: `auto`, or one of `azul`, `temurin`,
+	 * `mojang` and `mojang-mirror` pinned.
+	 */
+	java_provider: string
+
 	/** Whether the background picture chosen in Appearance is blurred. */
 	background_blur: boolean
 

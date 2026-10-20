@@ -16,6 +16,9 @@ import {
 	remove_unused_runtimes,
 } from '@/helpers/jre'
 
+// Noctrinth's own: who each runtime came from, by the backend's key.
+const PROVIDER_NAMES = { azul: 'Azul Zulu', temurin: 'Eclipse Temurin', mojang: 'Mojang' }
+
 const { handleError, addNotification } = injectNotificationManager()
 const formatBytes = useFormatBytes()
 const { formatMessage } = useVIntl()
@@ -165,7 +168,8 @@ async function removeUnused() {
 					</span>
 				</span>
 				<span class="text-xs text-secondary truncate" :title="runtime.path">
-					{{ runtime.name }}
+					<template v-if="runtime.provider">{{ PROVIDER_NAMES[runtime.provider] }} · </template
+					>{{ runtime.name }}
 				</span>
 			</div>
 

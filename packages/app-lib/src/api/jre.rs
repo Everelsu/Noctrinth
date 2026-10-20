@@ -1,4 +1,5 @@
 //! Authentication flow interface
+use crate::api::java_providers::{self, JavaDownload, JavaProvider};
 use crate::event::emit::{emit_loading, init_loading};
 use crate::install::{
     InstallErrorContext, InstallJavaStep, InstallPhaseDetails, InstallPhaseId,
@@ -6,11 +7,10 @@ use crate::install::{
 };
 use crate::state::JavaVersion;
 use crate::util::fetch::{
-    FetchProgressFn, fetch_advanced, fetch_advanced_with_progress, fetch_json,
+    FetchProgressFn, fetch_advanced, fetch_advanced_with_progress,
 };
 use dashmap::DashMap;
 use reqwest::Method;
-use serde::Deserialize;
 use std::future::Future;
 use std::path::{Path, PathBuf};
 use std::pin::Pin;
@@ -64,14 +64,14 @@ pub async fn auto_install_java(java_version: u32) -> crate::Result<PathBuf> {
     auto_install_java_with_loading(java_version, true).await
 }
 
-/// The URL listing the JRE packages available for a major version here.
-fn java_packages_url(java_version: u32) -> String {
-    format!(
-        "https://api.azul.com/metadata/v1/zulu/packages?arch={}&java_version={}&os={}&archive_type=zip&javafx_bundled=false&java_package_type=jre&page_size=1",
-        std::env::consts::ARCH,
-        java_version,
-        std::env::consts::OS
-    )
+/// Noctrinth's own: the providers the settings say to download Java from,
+/// in the order to try them.
+async fn java_providers(state: &State) -> Vec<JavaProvider> {
+    let setting = crate::state::Settings::get(&state.pool)
+        .await
+        .map(|settings| settings.java_provider)
+        .unwrap_or_default();
+    JavaProvider::order_for_setting(&setting)
 }
 
 /// Narrows a list of Java major versions to the ones that can actually be
@@ -82,36 +82,34 @@ fn java_packages_url(java_version: u32) -> String {
 /// the runtime does not exist, and hiding choices over that would be worse than
 /// letting the install report the problem.
 pub async fn filter_installable_java_majors(candidates: &[u32]) -> Vec<u32> {
-    #[derive(Deserialize)]
-    struct Package {}
-
     let Ok(state) = State::get().await else {
         return candidates.to_vec();
     };
+    let providers = java_providers(&state).await;
 
     let checks = candidates.iter().map(|&java_version| {
         let state = state.clone();
+        let providers = providers.clone();
         async move {
-            let packages = fetch_json::<Vec<Package>>(
-                Method::GET,
-                &java_packages_url(java_version),
-                None,
-                None,
-                None,
-                &state.fetch_semaphore,
-                &state.pool,
-            )
-            .await;
-
-            match packages {
-                Ok(packages) => (java_version, !packages.is_empty()),
-                Err(error) => {
-                    tracing::debug!(
-                        "Could not check whether Java {java_version} is available: {error}"
-                    );
-                    (java_version, true)
+            // Available as soon as one provider has it; dropped only when
+            // every provider answered that it has none.
+            let mut any_unknown = false;
+            for provider in providers {
+                match java_providers::resolve(provider, java_version, &state)
+                    .await
+                {
+                    Ok(Some(_)) => return (java_version, true),
+                    Ok(None) => {}
+                    Err(error) => {
+                        tracing::debug!(
+                            "Could not check whether {} has Java {java_version}: {error}",
+                            provider.name()
+                        );
+                        any_unknown = true;
+                    }
                 }
             }
+            (java_version, any_unknown)
         }
     });
 
@@ -197,8 +195,8 @@ async fn installed_runtime_for(java_version: u32) -> Option<PathBuf> {
             continue;
         }
 
-        // Azul names its directories after the version inside, so the name is
-        // worth reading before starting a process to ask. A name that cannot be
+        // Every provider's directory is named after the version inside, so the
+        // name is worth reading before starting a process to ask. A name that cannot be
         // read is checked anyway rather than skipped: it costs one `java
         // -version`, and being wrong here means downloading everything again.
         let name = entry.file_name().to_string_lossy().to_string();
@@ -253,91 +251,157 @@ async fn auto_install_java_inner(
         None
     };
 
-    #[derive(Deserialize)]
-    struct Package {
-        pub download_url: String,
-        pub name: PathBuf,
+    // Noctrinth's own: one provider after another until one delivers, so a
+    // provider that is down or blocked costs a retry, not the install.
+    let mut failures = Vec::new();
+    for provider in java_providers(&state).await {
+        match install_from(
+            provider,
+            java_version,
+            &state,
+            loading_bar.as_ref(),
+            reporter.as_ref(),
+        )
+        .await
+        {
+            Ok(Some(runtime_dir)) => {
+                let java = runtime_executable(&runtime_dir);
+                carry_gpu_preference_forward(java_version, &java).await;
+                return Ok(java);
+            }
+            Ok(None) => {
+                failures.push(format!("{} has no build of it", provider.name()))
+            }
+            Err(error) => {
+                tracing::warn!(
+                    "Could not install Java {java_version} from {}: {error}",
+                    provider.name()
+                );
+                failures.push(format!("{}: {error}", provider.name()));
+            }
+        }
     }
 
-    if let Some(loading_bar) = &loading_bar {
+    Err(crate::ErrorKind::LauncherError(format!(
+        "Could not download Java {java_version} for {} {} — {}",
+        std::env::consts::OS,
+        std::env::consts::ARCH,
+        failures.join("; "),
+    ))
+    .into())
+}
+
+/// Downloads and unpacks Java from one provider into the launcher's Java
+/// directory, returning the runtime's directory, or `None` when the provider
+/// has no build of this major for this machine.
+async fn install_from(
+    provider: JavaProvider,
+    java_version: u32,
+    state: &State,
+    loading_bar: Option<&crate::event::LoadingBarId>,
+    reporter: Option<&InstallProgressReporter>,
+) -> crate::Result<Option<PathBuf>> {
+    let context = |what: &str, url: &str| {
+        InstallErrorContext::new(format!("{what} ({})", provider.name()))
+            .urls(vec![url.to_string()])
+            .java_version(java_version)
+            .os(std::env::consts::OS)
+            .arch(std::env::consts::ARCH)
+            .build()
+    };
+
+    if let Some(loading_bar) = loading_bar {
         emit_loading(loading_bar, 0.0, Some("Fetching java version"))?;
     }
     update_java_install_progress(
-        reporter.as_ref(),
+        reporter,
         java_version,
         InstallJavaStep::FetchingMetadata,
         Some(java_step_progress(1)),
     )
     .await?;
-    let metadata_url = java_packages_url(java_version);
-    if let Some(reporter) = &reporter {
+    if let Some(reporter) = reporter {
         reporter
-            .set_context(
-                InstallErrorContext::new("fetch Java package metadata")
-                    .urls(vec![metadata_url.clone()])
-                    .java_version(java_version)
-                    .os(std::env::consts::OS)
-                    .arch(std::env::consts::ARCH)
-                    .build(),
-            )
+            .set_context(context("fetch Java package metadata", provider.key()))
             .await?;
     }
-    let packages = fetch_json::<Vec<Package>>(
-        Method::GET,
-        &metadata_url,
-        None,
-        None,
-        None,
-        &state.fetch_semaphore,
-        &state.pool,
-    )
-    .await?;
-    if let Some(loading_bar) = &loading_bar {
+    let Some(download) =
+        java_providers::resolve(provider, java_version, state).await?
+    else {
+        return Ok(None);
+    };
+    if let Some(loading_bar) = loading_bar {
         emit_loading(loading_bar, 10.0, Some("Downloading java version"))?;
     }
 
-    if let Some(download) = packages.first() {
-        if let Some(reporter) = &reporter {
-            reporter
-                .set_context(
-                    InstallErrorContext::new("download Java archive")
-                        .urls(vec![download.download_url.clone()])
-                        .file_path(download.name.display().to_string())
-                        .java_version(java_version)
-                        .os(std::env::consts::OS)
-                        .arch(std::env::consts::ARCH)
-                        .build(),
-                )
-                .await?;
-        }
-        update_java_install_progress(
-            reporter.as_ref(),
-            java_version,
-            InstallJavaStep::Downloading,
-            None,
-        )
-        .await?;
-        let file = if reporter.is_some() {
-            let mut last_reported_bytes = 0_u64;
-            let download_reporter = reporter.clone();
-            let mut progress = move |current: u64,
-                                     total: u64|
-                  -> Pin<
-                Box<dyn Future<Output = crate::Result<()>> + Send>,
-            > {
-                let min_delta =
-                    (total / 200).max(JAVA_DOWNLOAD_PROGRESS_MIN_BYTES);
-                if current < total
-                    && current.saturating_sub(last_reported_bytes) < min_delta
-                {
-                    return Box::pin(async { Ok(()) });
-                }
+    let root = state.directories.java_versions_dir();
+    update_java_install_progress(
+        reporter,
+        java_version,
+        InstallJavaStep::Downloading,
+        None,
+    )
+    .await?;
+    if let Some(reporter) = reporter {
+        reporter
+            .set_context(context("download Java", download.url()))
+            .await?;
+    }
 
-                last_reported_bytes = current;
-                let reporter = download_reporter.clone();
-                Box::pin(async move {
+    let runtime_dir = match download {
+        JavaDownload::Archive {
+            url,
+            sha256,
+            tar_gz,
+        } => {
+            let file = download_archive(
+                &url,
+                java_version,
+                state,
+                loading_bar,
+                reporter,
+            )
+            .await?;
+            java_providers::verify_sha256(&file, sha256.as_deref())?;
+
+            if let Some(loading_bar) = loading_bar {
+                emit_loading(loading_bar, 0.0, Some("Extracting java"))?;
+            }
+            update_java_install_progress(
+                reporter,
+                java_version,
+                InstallJavaStep::Extracting,
+                Some(java_step_progress(3)),
+            )
+            .await?;
+            if let Some(reporter) = reporter {
+                reporter
+                    .set_context(context("extract Java archive", &url))
+                    .await?;
+            }
+            let dir =
+                java_providers::unpack_archive(file, tar_gz, &root).await?;
+            if let Some(loading_bar) = loading_bar {
+                emit_loading(loading_bar, 10.0, Some("Done extracting java"))?;
+            }
+            dir
+        }
+        JavaDownload::Files {
+            manifest_url,
+            manifest_sha1,
+            directory,
+            mirror,
+        } => {
+            java_providers::install_files(
+                &manifest_url,
+                &manifest_sha1,
+                &directory,
+                mirror,
+                &root,
+                state,
+                |current, total| async move {
                     update_java_install_progress(
-                        reporter.as_ref(),
+                        reporter,
                         java_version,
                         InstallJavaStep::Downloading,
                         Some(InstallProgress {
@@ -347,137 +411,87 @@ async fn auto_install_java_inner(
                         }),
                     )
                     .await
-                })
-            };
-
-            fetch_advanced_with_progress(
-                Method::GET,
-                &download.download_url,
-                None,
-                None,
-                None,
-                None,
-                loading_bar.as_ref().map(|loading_bar| (loading_bar, 80.0)),
-                None,
-                &state.fetch_semaphore,
-                &state.pool,
-                Some(&mut progress as &mut FetchProgressFn<'_>),
+                },
             )
             .await?
-        } else {
-            fetch_advanced(
-                Method::GET,
-                &download.download_url,
-                None,
-                None,
-                None,
-                None,
-                loading_bar.as_ref().map(|loading_bar| (loading_bar, 80.0)),
-                None,
-                &state.fetch_semaphore,
-                &state.pool,
-            )
-            .await?
-        };
-
-        let path = state.directories.java_versions_dir();
-
-        if let Some(reporter) = &reporter {
-            reporter
-                .set_context(
-                    InstallErrorContext::new("read Java archive")
-                        .urls(vec![download.download_url.clone()])
-                        .file_path(download.name.display().to_string())
-                        .target_path(path.display().to_string())
-                        .java_version(java_version)
-                        .os(std::env::consts::OS)
-                        .arch(std::env::consts::ARCH)
-                        .build(),
-                )
-                .await?;
         }
-        let mut archive = zip::ZipArchive::new(std::io::Cursor::new(file))
-            .map_err(|_| {
-                crate::Error::from(crate::ErrorKind::InputError(
-                    "Failed to read java zip".to_string(),
-                ))
-            })?;
+    };
 
-        // removes the old installation of java
-        if let Some(file) = archive.file_names().next()
-            && let Some(dir) = file.split('/').next()
-        {
-            let path = path.join(dir);
+    // A runtime that does not run is no runtime: the next provider gets its
+    // turn instead of the game failing at launch.
+    jre::check_java_at_filepath(&runtime_executable(&runtime_dir)).await?;
+    Ok(Some(runtime_dir))
+}
 
-            if path.exists() {
-                io::remove_dir_all(path).await?;
-            }
-        }
-
-        if let Some(loading_bar) = &loading_bar {
-            emit_loading(loading_bar, 0.0, Some("Extracting java"))?;
-        }
-        update_java_install_progress(
-            reporter.as_ref(),
-            java_version,
-            InstallJavaStep::Extracting,
-            Some(java_step_progress(3)),
+/// One archive, with the install's progress reported as it arrives.
+async fn download_archive(
+    url: &str,
+    java_version: u32,
+    state: &State,
+    loading_bar: Option<&crate::event::LoadingBarId>,
+    reporter: Option<&InstallProgressReporter>,
+) -> crate::Result<bytes::Bytes> {
+    let Some(reporter) = reporter else {
+        return fetch_advanced(
+            Method::GET,
+            url,
+            None,
+            None,
+            None,
+            None,
+            loading_bar.map(|loading_bar| (loading_bar, 80.0)),
+            None,
+            &state.fetch_semaphore,
+            &state.pool,
         )
-        .await?;
-        if let Some(reporter) = &reporter {
-            reporter
-                .set_context(
-                    InstallErrorContext::new("extract Java archive")
-                        .urls(vec![download.download_url.clone()])
-                        .file_path(download.name.display().to_string())
-                        .target_path(path.display().to_string())
-                        .java_version(java_version)
-                        .os(std::env::consts::OS)
-                        .arch(std::env::consts::ARCH)
-                        .build(),
-                )
-                .await?;
-        }
-        archive.extract(&path).map_err(|_| {
-            crate::Error::from(crate::ErrorKind::InputError(
-                "Failed to extract java zip".to_string(),
-            ))
-        })?;
-        if let Some(loading_bar) = &loading_bar {
-            emit_loading(loading_bar, 10.0, Some("Done extracting java"))?;
-        }
-        let mut base_path = path.join(
-            download
-                .name
-                .file_stem()
-                .unwrap_or_default()
-                .to_string_lossy()
-                .to_string(),
-        );
+        .await;
+    };
 
-        #[cfg(target_os = "macos")]
+    let mut last_reported_bytes = 0_u64;
+    let download_reporter = reporter.clone();
+    let mut progress = move |current: u64,
+                             total: u64|
+          -> Pin<
+        Box<dyn Future<Output = crate::Result<()>> + Send>,
+    > {
+        let min_delta = (total / 200).max(JAVA_DOWNLOAD_PROGRESS_MIN_BYTES);
+        if current < total
+            && current.saturating_sub(last_reported_bytes) < min_delta
         {
-            base_path = base_path
-                .join("Contents")
-                .join("Home")
-                .join("bin")
-                .join("java")
+            return Box::pin(async { Ok(()) });
         }
 
-        #[cfg(not(target_os = "macos"))]
-        {
-            base_path = base_path.join("bin").join(jre::JAVA_BIN)
-        }
+        last_reported_bytes = current;
+        let reporter = download_reporter.clone();
+        Box::pin(async move {
+            update_java_install_progress(
+                Some(&reporter),
+                java_version,
+                InstallJavaStep::Downloading,
+                Some(InstallProgress {
+                    current,
+                    total,
+                    secondary: None,
+                }),
+            )
+            .await
+        })
+    };
 
-        carry_gpu_preference_forward(java_version, &base_path).await;
-
-        Ok(base_path)
-    } else {
-        Err(crate::ErrorKind::LauncherError(format!(
-                    "No Java Version found for Java version {}, OS {}, and Architecture {}",
-                    java_version, std::env::consts::OS, std::env::consts::ARCH,
-                )).into())
-    }
+    fetch_advanced_with_progress(
+        Method::GET,
+        url,
+        None,
+        None,
+        None,
+        None,
+        loading_bar.map(|loading_bar| (loading_bar, 80.0)),
+        None,
+        &state.fetch_semaphore,
+        &state.pool,
+        Some(&mut progress as &mut FetchProgressFn<'_>),
+    )
+    .await
 }
 
 /// Gives a freshly installed runtime the GPU its predecessor was set to.
@@ -584,6 +598,9 @@ pub struct InstalledRuntime {
     pub java_path: String,
     /// The directory name, e.g. `zulu25.36.15-ca-jre25.0.4-win_x64`.
     pub name: String,
+    /// Noctrinth's own: who it was downloaded from — `azul`, `temurin` or
+    /// `mojang` — when the name says.
+    pub provider: Option<String>,
     /// Parsed out of the name; `None` when it doesn't follow the usual shape.
     pub major_version: Option<u32>,
     pub size_bytes: u64,
@@ -591,19 +608,44 @@ pub struct InstalledRuntime {
     pub in_use: bool,
 }
 
-/// Reads the major version out of an Azul directory name.
+/// Reads the major version out of a runtime's directory name.
 ///
-/// These arrive as `zulu25.36.15-ca-jre25.0.4-win_x64`, where the part after
+/// Azul's arrive as `zulu25.36.15-ca-jre25.0.4-win_x64`, where the part after
 /// `-jre` is the Java version proper — the leading `zulu25.36.15` is Azul's own
-/// build number and only coincidentally starts the same way. Anything that
-/// doesn't match is left unlabelled rather than guessed at.
+/// build number and only coincidentally starts the same way. Mojang's are
+/// named here the same way (`mojang-java-runtime-delta-jre21.0.7`). Temurin's
+/// are `jdk-21.0.5+11-jre`, or `jdk8u432-b06-jre` for Java 8. Anything else
+/// is left unlabelled rather than guessed at.
 fn major_version_from_runtime_name(name: &str) -> Option<u32> {
-    let after_marker = name.split("-jre").nth(1)?;
-    let digits: String = after_marker
-        .chars()
-        .take_while(char::is_ascii_digit)
-        .collect();
-    digits.parse().ok()
+    let leading = |text: &str| -> Option<u32> {
+        text.chars()
+            .take_while(char::is_ascii_digit)
+            .collect::<String>()
+            .parse()
+            .ok()
+    };
+    // The first `-jre` followed by a version: Mojang's Java 8 component is
+    // itself called `jre-legacy`, so its name carries the marker twice.
+    if let Some(major) = name.split("-jre").skip(1).find_map(leading) {
+        return Some(major);
+    }
+    let temurin = name
+        .strip_prefix("jdk-")
+        .or_else(|| name.strip_prefix("jdk"))?;
+    name.ends_with("-jre").then(|| leading(temurin)).flatten()
+}
+
+/// Which provider a runtime directory came from, by its name.
+fn provider_from_runtime_name(name: &str) -> Option<&'static str> {
+    if name.starts_with("zulu") {
+        Some("azul")
+    } else if name.starts_with("mojang-") {
+        Some("mojang")
+    } else if name.starts_with("jdk") {
+        Some("temurin")
+    } else {
+        None
+    }
 }
 
 async fn directory_size(path: &Path) -> u64 {
@@ -666,6 +708,7 @@ pub async fn list_installed_runtimes() -> crate::Result<Vec<InstalledRuntime>> {
 
         runtimes.push(InstalledRuntime {
             major_version: major_version_from_runtime_name(&name),
+            provider: provider_from_runtime_name(&name).map(str::to_string),
             size_bytes: directory_size(&path).await,
             java_path: java_path.to_string_lossy().to_string(),
             path: path.to_string_lossy().to_string(),
@@ -801,6 +844,30 @@ mod runtime_name_tests {
             ),
             Some(26)
         );
+    }
+
+    #[test]
+    fn reads_temurin_and_mojang_runtime_names() {
+        assert_eq!(
+            major_version_from_runtime_name("jdk-21.0.5+11-jre"),
+            Some(21)
+        );
+        assert_eq!(
+            major_version_from_runtime_name("jdk8u432-b06-jre"),
+            Some(8)
+        );
+        assert_eq!(
+            major_version_from_runtime_name(
+                "mojang-java-runtime-delta-jre21.0.7"
+            ),
+            Some(21)
+        );
+        assert_eq!(
+            major_version_from_runtime_name("mojang-jre-legacy-jre8u51"),
+            Some(8)
+        );
+        // A full JDK from Temurin is not one of the launcher's runtimes.
+        assert_eq!(major_version_from_runtime_name("jdk-21.0.5+11"), None);
     }
 
     #[test]

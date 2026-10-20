@@ -116,6 +116,10 @@ pub struct Settings {
     /// How far the background picture is darkened, from 0 to 100.
     pub background_dim: u32,
 
+    /// Where Java is downloaded from: `auto` tries every provider in turn,
+    /// or one of [`crate::api::java_providers::JavaProvider`]'s keys pins it.
+    pub java_provider: String,
+
     pub version: usize,
 }
 
@@ -168,6 +172,11 @@ impl Settings {
 
         let splash_cube: String =
             sqlx::query_scalar("SELECT splash_cube FROM settings")
+                .fetch_one(exec)
+                .await?;
+
+        let java_provider: String =
+            sqlx::query_scalar("SELECT java_provider FROM settings")
                 .fetch_one(exec)
                 .await?;
 
@@ -285,6 +294,7 @@ impl Settings {
                 .unwrap_or_else(|| DEFAULT_ACCENT_PRESET.to_string()),
             accent_tint_background: accent_tint_background == 1,
             splash_cube,
+            java_provider,
             background_blur: background_blur == 1,
             background_dim: background_dim.clamp(0, 100) as u32,
             sync_theme_across_devices: res.sync_theme_across_devices == 1,
@@ -461,6 +471,11 @@ impl Settings {
 
         sqlx::query("UPDATE settings SET splash_cube = $1")
             .bind(&self.splash_cube)
+            .execute(exec)
+            .await?;
+
+        sqlx::query("UPDATE settings SET java_provider = $1")
+            .bind(&self.java_provider)
             .execute(exec)
             .await?;
 

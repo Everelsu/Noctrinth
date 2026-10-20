@@ -25,17 +25,22 @@
 //! for the rest, exactly as it was before any of this existed.
 
 use std::collections::{HashMap, HashSet};
+use std::io::{Read, Seek};
+use std::path::{Path, PathBuf};
 use std::sync::RwLock;
 
 use chrono::{DateTime, Duration, Utc};
 use reqwest::Method;
 use serde::Deserialize;
 
-use crate::state::State;
+use crate::state::{FileMetadata, State};
 use crate::util::fetch::fetch_advanced;
 
 const MODS_ENDPOINT: &str = "https://api.curseforge.com/v1/mods";
 const FILES_ENDPOINT: &str = "https://api.curseforge.com/v1/mods/files";
+/// Minecraft's game id on CurseForge.
+const FINGERPRINTS_ENDPOINT: &str =
+    "https://api.curseforge.com/v1/fingerprints/432";
 
 /// How long a cached answer is trusted. A mod's name, author and icon change
 /// about as often as anything on Modrinth does, and the alternative to a stale
@@ -162,7 +167,7 @@ struct FilesResponse {
     data: Vec<ApiFile>,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct ApiFile {
     id: i64,
@@ -173,6 +178,25 @@ struct ApiFile {
     file_name: Option<String>,
     #[serde(default)]
     file_date: Option<String>,
+    #[serde(default)]
+    file_fingerprint: Option<u32>,
+}
+
+#[derive(Deserialize)]
+struct FingerprintsResponse {
+    data: FingerprintMatches,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct FingerprintMatches {
+    #[serde(default)]
+    exact_matches: Vec<FingerprintMatch>,
+}
+
+#[derive(Deserialize)]
+struct FingerprintMatch {
+    file: ApiFile,
 }
 
 impl From<ApiMod> for CurseforgeProject {
@@ -370,6 +394,315 @@ async fn fetch_files(
     for file in files {
         metadata.files.insert(file.id.clone(), file);
     }
+
+    Ok(())
+}
+
+/// CurseForge's ids for files that came with none, recognised by content.
+///
+/// `files` pairs each file's SHA1 with where it is on disk. What comes back is
+/// keyed by that SHA1, in the same project/file shape a content entry carries
+/// its ids in, so the caller can hand the ids straight to [`resolve`]. A file
+/// CurseForge does not know is simply absent.
+///
+/// Like [`resolve`], never fails: without a key, a network or an answer, the
+/// files stay as unnamed as they were.
+pub async fn identify(
+    files: &[(String, PathBuf)],
+    state: &State,
+) -> HashMap<String, FileMetadata> {
+    if files.is_empty() {
+        return HashMap::new();
+    }
+
+    let cached = read_cached_fingerprints(files, Utc::now(), state)
+        .await
+        .unwrap_or_else(|error| {
+            tracing::warn!(
+                "Could not read CurseForge fingerprint cache: {error}"
+            );
+            HashMap::new()
+        });
+    let mut found = cached
+        .iter()
+        .filter_map(|(sha1, ids)| Some((sha1.clone(), ids.clone()?)))
+        .collect::<HashMap<_, _>>();
+
+    let unknown = files
+        .iter()
+        .filter(|(sha1, _)| !cached.contains_key(sha1))
+        .take(MAX_IDS_PER_REQUEST)
+        .cloned()
+        .collect::<Vec<_>>();
+    if unknown.is_empty() {
+        return found;
+    }
+
+    let Some(key) = api_key() else {
+        tracing::debug!(
+            "No CurseForge API key, so {} file(s) stay unrecognised",
+            unknown.len()
+        );
+        return found;
+    };
+
+    if let Err(error) =
+        fetch_fingerprints(unknown, &key, &mut found, state).await
+    {
+        tracing::warn!("Could not match CurseForge fingerprints: {error}");
+    }
+
+    found
+}
+
+async fn fetch_fingerprints(
+    files: Vec<(String, PathBuf)>,
+    key: &str,
+    found: &mut HashMap<String, FileMetadata>,
+    state: &State,
+) -> crate::Result<()> {
+    // Every byte of every file has to be read, twice, so it is done off the
+    // async runtime. A file that cannot be read is left out and asked about
+    // again next time.
+    let fingerprints = tokio::task::spawn_blocking(move || {
+        files
+            .into_iter()
+            .filter_map(|(sha1, path)| match fingerprint_file(&path) {
+                Ok(fingerprint) => Some((sha1, fingerprint)),
+                Err(error) => {
+                    tracing::debug!(
+                        "Could not fingerprint {}: {error}",
+                        path.display()
+                    );
+                    None
+                }
+            })
+            .collect::<Vec<_>>()
+    })
+    .await?;
+    if fingerprints.is_empty() {
+        return Ok(());
+    }
+
+    let body = fetch_advanced(
+        Method::POST,
+        FINGERPRINTS_ENDPOINT,
+        None,
+        Some(serde_json::json!({
+            "fingerprints": fingerprints
+                .iter()
+                .map(|(_, fingerprint)| *fingerprint)
+                .collect::<Vec<_>>(),
+        })),
+        Some(("x-api-key", key)),
+        None,
+        None,
+        None,
+        &state.fetch_semaphore,
+        &state.pool,
+    )
+    .await?;
+    let response: FingerprintsResponse = serde_json::from_slice(&body)?;
+    let matched = response
+        .data
+        .exact_matches
+        .into_iter()
+        .filter_map(|m| Some((m.file.file_fingerprint?, m.file)))
+        .collect::<HashMap<_, _>>();
+
+    // The match already says what the file is called, so it goes straight
+    // into the file cache and `resolve` has nothing left to ask about it.
+    let files = matched
+        .values()
+        .cloned()
+        .map(CurseforgeFile::from)
+        .collect::<Vec<_>>();
+    write_cached_files(&files, state).await?;
+
+    let answers = fingerprints
+        .into_iter()
+        .map(|(sha1, fingerprint)| {
+            let ids = matched.get(&fingerprint).map(|file| FileMetadata {
+                project_id: file.mod_id.to_string(),
+                version_id: file.id.to_string(),
+            });
+            (sha1, ids)
+        })
+        .collect::<Vec<_>>();
+    write_cached_fingerprints(&answers, state).await?;
+    for (sha1, ids) in answers {
+        if let Some(ids) = ids {
+            found.insert(sha1, ids);
+        }
+    }
+
+    Ok(())
+}
+
+/// The bytes CurseForge leaves out of a fingerprint: tab, LF, CR and space.
+fn is_fingerprint_whitespace(byte: u8) -> bool {
+    matches!(byte, 9 | 10 | 13 | 32)
+}
+
+/// CurseForge's file fingerprint: MurmurHash2 (seed 1) over the file with
+/// every whitespace byte removed. The length that seeds the hash is the
+/// length after removal, which is why a file is read twice.
+struct Fingerprint {
+    hash: u32,
+    block: u32,
+    shift: u32,
+}
+
+impl Fingerprint {
+    const M: u32 = 0x5bd1_e995;
+
+    fn new(normalized_len: u64) -> Self {
+        Self {
+            // Only the low 32 bits of the length take part, as in CurseForge's
+            // own implementation.
+            hash: 1 ^ normalized_len as u32,
+            block: 0,
+            shift: 0,
+        }
+    }
+
+    fn update(&mut self, bytes: &[u8]) {
+        for &byte in bytes {
+            if is_fingerprint_whitespace(byte) {
+                continue;
+            }
+            self.block |= u32::from(byte) << self.shift;
+            self.shift += 8;
+            if self.shift == 32 {
+                let mut k = self.block.wrapping_mul(Self::M);
+                k ^= k >> 24;
+                k = k.wrapping_mul(Self::M);
+                self.hash = self.hash.wrapping_mul(Self::M) ^ k;
+                self.block = 0;
+                self.shift = 0;
+            }
+        }
+    }
+
+    fn finish(self) -> u32 {
+        let mut hash = self.hash;
+        if self.shift > 0 {
+            hash ^= self.block;
+            hash = hash.wrapping_mul(Self::M);
+        }
+        hash ^= hash >> 13;
+        hash = hash.wrapping_mul(Self::M);
+        hash ^ (hash >> 15)
+    }
+}
+
+#[cfg(test)]
+fn fingerprint(bytes: &[u8]) -> u32 {
+    let len = bytes
+        .iter()
+        .filter(|&&b| !is_fingerprint_whitespace(b))
+        .count();
+    let mut fingerprint = Fingerprint::new(len as u64);
+    fingerprint.update(bytes);
+    fingerprint.finish()
+}
+
+fn fingerprint_file(path: &Path) -> std::io::Result<u32> {
+    let mut file = std::fs::File::open(path)?;
+    let mut buffer = vec![0; 256 * 1024];
+
+    let mut len = 0u64;
+    loop {
+        let read = file.read(&mut buffer)?;
+        if read == 0 {
+            break;
+        }
+        len += buffer[..read]
+            .iter()
+            .filter(|&&b| !is_fingerprint_whitespace(b))
+            .count() as u64;
+    }
+
+    file.rewind()?;
+    let mut fingerprint = Fingerprint::new(len);
+    loop {
+        let read = file.read(&mut buffer)?;
+        if read == 0 {
+            break;
+        }
+        fingerprint.update(&buffer[..read]);
+    }
+    Ok(fingerprint.finish())
+}
+
+async fn read_cached_fingerprints(
+    files: &[(String, PathBuf)],
+    now: DateTime<Utc>,
+    state: &State,
+) -> crate::Result<HashMap<String, Option<FileMetadata>>> {
+    let wanted = files
+        .iter()
+        .map(|(sha1, _)| sha1.as_str())
+        .collect::<HashSet<_>>();
+    let expires_after = now.timestamp();
+    let rows = sqlx::query!(
+        "
+        SELECT sha1, project_id, file_id
+        FROM curseforge_fingerprint_cache
+        WHERE expires > $1
+        ",
+        expires_after
+    )
+    .fetch_all(&state.pool)
+    .await?;
+
+    Ok(rows
+        .into_iter()
+        .filter(|row| wanted.contains(row.sha1.as_str()))
+        .map(|row| {
+            let ids = row.project_id.zip(row.file_id).map(
+                |(project_id, version_id)| FileMetadata {
+                    project_id,
+                    version_id,
+                },
+            );
+            (row.sha1, ids)
+        })
+        .collect())
+}
+
+async fn write_cached_fingerprints(
+    answers: &[(String, Option<FileMetadata>)],
+    state: &State,
+) -> crate::Result<()> {
+    if answers.is_empty() {
+        return Ok(());
+    }
+    let expires = (Utc::now() + Duration::days(CACHE_DAYS)).timestamp();
+    let mut tx = state.pool.begin().await?;
+    for (sha1, ids) in answers {
+        let project_id = ids.as_ref().map(|ids| ids.project_id.as_str());
+        let file_id = ids.as_ref().map(|ids| ids.version_id.as_str());
+        sqlx::query!(
+            "
+            INSERT INTO curseforge_fingerprint_cache (
+                sha1, project_id, file_id, expires
+            )
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT(sha1) DO UPDATE SET
+                project_id = excluded.project_id,
+                file_id = excluded.file_id,
+                expires = excluded.expires
+            ",
+            sha1,
+            project_id,
+            file_id,
+            expires,
+        )
+        .execute(&mut *tx)
+        .await?;
+    }
+    tx.commit().await?;
 
     Ok(())
 }
@@ -666,6 +999,80 @@ mod tests {
         )]);
 
         assert_eq!(difference(&wanted, &have), vec![2]);
+    }
+
+    /// Expected values come from running CurseForge's own `Curse.Hashing`
+    /// (`MurmurHash2.ComputeNormalizedHash`) on the same bytes.
+    #[test]
+    fn fingerprints_match_curseforges_own_implementation() {
+        let cases: &[(&[u8], u32)] = &[
+            (b"", 1540447798),
+            (b"a", 626045324),
+            (b"ab", 1692487918),
+            (b"abc", 1621425345),
+            (b"abcd", 3376380438),
+            (b"abcde", 3469237630),
+            (b"hello world", 2824650221),
+            (b"Noctrinth fingerprint test vector", 2776368908),
+        ];
+        for (input, expected) in cases {
+            assert_eq!(fingerprint(input), *expected, "{input:?}");
+        }
+    }
+
+    #[test]
+    fn whitespace_does_not_change_a_fingerprint() {
+        assert_eq!(
+            fingerprint(b" \t\r\nhello\n world \r\n"),
+            fingerprint(b"helloworld")
+        );
+        assert_eq!(fingerprint(b"    "), fingerprint(b""));
+    }
+
+    #[test]
+    fn a_file_fingerprints_the_same_as_its_bytes() {
+        // Longer than one read buffer, with whitespace bytes scattered
+        // through it, so both passes cross buffer boundaries.
+        let bytes = (0..600_000u32)
+            .map(|i| ((i * 31 + 7) % 251) as u8)
+            .collect::<Vec<_>>();
+        assert_eq!(fingerprint(&bytes[..200_000]), 2392768800);
+
+        let mut file = tempfile::NamedTempFile::new().unwrap();
+        std::io::Write::write_all(&mut file, &bytes).unwrap();
+        assert_eq!(
+            fingerprint_file(file.path()).unwrap(),
+            fingerprint(&bytes)
+        );
+    }
+
+    #[test]
+    fn a_fingerprint_match_reads_the_file_it_names() {
+        let response: FingerprintsResponse = serde_json::from_str(
+            r#"{
+                "data": {
+                    "isCacheBuilt": true,
+                    "exactMatches": [{
+                        "id": 5090810,
+                        "file": {
+                            "id": 5090810,
+                            "modId": 238222,
+                            "displayName": "JEI 1.20.1-15.3.0.4",
+                            "fileName": "jei.jar",
+                            "fileFingerprint": 2824650221
+                        },
+                        "latestFiles": []
+                    }],
+                    "exactFingerprints": [2824650221],
+                    "unmatchedFingerprints": [1]
+                }
+            }"#,
+        )
+        .unwrap();
+        let file = &response.data.exact_matches[0].file;
+
+        assert_eq!(file.file_fingerprint, Some(2824650221));
+        assert_eq!(file.mod_id, 238222);
     }
 
     #[test]

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO curseforge_fingerprint_cache (\n                sha1, project_id, file_id, expires\n            )\n            VALUES ($1, $2, $3, $4)\n            ON CONFLICT(sha1) DO UPDATE SET\n                project_id = excluded.project_id,\n                file_id = excluded.file_id,\n                expires = excluded.expires\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "091b0573199a4a0a19e05c4a0c24906570f660617cb03c266606c8be76b0db6f"
+}

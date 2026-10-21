@@ -1268,8 +1268,14 @@
 	"minecraft-account.label-microsoft": {
 		"message": "Microsoft account"
 	},
+	"noctrinth.settings.curseforge.cache.title": {
+		"message": "Cache"
+	},
 	"noctrinth.settings.curseforge.check-updates": {
 		"message": "Check CurseForge for updates of its mods and packs"
+	},
+	"noctrinth.settings.curseforge.check-updates.title": {
+		"message": "Check for updates"
 	},
 	"noctrinth.settings.curseforge.clear-cache": {
 		"message": "Forget CurseForge's answers"
@@ -1282,6 +1288,9 @@
 	},
 	"noctrinth.settings.curseforge.default-source": {
 		"message": "Browse opens on"
+	},
+	"noctrinth.settings.curseforge.default-source.description": {
+		"message": "Which catalogue Discover shows first. The switch above the results changes it any time."
 	},
 	"noctrinth.settings.curseforge.description": {
 		"message": "Browse and install from CurseForge, recognise its files in your instances and keep them up to date. Off, and the launcher asks CurseForge nothing."
@@ -1322,6 +1331,9 @@
 	"noctrinth.settings.curseforge.recognize-files": {
 		"message": "Recognise mods added by hand or from other launchers by their fingerprint"
 	},
+	"noctrinth.settings.curseforge.recognize-files.title": {
+		"message": "Recognise files"
+	},
 	"noctrinth.settings.curseforge.release-type": {
 		"message": "Update to"
 	},
@@ -1331,11 +1343,26 @@
 	"noctrinth.settings.curseforge.release-type.beta": {
 		"message": "Releases and betas"
 	},
+	"noctrinth.settings.curseforge.release-type.description": {
+		"message": "Which files count as an update."
+	},
 	"noctrinth.settings.curseforge.release-type.release": {
 		"message": "Releases only"
 	},
 	"noctrinth.settings.curseforge.search-other-launchers": {
 		"message": "Look for files kept off launchers in other launchers' instances, not only in Downloads"
+	},
+	"noctrinth.settings.curseforge.search-other-launchers.title": {
+		"message": "Search other launchers"
+	},
+	"noctrinth.settings.curseforge.section.discover": {
+		"message": "Discover"
+	},
+	"noctrinth.settings.curseforge.section.files": {
+		"message": "Files and updates"
+	},
+	"noctrinth.settings.curseforge.section.restricted": {
+		"message": "Files kept off launchers"
 	},
 	"noctrinth.settings.curseforge.source.curseforge": {
 		"message": "CurseForge"
@@ -1347,7 +1374,10 @@
 		"message": "CurseForge"
 	},
 	"noctrinth.settings.java-provider.auto": {
-		"message": "Automatically: Azul, then Temurin, then Mojang, then the BMCLAPI mirror"
+		"message": "Automatically"
+	},
+	"noctrinth.settings.java-provider.auto-hint": {
+		"message": "Tries Azul, then Temurin, then Temurin from GitHub, then Mojang, then Mojang through the BMCLAPI mirror, and stops at the first that answers. GitHub usually stays reachable where the others are blocked."
 	},
 	"noctrinth.settings.java-provider.azul": {
 		"message": "Azul Zulu"
@@ -1356,13 +1386,16 @@
 		"message": "Where the launcher gets Java when an instance needs one it does not have. Every download is checked against the checksum its source publishes."
 	},
 	"noctrinth.settings.java-provider.mojang": {
-		"message": "Mojang, the Java the official launcher uses"
+		"message": "Mojang"
 	},
 	"noctrinth.settings.java-provider.mojang-mirror": {
-		"message": "Mojang's Java through the BMCLAPI mirror, a third-party service"
+		"message": "Mojang through BMCLAPI (third-party mirror)"
 	},
 	"noctrinth.settings.java-provider.temurin": {
 		"message": "Eclipse Temurin"
+	},
+	"noctrinth.settings.java-provider.temurin-github": {
+		"message": "Eclipse Temurin from GitHub"
 	},
 	"noctrinth.settings.java-provider.title": {
 		"message": "Download Java from"

@@ -1,23 +1,16 @@
 <script setup lang="ts">
 /** Noctrinth's own: what the launcher does with CurseForge, and whether at all. */
-import {
-	CheckIcon,
-	CurseForgeIcon,
-	SpinnerIcon,
-	TrashIcon,
-	UndoIcon,
-	XIcon,
-} from '@modrinth/assets'
+import { CheckIcon, SpinnerIcon, TrashIcon, UndoIcon, XIcon } from '@modrinth/assets'
 import {
 	Button,
+	Combobox,
+	type ComboboxOption,
 	defineMessages,
 	Input,
-	RadioButtons,
-	SettingsToggleCard,
 	Toggle,
 	useVIntl,
 } from '@modrinth/ui'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import {
 	checkCurseforgeKey,
@@ -41,6 +34,77 @@ const messages = defineMessages({
 	noKey: {
 		id: 'noctrinth.settings.curseforge.no-key',
 		defaultMessage: 'This build has no CurseForge API key. Add your own below to use CurseForge.',
+	},
+	discoverSection: {
+		id: 'noctrinth.settings.curseforge.section.discover',
+		defaultMessage: 'Discover',
+	},
+	defaultSource: {
+		id: 'noctrinth.settings.curseforge.default-source',
+		defaultMessage: 'Browse opens on',
+	},
+	defaultSourceDescription: {
+		id: 'noctrinth.settings.curseforge.default-source.description',
+		defaultMessage:
+			'Which catalogue Discover shows first. The switch above the results changes it any time.',
+	},
+	modrinth: { id: 'noctrinth.settings.curseforge.source.modrinth', defaultMessage: 'Modrinth' },
+	curseforge: {
+		id: 'noctrinth.settings.curseforge.source.curseforge',
+		defaultMessage: 'CurseForge',
+	},
+	filesSection: {
+		id: 'noctrinth.settings.curseforge.section.files',
+		defaultMessage: 'Files and updates',
+	},
+	recognizeFilesTitle: {
+		id: 'noctrinth.settings.curseforge.recognize-files.title',
+		defaultMessage: 'Recognise files',
+	},
+	recognizeFiles: {
+		id: 'noctrinth.settings.curseforge.recognize-files',
+		defaultMessage: 'Recognise mods added by hand or from other launchers by their fingerprint',
+	},
+	checkUpdatesTitle: {
+		id: 'noctrinth.settings.curseforge.check-updates.title',
+		defaultMessage: 'Check for updates',
+	},
+	checkUpdates: {
+		id: 'noctrinth.settings.curseforge.check-updates',
+		defaultMessage: 'Check CurseForge for updates of its mods and packs',
+	},
+	releaseType: {
+		id: 'noctrinth.settings.curseforge.release-type',
+		defaultMessage: 'Update to',
+	},
+	releaseTypeDescription: {
+		id: 'noctrinth.settings.curseforge.release-type.description',
+		defaultMessage: 'Which files count as an update.',
+	},
+	release: {
+		id: 'noctrinth.settings.curseforge.release-type.release',
+		defaultMessage: 'Releases only',
+	},
+	beta: {
+		id: 'noctrinth.settings.curseforge.release-type.beta',
+		defaultMessage: 'Releases and betas',
+	},
+	alpha: {
+		id: 'noctrinth.settings.curseforge.release-type.alpha',
+		defaultMessage: 'Any file, alphas too',
+	},
+	restrictedSection: {
+		id: 'noctrinth.settings.curseforge.section.restricted',
+		defaultMessage: 'Files kept off launchers',
+	},
+	searchOtherLaunchersTitle: {
+		id: 'noctrinth.settings.curseforge.search-other-launchers.title',
+		defaultMessage: 'Search other launchers',
+	},
+	searchOtherLaunchers: {
+		id: 'noctrinth.settings.curseforge.search-other-launchers',
+		defaultMessage:
+			"Look for files kept off launchers in other launchers' instances, not only in Downloads",
 	},
 	ownKey: { id: 'noctrinth.settings.curseforge.own-key', defaultMessage: 'Your own API key' },
 	ownKeyHint: {
@@ -74,44 +138,7 @@ const messages = defineMessages({
 		id: 'noctrinth.settings.curseforge.own-key.check-failed',
 		defaultMessage: 'Could not reach CurseForge to check the key',
 	},
-	defaultSource: {
-		id: 'noctrinth.settings.curseforge.default-source',
-		defaultMessage: 'Browse opens on',
-	},
-	modrinth: { id: 'noctrinth.settings.curseforge.source.modrinth', defaultMessage: 'Modrinth' },
-	curseforge: {
-		id: 'noctrinth.settings.curseforge.source.curseforge',
-		defaultMessage: 'CurseForge',
-	},
-	recognizeFiles: {
-		id: 'noctrinth.settings.curseforge.recognize-files',
-		defaultMessage: 'Recognise mods added by hand or from other launchers by their fingerprint',
-	},
-	checkUpdates: {
-		id: 'noctrinth.settings.curseforge.check-updates',
-		defaultMessage: 'Check CurseForge for updates of its mods and packs',
-	},
-	releaseType: {
-		id: 'noctrinth.settings.curseforge.release-type',
-		defaultMessage: 'Update to',
-	},
-	release: {
-		id: 'noctrinth.settings.curseforge.release-type.release',
-		defaultMessage: 'Releases only',
-	},
-	beta: {
-		id: 'noctrinth.settings.curseforge.release-type.beta',
-		defaultMessage: 'Releases and betas',
-	},
-	alpha: {
-		id: 'noctrinth.settings.curseforge.release-type.alpha',
-		defaultMessage: 'Any file, alphas too',
-	},
-	searchOtherLaunchers: {
-		id: 'noctrinth.settings.curseforge.search-other-launchers',
-		defaultMessage:
-			"Look for files kept off launchers in other launchers' instances, not only in Downloads",
-	},
+	cacheTitle: { id: 'noctrinth.settings.curseforge.cache.title', defaultMessage: 'Cache' },
 	clearCache: {
 		id: 'noctrinth.settings.curseforge.clear-cache',
 		defaultMessage: "Forget CurseForge's answers",
@@ -123,8 +150,19 @@ const messages = defineMessages({
 	cleared: { id: 'noctrinth.settings.curseforge.cleared', defaultMessage: 'Forgotten' },
 })
 
-const sources = ['modrinth', 'curseforge'] as const
-const releaseTypes: CurseforgeReleaseType[] = ['release', 'beta', 'alpha']
+const sourceOptions = computed<ComboboxOption<'modrinth' | 'curseforge'>[]>(() => [
+	{ value: 'modrinth', label: formatMessage(messages.modrinth) },
+	{ value: 'curseforge', label: formatMessage(messages.curseforge) },
+])
+const releaseTypeOptions = computed<ComboboxOption<CurseforgeReleaseType>[]>(() =>
+	(['release', 'beta', 'alpha'] as const).map((type) => ({
+		value: type,
+		label: formatMessage(messages[type]),
+	})),
+)
+
+/** Everything but the key waits on CurseForge being on and usable. */
+const active = computed(() => curseforgeKeyAvailable.value && curseforgeSettings.enabled)
 
 const keyInput = ref('')
 const checking = ref(false)
@@ -165,78 +203,112 @@ async function clearCache() {
 </script>
 
 <template>
-	<p v-if="!curseforgeKeyAvailable" class="m-0 text-secondary">
-		{{ formatMessage(messages.noKey) }}
-	</p>
-	<SettingsToggleCard
-		v-else
-		v-model="curseforgeSettings.enabled"
-		:icon="CurseForgeIcon"
-		:title="formatMessage(messages.title)"
-		:description="formatMessage(messages.description)"
-	>
-		<template #expanded>
-			<section class="flex flex-col gap-2">
-				<h3 class="m-0 text-base font-semibold text-contrast">
-					{{ formatMessage(messages.defaultSource) }}
-				</h3>
-				<RadioButtons v-model="curseforgeSettings.defaultSource" :items="[...sources]">
-					<template #default="{ item }">
-						{{ formatMessage(messages[item as (typeof sources)[number]]) }}
-					</template>
-				</RadioButtons>
-			</section>
+	<section class="border-0 border-b border-solid border-divider pb-6">
+		<div class="flex items-center justify-between gap-4">
+			<div>
+				<h2 id="curseforge-enabled-label" class="m-0 text-lg font-semibold text-contrast">
+					{{ formatMessage(messages.title) }}
+				</h2>
+				<p class="m-0 mt-1 text-secondary">
+					{{ formatMessage(curseforgeKeyAvailable ? messages.description : messages.noKey) }}
+				</p>
+			</div>
+			<Toggle
+				id="curseforge-enabled"
+				v-model="curseforgeSettings.enabled"
+				:disabled="!curseforgeKeyAvailable"
+				aria-labelledby="curseforge-enabled-label"
+			/>
+		</div>
+	</section>
 
-			<section class="flex flex-col gap-3">
-				<label class="flex items-center justify-between gap-4">
-					<span class="text-primary">{{ formatMessage(messages.recognizeFiles) }}</span>
-					<Toggle v-model="curseforgeSettings.recognizeFiles" />
-				</label>
-				<label class="flex items-center justify-between gap-4">
-					<span class="text-primary">{{ formatMessage(messages.checkUpdates) }}</span>
-					<Toggle v-model="curseforgeSettings.checkUpdates" />
-				</label>
-			</section>
+	<div :class="['transition-opacity', active ? '' : 'pointer-events-none opacity-50']">
+		<section class="mt-6">
+			<h2 class="m-0 text-xl font-semibold text-contrast">
+				{{ formatMessage(messages.discoverSection) }}
+			</h2>
+			<div class="mt-4 flex flex-wrap items-center justify-between gap-4">
+				<div class="min-w-0 flex-1">
+					<h3 id="curseforge-source-label" class="m-0 text-lg font-semibold text-contrast">
+						{{ formatMessage(messages.defaultSource) }}
+					</h3>
+					<p class="m-0 mt-1">{{ formatMessage(messages.defaultSourceDescription) }}</p>
+				</div>
+				<Combobox
+					v-model="curseforgeSettings.defaultSource"
+					:options="sourceOptions"
+					aria-labelledby="curseforge-source-label"
+					class="w-56"
+				/>
+			</div>
+		</section>
 
-			<section v-if="curseforgeSettings.checkUpdates" class="flex flex-col gap-2">
-				<h3 class="m-0 text-base font-semibold text-contrast">
-					{{ formatMessage(messages.releaseType) }}
-				</h3>
-				<RadioButtons v-model="curseforgeSettings.updateReleaseType" :items="releaseTypes">
-					<template #default="{ item }">
-						{{ formatMessage(messages[item as CurseforgeReleaseType]) }}
-					</template>
-				</RadioButtons>
-			</section>
+		<section class="mt-6">
+			<h2 class="m-0 text-xl font-semibold text-contrast">
+				{{ formatMessage(messages.filesSection) }}
+			</h2>
+			<div class="mt-4 flex flex-col gap-6">
+				<div class="flex items-center justify-between gap-4">
+					<div>
+						<h3 class="m-0 text-lg font-semibold text-contrast">
+							{{ formatMessage(messages.recognizeFilesTitle) }}
+						</h3>
+						<p class="m-0 mt-1">{{ formatMessage(messages.recognizeFiles) }}</p>
+					</div>
+					<Toggle id="curseforge-recognize" v-model="curseforgeSettings.recognizeFiles" />
+				</div>
+				<div class="flex items-center justify-between gap-4">
+					<div>
+						<h3 class="m-0 text-lg font-semibold text-contrast">
+							{{ formatMessage(messages.checkUpdatesTitle) }}
+						</h3>
+						<p class="m-0 mt-1">{{ formatMessage(messages.checkUpdates) }}</p>
+					</div>
+					<Toggle id="curseforge-updates" v-model="curseforgeSettings.checkUpdates" />
+				</div>
+				<div
+					:class="[
+						'flex flex-wrap items-center justify-between gap-4',
+						curseforgeSettings.checkUpdates ? '' : 'pointer-events-none opacity-50',
+					]"
+				>
+					<div class="min-w-0 flex-1">
+						<h3 id="curseforge-release-label" class="m-0 text-lg font-semibold text-contrast">
+							{{ formatMessage(messages.releaseType) }}
+						</h3>
+						<p class="m-0 mt-1">{{ formatMessage(messages.releaseTypeDescription) }}</p>
+					</div>
+					<Combobox
+						v-model="curseforgeSettings.updateReleaseType"
+						:options="releaseTypeOptions"
+						aria-labelledby="curseforge-release-label"
+						class="w-56"
+					/>
+				</div>
+			</div>
+		</section>
 
-			<section class="flex flex-col gap-3">
-				<label class="flex items-center justify-between gap-4">
-					<span class="text-primary">{{ formatMessage(messages.searchOtherLaunchers) }}</span>
-					<Toggle v-model="curseforgeSettings.searchOtherLaunchers" />
-				</label>
-			</section>
+		<section class="mt-6">
+			<h2 class="m-0 text-xl font-semibold text-contrast">
+				{{ formatMessage(messages.restrictedSection) }}
+			</h2>
+			<div class="mt-4 flex items-center justify-between gap-4">
+				<div>
+					<h3 class="m-0 text-lg font-semibold text-contrast">
+						{{ formatMessage(messages.searchOtherLaunchersTitle) }}
+					</h3>
+					<p class="m-0 mt-1">{{ formatMessage(messages.searchOtherLaunchers) }}</p>
+				</div>
+				<Toggle id="curseforge-other-launchers" v-model="curseforgeSettings.searchOtherLaunchers" />
+			</div>
+		</section>
+	</div>
 
-			<section class="flex flex-wrap items-center gap-3">
-				<Button @click="clearCache">
-					<TrashIcon aria-hidden="true" />
-					{{ formatMessage(messages.clearCache) }}
-				</Button>
-				<span v-if="cleared" class="flex items-center gap-1.5 text-sm text-green">
-					<CheckIcon class="size-4 shrink-0" aria-hidden="true" />
-					{{ formatMessage(messages.cleared) }}
-				</span>
-				<span v-else class="text-sm text-secondary">
-					{{ formatMessage(messages.clearCacheHint) }}
-				</span>
-			</section>
-		</template>
-	</SettingsToggleCard>
-
-	<section class="mt-4 flex flex-col gap-2">
-		<label for="noctrinth-curseforge-key" class="text-base font-semibold text-contrast">
-			{{ formatMessage(messages.ownKey) }}
-		</label>
-		<p class="m-0 text-sm text-secondary">
+	<section class="mt-6">
+		<h2 class="m-0 text-xl font-semibold text-contrast">
+			<label for="noctrinth-curseforge-key">{{ formatMessage(messages.ownKey) }}</label>
+		</h2>
+		<p class="m-0 mt-1">
 			{{ formatMessage(messages.ownKeyHint) }}
 			<a
 				href="https://console.curseforge.com/"
@@ -246,34 +318,58 @@ async function clearCache() {
 				>console.curseforge.com</a
 			>
 		</p>
-		<Input
-			id="noctrinth-curseforge-key"
-			v-model="keyInput"
-			type="password"
-			autocomplete="off"
-			class="max-w-md"
-			:placeholder="hasUserCurseforgeKey ? formatMessage(messages.ownKeyPlaceholder) : ''"
-			@update:model-value="keyResult = null"
-		/>
-		<div class="flex flex-wrap items-center gap-3">
-			<Button :disabled="checking || (!keyInput.trim() && !hasUserCurseforgeKey)" @click="checkKey">
-				<SpinnerIcon v-if="checking" class="animate-spin" aria-hidden="true" />
-				<CheckIcon v-else aria-hidden="true" />
-				{{ formatMessage(keyInput.trim() ? messages.checkAndSave : messages.check) }}
+		<div class="mt-4 flex flex-col gap-3">
+			<Input
+				id="noctrinth-curseforge-key"
+				v-model="keyInput"
+				type="password"
+				autocomplete="off"
+				class="max-w-md"
+				:placeholder="hasUserCurseforgeKey ? formatMessage(messages.ownKeyPlaceholder) : ''"
+				@update:model-value="keyResult = null"
+			/>
+			<div class="flex flex-wrap items-center gap-3">
+				<Button
+					:disabled="checking || (!keyInput.trim() && !hasUserCurseforgeKey)"
+					@click="checkKey"
+				>
+					<SpinnerIcon v-if="checking" class="animate-spin" aria-hidden="true" />
+					<CheckIcon v-else aria-hidden="true" />
+					{{ formatMessage(keyInput.trim() ? messages.checkAndSave : messages.check) }}
+				</Button>
+				<Button v-if="hasUserCurseforgeKey" :disabled="checking" @click="forgetKey">
+					<UndoIcon aria-hidden="true" />
+					{{ formatMessage(messages.forget) }}
+				</Button>
+				<span
+					v-if="keyResult"
+					class="flex items-center gap-1.5 text-sm"
+					:class="keyResult.ok ? 'text-green' : 'text-red'"
+				>
+					<CheckIcon v-if="keyResult.ok" class="size-4 shrink-0" aria-hidden="true" />
+					<XIcon v-else class="size-4 shrink-0" aria-hidden="true" />
+					{{ keyResult.text }}
+				</span>
+			</div>
+		</div>
+	</section>
+
+	<section :class="['mt-6', active ? '' : 'pointer-events-none opacity-50']">
+		<h2 class="m-0 text-xl font-semibold text-contrast">
+			{{ formatMessage(messages.cacheTitle) }}
+		</h2>
+		<div class="mt-4 flex flex-wrap items-center justify-between gap-4">
+			<p class="m-0 min-w-0 flex-1">
+				<span v-if="cleared" class="inline-flex items-center gap-1.5 text-green">
+					<CheckIcon class="size-4 shrink-0" aria-hidden="true" />
+					{{ formatMessage(messages.cleared) }}
+				</span>
+				<template v-else>{{ formatMessage(messages.clearCacheHint) }}</template>
+			</p>
+			<Button @click="clearCache">
+				<TrashIcon aria-hidden="true" />
+				{{ formatMessage(messages.clearCache) }}
 			</Button>
-			<Button v-if="hasUserCurseforgeKey" :disabled="checking" @click="forgetKey">
-				<UndoIcon aria-hidden="true" />
-				{{ formatMessage(messages.forget) }}
-			</Button>
-			<span
-				v-if="keyResult"
-				class="flex items-center gap-1.5 text-sm"
-				:class="keyResult.ok ? 'text-green' : 'text-red'"
-			>
-				<CheckIcon v-if="keyResult.ok" class="size-4 shrink-0" aria-hidden="true" />
-				<XIcon v-else class="size-4 shrink-0" aria-hidden="true" />
-				{{ keyResult.text }}
-			</span>
 		</div>
 	</section>
 </template>

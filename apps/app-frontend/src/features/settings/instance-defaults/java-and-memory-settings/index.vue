@@ -66,11 +66,13 @@ const messages = defineMessages({
 
 <template>
 	<div class="flex flex-col gap-6">
+		<section class="border-0 border-b border-solid border-divider pb-6">
+			<JavaProviderSetting />
+		</section>
 		<section class="flex flex-col gap-4">
 			<h2 class="m-0 text-xl font-semibold text-contrast">
 				{{ formatMessage(messages.javaInstallationsTitle) }}
 			</h2>
-			<JavaProviderSetting />
 			<JavaInstallations />
 		</section>
 		<div class="flex flex-col gap-6 border-0 border-t border-solid border-surface-5 pt-6">

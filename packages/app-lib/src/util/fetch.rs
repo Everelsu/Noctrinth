@@ -431,9 +431,195 @@ fn reqwest_client_builder() -> reqwest::ClientBuilder {
                 tracing::warn!("Ignoring invalid proxy URL {url}: {e}")
             }
         }
+    } else if !env_names_a_proxy() {
+        // Noctrinth's own: reqwest reads the system proxy once, when a
+        // client is built, and these clients live as long as the launcher.
+        // A VPN turned off after the launcher started left every request
+        // going to its dead local proxy; one turned on afterwards was never
+        // used. The system proxy is asked per request instead.
+        #[cfg(windows)]
+        {
+            builder = builder
+                .no_proxy()
+                .proxy(reqwest::Proxy::custom(windows_proxy::proxy_for));
+        }
     }
 
     builder
+}
+
+/// Whether the environment names a proxy, which reqwest then uses as it
+/// always has.
+fn env_names_a_proxy() -> bool {
+    [
+        "HTTPS_PROXY",
+        "https_proxy",
+        "ALL_PROXY",
+        "all_proxy",
+        "HTTP_PROXY",
+        "http_proxy",
+    ]
+    .into_iter()
+    .any(|name| std::env::var(name).is_ok_and(|url| !url.trim().is_empty()))
+}
+
+/// Noctrinth's own: the Windows system proxy (the one VPN clients such as
+/// v2rayN switch on and off), read from the registry every few seconds.
+#[cfg(windows)]
+mod windows_proxy {
+    use std::sync::LazyLock;
+    use std::time::{Duration, Instant};
+
+    use parking_lot::Mutex;
+
+    const REFRESH: Duration = Duration::from_secs(3);
+
+    #[derive(Clone, Debug, Default, PartialEq, Eq)]
+    pub struct SystemProxy {
+        pub http: Option<String>,
+        pub https: Option<String>,
+        pub bypass: Vec<String>,
+    }
+
+    static CURRENT: LazyLock<Mutex<(Option<Instant>, Option<SystemProxy>)>> =
+        LazyLock::new(|| Mutex::new((None, None)));
+
+    fn read() -> Option<SystemProxy> {
+        let key = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER)
+            .open_subkey(
+                r"Software\Microsoft\Windows\CurrentVersion\Internet Settings",
+            )
+            .ok()?;
+        let enabled: u32 = key.get_value("ProxyEnable").ok()?;
+        if enabled == 0 {
+            return None;
+        }
+        let server: String = key.get_value("ProxyServer").ok()?;
+        let bypass: String = key.get_value("ProxyOverride").unwrap_or_default();
+        parse(&server, &bypass)
+    }
+
+    /// `host:port` for every scheme, or `http=host:port;https=host:port;
+    /// socks=host:port` per scheme, as Windows stores it.
+    pub fn parse(server: &str, bypass: &str) -> Option<SystemProxy> {
+        let with_scheme = |address: &str, scheme: &str| {
+            let address = address.trim();
+            (!address.is_empty()).then(|| {
+                if address.contains("://") {
+                    address.to_string()
+                } else {
+                    format!("{scheme}://{address}")
+                }
+            })
+        };
+        let mut proxy = SystemProxy {
+            bypass: bypass
+                .split(';')
+                .map(|entry| entry.trim().to_ascii_lowercase())
+                .filter(|entry| !entry.is_empty())
+                .collect(),
+            ..SystemProxy::default()
+        };
+        if server.contains('=') {
+            let mut socks = None;
+            for part in server.split(';') {
+                let Some((scheme, address)) = part.split_once('=') else {
+                    continue;
+                };
+                match scheme.trim().to_ascii_lowercase().as_str() {
+                    "http" => proxy.http = with_scheme(address, "http"),
+                    "https" => proxy.https = with_scheme(address, "http"),
+                    "socks" => socks = with_scheme(address, "socks5"),
+                    _ => {}
+                }
+            }
+            proxy.http = proxy.http.or_else(|| socks.clone());
+            proxy.https = proxy.https.or(socks);
+        } else {
+            proxy.http = with_scheme(server, "http");
+            proxy.https = proxy.http.clone();
+        }
+        (proxy.http.is_some() || proxy.https.is_some()).then_some(proxy)
+    }
+
+    /// Whether a host is on the bypass list: Windows' own `<local>` (names
+    /// without a dot), plain names, and `*` patterns. Loopback never goes
+    /// through a proxy.
+    pub fn bypassed(host: &str, bypass: &[String]) -> bool {
+        let host = host.to_ascii_lowercase();
+        if host == "localhost" || host.starts_with("127.") || host == "[::1]" {
+            return true;
+        }
+        bypass.iter().any(|entry| {
+            if entry == "<local>" {
+                return !host.contains('.');
+            }
+            match entry.split_once('*') {
+                Some((prefix, suffix)) => {
+                    host.len() >= prefix.len() + suffix.len()
+                        && host.starts_with(prefix)
+                        && host.ends_with(suffix)
+                }
+                None => host == *entry,
+            }
+        })
+    }
+
+    fn current() -> Option<SystemProxy> {
+        let mut current = CURRENT.lock();
+        if current.0.is_none_or(|at| at.elapsed() >= REFRESH) {
+            *current = (Some(Instant::now()), read());
+        }
+        current.1.clone()
+    }
+
+    pub fn proxy_for(url: &reqwest::Url) -> Option<String> {
+        let proxy = current()?;
+        if bypassed(url.host_str()?, &proxy.bypass) {
+            return None;
+        }
+        match url.scheme() {
+            "https" => proxy.https.or(proxy.http),
+            _ => proxy.http,
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn reads_one_address_for_every_scheme() {
+            let proxy =
+                parse("127.0.0.1:10809", "localhost;127.*;<local>").unwrap();
+            assert_eq!(proxy.http.as_deref(), Some("http://127.0.0.1:10809"));
+            assert_eq!(proxy.https.as_deref(), Some("http://127.0.0.1:10809"));
+        }
+
+        #[test]
+        fn reads_addresses_per_scheme() {
+            let proxy =
+                parse("http=10.0.0.1:8080;https=10.0.0.1:8443", "").unwrap();
+            assert_eq!(proxy.http.as_deref(), Some("http://10.0.0.1:8080"));
+            assert_eq!(proxy.https.as_deref(), Some("http://10.0.0.1:8443"));
+            let socks = parse("socks=127.0.0.1:1080", "").unwrap();
+            assert_eq!(socks.https.as_deref(), Some("socks5://127.0.0.1:1080"));
+            assert_eq!(parse("", ""), None);
+        }
+
+        #[test]
+        fn honours_the_bypass_list() {
+            let bypass = parse("1.2.3.4:1", "*.local;10.*;<local>;example.org")
+                .unwrap()
+                .bypass;
+            assert!(bypassed("printer.local", &bypass));
+            assert!(bypassed("10.1.2.3", &bypass));
+            assert!(bypassed("intranet", &bypass));
+            assert!(bypassed("example.org", &bypass));
+            assert!(bypassed("localhost", &bypass));
+            assert!(!bypassed("api.modrinth.com", &bypass));
+        }
+    }
 }
 
 pub static INSECURE_REQWEST_CLIENT: LazyLock<reqwest::Client> =

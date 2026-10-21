@@ -81,7 +81,7 @@ async function updateJavaVersion(version) {
 			</div>
 		</div>
 
-		<hr class="my-2 bg-button-border border-none h-[1px]" />
+		<hr class="my-2 h-px border-none bg-divider" />
 
 		<Suspense>
 			<JavaRuntimeManager :key="runtimeManagerKey" @changed="reloadJavaVersions" />

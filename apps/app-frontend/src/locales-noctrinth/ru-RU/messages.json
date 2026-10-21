@@ -2024,8 +2024,14 @@
 	"noctrinth.settings.splash-cube.title": {
 		"message": "Куб на заставке"
 	},
+	"noctrinth.settings.curseforge.cache.title": {
+		"message": "Кэш"
+	},
 	"noctrinth.settings.curseforge.check-updates": {
 		"message": "Проверять обновления модов и сборок с CurseForge"
+	},
+	"noctrinth.settings.curseforge.check-updates.title": {
+		"message": "Проверять обновления"
 	},
 	"noctrinth.settings.curseforge.clear-cache": {
 		"message": "Сбросить кэш CurseForge"
@@ -2038,6 +2044,9 @@
 	},
 	"noctrinth.settings.curseforge.default-source": {
 		"message": "Обзор открывается на"
+	},
+	"noctrinth.settings.curseforge.default-source.description": {
+		"message": "Какой каталог «Обзор» показывает первым. Переключатель над результатами меняет его в любой момент."
 	},
 	"noctrinth.settings.curseforge.description": {
 		"message": "Обзор и установка с CurseForge, распознавание его файлов в сборках и их обновление. Если выключить, лаунчер ничего не спрашивает у CurseForge."
@@ -2078,6 +2087,9 @@
 	"noctrinth.settings.curseforge.recognize-files": {
 		"message": "Распознавать моды, добавленные вручную или из других лаунчеров, по отпечатку файла"
 	},
+	"noctrinth.settings.curseforge.recognize-files.title": {
+		"message": "Распознавать файлы"
+	},
 	"noctrinth.settings.curseforge.release-type": {
 		"message": "Обновлять до"
 	},
@@ -2087,11 +2099,26 @@
 	"noctrinth.settings.curseforge.release-type.beta": {
 		"message": "Релизов и бет"
 	},
+	"noctrinth.settings.curseforge.release-type.description": {
+		"message": "Какие файлы считаются обновлением."
+	},
 	"noctrinth.settings.curseforge.release-type.release": {
 		"message": "Только релизов"
 	},
 	"noctrinth.settings.curseforge.search-other-launchers": {
-		"message": "Искать файлы, закрытые для лаунчеров, и в сборках других лаунчеров, а не только в «Загрузках»"
+		"message": "Искать файлы, закрытые для загрузки, и в сборках других лаунчеров, а не только в «Загрузках»"
+	},
+	"noctrinth.settings.curseforge.search-other-launchers.title": {
+		"message": "Искать в других лаунчерах"
+	},
+	"noctrinth.settings.curseforge.section.discover": {
+		"message": "Обзор"
+	},
+	"noctrinth.settings.curseforge.section.files": {
+		"message": "Файлы и обновления"
+	},
+	"noctrinth.settings.curseforge.section.restricted": {
+		"message": "Файлы, закрытые для загрузки"
 	},
 	"noctrinth.settings.curseforge.source.curseforge": {
 		"message": "CurseForge"
@@ -2103,7 +2130,10 @@
 		"message": "CurseForge"
 	},
 	"noctrinth.settings.java-provider.auto": {
-		"message": "Автоматически: Azul, затем Temurin, затем Mojang, затем зеркало BMCLAPI"
+		"message": "Автоматически"
+	},
+	"noctrinth.settings.java-provider.auto-hint": {
+		"message": "Пробует Azul, затем Temurin, затем Temurin с GitHub, затем Mojang, затем Mojang через зеркало BMCLAPI и останавливается на первом, кто ответил. GitHub обычно доступен там, где остальные заблокированы."
 	},
 	"noctrinth.settings.java-provider.azul": {
 		"message": "Azul Zulu"
@@ -2112,13 +2142,16 @@
 		"message": "Откуда лаунчер берёт Java, когда сборке нужна версия, которой ещё нет. Каждая загрузка сверяется с контрольной суммой, которую публикует источник."
 	},
 	"noctrinth.settings.java-provider.mojang": {
-		"message": "Mojang — та же Java, что у официального лаунчера"
+		"message": "Mojang"
 	},
 	"noctrinth.settings.java-provider.mojang-mirror": {
-		"message": "Java от Mojang через зеркало BMCLAPI (сторонний сервис)"
+		"message": "Mojang через BMCLAPI (стороннее зеркало)"
 	},
 	"noctrinth.settings.java-provider.temurin": {
 		"message": "Eclipse Temurin"
+	},
+	"noctrinth.settings.java-provider.temurin-github": {
+		"message": "Eclipse Temurin с GitHub"
 	},
 	"noctrinth.settings.java-provider.title": {
 		"message": "Откуда скачивать Java"

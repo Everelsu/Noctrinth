@@ -2,9 +2,11 @@
 //!
 //! Upstream only knows Azul, and Azul is not reachable everywhere — Java was
 //! reported not installing at all from Russia. A runtime can also come from
-//! Eclipse Temurin, from Mojang's own runtimes (the ones the official launcher
-//! ships), or from those through the BMCLAPI mirror. By default each is tried
-//! in that order until one works; the settings can pin one.
+//! Eclipse Temurin (through its own API, or straight from its GitHub releases,
+//! which stay reachable where the API is not), from Mojang's own runtimes (the
+//! ones the official launcher ships), or from those through the BMCLAPI
+//! mirror. By default each is tried in that order until one works; the
+//! settings can pin one.
 //!
 //! Every download is checked against the checksum its provider publishes:
 //! SHA-256 for Azul and Temurin archives, SHA-1 for each of Mojang's files.
@@ -25,6 +27,8 @@ use crate::util::io;
 pub enum JavaProvider {
     Azul,
     Temurin,
+    /// Temurin's releases on GitHub, without its API.
+    TemurinGithub,
     Mojang,
     /// Mojang's runtimes, fetched through BMCLAPI.
     MojangMirror,
@@ -32,14 +36,20 @@ pub enum JavaProvider {
 
 impl JavaProvider {
     /// The order tried when the settings leave the choice to the launcher.
-    pub const AUTO_ORDER: [Self; 4] =
-        [Self::Azul, Self::Temurin, Self::Mojang, Self::MojangMirror];
+    pub const AUTO_ORDER: [Self; 5] = [
+        Self::Azul,
+        Self::Temurin,
+        Self::TemurinGithub,
+        Self::Mojang,
+        Self::MojangMirror,
+    ];
 
     /// The value the settings store for it.
     pub fn key(self) -> &'static str {
         match self {
             Self::Azul => "azul",
             Self::Temurin => "temurin",
+            Self::TemurinGithub => "temurin-github",
             Self::Mojang => "mojang",
             Self::MojangMirror => "mojang-mirror",
         }
@@ -49,6 +59,7 @@ impl JavaProvider {
         match self {
             Self::Azul => "Azul Zulu",
             Self::Temurin => "Eclipse Temurin",
+            Self::TemurinGithub => "Eclipse Temurin (GitHub)",
             Self::Mojang => "Mojang",
             Self::MojangMirror => "Mojang (BMCLAPI)",
         }
@@ -127,6 +138,9 @@ pub async fn resolve(
     match provider {
         JavaProvider::Azul => resolve_azul(java_version, state).await,
         JavaProvider::Temurin => resolve_temurin(java_version, state).await,
+        JavaProvider::TemurinGithub => {
+            resolve_temurin_github(java_version, state).await
+        }
         JavaProvider::Mojang => {
             resolve_mojang(java_version, false, state).await
         }
@@ -177,7 +191,8 @@ async fn resolve_azul(
         }))
 }
 
-fn temurin_url(java_version: u32) -> Option<String> {
+/// How Temurin names this machine: (os, architecture).
+fn temurin_platform() -> Option<(&'static str, &'static str)> {
     let os = match std::env::consts::OS {
         "windows" => "windows",
         "linux" => "linux",
@@ -190,6 +205,11 @@ fn temurin_url(java_version: u32) -> Option<String> {
         "aarch64" => "aarch64",
         _ => return None,
     };
+    Some((os, arch))
+}
+
+fn temurin_url(java_version: u32) -> Option<String> {
+    let (os, arch) = temurin_platform()?;
     Some(format!(
         "https://api.adoptium.net/v3/assets/latest/{java_version}/hotspot?architecture={arch}&image_type=jre&os={os}&vendor=eclipse"
     ))
@@ -238,6 +258,100 @@ async fn resolve_temurin(
                 tar_gz,
             },
         )
+    }))
+}
+
+/// Temurin's JRE archive for this machine among a release's assets, by its
+/// name: `OpenJDK21U-jre_x64_windows_hotspot_21.0.5_11.zip`. Installers
+/// (`.msi`, `.pkg`) and the files beside an archive are not it.
+fn temurin_archive<'a>(
+    names: impl IntoIterator<Item = &'a str>,
+    java_version: u32,
+    os: &str,
+    arch: &str,
+) -> Option<&'a str> {
+    let prefix = format!("OpenJDK{java_version}U-jre_{arch}_{os}_hotspot_");
+    names.into_iter().find(|name| {
+        name.starts_with(&prefix)
+            && (name.ends_with(".zip") || name.ends_with(".tar.gz"))
+    })
+}
+
+async fn resolve_temurin_github(
+    java_version: u32,
+    state: &State,
+) -> crate::Result<Option<JavaDownload>> {
+    #[derive(Deserialize)]
+    struct Release {
+        assets: Vec<Asset>,
+    }
+    #[derive(Deserialize)]
+    struct Asset {
+        name: String,
+        browser_download_url: String,
+    }
+
+    let Some((os, arch)) = temurin_platform() else {
+        return Ok(None);
+    };
+    let release = fetch_json::<Release>(
+        Method::GET,
+        &format!(
+            "https://api.github.com/repos/adoptium/temurin{java_version}-binaries/releases/latest"
+        ),
+        None,
+        None,
+        None,
+        &state.fetch_semaphore,
+        &state.pool,
+    )
+    .await?;
+    let Some(name) = temurin_archive(
+        release.assets.iter().map(|asset| asset.name.as_str()),
+        java_version,
+        os,
+        arch,
+    ) else {
+        return Ok(None);
+    };
+    let url_of = |name: &str| {
+        release
+            .assets
+            .iter()
+            .find(|asset| asset.name == name)
+            .map(|asset| asset.browser_download_url.clone())
+    };
+    let Some(url) = url_of(name) else {
+        return Ok(None);
+    };
+    // The checksum is published beside the archive as `<name>.sha256.txt`:
+    // the hash, then the file name.
+    let sha256 = match url_of(&format!("{name}.sha256.txt")) {
+        Some(checksum_url) => {
+            let checksum = fetch_advanced(
+                Method::GET,
+                &checksum_url,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                &state.fetch_semaphore,
+                &state.pool,
+            )
+            .await?;
+            String::from_utf8_lossy(&checksum)
+                .split_whitespace()
+                .next()
+                .map(str::to_string)
+        }
+        None => None,
+    };
+    Ok(Some(JavaDownload::Archive {
+        tar_gz: name.ends_with(".tar.gz"),
+        url,
+        sha256,
     }))
 }
 
@@ -639,6 +753,35 @@ mod tests {
         for provider in JavaProvider::AUTO_ORDER {
             assert_eq!(JavaProvider::from_key(provider.key()), Some(provider));
         }
+    }
+
+    #[test]
+    fn finds_temurins_jre_archive_among_release_assets() {
+        let names = [
+            "OpenJDK26U-jre_x64_windows_hotspot_26.0.2.1_1.msi",
+            "OpenJDK26U-jre_x64_windows_hotspot_26.0.2.1_1.zip.sha256.txt",
+            "OpenJDK26U-jdk_x64_windows_hotspot_26.0.2.1_1.zip",
+            "OpenJDK26U-jre_x64_windows_hotspot_26.0.2.1_1.zip",
+            "OpenJDK26U-jre_x64_linux_hotspot_26.0.2.1_1.tar.gz",
+        ];
+        assert_eq!(
+            temurin_archive(names, 26, "windows", "x64"),
+            Some("OpenJDK26U-jre_x64_windows_hotspot_26.0.2.1_1.zip")
+        );
+        assert_eq!(
+            temurin_archive(names, 26, "linux", "x64"),
+            Some("OpenJDK26U-jre_x64_linux_hotspot_26.0.2.1_1.tar.gz")
+        );
+        assert_eq!(temurin_archive(names, 26, "mac", "aarch64"), None);
+        assert_eq!(
+            temurin_archive(
+                ["OpenJDK8U-jre_x64_windows_hotspot_8u482b08.zip"],
+                8,
+                "windows",
+                "x64"
+            ),
+            Some("OpenJDK8U-jre_x64_windows_hotspot_8u482b08.zip")
+        );
     }
 
     #[test]

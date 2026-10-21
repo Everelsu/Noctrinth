@@ -7,6 +7,24 @@ use derive_more::Display;
 use serde::{Deserialize, Serialize};
 use tracing_error::InstrumentError;
 
+/// Noctrinth's own: an error with every cause under it. reqwest's own message
+/// stops at "error sending request for url (...)"; the reason — a name that
+/// did not resolve, a refused connection, a proxy that is gone, a TLS
+/// handshake cut short — is only in its sources.
+fn with_sources(error: &dyn std::error::Error) -> String {
+    let mut message = error.to_string();
+    let mut source = error.source();
+    while let Some(cause) = source {
+        let cause_message = cause.to_string();
+        if !message.contains(&cause_message) {
+            message.push_str(": ");
+            message.push_str(&cause_message);
+        }
+        source = cause.source();
+    }
+    message
+}
+
 #[derive(Serialize, Deserialize, Debug, Display)]
 #[display("{description}")]
 pub struct LabrinthError {
@@ -98,7 +116,7 @@ pub enum ErrorKind {
     #[error("Error launching Minecraft: {0}")]
     LauncherError(String),
 
-    #[error("Error fetching URL: {0}")]
+    #[error("Error fetching URL: {}", with_sources(.0))]
     FetchError(#[from] reqwest::Error),
 
     #[error("Too many API errors, try again in {0} minutes")]

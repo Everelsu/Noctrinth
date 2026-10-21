@@ -119,7 +119,8 @@ const SCENES = {
 			),
 			// Search and the source switch, set to CurseForge.
 			`<rect x="360" y="150" width="760" height="64" rx="32" fill="#fff" fill-opacity="0.07" stroke="#fff" stroke-opacity="0.12" stroke-width="3"/>`,
-			`<circle cx="400" cy="182" r="13" fill="none" stroke="#fff" stroke-opacity="0.35" stroke-width="5"/>`,
+			`<circle cx="398" cy="180" r="12" fill="none" stroke="#fff" stroke-opacity="0.35" stroke-width="5"/>`,
+			`<line x1="407" y1="189" x2="416" y2="198" stroke="#fff" stroke-opacity="0.35" stroke-width="5" stroke-linecap="round"/>`,
 			bar(432, 170, 300, 24, '#fff', 0.16),
 			`<rect x="1160" y="150" width="520" height="64" rx="32" fill="#fff" fill-opacity="0.06" stroke="#fff" stroke-opacity="0.12" stroke-width="3"/>`,
 			`<circle cx="1206" cy="182" r="13" fill="#3bd16f" fill-opacity="0.75"/>`,
@@ -128,8 +129,9 @@ const SCENES = {
 			`<circle cx="1462" cy="182" r="13" fill="#2a0e05" fill-opacity="0.55"/>`,
 			bar(1488, 170, 160, 24, '#2a0e05', 0.55),
 		]
-		// Project cards, two rows of three, with CurseForge's orange icons.
-		const tints = ['#f16436', '#ff8a4c', '#e2502a', '#ff9f66', '#f47a3c', '#d9441f']
+		// Project cards, two rows of three, with CurseForge's orange icons; the
+		// last place in the grid goes to the returning arrow.
+		const tints = ['#f16436', '#ff8a4c', '#e2502a', '#ff9f66', '#f47a3c']
 		tints.forEach((tint, k) => {
 			const x = 360 + (k % 3) * 445
 			const y = 270 + Math.floor(k / 3) * 300
@@ -143,20 +145,37 @@ const SCENES = {
 				`<rect x="${x + 276}" y="${y + 210}" width="116" height="40" rx="20" fill="#c78aff" fill-opacity="${k === 1 ? 0.95 : 0.5}"/>`,
 			)
 		})
-		// The returning arrow: an orange ring, nearly closed, with its head.
-		const cx = 1560
-		const cy = 900
-		const r = 150
-		const start = (-60 * Math.PI) / 180
-		const end = (225 * Math.PI) / 180
-		const sx = cx + r * Math.cos(start)
-		const sy = cy + r * Math.sin(start)
-		const ex = cx + r * Math.cos(end)
-		const ey = cy + r * Math.sin(end)
+		// The returning arrow, in the grid's sixth place: an orange ring that
+		// runs clockwise most of the way round and ends in its own head, the
+		// head set on the ring's end and pointing along it.
+		const tile = { x: 1250, y: 570, w: 420, h: 270 }
+		const cx = tile.x + tile.w / 2
+		const cy = tile.y + tile.h / 2
+		const r = 82
+		const stroke = 28
+		const degrees = (d) => (d * Math.PI) / 180
+		const at = (angle, radius = r) => [
+			cx + radius * Math.cos(angle),
+			cy + radius * Math.sin(angle),
+		]
+		const from = degrees(-35)
+		const to = degrees(235)
+		const [sx, sy] = at(from)
+		const [ex, ey] = at(to)
+		// Travelling clockwise, the way on is the tangent (-sin, cos); the head
+		// spans the ring's width either side of it.
+		const forward = [-Math.sin(to), Math.cos(to)]
+		const length = 46
+		const half = 34
+		const tip = [ex + forward[0] * length, ey + forward[1] * length]
+		const outer = at(to, r + half)
+		const inner = at(to, r - half)
+		const point = ([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`
 		parts.push(
-			`<circle cx="${cx}" cy="${cy}" r="${r + 70}" fill="#17111f" fill-opacity="0.75" stroke="#fff" stroke-opacity="0.14" stroke-width="3"/>`,
-			`<path d="M ${sx.toFixed(1)} ${sy.toFixed(1)} A ${r} ${r} 0 1 1 ${ex.toFixed(1)} ${ey.toFixed(1)}" fill="none" stroke="url(#ember)" stroke-width="44" stroke-linecap="round"/>`,
-			`<polygon points="${(sx + 6).toFixed(1)},${(sy - 70).toFixed(1)} ${(sx + 78).toFixed(1)},${(sy + 22).toFixed(1)} ${(sx - 34).toFixed(1)},${(sy + 34).toFixed(1)}" fill="${orange}"/>`,
+			`<rect x="${tile.x}" y="${tile.y}" width="${tile.w}" height="${tile.h}" rx="28" fill="${orange}" fill-opacity="0.12" stroke="${orange}" stroke-opacity="0.45" stroke-width="3"/>`,
+			`<circle cx="${cx}" cy="${cy}" r="${r + 44}" fill="${orange}" fill-opacity="0.1"/>`,
+			`<path d="M ${point([sx, sy]).replace(',', ' ')} A ${r} ${r} 0 1 1 ${point([ex, ey]).replace(',', ' ')}" fill="none" stroke="url(#ember)" stroke-width="${stroke}" stroke-linecap="round"/>`,
+			`<polygon points="${point(outer)} ${point(tip)} ${point(inner)}" fill="#ff8a4c" stroke="#ff8a4c" stroke-width="6" stroke-linejoin="round"/>`,
 		)
 		return parts.join('')
 	},

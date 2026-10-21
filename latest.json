@@ -1,43 +1,43 @@
 {
-  "version": "0.21.9",
-  "notes": "noctrinth-patch:2",
-  "pub_date": "2026-10-16T04:10:38.532Z",
+  "version": "0.21.10",
+  "notes": "noctrinth-patch:0",
+  "pub_date": "2026-10-21T02:01:23.992Z",
   "platforms": {
     "linux-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRRlZhNHpvK054Y0lobDVnVkJ1K2hvWlFjenEwS2lwS3ZSdGM2ZkVsNWlKYVNLN0ZFbUp1QUJzVit4YlB0SHpuN2h4cTZTdVNUTXc5NG1iemNNdjA4aEx4V0ZrZ1NHTVFFPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyMTIyNDM4CWZpbGU6Tm9jdHJpbnRoXzAuMjEuOV9hbWQ2NC5BcHBJbWFnZQpBMzlGaTYvUjhqZG15L2pwWExsdTBSck9zNUE2WkdwOVhoVGpQL01JTFVDcDNRYVF0UzdDVHpCekl3bjE3SkE2QUUzVmVJeVBsK0RMZWQ2TTR1S0tEZz09Cg==",
-      "url": "https://github.com/Everelsu/Noctrinth/releases/download/v0.21.9/Noctrinth_0.21.9_amd64.AppImage"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRRlZhNHpvK054Y0kzd2tSWUN1MytRYXVYWWxONlJyR1hsOFNBODRvQWQzc25NaktLMHYvbWtwTlUwUjIwMi9ZRDFiR1B4clk5UnpxQUorTFZYSGNEdTVpWGFuZk1sdWdVPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyNTQ2OTkzCWZpbGU6Tm9jdHJpbnRoXzAuMjEuMTBfYW1kNjQuQXBwSW1hZ2UKdTBBSFNKWHkvMzVlQ3FlL2FpTFhUaGh4eFMvcTZlNEhVVUh4SUkxK1NsTUNiZnZ6dVZ0V09GbU5jUHp1R1RhdmVzTmdqYjFGN0ZObm5zZ2llSGU0QVE9PQo=",
+      "url": "https://github.com/Everelsu/Noctrinth/releases/download/v0.21.10/Noctrinth_0.21.10_amd64.AppImage"
     },
     "linux-x86_64-appimage": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRRlZhNHpvK054Y0lobDVnVkJ1K2hvWlFjenEwS2lwS3ZSdGM2ZkVsNWlKYVNLN0ZFbUp1QUJzVit4YlB0SHpuN2h4cTZTdVNUTXc5NG1iemNNdjA4aEx4V0ZrZ1NHTVFFPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyMTIyNDM4CWZpbGU6Tm9jdHJpbnRoXzAuMjEuOV9hbWQ2NC5BcHBJbWFnZQpBMzlGaTYvUjhqZG15L2pwWExsdTBSck9zNUE2WkdwOVhoVGpQL01JTFVDcDNRYVF0UzdDVHpCekl3bjE3SkE2QUUzVmVJeVBsK0RMZWQ2TTR1S0tEZz09Cg==",
-      "url": "https://github.com/Everelsu/Noctrinth/releases/download/v0.21.9/Noctrinth_0.21.9_amd64.AppImage"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRRlZhNHpvK054Y0kzd2tSWUN1MytRYXVYWWxONlJyR1hsOFNBODRvQWQzc25NaktLMHYvbWtwTlUwUjIwMi9ZRDFiR1B4clk5UnpxQUorTFZYSGNEdTVpWGFuZk1sdWdVPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyNTQ2OTkzCWZpbGU6Tm9jdHJpbnRoXzAuMjEuMTBfYW1kNjQuQXBwSW1hZ2UKdTBBSFNKWHkvMzVlQ3FlL2FpTFhUaGh4eFMvcTZlNEhVVUh4SUkxK1NsTUNiZnZ6dVZ0V09GbU5jUHp1R1RhdmVzTmdqYjFGN0ZObm5zZ2llSGU0QVE9PQo=",
+      "url": "https://github.com/Everelsu/Noctrinth/releases/download/v0.21.10/Noctrinth_0.21.10_amd64.AppImage"
     },
     "linux-x86_64-deb": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRRlZhNHpvK054Y0Y1czFMSnJxQUgrbm1rZzdkcnJKSDZkeldJcTdZdEZDMzkzank5V1NoNVlub05sUzIveEVPN1UrYnMrb3diWDlpcHQvQjFGMGpjVmg5dm55MWVqMEFjPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyMTIyNDM4CWZpbGU6Tm9jdHJpbnRoXzAuMjEuOV9hbWQ2NC5kZWIKQ1grMjNIbG1uUUpSb1NYbitObG1DYXFIemo0TnpKSFc2SDhYdHFOYzZmWERjSHRrQk5Na2VMbGJXRmlFdlovQXoraVJlVWxjOVZxVTJJL1ZHeEZMQ2c9PQo=",
-      "url": "https://github.com/Everelsu/Noctrinth/releases/download/v0.21.9/Noctrinth_0.21.9_amd64.deb"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRRlZhNHpvK054Y0JQNWt4NFBlN1llSlNPOWVYSUZsZkFNSzc4R0I2VFppbThETSsxTUpZOGlwWmpXN3dKODAwRndmallJL3dPM25IcndsNTEySVdMcVBZWnhyTmJuUGdJPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyNTQ2OTkzCWZpbGU6Tm9jdHJpbnRoXzAuMjEuMTBfYW1kNjQuZGViCitVU0xLdUdZdWduRzhBVXJ1OGlzNkZhMFVMK3pPSjlmd1hzN2hYL3VMaGtzUUphR1VPTHVHdGNJbjNHVEhPQkdzY0NGSWxPMzNXYzA1UjQ1WkNOZEJRPT0K",
+      "url": "https://github.com/Everelsu/Noctrinth/releases/download/v0.21.10/Noctrinth_0.21.10_amd64.deb"
     },
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRRlZhNHpvK054Y0ZTV3lTbWRrNi9rcVBzUnM5b1Bwbm9nOHFRQmd2OGxpKzRVYVp4WWZFOUU0Um9LcjJuQWNWOElCU3VkalM4Y0tiOFFjenNRTk9pREFwc25jNmVKbEFFPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyMTIzMTY0CWZpbGU6Tm9jdHJpbnRoXzAuMjEuOV94NjQtc2V0dXAuZXhlCnNaL2hWdHFielVqWTlWYUhMd0VyNFo4TW9hYzF0TmlKNDh0S29meVJ0dy9vQnBlQ1ppcExjaEN6TGVVdXJSNEl4TnFNQTdKZGRraVVoZ2NsVjQ4L0FnPT0K",
-      "url": "https://github.com/Everelsu/Noctrinth/releases/download/v0.21.9/Noctrinth_0.21.9_x64-setup.exe"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRRlZhNHpvK054Y0VFelZZSm8va21NdjMydTFwdHpRaTkzNVFWTDRoUkRPQjdlNEliS1hDYnlONDJreW9OVVNXRWhUdUVMMGJ0NzFRMDFUU2ltdk51Rm5OcE5rdTdSL0EwPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyNTQ3NDAyCWZpbGU6Tm9jdHJpbnRoXzAuMjEuMTBfeDY0LXNldHVwLmV4ZQp4dG1uOWRZbTh4RWNDNUxCZFlTODZmbTN3dllIZW9KNzN3M0xDN3lSQml1a2N4UXA3UUJFUTVBcnQyK1NNck1vM1VkNGlwS1NMeGdFQXprK3d1T2VDdz09Cg==",
+      "url": "https://github.com/Everelsu/Noctrinth/releases/download/v0.21.10/Noctrinth_0.21.10_x64-setup.exe"
     },
     "windows-x86_64-nsis": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRRlZhNHpvK054Y0ZTV3lTbWRrNi9rcVBzUnM5b1Bwbm9nOHFRQmd2OGxpKzRVYVp4WWZFOUU0Um9LcjJuQWNWOElCU3VkalM4Y0tiOFFjenNRTk9pREFwc25jNmVKbEFFPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyMTIzMTY0CWZpbGU6Tm9jdHJpbnRoXzAuMjEuOV94NjQtc2V0dXAuZXhlCnNaL2hWdHFielVqWTlWYUhMd0VyNFo4TW9hYzF0TmlKNDh0S29meVJ0dy9vQnBlQ1ppcExjaEN6TGVVdXJSNEl4TnFNQTdKZGRraVVoZ2NsVjQ4L0FnPT0K",
-      "url": "https://github.com/Everelsu/Noctrinth/releases/download/v0.21.9/Noctrinth_0.21.9_x64-setup.exe"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRRlZhNHpvK054Y0VFelZZSm8va21NdjMydTFwdHpRaTkzNVFWTDRoUkRPQjdlNEliS1hDYnlONDJreW9OVVNXRWhUdUVMMGJ0NzFRMDFUU2ltdk51Rm5OcE5rdTdSL0EwPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyNTQ3NDAyCWZpbGU6Tm9jdHJpbnRoXzAuMjEuMTBfeDY0LXNldHVwLmV4ZQp4dG1uOWRZbTh4RWNDNUxCZFlTODZmbTN3dllIZW9KNzN3M0xDN3lSQml1a2N4UXA3UUJFUTVBcnQyK1NNck1vM1VkNGlwS1NMeGdFQXprK3d1T2VDdz09Cg==",
+      "url": "https://github.com/Everelsu/Noctrinth/releases/download/v0.21.10/Noctrinth_0.21.10_x64-setup.exe"
     },
     "darwin-aarch64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRRlZhNHpvK054Y0JvRVZRZWQ4L2ExbTN2aVZZamJjQk1YTnJoRlBrZXk0ejdZSFFmeFJYSVVBbWtSOTBDUzFvd05yNy8wYWZKKzBoN2ZrM1B3aXEvMjEwMzF6QUpRREE0PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyMTIzODI5CWZpbGU6Tm9jdHJpbnRoLmFwcC50YXIuZ3oKOFlXQW9icWZTZHZIdTZxQkdqQ3k2VFRubVlJRCtaMllTMTJ5ZjJRekRrQ2c1M3JVZG9OYUU0Z0xWTEdIUHZEQ01iQ0p4S2FkRnpBckRBV0VkVUM3Q1E9PQo=",
-      "url": "https://github.com/Everelsu/Noctrinth/releases/download/v0.21.9/Noctrinth_universal.app.tar.gz"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRRlZhNHpvK054Y0F5VFo1UEdySzFLOHZaTnAvNUE3WkdLOWFkVW5CRWdBTU1VTTBLS0JPb3ZhbW8yUDVZVHpoZGRScEtlbDB4bTJ0ZDBOeVE5K0FBYUFFTksrOWg2cVFZPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyNTQ4MDc1CWZpbGU6Tm9jdHJpbnRoLmFwcC50YXIuZ3oKeWo3MFRXaDRDdXJTVEFJb2VnTExMYitlSFg5OXVGT1lMMVRsSkRpSkdlRjNrYjdnT3ZYdU1zeWpEWlIwM2hLbFEvc0lMWERvSU1xYnA2VVVFS2dJRHc9PQo=",
+      "url": "https://github.com/Everelsu/Noctrinth/releases/download/v0.21.10/Noctrinth_universal.app.tar.gz"
     },
     "darwin-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRRlZhNHpvK054Y0JvRVZRZWQ4L2ExbTN2aVZZamJjQk1YTnJoRlBrZXk0ejdZSFFmeFJYSVVBbWtSOTBDUzFvd05yNy8wYWZKKzBoN2ZrM1B3aXEvMjEwMzF6QUpRREE0PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyMTIzODI5CWZpbGU6Tm9jdHJpbnRoLmFwcC50YXIuZ3oKOFlXQW9icWZTZHZIdTZxQkdqQ3k2VFRubVlJRCtaMllTMTJ5ZjJRekRrQ2c1M3JVZG9OYUU0Z0xWTEdIUHZEQ01iQ0p4S2FkRnpBckRBV0VkVUM3Q1E9PQo=",
-      "url": "https://github.com/Everelsu/Noctrinth/releases/download/v0.21.9/Noctrinth_universal.app.tar.gz"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRRlZhNHpvK054Y0F5VFo1UEdySzFLOHZaTnAvNUE3WkdLOWFkVW5CRWdBTU1VTTBLS0JPb3ZhbW8yUDVZVHpoZGRScEtlbDB4bTJ0ZDBOeVE5K0FBYUFFTksrOWg2cVFZPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyNTQ4MDc1CWZpbGU6Tm9jdHJpbnRoLmFwcC50YXIuZ3oKeWo3MFRXaDRDdXJTVEFJb2VnTExMYitlSFg5OXVGT1lMMVRsSkRpSkdlRjNrYjdnT3ZYdU1zeWpEWlIwM2hLbFEvc0lMWERvSU1xYnA2VVVFS2dJRHc9PQo=",
+      "url": "https://github.com/Everelsu/Noctrinth/releases/download/v0.21.10/Noctrinth_universal.app.tar.gz"
     },
     "darwin-aarch64-app": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRRlZhNHpvK054Y0JvRVZRZWQ4L2ExbTN2aVZZamJjQk1YTnJoRlBrZXk0ejdZSFFmeFJYSVVBbWtSOTBDUzFvd05yNy8wYWZKKzBoN2ZrM1B3aXEvMjEwMzF6QUpRREE0PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyMTIzODI5CWZpbGU6Tm9jdHJpbnRoLmFwcC50YXIuZ3oKOFlXQW9icWZTZHZIdTZxQkdqQ3k2VFRubVlJRCtaMllTMTJ5ZjJRekRrQ2c1M3JVZG9OYUU0Z0xWTEdIUHZEQ01iQ0p4S2FkRnpBckRBV0VkVUM3Q1E9PQo=",
-      "url": "https://github.com/Everelsu/Noctrinth/releases/download/v0.21.9/Noctrinth_universal.app.tar.gz"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRRlZhNHpvK054Y0F5VFo1UEdySzFLOHZaTnAvNUE3WkdLOWFkVW5CRWdBTU1VTTBLS0JPb3ZhbW8yUDVZVHpoZGRScEtlbDB4bTJ0ZDBOeVE5K0FBYUFFTksrOWg2cVFZPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyNTQ4MDc1CWZpbGU6Tm9jdHJpbnRoLmFwcC50YXIuZ3oKeWo3MFRXaDRDdXJTVEFJb2VnTExMYitlSFg5OXVGT1lMMVRsSkRpSkdlRjNrYjdnT3ZYdU1zeWpEWlIwM2hLbFEvc0lMWERvSU1xYnA2VVVFS2dJRHc9PQo=",
+      "url": "https://github.com/Everelsu/Noctrinth/releases/download/v0.21.10/Noctrinth_universal.app.tar.gz"
     },
     "darwin-x86_64-app": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRRlZhNHpvK054Y0JvRVZRZWQ4L2ExbTN2aVZZamJjQk1YTnJoRlBrZXk0ejdZSFFmeFJYSVVBbWtSOTBDUzFvd05yNy8wYWZKKzBoN2ZrM1B3aXEvMjEwMzF6QUpRREE0PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyMTIzODI5CWZpbGU6Tm9jdHJpbnRoLmFwcC50YXIuZ3oKOFlXQW9icWZTZHZIdTZxQkdqQ3k2VFRubVlJRCtaMllTMTJ5ZjJRekRrQ2c1M3JVZG9OYUU0Z0xWTEdIUHZEQ01iQ0p4S2FkRnpBckRBV0VkVUM3Q1E9PQo=",
-      "url": "https://github.com/Everelsu/Noctrinth/releases/download/v0.21.9/Noctrinth_universal.app.tar.gz"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRRlZhNHpvK054Y0F5VFo1UEdySzFLOHZaTnAvNUE3WkdLOWFkVW5CRWdBTU1VTTBLS0JPb3ZhbW8yUDVZVHpoZGRScEtlbDB4bTJ0ZDBOeVE5K0FBYUFFTksrOWg2cVFZPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyNTQ4MDc1CWZpbGU6Tm9jdHJpbnRoLmFwcC50YXIuZ3oKeWo3MFRXaDRDdXJTVEFJb2VnTExMYitlSFg5OXVGT1lMMVRsSkRpSkdlRjNrYjdnT3ZYdU1zeWpEWlIwM2hLbFEvc0lMWERvSU1xYnA2VVVFS2dJRHc9PQo=",
+      "url": "https://github.com/Everelsu/Noctrinth/releases/download/v0.21.10/Noctrinth_universal.app.tar.gz"
     }
   }
 }

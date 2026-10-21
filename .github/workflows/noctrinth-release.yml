@@ -250,6 +250,17 @@ jobs:
             fi
           }
 
+          # The app's own binary is the executable that carries a bundle-type
+          # marker. An AppImage holds others beside it (AppRun, bundled
+          # helpers), so "the first executable" is not reliably the app; look
+          # for the one with a marker, patched or not. `|| true`: head closes
+          # the pipe early, and pipefail would otherwise fail the step.
+          app_binary() {
+            find "$1" -type f -executable -print0 \
+              | xargs -0 -r grep -la '__TAURI_BUNDLE_TYPE_VAR_' \
+              | head -n1 || true
+          }
+
           shopt -s nullglob
           found=0
 
@@ -262,12 +273,9 @@ jobs:
             chmod +x "$appimage"
             abs_appimage=$(readlink -f "$appimage")
             (cd "$workdir" && "$abs_appimage" --appimage-extract >/dev/null)
-            binary=$(find "$workdir/squashfs-root" -type f -executable -print0 \
-              | xargs -0 file --mime-type \
-              | grep -m1 'application/x-\(pie-\)\?executable' \
-              | cut -d: -f1 || true)
+            binary=$(app_binary "$workdir/squashfs-root")
             if [ -z "$binary" ]; then
-              echo "::error::no executable found inside $(basename "$appimage")"
+              echo "::error::no executable inside $(basename "$appimage") carries a bundle-type marker — the marker moved or the binary was stripped; the check needs revisiting."
               failed=1
             else
               check "$(basename "$appimage")" "$binary" '__TAURI_BUNDLE_TYPE_VAR_APP'
@@ -281,14 +289,9 @@ jobs:
             dpkg-deb -x "$deb" "$workdir"
             # The executable name follows productName, so locate it rather than
             # hard-coding a path that a rename would silently break.
-            # `|| true`: grep -m1 closes the pipe early, and with pipefail the
-            # SIGPIPE upstream would otherwise fail the whole step under set -e.
-            binary=$(find "$workdir" -type f -executable -print0 \
-              | xargs -0 file --mime-type \
-              | grep -m1 'application/x-\(pie-\)\?executable' \
-              | cut -d: -f1 || true)
+            binary=$(app_binary "$workdir")
             if [ -z "$binary" ]; then
-              echo "::error::no executable found inside $(basename "$deb")"
+              echo "::error::no executable inside $(basename "$deb") carries a bundle-type marker — the marker moved or the binary was stripped; the check needs revisiting."
               failed=1
             else
               check "$(basename "$deb")" "$binary" '__TAURI_BUNDLE_TYPE_VAR_DEB'

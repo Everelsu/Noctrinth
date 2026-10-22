@@ -12,7 +12,7 @@ import { noctrinthChangelogFeedQueryOptions } from '@/features/news/noctrinth-ne
 import { NOCTRINTH_CHANGELOG } from '@/helpers/noctrinth-changelog'
 import { renderChangelog } from '@/helpers/render-changelog'
 
-const { formatMessage } = useVIntl()
+const { formatMessage, locale } = useVIntl()
 
 /** Landing page of the fork's author, linked from the changelog header. */
 const AUTHOR_URL = 'https://everelsu.github.io/RelsevLink/'
@@ -123,7 +123,7 @@ const noctrinthChangelog = computed<ChangelogEntry[]>(() =>
 	(feed.data.value ?? NOCTRINTH_CHANGELOG).map((entry) => ({
 		version: entry.version,
 		date: dayjs(entry.date).format('MMM D, YYYY'),
-		sections: parseBody(entry.body),
+		sections: parseBody((locale.value.startsWith('ru') && entry.body_ru) || entry.body),
 	})),
 )
 

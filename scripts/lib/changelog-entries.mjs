@@ -14,19 +14,22 @@ export const NOCTRINTH_CHANGELOG_SRC = 'apps/app-frontend/src/helpers/noctrinth-
 
 /**
  * Pulls every `{ ... body: `...` ... }` object out of a changelog source and
- * reads the fields with a regex per field.
+ * reads the fields with a regex per field. A Noctrinth entry may carry its
+ * Russian text in a second template literal, `body_ru`, after `body`.
  */
 export function parseEntries(src) {
 	const entries = []
-	const entryRe = /\{((?:[^{}]|\{[^{}]*\})*?body:\s*`((?:\\`|[^`])*)`[^}]*)\}/g
+	const entryRe = /\{((?:[^{}]|\{[^{}]*\})*?body:\s*`((?:\\`|[^`])*)`(?:[^}`]|`(?:\\`|[^`])*`)*)\}/g
+	const unescape = (text) => text.replace(/\\`/g, '`').replace(/\\\$\{/g, '${')
 	let m
 	while ((m = entryRe.exec(src)) !== null) {
 		const block = m[1]
-		const body = m[2].replace(/\\`/g, '`').replace(/\\\$\{/g, '${')
+		const body = unescape(m[2])
+		const bodyRu = block.match(/body_ru:\s*`((?:\\`|[^`])*)`/)?.[1]
 		const version = block.match(/version:\s*['"`]([^'"`]+)['"`]/)?.[1]
 		const date = block.match(/date:\s*['"`]([^'"`]+)['"`]/)?.[1]
 		const product = block.match(/product:\s*['"`]([^'"`]+)['"`]/)?.[1]
-		entries.push({ version, date, body, product })
+		entries.push({ version, date, body, body_ru: bodyRu && unescape(bodyRu), product })
 	}
 	return entries
 }

@@ -91,6 +91,13 @@ const isRecent = (iso) => Date.now() - new Date(iso).getTime() < oneWeekMs
 
 const SOURCE_LABEL = { noctrinth: 'Noctrinth', modrinth: 'Modrinth App' }
 
+/** The entry's text; with a Russian one too, the site's EN/RU switch picks between them. */
+function renderBody(entry) {
+	const body = (text, lang) =>
+		`<div class="entry__body markdown${lang ? ' i18n' : ''}"${lang ? ` lang="${lang}"` : ''}>${renderMarkdown(text, changelogRelative)}</div>`
+	return entry.body_ru ? body(entry.body, 'en') + body(entry.body_ru, 'ru') : body(entry.body)
+}
+
 function renderEntry(entry, index) {
 	// Filled with the source's colour when recent or first, hollow otherwise —
 	// the way Modrinth's changelog timeline marks them.
@@ -108,7 +115,7 @@ function renderEntry(entry, index) {
 				</h2>
 				<time class="entry__date" datetime="${escapeHtml(entry.date)}" data-relative>${formatLongDate(entry.date)}</time>
 			</div>
-			<div class="entry__body markdown">${renderMarkdown(entry.body, changelogRelative)}</div>
+			${renderBody(entry)}
 		</div>`
 }
 
@@ -122,7 +129,9 @@ function checkScreenshots(entries) {
 	const problems = []
 
 	for (const entry of entries) {
-		for (const [, url] of entry.body.matchAll(/!\[[^\]]*\]\(([^)]+)\)/g)) {
+		for (const [, url] of [entry.body, entry.body_ru ?? '']
+			.join(' ')
+			.matchAll(/!\[[^\]]*\]\(([^)]+)\)/g)) {
 			if (/^https?:\/\//.test(url)) continue
 
 			const path = url.startsWith('/') ? url.slice(1) : url
@@ -304,7 +313,7 @@ writeFileSync(join(OUT_DIR, 'news', 'feed', 'rss.xml'), rssFeed(articles))
 writeFileSync(
 	join(OUT_DIR, 'changelog.json'),
 	JSON.stringify(
-		noctrinth.map(({ version, date, body }) => ({ version, date, body })),
+		noctrinth.map(({ version, date, body, body_ru }) => ({ version, date, body, body_ru })),
 		null,
 		'	',
 	),

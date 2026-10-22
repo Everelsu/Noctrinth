@@ -5,7 +5,9 @@ use discord_rich_presence::{
     activity::{Activity, Assets},
 };
 
-use crate::State;
+use sqlx::SqlitePool;
+
+use crate::state::ProcessManager;
 
 enum Presence {
     Activity {
@@ -52,9 +54,9 @@ impl DiscordGuard {
         &self,
         msg: &str,
         reconnect_if_fail: bool,
+        pool: &SqlitePool,
     ) -> crate::Result<()> {
-        let state = State::get().await?;
-        let settings = crate::state::Settings::get(&state.pool).await?;
+        let settings = crate::state::Settings::get(pool).await?;
         let _ = self.sender.send(if settings.discord_rpc {
             Presence::Activity {
                 text: msg.to_string(),
@@ -70,17 +72,20 @@ impl DiscordGuard {
     pub async fn clear_to_default(
         &self,
         reconnect_if_fail: bool,
+        pool: &SqlitePool,
+        process_manager: &ProcessManager,
     ) -> crate::Result<()> {
-        let state = State::get().await?;
-        let running_instances = state.process_manager.get_all();
+        let running_instances = process_manager.get_all();
         if let Some(existing_child) = running_instances.first() {
             self.set_activity(
                 &format!("Playing {}", existing_child.instance_name),
                 reconnect_if_fail,
+                pool,
             )
             .await
         } else {
-            self.set_activity("Idling...", reconnect_if_fail).await
+            self.set_activity("Idling...", reconnect_if_fail, pool)
+                .await
         }
     }
 }

@@ -23,7 +23,7 @@ import { computed, ref } from 'vue'
 import { handleSevereError } from '@/composables/use-error.js'
 import { login as login_flow, set_default_user } from '@/helpers/auth.js'
 
-import { findMinecraftAuthError, type MinecraftAuthError } from './minecraft-auth-errors'
+import { type MinecraftAuthError, minecraftAuthErrors } from './minecraft-auth-errors'
 
 const { formatMessage } = useVIntl()
 
@@ -76,10 +76,10 @@ const debugCollapsed = ref(true)
 const copied = ref(false)
 const loadingSignIn = ref(false)
 
-function show(errorVal: { message?: string }) {
+function show(errorVal: { message?: string; code?: string }) {
 	rawError.value = errorVal?.message ?? String(errorVal)
 
-	matchedError.value = findMinecraftAuthError(rawError.value)
+	matchedError.value = (errorVal?.code && minecraftAuthErrors[errorVal.code]) || null
 
 	debugCollapsed.value = true
 	modal.value?.show()

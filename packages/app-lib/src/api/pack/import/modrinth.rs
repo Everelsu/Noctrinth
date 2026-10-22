@@ -127,11 +127,13 @@ pub async fn import_modrinth(
         None => None,
     };
 
+    let state = State::get().await?;
     let loader_version = if source.loader != ModLoader::Vanilla {
         crate::launcher::get_loader_version_from_profile(
             &source.game_version,
             source.loader,
             source.loader_version.as_deref(),
+            &state.directories,
         )
         .await?
     } else {
@@ -156,11 +158,10 @@ pub async fn import_modrinth(
     )
     .await?;
 
-    let state = State::get().await?;
     finish_import(
         instance_id,
         base_path.join(INSTANCES_SUBFOLDER).join(instance_folder),
-        &state.io_semaphore,
+        &state,
         reporter,
         details,
     )

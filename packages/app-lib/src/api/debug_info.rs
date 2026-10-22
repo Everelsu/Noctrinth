@@ -1,5 +1,5 @@
-use crate::State;
 use crate::util::io::IOError;
+use crate::{ErrorKind, State};
 use serde::Serialize;
 use std::fs::File;
 use std::io::{BufWriter, Read, Write};
@@ -60,11 +60,9 @@ pub async fn export_debug_info(
     let mut buffer = vec![0; 64 * 1024];
 
     tokio::task::spawn_blocking(move || -> crate::Result<bool> {
-        let parent = export_path.parent().ok_or_else(|| {
-            crate::ErrorKind::InputError(
-                "Export path has no parent directory".to_string(),
-            )
-        })?;
+        let parent = export_path.parent().ok_or(ErrorKind::InputError(
+            "export path has no parent directory".to_string(),
+        ))?;
         let mut temporary = tempfile::NamedTempFile::new_in(parent)?;
         let excluded_paths = [
             std::fs::canonicalize(temporary.path())?,

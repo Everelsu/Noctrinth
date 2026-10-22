@@ -32,23 +32,22 @@ pub async fn background_set(path: String) -> Result<()> {
     let size = tokio::fs::metadata(&path)
         .await
         .map_err(|error| {
-            theseus::ErrorKind::OtherError(error.to_string()).as_error()
+            anyhow::anyhow!(error.to_string())
         })?
         .len();
     if size > MAX_BYTES {
-        return Err(theseus::ErrorKind::OtherError(format!(
+        return Err(anyhow::anyhow!(format!(
             "The picture is {} MB; the background takes up to {} MB",
             size / 1024 / 1024,
             MAX_BYTES / 1024 / 1024
         ))
-        .as_error()
         .into());
     }
 
     tokio::fs::copy(&path, stored_path().await?)
         .await
         .map_err(|error| {
-            theseus::ErrorKind::OtherError(error.to_string()).as_error()
+            anyhow::anyhow!(error.to_string())
         })?;
     Ok(())
 }
@@ -61,8 +60,7 @@ pub async fn background_get() -> Result<Response> {
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
             Ok(Response::new(Vec::new()))
         }
-        Err(error) => Err(theseus::ErrorKind::OtherError(error.to_string())
-            .as_error()
+        Err(error) => Err(anyhow::anyhow!(error.to_string())
             .into()),
     }
 }
@@ -71,8 +69,7 @@ pub async fn background_get() -> Result<Response> {
 pub async fn background_clear() -> Result<()> {
     match tokio::fs::remove_file(stored_path().await?).await {
         Err(error) if error.kind() != std::io::ErrorKind::NotFound => {
-            Err(theseus::ErrorKind::OtherError(error.to_string())
-                .as_error()
+            Err(anyhow::anyhow!(error.to_string())
                 .into())
         }
         _ => Ok(()),

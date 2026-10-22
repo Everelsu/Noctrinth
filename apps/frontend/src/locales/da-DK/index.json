@@ -773,17 +773,11 @@
   "conversation-thread.action.approve": {
     "message": "Godkend"
   },
-  "conversation-thread.action.approve-with-reply": {
-    "message": "Godkend med svar"
-  },
   "conversation-thread.action.close-with-reply": {
     "message": "Luk med svar"
   },
   "conversation-thread.action.reject": {
     "message": "Afvis"
-  },
-  "conversation-thread.action.reject-with-reply": {
-    "message": "Afvis med svar"
   },
   "conversation-thread.action.reopen-thread": {
     "message": "Genåbn tråd"
@@ -3206,9 +3200,6 @@
   "settings.pats.modal.create.name.placeholder": {
     "message": "Indtast PAT's navn..."
   },
-  "settings.pats.modal.delete.action": {
-    "message": "Slet denne token"
-  },
   "settings.pats.token.action.edit": {
     "message": "Rediger token"
   },
@@ -3232,9 +3223,6 @@
   },
   "settings.sessions.current-session": {
     "message": "Nuværende session"
-  },
-  "settings.sessions.description": {
-    "message": "Her er alle enheder, der i øjeblikket er logget ind med din Modrinth-konto. Du kan logge ud af hver enhed individuelt.\n\nHvis du ser en enhed, du ikke genkender, bør du straks logge ud af den og ændre adgangskoden til din Modrinth-konto."
   },
   "settings.sessions.last-accessed-ago": {
     "message": "Sidst tilgået {ago}"

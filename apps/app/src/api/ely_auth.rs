@@ -70,10 +70,9 @@ pub async fn ely_device_login<R: Runtime>(
         ELY_SIGN_IN_WINDOW_LABEL,
         tauri::WebviewUrl::External(flow.verification_url.parse().map_err(
             |_| {
-                theseus::ErrorKind::OtherError(
+                anyhow::anyhow!(
                     "Could not build the Ely.by sign-in address".to_string(),
                 )
-                .as_error()
             },
         )?),
     )
@@ -159,10 +158,9 @@ pub async fn ely_oauth_login<R: Runtime>(
         &app,
         ELY_SIGN_IN_WINDOW_LABEL,
         tauri::WebviewUrl::External(request.url.parse().map_err(|_| {
-            theseus::ErrorKind::OtherError(
+            anyhow::anyhow!(
                 "Could not build the Ely.by sign-in address".to_string(),
             )
-            .as_error()
         })?),
     )
     .title("Sign in with Ely.by")
@@ -206,10 +204,9 @@ pub async fn ely_oauth_login<R: Runtime>(
             }
             Some(ElyRedirect::Denied(reason)) => {
                 window.close()?;
-                return Err(theseus::ErrorKind::OtherError(format!(
+                return Err(anyhow::anyhow!(format!(
                     "Ely.by did not allow the sign-in: {reason}"
                 ))
-                .as_error()
                 .into());
             }
             None => {}
@@ -515,17 +512,16 @@ async fn run_as_account<R: Runtime>(
             break answer;
         }
         if started.elapsed() > ELY_SKIN_CALL_TIMEOUT {
-            return Err(theseus::ErrorKind::OtherError(
+            return Err(anyhow::anyhow!(
                 "Ely.by did not answer. Try again in a moment.".to_string(),
             )
-            .as_error()
             .into());
         }
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
     };
 
     let refusal = |message: String| -> Result<()> {
-        Err(theseus::ErrorKind::OtherError(message).as_error().into())
+        Err(anyhow::anyhow!(message).into())
     };
     match answer.as_str() {
         "done" => Ok(()),

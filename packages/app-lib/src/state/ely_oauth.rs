@@ -238,7 +238,7 @@ pub async fn begin_device() -> crate::Result<ElyDeviceFlow> {
 
     let response: DeviceCodeResponse =
         serde_json::from_str(&body).map_err(|e| {
-            crate::ErrorKind::OtherError(format!(
+            anyhow::anyhow!(format!(
                 "Failed to parse the Ely.by device code: {e}"
             ))
         })?;
@@ -263,9 +263,7 @@ pub async fn begin_device() -> crate::Result<ElyDeviceFlow> {
 /// be added: it came back as the first one again.
 fn verification_url(uri: &str, user_code: &str) -> crate::Result<String> {
     let mut url = url::Url::parse(uri).map_err(|e| {
-        crate::ErrorKind::OtherError(format!(
-            "Invalid Ely.by verification address: {e}"
-        ))
+        anyhow::anyhow!(format!("Invalid Ely.by verification address: {e}"))
     })?;
     if url.scheme() == "http" {
         let _ = url.set_scheme("https");
@@ -302,7 +300,7 @@ pub async fn poll_device(device_code: &str) -> crate::Result<ElyDevicePoll> {
     }
 
     let tokens: TokenResponse = serde_json::from_str(&body).map_err(|e| {
-        crate::ErrorKind::OtherError(format!(
+        anyhow::anyhow!(format!(
             "Failed to parse the Ely.by token response: {e}"
         ))
     })?;
@@ -350,7 +348,7 @@ pub async fn exchange_code(
 async fn identify(tokens: TokenResponse) -> crate::Result<ElyOauthTokens> {
     let info = account_info(&tokens.access_token).await?;
     let uuid = Uuid::parse_str(&info.uuid).map_err(|e| {
-        crate::ErrorKind::OtherError(format!("Invalid UUID from Ely.by: {e}"))
+        anyhow::anyhow!(format!("Invalid UUID from Ely.by: {e}"))
     })?;
 
     Ok(ElyOauthTokens {
@@ -376,7 +374,7 @@ pub async fn refresh(refresh_token: &str) -> crate::Result<ElyOauthTokens> {
 
     let info = account_info(&tokens.access_token).await?;
     let uuid = Uuid::parse_str(&info.uuid).map_err(|e| {
-        crate::ErrorKind::OtherError(format!("Invalid UUID from Ely.by: {e}"))
+        anyhow::anyhow!(format!("Invalid UUID from Ely.by: {e}"))
     })?;
 
     Ok(ElyOauthTokens {
@@ -399,14 +397,12 @@ async fn post_form(
         .send()
         .await
         .map_err(|e| {
-            crate::ErrorKind::OtherError(format!(
-                "Ely.by token request failed: {e}"
-            ))
+            anyhow::anyhow!(format!("Ely.by token request failed: {e}"))
         })?;
 
     let status = response.status();
     let body = response.text().await.map_err(|e| {
-        crate::ErrorKind::OtherError(format!(
+        anyhow::anyhow!(format!(
             "Failed to read the Ely.by token response: {e}"
         ))
     })?;
@@ -428,10 +424,7 @@ fn refusal(status: reqwest::StatusCode, body: &str) -> crate::Error {
         })
         .unwrap_or_else(|| format!("HTTP {status}"));
 
-    crate::ErrorKind::OtherError(format!(
-        "Ely.by refused the sign-in: {described}"
-    ))
-    .into()
+    anyhow::anyhow!(format!("Ely.by refused the sign-in: {described}"))
 }
 
 async fn post_token(form: &[(&str, &str)]) -> crate::Result<TokenResponse> {
@@ -441,10 +434,9 @@ async fn post_token(form: &[(&str, &str)]) -> crate::Result<TokenResponse> {
     }
 
     serde_json::from_str(&body).map_err(|e| {
-        crate::ErrorKind::OtherError(format!(
+        anyhow::anyhow!(format!(
             "Failed to parse the Ely.by token response: {e}"
         ))
-        .into()
     })
 }
 
@@ -455,24 +447,20 @@ async fn account_info(access_token: &str) -> crate::Result<AccountInfo> {
         .send()
         .await
         .map_err(|e| {
-            crate::ErrorKind::OtherError(format!(
-                "Ely.by account request failed: {e}"
-            ))
+            anyhow::anyhow!(format!("Ely.by account request failed: {e}"))
         })?;
 
     if !response.status().is_success() {
-        return Err(crate::ErrorKind::OtherError(format!(
+        return Err(anyhow::anyhow!(format!(
             "Ely.by would not say whose account this is: HTTP {}",
             response.status()
-        ))
-        .into());
+        )));
     }
 
     response.json().await.map_err(|e| {
-        crate::ErrorKind::OtherError(format!(
+        anyhow::anyhow!(format!(
             "Failed to parse the Ely.by account response: {e}"
         ))
-        .into()
     })
 }
 

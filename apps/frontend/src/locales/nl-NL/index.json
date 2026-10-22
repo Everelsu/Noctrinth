@@ -1049,9 +1049,6 @@
   "conversation-thread.action.approve": {
     "message": "Accepteren"
   },
-  "conversation-thread.action.approve-with-reply": {
-    "message": "Accepteren met antwoord"
-  },
   "conversation-thread.action.close-report": {
     "message": "Rapport afsluiten"
   },
@@ -1060,9 +1057,6 @@
   },
   "conversation-thread.action.reject": {
     "message": "Afkeuren"
-  },
-  "conversation-thread.action.reject-with-reply": {
-    "message": "Afkeuren met antwoord"
   },
   "conversation-thread.action.reopen-thread": {
     "message": "Heropen thread"
@@ -1097,9 +1091,6 @@
   "conversation-thread.action.withhold": {
     "message": "Terughouden"
   },
-  "conversation-thread.action.withhold-with-reply": {
-    "message": "Terughouden met antwoord"
-  },
   "conversation-thread.closed-thread.description": {
     "message": "Deze thread is gesloten en kan geen nieuwe berichten meer ontvangen."
   },
@@ -1108,9 +1099,6 @@
   },
   "conversation-thread.error.reopening-report": {
     "message": "Fout tijdens het heropenen van rapport"
-  },
-  "conversation-thread.error.sending-message": {
-    "message": "Fout tijdens het versturen van bericht"
   },
   "conversation-thread.reply-editor.placeholder.reply": {
     "message": "Reageer op het thread..."
@@ -1138,9 +1126,6 @@
   },
   "conversation-thread.resubmit-modal.confirmation.label": {
     "message": "Ik conformeer dat ik de opmerking van de moderator heb geadresseerd."
-  },
-  "conversation-thread.resubmit-modal.description": {
-    "message": "Je verstuurd <project-title>{projectTitle}</project-title> om opnieuw door de moderators gereviewd te laten worden."
   },
   "conversation-thread.resubmit-modal.header.resubmitting": {
     "message": "Heropsturen voor beoordeling"
@@ -3401,9 +3386,6 @@
   "project-member-header.success-join": {
     "message": "Je doet mee met het project team"
   },
-  "project-moderation-nags.project-submitted-for-review": {
-    "message": "Je project is ingediend ter beoordeling!"
-  },
   "project-moderation-nags.publishing-checklist": {
     "message": "Controlelijst publiceren"
   },
@@ -3520,9 +3502,6 @@
   },
   "project.actions.rescan-modpack": {
     "message": "Modpack opnieuw scannen"
-  },
-  "project.actions.review-project": {
-    "message": "Beoordeel project"
   },
   "project.actions.servers-promo.description": {
     "message": "Modrinth Hosting is de makkelijkste manier om zonder gedoe met je vrienden te spelen!"
@@ -4361,29 +4340,17 @@
   "report.not-for.dmca.description": {
     "message": "Zie onze <policy-link>Auteursrechtbeleid</policy-link>."
   },
-  "report.note.ai-images.1": {
-    "message": "We hebben zojuist onze regels bijgewerkt om AI-gegenereerde afbeeldingen te verbieden in pictogrammen, galerijen en beschrijvingen. We geven makers een vrijwaringsperiode om AI-afbeeldingen uit hun projecten te verwijderen voordat we rapporten voor hen gaan accepteren."
-  },
-  "report.note.check-back-later": {
-    "message": "Kom later terug zodra de genadeperiode is afgelopen. Rapporten van dit type worden op dit moment niet geaccepteerd."
-  },
   "report.note.copyright.1": {
     "message": "Houd er rekening mee dat je *geen* DMCA-verzoek tot verwijdering indient, maar een melding van opnieuw geüploade inhoud."
   },
   "report.note.copyright.2": {
     "message": "Als je in plaats hiervan een DMCA-verzoek tot verwijdering (een juridische procedure) wilde indienen, raadpleeg dan ons <copyright-policy-link>auteursrechtbeleid</copyright-policy-link>."
   },
-  "report.note.fully-ai-generated.1": {
-    "message": "We hebben zojuist onze regels bijgewerkt om AI-gegenereerde projecten volledig te verbieden. We geven makers een vrijwaringsperiode om door AI-gegenereerde projecten volledig bij te werken of op te nemen voordat we rapporten voor hen accepteren."
-  },
   "report.note.malicious.1": {
     "message": "Rapporten voor malware en niet geaccepteerde content moeten bewijs hebben zoals code voorbeelden."
   },
   "report.note.malicious.2": {
     "message": "Samenvattingen van Microsoft Defender, VirusTotal, of AI malware is geen goede vorm van bewijs en zal niet geaccepteerd worden."
-  },
-  "report.note.missing-disclosure.1": {
-    "message": "Content onthullingen zijn een nieuwe functie die we zojuist hebben toegevoegd. We geven de makers een vrijwaringsperiode om hun onthullingen up-to-date te krijgen voordat we rapporten voor ontbrekende of onjuiste onthullingen gaan accepteren."
   },
   "report.please-report": {
     "message": "Graag rapporteer:"
@@ -5333,15 +5300,6 @@
   "settings.pats.modal.create.title": {
     "message": "Persoonlijke toegangstoken aanmaken"
   },
-  "settings.pats.modal.delete.action": {
-    "message": "Verwijder deze token"
-  },
-  "settings.pats.modal.delete.description": {
-    "message": "Dit zal deze token voor altijd verwijderen (echt voor altijd)."
-  },
-  "settings.pats.modal.delete.title": {
-    "message": "Weet u zeker dat u deze token wilt verwijderen?"
-  },
   "settings.pats.modal.edit.title": {
     "message": "Persoonlijke toegangstoken bewerken"
   },
@@ -5371,9 +5329,6 @@
   },
   "settings.sessions.current-session": {
     "message": "Huidige sessie"
-  },
-  "settings.sessions.description": {
-    "message": "Hier vind je alle apparaten die momenteel zijn aangemeld bij je Modrinth-account. Je kunt je op elk apparaat afzonderlijk afmelden.\n\nAls je een vermelding ziet die je niet herkent, meld je dan af op dat apparaat en wijzig onmiddellijk het wachtwoord van je Modrinth-account."
   },
   "settings.sessions.last-accessed-ago": {
     "message": "Laatst geopend {ago}"

@@ -100,10 +100,9 @@ impl EventState {
             }
         }
 
-        Err(crate::ErrorKind::OtherError(
+        Err(anyhow::anyhow!(
             "The app event state was never initialized".to_string(),
-        )
-        .into())
+        ))
     }
 
     #[cfg(feature = "tauri")]
@@ -226,8 +225,7 @@ pub fn export_app_event_bindings(
             crate::install::model::InstallApiErrorDetails,
             crate::install::InstallErrorContext,
             crate::api::pack::import::ImportLauncherType,
-            crate::state::ModLoader,
-            crate::SharedInstanceUnavailableReason
+            crate::state::ModLoader
         ),
     )?;
     fix_postcard_javascript_utf8(&output.join("postcard/index.js"))?;

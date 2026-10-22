@@ -215,6 +215,7 @@ export function useImageEditor() {
 			bindCanvasEvents(nextCanvas)
 			resetHistory()
 			setTool('select')
+			return { width: originalWidth.value, height: originalHeight.value }
 		} finally {
 			loading.value = false
 		}

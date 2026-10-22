@@ -4,6 +4,7 @@ use super::content_mutation::{
 use super::sync_content_files::instance_file_id;
 use super::sync_content_files::normalize_legacy_content_files;
 use crate::state::content_store::file_path_on_disk;
+use crate::state::instances::adapters::filesystem::ScannedContentFile;
 use crate::state::instances::adapters::{filesystem, sqlite};
 use crate::state::{InstanceFile, InstanceInstallStage, State};
 use chrono::Utc;
@@ -80,21 +81,15 @@ pub(crate) async fn migrate_legacy_content(
                 && !duplicates.contains(canonical)
                 && !managed_paths.contains(canonical)
         });
-        // Adoption is linking a file into the store. Where no link can be
-        // made — upstream has them switched off for now — every file would be
-        // tried and deferred again before every launch, a warning each.
-        if let Some(first) = scanned.first() {
-            let probe = state
-                .content_store
-                .instance_path(&instance.path, &first.relative_path)
-                .await?;
-            if !state.content_store.can_share_content(&probe).await? {
-                tracing::debug!(
-                    instance_id,
-                    "Content links are unavailable here; legacy adoption skipped"
-                );
-                scanned.clear();
-            }
+        if let Some(probe) = scanned.first()
+            && !can_adopt_from_instance(state, &instance.path, probe).await
+        {
+            tracing::debug!(
+                instance_id,
+                pending = scanned.len(),
+                "Legacy content adoption skipped; content links are unavailable for this instance",
+            );
+            scanned.clear();
         }
         (scanned, normalized)
     };
@@ -204,4 +199,33 @@ pub(crate) async fn migrate_legacy_content(
         .await?;
     }
     Ok(())
+}
+
+/// Probes once whether content in this instance can be linked into the store.
+///
+/// Every candidate in an instance shares its filesystem, so a failed probe means
+/// each per-file adoption would only be deferred after taking the content locks.
+async fn can_adopt_from_instance(
+    state: &State,
+    instance_path: &str,
+    probe: &ScannedContentFile,
+) -> bool {
+    let result = async {
+        let source = state
+            .content_store
+            .instance_path(instance_path, &probe.relative_path)
+            .await?;
+        state.content_store.can_share_content(&source).await
+    }
+    .await;
+    match result {
+        Ok(available) => available,
+        Err(error) => {
+            tracing::debug!(
+                path = %probe.relative_path,
+                "Content link probe failed: {error}",
+            );
+            false
+        }
+    }
 }

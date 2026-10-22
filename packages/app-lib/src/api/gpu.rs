@@ -221,7 +221,7 @@ pub fn set_preference(
     _java_path: &Path,
     _preference: GpuPreference,
 ) -> crate::Result<()> {
-    Err(crate::ErrorKind::OtherError(
+    Err(anyhow::anyhow!(
         "Choosing a GPU per application is only supported on Windows"
             .to_string(),
     )

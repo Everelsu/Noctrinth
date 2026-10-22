@@ -1455,7 +1455,7 @@ async fn install_file(
     .await?;
     let project_id = file.mod_id.to_string();
     let file_id = file.id.to_string();
-    let _permit = state.install_db_semaphore.acquire().await?;
+    let _permit = state.installs.db_semaphore.acquire().await?;
     crate::state::instances::commands::add_project_bytes(
         instance_id,
         &sanitize_filename(&file.file_name),

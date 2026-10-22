@@ -1073,9 +1073,6 @@
   "conversation-thread.action.approve": {
     "message": "Approva"
   },
-  "conversation-thread.action.approve-with-reply": {
-    "message": "Approva con risposta"
-  },
   "conversation-thread.action.close-report": {
     "message": "Chiudi segnalazione"
   },
@@ -1084,9 +1081,6 @@
   },
   "conversation-thread.action.reject": {
     "message": "Rifiuta"
-  },
-  "conversation-thread.action.reject-with-reply": {
-    "message": "Rifiuta con risposta"
   },
   "conversation-thread.action.reopen-thread": {
     "message": "Riapri thread"
@@ -1121,9 +1115,6 @@
   "conversation-thread.action.withhold": {
     "message": "Sospendi"
   },
-  "conversation-thread.action.withhold-with-reply": {
-    "message": "Sospendi con risposta"
-  },
   "conversation-thread.closed-thread.description": {
     "message": "Questo thread è stato chiuso. Non potranno essere inviati nuovi messaggi."
   },
@@ -1132,9 +1123,6 @@
   },
   "conversation-thread.error.reopening-report": {
     "message": "Impossibile riaprire la segnalazione"
-  },
-  "conversation-thread.error.sending-message": {
-    "message": "Impossibile inviare il messaggio"
   },
   "conversation-thread.reply-editor.placeholder.reply": {
     "message": "Rispondi al thread..."
@@ -1162,9 +1150,6 @@
   },
   "conversation-thread.resubmit-modal.confirmation.label": {
     "message": "Confermo di aver risposto adeguatamente ai messaggi dei moderatori."
-  },
-  "conversation-thread.resubmit-modal.description": {
-    "message": "Stai ripresentando <project-title>{projectTitle}</project-title> per farlo revisionare nuovamente ai moderatori."
   },
   "conversation-thread.resubmit-modal.header.resubmitting": {
     "message": "Ripresentazione"
@@ -3431,9 +3416,6 @@
   "project-member-header.success-join": {
     "message": "Ora fai parte del team del progetto"
   },
-  "project-moderation-nags.project-submitted-for-review": {
-    "message": "Il progetto è stato presentato per la revisione!"
-  },
   "project-moderation-nags.publishing-checklist": {
     "message": "Checklist di pubblicazione"
   },
@@ -3550,9 +3532,6 @@
   },
   "project.actions.rescan-modpack": {
     "message": "Riscansiona pacchetto"
-  },
-  "project.actions.review-project": {
-    "message": "Rivedi progetto"
   },
   "project.actions.servers-promo.description": {
     "message": "Modrinth Hosting è il modo più facile per giocare insieme spensieratamente!"
@@ -4589,29 +4568,17 @@
   "report.not-for.dmca.description": {
     "message": "Consulta la nostra <policy-link>Politica sul copyright</policy-link>."
   },
-  "report.note.ai-images.1": {
-    "message": "Abbiamo aggiornato le nostre regole per proibire le icone, le gallerie e le descrizioni generate dall'IA. Stiamo dando ai creatori un periodo di tempo per rimuoverle prima che iniziamo ad accettarne le segnalazioni."
-  },
-  "report.note.check-back-later": {
-    "message": "Ritorna più tardi quando questo periodo sarà terminato. In questo momento le segnalazioni di questo tipo saranno ignorate."
-  },
   "report.note.copyright.1": {
     "message": "Nota che questo *non* è un avviso di rimozione per DMCA, ma una segnalazione di contenuto caricato più volte."
   },
   "report.note.copyright.2": {
     "message": "Se volessi invece presentare un avviso di rimozione per DMCA (un'azione legale), consulta la nostra <copyright-policy-link>Politica sul copyright</copyright-policy-link>."
   },
-  "report.note.fully-ai-generated.1": {
-    "message": "Abbiamo aggiornato le nostre regole per proibire i progetti interamente generati dall'IA. Stiamo dando ai creatori un periodo di tempo per eliminarli prima che iniziamo ad accettarne le segnalazioni."
-  },
   "report.note.malicious.1": {
     "message": "Le segnalazioni di contenuti dannosi o ingannevoli devono includere prove sostanziali del comportamento, per esempio segmenti di codice."
   },
   "report.note.malicious.2": {
     "message": "Riepiloghi di Microsoft Defender, VirusTotal, o altre rilevazioni di malware tramite IA non sono prove sufficienti e non saranno accettati."
-  },
-  "report.note.missing-disclosure.1": {
-    "message": "Le informative sui contenuti sono una funzione che abbiamo appena aggiunto. Stiamo dando ai creatori un periodo di tempo per aggiornare le informative dei loro progetti prima di iniziare ad accettare le segnalazioni per informative errate o mancanti."
   },
   "report.please-report": {
     "message": "Si prega di segnalare:"
@@ -5579,15 +5546,6 @@
   "settings.pats.modal.create.title": {
     "message": "Crea un token di accesso (PAT)"
   },
-  "settings.pats.modal.delete.action": {
-    "message": "Elimina questo token"
-  },
-  "settings.pats.modal.delete.description": {
-    "message": "Questo eliminerà definitivamente questo token (sul serio, per sempre)."
-  },
-  "settings.pats.modal.delete.title": {
-    "message": "Vuoi davvero eliminare questo token?"
-  },
   "settings.pats.modal.edit.title": {
     "message": "Modifica token di accesso (PAT)"
   },
@@ -5617,9 +5575,6 @@
   },
   "settings.sessions.current-session": {
     "message": "Sessione corrente"
-  },
-  "settings.sessions.description": {
-    "message": "Ecco tutti i dispositivi su cui hai effettuato l'accesso al tuo account di Modrinth. Puoi uscire da ciascuno individualmente.\n\nSe noti un dispositivo che non riconosci, disconnettiti da esso e cambia la password del tuo account Modrinth immediatamente."
   },
   "settings.sessions.last-accessed-ago": {
     "message": "Ultimo accesso {ago}"

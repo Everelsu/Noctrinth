@@ -116,16 +116,12 @@ impl ElyCredentials {
             .send()
             .await
             .map_err(|e| {
-                crate::ErrorKind::OtherError(format!(
-                    "Ely.by auth request failed: {e}"
-                ))
+                anyhow::anyhow!(format!("Ely.by auth request failed: {e}"))
             })?;
 
         let status = resp.status();
         let body = resp.text().await.map_err(|e| {
-            crate::ErrorKind::OtherError(format!(
-                "Failed to read Ely.by response: {e}"
-            ))
+            anyhow::anyhow!(format!("Failed to read Ely.by response: {e}"))
         })?;
 
         if !status.is_success() {
@@ -134,23 +130,18 @@ impl ElyCredentials {
                 .ok()
                 .and_then(|v| v["errorMessage"].as_str().map(String::from))
                 .unwrap_or_else(|| format!("HTTP {status}"));
-            return Err(crate::ErrorKind::OtherError(format!(
-                "Ely.by login failed: {msg}"
-            ))
-            .into());
+            return Err(anyhow::anyhow!(format!("Ely.by login failed: {msg}")));
         }
 
         let data: ElyAuthResponse =
             serde_json::from_str(&body).map_err(|e| {
-                crate::ErrorKind::OtherError(format!(
+                anyhow::anyhow!(format!(
                     "Failed to parse Ely.by auth response: {e}. Body: {body}"
                 ))
             })?;
 
         let uuid = Uuid::parse_str(&data.selected_profile.id).map_err(|e| {
-            crate::ErrorKind::OtherError(format!(
-                "Invalid UUID from Ely.by: {e}"
-            ))
+            anyhow::anyhow!(format!("Invalid UUID from Ely.by: {e}"))
         })?;
 
         Ok(Self {
@@ -221,23 +212,20 @@ impl ElyCredentials {
             .send()
             .await
             .map_err(|e| {
-                crate::ErrorKind::OtherError(format!(
-                    "Ely.by refresh request failed: {e}"
-                ))
+                anyhow::anyhow!(format!("Ely.by refresh request failed: {e}"))
             })?;
 
         let status = resp.status();
         let body = resp.text().await.map_err(|e| {
-            crate::ErrorKind::OtherError(format!(
+            anyhow::anyhow!(format!(
                 "Failed to read Ely.by refresh response: {e}"
             ))
         })?;
 
         if status.is_server_error() {
-            return Err(crate::ErrorKind::OtherError(format!(
+            return Err(anyhow::anyhow!(format!(
                 "Ely.by token refresh failed: HTTP {status}"
-            ))
-            .into());
+            )));
         }
         if !status.is_success() {
             return Ok(ElyRefresh::Rejected);
@@ -251,7 +239,7 @@ impl ElyCredentials {
 
         let data: RefreshResponse =
             serde_json::from_str(&body).map_err(|e| {
-                crate::ErrorKind::OtherError(format!(
+                anyhow::anyhow!(format!(
                     "Failed to parse Ely.by refresh response: {e}"
                 ))
             })?;
@@ -272,9 +260,7 @@ impl ElyCredentials {
         let Some(row) = res else { return Ok(None) };
 
         let uuid = Uuid::parse_str(&row.uuid).map_err(|e| {
-            crate::ErrorKind::OtherError(format!(
-                "Invalid UUID in ely_users: {e}"
-            ))
+            anyhow::anyhow!(format!("Invalid UUID in ely_users: {e}"))
         })?;
 
         let mut creds = Self {

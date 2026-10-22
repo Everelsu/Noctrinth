@@ -172,23 +172,18 @@ pub async fn get_skin_texture(username: &str) -> crate::Result<Vec<u8>> {
     let resp = send_to_ely(|| INSECURE_REQWEST_CLIENT.get(&url))
         .await
         .map_err(|e| {
-            crate::ErrorKind::OtherError(format!(
-                "Failed to fetch Ely.by skin: {e}"
-            ))
+            anyhow::anyhow!(format!("Failed to fetch Ely.by skin: {e}"))
         })?;
 
     if !resp.status().is_success() {
-        return Err(crate::ErrorKind::OtherError(format!(
+        return Err(anyhow::anyhow!(format!(
             "Ely.by skin not available (HTTP {})",
             resp.status()
-        ))
-        .into());
+        )));
     }
 
     let bytes = resp.bytes().await.map_err(|e| {
-        crate::ErrorKind::OtherError(format!(
-            "Failed to read Ely.by skin data: {e}"
-        ))
+        anyhow::anyhow!(format!("Failed to read Ely.by skin data: {e}"))
     })?;
 
     Ok(bytes.to_vec())
@@ -234,23 +229,18 @@ pub async fn list_uploaded_skins(
     })
     .await
     .map_err(|e| {
-        crate::ErrorKind::OtherError(format!(
-            "Failed to list Ely.by skins: {e}"
-        ))
+        anyhow::anyhow!(format!("Failed to list Ely.by skins: {e}"))
     })?;
 
     if !resp.status().is_success() {
-        return Err(crate::ErrorKind::OtherError(format!(
+        return Err(anyhow::anyhow!(format!(
             "Ely.by skin listing failed (HTTP {})",
             resp.status()
-        ))
-        .into());
+        )));
     }
 
     let listing: ElySkinListing = resp.json().await.map_err(|e| {
-        crate::ErrorKind::OtherError(format!(
-            "Could not read the Ely.by skin listing: {e}"
-        ))
+        anyhow::anyhow!(format!("Could not read the Ely.by skin listing: {e}"))
     })?;
 
     Ok(listing.items)
@@ -285,7 +275,7 @@ pub async fn get_current_skin_url(
     let resp = send_to_ely(|| INSECURE_REQWEST_CLIENT.get(&url))
         .await
         .map_err(|e| {
-            crate::ErrorKind::OtherError(format!(
+            anyhow::anyhow!(format!(
                 "Failed to read the current Ely.by skin: {e}"
             ))
         })?;
@@ -330,23 +320,18 @@ pub async fn get_texture_bytes(url: &str) -> crate::Result<Vec<u8>> {
     let resp = send_to_ely(|| INSECURE_REQWEST_CLIENT.get(parsed.clone()))
         .await
         .map_err(|e| {
-            crate::ErrorKind::OtherError(format!(
-                "Failed to fetch the Ely.by texture: {e}"
-            ))
+            anyhow::anyhow!(format!("Failed to fetch the Ely.by texture: {e}"))
         })?;
 
     if !resp.status().is_success() {
-        return Err(crate::ErrorKind::OtherError(format!(
+        return Err(anyhow::anyhow!(format!(
             "Ely.by texture not available (HTTP {})",
             resp.status()
-        ))
-        .into());
+        )));
     }
 
     let bytes = resp.bytes().await.map_err(|e| {
-        crate::ErrorKind::OtherError(format!(
-            "Failed to read the Ely.by texture: {e}"
-        ))
+        anyhow::anyhow!(format!("Failed to read the Ely.by texture: {e}"))
     })?;
 
     Ok(bytes.to_vec())

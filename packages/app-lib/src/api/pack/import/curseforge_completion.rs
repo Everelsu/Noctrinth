@@ -291,7 +291,7 @@ async fn restore_one(
     let relative_path = {
         // Serialised against the rest of the install bookkeeping, exactly as
         // the modpack installer does when it writes content of its own.
-        let _permit = state.install_db_semaphore.acquire().await?;
+        let _permit = state.installs.db_semaphore.acquire().await?;
         crate::state::instances::commands::add_project_bytes(
             instance_id,
             &file_name,

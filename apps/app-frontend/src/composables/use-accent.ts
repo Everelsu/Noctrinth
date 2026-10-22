@@ -279,6 +279,28 @@ export function findAccentPreset(id: string): AccentPreset | undefined {
 }
 
 /**
+ * A colour picked on the wheel rather than from the list, stored in place of a
+ * preset id as `#rrggbb`. It is drawn as picked on every theme: the picker
+ * repaints the window as it moves, so what reads well is the user's to see.
+ */
+const CUSTOM_ACCENT = /^#[0-9a-f]{6}$/i
+
+export function isCustomAccent(id: string): boolean {
+	return CUSTOM_ACCENT.test(id)
+}
+
+function isKnownAccent(id: string | null | undefined): id is string {
+	return !!id && (isCustomAccent(id) || !!findAccentPreset(id))
+}
+
+/** The colour an accent id is drawn in under the theme on screen. */
+export function accentColorOf(id: string, active: string = theme.active): string | null {
+	if (isCustomAccent(id)) return id.toLowerCase()
+	const preset = findAccentPreset(id)
+	return preset ? accentColorFor(preset, active) : null
+}
+
+/**
  * What was chosen last time, read before anything is drawn.
  *
  * The database is the real home of both of these; this is only so the window
@@ -293,7 +315,7 @@ function readCache(): { preset: string; tint: boolean } {
 		const cached = raw ? (JSON.parse(raw) as { preset?: unknown; tint?: unknown }) : null
 		return {
 			preset:
-				typeof cached?.preset === 'string' && findAccentPreset(cached.preset)
+				typeof cached?.preset === 'string' && isKnownAccent(cached.preset)
 					? cached.preset
 					: DEFAULT_ACCENT_PRESET,
 			tint: cached?.tint !== false,
@@ -337,10 +359,9 @@ function apply(id: string, tint: boolean): void {
 		html.style.removeProperty(variable)
 	}
 
-	const preset = findAccentPreset(id)
-	if (!preset || preset.id === DEFAULT_ACCENT_PRESET) return
-
-	const rgb = parseHex(accentColorFor(preset))
+	if (id === DEFAULT_ACCENT_PRESET) return
+	const color = accentColorOf(id)
+	const rgb = color ? parseHex(color) : null
 	if (!rgb) return
 
 	const [red, green, blue] = rgb
@@ -379,6 +400,8 @@ function apply(id: string, tint: boolean): void {
 	}
 }
 
+let iconTimer: ReturnType<typeof setTimeout> | undefined
+
 // Each theme carries its own alphas, and a preset is drawn differently on light
 // than on dark, so the override is recomputed rather than kept.
 watch(
@@ -389,18 +412,21 @@ watch(
 
 		// The window's own icon is the last purple thing left when the app is not
 		// purple any more. Loaded lazily: it is the one part of this that talks to
-		// the window, and nothing waits on it.
-		const preset = findAccentPreset(id)
-		if (preset) {
+		// the window, and nothing waits on it. Held back a moment, because
+		// dragging across the colour wheel changes the accent on every frame.
+		const color = accentColorOf(id)
+		if (!color) return
+		clearTimeout(iconTimer)
+		iconTimer = setTimeout(() => {
 			void import('@/helpers/noctrinth-window-icon').then(({ paintWindowIcon }) =>
 				paintWindowIcon(
-					accentColorFor(preset),
+					color,
 					// The shortcuts go back to the executable's icon only when that
 					// icon is the right colour, which it is not for a green theme.
-					preset.id === DEFAULT_ACCENT_PRESET && !THEME_ACCENTS[theme.active],
+					id === DEFAULT_ACCENT_PRESET && !THEME_ACCENTS[theme.active],
 				),
 			)
-		}
+		}, 150)
 	},
 	{ immediate: true },
 )
@@ -415,6 +441,6 @@ export function useAccentPreset() {
 
 /** Sets the accent without going through the settings tab — used at startup. */
 export function setAccentPreset(id: string | null | undefined, tint = true): void {
-	presetId.value = id && findAccentPreset(id) ? id : DEFAULT_ACCENT_PRESET
+	presetId.value = isKnownAccent(id) ? id : DEFAULT_ACCENT_PRESET
 	tintBackground.value = tint
 }

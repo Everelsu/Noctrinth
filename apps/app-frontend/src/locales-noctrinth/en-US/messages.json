@@ -1534,5 +1534,17 @@
 	},
 	"noctrinth.settings.background.dim.description": {
 		"message": "For a bright or busy picture, so what is over it stays easy to read."
+	},
+	"app.appearance-settings.accent.custom": {
+		"message": "Custom"
+	},
+	"app.appearance-settings.accent.custom.wheel": {
+		"message": "Hue and saturation"
+	},
+	"app.appearance-settings.accent.custom.brightness": {
+		"message": "Brightness"
+	},
+	"app.appearance-settings.accent.custom.hex": {
+		"message": "Hex colour"
 	}
 }

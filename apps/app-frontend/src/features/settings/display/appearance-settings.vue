@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { CheckIcon } from '@modrinth/assets'
+import { CheckIcon, DropdownIcon } from '@modrinth/assets'
 import {
 	AppearanceSettingsLayout,
+	Collapsible,
 	defineMessages,
 	injectAuth,
 	injectUserPreferences,
@@ -13,12 +14,15 @@ import {
 import { platform } from '@tauri-apps/plugin-os'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
+import NoctrinthColorWheel from '@/components/ui/NoctrinthColorWheel.vue'
 import {
 	ACCENT_PRESETS,
 	accentColorFor,
+	accentColorOf,
 	type AccentPreset,
 	DEFAULT_ACCENT_PRESET,
 	findAccentPreset,
+	isCustomAccent,
 	setAccentPreset,
 	useAccentPreset,
 } from '@/composables/use-accent.ts'
@@ -41,7 +45,10 @@ const accent = useAccentPreset()
 // preview would read back as the saved value and nothing would count as a
 // change. Upstream keeps the theme apart the same way, through `theme.preview`.
 const savedAccent = ref({
-	preset: findAccentPreset(accent.id.value)?.id ?? DEFAULT_ACCENT_PRESET,
+	preset:
+		isCustomAccent(accent.id.value) || findAccentPreset(accent.id.value)
+			? accent.id.value
+			: DEFAULT_ACCENT_PRESET,
 	tint: accent.tintBackground.value,
 })
 
@@ -80,6 +87,7 @@ const presetNames = defineMessages({
 	lantern: { id: 'app.appearance-settings.accent.lantern', defaultMessage: 'Lantern' },
 	ember: { id: 'app.appearance-settings.accent.ember', defaultMessage: 'Ember' },
 	rose: { id: 'app.appearance-settings.accent.rose', defaultMessage: 'Rose' },
+	custom: { id: 'app.appearance-settings.accent.custom', defaultMessage: 'Custom' },
 })
 
 function presetName(preset: AccentPreset): string {
@@ -152,6 +160,24 @@ const themeOptions = computed(() =>
 const preferredDarkTheme = computed(() =>
 	isDarkTheme(current.value.theme) ? current.value.theme : theme.preferredDark,
 )
+
+const customSelected = computed(() => isCustomAccent(current.value.accentPreset))
+
+// The wheel opens on the colour last picked on it, or on whatever accent is on
+// screen, so choosing Custom never jumps to an unrelated colour.
+const lastCustom = ref(
+	isCustomAccent(savedAccent.value.preset)
+		? savedAccent.value.preset
+		: (accentColorOf(savedAccent.value.preset, theme.active) ?? '#8e32f3'),
+)
+
+const customColor = computed({
+	get: () => (customSelected.value ? current.value.accentPreset : lastCustom.value),
+	set: (color: string) => {
+		lastCustom.value = color
+		current.value.accentPreset = color
+	},
+})
 
 function setTheme(value: ColorTheme): void {
 	current.value.theme = value
@@ -268,7 +294,31 @@ provideAppearanceSettings({
 				</span>
 				<span class="truncate font-medium text-contrast">{{ presetName(preset) }}</span>
 			</button>
+			<button
+				type="button"
+				class="accent-option flex items-center gap-3 rounded-xl border border-solid border-button-border bg-button-bg p-3 text-left"
+				:class="{ 'accent-option--selected': customSelected }"
+				:style="{ '--accent-swatch': customColor }"
+				:aria-pressed="customSelected"
+				@click="current.accentPreset = customColor"
+			>
+				<span class="accent-option__swatch accent-option__swatch--custom" aria-hidden="true">
+					<CheckIcon v-if="customSelected" class="size-4 text-contrast" />
+				</span>
+				<span class="truncate font-medium text-contrast">{{
+					formatMessage(presetNames.custom)
+				}}</span>
+				<DropdownIcon
+					class="ml-auto size-4 shrink-0 text-secondary transition-transform"
+					:class="{ 'rotate-180': customSelected }"
+					aria-hidden="true"
+				/>
+			</button>
 		</div>
+
+		<Collapsible :collapsed="!customSelected" overflow-visible>
+			<NoctrinthColorWheel v-model="customColor" class="mt-1" />
+		</Collapsible>
 
 		<div class="mt-3 flex items-center justify-between gap-4">
 			<div class="min-w-0">
@@ -315,5 +365,11 @@ provideAppearanceSettings({
 	flex-shrink: 0;
 	border-radius: 999px;
 	background: var(--accent-swatch);
+}
+
+.accent-option__swatch--custom {
+	background:
+		radial-gradient(circle, var(--accent-swatch) 38%, transparent 40%),
+		conic-gradient(red, yellow, lime, aqua, blue, magenta, red);
 }
 </style>

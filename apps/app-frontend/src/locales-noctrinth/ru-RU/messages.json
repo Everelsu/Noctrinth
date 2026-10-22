@@ -2287,5 +2287,17 @@
 	},
 	"noctrinth.settings.background.dim.description": {
 		"message": "Для яркой или пёстрой картинки, чтобы то, что поверх, легко читалось."
+	},
+	"app.appearance-settings.accent.custom": {
+		"message": "Свой"
+	},
+	"app.appearance-settings.accent.custom.wheel": {
+		"message": "Оттенок и насыщенность"
+	},
+	"app.appearance-settings.accent.custom.brightness": {
+		"message": "Яркость"
+	},
+	"app.appearance-settings.accent.custom.hex": {
+		"message": "Цвет в HEX"
 	}
 }

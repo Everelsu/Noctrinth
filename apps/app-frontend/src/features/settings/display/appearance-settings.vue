@@ -79,10 +79,8 @@ const messages = defineMessages({
 // rather than being labelled by whatever its list entry happens to say.
 const presetNames = defineMessages({
 	theme: { id: 'app.appearance-settings.accent.theme', defaultMessage: 'Theme' },
-	amethyst: { id: 'app.appearance-settings.accent.amethyst', defaultMessage: 'Amethyst' },
 	nightshade: { id: 'app.appearance-settings.accent.nightshade', defaultMessage: 'Nightshade' },
 	midnight: { id: 'app.appearance-settings.accent.midnight', defaultMessage: 'Midnight' },
-	glacier: { id: 'app.appearance-settings.accent.glacier', defaultMessage: 'Glacier' },
 	verdant: { id: 'app.appearance-settings.accent.verdant', defaultMessage: 'Verdant' },
 	lantern: { id: 'app.appearance-settings.accent.lantern', defaultMessage: 'Lantern' },
 	ember: { id: 'app.appearance-settings.accent.ember', defaultMessage: 'Ember' },

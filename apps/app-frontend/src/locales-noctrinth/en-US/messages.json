@@ -29,17 +29,11 @@
 	"app.appearance-settings.accent-tint.title": {
 		"message": "Tint the background too"
 	},
-	"app.appearance-settings.accent.amethyst": {
-		"message": "Amethyst"
-	},
 	"app.appearance-settings.accent.description": {
 		"message": "The colour the interface is picked out in. Each one is drawn deeper on light themes and brighter on dark ones."
 	},
 	"app.appearance-settings.accent.ember": {
 		"message": "Ember"
-	},
-	"app.appearance-settings.accent.glacier": {
-		"message": "Glacier"
 	},
 	"app.appearance-settings.accent.lantern": {
 		"message": "Lantern"

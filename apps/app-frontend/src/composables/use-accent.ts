@@ -55,10 +55,8 @@ export const DEFAULT_ACCENT_PRESET = 'theme'
  */
 export const ACCENT_PRESETS: AccentPreset[] = [
 	{ id: 'theme', name: 'Theme', light: '#8e32f3', dark: '#c78aff' },
-	{ id: 'amethyst', name: 'Amethyst', light: '#7b2cbf', dark: '#a855f7' },
 	{ id: 'nightshade', name: 'Nightshade', light: '#5b45d6', dark: '#8b7bff' },
 	{ id: 'midnight', name: 'Midnight', light: '#1f68c0', dark: '#4f9cff' },
-	{ id: 'glacier', name: 'Glacier', light: '#0e8fa8', dark: '#3ad2ec' },
 	{ id: 'verdant', name: 'Verdant', light: '#0faa4f', dark: '#42e686' },
 	{ id: 'lantern', name: 'Lantern', light: '#a86a00', dark: '#ffc857' },
 	{ id: 'ember', name: 'Ember', light: '#c9510c', dark: '#ff8f4a' },
@@ -289,8 +287,19 @@ export function isCustomAccent(id: string): boolean {
 	return CUSTOM_ACCENT.test(id)
 }
 
-function isKnownAccent(id: string | null | undefined): id is string {
-	return !!id && (isCustomAccent(id) || !!findAccentPreset(id))
+/**
+ * Presets that were dropped from the list, kept as the colour they drew on dark
+ * themes so that whoever had picked one keeps it, now as a custom colour.
+ */
+const RETIRED_PRESETS: Record<string, string> = {
+	amethyst: '#a855f7',
+	glacier: '#3ad2ec',
+}
+
+function knownAccent(id: unknown): string | null {
+	if (typeof id !== 'string') return null
+	if (RETIRED_PRESETS[id]) return RETIRED_PRESETS[id]
+	return isCustomAccent(id) || findAccentPreset(id) ? id : null
 }
 
 /** The colour an accent id is drawn in under the theme on screen. */
@@ -314,10 +323,7 @@ function readCache(): { preset: string; tint: boolean } {
 		const raw = localStorage.getItem(CACHE_KEY)
 		const cached = raw ? (JSON.parse(raw) as { preset?: unknown; tint?: unknown }) : null
 		return {
-			preset:
-				typeof cached?.preset === 'string' && isKnownAccent(cached.preset)
-					? cached.preset
-					: DEFAULT_ACCENT_PRESET,
+			preset: knownAccent(cached?.preset) ?? DEFAULT_ACCENT_PRESET,
 			tint: cached?.tint !== false,
 		}
 	} catch {
@@ -441,6 +447,6 @@ export function useAccentPreset() {
 
 /** Sets the accent without going through the settings tab — used at startup. */
 export function setAccentPreset(id: string | null | undefined, tint = true): void {
-	presetId.value = isKnownAccent(id) ? id : DEFAULT_ACCENT_PRESET
+	presetId.value = knownAccent(id) ?? DEFAULT_ACCENT_PRESET
 	tintBackground.value = tint
 }

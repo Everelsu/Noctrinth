@@ -43,6 +43,7 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 ### Changed
 - Synced with upstream Modrinth 0.22.0: shared instances can carry any file in the instance, the Push update window is redesigned with Changes and Files tabs, the download manager shows shared instance uploads, the Play button no longer stalls after the launcher has been open a while, and old launcher logs and cached project data are cleaned up.
 - Error messages say what went wrong in full, down to its cause.
+- The Amethyst and Glacier accents are gone from the list; whoever picked one keeps that colour as a custom one.
 
 ### Fixed
 - The installer no longer stops with "Error opening file for writing" when Noctrinth has only just closed.`,

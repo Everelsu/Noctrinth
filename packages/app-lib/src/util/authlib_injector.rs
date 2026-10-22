@@ -107,14 +107,14 @@ async fn update_agent(
         .send()
         .await
         .map_err(|e| {
-            crate::ErrorKind::OtherError(format!(
+            anyhow::anyhow!(format!(
                 "Failed to reach the authlib-injector distribution: {e}"
             ))
         })?
         .json::<LatestArtifact>()
         .await
         .map_err(|e| {
-            crate::ErrorKind::OtherError(format!(
+            anyhow::anyhow!(format!(
                 "Failed to parse authlib-injector metadata: {e}"
             ))
         })?;
@@ -133,25 +133,24 @@ async fn update_agent(
             .send()
             .await
             .map_err(|e| {
-                crate::ErrorKind::OtherError(format!(
+                anyhow::anyhow!(format!(
                     "Failed to download authlib-injector: {e}"
                 ))
             })?
             .bytes()
             .await
             .map_err(|e| {
-                crate::ErrorKind::OtherError(format!(
+                anyhow::anyhow!(format!(
                     "Failed to read the authlib-injector download: {e}"
                 ))
             })?;
 
         let digest = format!("{:x}", sha2::Sha256::digest(&bytes));
         if !digest.eq_ignore_ascii_case(latest.checksums.sha256.trim()) {
-            return Err(crate::ErrorKind::OtherError(format!(
+            return Err(anyhow::anyhow!(format!(
                 "The authlib-injector {} download does not match its checksum",
                 latest.version
-            ))
-            .into());
+            )));
         }
 
         // Next to it first, so a game holding the old jar open on Windows
@@ -301,9 +300,7 @@ async fn fetch_profile(server: &str) -> crate::Result<CachedProfile> {
         .send()
         .await
         .map_err(|e| {
-            crate::ErrorKind::OtherError(format!(
-                "Failed to reach {entry}: {e}"
-            ))
+            anyhow::anyhow!(format!("Failed to reach {entry}: {e}"))
         })?;
 
     let located = response
@@ -317,7 +314,7 @@ async fn fetch_profile(server: &str) -> crate::Result<CachedProfile> {
             .url()
             .join(&location)
             .map_err(|e| {
-                crate::ErrorKind::OtherError(format!(
+                anyhow::anyhow!(format!(
                     "{entry} pointed at an API location that is not a URL: {e}"
                 ))
             })?
@@ -331,14 +328,14 @@ async fn fetch_profile(server: &str) -> crate::Result<CachedProfile> {
         .send()
         .await
         .map_err(|e| {
-            crate::ErrorKind::OtherError(format!(
+            anyhow::anyhow!(format!(
                 "Failed to read the API metadata at {api_root}: {e}"
             ))
         })?
         .text()
         .await
         .map_err(|e| {
-            crate::ErrorKind::OtherError(format!(
+            anyhow::anyhow!(format!(
                 "Failed to read the API metadata at {api_root}: {e}"
             ))
         })?;
@@ -349,7 +346,7 @@ async fn fetch_profile(server: &str) -> crate::Result<CachedProfile> {
         .ok()
         .filter(serde_json::Value::is_object)
         .ok_or_else(|| {
-            crate::ErrorKind::OtherError(format!(
+            anyhow::anyhow!(format!(
                 "The API metadata at {api_root} is not a JSON object"
             ))
         })?;

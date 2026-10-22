@@ -229,6 +229,7 @@ export function page({
 	<meta property="og:description" content="${desc}">
 	<meta property="og:image" content="${SITE_URL}/assets/social-preview.png">
 	<meta name="twitter:card" content="summary_large_image">
+	<meta name="google-site-verification" content="ayBhsFYwpg8Dii-9MgI3aKSmUTBK_eOpAa3P1ohrrds" />
 	<link rel="icon" type="image/svg+xml" href="${prefix}logo.svg">
 	<link rel="alternate" type="application/json" title="Noctrinth news" href="${prefix}news/feed/articles.json">
 	<link rel="preconnect" href="https://fonts.googleapis.com">

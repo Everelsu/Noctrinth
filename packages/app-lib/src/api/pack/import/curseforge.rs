@@ -132,6 +132,7 @@ pub async fn import_curseforge(
                 &game_version,
                 mod_loader,
                 loader_version.as_deref(),
+                &state.directories,
             )
             .await?
         } else {
@@ -187,7 +188,6 @@ pub async fn import_curseforge(
     }
 
     // Copy in contained folders as overrides
-    let state = State::get().await?;
     copy_dotminecraft_with_reporter(
         instance_id,
         curseforge_instance_folder.clone(),
@@ -213,6 +213,7 @@ pub async fn import_curseforge(
         instance_id,
         false,
         Some(reporter),
+        &state,
     )
     .await?;
 

@@ -20,9 +20,9 @@ pub async fn clipboard_copy_files(paths: Vec<String>) -> Result<()> {
     tauri::async_runtime::spawn_blocking(move || copy_files(&paths))
         .await
         .map_err(|error| {
-            theseus::ErrorKind::OtherError(error.to_string()).as_error()
+            anyhow::anyhow!(error.to_string())
         })?
-        .map_err(|error| theseus::ErrorKind::OtherError(error).as_error())?;
+        .map_err(|error| anyhow::anyhow!(error))?;
     Ok(())
 }
 

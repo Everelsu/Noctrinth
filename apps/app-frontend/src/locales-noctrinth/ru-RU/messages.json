@@ -35,17 +35,11 @@
 	"app.appearance-settings.accent-tint.title": {
 		"message": "Красить и фон"
 	},
-	"app.appearance-settings.accent.amethyst": {
-		"message": "Аметист"
-	},
 	"app.appearance-settings.accent.description": {
 		"message": "Цвет, которым подсвечен интерфейс. На светлых темах каждый рисуется глубже, на тёмных — ярче."
 	},
 	"app.appearance-settings.accent.ember": {
 		"message": "Уголь"
-	},
-	"app.appearance-settings.accent.glacier": {
-		"message": "Ледник"
 	},
 	"app.appearance-settings.accent.lantern": {
 		"message": "Фонарь"
@@ -2287,5 +2281,17 @@
 	},
 	"noctrinth.settings.background.dim.description": {
 		"message": "Для яркой или пёстрой картинки, чтобы то, что поверх, легко читалось."
+	},
+	"app.appearance-settings.accent.custom": {
+		"message": "Свой"
+	},
+	"app.appearance-settings.accent.custom.wheel": {
+		"message": "Оттенок и насыщенность"
+	},
+	"app.appearance-settings.accent.custom.brightness": {
+		"message": "Яркость"
+	},
+	"app.appearance-settings.accent.custom.hex": {
+		"message": "Цвет в HEX"
 	}
 }

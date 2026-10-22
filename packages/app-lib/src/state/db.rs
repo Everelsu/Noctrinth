@@ -1,3 +1,4 @@
+use crate::ErrorKind;
 use crate::state::DirectoryInfo;
 use sqlx::migrate::Migrator;
 use sqlx::sqlite::{
@@ -14,8 +15,8 @@ pub(crate) async fn connect(
     app_identifier: &str,
 ) -> crate::Result<Pool<Sqlite>> {
     let settings_dir = DirectoryInfo::initial_settings_dir_path(app_identifier)
-        .ok_or(crate::ErrorKind::FSError(
-            "Could not find valid config dir".to_string(),
+        .ok_or(ErrorKind::FSError(
+            "could not find valid config dir".to_string(),
         ))?;
 
     crate::util::io::create_dir_all(&settings_dir).await?;
@@ -69,12 +70,11 @@ async fn open_migrated_app_db(db_path: &Path) -> crate::Result<Pool<Sqlite>> {
 /// says which files collided.
 async fn run_migrations(pool: &Pool<Sqlite>) -> crate::Result<()> {
     if let Some(problem) = duplicate_migration_versions(&MIGRATOR) {
-        return Err(crate::ErrorKind::OtherError(format!(
+        return Err(anyhow::anyhow!(format!(
             "Refusing to migrate the state database: {problem}. Renumber the \
              migration that has not shipped yet — the one already applied on \
              installs cannot move."
-        ))
-        .into());
+        )));
     }
 
     MIGRATOR.run(pool).await.inspect_err(|err| {

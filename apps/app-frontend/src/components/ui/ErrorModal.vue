@@ -197,37 +197,34 @@ defineExpose({
 		console.log(errorVal, context, canClose, source)
 		closable.value = canClose
 
-		if (errorVal.message && errorVal.message.includes('Minecraft authentication error:')) {
+		if (errorVal.code?.startsWith('minecraft_auth_')) {
 			titleMessage.value = messages.titleMinecraftAuth
 			errorType.value = 'minecraft_auth'
 			supportLink.value = ''
 			metadata.value = {}
 
-			if (errorVal.message.includes('temporarily unavailable')) {
+			if (errorVal.code === 'minecraft_auth_service_unavailable') {
 				metadata.value.serviceOutage = true
 			}
-			if (
-				errorVal.message.includes('existing connection was forcibly closed') ||
-				errorVal.message.includes('error sending request for url')
-			) {
+			if (errorVal.code === 'minecraft_auth_network') {
 				metadata.value.network = true
 			}
-			if (errorVal.message.includes('because the target machine actively refused it')) {
+			if (errorVal.code === 'minecraft_auth_connection_refused') {
 				metadata.value.hostsFile = true
 			}
-		} else if (errorVal.message && errorVal.message.includes('Move directory error:')) {
+		} else if (errorVal.code?.startsWith('directory_move_')) {
 			titleMessage.value = messages.titleDirectoryMove
 			errorType.value = 'directory_move'
 			supportLink.value = ''
 
-			if (errorVal.message.includes('directory is not writable')) {
+			if (errorVal.code === 'directory_move_permission_denied') {
 				metadata.value.readOnly = true
 			}
 
-			if (errorVal.message.includes('Not enough space')) {
+			if (errorVal.code === 'directory_move_no_space') {
 				metadata.value.notEnoughSpace = true
 			}
-		} else if (errorVal.message && errorVal.message.includes('No loader version selected for')) {
+		} else if (errorVal.code === 'no_loader_version') {
 			titleMessage.value = messages.titleNoLoader
 			errorType.value = 'no_loader_version'
 			supportLink.value = ''

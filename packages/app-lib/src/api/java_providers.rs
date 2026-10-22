@@ -544,7 +544,7 @@ pub async fn unpack_archive(
     })
     .await
     .map_err(|e| {
-        crate::Error::from(crate::ErrorKind::OtherError(format!(
+        crate::Error::from(anyhow::anyhow!(format!(
             "Java extraction task failed: {e}"
         )))
     })?

@@ -1061,9 +1061,6 @@
   "conversation-thread.action.approve": {
     "message": "Aprobar"
   },
-  "conversation-thread.action.approve-with-reply": {
-    "message": "Aprobar con respuesta"
-  },
   "conversation-thread.action.close-report": {
     "message": "Cerrar informe"
   },
@@ -1072,9 +1069,6 @@
   },
   "conversation-thread.action.reject": {
     "message": "Rechazar"
-  },
-  "conversation-thread.action.reject-with-reply": {
-    "message": "Rechazar con respuesta"
   },
   "conversation-thread.action.reopen-thread": {
     "message": "Reabrir hilo"
@@ -1109,9 +1103,6 @@
   "conversation-thread.action.withhold": {
     "message": "Retener"
   },
-  "conversation-thread.action.withhold-with-reply": {
-    "message": "Retener con respuesta"
-  },
   "conversation-thread.closed-thread.description": {
     "message": "Este hilo está cerrado y los nuevos mensajes no podrán ser enviados."
   },
@@ -1120,9 +1111,6 @@
   },
   "conversation-thread.error.reopening-report": {
     "message": "Error reabriendo reporte"
-  },
-  "conversation-thread.error.sending-message": {
-    "message": "Error al enviar el mensaje"
   },
   "conversation-thread.reply-editor.placeholder.reply": {
     "message": "Responder al hilo..."
@@ -1150,9 +1138,6 @@
   },
   "conversation-thread.resubmit-modal.confirmation.label": {
     "message": "Confirmo que he respondido debidamente los comentarios de los moderadores."
-  },
-  "conversation-thread.resubmit-modal.description": {
-    "message": "Estás subiendo <project-title>{projectTitle}</project-title> para que sea revisado nuevamente por los moderadores."
   },
   "conversation-thread.resubmit-modal.header.resubmitting": {
     "message": "Resubiendo para revisión"
@@ -3407,9 +3392,6 @@
   "project-member-header.success-join": {
     "message": "Te has unido al equipo del proyecto"
   },
-  "project-moderation-nags.project-submitted-for-review": {
-    "message": "¡Tu proyecto fue enviado a revisión!"
-  },
   "project-moderation-nags.publishing-checklist": {
     "message": "Lista de verificación para la publicación"
   },
@@ -3526,9 +3508,6 @@
   },
   "project.actions.rescan-modpack": {
     "message": "Volver a escanear modpack"
-  },
-  "project.actions.review-project": {
-    "message": "Revisar proyecto"
   },
   "project.actions.servers-promo.description": {
     "message": "¡Modrinth Hosting es la forma más fácil de jugar con tus amigos sin problemas!"
@@ -4547,29 +4526,17 @@
   "report.not-for.dmca.description": {
     "message": "Consulte nuestra <policy-link>Política de derechos de autor</policy-link>."
   },
-  "report.note.ai-images.1": {
-    "message": "Acabamos de actualizar nuestras reglas para prohibir imágenes generadas por AI en iconos, galerías y descripciones. Estamos dando a los creadores un período de margen para eliminar imágenes hechas con IA de sus proyectos antes de empezar a aceptar reportes sobre ello."
-  },
-  "report.note.check-back-later": {
-    "message": "Vuelve a comprobar más tarde una vez finalizado el período de margen. Los reportes de este tipo no están siendo aceptados en este momento."
-  },
   "report.note.copyright.1": {
     "message": "Tenga en cuenta que *no* está enviando una solicitud de retirada en virtud de la DMCA, sino un informe sobre contenido vuelto a subir."
   },
   "report.note.copyright.2": {
     "message": "Si desea presentar una solicitud de eliminación de DMCA (que es una acción legal), consulte nuestra <copyright-policy-link>Política de derechos de autor</copyright-policy-link>."
   },
-  "report.note.fully-ai-generated.1": {
-    "message": "Acabamos de actualizar nuestras reglas para prohibir proyectos totalmente generados por AI. Estamos dando a los creadores un período de margen para actualizar o eliminar completamente los proyectos generados por AI antes de empezar a aceptar reportes sobre ello."
-  },
   "report.note.malicious.1": {
     "message": "Los informes de contenido malicioso o engañoso deben incluir pruebas sustanciales del comportamiento, como muestras de código."
   },
   "report.note.malicious.2": {
     "message": "Los resúmenes de Microsoft Defender, Virus Total o la detección de malware por IA no son formas de evidencia suficientes y no serán aceptadas."
-  },
-  "report.note.missing-disclosure.1": {
-    "message": "Las divulgaciones de contenido son una nueva característica que acabamos de añadir. Estamos dando a los creadores un período de gracia para que se actualicen sus divulgaciones antes de empezar a aceptar los informes de divulgaciones faltantes o incorrectas."
   },
   "report.please-report": {
     "message": "Por favor, informe:"
@@ -5537,15 +5504,6 @@
   "settings.pats.modal.create.title": {
     "message": "Crear token de acceso personal"
   },
-  "settings.pats.modal.delete.action": {
-    "message": "Eliminar este token"
-  },
-  "settings.pats.modal.delete.description": {
-    "message": "Esto eliminará este token para siempre (de verdad, para siempre)."
-  },
-  "settings.pats.modal.delete.title": {
-    "message": "Estás seguro de que deseas eliminar este token?"
-  },
   "settings.pats.modal.edit.title": {
     "message": "Editar token de acceso personal"
   },
@@ -5575,9 +5533,6 @@
   },
   "settings.sessions.current-session": {
     "message": "Sesión actual"
-  },
-  "settings.sessions.description": {
-    "message": "Aquí están todos los dispositivos que están actualmente conectados con tu cuenta Modrinth. Puedes cerrar sesión en cada uno de ellos individualmente.\n\nSi ves una entrada que no reconoces, cierra sesión en ese dispositivo y cambia la contraseña de tu cuenta Modrinth inmediatamente."
   },
   "settings.sessions.last-accessed-ago": {
     "message": "Último Acceso"

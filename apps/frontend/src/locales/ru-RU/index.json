@@ -1067,9 +1067,6 @@
   "conversation-thread.action.approve": {
     "message": "Одобрить"
   },
-  "conversation-thread.action.approve-with-reply": {
-    "message": "Одобрить с ответом"
-  },
   "conversation-thread.action.close-report": {
     "message": "Закрыть жалобу"
   },
@@ -1078,9 +1075,6 @@
   },
   "conversation-thread.action.reject": {
     "message": "Отклонить"
-  },
-  "conversation-thread.action.reject-with-reply": {
-    "message": "Отклонить с ответом"
   },
   "conversation-thread.action.reopen-thread": {
     "message": "Возобновить ветку"
@@ -1115,9 +1109,6 @@
   "conversation-thread.action.withhold": {
     "message": "Удержать"
   },
-  "conversation-thread.action.withhold-with-reply": {
-    "message": "Удержать с ответом"
-  },
   "conversation-thread.closed-thread.description": {
     "message": "Ветка закрыта. Отправка сообщений недоступна."
   },
@@ -1126,9 +1117,6 @@
   },
   "conversation-thread.error.reopening-report": {
     "message": "Ошибка возобновления жалобы"
-  },
-  "conversation-thread.error.sending-message": {
-    "message": "Ошибка отправки сообщения"
   },
   "conversation-thread.reply-editor.placeholder.reply": {
     "message": "Ответьте в ветке..."
@@ -1156,9 +1144,6 @@
   },
   "conversation-thread.resubmit-modal.confirmation.label": {
     "message": "Я подтверждаю, что все замечания модераторов исправлены."
-  },
-  "conversation-thread.resubmit-modal.description": {
-    "message": "Вы повторно отправляете <project-title>{projectTitle}</project-title> на проверку."
   },
   "conversation-thread.resubmit-modal.header.resubmitting": {
     "message": "Отправка на перепроверку"
@@ -3419,9 +3404,6 @@
   "project-member-header.success-join": {
     "message": "Вы присоединились к команде проекта"
   },
-  "project-moderation-nags.project-submitted-for-review": {
-    "message": "Проект отправлен на проверку!"
-  },
   "project-moderation-nags.publishing-checklist": {
     "message": "Контрольный список для публикации"
   },
@@ -3538,9 +3520,6 @@
   },
   "project.actions.rescan-modpack": {
     "message": "Пересканировать сборку"
-  },
-  "project.actions.review-project": {
-    "message": "Проверить проект"
   },
   "project.actions.servers-promo.description": {
     "message": "Modrinth Hosting — самый простой способ играть с друзьями без лишних хлопот!"
@@ -4565,29 +4544,17 @@
   "report.not-for.dmca.description": {
     "message": "Ознакомьтесь с нашей <policy-link>политикой авторских прав</policy-link>."
   },
-  "report.note.ai-images.1": {
-    "message": "Запрет на ИИ‑изображения в иконках, галереях и описаниях появился недавно. Мы дали авторам время на обновление проектов перед приёмом жалоб."
-  },
-  "report.note.check-back-later": {
-    "message": "Дождитесь окончания переходного периода. Жалобы этого типа пока не принимаются."
-  },
   "report.note.copyright.1": {
     "message": "Это жалоба на перезалив контента, а не запрос на удаление по DMCA."
   },
   "report.note.copyright.2": {
     "message": "Для подачи претензии на удаление контента по DMCA изучите <copyright-policy-link>политику авторских прав</copyright-policy-link>."
   },
-  "report.note.fully-ai-generated.1": {
-    "message": "Запрет на полностью созданные ИИ проекты появился недавно. Мы дали авторам время на обновление проектов перед приёмом жалоб."
-  },
   "report.note.malicious.1": {
     "message": "В жалобах на вредоносный контент нужны веские доказательства, например фрагменты кода."
   },
   "report.note.malicious.2": {
     "message": "Отчётов Microsoft Defender, VirusTotal и ИИ‑сканеров недостаточно для доказательств."
-  },
-  "report.note.missing-disclosure.1": {
-    "message": "Маркировка контента появилась недавно. Мы дали авторам время на обновление проектов перед приёмом жалоб."
   },
   "report.please-report": {
     "message": "На что жаловаться"
@@ -5549,15 +5516,6 @@
   "settings.pats.modal.create.title": {
     "message": "Создание личного токена доступа"
   },
-  "settings.pats.modal.delete.action": {
-    "message": "Удалить этот токен"
-  },
-  "settings.pats.modal.delete.description": {
-    "message": "Токен будет удалён навсегда (буквально навсегда)."
-  },
-  "settings.pats.modal.delete.title": {
-    "message": "Вы точно хотите удалить этот токен?"
-  },
   "settings.pats.modal.edit.title": {
     "message": "Настройка личного токена доступа"
   },
@@ -5587,9 +5545,6 @@
   },
   "settings.sessions.current-session": {
     "message": "Текущий сеанс"
-  },
-  "settings.sessions.description": {
-    "message": "Ниже показаны устройства, использующие ваш аккаунт Modrinth. Сеансом каждого из них можно управлять по отдельности.\n\nЕсли в списке есть незнакомое устройство, немедленно завершите его сеанс и смените пароль от аккаунта."
   },
   "settings.sessions.last-accessed-ago": {
     "message": "Активность {ago}"

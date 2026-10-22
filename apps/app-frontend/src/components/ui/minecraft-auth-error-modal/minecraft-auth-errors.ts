@@ -21,16 +21,55 @@ export interface AuthErrorStep {
 }
 
 export interface MinecraftAuthError {
-	errorCode?: string
-	errorMatchers?: string[]
-	matches?: (message: string) => boolean
 	whatHappened: AuthErrorMessage
 	stepsToFix: AuthErrorStep[]
 }
 
-export const minecraftAuthErrors: MinecraftAuthError[] = [
-	{
-		errorMatchers: ['Failed to deserialize response to JSON during step RefreshOAuthToken:'],
+const networkError: MinecraftAuthError = {
+	whatHappened: defineMessage({
+		id: 'app.minecraft-auth-error.network.what',
+		defaultMessage:
+			'Noctrinth could not connect to a Microsoft, Xbox, or Minecraft service needed for sign-in. This is usually caused by a local network, DNS, proxy, firewall, hosts file, VPN, or antivirus issue.',
+	}),
+	stepsToFix: [
+		{
+			message: defineMessage({
+				id: 'app.minecraft-auth-error.network.step-1',
+				defaultMessage: 'Restart Noctrinth and try signing in again',
+			}),
+		},
+		{
+			message: defineMessage({
+				id: 'app.minecraft-auth-error.network.step-2',
+				defaultMessage: 'Check that your internet connection is working',
+			}),
+		},
+		{
+			message: defineMessage({
+				id: 'app.minecraft-auth-error.network.step-3',
+				defaultMessage:
+					'Allow Noctrinth through your firewall, antivirus, proxy, VPN, and hosts file rules',
+			}),
+		},
+		{
+			message: defineMessage({
+				id: 'app.minecraft-auth-error.network.step-4',
+				defaultMessage:
+					'Try a different network or temporarily disable VPN/proxy software if you use one',
+			}),
+		},
+		{
+			message: defineMessage({
+				id: 'app.minecraft-auth-error.network.step-5',
+				defaultMessage:
+					'If routing or DNS is the issue, a service like Cloudflare WARP can sometimes help',
+			}),
+		},
+	],
+}
+
+export const minecraftAuthErrors: Record<string, MinecraftAuthError> = {
+	minecraft_auth_token_expired: {
 		whatHappened: defineMessage({
 			id: 'app.minecraft-auth-error.refresh-token.what',
 			defaultMessage:
@@ -57,8 +96,7 @@ export const minecraftAuthErrors: MinecraftAuthError[] = [
 			},
 		],
 	},
-	{
-		errorMatchers: ['Failed to deserialize response to JSON during step SisuAuthenticate:'],
+	minecraft_auth_clock_out_of_sync: {
 		whatHappened: defineMessage({
 			id: 'app.minecraft-auth-error.sisu-authenticate.what',
 			defaultMessage:
@@ -97,10 +135,7 @@ export const minecraftAuthErrors: MinecraftAuthError[] = [
 			},
 		],
 	},
-	{
-		matches: (message) =>
-			message.includes('Failed to deserialize response to JSON during step MinecraftToken:') &&
-			message.includes('429 Too Many Requests'),
+	minecraft_auth_rate_limited: {
 		whatHappened: defineMessage({
 			id: 'app.minecraft-auth-error.too-many-requests.what',
 			defaultMessage:
@@ -134,10 +169,7 @@ export const minecraftAuthErrors: MinecraftAuthError[] = [
 			},
 		],
 	},
-	{
-		matches: (message) =>
-			message.includes('Failed to deserialize response to JSON during step MinecraftToken:') &&
-			/Status Code: 5\d\d/.test(message),
+	minecraft_auth_service_unavailable: {
 		whatHappened: defineMessage({
 			id: 'app.minecraft-auth-error.minecraft-server-error.what',
 			defaultMessage:
@@ -174,8 +206,7 @@ export const minecraftAuthErrors: MinecraftAuthError[] = [
 			},
 		],
 	},
-	{
-		errorMatchers: ['Failed to fetch player profile'],
+	minecraft_auth_no_profile: {
 		whatHappened: defineMessage({
 			id: 'app.minecraft-auth-error.player-profile.what',
 			defaultMessage:
@@ -217,60 +248,9 @@ export const minecraftAuthErrors: MinecraftAuthError[] = [
 			},
 		],
 	},
-	{
-		matches: (message) =>
-			message.includes('error sending request for url (') &&
-			[
-				'minecraft.net',
-				'minecraftservices.com',
-				'mojang.com',
-				'xbox.com',
-				'xboxlive.com',
-				'live.com',
-			].some((domain) => message.includes(domain)),
-		whatHappened: defineMessage({
-			id: 'app.minecraft-auth-error.network.what',
-			defaultMessage:
-				'Noctrinth could not connect to a Microsoft, Xbox, or Minecraft service needed for sign-in. This is usually caused by a local network, DNS, proxy, firewall, hosts file, VPN, or antivirus issue.',
-		}),
-		stepsToFix: [
-			{
-				message: defineMessage({
-					id: 'app.minecraft-auth-error.network.step-1',
-					defaultMessage: 'Restart Noctrinth and try signing in again',
-				}),
-			},
-			{
-				message: defineMessage({
-					id: 'app.minecraft-auth-error.network.step-2',
-					defaultMessage: 'Check that your internet connection is working',
-				}),
-			},
-			{
-				message: defineMessage({
-					id: 'app.minecraft-auth-error.network.step-3',
-					defaultMessage:
-						'Allow Noctrinth through your firewall, antivirus, proxy, VPN, and hosts file rules',
-				}),
-			},
-			{
-				message: defineMessage({
-					id: 'app.minecraft-auth-error.network.step-4',
-					defaultMessage:
-						'Try a different network or temporarily disable VPN/proxy software if you use one',
-				}),
-			},
-			{
-				message: defineMessage({
-					id: 'app.minecraft-auth-error.network.step-5',
-					defaultMessage:
-						'If routing or DNS is the issue, a service like Cloudflare WARP can sometimes help',
-				}),
-			},
-		],
-	},
-	{
-		errorCode: '2148916222',
+	minecraft_auth_network: networkError,
+	minecraft_auth_connection_refused: networkError,
+	minecraft_auth_age_verification: {
 		whatHappened: defineMessage({
 			id: 'app.minecraft-auth-error.uk-age-verification.what',
 			defaultMessage:
@@ -305,8 +285,7 @@ export const minecraftAuthErrors: MinecraftAuthError[] = [
 			},
 		],
 	},
-	{
-		errorCode: '2148916233',
+	minecraft_auth_no_xbox_profile: {
 		whatHappened: defineMessage({
 			id: 'app.minecraft-auth-error.no-xbox-profile.what',
 			defaultMessage: "This account doesn't have an Xbox profile set up or doesn't own Minecraft.",
@@ -339,8 +318,7 @@ export const minecraftAuthErrors: MinecraftAuthError[] = [
 			},
 		],
 	},
-	{
-		errorCode: '2148916235',
+	minecraft_auth_region_unavailable: {
 		whatHappened: defineMessage({
 			id: 'app.minecraft-auth-error.region-unavailable.what',
 			defaultMessage: "Xbox Live isn't available in your region, so sign-in is blocked.",
@@ -361,8 +339,7 @@ export const minecraftAuthErrors: MinecraftAuthError[] = [
 			},
 		],
 	},
-	{
-		errorCode: '2148916236',
+	minecraft_auth_adult_verification: {
 		whatHappened: defineMessage({
 			id: 'app.minecraft-auth-error.korea-adult-verification.what',
 			defaultMessage: 'This account requires adult verification under South Korean regulations.',
@@ -389,36 +366,7 @@ export const minecraftAuthErrors: MinecraftAuthError[] = [
 			},
 		],
 	},
-	{
-		errorCode: '2148916237',
-		whatHappened: defineMessage({
-			id: 'app.minecraft-auth-error.korea-adult-verification-alt.what',
-			defaultMessage: 'This account requires adult verification under South Korean regulations.',
-		}),
-		stepsToFix: [
-			{
-				message: defineMessage({
-					id: 'app.minecraft-auth-error.korea-adult-verification-alt.step-1',
-					defaultMessage: 'Visit <link>Xbox</link> and sign in',
-				}),
-				href: 'https://www.xbox.com',
-			},
-			{
-				message: defineMessage({
-					id: 'app.minecraft-auth-error.korea-adult-verification-alt.step-2',
-					defaultMessage: 'Complete the identity verification process',
-				}),
-			},
-			{
-				message: defineMessage({
-					id: 'app.minecraft-auth-error.korea-adult-verification-alt.step-3',
-					defaultMessage: 'Once finished, try signing in again',
-				}),
-			},
-		],
-	},
-	{
-		errorCode: '2148916238',
+	minecraft_auth_underage: {
 		whatHappened: defineMessage({
 			id: 'app.minecraft-auth-error.underage-no-family.what',
 			defaultMessage: 'This account is underage and not linked to a Microsoft family group.',
@@ -445,8 +393,7 @@ export const minecraftAuthErrors: MinecraftAuthError[] = [
 			},
 		],
 	},
-	{
-		errorCode: '2148916227',
+	minecraft_auth_banned: {
 		whatHappened: defineMessage({
 			id: 'app.minecraft-auth-error.suspended.what',
 			defaultMessage: 'This account was suspended for violating Xbox Community Standards.',
@@ -467,8 +414,7 @@ export const minecraftAuthErrors: MinecraftAuthError[] = [
 			},
 		],
 	},
-	{
-		errorCode: '2148916229',
+	minecraft_auth_restricted: {
 		whatHappened: defineMessage({
 			id: 'app.minecraft-auth-error.restricted-online-play.what',
 			defaultMessage: "This account is restricted and doesn't have permission to play online.",
@@ -495,8 +441,7 @@ export const minecraftAuthErrors: MinecraftAuthError[] = [
 			},
 		],
 	},
-	{
-		errorCode: '2148916234',
+	minecraft_auth_terms_not_accepted: {
 		whatHappened: defineMessage({
 			id: 'app.minecraft-auth-error.terms-not-accepted.what',
 			defaultMessage: "This account hasn't accepted Xbox's Terms of Service.",
@@ -523,8 +468,7 @@ export const minecraftAuthErrors: MinecraftAuthError[] = [
 			},
 		],
 	},
-	{
-		errorMatchers: ['Failed to deserialize response to JSON during step XstsAuthorize:'],
+	minecraft_auth_xsts_rejected: {
 		whatHappened: defineMessage({
 			id: 'app.minecraft-auth-error.xsts-authorize.what',
 			defaultMessage:
@@ -559,20 +503,4 @@ export const minecraftAuthErrors: MinecraftAuthError[] = [
 			},
 		],
 	},
-]
-
-export function findMinecraftAuthError(message: string): MinecraftAuthError | null {
-	return (
-		minecraftAuthErrors.find((error) => {
-			if (error.errorCode && message.includes(error.errorCode)) {
-				return true
-			}
-
-			if (error.errorMatchers?.some((matcher) => message.includes(matcher))) {
-				return true
-			}
-
-			return error.matches?.(message) ?? false
-		}) ?? null
-	)
 }

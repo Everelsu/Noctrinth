@@ -99,10 +99,9 @@ pub async fn paint_shortcut_icons<R: Runtime>(
         })
         .await
         .map_err(|e| {
-            theseus::ErrorKind::OtherError(format!(
+            anyhow::anyhow!(format!(
                 "Shortcut icon task failed: {e}"
             ))
-            .as_error()
         })?;
 
         // The files of colours no shortcut uses any more.

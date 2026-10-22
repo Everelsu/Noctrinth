@@ -309,10 +309,12 @@ pub async fn install_modern_java(
     // The patches swap LWJGL 2 for LWJGL 3 and add the early-classpath jar, so
     // the instance now depends on libraries it was never told to fetch. Without
     // this the next launch dies on the first missing native.
+    let state = crate::State::get().await?;
     crate::launcher::install_minecraft_for_instance_id_with_reporter(
         instance_id,
         false,
         None,
+        &state,
     )
     .await?;
 

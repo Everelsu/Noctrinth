@@ -29,17 +29,11 @@
 	"app.appearance-settings.accent-tint.title": {
 		"message": "Tint the background too"
 	},
-	"app.appearance-settings.accent.amethyst": {
-		"message": "Amethyst"
-	},
 	"app.appearance-settings.accent.description": {
 		"message": "The colour the interface is picked out in. Each one is drawn deeper on light themes and brighter on dark ones."
 	},
 	"app.appearance-settings.accent.ember": {
 		"message": "Ember"
-	},
-	"app.appearance-settings.accent.glacier": {
-		"message": "Glacier"
 	},
 	"app.appearance-settings.accent.lantern": {
 		"message": "Lantern"
@@ -1534,5 +1528,17 @@
 	},
 	"noctrinth.settings.background.dim.description": {
 		"message": "For a bright or busy picture, so what is over it stays easy to read."
+	},
+	"app.appearance-settings.accent.custom": {
+		"message": "Custom"
+	},
+	"app.appearance-settings.accent.custom.wheel": {
+		"message": "Hue and saturation"
+	},
+	"app.appearance-settings.accent.custom.brightness": {
+		"message": "Brightness"
+	},
+	"app.appearance-settings.accent.custom.hex": {
+		"message": "Hex colour"
 	}
 }

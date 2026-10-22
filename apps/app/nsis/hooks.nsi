@@ -30,6 +30,34 @@
 
 Var /GLOBAL OldInstallDir
 
+; Noctrinth's own. A Noctrinth that is closing, or a virus scanner looking at the
+; file it just left, holds the executable a moment after the process is gone,
+; and overwriting it then fails with "Error opening file for writing" until
+; Retry is pressed. Wait up to five seconds for it to let go; an instance that is
+; still running after that is left to Tauri's running-app check.
+!macro WaitForMainBinaryToBeWritable
+    Push $R8
+    Push $R9
+    ${If} ${FileExists} "$INSTDIR\${MAINBINARYNAME}.exe"
+        StrCpy $R9 0
+        ${Do}
+            ClearErrors
+            FileOpen $R8 "$INSTDIR\${MAINBINARYNAME}.exe" a
+            ${IfNot} ${Errors}
+                FileClose $R8
+                ${Break}
+            ${EndIf}
+            IntOp $R9 $R9 + 1
+            ${If} $R9 >= 20
+                ${Break}
+            ${EndIf}
+            Sleep 250
+        ${Loop}
+    ${EndIf}
+    Pop $R9
+    Pop $R8
+!macroend
+
 !macro NSIS_HOOK_PREINSTALL
     SetShellVarContext all
     ${If} ${FileExists} "$SMPROGRAMS\${PRODUCTNAME}.lnk"
@@ -55,6 +83,8 @@ Var /GLOBAL OldInstallDir
         ${EndIf}
     ${EndIf}
     SetShellVarContext current
+
+    !insertmacro WaitForMainBinaryToBeWritable
 !macroend
 
 !macro NSIS_HOOK_POSTINSTALL

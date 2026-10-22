@@ -551,9 +551,6 @@
   "collection.title": {
     "message": "{name} - Colecție"
   },
-  "conversation-thread.resubmit-modal.description": {
-    "message": "Trimiți <project-title>{projectTitle}</project-title> pentru a fi revizuit din nou de moderatori."
-  },
   "conversation-thread.resubmit-modal.header.resubmitting": {
     "message": "Retrimite pentru revizuire"
   },
@@ -1589,9 +1586,6 @@
   "project.actions.dont-show-again": {
     "message": "Nu afișa din nou"
   },
-  "project.actions.review-project": {
-    "message": "Revizuiește proiectul"
-  },
   "project.actions.servers-promo.pricing": {
     "message": "Începând de la {price}<small> / lună</small>"
   },
@@ -2189,15 +2183,6 @@
   "settings.pats.modal.create.title": {
     "message": "Creează un token de acces"
   },
-  "settings.pats.modal.delete.action": {
-    "message": "Șterge acest token"
-  },
-  "settings.pats.modal.delete.description": {
-    "message": "Acest lucru va șterge acest token pentru totdeauna (chiar pentru totdeauna)."
-  },
-  "settings.pats.modal.delete.title": {
-    "message": "Ești sigur că dorești să ștergi acest token?"
-  },
   "settings.pats.modal.edit.title": {
     "message": "Editează token-ul de acces personal"
   },
@@ -2227,9 +2212,6 @@
   },
   "settings.sessions.current-session": {
     "message": "Sesiune curentă"
-  },
-  "settings.sessions.description": {
-    "message": "Acestea sunt toate dispozitivele pe care ești conectat(ă) la contul tău Modrinth. Te poți deconecta de pe fiecare în parte.\n\nDacă observi o intrare pe care nu o recunoști, deconectează-te de pe acel dispozitiv și schimbă imediat parola contului tău Modrinth."
   },
   "settings.sessions.last-accessed-ago": {
     "message": "Ultima accesare în urmă cu {ago}"

@@ -84,14 +84,17 @@ jobs:
     runs-on: ${{ matrix.platform }}
 
     env:
+      # Thin LTO instead of the workspace's full LTO for the release binary.
+      # Full LTO optimises the whole dependency graph as one unit on one thread
+      # at link time — twice on macOS, once per architecture. Thin LTO does that
+      # work in parallel, for a binary a few percent larger.
+      CARGO_PROFILE_RELEASE_LTO: thin
       # Public Stripe publishable key used by the frontend build (safe to expose).
       VITE_STRIPE_PUBLISHABLE_KEY: pk_live_51JbFxJJygY5LJFfKLVVldb10HlLt24p421OWRsTOWc5sXYFOnFUXWieSc6HD3PHo25ktx8db1WcHr36XGFvZFVUz00V9ixrCs5
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+        uses: actions/checkout@v7
 
       - name: Install Linux dependencies
         if: matrix.platform == 'ubuntu-22.04'
@@ -106,16 +109,22 @@ jobs:
             libssl-dev
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '17'
+          # app-lib's build script runs Gradle; keep its wrapper and
+          # dependencies between runs instead of downloading them every time.
+          cache: gradle
+          cache-dependency-path: |
+            packages/app-lib/java/*.gradle*
+            packages/app-lib/java/gradle/wrapper/gradle-wrapper.properties
 
       - name: Enable Corepack
         run: corepack enable
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -312,13 +321,13 @@ jobs:
   finalize:
     name: Publish updater manifest
     needs: release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set release notes from Noctrinth changelog
         env:

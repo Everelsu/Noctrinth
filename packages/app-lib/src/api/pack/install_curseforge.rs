@@ -434,6 +434,7 @@ pub(crate) async fn install_curseforge_pack_files_with_reporter(
         instance_id,
         false,
         Some(reporter.clone()),
+        &state,
     )
     .await?;
     reporter.clear_context().await?;
@@ -449,10 +450,12 @@ async fn apply_manifest_to_instance(
 ) -> crate::Result<()> {
     let (loader, manifest_loader_version) = pick_loader(manifest);
     let loader_version = if loader != ModLoader::Vanilla {
+        let state = crate::State::get().await?;
         crate::launcher::get_loader_version_from_profile(
             &manifest.minecraft.version,
             loader,
             manifest_loader_version.as_deref(),
+            &state.directories,
         )
         .await?
     } else {
@@ -577,7 +580,7 @@ async fn download_cf_file(
     // Serialize the DB-and-filesystem bookkeeping while the downloads above
     // still run in parallel — mirrors the mrpack installer's use of the
     // install DB semaphore.
-    let _permit = state.install_db_semaphore.acquire().await?;
+    let _permit = state.installs.db_semaphore.acquire().await?;
     crate::state::instances::commands::add_project_bytes(
         instance_id,
         &safe_file_name,
@@ -805,7 +808,7 @@ async fn extract_overrides(
             .iter()
             .find_map(|p| raw_path.strip_prefix(p).ok())
             .ok_or_else(|| {
-                crate::Error::from(crate::ErrorKind::OtherError(
+                crate::Error::from(anyhow::anyhow!(
                     "Failed to strip override prefix".to_string(),
                 ))
             })?;

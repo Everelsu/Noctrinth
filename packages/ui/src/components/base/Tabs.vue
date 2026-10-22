@@ -1,7 +1,12 @@
 <template>
 	<div
 		v-if="tabs.length > 0"
-		class="inline-flex w-fit items-center overflow-x-auto rounded-xl border border-solid border-surface-5 p-0.5 shadow-sm gap-1 h-[38px]"
+		class="inline-flex w-fit items-center gap-1 border border-solid border-surface-5 shadow-sm"
+		:class="[
+			wrap ? 'h-auto max-w-full flex-wrap' : 'overflow-x-auto',
+			size === 'large' ? 'rounded-[14px] p-[3px]' : 'rounded-xl p-0.5',
+			!wrap && (size === 'large' ? 'h-[42px]' : 'h-[38px]'),
+		]"
 		role="tablist"
 	>
 		<button
@@ -9,14 +14,21 @@
 			:key="tab.value"
 			ref="tabButtons"
 			type="button"
-			class="flex min-h-6 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-[10px] border border-solid px-2.5 h-full text-sm font-medium outline-none transition-all active:scale-[0.97] focus-visible:ring-4 focus-visible:ring-brand-shadow disabled:cursor-not-allowed disabled:opacity-50"
-			:class="
+			class="flex min-h-6 shrink-0 cursor-pointer items-center justify-center gap-2 border border-solid outline-none transition-all active:scale-[0.97] focus-visible:ring-4 focus-visible:ring-brand-shadow disabled:cursor-not-allowed disabled:opacity-50"
+			:class="[
+				wrap ? 'h-8' : 'h-full',
+				size === 'large'
+					? 'rounded-xl px-3 text-base font-semibold'
+					: 'rounded-[10px] px-2.5 text-sm font-medium',
 				tab.value === value
 					? color === 'gray'
 						? 'border-surface-5 bg-surface-4 text-contrast'
 						: 'border-brand bg-brand-highlight text-brand'
-					: 'border-transparent bg-transparent text-primary hover:bg-surface-4'
-			"
+					: [
+							'border-transparent bg-transparent hover:bg-surface-4',
+							size === 'large' ? 'text-contrast' : 'text-primary',
+						],
+			]"
 			role="tab"
 			:disabled="disabled"
 			:aria-selected="tab.value === value"
@@ -37,6 +49,7 @@
 				"
 			/>
 			<span v-if="tab.label" class="text-nowrap">{{ tab.label }}</span>
+			<slot name="after-label" :tab="tab" />
 		</button>
 	</div>
 </template>
@@ -56,7 +69,9 @@ export interface TabsTab {
 const props = defineProps<{
 	value: TabsValue
 	tabs: TabsTab[]
+	wrap?: boolean
 	color?: 'green' | 'gray'
+	size?: 'default' | 'large'
 	disabled?: boolean
 }>()
 

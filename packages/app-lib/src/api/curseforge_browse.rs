@@ -1513,6 +1513,14 @@ pub async fn download_modpack_bytes(
     Ok(bytes)
 }
 
+/// The code out of what was pasted: the code itself, or a share link such as
+/// `https://www.curseforge.com/minecraft/share/cbGiK6Ch`.
+fn share_code_of(input: &str) -> &str {
+    let input = input.trim();
+    let code = input.rsplit_once("/share/").map_or(input, |(_, rest)| rest);
+    code.split(['/', '?', '#']).next().unwrap_or_default()
+}
+
 /// Whether `code` can be a CurseForge profile code: letters and digits only,
 /// which also keeps it from reaching anywhere but the one endpoint.
 fn is_share_code(code: &str) -> bool {
@@ -1528,7 +1536,7 @@ fn is_share_code(code: &str) -> bool {
 /// back for the code until it expires. No account is needed to use one, and
 /// the key is sent only because the API may ask for it.
 pub async fn download_shared_profile(code: &str) -> crate::Result<PathBuf> {
-    let code = code.trim();
+    let code = share_code_of(code);
     if !is_share_code(code) {
         return Err(input(
             "A CurseForge profile code is made of letters and digits only",
@@ -1594,6 +1602,19 @@ mod tests {
         assert!(!is_share_code("../mods"));
         assert!(!is_share_code("abc def"));
         assert!(!is_share_code(&"a".repeat(33)));
+    }
+
+    #[test]
+    fn share_links_give_their_code() {
+        assert_eq!(share_code_of(" cbGiK6Ch "), "cbGiK6Ch");
+        assert_eq!(
+            share_code_of("https://www.curseforge.com/minecraft/share/cbGiK6Ch"),
+            "cbGiK6Ch"
+        );
+        assert_eq!(
+            share_code_of("curseforge.com/minecraft/share/cbGiK6Ch/?utm=x"),
+            "cbGiK6Ch"
+        );
     }
 
     fn query(project_type: &str) -> SearchQuery {

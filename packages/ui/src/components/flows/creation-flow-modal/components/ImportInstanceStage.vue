@@ -219,7 +219,7 @@ const messages = defineMessages({
 	},
 	curseforgeCodePlaceholder: {
 		id: 'noctrinth.creation-flow.curseforge-code.placeholder',
-		defaultMessage: 'A code shared from the CurseForge app, such as aBc12XyZ',
+		defaultMessage: 'A code or share link from the CurseForge app',
 	},
 	curseforgeCodeImport: {
 		id: 'noctrinth.creation-flow.curseforge-code.import',

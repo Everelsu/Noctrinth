@@ -10,9 +10,8 @@ import {
 import { useQuery } from '@tanstack/vue-query'
 import { computed } from 'vue'
 
+import { config } from '@/config'
 import { useRootBreadcrumb } from '@/shared/breadcrumbs'
-
-import { config } from '../config'
 
 const messages = defineMessages({
 	breadcrumb: { id: 'app.hosting.title', defaultMessage: 'Hosting' },

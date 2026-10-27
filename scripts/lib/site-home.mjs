@@ -31,10 +31,10 @@ const FEATURES = [
 	},
 	{
 		media: 'assets/curseforge-import.png',
-		title: t('CurseForge packs and other launchers', 'Паки CurseForge и другие лаунчеры'),
+		title: t('CurseForge, right next to Modrinth', 'CurseForge рядом с Modrinth'),
 		text: t(
-			'Install a CurseForge <code>.zip</code> straight from disk, or bring instances over from CurseForge, Prism, MultiMC and the Modrinth App. Missing mods are fetched on the way in.',
-			'Ставь <code>.zip</code> с CurseForge прямо с диска или переноси сборки из CurseForge, Prism, MultiMC и Modrinth App. Недостающие моды докачаются при импорте.',
+			'Search CurseForge from the same Discover page, open a project and install its mods, resource packs, shaders or modpacks. CurseForge files in an instance get updates and a version switcher like Modrinth ones, and a file its author keeps off launchers is picked up from Downloads once you fetch it. A friend’s CurseForge profile code installs their pack, and a CurseForge <code>.zip</code> installs straight from disk.',
+			'Ищи на CurseForge с той же страницы «Обзор», открывай проект и ставь моды, ресурспаки, шейдеры или модпаки. Файлы с CurseForge в сборке обновляются и переключаются по версиям так же, как с Modrinth, а файл, который автор не даёт качать лаунчерам, подхватывается из «Загрузок», как только ты его скачаешь. Код профиля CurseForge от друга ставит его пак, а <code>.zip</code> с CurseForge ставится прямо с диска.',
 		),
 	},
 	{
@@ -55,20 +55,29 @@ const FEATURES = [
 	},
 	{
 		media: 'assets/accents.gif',
-		title: t('Nine accent colours', 'Девять акцентов'),
+		title: t('Made to look like yours', 'Выглядит так, как хочешь ты'),
 		text: t(
-			'The whole interface, the splash screen and the taskbar icon in the colour you pick.',
-			'Весь интерфейс, заставка и иконка на панели задач в выбранном цвете.',
+			'Pick an accent from the presets or any colour on a colour wheel: the whole interface, its backgrounds, the splash screen and the taskbar icon follow it. Put a picture, an animated GIF or a looping video behind the launcher, blurred and darkened as you like, and set the interface in Inter, the system font, the Minecraft font or any font on your computer.',
+			'Выбери акцент из готовых или любой цвет на цветовом круге: за ним следует весь интерфейс, его фоны, заставка и иконка на панели задач. Поставь за лаунчером картинку, анимированную GIF или зацикленное видео с размытием и затемнением на вкус и выбери шрифт: Inter, системный, шрифт Minecraft или любой установленный.',
 		),
 	},
 ]
 
 const SMALL_FEATURES = [
+	t(
+		'Instances from Prism, MultiMC, ATLauncher, GDLauncher and CurseForge',
+		'Сборки из Prism, MultiMC, ATLauncher, GDLauncher и CurseForge',
+	),
 	t('Two copies of one instance on two accounts', 'Две копии одной сборки на двух аккаунтах'),
 	t('Modern Java for 1.7.10 in one click', 'Современная Java для 1.7.10 в один клик'),
 	t('A graphics adapter per Java runtime', 'Своя видеокарта для каждой Java'),
 	t('Touchpad swipes back and forward', 'Жесты тачпада: назад и вперёд'),
 	t('A proxy for blocked regions', 'Прокси для заблокированных регионов'),
+	t(
+		'Java from Azul, Temurin, Mojang or a mirror, whichever answers',
+		'Java из Azul, Temurin, Mojang или зеркала — откуда скачается',
+	),
+	t('Changelogs in Russian, Modrinth’s too', 'Списки изменений на русском, и Modrinth тоже'),
 	t('Collections and notifications built in', 'Коллекции и уведомления внутри'),
 	t('Animated instance icons', 'Анимированные иконки сборок'),
 	t('No ads', 'Без рекламы'),
@@ -197,8 +206,8 @@ export function renderHome({ version, articles }) {
 		<img class="hero__banner" src="assets/noctrinth-banner.svg" alt="Noctrinth">
 		<div class="hero__body">
 			<p class="hero__lead">${t(
-				'Ely.by, offline accounts and CurseForge packs, in the Modrinth App you already know.',
-				'Ely.by, офлайн-аккаунты и паки с CurseForge — в том же Modrinth App, к которому ты привык.',
+				'Ely.by, offline accounts and CurseForge, in the Modrinth App you already know.',
+				'Ely.by, офлайн-аккаунты и CurseForge — в том же Modrinth App, к которому ты привык.',
 			)}</p>
 			<p class="hero__sub">${t(
 				'Free and open source. Follows every Modrinth App release.',

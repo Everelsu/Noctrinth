@@ -59,11 +59,20 @@
 	"app.appearance-settings.font.custom": {
 		"message": "Custom"
 	},
+	"app.appearance-settings.font.custom.none": {
+		"message": "No installed font is called that"
+	},
 	"app.appearance-settings.font.custom.placeholder": {
-		"message": "Name of a font installed on this computer"
+		"message": "Choose a font installed on this computer"
+	},
+	"app.appearance-settings.font.custom.search": {
+		"message": "Search fonts"
 	},
 	"app.appearance-settings.font.default": {
 		"message": "Inter"
+	},
+	"app.appearance-settings.font.default.badge": {
+		"message": "Default"
 	},
 	"app.appearance-settings.font.description": {
 		"message": "The typeface the app is set in. A letter the chosen font does not have is drawn in Inter."
@@ -1503,7 +1512,7 @@
 		"message": "Background"
 	},
 	"noctrinth.settings.background.description": {
-		"message": "A picture, an animated GIF or a looping video (MP4 or WebM) behind the launcher, showing through its frame and, a little, through the cards on a page."
+		"message": "A picture, an animated GIF or a looping video behind the launcher, showing through its frame and, a little, through the cards on a page. Pictures and GIFs up to 32 MB, MP4 or WebM videos up to 100 MB."
 	},
 	"noctrinth.settings.background.choose": {
 		"message": "Choose a file"

@@ -484,6 +484,7 @@ fn main() {
         .plugin(api::noctrinth_clipboard::init())
         .plugin(api::noctrinth_crash::init())
         .plugin(api::noctrinth_curseforge::init())
+        .plugin(api::noctrinth_fonts::init())
         .plugin(api::noctrinth_offline_auth::init())
         .plugin(api::noctrinth_recovery::init())
         .plugin(api::jre::init())

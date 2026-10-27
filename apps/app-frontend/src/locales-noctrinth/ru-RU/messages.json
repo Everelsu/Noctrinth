@@ -65,11 +65,20 @@
 	"app.appearance-settings.font.custom": {
 		"message": "Свой"
 	},
+	"app.appearance-settings.font.custom.none": {
+		"message": "Такого шрифта не установлено"
+	},
 	"app.appearance-settings.font.custom.placeholder": {
-		"message": "Название шрифта, установленного на компьютере"
+		"message": "Выберите шрифт, установленный на компьютере"
+	},
+	"app.appearance-settings.font.custom.search": {
+		"message": "Поиск шрифтов"
 	},
 	"app.appearance-settings.font.default": {
 		"message": "Inter"
+	},
+	"app.appearance-settings.font.default.badge": {
+		"message": "По умолчанию"
 	},
 	"app.appearance-settings.font.description": {
 		"message": "Шрифт, которым написан весь лаунчер. Буквы, которых в выбранном шрифте нет, рисуются шрифтом Inter."
@@ -2268,7 +2277,7 @@
 		"message": "Фон"
 	},
 	"noctrinth.settings.background.description": {
-		"message": "Картинка, анимированная GIF или зацикленное видео (MP4 или WebM) за лаунчером: видно сквозь его рамку и, немного, сквозь карточки на страницах."
+		"message": "Картинка, анимированная GIF или зацикленное видео за лаунчером: видно сквозь его рамку и, немного, сквозь карточки на страницах. Картинки и GIF — до 32 МБ, видео MP4 или WebM — до 100 МБ."
 	},
 	"noctrinth.settings.background.choose": {
 		"message": "Выбрать файл"

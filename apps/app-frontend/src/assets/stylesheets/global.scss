@@ -36,8 +36,30 @@
 	src: url('https://cdn.modrinth.com/fonts/minecraft/bold-italic.otf') format('opentype');
 }
 
+/* Noctrinth's own: the Minecraft font above has no Cyrillic at all, so Russian
+   text in it fell back to Inter letter by letter. These are Monocraft's
+   Cyrillic letters (SIL OFL 1.1, see ../fonts/monocraft/LICENSE), cut down to
+   that range and bundled, so they load with the app and only for Cyrillic. */
+@font-face {
+	font-family: 'noctrinth-minecraft-cyrillic';
+	font-style: normal;
+	font-display: swap;
+	font-weight: 400;
+	src: url('../fonts/monocraft/cyrillic-regular.woff2') format('woff2');
+	unicode-range: U+0400-04FF, U+2116;
+}
+
+@font-face {
+	font-family: 'noctrinth-minecraft-cyrillic';
+	font-style: normal;
+	font-display: swap;
+	font-weight: 700;
+	src: url('../fonts/monocraft/cyrillic-bold.woff2') format('woff2');
+	unicode-range: U+0400-04FF, U+2116;
+}
+
 .font-minecraft {
-	font-family: 'bundled-minecraft-font-mrapp', monospace;
+	font-family: 'bundled-minecraft-font-mrapp', 'noctrinth-minecraft-cyrillic', monospace;
 }
 
 :root {

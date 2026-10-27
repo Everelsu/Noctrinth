@@ -16,6 +16,7 @@ pub mod noctrinth_background;
 pub mod noctrinth_clipboard;
 pub mod noctrinth_crash;
 pub mod noctrinth_curseforge;
+pub mod noctrinth_fonts;
 pub mod noctrinth_offline_auth;
 pub mod noctrinth_recovery;
 pub mod onboarding_checklist;

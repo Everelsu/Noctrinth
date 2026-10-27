@@ -3,15 +3,17 @@ import { CheckIcon, DropdownIcon } from '@modrinth/assets'
 import {
 	AppearanceSettingsLayout,
 	Collapsible,
+	Combobox,
+	commonMessages,
 	defineMessages,
 	injectAuth,
 	injectUserPreferences,
-	InputFrame,
 	provideAppearanceSettings,
 	Toggle,
 	useSavable,
 	useVIntl,
 } from '@modrinth/ui'
+import { useQuery } from '@tanstack/vue-query'
 import { platform } from '@tauri-apps/plugin-os'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
@@ -30,6 +32,7 @@ import {
 import { useAppSettings } from '@/composables/use-app-settings.ts'
 import {
 	FONT_PRESETS,
+	fontFamilyCss,
 	installedFontFamilies,
 	setInterfaceFont,
 	useInterfaceFont,
@@ -91,9 +94,18 @@ const messages = defineMessages({
 	fontSystem: { id: 'app.appearance-settings.font.system', defaultMessage: 'System' },
 	fontMinecraft: { id: 'app.appearance-settings.font.minecraft', defaultMessage: 'Minecraft' },
 	fontCustom: { id: 'app.appearance-settings.font.custom', defaultMessage: 'Custom' },
+	fontDefaultBadge: { id: 'app.appearance-settings.font.default.badge', defaultMessage: 'Default' },
 	fontCustomPlaceholder: {
 		id: 'app.appearance-settings.font.custom.placeholder',
-		defaultMessage: 'Name of a font installed on this computer',
+		defaultMessage: 'Choose a font installed on this computer',
+	},
+	fontCustomSearch: {
+		id: 'app.appearance-settings.font.custom.search',
+		defaultMessage: 'Search fonts',
+	},
+	fontCustomNone: {
+		id: 'app.appearance-settings.font.custom.none',
+		defaultMessage: 'No installed font is called that',
 	},
 	accentTintDescription: {
 		id: 'app.appearance-settings.accent-tint.description',
@@ -209,33 +221,34 @@ const customColor = computed({
 })
 
 const fontOptions = computed(() => [
-	{ id: '', label: formatMessage(messages.fontDefault), family: 'Inter' },
+	{ id: '', label: formatMessage(messages.fontDefault), family: 'Inter', isDefault: true },
 	{ id: 'system', label: formatMessage(messages.fontSystem), family: 'system-ui' },
 	{
 		id: 'minecraft',
 		label: formatMessage(messages.fontMinecraft),
-		family: "'bundled-minecraft-font-mrapp'",
+		family: fontFamilyCss('minecraft'),
 	},
 ])
 
 const customFontSelected = computed(
 	() => !(FONT_PRESETS as readonly string[]).includes(current.value.interfaceFont),
 )
-// What the field holds while Custom is open, so picking a preset and coming
-// back does not lose a name half typed.
-const customFont = ref(customFontSelected.value ? current.value.interfaceFont : '')
-const installedFonts = ref<string[]>([])
+// The picker stays open while Custom is chosen, and can be opened before a font
+// is picked, without the app changing font until one is.
+const customFontOpen = ref(customFontSelected.value)
+const installedFonts = useQuery({
+	queryKey: ['noctrinth', 'installed-font-families'],
+	queryFn: installedFontFamilies,
+	enabled: customFontOpen,
+	staleTime: Infinity,
+})
+const installedFontOptions = computed(() =>
+	(installedFonts.data.value ?? []).map((family) => ({ label: family, value: family })),
+)
 
-function chooseCustomFont(): void {
-	current.value.interfaceFont = customFont.value || ' '
-	if (!installedFonts.value.length) {
-		void installedFontFamilies().then((families) => (installedFonts.value = families))
-	}
-}
-
-function setCustomFont(name: string): void {
-	customFont.value = name
-	current.value.interfaceFont = name || ' '
+function chooseFont(id: string): void {
+	customFontOpen.value = false
+	current.value.interfaceFont = id
 }
 
 function setTheme(value: ColorTheme): void {
@@ -418,53 +431,80 @@ provideAppearanceSettings({
 				:key="option.id"
 				type="button"
 				class="accent-option flex items-center gap-3 rounded-xl border border-solid border-button-border bg-button-bg p-3 text-left"
-				:class="{ 'accent-option--selected': current.interfaceFont === option.id }"
-				:aria-pressed="current.interfaceFont === option.id"
-				@click="current.interfaceFont = option.id"
+				:class="{
+					'accent-option--selected': !customFontOpen && current.interfaceFont === option.id,
+				}"
+				:aria-pressed="!customFontOpen && current.interfaceFont === option.id"
+				@click="chooseFont(option.id)"
 			>
-				<span
-					class="truncate text-lg font-medium text-contrast"
-					:style="{ fontFamily: `${option.family}, Inter, sans-serif` }"
-					>{{ option.label }}</span
-				>
+				<span class="flex min-w-0 flex-col">
+					<span
+						class="truncate text-lg font-medium text-contrast"
+						:style="{ fontFamily: `${option.family}, Inter, sans-serif` }"
+						>{{ option.label }}</span
+					>
+					<span v-if="option.isDefault" class="text-xs text-secondary">{{
+						formatMessage(messages.fontDefaultBadge)
+					}}</span>
+				</span>
 				<CheckIcon
-					v-if="current.interfaceFont === option.id"
+					v-if="!customFontOpen && current.interfaceFont === option.id"
 					class="ml-auto size-4 shrink-0 text-contrast"
 				/>
 			</button>
 			<button
 				type="button"
 				class="accent-option flex items-center gap-3 rounded-xl border border-solid border-button-border bg-button-bg p-3 text-left"
-				:class="{ 'accent-option--selected': customFontSelected }"
+				:class="{ 'accent-option--selected': customFontOpen }"
 				:aria-pressed="customFontSelected"
-				@click="chooseCustomFont"
+				:aria-expanded="customFontOpen"
+				@click="customFontOpen = !customFontOpen || !customFontSelected"
 			>
-				<span class="truncate text-lg font-medium text-contrast">{{
-					formatMessage(messages.fontCustom)
-				}}</span>
+				<span
+					class="truncate text-lg font-medium text-contrast"
+					:style="
+						customFontSelected
+							? { fontFamily: `${fontFamilyCss(current.interfaceFont)}, Inter, sans-serif` }
+							: undefined
+					"
+					>{{
+						customFontSelected ? current.interfaceFont : formatMessage(messages.fontCustom)
+					}}</span
+				>
 				<DropdownIcon
 					class="ml-auto size-4 shrink-0 text-secondary transition-transform"
-					:class="{ 'rotate-180': customFontSelected }"
+					:class="{ 'rotate-180': customFontOpen }"
 					aria-hidden="true"
 				/>
 			</button>
 		</div>
 
-		<Collapsible :collapsed="!customFontSelected" overflow-visible>
-			<InputFrame appearance="surface" size="standard" class="mt-1 w-full">
-				<input
-					:value="customFont"
-					class="w-full min-w-0 appearance-none border-0 bg-transparent p-0 text-base font-medium shadow-none outline-none focus:ring-0"
-					:placeholder="formatMessage(messages.fontCustomPlaceholder)"
-					:aria-label="formatMessage(messages.fontCustom)"
-					list="installed-fonts"
-					spellcheck="false"
-					@input="setCustomFont(($event.target as HTMLInputElement).value)"
-				/>
-			</InputFrame>
-			<datalist id="installed-fonts">
-				<option v-for="family in installedFonts" :key="family" :value="family" />
-			</datalist>
+		<Collapsible :collapsed="!customFontOpen" overflow-visible>
+			<Combobox
+				class="mt-1"
+				:model-value="customFontSelected ? current.interfaceFont : undefined"
+				:options="installedFontOptions"
+				:placeholder="formatMessage(messages.fontCustomPlaceholder)"
+				:search-placeholder="formatMessage(messages.fontCustomSearch)"
+				:no-options-message="
+					installedFonts.isPending.value
+						? formatMessage(commonMessages.loadingLabel)
+						: formatMessage(messages.fontCustomNone)
+				"
+				:max-height="320"
+				searchable
+				listbox
+				@update:model-value="(family?: string) => family && (current.interfaceFont = family)"
+			>
+				<template #option="{ item, isSelected }">
+					<span
+						class="truncate text-base"
+						:class="isSelected ? 'text-brand' : 'text-primary'"
+						:style="{ fontFamily: `${fontFamilyCss(item.value)}, Inter, sans-serif` }"
+						>{{ item.label }}</span
+					>
+				</template>
+			</Combobox>
 		</Collapsible>
 	</div>
 

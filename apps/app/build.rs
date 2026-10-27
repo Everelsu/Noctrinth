@@ -582,6 +582,14 @@ fn main() {
                     ),
             )
             .plugin(
+                "noctrinth-fonts",
+                InlinedPlugin::new()
+                    .commands(&["fonts_installed_families"])
+                    .default_permission(
+                        DefaultPermissionRule::AllowAllCommands,
+                    ),
+            )
+            .plugin(
                 "noctrinth-clipboard",
                 InlinedPlugin::new()
                     .commands(&["clipboard_copy_files"])

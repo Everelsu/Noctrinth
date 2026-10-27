@@ -33,7 +33,7 @@ const messages = defineMessages({
 	description: {
 		id: 'noctrinth.settings.background.description',
 		defaultMessage:
-			'A picture, an animated GIF or a looping video (MP4 or WebM) behind the launcher, showing through its frame and, a little, through the cards on a page.',
+			'A picture, an animated GIF or a looping video behind the launcher, showing through its frame and, a little, through the cards on a page. Pictures and GIFs up to 32 MB, MP4 or WebM videos up to 100 MB.',
 	},
 	choose: { id: 'noctrinth.settings.background.choose', defaultMessage: 'Choose a file' },
 	change: { id: 'noctrinth.settings.background.change', defaultMessage: 'Change background' },

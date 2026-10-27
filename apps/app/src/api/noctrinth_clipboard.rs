@@ -19,9 +19,7 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
 pub async fn clipboard_copy_files(paths: Vec<String>) -> Result<()> {
     tauri::async_runtime::spawn_blocking(move || copy_files(&paths))
         .await
-        .map_err(|error| {
-            anyhow::anyhow!(error.to_string())
-        })?
+        .map_err(|error| anyhow::anyhow!(error.to_string()))?
         .map_err(|error| anyhow::anyhow!(error))?;
     Ok(())
 }

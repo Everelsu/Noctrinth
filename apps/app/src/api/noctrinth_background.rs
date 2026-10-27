@@ -31,9 +31,7 @@ async fn stored_path() -> Result<std::path::PathBuf> {
 pub async fn background_set(path: String) -> Result<()> {
     let size = tokio::fs::metadata(&path)
         .await
-        .map_err(|error| {
-            anyhow::anyhow!(error.to_string())
-        })?
+        .map_err(|error| anyhow::anyhow!(error.to_string()))?
         .len();
     if size > MAX_BYTES {
         return Err(anyhow::anyhow!(format!(
@@ -46,9 +44,7 @@ pub async fn background_set(path: String) -> Result<()> {
 
     tokio::fs::copy(&path, stored_path().await?)
         .await
-        .map_err(|error| {
-            anyhow::anyhow!(error.to_string())
-        })?;
+        .map_err(|error| anyhow::anyhow!(error.to_string()))?;
     Ok(())
 }
 
@@ -60,8 +56,7 @@ pub async fn background_get() -> Result<Response> {
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
             Ok(Response::new(Vec::new()))
         }
-        Err(error) => Err(anyhow::anyhow!(error.to_string())
-            .into()),
+        Err(error) => Err(anyhow::anyhow!(error.to_string()).into()),
     }
 }
 
@@ -69,8 +64,7 @@ pub async fn background_get() -> Result<Response> {
 pub async fn background_clear() -> Result<()> {
     match tokio::fs::remove_file(stored_path().await?).await {
         Err(error) if error.kind() != std::io::ErrorKind::NotFound => {
-            Err(anyhow::anyhow!(error.to_string())
-                .into())
+            Err(anyhow::anyhow!(error.to_string()).into())
         }
         _ => Ok(()),
     }

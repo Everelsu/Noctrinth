@@ -1,4 +1,5 @@
-//! A picture behind the launcher, chosen in Settings → Appearance.
+//! A picture, an animated GIF or a looping video behind the launcher, chosen in
+//! Settings → Appearance.
 //!
 //! The idea is Celestial Launcher's (github.com/Wemsur/Celestial-Launcher).
 //! The picture is copied next to the app database rather than remembered by
@@ -21,6 +22,12 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
 /// Big enough for any wallpaper, small enough not to stall the window.
 const MAX_BYTES: u64 = 32 * 1024 * 1024;
 
+/// A video is handed over whole like a picture is, so it gets more room but
+/// still a ceiling: a short loop, not a film.
+const MAX_VIDEO_BYTES: u64 = 100 * 1024 * 1024;
+
+const VIDEO_EXTENSIONS: [&str; 3] = ["mp4", "m4v", "webm"];
+
 async fn stored_path() -> Result<std::path::PathBuf> {
     let state = theseus::State::get().await?;
     Ok(state.directories.settings_dir.join("background"))
@@ -33,11 +40,19 @@ pub async fn background_set(path: String) -> Result<()> {
         .await
         .map_err(|error| anyhow::anyhow!(error.to_string()))?
         .len();
-    if size > MAX_BYTES {
+    let video = std::path::Path::new(&path)
+        .extension()
+        .and_then(|extension| extension.to_str())
+        .is_some_and(|extension| {
+            VIDEO_EXTENSIONS.contains(&extension.to_ascii_lowercase().as_str())
+        });
+    let max = if video { MAX_VIDEO_BYTES } else { MAX_BYTES };
+    if size > max {
         return Err(anyhow::anyhow!(format!(
-            "The picture is {} MB; the background takes up to {} MB",
+            "The {} is {} MB; the background takes up to {} MB",
+            if video { "video" } else { "picture" },
             size / 1024 / 1024,
-            MAX_BYTES / 1024 / 1024
+            max / 1024 / 1024
         ))
         .into());
     }

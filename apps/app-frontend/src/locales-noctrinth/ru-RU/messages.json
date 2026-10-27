@@ -2253,22 +2253,22 @@
 		"message": "Остановить все копии"
 	},
 	"noctrinth.settings.background.title": {
-		"message": "Фоновая картинка"
+		"message": "Фон"
 	},
 	"noctrinth.settings.background.description": {
-		"message": "Картинка за лаунчером: видна сквозь его рамку и, немного, сквозь карточки на страницах."
+		"message": "Картинка, анимированная GIF или зацикленное видео (MP4 или WebM) за лаунчером: видно сквозь его рамку и, немного, сквозь карточки на страницах."
 	},
 	"noctrinth.settings.background.choose": {
-		"message": "Выбрать картинку"
+		"message": "Выбрать файл"
 	},
 	"noctrinth.settings.background.change": {
-		"message": "Сменить картинку"
+		"message": "Сменить фон"
 	},
 	"noctrinth.settings.background.remove": {
 		"message": "Убрать"
 	},
 	"noctrinth.settings.background.blur.title": {
-		"message": "Размыть картинку"
+		"message": "Размыть фон"
 	},
 	"noctrinth.settings.background.blur.description": {
 		"message": "Смягчает её, чтобы она не спорила с тем, что поверх."
@@ -2292,16 +2292,16 @@
 		"message": "Noctrinth не отправляет ни аналитику, ни данные об использовании, как бы ни стоял этот переключатель. Он оставлен, чтобы настройка переносилась из Modrinth App и обратно."
 	},
 	"noctrinth.settings.background.drop-hint": {
-		"message": "Или перетащите картинку на окно."
+		"message": "Или перетащите картинку или видео на окно."
 	},
 	"noctrinth.settings.background.drop-here": {
 		"message": "Бросайте сюда"
 	},
 	"noctrinth.settings.background.dim.title": {
-		"message": "Затемнение картинки"
+		"message": "Затемнение фона"
 	},
 	"noctrinth.settings.background.dim.description": {
-		"message": "Для яркой или пёстрой картинки, чтобы то, что поверх, легко читалось."
+		"message": "Для яркого или пёстрого фона, чтобы то, что поверх, легко читалось."
 	},
 	"app.appearance-settings.accent.custom": {
 		"message": "Свой"

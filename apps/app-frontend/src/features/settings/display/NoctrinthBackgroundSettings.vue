@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/** The background picture, under the accent in Appearance. */
+/** The background picture, GIF or video, under the accent in Appearance. */
 import { ImageIcon, TrashIcon } from '@modrinth/assets'
 import {
 	Button,
@@ -15,6 +15,7 @@ import { onMounted, onUnmounted, ref } from 'vue'
 import {
 	backgroundBlur,
 	backgroundDim,
+	backgroundIsVideo,
 	backgroundUrl,
 	chooseBackground,
 	clearBackground,
@@ -28,29 +29,35 @@ const { formatMessage } = useVIntl()
 const { handleError } = injectNotificationManager()
 
 const messages = defineMessages({
-	title: { id: 'noctrinth.settings.background.title', defaultMessage: 'Background picture' },
+	title: { id: 'noctrinth.settings.background.title', defaultMessage: 'Background' },
 	description: {
 		id: 'noctrinth.settings.background.description',
 		defaultMessage:
-			'A picture behind the launcher, showing through its frame and, a little, through the cards on a page.',
+			'A picture, an animated GIF or a looping video (MP4 or WebM) behind the launcher, showing through its frame and, a little, through the cards on a page.',
 	},
-	choose: { id: 'noctrinth.settings.background.choose', defaultMessage: 'Choose picture' },
-	change: { id: 'noctrinth.settings.background.change', defaultMessage: 'Change picture' },
+	choose: { id: 'noctrinth.settings.background.choose', defaultMessage: 'Choose a file' },
+	change: { id: 'noctrinth.settings.background.change', defaultMessage: 'Change background' },
 	remove: { id: 'noctrinth.settings.background.remove', defaultMessage: 'Remove' },
 	dropHint: {
 		id: 'noctrinth.settings.background.drop-hint',
-		defaultMessage: 'Or drop a picture onto the window.',
+		defaultMessage: 'Or drop a picture or a video onto the window.',
 	},
 	dropHere: { id: 'noctrinth.settings.background.drop-here', defaultMessage: 'Drop it here' },
-	blurTitle: { id: 'noctrinth.settings.background.blur.title', defaultMessage: 'Blur the picture' },
+	blurTitle: {
+		id: 'noctrinth.settings.background.blur.title',
+		defaultMessage: 'Blur the background',
+	},
 	blurDescription: {
 		id: 'noctrinth.settings.background.blur.description',
 		defaultMessage: 'Softens it, so it stays behind what is in front of it.',
 	},
-	dimTitle: { id: 'noctrinth.settings.background.dim.title', defaultMessage: 'Darken the picture' },
+	dimTitle: {
+		id: 'noctrinth.settings.background.dim.title',
+		defaultMessage: 'Darken the background',
+	},
 	dimDescription: {
 		id: 'noctrinth.settings.background.dim.description',
-		defaultMessage: 'For a bright or busy picture, so what is over it stays easy to read.',
+		defaultMessage: 'For a bright or busy background, so what is over it stays easy to read.',
 	},
 })
 
@@ -124,8 +131,21 @@ onUnmounted(() => {
 					dragging ? 'border-brand' : 'border-surface-5',
 					{ 'grid place-items-center text-secondary': !backgroundUrl || dragging },
 				]"
-				:style="backgroundUrl ? { backgroundImage: `url(${backgroundUrl})` } : undefined"
+				:style="
+					backgroundUrl && !backgroundIsVideo
+						? { backgroundImage: `url(${backgroundUrl})` }
+						: undefined
+				"
 			>
+				<video
+					v-if="backgroundUrl && backgroundIsVideo"
+					class="absolute inset-0 size-full object-cover"
+					:src="backgroundUrl"
+					autoplay
+					muted
+					loop
+					playsinline
+				/>
 				<span
 					v-if="dragging"
 					class="absolute inset-0 grid place-items-center bg-black/60 text-sm font-semibold text-contrast"

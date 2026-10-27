@@ -2,15 +2,34 @@
 /**
  * The background picture, behind the whole window. While there is one, the
  * window's frame lets it through, and the cards on a page a little of it.
+ *
+ * A video is played under the same veil, muted and looping, and paused while
+ * the window cannot be seen so it costs nothing in the tray.
  */
-import { computed, watchEffect } from 'vue'
+import { useDocumentVisibility } from '@vueuse/core'
+import { computed, ref, watch, watchEffect } from 'vue'
 
-import { backgroundBlur, backgroundDim, backgroundUrl } from '@/helpers/noctrinth-background'
+import {
+	backgroundBlur,
+	backgroundDim,
+	backgroundIsVideo,
+	backgroundUrl,
+} from '@/helpers/noctrinth-background'
 
-/** The darkening is a veil painted over the picture, in the same layer. */
-const backgroundImage = computed(() => {
-	const veil = `rgba(0, 0, 0, ${Math.min(100, Math.max(0, backgroundDim.value)) / 100})`
-	return `linear-gradient(${veil}, ${veil}), url(${backgroundUrl.value})`
+/** The darkening is a veil over the picture: in the same layer, or over the video. */
+const veil = computed(
+	() => `rgba(0, 0, 0, ${Math.min(100, Math.max(0, backgroundDim.value)) / 100})`,
+)
+const backgroundImage = computed(
+	() => `linear-gradient(${veil.value}, ${veil.value}), url(${backgroundUrl.value})`,
+)
+
+const video = ref<HTMLVideoElement | null>(null)
+const visibility = useDocumentVisibility()
+watch([visibility, video], ([state, element]) => {
+	if (!element) return
+	if (state === 'visible') void element.play().catch(() => {})
+	else element.pause()
 })
 
 watchEffect(() => {
@@ -25,8 +44,22 @@ watchEffect(() => {
 			:key="backgroundUrl"
 			class="noctrinth-backdrop"
 			:class="{ 'noctrinth-backdrop--blur': backgroundBlur }"
-			:style="{ backgroundImage }"
-		/>
+			:style="backgroundIsVideo ? undefined : { backgroundImage }"
+		>
+			<template v-if="backgroundIsVideo">
+				<video
+					ref="video"
+					class="noctrinth-backdrop__video"
+					:src="backgroundUrl"
+					autoplay
+					muted
+					loop
+					playsinline
+					disablepictureinpicture
+				/>
+				<span class="noctrinth-backdrop__video" :style="{ background: veil }" />
+			</template>
+		</div>
 	</Transition>
 </template>
 
@@ -39,6 +72,14 @@ watchEffect(() => {
 	background-position: center;
 	background-size: cover;
 	background-repeat: no-repeat;
+}
+
+.noctrinth-backdrop__video {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
 }
 
 .noctrinth-backdrop::after {

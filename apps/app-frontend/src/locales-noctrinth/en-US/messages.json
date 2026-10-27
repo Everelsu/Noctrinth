@@ -56,6 +56,27 @@
 	"app.appearance-settings.accent.verdant": {
 		"message": "Verdant"
 	},
+	"app.appearance-settings.font.custom": {
+		"message": "Custom"
+	},
+	"app.appearance-settings.font.custom.placeholder": {
+		"message": "Name of a font installed on this computer"
+	},
+	"app.appearance-settings.font.default": {
+		"message": "Inter"
+	},
+	"app.appearance-settings.font.description": {
+		"message": "The typeface the app is set in. A letter the chosen font does not have is drawn in Inter."
+	},
+	"app.appearance-settings.font.minecraft": {
+		"message": "Minecraft"
+	},
+	"app.appearance-settings.font.system": {
+		"message": "System"
+	},
+	"app.appearance-settings.font.title": {
+		"message": "Interface font"
+	},
 	"app.appearance-settings.minimize-launcher.description": {
 		"message": "Minimize Noctrinth when Minecraft starts."
 	},

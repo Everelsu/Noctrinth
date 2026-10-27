@@ -121,6 +121,11 @@ pub struct Settings {
     /// or one of [`crate::api::java_providers::JavaProvider`]'s keys pins it.
     pub java_provider: String,
 
+    /// The typeface the interface is set in: empty for the theme's own,
+    /// `system` or `minecraft`, or the family name of an installed font. The
+    /// interface owns the list and caches the choice, as it does the accent.
+    pub interface_font: String,
+
     pub version: usize,
 }
 
@@ -178,6 +183,11 @@ impl Settings {
 
         let java_provider: String =
             sqlx::query_scalar("SELECT java_provider FROM settings")
+                .fetch_one(exec)
+                .await?;
+
+        let interface_font: String =
+            sqlx::query_scalar("SELECT interface_font FROM settings")
                 .fetch_one(exec)
                 .await?;
 
@@ -296,6 +306,7 @@ impl Settings {
             accent_tint_background: accent_tint_background == 1,
             splash_cube,
             java_provider,
+            interface_font,
             background_blur: background_blur == 1,
             background_dim: background_dim.clamp(0, 100) as u32,
             sync_theme_across_devices: res.sync_theme_across_devices == 1,
@@ -477,6 +488,11 @@ impl Settings {
 
         sqlx::query("UPDATE settings SET java_provider = $1")
             .bind(&self.java_provider)
+            .execute(exec)
+            .await?;
+
+        sqlx::query("UPDATE settings SET interface_font = $1")
+            .bind(&self.interface_font)
             .execute(exec)
             .await?;
 

@@ -62,6 +62,27 @@
 	"app.appearance-settings.accent.verdant": {
 		"message": "Зелень"
 	},
+	"app.appearance-settings.font.custom": {
+		"message": "Свой"
+	},
+	"app.appearance-settings.font.custom.placeholder": {
+		"message": "Название шрифта, установленного на компьютере"
+	},
+	"app.appearance-settings.font.default": {
+		"message": "Inter"
+	},
+	"app.appearance-settings.font.description": {
+		"message": "Шрифт, которым написан весь лаунчер. Буквы, которых в выбранном шрифте нет, рисуются шрифтом Inter."
+	},
+	"app.appearance-settings.font.minecraft": {
+		"message": "Minecraft"
+	},
+	"app.appearance-settings.font.system": {
+		"message": "Системный"
+	},
+	"app.appearance-settings.font.title": {
+		"message": "Шрифт интерфейса"
+	},
 	"app.appearance-settings.minimize-launcher.description": {
 		"message": "Сворачивать окно лаунчера при запуске Minecraft."
 	},

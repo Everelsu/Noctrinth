@@ -116,6 +116,12 @@ export type AppSettings = {
 	 */
 	java_provider: string
 
+	/**
+	 * The typeface the interface is set in: empty for Inter, `system`,
+	 * `minecraft`, or the family name of an installed font.
+	 */
+	interface_font: string
+
 	/** Whether the background picture chosen in Appearance is blurred. */
 	background_blur: boolean
 

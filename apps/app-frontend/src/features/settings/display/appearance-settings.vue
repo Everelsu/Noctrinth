@@ -6,6 +6,7 @@ import {
 	defineMessages,
 	injectAuth,
 	injectUserPreferences,
+	InputFrame,
 	provideAppearanceSettings,
 	Toggle,
 	useSavable,
@@ -27,6 +28,12 @@ import {
 	useAccentPreset,
 } from '@/composables/use-accent.ts'
 import { useAppSettings } from '@/composables/use-app-settings.ts'
+import {
+	FONT_PRESETS,
+	installedFontFamilies,
+	setInterfaceFont,
+	useInterfaceFont,
+} from '@/composables/use-font.ts'
 import { type ColorTheme, isDarkTheme, useTheme } from '@/composables/use-theme.ts'
 import { injectAppSettingsModal } from '@/features/settings/app-settings-modal/context'
 import NoctrinthBackgroundSettings from '@/features/settings/display/NoctrinthBackgroundSettings.vue'
@@ -39,6 +46,7 @@ const { updatePreferences } = injectUserPreferences()
 const settingsModal = injectAppSettingsModal()
 const os = platform()
 const accent = useAccentPreset()
+const interfaceFont = useInterfaceFont()
 
 // The accent lives in a store of its own that the picker repaints as you move
 // through it, so what was saved has to be kept apart from it — otherwise the
@@ -51,6 +59,8 @@ const savedAccent = ref({
 			: DEFAULT_ACCENT_PRESET,
 	tint: accent.tintBackground.value,
 })
+// Kept apart from the live font for the same reason as the accent.
+const savedFont = ref(interfaceFont.value)
 
 const { formatMessage } = useVIntl()
 
@@ -67,6 +77,23 @@ const messages = defineMessages({
 	accentTintTitle: {
 		id: 'app.appearance-settings.accent-tint.title',
 		defaultMessage: 'Tint the background too',
+	},
+	fontTitle: {
+		id: 'app.appearance-settings.font.title',
+		defaultMessage: 'Interface font',
+	},
+	fontDescription: {
+		id: 'app.appearance-settings.font.description',
+		defaultMessage:
+			'The typeface the app is set in. A letter the chosen font does not have is drawn in Inter.',
+	},
+	fontDefault: { id: 'app.appearance-settings.font.default', defaultMessage: 'Inter' },
+	fontSystem: { id: 'app.appearance-settings.font.system', defaultMessage: 'System' },
+	fontMinecraft: { id: 'app.appearance-settings.font.minecraft', defaultMessage: 'Minecraft' },
+	fontCustom: { id: 'app.appearance-settings.font.custom', defaultMessage: 'Custom' },
+	fontCustomPlaceholder: {
+		id: 'app.appearance-settings.font.custom.placeholder',
+		defaultMessage: 'Name of a font installed on this computer',
 	},
 	accentTintDescription: {
 		id: 'app.appearance-settings.accent-tint.description',
@@ -100,6 +127,7 @@ type AppearanceSettingsState = {
 	nativeDecorations: boolean
 	accentPreset: string
 	accentTintBackground: boolean
+	interfaceFont: string
 }
 
 function getAppearanceSettingsState(): AppearanceSettingsState {
@@ -110,6 +138,7 @@ function getAppearanceSettingsState(): AppearanceSettingsState {
 		nativeDecorations: appSettings.nativeDecorations,
 		accentPreset: savedAccent.value.preset,
 		accentTintBackground: savedAccent.value.tint,
+		interfaceFont: savedFont.value,
 	}
 }
 
@@ -135,6 +164,7 @@ const { saved, current, changes, saving, hasChanges, reset, save } = useSavable(
 			native_decorations: value.nativeDecorations,
 			accent_preset: value.accentPreset,
 			accent_tint_background: value.accentTintBackground,
+			interface_font: value.interfaceFont.trim(),
 		}
 
 		await set(nextSettings)
@@ -146,6 +176,7 @@ const { saved, current, changes, saving, hasChanges, reset, save } = useSavable(
 		theme.advancedRendering = value.advancedRendering
 		appSettings.nativeDecorations = value.nativeDecorations
 		savedAccent.value = { preset: value.accentPreset, tint: value.accentTintBackground }
+		savedFont.value = value.interfaceFont.trim()
 	},
 )
 
@@ -177,6 +208,36 @@ const customColor = computed({
 	},
 })
 
+const fontOptions = computed(() => [
+	{ id: '', label: formatMessage(messages.fontDefault), family: 'Inter' },
+	{ id: 'system', label: formatMessage(messages.fontSystem), family: 'system-ui' },
+	{
+		id: 'minecraft',
+		label: formatMessage(messages.fontMinecraft),
+		family: "'bundled-minecraft-font-mrapp'",
+	},
+])
+
+const customFontSelected = computed(
+	() => !(FONT_PRESETS as readonly string[]).includes(current.value.interfaceFont),
+)
+// What the field holds while Custom is open, so picking a preset and coming
+// back does not lose a name half typed.
+const customFont = ref(customFontSelected.value ? current.value.interfaceFont : '')
+const installedFonts = ref<string[]>([])
+
+function chooseCustomFont(): void {
+	current.value.interfaceFont = customFont.value || ' '
+	if (!installedFonts.value.length) {
+		void installedFontFamilies().then((families) => (installedFonts.value = families))
+	}
+}
+
+function setCustomFont(name: string): void {
+	customFont.value = name
+	current.value.interfaceFont = name || ' '
+}
+
 function setTheme(value: ColorTheme): void {
 	current.value.theme = value
 }
@@ -198,6 +259,11 @@ function setNativeDecorations(enabled: boolean): void {
 // saved — which `useSavable` has already restored into `saved` by then.
 watch([() => current.value.accentPreset, () => current.value.accentTintBackground], ([id, tint]) =>
 	setAccentPreset(id, tint),
+)
+
+watch(
+	() => current.value.interfaceFont,
+	(name) => setInterfaceFont(name),
 )
 
 watch(
@@ -230,6 +296,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
 	theme.preview = null
 	setAccentPreset(saved.value.accentPreset, saved.value.accentTintBackground)
+	setInterfaceFont(saved.value.interfaceFont)
 	settingsModal.registerUnsavedChangesController(null)
 })
 
@@ -334,6 +401,71 @@ provideAppearanceSettings({
 				:disabled="current.accentPreset === DEFAULT_ACCENT_PRESET"
 			/>
 		</div>
+	</div>
+
+	<div class="mt-6 flex flex-col gap-3">
+		<div>
+			<h2 class="m-0 text-lg font-semibold text-contrast">
+				{{ formatMessage(messages.fontTitle) }}
+			</h2>
+			<p class="m-0 mt-1 text-secondary">
+				{{ formatMessage(messages.fontDescription) }}
+			</p>
+		</div>
+		<div class="grid grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-2">
+			<button
+				v-for="option in fontOptions"
+				:key="option.id"
+				type="button"
+				class="accent-option flex items-center gap-3 rounded-xl border border-solid border-button-border bg-button-bg p-3 text-left"
+				:class="{ 'accent-option--selected': current.interfaceFont === option.id }"
+				:aria-pressed="current.interfaceFont === option.id"
+				@click="current.interfaceFont = option.id"
+			>
+				<span
+					class="truncate text-lg font-medium text-contrast"
+					:style="{ fontFamily: `${option.family}, Inter, sans-serif` }"
+					>{{ option.label }}</span
+				>
+				<CheckIcon
+					v-if="current.interfaceFont === option.id"
+					class="ml-auto size-4 shrink-0 text-contrast"
+				/>
+			</button>
+			<button
+				type="button"
+				class="accent-option flex items-center gap-3 rounded-xl border border-solid border-button-border bg-button-bg p-3 text-left"
+				:class="{ 'accent-option--selected': customFontSelected }"
+				:aria-pressed="customFontSelected"
+				@click="chooseCustomFont"
+			>
+				<span class="truncate text-lg font-medium text-contrast">{{
+					formatMessage(messages.fontCustom)
+				}}</span>
+				<DropdownIcon
+					class="ml-auto size-4 shrink-0 text-secondary transition-transform"
+					:class="{ 'rotate-180': customFontSelected }"
+					aria-hidden="true"
+				/>
+			</button>
+		</div>
+
+		<Collapsible :collapsed="!customFontSelected" overflow-visible>
+			<InputFrame appearance="surface" size="standard" class="mt-1 w-full">
+				<input
+					:value="customFont"
+					class="w-full min-w-0 appearance-none border-0 bg-transparent p-0 text-base font-medium shadow-none outline-none focus:ring-0"
+					:placeholder="formatMessage(messages.fontCustomPlaceholder)"
+					:aria-label="formatMessage(messages.fontCustom)"
+					list="installed-fonts"
+					spellcheck="false"
+					@input="setCustomFont(($event.target as HTMLInputElement).value)"
+				/>
+			</InputFrame>
+			<datalist id="installed-fonts">
+				<option v-for="family in installedFonts" :key="family" :value="family" />
+			</datalist>
+		</Collapsible>
 	</div>
 
 	<NoctrinthBackgroundSettings />

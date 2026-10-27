@@ -92,6 +92,7 @@ import { setAccentPreset } from '@/composables/use-accent.ts'
 import { useAppEvent } from '@/composables/use-app-event'
 import { useAppSettings } from '@/composables/use-app-settings.ts'
 import { useError } from '@/composables/use-error.js'
+import { setInterfaceFont } from '@/composables/use-font.ts'
 import { useInstanceMetadataRefresh } from '@/composables/use-instance-metadata-refresh'
 import { useQuickInstanceLimit } from '@/composables/use-quick-instance-limit.ts'
 import { isDarkTheme, useTheme } from '@/composables/use-theme.ts'
@@ -792,6 +793,7 @@ async function setupApp() {
 		pending_update_toast_for_version,
 		accent_preset,
 		accent_tint_background,
+		interface_font,
 		splash_cube,
 		background_blur,
 		background_dim,
@@ -801,6 +803,7 @@ async function setupApp() {
 	// these colours, rather than in whatever the last session left cached.
 	appTheme.preferred = theme
 	setAccentPreset(accent_preset, accent_tint_background)
+	setInterfaceFont(interface_font)
 	markThemeSettled()
 	cacheSplashCubeChoice(splash_cube)
 	loadBackground(background_blur, background_dim).catch((error) =>

@@ -1517,6 +1517,18 @@
 	"noctrinth.settings.background.blur.title": {
 		"message": "Blur the background"
 	},
+	"noctrinth.creation-flow.curseforge-code.description": {
+		"message": "Install a modpack someone shared from the CurseForge app."
+	},
+	"noctrinth.creation-flow.curseforge-code.import": {
+		"message": "Import"
+	},
+	"noctrinth.creation-flow.curseforge-code.placeholder": {
+		"message": "Profile code, such as aBc12XyZ"
+	},
+	"noctrinth.creation-flow.curseforge-code.title": {
+		"message": "CurseForge profile code"
+	},
 	"noctrinth.settings.background.blur.description": {
 		"message": "Softens it, so it stays behind what is in front of it."
 	},

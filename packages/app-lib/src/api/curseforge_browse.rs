@@ -15,6 +15,7 @@
 //! [`curseforge_blocked`]: crate::api::curseforge_blocked
 
 use std::collections::{HashMap, HashSet};
+use std::path::PathBuf;
 use std::sync::{LazyLock, Mutex};
 use std::time::{Duration, Instant};
 
@@ -1512,6 +1513,49 @@ pub async fn download_modpack_bytes(
     Ok(bytes)
 }
 
+/// Whether `code` can be a CurseForge profile code: letters and digits only,
+/// which also keeps it from reaching anywhere but the one endpoint.
+fn is_share_code(code: &str) -> bool {
+    (1..=32).contains(&code.len())
+        && code.chars().all(|c| c.is_ascii_alphanumeric())
+}
+
+/// Downloads the modpack a CurseForge profile code was made for, and returns
+/// the zip on disk, for the regular modpack import to install from.
+///
+/// A code is what CurseForge's app makes when someone shares a profile: the
+/// profile exported as an ordinary CurseForge modpack zip, which the API hands
+/// back for the code until it expires. No account is needed to use one, and
+/// the key is sent only because the API may ask for it.
+pub async fn download_shared_profile(code: &str) -> crate::Result<PathBuf> {
+    let code = code.trim();
+    if !is_share_code(code) {
+        return Err(input(
+            "A CurseForge profile code is made of letters and digits only",
+        ));
+    }
+
+    let state = State::get().await?;
+    let mut request = crate::util::fetch::REQWEST_CLIENT
+        .get(format!("{API}/shared-profile/{code}"));
+    if let Some(key) = crate::api::curseforge_metadata::api_key() {
+        request = request.header("x-api-key", key);
+    }
+    let response = request.send().await?;
+    if response.status() == reqwest::StatusCode::NOT_FOUND {
+        return Err(input(format!(
+            "There is no CurseForge profile with the code {code}, or it has expired"
+        )));
+    }
+    let bytes = response.error_for_status()?.bytes().await?;
+
+    let folder = state.directories.caches_dir().join("curseforge-profiles");
+    crate::util::io::create_dir_all(&folder).await?;
+    let path = folder.join(format!("{code}.zip"));
+    crate::util::io::write(&path, &bytes).await?;
+    Ok(path)
+}
+
 /// What an instance is still waiting on, described for the frontend.
 pub async fn pending_files(
     instance_id: &str,
@@ -1542,6 +1586,15 @@ pub async fn dismiss_pending_file(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn share_codes_are_letters_and_digits() {
+        assert!(is_share_code("Ab3dE9xY"));
+        assert!(!is_share_code(""));
+        assert!(!is_share_code("../mods"));
+        assert!(!is_share_code("abc def"));
+        assert!(!is_share_code(&"a".repeat(33)));
+    }
 
     fn query(project_type: &str) -> SearchQuery {
         SearchQuery {

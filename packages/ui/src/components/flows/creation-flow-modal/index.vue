@@ -47,6 +47,7 @@ const props = withDefaults(
 		getLoaderManifest?: LoaderManifestResolver
 		randomizeInstanceIcon?: () => Promise<{ path: string; previewUrl: string } | null>
 		customizeInstanceIcon?: () => void
+		downloadCurseforgeProfile?: (code: string) => Promise<string>
 		finishDisabled?: boolean
 		finishDisabledTooltip?: string
 	}>(),
@@ -62,6 +63,7 @@ const props = withDefaults(
 		onBack: null,
 		randomizeInstanceIcon: undefined,
 		customizeInstanceIcon: undefined,
+		downloadCurseforgeProfile: undefined,
 	},
 )
 
@@ -95,6 +97,7 @@ const ctx = createCreationFlowContext(
 		getLoaderManifest: props.getLoaderManifest,
 		randomizeInstanceIcon: props.randomizeInstanceIcon,
 		customizeInstanceIcon: props.customizeInstanceIcon,
+		downloadCurseforgeProfile: props.downloadCurseforgeProfile,
 		finishDisabled: computed(() => props.finishDisabled ?? false),
 		finishDisabledTooltip: computed(() => props.finishDisabledTooltip),
 	},

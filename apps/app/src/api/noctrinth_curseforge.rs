@@ -39,6 +39,7 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
             curseforge_pending_files,
             curseforge_check_pending_downloads,
             curseforge_dismiss_pending_file,
+            curseforge_download_shared_profile,
         ])
         .build()
 }
@@ -152,4 +153,13 @@ pub async fn curseforge_dismiss_pending_file(
     file_id: String,
 ) -> Result<()> {
     Ok(curseforge_browse::dismiss_pending_file(&instance_id, &file_id).await?)
+}
+
+/// Downloads the modpack behind a CurseForge profile code; the zip's path is
+/// then imported like any modpack file.
+#[tauri::command]
+pub async fn curseforge_download_shared_profile(
+    code: String,
+) -> Result<std::path::PathBuf> {
+    Ok(curseforge_browse::download_shared_profile(&code).await?)
 }

@@ -180,6 +180,8 @@ export interface CreationFlowContextValue {
 	instanceIconUrl: Ref<string | null>
 	instanceIconPath: Ref<string | null>
 	randomizeInstanceIcon: (() => Promise<GeneratedInstanceIcon | null>) | null
+	/** Noctrinth's own: downloads the modpack behind a CurseForge profile code, to a file path. */
+	downloadCurseforgeProfile: ((code: string) => Promise<string>) | null
 	customizeInstanceIcon: (() => void) | null
 
 	// Loader/version state (custom setup)
@@ -272,6 +274,7 @@ export interface CreationFlowOptions {
 	getProjectVersions?: (projectId: string) => Promise<{ id: string }[]>
 	getLoaderManifest?: LoaderManifestResolver
 	randomizeInstanceIcon?: () => Promise<GeneratedInstanceIcon | null>
+	downloadCurseforgeProfile?: (code: string) => Promise<string>
 	customizeInstanceIcon?: () => void
 	finishDisabled?: ComputedRef<boolean>
 	finishDisabledTooltip?: ComputedRef<string | undefined>
@@ -299,6 +302,7 @@ export function createCreationFlowContext(
 	const initialGameVersion = options.initialGameVersion ?? null
 	const onBack = options.onBack ?? null
 	const randomizeInstanceIcon = options.randomizeInstanceIcon ?? null
+	const downloadCurseforgeProfile = options.downloadCurseforgeProfile ?? null
 	const customizeInstanceIcon = options.customizeInstanceIcon ?? null
 	const searchProjects = options.searchProjects!
 	const prepareProjectInstall = options.prepareProjectInstall
@@ -663,6 +667,7 @@ export function createCreationFlowContext(
 		instanceIconUrl,
 		instanceIconPath,
 		randomizeInstanceIcon,
+		downloadCurseforgeProfile,
 		customizeInstanceIcon,
 		selectedLoader,
 		selectedGameVersion,

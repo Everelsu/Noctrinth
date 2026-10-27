@@ -2249,6 +2249,18 @@
 	"noctrinth.instance.stop-copy": {
 		"message": "Остановить {name} · {time}"
 	},
+	"noctrinth.creation-flow.curseforge-code.description": {
+		"message": "Установить модпак, которым поделились из приложения CurseForge."
+	},
+	"noctrinth.creation-flow.curseforge-code.import": {
+		"message": "Импорт"
+	},
+	"noctrinth.creation-flow.curseforge-code.placeholder": {
+		"message": "Код профиля, например aBc12XyZ"
+	},
+	"noctrinth.creation-flow.curseforge-code.title": {
+		"message": "Код профиля CurseForge"
+	},
 	"noctrinth.instance.stop-all-copies": {
 		"message": "Остановить все копии"
 	},

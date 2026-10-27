@@ -392,3 +392,12 @@ export function useCurseforgeFavorites() {
 		},
 	}
 }
+
+/**
+ * Downloads the modpack behind a CurseForge profile code — what the CurseForge
+ * app makes when someone shares a profile — and returns the zip's path, to be
+ * imported like a modpack file picked from disk.
+ */
+export function downloadCurseforgeProfile(code: string): Promise<string> {
+	return invoke<string>('plugin:noctrinth-curseforge|curseforge_download_shared_profile', { code })
+}

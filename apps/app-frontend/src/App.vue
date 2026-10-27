@@ -113,6 +113,7 @@ import {
 import { debugAnalytics, initAnalytics, trackEvent } from '@/helpers/analytics'
 import { check_reachable } from '@/helpers/auth.js'
 import { get_user, get_user_many, get_version } from '@/helpers/cache.js'
+import { curseforgeEnabled, downloadCurseforgeProfile } from '@/helpers/curseforge'
 import { applyCurseforgeSettings } from '@/helpers/curseforge-settings'
 import { gameSettingsQueryOptions } from '@/helpers/game-options'
 import {
@@ -2296,6 +2297,7 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 			:get-loader-manifest="getLoaderManifest"
 			:randomize-instance-icon="randomizeCreationIcon"
 			:customize-instance-icon="customizeCreationIcon"
+			:download-curseforge-profile="curseforgeEnabled() ? downloadCurseforgeProfile : undefined"
 			@create="handleCreate"
 			@browse-modpacks="handleBrowseModpacks"
 		/>

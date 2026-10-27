@@ -74,6 +74,39 @@
 					:description="formatMessage(messages.importInstanceDescription)"
 					@click="ctx.setImportMode()"
 				/>
+				<template v-if="ctx.downloadCurseforgeProfile">
+					<BigOptionButton
+						:icon="CurseForgeIcon"
+						:title="formatMessage(messages.curseforgeCodeTitle)"
+						:description="formatMessage(messages.curseforgeCodeDescription)"
+						@click="curseforgeCodeOpen = !curseforgeCodeOpen"
+					/>
+					<form
+						v-if="curseforgeCodeOpen"
+						class="flex items-center gap-2"
+						@submit.prevent="importCurseforgeProfile"
+					>
+						<Input
+							ref="curseforgeCodeInput"
+							v-model="curseforgeCode"
+							class="flex-1"
+							:placeholder="formatMessage(messages.curseforgeCodePlaceholder)"
+							:disabled="curseforgeCodeBusy"
+							autocomplete="off"
+							:spellcheck="false"
+						/>
+						<Button
+							type="colored"
+							color="brand"
+							native-type="submit"
+							:loading="curseforgeCodeBusy"
+							:disabled="!curseforgeCode.trim()"
+						>
+							<DownloadIcon />
+							{{ formatMessage(messages.curseforgeCodeImport) }}
+						</Button>
+					</form>
+				</template>
 			</div>
 		</template>
 
@@ -114,16 +147,19 @@ import {
 	BoxIcon,
 	BoxImportIcon,
 	CompassIcon,
+	CurseForgeIcon,
 	DownloadIcon,
 	RightArrowIcon,
 	UploadIcon,
 } from '@modrinth/assets'
 import { commonMessages, defineMessages, useVIntl } from '@modrinth/ui'
-import { computed, defineAsyncComponent, h, onMounted, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, h, nextTick, onMounted, ref, watch } from 'vue'
 
+import { Button } from '#ui/components/base/buttons'
+import Input from '#ui/components/base/inputs/Input.vue'
 import { useDebugLogger } from '#ui/composables/debug-logger'
 
-import { injectFilePicker } from '../../../../providers'
+import { injectFilePicker, injectNotificationManager } from '../../../../providers'
 import BigOptionButton from '../../../base/BigOptionButton.vue'
 import Combobox from '../../../base/Combobox.vue'
 import { injectCreationFlowContext } from '../creation-flow-context'
@@ -210,7 +246,55 @@ const messages = defineMessages({
 		id: 'creation-flow.modal.setup-type.option.vanilla-minecraft.description',
 		defaultMessage: 'Classic Minecraft with no mods or plugins.',
 	},
+	curseforgeCodeTitle: {
+		id: 'noctrinth.creation-flow.curseforge-code.title',
+		defaultMessage: 'CurseForge profile code',
+	},
+	curseforgeCodeDescription: {
+		id: 'noctrinth.creation-flow.curseforge-code.description',
+		defaultMessage: 'Install a modpack someone shared from the CurseForge app.',
+	},
+	curseforgeCodePlaceholder: {
+		id: 'noctrinth.creation-flow.curseforge-code.placeholder',
+		defaultMessage: 'Profile code, such as aBc12XyZ',
+	},
+	curseforgeCodeImport: {
+		id: 'noctrinth.creation-flow.curseforge-code.import',
+		defaultMessage: 'Import',
+	},
 })
+
+// Noctrinth's own: a CurseForge profile code is downloaded as the modpack zip
+// it stands for, which then goes the way a modpack file picked from disk does.
+const { handleError } = injectNotificationManager()
+const curseforgeCodeOpen = ref(false)
+const curseforgeCode = ref('')
+const curseforgeCodeBusy = ref(false)
+const curseforgeCodeInput = ref<InstanceType<typeof Input> | null>(null)
+
+watch(curseforgeCodeOpen, async (open) => {
+	if (!open) return
+	await nextTick()
+	curseforgeCodeInput.value?.focus()
+})
+
+async function importCurseforgeProfile() {
+	const code = curseforgeCode.value.trim()
+	if (!code || !ctx.downloadCurseforgeProfile || ctx.finishDisabled.value) return
+
+	curseforgeCodeBusy.value = true
+	try {
+		const path = await ctx.downloadCurseforgeProfile(code)
+		selectModpack()
+		ctx.modpackFile.value = null
+		ctx.modpackFilePath.value = path
+		proceedWithModpack()
+	} catch (error) {
+		handleError(error as Error)
+	} finally {
+		curseforgeCodeBusy.value = false
+	}
+}
 
 const setupTypeTitle = computed(() => {
 	if (ctx.flowType === 'instance') {

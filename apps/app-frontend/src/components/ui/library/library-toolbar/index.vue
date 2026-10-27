@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { PlusIcon, SearchIcon, SquarePlusIcon } from '@modrinth/assets'
 import { Avatar, Button, defineMessages, Input, useVIntl } from '@modrinth/ui'
-import { computed, inject } from 'vue'
+import { computed, inject, onBeforeUnmount, onMounted, ref } from 'vue'
 
 import FilterMenu from '@/components/ui/library/library-toolbar/filter-menu.vue'
 import NewGroupModal from '@/components/ui/library/library-toolbar/new-group-modal.vue'
 import SortMenu from '@/components/ui/library/library-toolbar/sort-menu.vue'
 import { useLibrary } from '@/components/ui/library/use-library'
+import QuickSearchResults from '@/components/ui/quick-search/QuickSearchResults.vue'
+import { registerInlineQuickSearch } from '@/composables/use-quick-search'
 
 const {
 	search,
@@ -23,7 +25,7 @@ const { formatMessage } = useVIntl()
 const messages = defineMessages({
 	search: {
 		id: 'app.library.search.placeholder',
-		defaultMessage: 'Search instances, or type @ # ! to filter',
+		defaultMessage: 'Search instances and mods, or type @ # ! to filter · {shortcut}',
 	},
 	searchHint: {
 		id: 'app.library.search.hint',
@@ -50,8 +52,38 @@ function onSearchBlur(event: FocusEvent) {
 	searchFocused.value = false
 }
 
+// Noctrinth's own: the field is the quick search too. While it is focused and
+// has something in it, the matching instances and installed content drop down
+// under it with their actions; the grid below still narrows as before. Ctrl+K
+// anywhere on this page comes back to it.
+const searchInput = ref<InstanceType<typeof Input> | null>(null)
+const searchWrapper = ref<HTMLElement | null>(null)
+const quickResults = ref<InstanceType<typeof QuickSearchResults> | null>(null)
+const showQuickResults = computed(
+	() => searchFocused.value && !suggestions.value.length && search.value.trim() !== '',
+)
+const shortcut = /Mac/.test(navigator.userAgent) ? '⌘K' : 'Ctrl+K'
+
+let unregister: (() => void) | undefined
+onMounted(() => {
+	unregister = registerInlineQuickSearch(() => {
+		searchWrapper.value?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+		searchInput.value?.focus()
+	})
+})
+onBeforeUnmount(() => unregister?.())
+
+function leaveSearch() {
+	searchFocused.value = false
+	;(document.activeElement as HTMLElement | null)?.blur()
+}
+
 function onSearchKeydown(event: KeyboardEvent) {
-	if (!suggestions.value.length) return
+	if (!suggestions.value.length) {
+		if (event.key === 'Escape') leaveSearch()
+		else if (showQuickResults.value) quickResults.value?.onKeydown(event)
+		return
+	}
 
 	if (event.key === 'ArrowDown') {
 		event.preventDefault()
@@ -79,21 +111,34 @@ function openNewGroup() {
 	<div class="flex flex-col gap-2">
 		<div class="flex flex-wrap gap-2">
 			<div
+				ref="searchWrapper"
 				class="relative min-w-[16rem] flex-1"
 				@focusin="searchFocused = true"
 				@focusout="onSearchBlur"
 			>
 				<Input
+					ref="searchInput"
 					v-model="search"
 					:icon="SearchIcon"
 					type="text"
-					:placeholder="formatMessage(messages.search)"
+					:placeholder="formatMessage(messages.search, { shortcut })"
 					clearable
 					wrapper-class="w-full"
 					@keydown="onSearchKeydown"
 				/>
 				<div
-					v-if="suggestions.length"
+					v-if="showQuickResults"
+					class="absolute left-0 right-0 top-full z-[60] mt-1 overflow-hidden rounded-xl border border-solid border-surface-5 bg-surface-3 shadow-xl"
+				>
+					<QuickSearchResults
+						ref="quickResults"
+						:query="search"
+						:active="searchFocused"
+						@done="leaveSearch"
+					/>
+				</div>
+				<div
+					v-else-if="suggestions.length"
 					role="listbox"
 					:aria-label="formatMessage(messages.search)"
 					class="absolute left-0 right-0 top-full z-[60] mt-1 overflow-hidden rounded-xl border border-solid border-surface-5 bg-surface-3 py-1 shadow-xl"

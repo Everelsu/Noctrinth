@@ -11,6 +11,29 @@ const managedSourceKinds = new Set([
 	'curseforge_modpack',
 ])
 
+/**
+ * Whether an item belongs to what manages the instance — a shared instance's
+ * owner, or a quarantined instance as a whole — and so is not the user's to change.
+ */
+export function isManagedContentIn(instance: GameInstance, item: ContentItem): boolean {
+	return (
+		instance.quarantined ||
+		(instance.shared_instance?.role === 'member' &&
+			!!item.source_kind &&
+			managedSourceKinds.has(item.source_kind))
+	)
+}
+
+/** Whether an item can be updated in place, outside the instance's own content tab too. */
+export function canUpdateContentIn(instance: GameInstance, item: ContentItem): boolean {
+	return (
+		!isManagedContentIn(instance, item) &&
+		!!item.file_path &&
+		!!item.has_update &&
+		!!item.update_version_id
+	)
+}
+
 export function useManagedContentPolicy(instance: Ref<GameInstance>) {
 	const { formatMessage } = useVIntl()
 	const isManagedModpack = computed(() => instance.value.shared_instance?.role === 'member')
@@ -24,10 +47,7 @@ export function useManagedContentPolicy(instance: Ref<GameInstance>) {
 	}))
 
 	function isManagedContent(item: ContentItem) {
-		return (
-			isQuarantined.value ||
-			(isManagedModpack.value && !!item.source_kind && managedSourceKinds.has(item.source_kind))
-		)
+		return isManagedContentIn(instance.value, item)
 	}
 
 	function canMutateContent(item: ContentItem) {
@@ -35,9 +55,7 @@ export function useManagedContentPolicy(instance: Ref<GameInstance>) {
 	}
 
 	function canUpdateContent(item: ContentItem) {
-		return (
-			canMutateContent(item) && !!item.file_path && !!item.has_update && !!item.update_version_id
-		)
+		return canUpdateContentIn(instance.value, item)
 	}
 
 	function deleteWarning(items: ContentItem[]): ContentActionWarning | null {

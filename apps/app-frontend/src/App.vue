@@ -83,6 +83,7 @@ import NavButton from '@/components/ui/NavButton.vue'
 import NoctrinthBackdrop from '@/components/ui/NoctrinthBackdrop.vue'
 import NoctrinthCrashModal from '@/components/ui/NoctrinthCrashModal.vue'
 import NoctrinthSwipeNavigation from '@/components/ui/NoctrinthSwipeNavigation.vue'
+import QuickSearchPalette from '@/components/ui/quick-search/QuickSearchPalette.vue'
 import QuickInstanceSwitcher from '@/components/ui/QuickInstanceSwitcher.vue'
 import SharedInstanceInviteHandler from '@/components/ui/shared-instances/shared-instance-invite-handler/index.vue'
 import SplashScreen from '@/components/ui/SplashScreen.vue'
@@ -2260,6 +2261,7 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 	<div id="teleports"></div>
 	<AccountSwitchOverlay :show="isSwitchingAccount" />
 	<NoctrinthBackdrop />
+	<QuickSearchPalette />
 	<div
 		v-if="stateInitialized"
 		class="app-grid-layout relative"

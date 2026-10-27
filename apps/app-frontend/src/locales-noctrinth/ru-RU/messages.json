@@ -930,7 +930,7 @@
 		"message": "Читаю, что установлено…"
 	},
 	"app.library.search.placeholder": {
-		"message": "Поиск по сборкам, или @ # ! для фильтров"
+		"message": "Поиск по сборкам и модам, или @ # ! для фильтров · {shortcut}"
 	},
 	"app.library.search.sigil.mod": {
 		"message": "по моду"
@@ -2293,6 +2293,51 @@
 	},
 	"noctrinth.settings.background.blur.title": {
 		"message": "Размыть фон"
+	},
+	"noctrinth.quick-search.discover": {
+		"message": "Ещё не установлено"
+	},
+	"noctrinth.quick-search.hint": {
+		"message": "↑↓ — выбрать · Enter — открыть · Ctrl+Enter — играть или обновить · Esc — закрыть"
+	},
+	"noctrinth.quick-search.in-instance": {
+		"message": "В «{instance}»"
+	},
+	"noctrinth.quick-search.installed": {
+		"message": "Установлено"
+	},
+	"noctrinth.quick-search.instances": {
+		"message": "Сборки"
+	},
+	"noctrinth.quick-search.nothing": {
+		"message": "Ничего не нашлось"
+	},
+	"noctrinth.quick-search.placeholder": {
+		"message": "Поиск по сборкам и тому, что в них установлено"
+	},
+	"noctrinth.quick-search.play": {
+		"message": "Играть"
+	},
+	"noctrinth.quick-search.reading": {
+		"message": "Читаю, что установлено…"
+	},
+	"noctrinth.quick-search.recent": {
+		"message": "Недавно запускались"
+	},
+	"noctrinth.quick-search.search-curseforge": {
+		"message": "Искать «{query}» на CurseForge"
+	},
+	"noctrinth.quick-search.search-modrinth": {
+		"message": "Искать «{query}» на Modrinth"
+	},
+	"noctrinth.quick-search.stop": {
+		"message": "Остановить"
+	},
+	"noctrinth.quick-search.update": {
+		"message": "Обновить"
+	},
+	"noctrinth.quick-search.update-available": {
+		"message": "Есть обновление"
 	},
 	"noctrinth.settings.background.blur.description": {
 		"message": "Смягчает её, чтобы она не спорила с тем, что поверх."

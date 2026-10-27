@@ -411,7 +411,7 @@
 		"message": "Still reading what is installed…"
 	},
 	"app.library.search.placeholder": {
-		"message": "Search instances, or type @ # ! to filter"
+		"message": "Search instances and mods, or type @ # ! to filter · {shortcut}"
 	},
 	"app.library.search.sigil.mod": {
 		"message": "by mod"
@@ -1540,6 +1540,51 @@
 	},
 	"noctrinth.creation-flow.curseforge-code.title": {
 		"message": "CurseForge profile code"
+	},
+	"noctrinth.quick-search.discover": {
+		"message": "Not installed yet"
+	},
+	"noctrinth.quick-search.hint": {
+		"message": "↑↓ to pick · Enter to open · Ctrl+Enter to play or update · Esc to close"
+	},
+	"noctrinth.quick-search.in-instance": {
+		"message": "In {instance}"
+	},
+	"noctrinth.quick-search.installed": {
+		"message": "Installed"
+	},
+	"noctrinth.quick-search.instances": {
+		"message": "Instances"
+	},
+	"noctrinth.quick-search.nothing": {
+		"message": "Nothing matches"
+	},
+	"noctrinth.quick-search.placeholder": {
+		"message": "Search instances and what is installed in them"
+	},
+	"noctrinth.quick-search.play": {
+		"message": "Play"
+	},
+	"noctrinth.quick-search.reading": {
+		"message": "Still reading what is installed…"
+	},
+	"noctrinth.quick-search.recent": {
+		"message": "Played recently"
+	},
+	"noctrinth.quick-search.search-curseforge": {
+		"message": "Search “{query}” on CurseForge"
+	},
+	"noctrinth.quick-search.search-modrinth": {
+		"message": "Search “{query}” on Modrinth"
+	},
+	"noctrinth.quick-search.stop": {
+		"message": "Stop"
+	},
+	"noctrinth.quick-search.update": {
+		"message": "Update"
+	},
+	"noctrinth.quick-search.update-available": {
+		"message": "Update available"
 	},
 	"noctrinth.settings.background.blur.description": {
 		"message": "Softens it, so it stays behind what is in front of it."

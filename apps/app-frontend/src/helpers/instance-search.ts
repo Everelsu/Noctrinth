@@ -388,6 +388,27 @@ function contentTokenMatches(token: SearchToken, item: ContentItem): boolean {
 	}
 }
 
+/**
+ * Whether one installed item answers the query by itself, for the quick
+ * search's list of what is installed. Bare words are read as content names
+ * there, the way `@` terms are; negated terms and instance-only states do not
+ * decide it, and a query with nothing to say about content matches nothing.
+ */
+export function matchContentItem(query: ParsedQuery, item: ContentItem): boolean {
+	const terms = query.tokens.filter(
+		(token) =>
+			!token.negated &&
+			!token.unknown &&
+			(token.kind !== 'state' || CONTENT_STATES.has(token.value)),
+	)
+	return (
+		terms.length > 0 &&
+		terms.every((token) =>
+			contentTokenMatches(token.kind === 'name' ? { ...token, kind: 'content' } : token, item),
+		)
+	)
+}
+
 function isInstanceBroken(instance: GameInstance): boolean {
 	return instance.quarantined || instance.install_stage !== 'installed'
 }

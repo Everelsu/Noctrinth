@@ -19,6 +19,7 @@ use theseus::curseforge_browse::{
     SearchQuery, SearchResults,
 };
 use theseus::curseforge_metadata;
+use theseus::handler::CURSEFORGE_DEEP_LINK_SCHEME;
 
 pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
     tauri::plugin::Builder::new("noctrinth-curseforge")
@@ -40,6 +41,8 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
             curseforge_check_pending_downloads,
             curseforge_dismiss_pending_file,
             curseforge_download_shared_profile,
+            curseforge_link_handler_get,
+            curseforge_link_handler_set,
         ])
         .build()
 }
@@ -162,4 +165,67 @@ pub async fn curseforge_download_shared_profile(
     code: String,
 ) -> Result<std::path::PathBuf> {
     Ok(curseforge_browse::download_shared_profile(&code).await?)
+}
+
+/// Whether CurseForge's Install links open Noctrinth, or `None` where that
+/// cannot be changed at runtime: macOS takes its schemes from the bundle.
+#[tauri::command]
+pub async fn curseforge_link_handler_get<R: tauri::Runtime>(
+    app: tauri::AppHandle<R>,
+) -> Result<Option<bool>> {
+    use tauri_plugin_deep_link::DeepLinkExt;
+
+    match app.deep_link().is_registered(CURSEFORGE_DEEP_LINK_SCHEME) {
+        Ok(registered) => Ok(Some(registered)),
+        Err(tauri_plugin_deep_link::Error::UnsupportedPlatform) => Ok(None),
+        Err(error) => Err(anyhow::anyhow!(error.to_string()).into()),
+    }
+}
+
+/// Makes CurseForge's Install links open Noctrinth, or stops them doing so.
+///
+/// The scheme is CurseForge's app's, so this is only ever done when asked, and
+/// undoing it removes only what Noctrinth wrote: the plugin's own unregister
+/// would also delete a machine-wide registration that may be the app's.
+#[tauri::command]
+pub async fn curseforge_link_handler_set<R: tauri::Runtime>(
+    app: tauri::AppHandle<R>,
+    enabled: bool,
+) -> Result<()> {
+    use tauri_plugin_deep_link::DeepLinkExt;
+
+    let deep_link = app.deep_link();
+    let outcome = if enabled {
+        deep_link.register(CURSEFORGE_DEEP_LINK_SCHEME)
+    } else if deep_link
+        .is_registered(CURSEFORGE_DEEP_LINK_SCHEME)
+        .unwrap_or(false)
+    {
+        unregister_own_link_handler(&deep_link)
+    } else {
+        Ok(())
+    };
+    outcome.map_err(|error| anyhow::anyhow!(error.to_string()).into())
+}
+
+#[cfg(windows)]
+fn unregister_own_link_handler<R: tauri::Runtime>(
+    _: &tauri_plugin_deep_link::DeepLink<R>,
+) -> tauri_plugin_deep_link::Result<()> {
+    use windows::Win32::System::Registry::{HKEY_CURRENT_USER, RegDeleteTreeW};
+    use windows::core::HSTRING;
+
+    let key = HSTRING::from(format!(
+        "Software\\Classes\\{CURSEFORGE_DEEP_LINK_SCHEME}"
+    ));
+    // SAFETY: a predefined root key and a valid, NUL-terminated wide string.
+    let status = unsafe { RegDeleteTreeW(HKEY_CURRENT_USER, &key) };
+    status.ok().map_err(|error| std::io::Error::other(error).into())
+}
+
+#[cfg(not(windows))]
+fn unregister_own_link_handler<R: tauri::Runtime>(
+    deep_link: &tauri_plugin_deep_link::DeepLink<R>,
+) -> tauri_plugin_deep_link::Result<()> {
+    deep_link.unregister(CURSEFORGE_DEEP_LINK_SCHEME)
 }

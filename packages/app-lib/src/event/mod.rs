@@ -423,6 +423,13 @@ pub enum CommandPayload {
         // run or install .mrpack
         path: String,
     },
+    /// Noctrinth's own: the Install button on CurseForge's site, which opens
+    /// `curseforge://install?addonId=…&fileId=…`. Opens the project — at the
+    /// file, when there is one — for it to be installed from there.
+    OpenCurseforgeProject {
+        project_id: String,
+        file_id: Option<String>,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone)]

@@ -2075,6 +2075,12 @@
 	"noctrinth.settings.curseforge.description": {
 		"message": "Обзор и установка с CurseForge, распознавание его файлов в сборках и их обновление. Если выключить, лаунчер ничего не спрашивает у CurseForge."
 	},
+	"noctrinth.settings.curseforge.install-links.description": {
+		"message": "Кнопка «Установить» на curseforge.com открывает проект здесь, а не в приложении CurseForge. Если оно установлено, при следующем запуске оно заберёт ссылки обратно."
+	},
+	"noctrinth.settings.curseforge.install-links.title": {
+		"message": "Открывать кнопку «Установить» с сайта CurseForge"
+	},
 	"noctrinth.settings.curseforge.no-key": {
 		"message": "В этой сборке нет API-ключа CurseForge. Добавьте свой ниже, чтобы пользоваться CurseForge."
 	},
@@ -2262,7 +2268,7 @@
 		"message": "Импорт"
 	},
 	"noctrinth.creation-flow.curseforge-code.placeholder": {
-		"message": "Код из приложения CurseForge, например aBc12XyZ"
+		"message": "Код или ссылка из приложения CurseForge"
 	},
 	"noctrinth.creation-flow.curseforge-code.title": {
 		"message": "Код профиля CurseForge"

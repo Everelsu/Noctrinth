@@ -1319,6 +1319,12 @@
 	"noctrinth.settings.curseforge.description": {
 		"message": "Browse and install from CurseForge, recognise its files in your instances and keep them up to date. Off, and the launcher asks CurseForge nothing."
 	},
+	"noctrinth.settings.curseforge.install-links.description": {
+		"message": "The Install button on curseforge.com opens the project here instead of in CurseForge's app. If that app is installed, it takes its links back the next time it starts."
+	},
+	"noctrinth.settings.curseforge.install-links.title": {
+		"message": "Open Install links from the CurseForge site"
+	},
 	"noctrinth.settings.curseforge.no-key": {
 		"message": "This build has no CurseForge API key. Add your own below to use CurseForge."
 	},
@@ -1530,7 +1536,7 @@
 		"message": "Import"
 	},
 	"noctrinth.creation-flow.curseforge-code.placeholder": {
-		"message": "A code shared from the CurseForge app, such as aBc12XyZ"
+		"message": "A code or share link from the CurseForge app"
 	},
 	"noctrinth.creation-flow.curseforge-code.title": {
 		"message": "CurseForge profile code"

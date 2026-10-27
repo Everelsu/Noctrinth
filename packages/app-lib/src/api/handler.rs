@@ -23,6 +23,39 @@ pub const DEEP_LINK_SCHEME: &str = "noctrinth";
 /// same API. Older shortcuts written before the rename land here too.
 const MODRINTH_DEEP_LINK_SCHEME: &str = "modrinth";
 
+/// CurseForge's scheme, which its site's Install button opens. The app takes
+/// it only when asked to, in the CurseForge settings, since it belongs to
+/// CurseForge's own app.
+pub const CURSEFORGE_DEEP_LINK_SCHEME: &str = "curseforge";
+
+/// `curseforge://install?addonId=…&fileId=…`. Both ids are CurseForge's
+/// numbers; anything else is not an install link of theirs.
+fn curseforge_install_link(command_string: &str) -> Option<CommandPayload> {
+    let url = url::Url::parse(command_string).ok()?;
+    if !url.scheme().eq_ignore_ascii_case(CURSEFORGE_DEEP_LINK_SCHEME)
+        || url.host_str() != Some("install")
+    {
+        return None;
+    }
+    let number = |value: &str| {
+        (!value.is_empty() && value.bytes().all(|b| b.is_ascii_digit()))
+            .then(|| value.to_string())
+    };
+    let mut project_id = None;
+    let mut file_id = None;
+    for (key, value) in url.query_pairs() {
+        match key.as_ref() {
+            "addonId" => project_id = number(&value),
+            "fileId" => file_id = number(&value),
+            _ => {}
+        }
+    }
+    Some(CommandPayload::OpenCurseforgeProject {
+        project_id: project_id?,
+        file_id,
+    })
+}
+
 /// Handles external functions (such as through URL deep linkage)
 /// Link is extracted value (link) in somewhat URL format, such as
 /// subdomain1/subdomain2
@@ -136,6 +169,10 @@ pub async fn parse_command(
 ) -> crate::Result<CommandPayload> {
     tracing::debug!("Parsing external command");
 
+    if let Some(command) = curseforge_install_link(command_string) {
+        return Ok(command);
+    }
+
     // noctrinth://some-command
     // This occurs when following a web redirect link
     if let Some(sublink) = strip_deep_link_scheme(command_string) {
@@ -167,4 +204,37 @@ pub async fn parse_and_emit_command(command_string: &str) -> crate::Result<()> {
     let command = parse_command(command_string).await?;
     emit_command(command).await?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn reads_curseforge_install_links() {
+        let Some(CommandPayload::OpenCurseforgeProject {
+            project_id,
+            file_id,
+        }) = curseforge_install_link(
+            "curseforge://install?addonId=238222&fileId=5101366",
+        )
+        else {
+            panic!("not read as an install link");
+        };
+        assert_eq!(project_id, "238222");
+        assert_eq!(file_id.as_deref(), Some("5101366"));
+
+        assert!(matches!(
+            curseforge_install_link("curseforge://install?addonId=238222"),
+            Some(CommandPayload::OpenCurseforgeProject { file_id: None, .. })
+        ));
+        assert!(
+            curseforge_install_link("curseforge://install?addonId=../x")
+                .is_none()
+        );
+        assert!(
+            curseforge_install_link("curseforge://open?addonId=1").is_none()
+        );
+        assert!(curseforge_install_link("noctrinth://mod/sodium").is_none());
+    }
 }

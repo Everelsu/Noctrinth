@@ -259,6 +259,14 @@ function deserialize_COMMAND_PAYLOAD(d) {
                 path: d.deserialize_string()
             }
         };
+    case 7:
+        return {
+            tag: "OpenCurseforgeProject",
+            value: {
+                project_id: d.deserialize_string(),
+                file_id: (d.deserialize_number(U32_BYTES, false) === 0) ? undefined : d.deserialize_string()
+            }
+        };
     default:
         throw "variant not implemented"
     }

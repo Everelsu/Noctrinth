@@ -401,3 +401,15 @@ export function useCurseforgeFavorites() {
 export function downloadCurseforgeProfile(code: string): Promise<string> {
 	return invoke<string>('plugin:noctrinth-curseforge|curseforge_download_shared_profile', { code })
 }
+
+/**
+ * Whether the Install button on CurseForge's site opens Noctrinth, or null
+ * where that cannot be changed from the app (macOS).
+ */
+export function curseforgeLinkHandler(): Promise<boolean | null> {
+	return invoke<boolean | null>('plugin:noctrinth-curseforge|curseforge_link_handler_get')
+}
+
+export function setCurseforgeLinkHandler(enabled: boolean): Promise<void> {
+	return invoke('plugin:noctrinth-curseforge|curseforge_link_handler_set', { enabled })
+}

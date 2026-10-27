@@ -6,12 +6,14 @@ import {
 	Combobox,
 	type ComboboxOption,
 	defineMessages,
+	injectNotificationManager,
 	Input,
 	Toggle,
 	useVIntl,
 } from '@modrinth/ui'
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
+import { curseforgeLinkHandler, setCurseforgeLinkHandler } from '@/helpers/curseforge'
 import {
 	checkCurseforgeKey,
 	clearCurseforgeCache,
@@ -23,8 +25,18 @@ import {
 } from '@/helpers/curseforge-settings'
 
 const { formatMessage } = useVIntl()
+const { handleError } = injectNotificationManager()
 
 const messages = defineMessages({
+	installLinksTitle: {
+		id: 'noctrinth.settings.curseforge.install-links.title',
+		defaultMessage: 'Open Install links from the CurseForge site',
+	},
+	installLinks: {
+		id: 'noctrinth.settings.curseforge.install-links.description',
+		defaultMessage:
+			"The Install button on curseforge.com opens the project here instead of in CurseForge's app. If that app is installed, it takes its links back the next time it starts.",
+	},
 	title: { id: 'noctrinth.settings.curseforge.title', defaultMessage: 'CurseForge' },
 	description: {
 		id: 'noctrinth.settings.curseforge.description',
@@ -195,6 +207,23 @@ async function forgetKey() {
 	keyResult.value = null
 }
 
+// The link scheme is the system's to remember, so it is read from there rather
+// than kept as a setting; null where it cannot be changed (macOS).
+const installLinks = ref<boolean | null>(null)
+onMounted(async () => {
+	installLinks.value = await curseforgeLinkHandler().catch(() => null)
+})
+
+async function setInstallLinks(enabled: boolean) {
+	installLinks.value = enabled
+	try {
+		await setCurseforgeLinkHandler(enabled)
+	} catch (error) {
+		handleError(error as Error)
+	}
+	installLinks.value = await curseforgeLinkHandler().catch(() => null)
+}
+
 const cleared = ref(false)
 async function clearCache() {
 	await clearCurseforgeCache()
@@ -239,6 +268,20 @@ async function clearCache() {
 					:options="sourceOptions"
 					aria-labelledby="curseforge-source-label"
 					class="w-56"
+				/>
+			</div>
+			<div v-if="installLinks !== null" class="mt-6 flex items-center justify-between gap-4">
+				<div>
+					<h3 id="curseforge-install-links-label" class="m-0 text-lg font-semibold text-contrast">
+						{{ formatMessage(messages.installLinksTitle) }}
+					</h3>
+					<p class="m-0 mt-1">{{ formatMessage(messages.installLinks) }}</p>
+				</div>
+				<Toggle
+					id="curseforge-install-links"
+					:model-value="installLinks"
+					aria-labelledby="curseforge-install-links-label"
+					@update:model-value="(value?: boolean) => setInstallLinks(!!value)"
 				/>
 			</div>
 		</section>

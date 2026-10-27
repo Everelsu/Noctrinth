@@ -113,7 +113,11 @@ import {
 import { debugAnalytics, initAnalytics, trackEvent } from '@/helpers/analytics'
 import { check_reachable } from '@/helpers/auth.js'
 import { get_user, get_user_many, get_version } from '@/helpers/cache.js'
-import { curseforgeEnabled, downloadCurseforgeProfile } from '@/helpers/curseforge'
+import {
+	CURSEFORGE_ID_PREFIX,
+	curseforgeEnabled,
+	downloadCurseforgeProfile,
+} from '@/helpers/curseforge'
 import { applyCurseforgeSettings } from '@/helpers/curseforge-settings'
 import { gameSettingsQueryOptions } from '@/helpers/game-options'
 import {
@@ -1665,6 +1669,10 @@ async function handleCommand(e) {
 	} else if (e.event === 'InstallServer') {
 		await router.push(`/project/${e.id}`)
 		await playServerProject(e.id).catch(handleError)
+	} else if (e.event === 'OpenCurseforgeProject') {
+		// The Install button on CurseForge's site: the project, at the file it was for.
+		const project = `/curseforge/${CURSEFORGE_ID_PREFIX}${e.project_id}`
+		await router.push(e.file_id ? `${project}/version/${e.file_id}` : project)
 	} else if (e.event === 'InstallVersion') {
 		const version = await get_version(e.id, 'must_revalidate').catch(handleError)
 		if (version) {

@@ -227,9 +227,10 @@ fn read_jar(path: &Path) -> Option<ModJar> {
     let mut last_package = String::new();
 
     for index in 0..archive.len() {
-        let Some(name) = archive.name_for_index(index) else {
+        let Some(Ok(entry_name)) = archive.name_for_index(index) else {
             continue;
         };
+        let name: &str = &entry_name;
 
         if let Some(class) = name.strip_suffix(".class") {
             if name.starts_with("META-INF/") {

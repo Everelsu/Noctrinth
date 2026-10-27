@@ -2,39 +2,6 @@
   "action.no-permission": {
     "defaultMessage": "You do not have permission."
   },
-  "affiliate.create.button": {
-    "defaultMessage": "Create affiliate link"
-  },
-  "affiliate.create.header": {
-    "defaultMessage": "Creating new affiliate code"
-  },
-  "affiliate.create.title.description": {
-    "defaultMessage": "Give your affiliate link a name so you know where people are coming from!"
-  },
-  "affiliate.create.title.label": {
-    "defaultMessage": "Title of affiliate link"
-  },
-  "affiliate.create.title.placeholder": {
-    "defaultMessage": "e.g. YouTube"
-  },
-  "affiliate.create.user.description": {
-    "defaultMessage": "The username of the user to create the affiliate code for"
-  },
-  "affiliate.create.user.placeholder": {
-    "defaultMessage": "Enter username..."
-  },
-  "affiliate.createdBy": {
-    "defaultMessage": "Created by {user}"
-  },
-  "affiliate.creating.button": {
-    "defaultMessage": "Creating affiliate link..."
-  },
-  "affiliate.revoke": {
-    "defaultMessage": "Revoke affiliate link"
-  },
-  "affiliate.viewAnalytics": {
-    "defaultMessage": "View analytics"
-  },
   "app.appearance-settings.native-decorations.description": {
     "defaultMessage": "Use your operating system's title bar and window controls. Requires an app restart."
   },
@@ -151,9 +118,6 @@
   },
   "button.add-server-to-instance": {
     "defaultMessage": "Add server to instance"
-  },
-  "button.affiliate-links": {
-    "defaultMessage": "Affiliate links"
   },
   "button.analytics": {
     "defaultMessage": "Analytics"
@@ -367,6 +331,15 @@
   },
   "collections.label.private": {
     "defaultMessage": "Private"
+  },
+  "color-picker.hex-value": {
+    "defaultMessage": "{label} hex value"
+  },
+  "color-picker.hue": {
+    "defaultMessage": "{label} hue"
+  },
+  "color-picker.saturation-and-brightness": {
+    "defaultMessage": "{label} saturation and brightness"
   },
   "console.actions.collapse": {
     "defaultMessage": "Collapse"
@@ -3320,9 +3293,6 @@
   "profile.button.manage-projects": {
     "defaultMessage": "Manage projects"
   },
-  "profile.button.remove-affiliate": {
-    "defaultMessage": "Remove as affiliate"
-  },
   "profile.button.reset-2fa": {
     "defaultMessage": "Reset two-factor authentication"
   },
@@ -3331,9 +3301,6 @@
   },
   "profile.button.revoke-sessions": {
     "defaultMessage": "Revoke all sessions"
-  },
-  "profile.button.set-affiliate": {
-    "defaultMessage": "Set as affiliate"
   },
   "profile.button.shared-instances": {
     "defaultMessage": "View shared instances"
@@ -3421,9 +3388,6 @@
   },
   "profile.force-password-reset.title": {
     "defaultMessage": "Force password reset for {username}"
-  },
-  "profile.label.affiliate": {
-    "defaultMessage": "Affiliate"
   },
   "profile.label.badges": {
     "defaultMessage": "Badges"

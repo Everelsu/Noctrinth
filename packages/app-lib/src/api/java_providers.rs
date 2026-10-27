@@ -476,7 +476,8 @@ pub fn verify_sha256(
     let Some(expected) = expected else {
         return Ok(());
     };
-    let actual = format!("{:x}", sha2::Sha256::digest(bytes));
+    let actual =
+        crate::util::content_hash::encode_hex(&sha2::Sha256::digest(bytes));
     if actual.eq_ignore_ascii_case(expected.trim()) {
         Ok(())
     } else {
@@ -532,7 +533,8 @@ pub async fn unpack_archive(
             let top = archive
                 .file_names()
                 .next()
-                .and_then(|name| top_directory(Path::new(name)))
+                .and_then(Result::ok)
+                .and_then(|name| top_directory(Path::new(name.as_ref())))
                 .ok_or_else(|| read_failed("read"))?;
             let target = root.join(&top);
             if target.exists() {
@@ -896,7 +898,9 @@ mod tests {
         assert!(verify_sha256(b"java", Some(&"0".repeat(64))).is_err());
         let actual = {
             use sha2::Digest;
-            format!("{:x}", sha2::Sha256::digest(b"java"))
+            crate::util::content_hash::encode_hex(&sha2::Sha256::digest(
+                b"java",
+            ))
         };
         assert!(verify_sha256(b"java", Some(&actual.to_uppercase())).is_ok());
     }

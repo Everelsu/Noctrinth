@@ -28,8 +28,8 @@
 //! [RFC 7636]: https://datatracker.ietf.org/doc/html/rfc7636
 
 use base64::Engine;
-use rand::Rng;
-use rand::distributions::Alphanumeric;
+use rand::RngExt;
+use rand::distr::Alphanumeric;
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use uuid::Uuid;
@@ -88,7 +88,7 @@ impl PkcePair {
     /// 64 characters out of the unreserved set, which is comfortably inside
     /// RFC 7636's 43-to-128 and needs no escaping anywhere it is sent.
     pub fn generate() -> Self {
-        let verifier: String = rand::thread_rng()
+        let verifier: String = rand::rng()
             .sample_iter(&Alphanumeric)
             .take(64)
             .map(char::from)
@@ -121,7 +121,7 @@ pub struct ElyAuthorizationRequest {
 /// Builds the address the sign-in window opens at.
 pub fn begin() -> ElyAuthorizationRequest {
     let pkce = PkcePair::generate();
-    let state: String = rand::thread_rng()
+    let state: String = rand::rng()
         .sample_iter(&Alphanumeric)
         .take(32)
         .map(char::from)

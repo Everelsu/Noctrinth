@@ -130,7 +130,17 @@ impl CensoredString {
             );
         }
 
-        let username = whoami::username();
+        let Ok(username) = whoami::username_os() else {
+            return Self(
+                "[Log withheld: unable to determine computer username]".into(),
+            );
+        };
+        let username = username.to_string_lossy();
+        if username.is_empty() {
+            return Self(
+                "[Log withheld: unable to determine computer username]".into(),
+            );
+        }
         s = redact(s, &format!("/{username}/"), "/{COMPUTER_USERNAME}/");
         s = redact(s, &format!("\\{username}\\"), "\\{COMPUTER_USERNAME}\\");
         for credentials in credentials_list {

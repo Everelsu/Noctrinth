@@ -796,7 +796,11 @@ fn infer_project_type_loosely(
 
     // Packs zipped with a single wrapping folder ("MyPack/pack.mcmeta") — a
     // very common way users receive them, and invisible to a root-only check.
-    let names: Vec<&str> = archive.file_names().collect();
+    let names: Vec<String> = archive
+        .file_names()
+        .filter_map(Result::ok)
+        .map(|name| name.into_owned())
+        .collect();
     let nested = |suffix: &str| {
         names.iter().any(|name| {
             name.split_once('/')

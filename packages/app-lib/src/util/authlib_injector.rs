@@ -123,7 +123,7 @@ async fn update_agent(
     // so it is not downloaded again only to be the same file.
     let already_current = known == Some(latest.version.as_str())
         || io::read(jar_path).await.is_ok_and(|bytes| {
-            format!("{:x}", sha2::Sha256::digest(&bytes))
+            crate::util::content_hash::encode_hex(&sha2::Sha256::digest(&bytes))
                 .eq_ignore_ascii_case(latest.checksums.sha256.trim())
         });
 
@@ -145,7 +145,9 @@ async fn update_agent(
                 ))
             })?;
 
-        let digest = format!("{:x}", sha2::Sha256::digest(&bytes));
+        let digest = crate::util::content_hash::encode_hex(
+            &sha2::Sha256::digest(&bytes),
+        );
         if !digest.eq_ignore_ascii_case(latest.checksums.sha256.trim()) {
             return Err(anyhow::anyhow!(format!(
                 "The authlib-injector {} download does not match its checksum",

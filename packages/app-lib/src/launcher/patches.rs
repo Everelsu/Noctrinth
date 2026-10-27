@@ -12,10 +12,13 @@
 //! [`download_version_info`](super::download::download_version_info) caches its
 //! result globally per version ID, while patches belong to a single instance.
 
+use crate::launcher::profile::ResolvedVersion as VersionInfo;
 use crate::state::ModLoader;
-use daedalus::minecraft::{Argument, ArgumentType, Library, Os, VersionInfo};
+use crate::util::platform::OperatingSystemExt;
+use minecraft_meta_manifest::minecraft::{
+    Argument, ArgumentType, Library, OperatingSystem as Os,
+};
 use serde::Deserialize;
-use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 /// Folder inside an instance that holds the patch files.
@@ -514,7 +517,7 @@ fn append_game_arguments(version_info: &mut VersionInfo, args: Vec<String>) {
 
     let arguments = version_info
         .arguments
-        .get_or_insert_with(HashMap::new)
+        .get_or_insert_with(indexmap::IndexMap::new)
         .entry(ArgumentType::Game)
         .or_default();
     arguments.extend(args.into_iter().map(Argument::Normal));
@@ -679,7 +682,7 @@ mod tests {
         let freebsd_rules = patch.libraries[0].rules.as_ref().unwrap();
         assert!(matches!(
             freebsd_rules[0].os.as_ref().unwrap().name,
-            Some(daedalus::minecraft::Os::Unknown)
+            Some(Os::Unknown)
         ));
     }
 
@@ -1151,31 +1154,28 @@ mod tests {
     }
 
     fn version_with(libraries: Vec<Library>) -> VersionInfo {
-        use daedalus::minecraft::{AssetIndex, VersionType};
-
-        VersionInfo {
-            arguments: None,
-            asset_index: AssetIndex {
-                id: "1.7.10".to_string(),
-                sha1: String::new(),
-                size: 0,
-                total_size: 0,
-                url: String::new(),
-            },
-            assets: "1.7.10".to_string(),
-            downloads: HashMap::new(),
-            id: "1.7.10".to_string(),
-            java_version: None,
-            libraries,
-            logging: None,
-            main_class: "net.minecraft.client.main.Main".to_string(),
-            minecraft_arguments: None,
-            minimum_launcher_version: 0,
-            release_time: chrono::Utc::now(),
-            time: chrono::Utc::now(),
-            type_: VersionType::Release,
-            data: None,
-            processors: None,
-        }
+        let mut minecraft: minecraft_meta_manifest::minecraft::VersionManifest =
+            serde_json::from_value(serde_json::json!({
+                "assetIndex": {
+                    "id": "1.7.10",
+                    "sha1": "0000000000000000000000000000000000000000",
+                    "size": 0,
+                    "totalSize": 0,
+                    "url": "https://example.invalid/1.7.10.json"
+                },
+                "assets": "1.7.10",
+                "downloads": {},
+                "id": "1.7.10",
+                "javaVersion": null,
+                "libraries": [],
+                "mainClass": "net.minecraft.client.main.Main",
+                "minimumLauncherVersion": 0,
+                "releaseTime": "2014-06-26T00:00:00Z",
+                "time": "2014-06-26T00:00:00Z",
+                "type": "release"
+            }))
+            .unwrap();
+        minecraft.libraries = libraries;
+        VersionInfo::from(minecraft)
     }
 }

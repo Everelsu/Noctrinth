@@ -57,6 +57,9 @@ const friends = ref<InstanceType<typeof FriendsList> | null>(null)
 const scrollContainer = ref<HTMLElement | null>(null)
 const scrollViewport = ref<HTMLElement | null>(null)
 const upgradeHeight = ref(0)
+const promotionPaddingStyle = computed(() =>
+	props.showAd ? { paddingBottom: `calc(1rem + ${upgradeHeight.value}px)` } : undefined,
+)
 const { showTopFade, showBottomFade, checkScrollState } = useScrollIndicator(scrollViewport)
 
 let removeScrollbarListener: (() => void) | undefined
@@ -154,9 +157,7 @@ const messages = defineMessages({
 					<PrideFundraiserBanner
 						class="p-4 border-0 border-b-[1px] border-[--brand-gradient-border] border-solid"
 					/>
-					<NewsSidebar
-						:style="showAd ? { paddingBottom: `calc(1rem + ${upgradeHeight}px)` } : undefined"
-					/>
+					<NewsSidebar :style="promotionPaddingStyle" />
 				</div>
 			</div>
 			<div

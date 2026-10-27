@@ -356,25 +356,56 @@ export function accentColorFor(preset: AccentPreset, active: string = theme.acti
 	return active === 'light' ? preset.light : preset.dark
 }
 
+function clear(html: HTMLElement, variables: readonly string[]): void {
+	for (const variable of variables) {
+		html.style.removeProperty(variable)
+	}
+}
+
+const ALL_VARIABLES = [...ACCENT_VARIABLES, ...SURFACE_VARIABLES, ...GRADIENT_VARIABLES]
+
+/**
+ * What the theme on screen gives the variables this repaints, read once per
+ * theme rather than on every repaint.
+ *
+ * Reading them means taking the overrides off and asking for the computed
+ * style, which recalculates the style of the whole window there and then — and
+ * again once the overrides go back on. Done for every step of a drag across the
+ * colour wheel, that was most of why the wheel lagged. Not kept while the theme
+ * has not reached the page yet, which is what an empty brand colour means.
+ */
+let themeValues: { active: string; values: Map<string, string> } | null = null
+
+function readThemeValues(html: HTMLElement): Map<string, string> {
+	if (themeValues?.active === theme.active) return themeValues.values
+
+	// Cleared first, so what is read back is the theme's own colour and not the
+	// last thing this wrote.
+	clear(html, ALL_VARIABLES)
+	const styles = getComputedStyle(html)
+	const values = new Map(
+		[...ACCENT_VARIABLES, ...SURFACE_VARIABLES, '--brand-gradient-border'].map((variable) => [
+			variable,
+			styles.getPropertyValue(variable),
+		]),
+	)
+	themeValues = values.get('--color-brand')?.trim() ? { active: theme.active, values } : null
+	return values
+}
+
 function apply(id: string, tint: boolean): void {
 	const html = document.documentElement
 
-	// Cleared first, so what is read back is the theme's own colour and not the
-	// last thing this wrote. Also the whole of the work for `theme`.
-	for (const variable of [...ACCENT_VARIABLES, ...SURFACE_VARIABLES, ...GRADIENT_VARIABLES]) {
-		html.style.removeProperty(variable)
-	}
-
-	if (id === DEFAULT_ACCENT_PRESET) return
-	const color = accentColorOf(id)
+	const color = id === DEFAULT_ACCENT_PRESET ? null : accentColorOf(id)
 	const rgb = color ? parseHex(color) : null
-	if (!rgb) return
+	// The whole of the work for `theme`.
+	if (!rgb) return clear(html, ALL_VARIABLES)
 
 	const [red, green, blue] = rgb
-	const styles = getComputedStyle(html)
+	const values = readThemeValues(html)
 
 	for (const variable of ACCENT_VARIABLES) {
-		const alpha = alphaOf(styles.getPropertyValue(variable))
+		const alpha = alphaOf(values.get(variable) ?? '')
 		html.style.setProperty(
 			variable,
 			alpha >= 1 ? `rgb(${red} ${green} ${blue})` : `rgb(${red} ${green} ${blue} / ${alpha})`,
@@ -386,19 +417,19 @@ function apply(id: string, tint: boolean): void {
 	// preset whether or not the greys do. It was the brand's before; it is the
 	// brand's now.
 	const accent = `${red} ${green} ${blue}`
-	const borderAlpha = alphaOf(styles.getPropertyValue('--brand-gradient-border'))
+	const borderAlpha = alphaOf(values.get('--brand-gradient-border') ?? '')
 	for (const [variable, value] of Object.entries(brandGradients(accent, borderAlpha))) {
 		html.style.setProperty(variable, value)
 	}
 	html.style.setProperty('--loading-bar-gradient', loadingBarGradient(accent, theme.active))
 
-	if (!tint) return
+	if (!tint) return clear(html, SURFACE_VARIABLES)
 
 	// The surfaces keep their lightness — that is the theme's depth and its
 	// contrast — and are given the preset's hue at a fraction of its strength.
 	const hue = round(hueOf(rgb), 2)
 	for (const variable of SURFACE_VARIABLES) {
-		const surface = parseHex(styles.getPropertyValue(variable))
+		const surface = parseHex(values.get(variable) ?? '')
 		if (!surface) continue
 
 		const lightness = lightnessOf(surface)
@@ -407,23 +438,49 @@ function apply(id: string, tint: boolean): void {
 }
 
 let iconTimer: ReturnType<typeof setTimeout> | undefined
+let settleTimer: ReturnType<typeof setTimeout> | undefined
+let frame = 0
+
+/**
+ * Holds every transition and animation off while the accent changes, the way a
+ * theme change does, with the same class.
+ *
+ * Elements that fade their colours would otherwise start a fade on every step
+ * of a drag across the wheel, each from wherever the last one had got to, so
+ * the window trailed behind the pointer in a smear of half-finished fades.
+ */
+function holdTransitions(): void {
+	const html = document.documentElement
+	html.classList.add('theme-color-transitioning')
+	clearTimeout(settleTimer)
+	settleTimer = setTimeout(() => html.classList.remove('theme-color-transitioning'), 200)
+}
 
 // Each theme carries its own alphas, and a preset is drawn differently on light
 // than on dark, so the override is recomputed rather than kept.
 watch(
 	[presetId, tintBackground, () => theme.active],
-	([id, tint]) => {
-		apply(id, tint)
-		writeCache(id, tint)
+	([id, tint, active], previous) => {
+		cancelAnimationFrame(frame)
+		if (previous?.[2] === active) {
+			// A new colour, at most once a frame: the wheel can report more moves
+			// than the window can draw.
+			holdTransitions()
+			frame = requestAnimationFrame(() => apply(presetId.value, tintBackground.value))
+		} else {
+			// The first paint and a theme change are drawn at once, so the window
+			// never shows a frame in the theme's own colour.
+			apply(id, tint)
+		}
 
-		// The window's own icon is the last purple thing left when the app is not
-		// purple any more. Loaded lazily: it is the one part of this that talks to
-		// the window, and nothing waits on it. Held back a moment, because
-		// dragging across the colour wheel changes the accent on every frame.
-		const color = accentColorOf(id)
-		if (!color) return
+		// Remembering it, and the window's own icon, which is the last purple thing
+		// left when the app is not purple any more, wait until the colour settles:
+		// the icon is redrawn by the backend, along with every shortcut's.
 		clearTimeout(iconTimer)
 		iconTimer = setTimeout(() => {
+			writeCache(id, tint)
+			const color = accentColorOf(id)
+			if (!color) return
 			void import('@/helpers/noctrinth-window-icon').then(({ paintWindowIcon }) =>
 				paintWindowIcon(
 					color,
@@ -432,7 +489,7 @@ watch(
 					id === DEFAULT_ACCENT_PRESET && !THEME_ACCENTS[theme.active],
 				),
 			)
-		}, 150)
+		}, 400)
 	},
 	{ immediate: true },
 )

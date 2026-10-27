@@ -33,6 +33,8 @@ import { page, t } from './lib/site-style.mjs'
 
 const OUT_DIR = process.argv[2] ?? 'site'
 const MODRINTH_SRC = 'packages/blog/changelog.ts'
+/** Our Russian translation of upstream's app entries, by version. */
+const MODRINTH_RU_SRC = 'apps/app-frontend/src/helpers/modrinth-changelog-ru.ts'
 const LOGO_SRC = 'apps/app/icons/noctrinth.svg'
 /** Screenshots, referenced from entries as `/changelog/screenshots/<file>`. */
 const SCREENSHOT_DIR = 'apps/app-frontend/src/changelog/screenshots'
@@ -56,9 +58,12 @@ const noctrinth = parseEntries(readFileSync(NOCTRINTH_CHANGELOG_SRC, 'utf-8')).m
 	...entry,
 	source: 'noctrinth',
 }))
+const modrinthRu = new Map(
+	parseEntries(readFileSync(MODRINTH_RU_SRC, 'utf-8')).map((e) => [e.version, e.body]),
+)
 const modrinth = parseEntries(readFileSync(MODRINTH_SRC, 'utf-8'))
 	.filter((e) => e.product === 'app')
-	.map((e) => ({ ...e, source: 'modrinth' }))
+	.map((e) => ({ ...e, body_ru: modrinthRu.get(e.version), source: 'modrinth' }))
 
 const all = [...noctrinth, ...modrinth]
 	.filter((e) => e.date)

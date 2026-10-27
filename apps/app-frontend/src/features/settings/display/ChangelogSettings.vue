@@ -9,6 +9,7 @@ import dayjs from 'dayjs'
 import { computed, onMounted, ref } from 'vue'
 
 import { noctrinthChangelogFeedQueryOptions } from '@/features/news/noctrinth-news'
+import { MODRINTH_CHANGELOG_RU_BY_VERSION } from '@/helpers/modrinth-changelog-ru'
 import { NOCTRINTH_CHANGELOG } from '@/helpers/noctrinth-changelog'
 import { renderChangelog } from '@/helpers/render-changelog'
 
@@ -128,7 +129,8 @@ const noctrinthChangelog = computed<ChangelogEntry[]>(() =>
 )
 
 // Modrinth App changelog — pulled from @modrinth/blog, the exact source the
-// modrinth.com changelog page renders from. Capped to the most recent releases.
+// modrinth.com changelog page renders from, in Russian from our own translation
+// where there is one. Capped to the most recent releases.
 const modrinthChangelog = computed<ChangelogEntry[]>(() =>
 	getChangelog()
 		.filter((entry) => entry.product === 'app')
@@ -136,7 +138,12 @@ const modrinthChangelog = computed<ChangelogEntry[]>(() =>
 		.map((entry) => ({
 			version: entry.version,
 			date: dayjs(entry.date).format('MMM D, YYYY'),
-			sections: parseBody(entry.body),
+			sections: parseBody(
+				(locale.value.startsWith('ru') &&
+					entry.version &&
+					MODRINTH_CHANGELOG_RU_BY_VERSION.get(entry.version)) ||
+					entry.body,
+			),
 		})),
 )
 

@@ -1560,7 +1560,7 @@
 		"message": "Nothing matches"
 	},
 	"noctrinth.quick-search.placeholder": {
-		"message": "Search instances and what is installed in them"
+		"message": "Search instances, what is installed in them, and settings"
 	},
 	"noctrinth.quick-search.play": {
 		"message": "Play"
@@ -1576,6 +1576,9 @@
 	},
 	"noctrinth.quick-search.search-modrinth": {
 		"message": "Search “{query}” on Modrinth"
+	},
+	"noctrinth.quick-search.settings": {
+		"message": "Settings"
 	},
 	"noctrinth.quick-search.stop": {
 		"message": "Stop"

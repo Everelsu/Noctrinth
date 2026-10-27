@@ -12,13 +12,15 @@
  * anywhere: on the library's page it focuses the field, elsewhere it opens the
  * same results in a palette over the page.
  */
-import type { ContentItem } from '@modrinth/ui'
+import { type ContentItem, useVIntl } from '@modrinth/ui'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, type Ref, ref, shallowRef, watch } from 'vue'
 
 import { useInstanceContentIndex } from '@/composables/instances/use-instance-content-index'
 import { canUpdateContentIn } from '@/composables/instances/use-managed-content-policy'
 import { useAppEvent } from '@/composables/use-app-event'
+import { injectSettingsActions } from '@/features/settings/settings-actions'
+import { matchSettingsTab, type SettingsTabEntry } from '@/features/settings/settings-search'
 import { curseforgeEnabled } from '@/helpers/curseforge'
 import { matchContentItem, matchInstance, parseQuery } from '@/helpers/instance-search'
 import { get_all as getRunningProcesses } from '@/helpers/process'
@@ -34,10 +36,12 @@ export type QuickSearchResult =
 			item: ContentItem
 			canUpdate: boolean
 	  }
+	| { kind: 'settings'; key: string; tab: SettingsTabEntry }
 	| { kind: 'discover'; key: string; source: 'modrinth' | 'curseforge'; query: string }
 
 const MAX_INSTANCES = 6
 const MAX_CONTENT = 8
+const MAX_SETTINGS = 4
 
 /** Whether the palette is open over the page. */
 export const quickSearchOpen = ref(false)
@@ -77,6 +81,8 @@ export function useQuickSearch(query: Ref<string>, active: Ref<boolean>) {
 	const instancesQuery = useQuery(instanceListQueryOptions())
 	const instances = computed(() => instancesQuery.data.value ?? [])
 	const contentIndex = useInstanceContentIndex()
+	const settingsActions = injectSettingsActions()
+	const { formatMessage } = useVIntl()
 
 	const running = ref(new Set<string>())
 	async function refreshRunning() {
@@ -152,8 +158,17 @@ export function useQuickSearch(query: Ref<string>, active: Ref<boolean>) {
 		found.push(...content.slice(0, MAX_CONTENT))
 
 		// A query in the query language is about what is installed; plain words
-		// can also be looked for in Discover.
+		// can also be a setting, or be looked for in Discover.
 		if (!/[@#!]/.test(text)) {
+			found.push(
+				...settingsActions
+					.settingsTabs()
+					.filter((tab) =>
+						matchSettingsTab(text, tab, [formatMessage(tab.name), formatMessage(tab.category)]),
+					)
+					.slice(0, MAX_SETTINGS)
+					.map((tab) => ({ kind: 'settings' as const, key: `settings:${tab.id}`, tab })),
+			)
 			found.push({ kind: 'discover', key: 'discover:modrinth', source: 'modrinth', query: text })
 			if (curseforgeEnabled()) {
 				found.push({
@@ -172,5 +187,6 @@ export function useQuickSearch(query: Ref<string>, active: Ref<boolean>) {
 		/** True while installed content is still being read, so results may grow. */
 		loading: computed(() => contentIndex.loading.value || instancesQuery.isPending.value),
 		contentTitle,
+		openSettingsTab: settingsActions.openSettingsTab,
 	}
 }

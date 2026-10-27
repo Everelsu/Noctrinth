@@ -48,6 +48,7 @@ import JavaAndMemorySettings from '@/features/settings/instance-defaults/java-an
 import LaunchHooksSettings from '@/features/settings/instance-defaults/launch-hooks-settings.vue'
 import WindowSettings from '@/features/settings/instance-defaults/window-settings.vue'
 import type { InstanceDefaultsTab } from '@/features/settings/settings-actions'
+import type { SettingsTabEntry } from '@/features/settings/settings-search'
 import SyncingSettings from '@/features/settings/syncing/syncing-settings.vue'
 import CurseforgeSettings from '@/features/settings/system/CurseforgeSettings.vue'
 import ResourceManagementSettings from '@/features/settings/system/resource-management-settings/index.vue'
@@ -328,7 +329,34 @@ function showInstanceDefaults(tab: InstanceDefaultsTab): void {
 	modal.value?.show()
 }
 
-defineExpose({ show, showProfile, showFeatureFlags, showSyncedOptions, showInstanceDefaults })
+// Noctrinth's own: any tab by its name's message id, for the quick search,
+// which also needs the list of tabs it can offer.
+function showTab(id: string): void {
+	const tabIndex = availableTabs.value.findIndex((tab) => tab.name.id === id)
+	if (tabIndex >= 0) {
+		modal.value?.setTab(tabIndex)
+	}
+	modal.value?.show()
+}
+
+const searchTabs = computed<SettingsTabEntry[]>(() =>
+	availableTabs.value.map((tab) => ({
+		id: tab.name.id,
+		name: tab.name,
+		category: tab.category,
+		icon: tab.icon,
+	})),
+)
+
+defineExpose({
+	show,
+	showProfile,
+	showFeatureFlags,
+	showSyncedOptions,
+	showInstanceDefaults,
+	showTab,
+	searchTabs,
+})
 
 const { progress, version: downloadingVersion } = injectAppUpdateDownloadProgress()
 

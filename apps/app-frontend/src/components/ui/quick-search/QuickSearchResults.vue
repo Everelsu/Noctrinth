@@ -42,6 +42,7 @@ const messages = defineMessages({
 	instances: { id: 'noctrinth.quick-search.instances', defaultMessage: 'Instances' },
 	installed: { id: 'noctrinth.quick-search.installed', defaultMessage: 'Installed' },
 	discover: { id: 'noctrinth.quick-search.discover', defaultMessage: 'Not installed yet' },
+	settings: { id: 'noctrinth.quick-search.settings', defaultMessage: 'Settings' },
 	play: { id: 'noctrinth.quick-search.play', defaultMessage: 'Play' },
 	stop: { id: 'noctrinth.quick-search.stop', defaultMessage: 'Stop' },
 	update: { id: 'noctrinth.quick-search.update', defaultMessage: 'Update' },
@@ -69,7 +70,7 @@ const messages = defineMessages({
 	},
 })
 
-const { results, loading, contentTitle } = useQuickSearch(
+const { results, loading, contentTitle, openSettingsTab } = useQuickSearch(
 	toRef(props, 'query'),
 	toRef(props, 'active'),
 )
@@ -84,6 +85,7 @@ const sections = computed(() => {
 	const titles: Record<QuickSearchResult['kind'], string> = {
 		instance: formatMessage(props.query.trim() ? messages.instances : messages.recent),
 		content: formatMessage(messages.installed),
+		settings: formatMessage(messages.settings),
 		discover: formatMessage(messages.discover),
 	}
 	const list: { title: string; rows: { result: QuickSearchResult; index: number }[] }[] = []
@@ -101,7 +103,9 @@ function loaderLabel(loader: string): string {
 
 async function open(result: QuickSearchResult) {
 	emit('done')
-	if (result.kind === 'discover') {
+	if (result.kind === 'settings') {
+		openSettingsTab(result.tab.id)
+	} else if (result.kind === 'discover') {
 		await router.push({
 			path: '/browse/mod',
 			query: { q: result.query, src: result.source === 'curseforge' ? 'cf' : 'mr' },
@@ -196,7 +200,24 @@ defineExpose({ onKeydown })
 					@mouseenter="activeIndex = index"
 					@click="open(result)"
 				>
-					<template v-if="result.kind === 'discover'">
+					<template v-if="result.kind === 'settings'">
+						<span
+							class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-5 text-contrast"
+						>
+							<component :is="result.tab.icon" class="size-5" />
+						</span>
+						<span class="min-w-0 flex-1">
+							<span class="block truncate font-semibold text-contrast">
+								{{ formatMessage(result.tab.name) }}
+							</span>
+							<span class="block truncate text-sm text-secondary">
+								{{ formatMessage(messages.settings) }} ·
+								{{ formatMessage(result.tab.category) }}
+							</span>
+						</span>
+					</template>
+
+					<template v-else-if="result.kind === 'discover'">
 						<span
 							class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-5 text-contrast"
 						>

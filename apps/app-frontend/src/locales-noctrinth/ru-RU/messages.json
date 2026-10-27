@@ -2313,7 +2313,7 @@
 		"message": "Ничего не нашлось"
 	},
 	"noctrinth.quick-search.placeholder": {
-		"message": "Поиск по сборкам и тому, что в них установлено"
+		"message": "Поиск по сборкам, тому, что в них установлено, и настройкам"
 	},
 	"noctrinth.quick-search.play": {
 		"message": "Играть"
@@ -2329,6 +2329,9 @@
 	},
 	"noctrinth.quick-search.search-modrinth": {
 		"message": "Искать «{query}» на Modrinth"
+	},
+	"noctrinth.quick-search.settings": {
+		"message": "Настройки"
 	},
 	"noctrinth.quick-search.stop": {
 		"message": "Остановить"

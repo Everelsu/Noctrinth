@@ -19,7 +19,7 @@ const route = useRoute()
 const messages = defineMessages({
 	placeholder: {
 		id: 'noctrinth.quick-search.placeholder',
-		defaultMessage: 'Search instances and what is installed in them',
+		defaultMessage: 'Search instances, what is installed in them, and settings',
 	},
 })
 

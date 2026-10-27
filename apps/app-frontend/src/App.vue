@@ -1092,6 +1092,8 @@ const settingsActions = provideSettingsActions({
 	openFeatureFlags: () => appSettingsModal.value?.showFeatureFlags(),
 	openSyncedOptions: () => appSettingsModal.value?.showSyncedOptions(),
 	openInstanceDefaults: (tab) => appSettingsModal.value?.showInstanceDefaults(tab),
+	openSettingsTab: (id) => appSettingsModal.value?.showTab(id),
+	settingsTabs: () => appSettingsModal.value?.searchTabs ?? [],
 })
 
 watch(incompatibilityWarningModal, (modal) => {

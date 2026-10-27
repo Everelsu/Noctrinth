@@ -1526,14 +1526,11 @@
 	"noctrinth.settings.background.blur.title": {
 		"message": "Blur the background"
 	},
-	"noctrinth.creation-flow.curseforge-code.description": {
-		"message": "Install a modpack someone shared from the CurseForge app."
-	},
 	"noctrinth.creation-flow.curseforge-code.import": {
 		"message": "Import"
 	},
 	"noctrinth.creation-flow.curseforge-code.placeholder": {
-		"message": "Profile code, such as aBc12XyZ"
+		"message": "A code shared from the CurseForge app, such as aBc12XyZ"
 	},
 	"noctrinth.creation-flow.curseforge-code.title": {
 		"message": "CurseForge profile code"

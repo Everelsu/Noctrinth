@@ -1,5 +1,31 @@
 <template>
 	<div class="flex flex-col gap-2">
+		<!-- Noctrinth's own: a CurseForge profile code, imported as the modpack it stands for -->
+		<template v-if="ctx.downloadCurseforgeProfile">
+			<span class="font-semibold text-contrast">{{
+				formatMessage(messages.curseforgeCodeTitle)
+			}}</span>
+			<form class="flex items-center gap-2" @submit.prevent="importCurseforgeProfile">
+				<Input
+					v-model="curseforgeCode"
+					:icon="CurseForgeIcon"
+					:placeholder="formatMessage(messages.curseforgeCodePlaceholder)"
+					:disabled="curseforgeCodeBusy"
+					:spellcheck="false"
+					autocomplete="off"
+					class="flex-1"
+				/>
+				<Button
+					native-type="submit"
+					:loading="curseforgeCodeBusy"
+					:disabled="!curseforgeCode.trim() || ctx.finishDisabled.value"
+				>
+					{{ formatMessage(messages.curseforgeCodeImport) }}
+				</Button>
+			</form>
+			<div class="my-2 h-px bg-surface-5" />
+		</template>
+
 		<!-- Header -->
 		<div class="flex items-center justify-between">
 			<span class="font-semibold text-contrast">{{
@@ -118,7 +144,7 @@
 </template>
 
 <script setup lang="ts">
-import { ChevronRightIcon, FolderSearchIcon, SearchIcon } from '@modrinth/assets'
+import { ChevronRightIcon, CurseForgeIcon, FolderSearchIcon, SearchIcon } from '@modrinth/assets'
 import { defineMessages, useVIntl } from '@modrinth/ui'
 import { computed, onMounted, ref, watch } from 'vue'
 
@@ -133,7 +159,7 @@ import { injectCreationFlowContext } from '../creation-flow-context'
 
 const ctx = injectCreationFlowContext()
 const importProvider = injectInstanceImport()
-const { addNotification } = injectNotificationManager()
+const { addNotification, handleError } = injectNotificationManager()
 const { formatMessage } = useVIntl()
 
 const loading = ref(false)
@@ -187,12 +213,47 @@ const messages = defineMessages({
 		id: 'creation-flow.modal.import-instance.delete-source.label',
 		defaultMessage: 'Remove from {launcher} after importing',
 	},
+	curseforgeCodeTitle: {
+		id: 'noctrinth.creation-flow.curseforge-code.title',
+		defaultMessage: 'CurseForge profile code',
+	},
+	curseforgeCodePlaceholder: {
+		id: 'noctrinth.creation-flow.curseforge-code.placeholder',
+		defaultMessage: 'A code shared from the CurseForge app, such as aBc12XyZ',
+	},
+	curseforgeCodeImport: {
+		id: 'noctrinth.creation-flow.curseforge-code.import',
+		defaultMessage: 'Import',
+	},
 	deleteSourceDescription: {
 		id: 'creation-flow.modal.import-instance.delete-source.description',
 		defaultMessage:
 			"Deletes each imported instance's files from the other launcher, so they aren't stored twice. Leave this off to keep both copies.",
 	},
 })
+
+// A CurseForge profile code is the profile exported as an ordinary modpack zip;
+// once downloaded it goes the way a modpack file picked from disk does.
+const curseforgeCode = ref('')
+const curseforgeCodeBusy = ref(false)
+
+async function importCurseforgeProfile() {
+	const code = curseforgeCode.value.trim()
+	if (!code || !ctx.downloadCurseforgeProfile || ctx.finishDisabled.value) return
+
+	curseforgeCodeBusy.value = true
+	try {
+		const path = await ctx.downloadCurseforgeProfile(code)
+		ctx.setSetupType('modpack')
+		ctx.modpackFile.value = null
+		ctx.modpackFilePath.value = path
+		ctx.finish()
+	} catch (error) {
+		handleError(error as Error)
+	} finally {
+		curseforgeCodeBusy.value = false
+	}
+}
 
 // Launchers among the current selection whose instances can be deleted after
 // importing — the checkbox is pointless unless one is actually selected.

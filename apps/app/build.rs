@@ -641,6 +641,7 @@ fn main() {
                         "curseforge_pending_files",
                         "curseforge_check_pending_downloads",
                         "curseforge_dismiss_pending_file",
+                        "curseforge_download_shared_profile",
                     ])
                     .default_permission(
                         DefaultPermissionRule::AllowAllCommands,

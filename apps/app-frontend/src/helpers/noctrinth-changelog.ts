@@ -42,6 +42,42 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.22.0+1',
+		date: '2026-10-29T12:00:00+00:00',
+		body: `### Added
+- Quick search with Ctrl+K (⌘K on macOS) from anywhere: instances with Play or Stop, installed mods and packs with Update, settings tabs by what is in them, in English or Russian, and the query handed to Discover on Modrinth or CurseForge. In the library it is the search field itself.
+- The interface font can be changed in Settings → Appearance: Inter, the theme's own, the system's, the Minecraft font, or any font installed on the computer, picked from a searchable list. The Minecraft font now has Cyrillic letters, from Monocraft.
+- The background can be a looping MP4 or WebM video of up to 100 MB; pictures and GIFs still take up to 32 MB.
+- A CurseForge profile code, or a share link holding one, installs its modpack from the Import step of creating an instance.
+- The Install button on curseforge.com can open the project in Noctrinth, at the file it was for: a toggle in the CurseForge settings, everywhere but macOS.
+- Modrinth App's changelog in Russian too, in the Changelog tab and on the site. Thanks to [@Portalrolls](https://github.com/Portalrolls) for asking for it ([Everelsu/Noctrinth#10](https://github.com/Everelsu/Noctrinth/issues/10)).
+
+### Changed
+- Synced with upstream Modrinth main: version tables of projects with many game versions load faster, dropdowns with a search field stop jumping, Discover moves to its new layout, and translations are updated.
+- A custom accent follows the colour wheel without lag.
+
+### Fixed
+- Instances sort by name the way numbers are read, 2 before 10.
+- An instance opens with a tap on the touchpad again.
+- Resizing Jump back in by dragging works with several columns.`,
+		body_ru: `### Добавлено
+- Быстрый поиск по Ctrl+K (⌘K на macOS) из любого места: сборки с кнопками «Играть» и «Остановить», установленные моды и паки с «Обновить», вкладки настроек по тому, что в них есть, — на английском или на русском, — и запрос, переданный в «Обзор» на Modrinth или CurseForge. В библиотеке это само поле поиска.
+- Шрифт интерфейса меняется в Настройки → Внешний вид: Inter, шрифт темы, системный, шрифт Minecraft или любой шрифт, установленный на компьютере, из списка с поиском. У шрифта Minecraft теперь есть кириллица — из Monocraft.
+- Фоном может быть зацикленное видео MP4 или WebM до 100 МБ; картинки и GIF — по-прежнему до 32 МБ.
+- Код профиля CurseForge или ссылка с ним ставит модпак на шаге «Импорт» при создании сборки.
+- Кнопка «Install» на curseforge.com может открыть проект в Noctrinth, на том файле, для которого нажата: переключатель в настройках CurseForge, везде, кроме macOS.
+- Список изменений Modrinth App тоже на русском — во вкладке «Список изменений» и на сайте. Спасибо [@Portalrolls](https://github.com/Portalrolls) за идею ([Everelsu/Noctrinth#10](https://github.com/Everelsu/Noctrinth/issues/10)).
+
+### Изменено
+- Синхронизация с основной веткой Modrinth: таблицы версий у проектов с множеством версий игры грузятся быстрее, выпадающие списки с поиском больше не прыгают, «Обзор» переехал на новую раскладку, обновлены переводы.
+- Свой цвет акцента следует за цветовым колесом без задержки.
+
+### Исправлено
+- Сборки сортируются по имени так, как читаются числа: 2 раньше 10.
+- Сборка снова открывается касанием тачпада.
+- Изменение размера «Недавнего» перетаскиванием работает при нескольких колонках.`,
+	},
+	{
 		version: '0.22.0',
 		date: '2026-10-22T12:00:00+00:00',
 		body: `### Added

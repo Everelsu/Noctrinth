@@ -358,7 +358,7 @@ public final class SkinHooks {
 
         final String url = (String) texture.getClass().getMethod("getUrl").invoke(texture);
         final String through = LocalTextures.relay(url);
-        if (through == null || through.equals(url)) {
+        if (through == null || through.equals(url) || !LocalTextures.isFetchable(through)) {
             return texture;
         }
 
@@ -508,6 +508,10 @@ public final class SkinHooks {
         // Through the agent's own relay rather than straight from wherever it is: the
         // game would try once, without the proxy, and give up on the skin for the session.
         final String url = LocalTextures.relay(texture.url);
+        if (!LocalTextures.isFetchable(url)) {
+            SkinSource.debug("Left out a texture the game could not fetch: " + url);
+            return null;
+        }
 
         if (withMetadata != null) {
             withMetadata.setAccessible(true);

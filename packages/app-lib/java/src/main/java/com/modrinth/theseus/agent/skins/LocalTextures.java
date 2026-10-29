@@ -4,6 +4,9 @@ import com.sun.net.httpserver.HttpServer;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -104,6 +107,23 @@ final class LocalTextures {
         final String key = name.endsWith(".png") ? name.substring(0, name.length() - 4) : name;
         final String source = RELAYED.get(key);
         return source == null ? url : source;
+    }
+
+    /**
+     * Whether the game can be handed this URL. authlib reads a texture's name out of it with
+     * {@code java.net.URL}, on the render thread and uncaught, so one it cannot parse is a crash on
+     * joining a world rather than a missing skin.
+     */
+    static boolean isFetchable(String url) {
+        if (url == null) {
+            return false;
+        }
+        try {
+            final String protocol = new URL(url).getProtocol();
+            return "http".equals(protocol) || "https".equals(protocol);
+        } catch (MalformedURLException e) {
+            return false;
+        }
     }
 
     private static boolean isOurs(String url) {
@@ -213,7 +233,8 @@ final class LocalTextures {
 
     private static boolean start() {
         try {
-            server = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
+            final HttpServer created = bind();
+            server = created;
             // One texture still on its way must not hold up the others.
             server.setExecutor(POOL);
             server.createContext("/", exchange -> {
@@ -242,11 +263,14 @@ final class LocalTextures {
             });
 
             // Its own thread would otherwise keep the game from ever exiting.
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> server.stop(0), "noctrinth-skins-stop"));
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> created.stop(0), "noctrinth-skins-stop"));
 
+            // Through URI, which puts brackets round an IPv6 address: written out bare,
+            // ::1 is a URL nothing can parse, and authlib crashes the game on it.
+            final InetSocketAddress bound = server.getAddress();
+            origin = new URI("http", null, bound.getAddress().getHostAddress(), bound.getPort(), null, null, null)
+                    .toString();
             server.start();
-            origin = "http://" + server.getAddress().getAddress().getHostAddress() + ":"
-                    + server.getAddress().getPort();
             SkinSource.debug("Serving skins from disk at " + origin);
             return true;
         } catch (Throwable t) {
@@ -254,6 +278,20 @@ final class LocalTextures {
             SkinSource.debug("Could not serve skins from disk: " + t);
             server = null;
             return false;
+        }
+    }
+
+    /**
+     * A socket on the loopback address, IPv4 first. NeoForge sets
+     * {@code java.net.preferIPv6Addresses=system}, which on Windows makes the default loopback
+     * address {@code ::1}, a way in that firewalls and proxies refuse more often; it is only used
+     * when there is no IPv4 at all.
+     */
+    private static HttpServer bind() throws Exception {
+        try {
+            return HttpServer.create(new InetSocketAddress(InetAddress.getByAddress(new byte[] {127, 0, 0, 1}), 0), 0);
+        } catch (Exception noIpv4) {
+            return HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
         }
     }
 

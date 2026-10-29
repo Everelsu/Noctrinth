@@ -42,6 +42,16 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.22.0+2',
+		date: '2026-10-29T18:00:00+00:00',
+		body: `### Fixed
+- The game no longer crashes with "Invalid profile texture url" when joining a world on NeoForge. NeoForge makes Java prefer IPv6, and the launcher handed the game skins from an IPv6 loopback address written in a form the game cannot read; skins are now served from 127.0.0.1.
+- A skin or cape whose address the game could not read is left out instead of crashing the game.`,
+		body_ru: `### Исправлено
+- Игра больше не вылетает с «Invalid profile texture url» при входе в мир на NeoForge. NeoForge заставляет Java предпочитать IPv6, и лаунчер отдавал игре скины с IPv6-адреса loopback в записи, которую игра не может прочитать; теперь скины отдаются с 127.0.0.1.
+- Скин или плащ с адресом, который игра не может прочитать, пропускается, а не роняет игру.`,
+	},
+	{
 		version: '0.22.0+1',
 		date: '2026-10-29T12:00:00+00:00',
 		body: `### Added

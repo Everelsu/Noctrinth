@@ -13822,7 +13822,7 @@ dependencies = [
 
 [[package]]
 name = "theseus"
-version = "0.22.0"
+version = "0.23.1"
 dependencies = [
  "anyhow",
  "ariadne",
@@ -13919,7 +13919,7 @@ dependencies = [
 
 [[package]]
 name = "theseus_gui"
-version = "0.22.0"
+version = "0.23.1"
 dependencies = [
  "aes-gcm 0.11.1",
  "anyhow",

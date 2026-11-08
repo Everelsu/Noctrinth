@@ -42,6 +42,50 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.23.1',
+		date: '2026-11-08T06:04:22+00:00',
+		body: `### Added
+- Shared instances you have joined appear in the Library before they are installed on this device, with their owner's name on the card.
+- Filters by install status and owner in the Library.
+- Hide from library in the instance menu, with hidden instances available in Settings → Behavior.
+- Leave and Unpublish actions for shared instances that are not installed, including for several selected instances at once.
+
+### Changed
+- Updated to Modrinth App 0.23.1.
+- Settings windows adapt to narrow windows with a compact sidebar and a mobile layout.
+- Installing and updating large amounts of content no longer stalls the launcher, and project, author and shared instance icons load faster.
+- Translated the Modrinth App changelogs for 0.22.1, 0.23.0 and 0.23.1 into Russian.
+
+### Fixed
+- Installing content into an instance from Discover works again.
+- Shared instance installs keep the configuration files from the owner's first push and no longer fail with database locking errors.
+- Content installation respects the instance's release, beta or alpha update channel.
+- Minecraft 1.8.9 launches on Apple Silicon Macs again.
+- Skin file drops reach the right area on scaled displays and show the reason when an upload fails.
+- Exporting the diagnostic ZIP from Troubleshooting works again.
+- Modpacks no longer fail to install with an unsupported content destination error.`,
+		body_ru: `### Добавлено
+- Общие сборки, к которым вы присоединились, появляются в библиотеке ещё до установки на этом устройстве, а на карточке указан их владелец.
+- Фильтры по состоянию установки и владельцу в библиотеке.
+- Пункт «Скрыть из библиотеки» в меню сборки, а список скрытых сборок — в Настройки → Поведение.
+- Выход из общей сборки и отмена её публикации без установки, в том числе сразу для нескольких выбранных сборок.
+
+### Изменено
+- Обновлена основа до Modrinth App 0.23.1.
+- Окна настроек подстраиваются под узкое окно: с компактной боковой панелью и мобильной раскладкой.
+- Установка и обновление большого количества контента больше не тормозят лаунчер, а иконки проектов, авторов и общих сборок загружаются быстрее.
+- Списки изменений Modrinth App 0.22.1, 0.23.0 и 0.23.1 переведены на русский.
+
+### Исправлено
+- Установка контента в сборку из «Обзора» снова работает.
+- При установке общей сборки сохраняются файлы конфигурации из первой публикации владельца и больше не возникают ошибки блокировки базы данных.
+- Установка контента учитывает выбранный для сборки канал обновлений: релизы, бета- или альфа-версии.
+- Minecraft 1.8.9 снова запускается на Mac с Apple Silicon.
+- При перетаскивании скина с масштабированием экрана файл попадает в нужную область, а при ошибке загрузки показывается её причина.
+- Экспорт ZIP-архива с диагностикой из «Устранения неполадок» снова работает.
+- Модпаки больше не отказываются устанавливаться с ошибкой неподдерживаемого расположения контента.`,
+	},
+	{
 		version: '0.22.0+2',
 		date: '2026-10-29T18:00:00+00:00',
 		body: `### Fixed

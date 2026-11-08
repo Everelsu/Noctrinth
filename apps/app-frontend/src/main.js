@@ -3,7 +3,8 @@ import '@/assets/stylesheets/noctrinth-motion.css'
 import '@/assets/stylesheets/noctrinth-themes.css'
 
 import { installTooltipDirective } from '@modrinth/ui'
-import { VueQueryPlugin } from '@tanstack/vue-query'
+import { focusManager, VueQueryPlugin } from '@tanstack/vue-query'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 import { createApp } from 'vue'
 
 import App from '@/App.vue'
@@ -18,6 +19,11 @@ import router from '@/routes'
 debugStartup('Frontend entry module evaluated')
 const app = createApp(App)
 setupErrorReporting(app, router)
+
+focusManager.setEventListener((setFocused) => {
+	const unlisten = getCurrentWindow().onFocusChanged(({ payload }) => setFocused(payload))
+	return () => void unlisten.then((stop) => stop())
+})
 
 // Every query refetching whenever the window gets focus is a website's habit.
 // Here focus comes and goes each time someone switches between the launcher

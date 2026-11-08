@@ -430,6 +430,10 @@ pub enum CommandPayload {
         project_id: String,
         file_id: Option<String>,
     },
+    PlayHostingServer {
+        server_id: String,
+        world_id: String,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone)]

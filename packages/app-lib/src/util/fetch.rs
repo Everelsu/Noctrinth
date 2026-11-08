@@ -223,6 +223,17 @@ pub fn effective_proxy_url() -> Option<String> {
 }
 
 const API_RETRY_AFTER_FALLBACK: Duration = Duration::from_secs(60);
+const LOCAL_API_RATE_LIMIT_WAIT: Duration = Duration::from_secs(30);
+
+tokio::task_local! {
+    static WAIT_FOR_LOCAL_API_RATE_LIMIT: ();
+}
+
+pub(crate) async fn wait_for_local_api_rate_limit<F: Future>(
+    future: F,
+) -> F::Output {
+    WAIT_FOR_LOCAL_API_RATE_LIMIT.scope((), future).await
+}
 
 // This means the unit recovery time will be:
 // replenish one unit time in seconds = (60 / (units recovered per minute))
@@ -366,6 +377,8 @@ fn rate_limit_patience() -> Duration {
             .is_ok()
     {
         RATE_LIMIT_PATIENCE
+    } else if WAIT_FOR_LOCAL_API_RATE_LIMIT.try_with(|_| ()).is_ok() {
+        LOCAL_API_RATE_LIMIT_WAIT
     } else {
         Duration::ZERO
     }
@@ -1200,9 +1213,6 @@ async fn fetch_advanced_with_target(
     to_file: bool,
     file_staging: Option<&Path>,
 ) -> crate::Result<FetchBody> {
-    let _permit =
-        crate::install::control::download_step(semaphore.0.acquire()).await??;
-
     let is_api_url = url.starts_with(env!("MODRINTH_API_URL"))
         || url.starts_with(env!("MODRINTH_API_URL_V3"));
     let fence_key = if is_api_url { uri_path } else { None };
@@ -1223,14 +1233,15 @@ async fn fetch_advanced_with_target(
     let mut patience = rate_limit_patience();
 
     for attempt in 1..=(FETCH_ATTEMPTS + 1) {
-        // Rate limits are waited out in here without spending an attempt.
-        let result = loop {
-            if is_api_url {
-                while let Err(error) = GLOBAL_API_RATE_LIMIT.check() {
-                    wait_out_rate_limit(error, &mut patience).await?;
-                }
+        let (result, _permit) = loop {
+            let permit =
+                crate::install::control::download_step(semaphore.0.acquire())
+                    .await??;
+            if is_api_url && let Err(error) = GLOBAL_API_RATE_LIMIT.check() {
+                drop(permit);
+                wait_out_rate_limit(error, &mut patience).await?;
+                continue;
             }
-
             if let Some(fence_key) = fence_key
                 && GLOBAL_FETCH_FENCE.is_blocked(fence_key)
             {
@@ -1266,10 +1277,11 @@ async fn fetch_advanced_with_target(
                 && let Ok(resp) = &result
                 && let Some(error) = GLOBAL_API_RATE_LIMIT.handle_response(resp)
             {
+                drop(permit);
                 wait_out_rate_limit(error.into(), &mut patience).await?;
                 continue;
             }
-            break result;
+            break (result, permit);
         };
         match result {
             Ok(resp) => {
@@ -1452,6 +1464,36 @@ pub async fn write(
         .await
         .map_err(|e| IOError::with_path(e, path))?;
     tracing::trace!("Done writing file {}", path.display());
+    Ok(())
+}
+
+pub async fn write_atomic(
+    path: &Path,
+    bytes: &[u8],
+    semaphore: &IoSemaphore,
+) -> crate::Result<()> {
+    let _permit = semaphore.0.acquire().await?;
+    let parent = path.parent().ok_or(ErrorKind::InputError(
+        "write destination has no parent directory".to_string(),
+    ))?;
+    io::create_dir_all(parent).await?;
+
+    let (mut file, temporary) = temporary_file(Some(parent)).await?;
+    file.write_all(bytes)
+        .await
+        .map_err(|e| IOError::with_path(e, path))?;
+    file.flush()
+        .await
+        .map_err(|e| IOError::with_path(e, path))?;
+    drop(file);
+
+    let path = path.to_path_buf();
+    tokio::task::spawn_blocking(move || {
+        temporary
+            .persist(&path)
+            .map_err(|error| IOError::with_path(error.error, &path))
+    })
+    .await??;
     Ok(())
 }
 

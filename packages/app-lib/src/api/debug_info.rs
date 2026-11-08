@@ -1,3 +1,6 @@
+use crate::state::db_backup::{
+    copy_db_files, create_sqlite_snapshot, remove_partial_backup,
+};
 use crate::util::io::IOError;
 use crate::{ErrorKind, State};
 use serde::Serialize;
@@ -47,16 +50,28 @@ pub async fn export_debug_info(
     };
     let directories = state.directories.clone();
     let database_files = tempfile::tempdir()?;
-    // A consistent snapshot from SQLite itself, rather than copying app.db and
-    // its -wal/-shm files: on Windows SQLite holds byte-range locks on the -shm
-    // file, and reading it fails with ERROR_LOCK_VIOLATION (os error 33).
-    let snapshot = database_files.path().join("app.db");
-    tokio::select! {
+    let database_snapshot = database_files.path().join("app.db");
+    let mut connection = tokio::select! {
         _ = cancel.cancelled() => return Ok(false),
-        result = sqlx::query("VACUUM INTO ?")
-            .bind(snapshot.to_string_lossy().into_owned())
-            .execute(&state.pool) => { result?; }
+        connection = state.pool.acquire() => connection?,
     };
+    if let Err(error) =
+        create_sqlite_snapshot(&mut connection, &database_snapshot).await
+    {
+        tracing::warn!(
+            "Failed to snapshot app database for debug info export, copying the database files instead: {error}"
+        );
+        remove_partial_backup(&database_snapshot).await;
+        copy_db_files(
+            &directories.settings_dir.join("app.db"),
+            &database_snapshot,
+        )
+        .await?;
+    }
+    drop(connection);
+    if cancel.is_cancelled() {
+        return Ok(false);
+    }
     let mut buffer = vec![0; 64 * 1024];
 
     tokio::task::spawn_blocking(move || -> crate::Result<bool> {

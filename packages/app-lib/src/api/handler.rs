@@ -32,7 +32,9 @@ pub const CURSEFORGE_DEEP_LINK_SCHEME: &str = "curseforge";
 /// numbers; anything else is not an install link of theirs.
 fn curseforge_install_link(command_string: &str) -> Option<CommandPayload> {
     let url = url::Url::parse(command_string).ok()?;
-    if !url.scheme().eq_ignore_ascii_case(CURSEFORGE_DEEP_LINK_SCHEME)
+    if !url
+        .scheme()
+        .eq_ignore_ascii_case(CURSEFORGE_DEEP_LINK_SCHEME)
         || url.host_str() != Some("install")
     {
         return None;
@@ -75,6 +77,21 @@ pub async fn handle_url(sublink: &str) -> crate::Result<CommandPayload> {
         // /server/{id}   -    Opens a server project page and triggers play flow
         Some(("server", id)) => {
             CommandPayload::InstallServer { id: id.to_string() }
+        }
+        Some(("hosting", path)) => {
+            let (server_id, world_id) = path.split_once('/').ok_or(
+                ErrorKind::InputError("missing hosting world ID".to_string()),
+            )?;
+            let server_id = uuid::Uuid::parse_str(server_id).context(
+                ErrorKind::InputError("invalid hosting server ID".to_string()),
+            )?;
+            let world_id = uuid::Uuid::parse_str(world_id).context(
+                ErrorKind::InputError("invalid hosting world ID".to_string()),
+            )?;
+            CommandPayload::PlayHostingServer {
+                server_id: server_id.to_string(),
+                world_id: world_id.to_string(),
+            }
         }
         // /share/{invite_id}
         Some(("share", raw)) => {

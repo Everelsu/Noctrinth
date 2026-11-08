@@ -9,6 +9,7 @@ import type {
 	ContentActionWarning,
 	ContentCardTableItem,
 	ContentItem,
+	ContentSide,
 	ManagedContentCardData,
 } from '../types'
 
@@ -39,6 +40,7 @@ export interface ContentManagerContext {
 	// Guards
 	isBusy: Ref<boolean> | ComputedRef<boolean>
 	busyMessage?: Ref<string | null> | ComputedRef<string | null>
+	disableWhileMutating?: boolean
 	skipNonEssentialWarnings?: Ref<boolean> | ComputedRef<boolean>
 	disableAddContent?: Ref<boolean> | ComputedRef<boolean>
 	disableAddContentTooltip?: string
@@ -49,7 +51,8 @@ export interface ContentManagerContext {
 	currentLoader?: Ref<string> | ComputedRef<string>
 
 	// Core actions
-	toggleEnabled: (item: ContentItem) => Promise<void>
+	toggleEnabled?: (item: ContentItem) => Promise<void>
+	setEnabledFor?: (item: ContentItem, side: ContentSide, enabled: boolean) => Promise<void>
 	deleteItem: (item: ContentItem) => Promise<void>
 	refresh: () => Promise<void>
 	browse: () => void

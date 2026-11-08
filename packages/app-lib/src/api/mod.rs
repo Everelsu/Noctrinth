@@ -29,15 +29,17 @@ pub mod reports;
 pub mod server_address;
 pub mod settings;
 pub mod tags;
+pub mod upload;
 pub mod users;
 pub mod worlds;
 
 pub mod data {
     pub use crate::state::{
-        AppliedContentSetPatch, CacheBehaviour, CacheValueType, ContentFile,
-        ContentItem, ContentItemOwner, ContentItemProject, ContentItemVersion,
+        AppliedContentSetPatch, CacheBehaviour, CacheValueType,
+        CachedSharedInstanceSummary, ContentFile, ContentItem,
+        ContentItemOwner, ContentItemProject, ContentItemVersion,
         CreateInstance, Credentials, Dependency, DirectoryInfo, EditInstance,
-        ElyCredentials, Hooks, InstanceIconBackground, InstanceIconConfig,
+        ElyCredentials, Hooks, IconBackground, IconConfig,
         InstanceInstallCandidate, InstanceInstallTarget,
         InstanceLaunchOverridesPatch, InstanceLink, InstanceMetadata,
         InstanceSyncedOption, InstanceSyncedOptions, InstanceTabVisibility,

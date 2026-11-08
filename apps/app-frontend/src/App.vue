@@ -29,6 +29,8 @@ import {
 	commonSettingsMessages,
 	ContentInstallModal,
 	ContentUpdaterModal,
+	createServerInviteHandoff,
+	createServerOnboardingFlow,
 	CreationFlowModal,
 	defineMessages,
 	I18nDebugPanel,
@@ -36,12 +38,18 @@ import {
 	LoadingBar,
 	NotificationPanel,
 	PopupNotificationPanel,
+	provideFileDownload,
+	provideIconCache,
 	provideLoadingState,
 	provideModalBehavior,
 	provideModrinthClient,
 	provideNotificationManager,
 	providePageContext,
 	providePopupNotificationManager,
+	provideServerInviteHandoff,
+	provideServerOnboardingFlow,
+	provideServerPlay,
+	ServerOnboardingModal,
 	TeleportOverflowMenu,
 	TooltipDirective,
 	useDebugLogger,
@@ -67,11 +75,12 @@ import { useRouteLoading } from '@/app/runtime/use-route-loading'
 import AppSidebar from '@/app/shell/sidebar/index.vue'
 import AppTitleBar from '@/app/shell/title-bar/index.vue'
 import CurseforgePendingFilesModal from '@/components/ui/curseforge/CurseforgePendingFilesModal.vue'
+import { trackExternalFileDownload } from '@/components/ui/download-manager/external-file-downloads'
 import ErrorModal from '@/components/ui/ErrorModal.vue'
 import HostingUpdateRequired from '@/components/ui/HostingUpdateRequired.vue'
 import AddServerToInstanceModal from '@/components/ui/install_flow/AddServerToInstanceModal.vue'
 import UnknownPackWarningModal from '@/components/ui/install_flow/UnknownPackWarningModal.vue'
-import IconEditorModal from '@/components/ui/instance_settings/icon-editor-modal/index.vue'
+import IconEditorModal from '@/components/ui/instance_settings/InstanceIconEditorModal.vue'
 import MinecraftAuthErrorModal from '@/components/ui/minecraft-auth-error-modal/MinecraftAuthErrorModal.vue'
 import MinecraftRequiredModal from '@/components/ui/minecraft-required-modal/MinecraftRequiredModal.vue'
 import InstallToPlayModal from '@/components/ui/modal/InstallToPlayModal.vue'
@@ -98,6 +107,14 @@ import { useInstanceMetadataRefresh } from '@/composables/use-instance-metadata-
 import { useQuickInstanceLimit } from '@/composables/use-quick-instance-limit.ts'
 import { isDarkTheme, useTheme } from '@/composables/use-theme.ts'
 import { config } from '@/config'
+import ServerPlayHandler from '@/features/hosting/play-handler.vue'
+import { prefetchHostingData } from '@/features/hosting/prefetch'
+import InstanceActionModals from '@/features/instances/instance-actions/instance-action-modals.vue'
+import {
+	createInstanceLaunchState,
+	provideInstanceLaunchState,
+} from '@/features/instances/launch-state'
+import SharedInstanceModals from '@/features/library/shared-instances/shared-instance-modals.vue'
 import { provideMinecraftAccounts } from '@/features/minecraft-accounts/context'
 import AppSettingsModal from '@/features/settings/app-settings-modal/index.vue'
 import { provideSettingsActions } from '@/features/settings/settings-actions'
@@ -183,6 +200,8 @@ import {
 	instanceListQueryOptions,
 	screenshotKeys,
 } from '@/pages/instance/query-options'
+import { createFileDownload } from '@/platform/adapters/file-download'
+import { createIconCache } from '@/platform/adapters/icon-cache'
 import { createAppClient } from '@/platform/modrinth-client'
 import {
 	appUpdateState,
@@ -312,6 +331,20 @@ useAppEvent('ads_consent_required', handleAdsConsentRequired, appEvents)
 
 const tauriApiClient = createAppClient()
 provideModrinthClient(tauriApiClient)
+provideServerOnboardingFlow(createServerOnboardingFlow())
+provideServerInviteHandoff(createServerInviteHandoff())
+provideFileDownload(createFileDownload(tauriApiClient, trackExternalFileDownload))
+const iconCache = createIconCache()
+provideIconCache(iconCache)
+provideInstanceLaunchState(createInstanceLaunchState())
+const serverPlayHandler = ref()
+const serverPlay = {
+	async play(target) {
+		if (!serverPlayHandler.value) throw new Error('Server play handler is not ready.')
+		await serverPlayHandler.value.play(target)
+	},
+}
+provideServerPlay(serverPlay)
 const { data: authenticatedModrinthUser } = useQuery({
 	queryKey: computed(() => ['authenticated-user', 'campaigns', credentials.value?.user?.id]),
 	queryFn: () => tauriApiClient.labrinth.users_v3.getAuthenticated(),
@@ -916,8 +949,14 @@ async function setupApp() {
 }
 
 const stateFailed = ref(false)
-const { loading, canNavigateBack, canNavigateForward, onSuspensePending, onSuspenseResolve } =
-	useRouteLoading({ stateInitialized, stateFailed })
+const {
+	loading,
+	canNavigateBack,
+	canNavigateForward,
+	onboardingPageReady,
+	onSuspensePending,
+	onSuspenseResolve,
+} = useRouteLoading({ stateInitialized, stateFailed })
 provideLoadingState(loading)
 
 traceStartupStep('Initialize backend state', () => initialize_state(appEventChannel))
@@ -948,42 +987,19 @@ const handleClose = async () => {
 
 const queryClient = useQueryClient()
 
-watch(stateInitialized, (ready) => {
-	if (ready) {
-		queryClient.prefetchQuery({
-			queryKey: ['servers'],
-			queryFn: async () => {
-				const response = await tauriApiClient.archon.servers_v0.list({ limit: 100 })
-				const hasMedalServers = response.servers.some((s) => s.is_medal)
-				if (hasMedalServers) {
-					const subscriptions = await tauriApiClient.labrinth.billing_internal.getSubscriptions()
-					for (const server of response.servers) {
-						if (server.is_medal) {
-							const sub = subscriptions.find((s) => s.metadata?.id === server.server_id)
-							if (sub) {
-								server.medal_expires = new Date(
-									new Date(sub.created).getTime() + 5 * 86400000,
-								).toISOString()
-							}
-						}
-					}
-				}
-				return response
-			},
-			staleTime: 30_000,
-		})
-		queryClient.prefetchQuery({
-			queryKey: ['billing', 'subscriptions'],
-			queryFn: () => tauriApiClient.labrinth.billing_internal.getSubscriptions(),
-			staleTime: 30_000,
-		})
-		queryClient.prefetchQuery({
-			queryKey: ['billing', 'payments'],
-			queryFn: () => tauriApiClient.labrinth.billing_internal.getPayments(),
-			staleTime: 30_000,
-		})
-	}
-})
+watch(
+	() => stateInitialized.value && credentials.value?.session,
+	(session) => {
+		if (!session) return
+
+		void prefetchHostingData(
+			queryClient,
+			tauriApiClient,
+			iconCache,
+			() => credentials.value?.session === session,
+		)
+	},
+)
 
 const error = useError()
 const errorModal = ref()
@@ -1667,6 +1683,8 @@ async function handleCommand(e) {
 		} else {
 			await run(e.id).catch(handleError)
 		}
+	} else if (e.event === 'PlayHostingServer') {
+		await serverPlay.play({ serverId: e.server_id, worldId: e.world_id }).catch(handleError)
 	} else if (e.event === 'InstallSharedInstanceInvite') {
 		await sharedInstanceInviteHandler.value?.installFromInviteId(e.invite_id)
 	} else if (e.event === 'InstallServer') {
@@ -2313,12 +2331,20 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 			@create="handleCreate"
 			@browse-modpacks="handleBrowseModpacks"
 		/>
+		<ServerOnboardingModal
+			browse-path="/browse/modpack"
+			:get-loader-manifest="getLoaderManifest"
+			:navigate="(to) => router.push(to)"
+			:page-ready="onboardingPageReady"
+		/>
 		<IconEditorModal
 			ref="creationIconEditorModal"
 			:config="creationGeneratedIcon?.config"
 			@saved="onCreationIconSaved"
 		/>
 		<UnknownPackWarningModal ref="unknownPackWarningModal" />
+		<InstanceActionModals ref="instanceActionModals" />
+		<SharedInstanceModals ref="sharedInstanceModals" />
 		<div
 			class="app-grid-navbar bg-bg-raised flex flex-col p-[0.5rem] pt-0 gap-[0.25rem] w-[--left-bar-width]"
 		>
@@ -2604,6 +2630,7 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 		@create-anyway="handleContentInstallModpackDuplicateCreateAnyway"
 		@go-to-instance="handleContentInstallModpackDuplicateGoToInstance"
 	/>
+	<ServerPlayHandler ref="serverPlayHandler" />
 	<SharedInstanceInviteHandler ref="sharedInstanceInviteHandler" />
 	<InstallToPlayModal ref="installToPlayModal" :show-external-warnings="false" />
 	<UpdateToPlayModal ref="updateToPlayModal" :show-external-warnings="false" />

@@ -267,6 +267,14 @@ function deserialize_COMMAND_PAYLOAD(d) {
                 file_id: (d.deserialize_number(U32_BYTES, false) === 0) ? undefined : d.deserialize_string()
             }
         };
+    case 8:
+        return {
+            tag: "PlayHostingServer",
+            value: {
+                server_id: d.deserialize_string(),
+                world_id: d.deserialize_string()
+            }
+        };
     default:
         throw "variant not implemented"
     }

@@ -1608,7 +1608,9 @@ mod tests {
     fn share_links_give_their_code() {
         assert_eq!(share_code_of(" cbGiK6Ch "), "cbGiK6Ch");
         assert_eq!(
-            share_code_of("https://www.curseforge.com/minecraft/share/cbGiK6Ch"),
+            share_code_of(
+                "https://www.curseforge.com/minecraft/share/cbGiK6Ch"
+            ),
             "cbGiK6Ch"
         );
         assert_eq!(

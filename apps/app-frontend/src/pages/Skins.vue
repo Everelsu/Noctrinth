@@ -26,7 +26,6 @@ import {
 import { arrayBufferToBase64 } from '@modrinth/utils'
 import { useQuery } from '@tanstack/vue-query'
 import { listen } from '@tauri-apps/api/event'
-import { type DragDropEvent, getCurrentWebview } from '@tauri-apps/api/webview'
 import { computedAsync } from '@vueuse/core'
 import { computed, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
 
@@ -54,6 +53,7 @@ import {
 	uploadElySkin,
 	wearElySkin,
 } from '@/helpers/ely_skins'
+import { listenNativeDragDrop, type NativeDragDropEvent } from '@/helpers/native-drag-drop'
 import { offline_player_cape, type PlayerCapeSource } from '@/helpers/offline_auth'
 import { cleanupUnusedPreviews } from '@/helpers/rendering/skin-previews'
 import type { Cape, Skin, SkinModel, SkinTextureUrl } from '@/helpers/skins.ts'
@@ -1152,7 +1152,16 @@ function isSkinActive(skin: Skin) {
 }
 
 function getErrorMessage(error: unknown) {
-	return error instanceof Error ? error.message : String(error)
+	if (error instanceof Error) return error.message
+	if (
+		typeof error === 'object' &&
+		error !== null &&
+		'message' in error &&
+		typeof error.message === 'string'
+	) {
+		return error.message
+	}
+	return String(error)
 }
 
 function isMinecraftSkinRateLimitError(error: unknown) {
@@ -1590,29 +1599,27 @@ const isSkinDropBusy = computed(() =>
  * through this event instead, and the backend reads the bytes. Both grids go
  * through here; only the destination differs.
  */
-async function handleAddSkinNativeDragDrop(event: { payload: DragDropEvent }) {
+async function handleAddSkinNativeDragDrop(event: NativeDragDropEvent) {
 	if (isSkinDropBusy.value) return
 
-	const payload = event.payload
-
-	if (payload.type === 'leave') {
+	if (event.type === 'leave') {
 		isDraggingSkinFile.value = false
 		setAddSkinDragActive(false)
 		return
 	}
 
-	if (payload.type === 'enter') {
-		isDraggingSkinFile.value = payload.paths.some(isSkinImagePath)
+	if (event.type === 'enter') {
+		isDraggingSkinFile.value = event.paths.some(isSkinImagePath)
 	}
 
-	if (payload.type === 'enter' || payload.type === 'over') {
-		setAddSkinDragActive(isDraggingSkinFile.value && isPositionOverAddSkinButton(payload.position))
+	if (event.type === 'enter' || event.type === 'over') {
+		setAddSkinDragActive(isDraggingSkinFile.value && isPositionOverAddSkinButton(event.position))
 		return
 	}
 
-	const hasSkinPath = payload.paths.some(isSkinImagePath)
+	const hasSkinPath = event.paths.some(isSkinImagePath)
 	const shouldUpload =
-		(isDraggingSkinFile.value || hasSkinPath) && isPositionOverAddSkinButton(payload.position)
+		(isDraggingSkinFile.value || hasSkinPath) && isPositionOverAddSkinButton(event.position)
 
 	isDraggingSkinFile.value = false
 	setAddSkinDragActive(false)
@@ -1621,7 +1628,7 @@ async function handleAddSkinNativeDragDrop(event: { payload: DragDropEvent }) {
 		return
 	}
 
-	const skinPath = payload.paths.find(isSkinImagePath)
+	const skinPath = event.paths.find(isSkinImagePath)
 
 	if (!skinPath) {
 		return
@@ -1637,7 +1644,7 @@ async function handleAddSkinNativeDragDrop(event: { payload: DragDropEvent }) {
 	} catch (error) {
 		addNotification({
 			title: formatMessage(messages.droppedFileErrorTitle),
-			text: error instanceof Error ? error.message : formatMessage(messages.droppedFileErrorText),
+			text: getErrorMessage(error) || formatMessage(messages.droppedFileErrorText),
 			type: 'error',
 		})
 	}
@@ -1677,7 +1684,7 @@ async function onAddSkinDrop(event: DragEvent) {
 
 async function setupAddSkinDragDropListener() {
 	try {
-		const unlisten = await getCurrentWebview().onDragDropEvent(handleAddSkinNativeDragDrop)
+		const unlisten = await listenNativeDragDrop(handleAddSkinNativeDragDrop)
 
 		if (isUnmounted) {
 			unlisten()

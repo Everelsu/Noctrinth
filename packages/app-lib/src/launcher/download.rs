@@ -510,10 +510,10 @@ async fn download_minecraft_inner(
 
     let (client, log_config, assets, libraries) = tokio::join! {
         // Total loading sums to 90/60
-        download_client(st, version, loading_bar, force, progress.clone()), // 9
-        download_log_config(st, version, loading_bar, force, progress.clone()),
-        download_assets(st, version.assets == "legacy", &assets_index, loading_bar, amount, force, progress.clone()), // 40
-        download_libraries(st, version.libraries.as_slice(), &version.id, loading_bar, amount, java_arch, force, minecraft_updated, progress.clone()) // 40
+        Box::pin(download_client(st, version, loading_bar, force, progress.clone())), // 9
+        Box::pin(download_log_config(st, version, loading_bar, force, progress.clone())),
+        Box::pin(download_assets(st, version.assets == "legacy", &assets_index, loading_bar, amount, force, progress.clone())), // 40
+        Box::pin(download_libraries(st, version.libraries.as_slice(), &version.id, loading_bar, amount, java_arch, force, minecraft_updated, progress.clone())) // 40
     };
     client.context("downloading client")?;
     log_config.context("downloading log config")?;
@@ -935,7 +935,16 @@ pub async fn download_libraries(
                 return Ok(());
             }
 
-            // When a library has natives, we only need to download such natives, as PrismLauncher does
+			if library.is_native()
+				&& library.native_classifier(java_arch).is_none()
+			{
+				tracing::trace!(
+					"Skipped incompatible native library {}",
+					&library.name
+				);
+				return Ok(());
+			}
+
 				if let Some((url, sha1, size)) =
 					library.native_download(java_arch)?
             {

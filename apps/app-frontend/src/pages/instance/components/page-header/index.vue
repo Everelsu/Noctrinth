@@ -36,6 +36,7 @@
 				:loading-server-ping="loadingServerPing"
 				:players-online="playersOnline"
 				:status-online="statusOnline"
+				:hosting-status="hostingStatus"
 				:ping="ping"
 				:minecraft-server="minecraftServer"
 				:show-instance-play-time="showInstancePlayTime"
@@ -152,11 +153,13 @@
 </template>
 
 <script setup lang="ts">
-import type { Labrinth } from '@modrinth/api-client'
+import type { Labrinth, SharedInstances } from '@modrinth/api-client'
 import {
 	ClockIcon,
 	DownloadIcon,
 	ExternalIcon,
+	EyeIcon,
+	EyeOffIcon,
 	FolderOpenIcon,
 	LockIcon,
 	MoreVerticalIcon,
@@ -187,6 +190,7 @@ import {
 import { computed } from 'vue'
 
 import NoctrinthLaunchButton, { type LaunchState } from '@/components/ui/NoctrinthLaunchButton.vue'
+import { libraryInstanceMessages } from '@/features/library/messages'
 import type { GameInstance } from '@/helpers/types'
 
 import InstanceHeaderServerMetadata from './instance-page-header-server-metadata.vue'
@@ -302,9 +306,12 @@ const props = withDefaults(
 		stopping?: boolean
 		loadingServerPing?: boolean
 		playersOnline?: number
+		hostingStatus?: SharedInstances.Instances.v1.OnlineStatus
 		statusOnline?: boolean
 		ping?: number
 		minecraftServer?: Labrinth.Projects.v3.Project['minecraft_server']
+		canHideFromLibrary?: boolean
+		hiddenFromLibrary?: boolean
 	}>(),
 	{
 		iconSrc: null,
@@ -317,8 +324,11 @@ const props = withDefaults(
 		loadingServerPing: false,
 		playersOnline: undefined,
 		statusOnline: false,
+		hostingStatus: undefined,
 		ping: undefined,
 		minecraftServer: undefined,
+		canHideFromLibrary: false,
+		hiddenFromLibrary: false,
 	},
 )
 
@@ -332,6 +342,7 @@ const emit = defineEmits<{
 	openFolder: []
 	export: []
 	createShortcut: []
+	toggleHidden: []
 	report: [event?: MouseEvent]
 }>()
 
@@ -426,6 +437,24 @@ const moreActions = computed<ButtonMenuOption[]>(() => {
 				icon: ExternalIcon,
 				action: () => emit('createShortcut'),
 			},
+		)
+	}
+
+	if (props.canHideFromLibrary) {
+		actions.push(
+			props.hiddenFromLibrary
+				? {
+						id: 'show-in-library',
+						label: formatMessage(libraryInstanceMessages.showInLibrary),
+						icon: EyeIcon,
+						action: () => emit('toggleHidden'),
+					}
+				: {
+						id: 'hide-from-library',
+						label: formatMessage(libraryInstanceMessages.hideFromLibrary),
+						icon: EyeOffIcon,
+						action: () => emit('toggleHidden'),
+					},
 		)
 	}
 

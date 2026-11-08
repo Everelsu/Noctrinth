@@ -104,7 +104,7 @@ pub fn get_class_paths(
                 return None;
             }
 
-            if !library.include_in_classpath {
+            if !library.include_in_classpath || library.is_native() {
                 return None;
             }
 
@@ -115,11 +115,7 @@ pub fn get_class_paths(
                 ));
             }
 
-            Some(get_lib_path(
-                libraries_path,
-                &library.name,
-                library.native_classifier(java_arch).is_some(),
-            ))
+            Some(get_lib_path(libraries_path, &library.name, false))
         }))
         .process_results(|iter| {
             iter.unique().join(classpath_separator(java_arch))

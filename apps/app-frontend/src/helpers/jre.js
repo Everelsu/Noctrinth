@@ -109,6 +109,7 @@ export async function remove_unused_runtimes() {
 export function maxMemoryQueryOptions() {
 	return queryOptions({
 		queryKey: ['system', 'memory', 'total'],
+		networkMode: 'always',
 		queryFn: get_max_memory,
 		staleTime: Infinity,
 		gcTime: Infinity,

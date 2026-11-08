@@ -79,6 +79,7 @@ pub use self::mr_auth::*;
 mod legacy_converter;
 
 pub mod attached_world_data;
+pub mod hidden_instances;
 pub mod server_join_log;
 
 mod ely_auth;
@@ -179,27 +180,6 @@ impl State {
             );
             loop {
                 interval.tick().await;
-                match instances::adapters::sqlite::instance_rows::list_instances(
-					&state.pool,
-				).await {
-					Ok(instances) => {
-						for instance in instances {
-							if let Err(error) = crate::util::fetch::patiently(
-								instances::commands::migrate_legacy_content(
-									&instance.id, state, true,
-								),
-							).await {
-								tracing::warn!(
-									instance_id = %instance.id,
-									"Legacy content migration deferred: {error}",
-								);
-							}
-						}
-					}
-					Err(error) => tracing::warn!(
-						"Could not list instances for content migration: {error}",
-					),
-				}
                 if let Err(error) =
                     crate::api::instance::synced_packs::migrate_store(state)
                         .await

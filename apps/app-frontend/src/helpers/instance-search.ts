@@ -18,6 +18,8 @@
  */
 import { type ContentItem, defineMessages } from '@modrinth/ui'
 
+import type { LibraryInstance } from '@/features/library/library-instance'
+
 import type { GameInstance } from './types'
 
 export type ContentTypeFilter = 'mod' | 'datapack' | 'resourcepack' | 'shaderpack'
@@ -44,8 +46,8 @@ export interface ParsedQuery {
 	isEmpty: boolean
 }
 
-export interface InstanceMatch {
-	instance: GameInstance
+export interface InstanceMatch<T = GameInstance> {
+	instance: T
 	/** Content items that satisfied the positive content terms, for display on the card. */
 	contentMatches: ContentItem[]
 }
@@ -409,8 +411,10 @@ export function matchContentItem(query: ParsedQuery, item: ContentItem): boolean
 	)
 }
 
-function isInstanceBroken(instance: GameInstance): boolean {
-	return instance.quarantined || instance.install_stage !== 'installed'
+function isInstanceBroken(instance: LibraryInstance): boolean {
+	return (
+		'install_stage' in instance && (instance.quarantined || instance.install_stage !== 'installed')
+	)
 }
 
 /**
@@ -420,11 +424,11 @@ function isInstanceBroken(instance: GameInstance): boolean {
  * content-level terms are skipped so the grid still narrows by the terms it can
  * already answer. Callers should show that the result is provisional.
  */
-export function matchInstance(
-	instance: GameInstance,
+export function matchInstance<T extends LibraryInstance>(
+	instance: T,
 	query: ParsedQuery,
 	content: ContentItem[] | undefined,
-): InstanceMatch | null {
+): InstanceMatch<T> | null {
 	const name = instance.name.toLowerCase()
 
 	const positiveContent: SearchToken[] = []

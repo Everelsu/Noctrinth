@@ -926,7 +926,7 @@ const route = useNativeRoute()
 const router = useNativeRouter()
 const signInRouteObj = computed(() => getSignInRouteObj(route))
 const storedAccounts = useStoredAccounts()
-const link = config.public.siteUrl + route.path.replace(/\/+$/, '')
+const canonicalUrl = computed(() => config.public.siteUrl + route.path.replace(/\/+$/, ''))
 const client = injectModrinthClient()
 const pageContext = injectPageContext()
 const hostingIntercomActive = computed(() => route.path.startsWith('/hosting') && !!auth.value.user)
@@ -1180,8 +1180,9 @@ useFavicon()
 useHead({
 	link: [
 		{
+			key: 'canonical',
 			rel: 'canonical',
-			href: link,
+			href: canonicalUrl,
 		},
 	],
 })
@@ -1208,7 +1209,7 @@ useSeoMeta({
 		}),
 	ogType: 'website',
 	ogImage: 'https://cdn.modrinth.com/modrinth-new.png',
-	ogUrl: link,
+	ogUrl: canonicalUrl,
 
 	// Twitter
 	twitterCard: 'summary',

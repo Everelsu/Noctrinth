@@ -220,7 +220,9 @@ fn unregister_own_link_handler<R: tauri::Runtime>(
     ));
     // SAFETY: a predefined root key and a valid, NUL-terminated wide string.
     let status = unsafe { RegDeleteTreeW(HKEY_CURRENT_USER, &key) };
-    status.ok().map_err(|error| std::io::Error::other(error).into())
+    status
+        .ok()
+        .map_err(|error| std::io::Error::other(error).into())
 }
 
 #[cfg(not(windows))]

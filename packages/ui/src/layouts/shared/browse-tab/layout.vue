@@ -165,20 +165,17 @@ function getProjectCardTags(result: Labrinth.Search.v3.ResultSearchProject, disp
 
 	<!-- Noctrinth's own: a place beside the type tabs for the app to choose
 	     where results come from. Renders exactly as before when unused. -->
-	<div v-if="$slots['tabs-end']" class="flex flex-wrap items-center justify-between gap-2">
+	<div
+		:class="$slots['tabs-end'] ? 'flex flex-wrap items-center justify-between gap-2' : 'contents'"
+	>
 		<NavTabs
 			v-if="ctx.showProjectTypeTabs.value"
 			:links="ctx.selectableProjectTypes.value"
 			:replace="ctx.variant === 'app'"
+			:animate-collapse="!$slots['tabs-end']"
 		/>
 		<slot name="tabs-end" />
 	</div>
-	<NavTabs
-		v-else-if="ctx.showProjectTypeTabs.value"
-		:links="ctx.selectableProjectTypes.value"
-		:replace="ctx.variant === 'app'"
-		animate-collapse
-	/>
 
 	<Input
 		v-model="ctx.query.value"

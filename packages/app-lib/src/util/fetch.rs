@@ -22,7 +22,7 @@ use std::path::Path;
 use std::pin::Pin;
 use std::sync::{Arc, LazyLock};
 use std::time::{Duration, Instant, SystemTime};
-use tokio::sync::Semaphore;
+use tokio::sync::{Semaphore, SemaphorePermit};
 use tokio::{fs::File, io::AsyncReadExt, io::AsyncWriteExt};
 use tracing::{debug, info};
 
@@ -291,6 +291,26 @@ impl ApiRateLimit {
         }
 
         self.ensure_not_blocked()
+    }
+
+    /// Waits for the API quota without occupying a download slot during recovery.
+    async fn acquire<'a>(
+        &self,
+        semaphore: &'a FetchSemaphore,
+    ) -> crate::Result<SemaphorePermit<'a>> {
+        let mut patience = RATE_LIMIT_PATIENCE;
+        loop {
+            let permit =
+                crate::install::control::download_step(semaphore.0.acquire())
+                    .await??;
+            match self.check() {
+                Ok(()) => return Ok(permit),
+                Err(error) => {
+                    drop(permit);
+                    wait_out_rate_limit(error, &mut patience).await?;
+                }
+            }
+        }
     }
 
     fn handle_response(
@@ -1234,14 +1254,12 @@ async fn fetch_advanced_with_target(
 
     for attempt in 1..=(FETCH_ATTEMPTS + 1) {
         let (result, _permit) = loop {
-            let permit =
+            let permit = if is_api_url {
+                GLOBAL_API_RATE_LIMIT.acquire(semaphore).await?
+            } else {
                 crate::install::control::download_step(semaphore.0.acquire())
-                    .await??;
-            if is_api_url && let Err(error) = GLOBAL_API_RATE_LIMIT.check() {
-                drop(permit);
-                wait_out_rate_limit(error, &mut patience).await?;
-                continue;
-            }
+                    .await??
+            };
             if let Some(fence_key) = fence_key
                 && GLOBAL_FETCH_FENCE.is_blocked(fence_key)
             {
@@ -1574,6 +1592,29 @@ pub async fn sha1_file_async_with_progress(
 mod tests {
     use super::*;
     use chrono::{TimeDelta, Utc};
+
+    #[tokio::test]
+    async fn test_local_quota_wait_releases_download_slot() {
+        let limit = ApiRateLimit::new();
+        for _ in 0..50 {
+            limit.check().unwrap();
+        }
+        let semaphore = FetchSemaphore(Semaphore::new(1));
+        let mut request = std::pin::pin!(limit.acquire(&semaphore));
+        assert!(
+            tokio::time::timeout(Duration::from_millis(20), request.as_mut())
+                .await
+                .is_err()
+        );
+        assert_eq!(semaphore.0.available_permits(), 1);
+        let permit = tokio::time::timeout(Duration::from_secs(15), request)
+            .await
+            .expect("request should resume after quota recovery")
+            .expect("local throttling should not fail an interactive request");
+        assert_eq!(semaphore.0.available_permits(), 0);
+        drop(permit);
+        assert_eq!(semaphore.0.available_permits(), 1);
+    }
 
     #[tokio::test]
     async fn test_patient_requests_wait_out_rate_limit() {

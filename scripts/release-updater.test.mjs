@@ -161,3 +161,21 @@ test('release download table lists available installers without architecture ima
 		rmSync(directory, { recursive: true, force: true })
 	}
 })
+
+test('Windows ARM uses a Java 17 x64 build tool while Rust still targets ARM64', () => {
+	for (const file of ['noctrinth-release.yml', 'noctrinth-prerelease.yml']) {
+		const release = parse(
+			readFileSync(new URL('../.github/workflows/' + file, import.meta.url), 'utf8'),
+		)
+		const build = Object.values(release.jobs).find((job) => job.strategy?.matrix?.include)
+		const java = build.steps.find((step) => step.uses?.startsWith('actions/setup-java@')).with
+		assert.equal(String(java['java-version']), '17')
+		const expression = java.architecture.slice(3, -2).trim()
+		for (const matrix of build.strategy.matrix.include) {
+			const architecture = vm.runInNewContext(expression, { matrix })
+			assert.equal(architecture, matrix.platform === 'windows-11-arm' ? 'x64' : '')
+			if (matrix.platform === 'windows-11-arm')
+				assert.match(matrix.args, /--target aarch64-pc-windows-msvc/)
+		}
+	}
+})

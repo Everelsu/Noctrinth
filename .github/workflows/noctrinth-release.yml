@@ -120,6 +120,8 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+          # Temurin 17 has no Windows ARM64 build; Gradle can use x64 under emulation.
+          architecture: ${{ matrix.platform == 'windows-11-arm' && 'x64' || '' }}
           # app-lib's build script runs Gradle; keep its wrapper and
           # dependencies between runs instead of downloading them every time.
           cache: gradle

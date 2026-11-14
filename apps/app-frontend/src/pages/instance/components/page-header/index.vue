@@ -10,9 +10,12 @@
 			/>
 		</template>
 
-		<template v-if="instance.shared_instance || instance.quarantined" #badges>
+		<template
+			v-if="instance.launch_blocked || (instance.shared_instance && !instance.launch_blocked)"
+			#badges
+		>
 			<PageHeaderBadgeItem
-				v-if="instance.quarantined"
+				v-if="instance.launch_blocked"
 				:icon="LockIcon"
 				:aria-label="formatMessage(messages.lockedBadgeLabel)"
 				class="!border-orange !bg-highlight-orange !text-orange"
@@ -93,7 +96,7 @@
 				/>
 				<Transition v-else name="nm-swap-seq" mode="out-in">
 					<Button
-						v-if="instance.quarantined"
+						v-if="instance.launch_blocked"
 						v-tooltip="formatMessage(messages.lockedPlayTooltip)"
 						type="colored"
 						color="brand"
@@ -390,7 +393,7 @@ const playtimeLabel = computed(() => {
 const launchState = computed<LaunchState | null>(() => {
 	if (props.playing) return props.stopping ? 'stopping' : 'stop'
 	if (isInstalling.value) return 'installing'
-	if (props.instance.quarantined || props.instance.install_stage !== 'installed') return null
+	if (props.instance.launch_blocked || props.instance.install_stage !== 'installed') return null
 	if (props.loading) return 'starting'
 	if (props.isServerInstance) return null
 	return 'play'
@@ -423,21 +426,22 @@ const moreActions = computed<ButtonMenuOption[]>(() => {
 		},
 	]
 
-	if (!props.instance.quarantined) {
-		actions.push(
-			{
-				id: 'export-mrpack',
-				label: formatMessage(messages.exportModpack),
-				icon: PackageIcon,
-				action: () => emit('export'),
-			},
-			{
-				id: 'create-shortcut',
-				label: formatMessage(messages.createShortcut),
-				icon: ExternalIcon,
-				action: () => emit('createShortcut'),
-			},
-		)
+	if (!props.instance.launch_blocked) {
+		actions.push({
+			id: 'export-mrpack',
+			label: formatMessage(messages.exportModpack),
+			icon: PackageIcon,
+			action: () => emit('export'),
+		})
+	}
+
+	if (!props.instance.launch_blocked) {
+		actions.push({
+			id: 'create-shortcut',
+			label: formatMessage(messages.createShortcut),
+			icon: ExternalIcon,
+			action: () => emit('createShortcut'),
+		})
 	}
 
 	if (props.canHideFromLibrary) {

@@ -39,6 +39,7 @@ import { instanceKeys } from '@/pages/instance/query-options'
 import { injectAppEvents } from '@/providers/app-events'
 import { provideInstanceBackup } from '@/providers/instance-backup'
 
+import AdvancedInstallationSettings from './advanced-installation-settings.vue'
 import { injectInstanceSettings } from './instance-settings-context.ts'
 import SharedInstanceInstallationSettingsControls from './shared-instance-installation-settings-controls.vue'
 
@@ -142,7 +143,7 @@ const reinstalling = ref(false)
 const unlinkingSharedInstance = ref(false)
 const installationSettingsBusy = computed(
 	() =>
-		instance.value.quarantined ||
+		instance.value.content_locked ||
 		instance.value.install_stage !== 'installed' ||
 		repairing.value ||
 		reinstalling.value ||
@@ -150,7 +151,7 @@ const installationSettingsBusy = computed(
 		!!offline,
 )
 const installationSettingsBusyMessage = computed(() =>
-	instance.value.quarantined ? formatMessage(messages.locked) : null,
+	instance.value.content_locked ? formatMessage(messages.locked) : null,
 )
 
 async function unlinkSharedInstance() {
@@ -503,6 +504,7 @@ provideInstallationSettings({
 				:unlinking="unlinkingSharedInstance"
 				:unlink="unlinkSharedInstance"
 			/>
+			<AdvancedInstallationSettings />
 		</template>
 	</InstallationSettingsLayout>
 </template>

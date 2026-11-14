@@ -1,90 +1,91 @@
-<script setup>
-import { CoffeeIcon } from '@modrinth/assets'
+<script setup lang="ts">
 import { defineMessages, injectNotificationManager, useVIntl } from '@modrinth/ui'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 
-import JavaSelector from '@/components/ui/JavaSelector.vue'
-import { get_java_versions, set_java_version } from '@/helpers/jre'
+import JavaSelector from '@/features/java/java-selector/index.vue'
+import { javaKeys, javaVersionsQueryOptions } from '@/features/java/queries'
+import { setJavaVersion } from '@/platform/app-lib/jre/commands'
+import type { JavaVersion } from '@/platform/app-lib/jre/types'
 
 import JavaGpuPreference from './JavaGpuPreference.vue'
 import JavaRuntimeManager from './JavaRuntimeManager.vue'
 
+const JAVA_MAJOR_VERSIONS = [26, 25, 21, 17, 8]
+
 const { handleError } = injectNotificationManager()
 const { formatMessage } = useVIntl()
+const queryClient = useQueryClient()
 
+const { data: javaVersions } = useQuery(javaVersionsQueryOptions())
+
+const javaVersionMutation = useMutation({
+	mutationFn: ({ selection }: { majorVersion: number; selection: Partial<JavaVersion> }) =>
+		setJavaVersion(selection),
+	networkMode: 'always',
+	onMutate: ({ majorVersion, selection }) => {
+		queryClient.setQueryData(javaVersionsQueryOptions().queryKey, (current) => ({
+			...current,
+			[majorVersion]: selection as JavaVersion,
+		}))
+	},
+	onError: handleError,
+	onSettled: () => queryClient.invalidateQueries({ queryKey: javaKeys.versions }),
+})
+
+function updateJavaVersion(majorVersion: number, selection: Partial<JavaVersion>) {
+	javaVersionMutation.mutate({
+		majorVersion,
+		selection: {
+			...selection,
+			path: selection.path ? selection.path.replace('java.exe', 'javaw.exe') : undefined,
+		},
+	})
+}
+
+const shownJavaMajors = computed(() =>
+	[
+		...new Set([
+			...JAVA_MAJOR_VERSIONS,
+			...Object.keys(javaVersions.value ?? {})
+				.map(Number)
+				.filter(Number.isFinite),
+		]),
+	].sort((a, b) => b - a),
+)
+const runtimeManagerKey = ref(0)
+async function reloadJavaVersions() {
+	await queryClient.invalidateQueries({ queryKey: javaKeys.versions })
+	runtimeManagerKey.value += 1
+}
 const messages = defineMessages({
 	javaLocation: {
 		id: 'app.settings.java-installations.location.title',
 		defaultMessage: 'Java {version, number} location',
 	},
 })
-
-const javaVersions = ref(await get_java_versions().catch(handleError))
-
-// Deleting a runtime can invalidate a configured path, and the selectors above
-// each hold their own copy — so re-read them, and remount the list so its own
-// `await` runs again.
-const runtimeManagerKey = ref(0)
-async function reloadJavaVersions() {
-	javaVersions.value = (await get_java_versions().catch(handleError)) ?? javaVersions.value
-	runtimeManagerKey.value += 1
-}
-
-// Majors the launcher is expected to need. Minecraft asks for whichever one its
-// own manifest names, so this is a floor rather than the whole truth — anything
-// already configured is folded in below, which is how a newly installed major
-// (26, say) appears here without this list being edited again.
-const KNOWN_JAVA_MAJORS = [26, 25, 21, 17, 8]
-
-const shownJavaMajors = computed(() => {
-	const configured = Object.keys(javaVersions.value ?? {})
-		.map(Number)
-		.filter(Number.isFinite)
-
-	return [...new Set([...KNOWN_JAVA_MAJORS, ...configured])].sort((a, b) => b - a)
-})
-async function updateJavaVersion(version) {
-	if (version?.path === '') {
-		version.path = undefined
-	}
-
-	if (version?.path) {
-		version.path = version.path.replace('java.exe', 'javaw.exe')
-	}
-
-	await set_java_version(version).catch(handleError)
-}
 </script>
+
 <template>
-	<div class="flex flex-col gap-4">
+	<div class="flex flex-col gap-6">
 		<div
-			v-for="javaVersion in shownJavaMajors"
-			:key="`java-${javaVersion}`"
-			class="flex items-start gap-3 rounded-2xl bg-bg p-4"
+			v-for="(majorVersion, index) in shownJavaMajors"
+			:key="`java-${majorVersion}`"
+			class="flex flex-col gap-2.5"
 		>
-			<div
-				class="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-[1px] border-solid border-button-border bg-button-bg p-2 [&_svg]:h-full [&_svg]:w-full"
-			>
-				<CoffeeIcon />
-			</div>
-			<div class="flex min-w-0 flex-1 flex-col gap-2">
-				<h3 class="m-0 text-lg font-extrabold leading-none text-contrast">
-					{{ formatMessage(messages.javaLocation, { version: javaVersion }) }}
-				</h3>
-				<JavaSelector
-					:id="'java-selector-' + javaVersion"
-					v-model="javaVersions[javaVersion]"
-					:version="javaVersion"
-					@update:model-value="updateJavaVersion"
-				/>
-				<JavaGpuPreference :path="javaVersions[javaVersion]?.path ?? ''" />
-			</div>
+			<h3 class="m-0 text-lg font-semibold text-contrast" :class="{ 'mt-4': index !== 0 }">
+				{{ formatMessage(messages.javaLocation, { version: majorVersion }) }}
+			</h3>
+			<JavaSelector
+				:id="`java-selector-${majorVersion}`"
+				:model-value="javaVersions?.[majorVersion]"
+				:version="majorVersion"
+				@update:model-value="(selection) => updateJavaVersion(majorVersion, selection)"
+			/>
+			<JavaGpuPreference :path="javaVersions?.[majorVersion]?.path ?? ''" />
 		</div>
-
-		<hr class="my-2 h-px border-none bg-divider" />
-
-		<Suspense>
-			<JavaRuntimeManager :key="runtimeManagerKey" @changed="reloadJavaVersions" />
-		</Suspense>
+		<Suspense
+			><JavaRuntimeManager :key="runtimeManagerKey" @changed="reloadJavaVersions"
+		/></Suspense>
 	</div>
 </template>

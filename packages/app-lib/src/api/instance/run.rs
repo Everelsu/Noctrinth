@@ -22,6 +22,22 @@ pub enum QuickPlayType {
     Server(ServerAddress),
 }
 
+async fn ensure_launch_allowed(
+    instance_id: &str,
+    state: &State,
+) -> crate::Result<()> {
+    if crate::state::get_instance(instance_id, &state.pool)
+        .await?
+        .is_some_and(|metadata| metadata.launch_blocked)
+    {
+        bail!(ErrorKind::InputError(
+            "this instance has been quarantined".to_string(),
+        ));
+    }
+
+    Ok(())
+}
+
 #[tracing::instrument]
 pub async fn run(
     instance_id: &str,
@@ -48,21 +64,12 @@ async fn run_inner(
     additional: bool,
 ) -> crate::Result<ProcessMetadata> {
     let state = State::get().await?;
-    if crate::state::instances::adapters::sqlite::instance_rows::is_instance_quarantined(
-        instance_id,
-        &state.pool,
-    )
-    .await?
-    {
-        bail!(ErrorKind::InputError(
-            "this instance has been quarantined".to_string(),
-        ));
-    }
     super::shared::check_shared_instance_availability_before_launch(
         instance_id,
         &state,
     )
     .await?;
+    ensure_launch_allowed(instance_id, &state).await?;
 
     // Prefer a signed-in Microsoft account.
     //
@@ -166,16 +173,7 @@ async fn run_credentials(
             .await?
             .get("fullscreen")
             .is_some_and(|preference| preference.enabled);
-    if crate::state::instances::adapters::sqlite::instance_rows::is_instance_quarantined(
-        instance_id,
-        &state.pool,
-    )
-    .await?
-    {
-        bail!(ErrorKind::InputError(
-            "this instance has been quarantined".to_string(),
-        ));
-    }
+    ensure_launch_allowed(instance_id, &state).await?;
 
     let pre_launch_hook = context
         .launch_overrides

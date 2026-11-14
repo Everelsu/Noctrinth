@@ -150,13 +150,71 @@ pub async fn resolve(
     }
 }
 
+const WINDOWS_ARM64_MIN_NATIVE_JAVA: u32 = 17;
+/// Azul publishes a Windows arm64 JDK for Java 17, but no JRE.
+const WINDOWS_ARM64_JDK_ONLY_JAVA: u32 = 17;
+
+#[derive(Debug, PartialEq, Eq)]
+struct JavaPackageQuery {
+    os: &'static str,
+    arch: &'static str,
+    archive_type: &'static str,
+    package_type: &'static str,
+}
+
+impl JavaPackageQuery {
+    fn new(os: &'static str, arch: &'static str, java_version: u32) -> Self {
+        match (os, arch) {
+            ("linux", "aarch64") => Self {
+                os: "linux-glibc",
+                arch,
+                archive_type: "tar.gz",
+                package_type: "jre",
+            },
+            ("windows", "aarch64")
+                if java_version < WINDOWS_ARM64_MIN_NATIVE_JAVA =>
+            {
+                Self {
+                    os,
+                    arch: "x86_64",
+                    archive_type: "zip",
+                    package_type: "jre",
+                }
+            }
+            ("windows", "aarch64")
+                if java_version == WINDOWS_ARM64_JDK_ONLY_JAVA =>
+            {
+                Self {
+                    os,
+                    arch,
+                    archive_type: "zip",
+                    package_type: "jdk",
+                }
+            }
+            _ => Self {
+                os,
+                arch,
+                archive_type: "zip",
+                package_type: "jre",
+            },
+        }
+    }
+}
+
 /// The URL listing Azul's JRE packages for a major version here.
 pub fn azul_packages_url(java_version: u32) -> String {
-    format!(
-        "https://api.azul.com/metadata/v1/zulu/packages?arch={}&java_version={}&os={}&archive_type=zip&javafx_bundled=false&java_package_type=jre&page_size=1&include_fields=sha256_hash",
+    let JavaPackageQuery {
+        os,
+        arch,
+        archive_type,
+        package_type,
+    } = JavaPackageQuery::new(
+        std::env::consts::OS,
         std::env::consts::ARCH,
         java_version,
-        std::env::consts::OS
+    );
+    format!(
+        "https://api.azul.com/metadata/v1/zulu/packages?arch={arch}&java_version={java_version}&os={os}&archive_type={archive_type}&javafx_bundled=false&java_package_type={package_type}&crac_supported=false&release_status=ga&availability_types=CA&page_size=1&include_fields=sha256_hash"
     )
 }
 
@@ -187,7 +245,13 @@ async fn resolve_azul(
         .map(|package| JavaDownload::Archive {
             url: package.download_url,
             sha256: package.sha256_hash,
-            tar_gz: false,
+            tar_gz: JavaPackageQuery::new(
+                std::env::consts::OS,
+                std::env::consts::ARCH,
+                java_version,
+            )
+            .archive_type
+                == "tar.gz",
         }))
 }
 
@@ -490,13 +554,19 @@ pub fn verify_sha256(
 
 /// Unpacks a runtime archive into `root`, replacing an older copy of the same
 /// runtime, and returns the runtime's own directory.
+static JAVA_INSTALL_LOCK: tokio::sync::Mutex<()> =
+    tokio::sync::Mutex::const_new(());
+
 pub async fn unpack_archive(
     bytes: Bytes,
     tar_gz: bool,
     root: &Path,
 ) -> crate::Result<PathBuf> {
-    let root = root.to_path_buf();
-    tokio::task::spawn_blocking(move || {
+    io::create_dir_all(root).await?;
+    let install_root = root.to_path_buf();
+    let staging = tempfile::tempdir_in(root)?;
+    let root = staging.path().to_path_buf();
+    let (staging, extracted) = tokio::task::spawn_blocking(move || {
         let read_failed = |what: &str| {
             crate::Error::from(crate::ErrorKind::InputError(format!(
                 "Failed to {what} the Java archive"
@@ -517,15 +587,12 @@ pub async fn unpack_archive(
                 top_directory(&path).ok_or_else(|| read_failed("read"))?
             };
             let target = root.join(&top);
-            if target.exists() {
-                std::fs::remove_dir_all(&target)?;
-            }
             tar::Archive::new(flate2::read::GzDecoder::new(
                 std::io::Cursor::new(&bytes),
             ))
             .unpack(&root)
             .map_err(|_| read_failed("extract"))?;
-            Ok(target)
+            crate::Result::Ok((staging, target))
         } else {
             let mut archive =
                 zip::ZipArchive::new(std::io::Cursor::new(&bytes))
@@ -537,11 +604,8 @@ pub async fn unpack_archive(
                 .and_then(|name| top_directory(Path::new(name.as_ref())))
                 .ok_or_else(|| read_failed("read"))?;
             let target = root.join(&top);
-            if target.exists() {
-                std::fs::remove_dir_all(&target)?;
-            }
             archive.extract(&root).map_err(|_| read_failed("extract"))?;
-            Ok(target)
+            crate::Result::Ok((staging, target))
         }
     })
     .await
@@ -549,7 +613,30 @@ pub async fn unpack_archive(
         crate::Error::from(anyhow::anyhow!(format!(
             "Java extraction task failed: {e}"
         )))
-    })?
+    })??;
+    let executable = |directory: &Path| {
+        #[cfg(target_os = "macos")]
+        let directory = directory.join("Contents").join("Home");
+        directory.join("bin").join(crate::util::jre::JAVA_BIN)
+    };
+    crate::util::jre::check_java_at_filepath(&executable(&extracted)).await?;
+    let target = install_root.join(extracted.file_name().ok_or_else(|| {
+        crate::ErrorKind::InputError(
+            "Invalid Java archive directory".to_string(),
+        )
+    })?);
+    let _guard = JAVA_INSTALL_LOCK.lock().await;
+    if crate::util::jre::check_java_at_filepath(&executable(&target))
+        .await
+        .is_err()
+    {
+        if target.exists() {
+            io::remove_dir_all(&target).await?;
+        }
+        tokio::fs::rename(&extracted, &target).await?;
+    }
+    drop(staging);
+    Ok(target)
 }
 
 /// The first component of an archive path, when it is a plain name.
@@ -903,5 +990,137 @@ mod tests {
             ))
         };
         assert!(verify_sha256(b"java", Some(&actual.to_uppercase())).is_ok());
+    }
+}
+
+#[cfg(test)]
+mod platform_tests {
+    use super::JavaPackageQuery;
+    #[test]
+    fn linux_arm64_uses_glibc_tarballs() {
+        assert_eq!(
+            JavaPackageQuery::new("linux", "aarch64", 16),
+            JavaPackageQuery {
+                os: "linux-glibc",
+                arch: "aarch64",
+                archive_type: "tar.gz",
+                package_type: "jre",
+            }
+        );
+    }
+
+    #[test]
+    fn windows_arm64_runs_older_java_under_emulation() {
+        for java_version in [8, 16] {
+            let query =
+                JavaPackageQuery::new("windows", "aarch64", java_version);
+            assert_eq!(query.arch, "x86_64");
+            assert_eq!(query.package_type, "jre");
+        }
+    }
+
+    #[test]
+    fn windows_arm64_uses_native_java_from_17() {
+        let query = JavaPackageQuery::new("windows", "aarch64", 17);
+        assert_eq!(query.arch, "aarch64");
+        assert_eq!(query.package_type, "jdk");
+        for java_version in [21, 25] {
+            let query =
+                JavaPackageQuery::new("windows", "aarch64", java_version);
+            assert_eq!(query.arch, "aarch64");
+            assert_eq!(query.package_type, "jre");
+        }
+    }
+
+    #[test]
+    fn other_platforms_use_native_zips() {
+        for (os, arch) in [
+            ("linux", "x86_64"),
+            ("windows", "x86_64"),
+            ("macos", "aarch64"),
+        ] {
+            assert_eq!(
+                JavaPackageQuery::new(os, arch, 8),
+                JavaPackageQuery {
+                    os,
+                    arch,
+                    archive_type: "zip",
+                    package_type: "jre",
+                }
+            );
+        }
+    }
+}
+
+#[cfg(all(test, unix))]
+mod archive_tests {
+    use super::unpack_archive;
+    use bytes::Bytes;
+
+    fn runtime_archive(contents: &[u8]) -> Bytes {
+        let encoder = flate2::write::GzEncoder::new(
+            Vec::new(),
+            flate2::Compression::fast(),
+        );
+        let mut builder = tar::Builder::new(encoder);
+        let mut header = tar::Header::new_gnu();
+        header.set_size(contents.len() as u64);
+        header.set_mode(0o755);
+        header.set_cksum();
+        #[cfg(target_os = "macos")]
+        let path = "runtime/Contents/Home/bin/java";
+        #[cfg(not(target_os = "macos"))]
+        let path = "runtime/bin/java";
+        builder.append_data(&mut header, path, contents).unwrap();
+        builder.into_inner().unwrap().finish().unwrap().into()
+    }
+
+    #[tokio::test]
+    async fn rejected_java_keeps_existing_runtime() {
+        let root = tempfile::tempdir().unwrap();
+        let runtime = root.path().join("runtime");
+        std::fs::create_dir(&runtime).unwrap();
+        std::fs::write(runtime.join("keep.txt"), "existing runtime").unwrap();
+        unpack_archive(
+            runtime_archive(b"#!/bin/sh\nexit 1\n"),
+            true,
+            root.path(),
+        )
+        .await
+        .unwrap_err();
+        assert_eq!(
+            std::fs::read_to_string(runtime.join("keep.txt")).unwrap(),
+            "existing runtime"
+        );
+        assert_eq!(std::fs::read_dir(root.path()).unwrap().count(), 1);
+    }
+
+    #[tokio::test]
+    async fn working_runtime_is_not_replaced() {
+        let root = tempfile::tempdir().unwrap();
+        let file = runtime_archive(
+            b"#!/bin/sh\necho os.arch=aarch64\necho java.version=21.0.1\n",
+        );
+        let runtime = unpack_archive(file.clone(), true, root.path())
+            .await
+            .unwrap();
+        let marker = runtime.join("keep.txt");
+        std::fs::write(&marker, "keep").unwrap();
+        unpack_archive(file, true, root.path()).await.unwrap();
+        assert_eq!(std::fs::read_to_string(marker).unwrap(), "keep");
+    }
+
+    #[tokio::test]
+    async fn parallel_java_archives_keep_working_installation() {
+        let root = tempfile::tempdir().unwrap();
+        let file = runtime_archive(
+            b"#!/bin/sh\necho os.arch=aarch64\necho java.version=21.0.1\n",
+        );
+        let (first, second) = tokio::join!(
+            unpack_archive(file.clone(), true, root.path()),
+            unpack_archive(file, true, root.path())
+        );
+        assert_eq!(first.unwrap(), second.unwrap());
+        assert_eq!(std::fs::read_dir(root.path()).unwrap().count(), 1);
     }
 }

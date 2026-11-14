@@ -1,10 +1,10 @@
-use crate::state::{JavaVersion, State};
+use crate::state::{InstanceLaunchContext, JavaVersion, State};
 use anyhow::Context;
 
-pub async fn get_optimal_jre_key(
+async fn resolve_launch_version_info(
     instance_id: &str,
-) -> crate::Result<Option<JavaVersion>> {
-    let state = State::get().await?;
+    state: &State,
+) -> crate::Result<(InstanceLaunchContext, u32)> {
     let context =
         crate::state::instances::commands::get_instance_launch_context(
             instance_id,
@@ -17,7 +17,7 @@ pub async fn get_optimal_jre_key(
     let (minecraft, version_index) =
         crate::launcher::resolve_minecraft_manifest(
             &context.applied_content_set.game_version,
-            &state,
+            state,
         )
         .await?;
     let version = &minecraft.versions[version_index];
@@ -29,7 +29,7 @@ pub async fn get_optimal_jre_key(
     )
     .await?;
     let mut version_info = crate::launcher::download::download_version_info(
-        &state,
+        state,
         version,
         loader_version.as_ref(),
         crate::launcher::patches::loader_component(
@@ -45,16 +45,38 @@ pub async fn get_optimal_jre_key(
         .directories
         .instances_dir()
         .join(&context.instance.path);
-    let applied_patches = crate::launcher::patches::patch_version_info(
+    let patches = crate::launcher::patches::patch_version_info(
         &instance_path,
         &mut version_info,
         &context.applied_content_set.game_version,
     )?;
+    Ok((
+        context,
+        crate::launcher::required_java_major(&version_info, &patches),
+    ))
+}
+
+pub async fn get_optimal_jre_key(
+    instance_id: &str,
+) -> crate::Result<Option<JavaVersion>> {
+    let state = State::get().await?;
+    let (context, java_major) =
+        resolve_launch_version_info(instance_id, &state).await?;
 
     crate::launcher::get_java_version_from_launch_context(
         &context,
-        crate::launcher::required_java_major(&version_info, &applied_patches),
+        java_major,
         &state.pool,
     )
     .await
+}
+
+pub async fn get_recommended_java_version(
+    instance_id: &str,
+) -> crate::Result<u32> {
+    let state = State::get().await?;
+    let (_, java_major) =
+        resolve_launch_version_info(instance_id, &state).await?;
+
+    Ok(java_major)
 }

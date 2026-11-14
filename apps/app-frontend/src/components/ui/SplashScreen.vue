@@ -45,7 +45,7 @@
  * so it is the same colour as what it uncovers, and the cube behind it is
  * grey so that the accent is the only colour on it.
  */
-import { injectLoadingState } from '@modrinth/ui'
+import { defineMessages, injectLoadingState, useVIntl } from '@modrinth/ui'
 import { onMounted, ref, useTemplateRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -62,6 +62,13 @@ const doneLoading = ref(false)
 /** Set only when there is a real fraction to show; the crawl stands in otherwise. */
 const realProgress = ref(null)
 const message = ref()
+const { formatMessage } = useVIntl()
+const messages = defineMessages({
+	movingAppDirectory: {
+		id: 'app.splash.moving-app-directory',
+		defaultMessage: 'Moving your app directory...',
+	},
+})
 
 const MIN_DISPLAY_MS = 500
 const FADE_MS = 420
@@ -156,7 +163,7 @@ router.isReady().then(
 useAppEvent('loading', (e) => {
 	if (e.event.type === 'directory_move') {
 		realProgress.value = 100 * (e.fraction ?? 1)
-		message.value = 'Updating app directory...'
+		message.value = formatMessage(messages.movingAppDirectory)
 	}
 })
 </script>

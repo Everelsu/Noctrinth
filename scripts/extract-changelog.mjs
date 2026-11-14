@@ -70,7 +70,7 @@ ${button('macos', 'macOS', `Noctrinth_${version}_universal.dmg`)}
 ${button('linux', 'Linux', `Noctrinth_${version}_amd64.AppImage`)}
 </p>
 
-<p align="center"><a href="${SITE}/news/">News</a> · <a href="${SITE}/changelog/#v${versionArg}">Changelog</a> · <a href="${download(`Noctrinth_${version}_amd64.deb`)}">Linux .deb</a></p>
+<p align="center"><a href="${SITE}/news/">News</a> · <a href="${SITE}/changelog/#v${versionArg}">Changelog</a> · <a href="${download(`Noctrinth_${version}_amd64.deb`)}">Linux x64 .deb</a> · <a href="${download(`Noctrinth_${version}_arm64-setup.exe`)}">Windows ARM64</a> · <a href="${download(`Noctrinth_${version}_aarch64.AppImage`)}">Linux ARM64 AppImage</a> · <a href="${download(`Noctrinth_${version}_arm64.deb`)}">Linux ARM64 .deb</a></p>
 
 ---
 

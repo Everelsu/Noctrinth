@@ -452,7 +452,7 @@ function createLibraryState(instances: Ref<GameInstance[]>) {
 	)
 
 	const allLibraryInstances = computed<LibraryInstance[]>(() => [
-		...instances.value,
+		...instances.value.filter((instance) => !instance.launch_blocked),
 		...uninstalledSharedInstances.value,
 	])
 

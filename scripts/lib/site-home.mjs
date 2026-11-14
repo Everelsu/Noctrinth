@@ -171,6 +171,9 @@ export function renderHome({ version, articles }) {
 	const asset = (name) => `${REPO}/releases/latest/download/${name}`
 	const downloads = {
 		windows: asset(`Noctrinth_${version}_x64-setup.exe`),
+		windowsArm: asset(`Noctrinth_${version}_arm64-setup.exe`),
+		appimageArm: asset(`Noctrinth_${version}_aarch64.AppImage`),
+		debArm: asset(`Noctrinth_${version}_arm64.deb`),
 		macos: asset(`Noctrinth_${version}_universal.dmg`),
 		appimage: asset(`Noctrinth_${version}_amd64.AppImage`),
 		deb: asset(`Noctrinth_${version}_amd64.deb`),
@@ -220,10 +223,13 @@ export function renderHome({ version, articles }) {
 					<small id="download-label">Windows · v${version}</small>
 				</a>
 				<div class="download__others">
-					<a class="btn" href="${downloads.windows}" data-os="windows">Windows</a>
+					<a class="btn" href="${downloads.windows}" data-os="windows">Windows x64</a>
+					<a class="btn" href="${downloads.windowsArm}" data-os="windowsArm">Windows ARM64</a>
 					<a class="btn" href="${downloads.macos}" data-os="macos">macOS</a>
-					<a class="btn" href="${downloads.appimage}" data-os="appimage">Linux AppImage</a>
-					<a class="btn" href="${downloads.deb}" data-os="deb">Linux .deb</a>
+					<a class="btn" href="${downloads.appimage}" data-os="appimage">Linux x64 AppImage</a>
+					<a class="btn" href="${downloads.appimageArm}" data-os="appimageArm">Linux ARM64 AppImage</a>
+					<a class="btn" href="${downloads.deb}" data-os="deb">Linux x64 .deb</a>
+					<a class="btn" href="${downloads.debArm}" data-os="debArm">Linux ARM64 .deb</a>
 					<a class="btn" href="${REPO}/releases" rel="noopener">${t('All releases', 'Все релизы')}</a>
 				</div>
 			</div>
@@ -284,7 +290,7 @@ function downloadScript(version) {
 			.then(function (r) { return r.ok ? r.json() : null; })
 			.then(function (release) {
 				if (!release || !release.assets) return;
-				var patterns = { windows: /setup\\.exe$/, macos: /\\.dmg$/, appimage: /\\.AppImage$/, deb: /\\.deb$/ };
+				var patterns = { windowsArm: /_arm64-setup\\.exe$/, windows: /_x64-setup\\.exe$/, macos: /\\.dmg$/, appimage: /_amd64\\.AppImage$/, appimageArm: /_aarch64\\.AppImage$/, deb: /_amd64\\.deb$/, debArm: /_arm64\\.deb$/ };
 				for (var key in patterns) {
 					var asset = release.assets.filter(function (a) { return patterns[key].test(a.name); })[0];
 					var link = document.querySelector('[data-os="' + key + '"]');

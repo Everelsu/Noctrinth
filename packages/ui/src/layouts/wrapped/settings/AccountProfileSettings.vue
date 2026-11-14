@@ -354,16 +354,10 @@ async function save(): Promise<void> {
 		auth.user.value = refreshedUser
 		syncFromUser(refreshedUser)
 	} catch (error) {
-		// Carry the underlying reason through: without it every failure —
-		// oversized image, rejected username, dropped connection — looked
-		// identical and left nothing to act on.
-		const reason = error instanceof Error ? error.message : String(error)
 		notificationManager.addNotification({
 			type: 'error',
 			title: formatMessage(messages.saveError),
-			text: reason
-				? `${formatMessage(messages.saveErrorDescription)} ${reason}`
-				: formatMessage(messages.saveErrorDescription),
+			text: error instanceof Error ? error.message : formatMessage(messages.saveErrorDescription),
 		})
 	} finally {
 		saving.value = false

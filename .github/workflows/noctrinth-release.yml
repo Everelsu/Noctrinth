@@ -80,6 +80,10 @@ jobs:
             args: '--features updater'
           - platform: windows-latest
             args: '--features updater'
+          - platform: ubuntu-22.04-arm
+            args: '--features updater'
+          - platform: windows-11-arm
+            args: '--features updater --target aarch64-pc-windows-msvc'
 
     runs-on: ${{ matrix.platform }}
 
@@ -97,7 +101,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Install Linux dependencies
-        if: matrix.platform == 'ubuntu-22.04'
+        if: startsWith(matrix.platform, 'ubuntu-22.04')
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -131,6 +135,10 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Add Windows ARM64 target
+        if: matrix.platform == 'windows-11-arm'
+        run: rustup target add aarch64-pc-windows-msvc
 
       - name: Add macOS universal targets
         if: matrix.platform == 'macos-latest'
@@ -225,7 +233,7 @@ jobs:
           args: ${{ matrix.args }}
 
       - name: Verify Linux bundles declare their bundle type
-        if: matrix.platform == 'ubuntu-22.04'
+        if: startsWith(matrix.platform, 'ubuntu-22.04')
         shell: bash
         run: |
           set -eo pipefail

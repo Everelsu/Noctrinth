@@ -146,12 +146,16 @@ pub fn required_java_major(
     version_info: &VersionInfo,
     patches: &patches::AppliedPatches,
 ) -> u32 {
-    patches.preferred_java_major().unwrap_or_else(|| {
-        version_info
-            .java_version
-            .as_ref()
-            .map_or(8, |it| it.major_version)
-    })
+    patches
+        .preferred_java_major()
+        .unwrap_or_else(|| get_recommended_java_major_version(version_info))
+}
+
+pub fn get_recommended_java_major_version(version_info: &VersionInfo) -> u32 {
+    version_info
+        .java_version
+        .as_ref()
+        .map_or(8, |it| it.major_version)
 }
 
 pub async fn get_java_version_from_launch_context(
@@ -378,7 +382,7 @@ pub async fn resolve_minecraft_manifest(
         return Ok((minecraft, idx));
     }
 
-    // Version not found in cache — force a manifest refresh in case it was
+    // Version not found in cache вЂ” force a manifest refresh in case it was
     // released after the cache was populated.
     let refreshed = crate::state::CachedEntry::get_minecraft_manifest(
         Some(crate::state::CacheBehaviour::MustRevalidate),

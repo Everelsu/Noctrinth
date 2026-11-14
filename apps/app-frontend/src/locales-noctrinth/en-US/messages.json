@@ -843,7 +843,7 @@
 		"message": "Show Noctrinth as your current activity on Discord. This does not affect Rich Presence added to instances by mods. Requires an app restart."
 	},
 	"app.settings.resource-management.app-directory.description": {
-		"message": "Where Noctrinth stores instances and other files. Changes take effect after restarting the app."
+		"message": "Where Noctrinth stores instances and other files."
 	},
 	"app.settings.tabs.changelog": {
 		"message": "Changelog"
@@ -1281,7 +1281,7 @@
 		"message": "Java version"
 	},
 	"instance.settings.tabs.java.modern-java-version-hint": {
-		"message": "Picking a version downloads it and pins it as this instance’s Java installation. The lowest one is the best tested; newer ones are supported but less proven with mods for this Minecraft version."
+		"message": "Picking a version downloads it. Select Save to use it for this instance. The lowest version is the best tested; newer ones are supported but less proven with mods for this Minecraft version."
 	},
 	"minecraft-account.add-ely-account": {
 		"message": "Add Ely.by account"

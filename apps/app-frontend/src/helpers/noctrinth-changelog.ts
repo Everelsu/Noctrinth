@@ -42,6 +42,38 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.23.3',
+		date: '2026-11-15T00:00:00+00:00',
+		body: `### Added
+- Windows and Linux ARM64 builds alongside existing x64 builds and the universal macOS build.
+- Reset buttons, a save and discard bar, and the recommended Java version in instance settings.
+- Relinking an instance to a shared instance from advanced installation settings.
+
+### Changed
+- Updated to Modrinth App 0.23.3 with the fixes and settings changes from 0.23.2.
+- Redesigned the Java picker and app directory settings, with verified file copying and a choice of when to move.
+- Translated new interface messages and the Modrinth App 0.23.2 changelog into Russian, and updated older settings translations.
+
+### Fixed
+- Installing many mods waits for the local API quota to recover instead of immediately reporting too many requests.
+- The active tab indicator keeps animating when switching to Servers in Explore.
+- Preserved Noctrinth's Java providers, runtime management, GPU preferences and Modern Java with the new settings.`,
+		body_ru: `### Добавлено
+- Сборки для Windows и Linux ARM64 в дополнение к существующим x64 и универсальной сборке macOS.
+- Кнопки сброса, панель сохранения и отмены изменений и рекомендуемая версия Java в настройках сборки.
+- Восстановление связи с общей сборкой в расширенных настройках установки.
+
+### Изменено
+- Обновление до Modrinth App 0.23.3 с исправлениями и изменениями настроек из 0.23.2.
+- Переработаны выбор Java и настройки папки приложения: проверка скопированных файлов и выбор времени переноса.
+- Переведены новые строки интерфейса и список изменений Modrinth App 0.23.2; уточнены старые переводы настроек.
+
+### Исправлено
+- При установке множества модов приложение дожидается восстановления локальной квоты API вместо немедленной ошибки о слишком частых запросах.
+- Индикатор активной вкладки продолжает анимироваться при переключении на «Серверы» в разделе «Обзор».
+- В новых настройках сохранены провайдеры Java, управление средами выполнения, выбор GPU и Modern Java.`,
+	},
+	{
 		version: '0.23.1',
 		date: '2026-11-08T06:04:22+00:00',
 		body: `### Added

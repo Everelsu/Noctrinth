@@ -11,7 +11,15 @@ import {
 } from '@/helpers/instance'
 import { loadInstanceContentData } from '@/helpers/instance-content'
 import { get_by_instance_id } from '@/helpers/process'
+import type { GameInstance } from '@/helpers/types'
 import { refreshWorlds } from '@/helpers/worlds'
+import { getRecommendedJavaVersion } from '@/platform/app-lib/instances/commands'
+import { refreshSharedInstanceLock } from '@/platform/app-lib/shared-instances/commands'
+
+type RecommendedJavaInstance = Pick<
+	GameInstance,
+	'id' | 'game_version' | 'loader' | 'loader_version'
+>
 
 export const instanceKeys = {
 	all: ['instances'] as const,
@@ -38,7 +46,16 @@ export const instanceKeys = {
 		[...instanceKeys.detail(instanceId), 'shared-update-preview'] as const,
 	sharedUpdatePreview: (instanceId: string, userId: string | null | undefined) =>
 		[...instanceKeys.sharedUpdatePreviews(instanceId), userId] as const,
+	sharedLock: (instanceId: string) => ['sharedInstanceLock', instanceId] as const,
 	sharedMembers: (instanceId: string) => ['sharedInstanceUsers', instanceId] as const,
+	recommendedJava: (instance: RecommendedJavaInstance) =>
+		[
+			...instanceKeys.detail(instance.id),
+			'recommended-java',
+			instance.game_version,
+			instance.loader,
+			instance.loader_version ?? null,
+		] as const,
 }
 
 export const screenshotKeys = {
@@ -84,6 +101,15 @@ export function screenshotGroupsQueryOptions() {
 	})
 }
 
+export function instanceRecommendedJavaQueryOptions(instance: RecommendedJavaInstance) {
+	return queryOptions({
+		queryKey: instanceKeys.recommendedJava(instance),
+		networkMode: 'always',
+		queryFn: () => getRecommendedJavaVersion(instance.id),
+		staleTime: Infinity,
+	})
+}
+
 export function instanceDetailQueryOptions(instanceId: string) {
 	return queryOptions({
 		queryKey: instanceKeys.detail(instanceId),
@@ -116,6 +142,17 @@ export function sharedInstanceUpdatePreviewQueryOptions(
 	return queryOptions({
 		queryKey: instanceKeys.sharedUpdatePreview(instanceId, userId),
 		queryFn: () => install_get_shared_instance_update_preview(instanceId),
+		retry: false,
+		staleTime: 30_000,
+		refetchOnWindowFocus: 'always',
+		refetchInterval: 60_000,
+	})
+}
+
+export function sharedInstanceLockQueryOptions(instanceId: string) {
+	return queryOptions({
+		queryKey: instanceKeys.sharedLock(instanceId),
+		queryFn: () => refreshSharedInstanceLock(instanceId),
 		retry: false,
 		staleTime: 30_000,
 		refetchOnWindowFocus: 'always',

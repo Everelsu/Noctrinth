@@ -1401,7 +1401,7 @@
 		"message": "Показывать Noctrinth в текущей активности Discord. Не влияет на Rich Presence, который добавляют моды. Требуется перезапуск."
 	},
 	"app.settings.resource-management.app-directory.description": {
-		"message": "Здесь Noctrinth хранит сборки и другие файлы. Изменения вступят в силу после перезапуска."
+		"message": "Где Noctrinth хранит сборки и другие файлы."
 	},
 	"app.settings.tabs.changelog": {
 		"message": "Список изменений"
@@ -1899,7 +1899,7 @@
 		"message": "Версия Java"
 	},
 	"instance.settings.tabs.java.modern-java-version-hint": {
-		"message": "Выбор версии скачает её и закрепит за этой сборкой. Самая младшая обкатана лучше всех; новые поддерживаются, но с модами этой версии Minecraft проверены меньше."
+		"message": "При выборе версия скачивается. Нажмите «Сохранить», чтобы использовать её в этой сборке. Самая младшая версия проверена лучше всего; более новые поддерживаются, но меньше проверены с модами для этой версии Minecraft."
 	},
 	"minecraft-account.add-ely-account": {
 		"message": "Добавить аккаунт Ely.by"
@@ -2386,5 +2386,17 @@
 	},
 	"app.appearance-settings.accent.custom.hex": {
 		"message": "Цвет в HEX"
+	},
+	"instance.settings.tabs.java.environment-variables": {
+		"message": "Переменные окружения"
+	},
+	"instance.settings.tabs.java.java-arguments": {
+		"message": "Аргументы Java"
+	},
+	"instance.settings.tabs.java.java-installation": {
+		"message": "Установка Java"
+	},
+	"instance.settings.tabs.java.java-memory": {
+		"message": "Выделение памяти"
 	}
 }

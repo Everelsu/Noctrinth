@@ -1,7 +1,7 @@
 [package]
 name = "theseus"
 # The actual version is set by the theseus-build workflow on tagging
-version = "0.23.1"
+version = "0.23.3"
 edition.workspace = true
 
 [[bin]]
@@ -142,6 +142,9 @@ dunce = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 cidre = { workspace = true, features = ["blocks", "nw"] }
+
+[target."cfg(unix)".dependencies]
+libc = { workspace = true }
 
 [target."cfg(windows)".dependencies]
 windows = { workspace = true, features = ["Networking_Connectivity", "Win32_Storage_FileSystem"] }

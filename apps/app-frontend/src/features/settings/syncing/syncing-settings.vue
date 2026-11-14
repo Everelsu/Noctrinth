@@ -335,7 +335,7 @@ const baseInstances = computed(() =>
 				name: instance.name,
 				icon_path: instance.icon_path,
 				eligible:
-					!instance.quarantined &&
+					!instance.content_locked &&
 					(baseOption.value !== 'multiplayer_servers' || canSourceMultiplayerServers(instance)),
 			})),
 )

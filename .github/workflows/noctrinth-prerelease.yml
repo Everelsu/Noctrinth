@@ -204,7 +204,7 @@ jobs:
           node scripts/sync-version.mjs
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install ${{ matrix.platform == 'windows-11-arm' && '--cpu=x64' || '' }}
 
       - name: Build, sign and publish
         uses: tauri-apps/tauri-action@v0

@@ -196,6 +196,14 @@ test('Windows ARM installs frontend dependencies with Node x64 and matching Core
 				matrix.platform === 'windows-11-arm' ? 'x64' : '',
 			)
 		assert.ok(nodeIndex < bindIndex && bindIndex < installIndex)
+		const install = build.steps[installIndex].run
+		assert.match(install, /--cpu=x64/)
+		const cpuExpression = /\$\{\{(.*?)\}\}/.exec(install)[1]
+		for (const matrix of build.strategy.matrix.include)
+			assert.equal(
+				vm.runInNewContext(cpuExpression, { matrix }),
+				matrix.platform === 'windows-11-arm' ? '--cpu=x64' : '',
+			)
 		assert.equal(build.steps[bindIndex].if, "matrix.platform == 'windows-11-arm'")
 		assert.match(build.steps[bindIndex].run, /corepack enable --install-directory/)
 	}

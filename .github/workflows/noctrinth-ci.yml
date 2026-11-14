@@ -161,7 +161,7 @@ jobs:
             packages/app-lib/java/gradle/wrapper/gradle-wrapper.properties
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --cpu=x64
 
       - name: Build app frontend
         run: pnpm --filter @modrinth/app-frontend run build

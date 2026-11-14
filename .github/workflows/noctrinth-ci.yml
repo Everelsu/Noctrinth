@@ -63,6 +63,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Check installer selection and updater publication
+        run: node --test scripts/lib/site-home.test.mjs scripts/release-updater.test.mjs
+
       # prepr = the project's own lint + typecheck pass (see root CLAUDE.md).
       # Libs first because the app frontend type-checks against them.
       - name: Check shared frontend libraries

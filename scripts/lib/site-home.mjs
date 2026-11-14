@@ -125,6 +125,7 @@ const FAQ = [
 ]
 
 const HOME_CSS = `
+	.download__others [hidden] { display: none; }
 	.hero { border-bottom: 1px solid var(--brand-gradient-border); background: var(--brand-gradient-bg); }
 	.hero__banner { display: block; width: 100%; height: auto; max-height: 340px; object-fit: cover; }
 	.hero__body { text-align: center; padding: 2rem 1.5rem 3rem; }
@@ -163,21 +164,17 @@ const HOME_CSS = `
 /**
  * The front page.
  *
- * `version` is the build's own, baked into the download links so they work
- * without JavaScript; the script then asks GitHub for the latest release and
- * corrects them if one has come out since.
+ * Download links point to the published release until GitHub provides the
+ * actual installers, independently of the version used to build the site.
  */
-export function renderHome({ version, articles }) {
-	const asset = (name) => `${REPO}/releases/latest/download/${name}`
-	const downloads = {
-		windows: asset(`Noctrinth_${version}_x64-setup.exe`),
-		windowsArm: asset(`Noctrinth_${version}_arm64-setup.exe`),
-		appimageArm: asset(`Noctrinth_${version}_aarch64.AppImage`),
-		debArm: asset(`Noctrinth_${version}_arm64.deb`),
-		macos: asset(`Noctrinth_${version}_universal.dmg`),
-		appimage: asset(`Noctrinth_${version}_amd64.AppImage`),
-		deb: asset(`Noctrinth_${version}_amd64.deb`),
-	}
+export function renderHome({ articles }) {
+	const releasePage = `${REPO}/releases/latest`
+	const downloads = Object.fromEntries(
+		['windows', 'windowsArm', 'macos', 'appimage', 'appimageArm', 'deb', 'debArm'].map((key) => [
+			key,
+			releasePage,
+		]),
+	)
 
 	const features = FEATURES.map(
 		(feature, index) => `
@@ -220,16 +217,16 @@ export function renderHome({ version, articles }) {
 				<a class="btn btn--brand btn--xl download__main" id="download-main" href="${downloads.windows}">
 					${icon('download')}
 					<span>${t('Download', 'Скачать')}</span>
-					<small id="download-label">Windows · v${version}</small>
+					<small id="download-label">Windows</small>
 				</a>
 				<div class="download__others">
 					<a class="btn" href="${downloads.windows}" data-os="windows">Windows x64</a>
-					<a class="btn" href="${downloads.windowsArm}" data-os="windowsArm">Windows ARM64</a>
+					<a class="btn" href="${downloads.windowsArm}" data-os="windowsArm" hidden>Windows ARM64</a>
 					<a class="btn" href="${downloads.macos}" data-os="macos">macOS</a>
 					<a class="btn" href="${downloads.appimage}" data-os="appimage">Linux x64 AppImage</a>
-					<a class="btn" href="${downloads.appimageArm}" data-os="appimageArm">Linux ARM64 AppImage</a>
+					<a class="btn" href="${downloads.appimageArm}" data-os="appimageArm" hidden>Linux ARM64 AppImage</a>
 					<a class="btn" href="${downloads.deb}" data-os="deb">Linux x64 .deb</a>
-					<a class="btn" href="${downloads.debArm}" data-os="debArm">Linux ARM64 .deb</a>
+					<a class="btn" href="${downloads.debArm}" data-os="debArm" hidden>Linux ARM64 .deb</a>
 					<a class="btn" href="${REPO}/releases" rel="noopener">${t('All releases', 'Все релизы')}</a>
 				</div>
 			</div>
@@ -260,7 +257,7 @@ export function renderHome({ version, articles }) {
 		current: 'home',
 		css: NEWS_CSS + HOME_CSS,
 		body,
-		scripts: `<script>${downloadScript(version)}</script>`,
+		scripts: `<script>${downloadScript()}</script>`,
 	})
 }
 
@@ -270,33 +267,54 @@ export function renderHome({ version, articles }) {
  * Asked of GitHub's API, which needs no key for a public repository; if it does
  * not answer, the links baked in at build time already work.
  */
-function downloadScript(version) {
+function downloadScript() {
 	return `
 	(function () {
 		var ua = (navigator.userAgent || '').toLowerCase();
 		var os = ua.indexOf('mac') !== -1 ? 'macos' : ua.indexOf('linux') !== -1 && ua.indexOf('android') === -1 ? 'appimage' : 'windows';
-		var names = { windows: 'Windows', macos: 'macOS', appimage: 'Linux', deb: 'Linux .deb' };
+		var arch = /aarch64|arm64/.test(ua) ? 'arm' : os !== 'windows' && /x86_64|amd64|x64/.test(ua) ? 'x86' : null;
+		var names = { windows: 'Windows x64', windowsArm: 'Windows ARM64', macos: 'macOS Universal', appimage: 'Linux x64', appimageArm: 'Linux ARM64' };
 		var main = document.getElementById('download-main');
 		var label = document.getElementById('download-label');
+		var available = {};
+		var version = null;
+		var releasePage = ${JSON.stringify(`${REPO}/releases/latest`)};
 
-		function apply(version) {
-			var link = document.querySelector('[data-os="' + os + '"]');
-			if (link) main.href = link.href;
-			label.textContent = names[os] + ' · v' + version;
+		function apply() {
+			var key = os === 'macos' ? os : arch === 'arm' ? os + 'Arm' : arch === 'x86' ? os : null;
+			main.href = key && available[key] ? available[key] : releasePage;
+			label.textContent = (key ? names[key] : os === 'windows' ? 'Windows' : 'Linux') + (key && available[key] && version ? ' · v' + version : '');
 		}
-		apply(${JSON.stringify(version)});
+		apply();
+
+		if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+			navigator.userAgentData.getHighEntropyValues(['architecture', 'bitness'])
+				.then(function (data) {
+					if (data.architecture === 'arm' || data.architecture === 'x86') {
+						arch = data.bitness === '64' ? data.architecture : null;
+						apply();
+					}
+				})
+				.catch(function () {});
+		}
 
 		fetch('https://api.github.com/repos/Everelsu/Noctrinth/releases/latest')
 			.then(function (r) { return r.ok ? r.json() : null; })
 			.then(function (release) {
-				if (!release || !release.assets) return;
-				var patterns = { windowsArm: /_arm64-setup\\.exe$/, windows: /_x64-setup\\.exe$/, macos: /\\.dmg$/, appimage: /_amd64\\.AppImage$/, appimageArm: /_aarch64\\.AppImage$/, deb: /_amd64\\.deb$/, debArm: /_arm64\\.deb$/ };
+				if (!release || !Array.isArray(release.assets)) return;
+				releasePage = release.html_url || releasePage;
+				version = String(release.tag_name || '').replace(/^(?:noctrinth-)?v/, '');
+				var patterns = { windowsArm: /_arm64-setup\\.exe$/, windows: /_x64-setup\\.exe$/, macos: /_universal\\.dmg$/, appimage: /_amd64\\.AppImage$/, appimageArm: /_aarch64\\.AppImage$/, deb: /_amd64\\.deb$/, debArm: /_arm64\\.deb$/ };
 				for (var key in patterns) {
-					var asset = release.assets.filter(function (a) { return patterns[key].test(a.name); })[0];
+					var asset = release.assets.find(function (a) { return patterns[key].test(a.name); });
 					var link = document.querySelector('[data-os="' + key + '"]');
-					if (asset && link) link.href = asset.browser_download_url;
+					if (asset) available[key] = asset.browser_download_url;
+					if (link) {
+						link.hidden = !asset;
+						link.href = asset ? asset.browser_download_url : releasePage;
+					}
 				}
-				apply(String(release.tag_name || '').replace(/^v/, '') || ${JSON.stringify(version)});
+				apply();
 			})
 			.catch(function () {});
 	})();`

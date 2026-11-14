@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Extract a single Noctrinth changelog entry so the release workflow can use it
-// as the GitHub release notes, under the banner and download buttons for that
+// as the GitHub release notes, under the banner and download table for that
 // release's own files. `TAG` in the environment names the release (the
 // workflows set it); without it the tag is taken to be `v<version>`.
 //
@@ -59,18 +59,27 @@ const tag = process.env.TAG || `v${version}`
 const raw = (path) => `https://raw.githubusercontent.com/${REPO}/main/${path}`
 const download = (name) => `https://github.com/${REPO}/releases/download/${tag}/${name}`
 
-const button = (os, label, file) =>
-	`<a href="${download(file)}"><img src="${raw(`.github/assets/readme/download-${os}.svg`)}" alt="Download for ${label}" height="56"></a>`
-
+const installers = [
+	['Windows', 'x64 (Intel / AMD)', '.exe', `Noctrinth_${version}_x64-setup.exe`],
+	['Windows', 'ARM64', '.exe', `Noctrinth_${version}_arm64-setup.exe`],
+	['macOS', 'Universal (Intel / Apple Silicon)', '.dmg', `Noctrinth_${version}_universal.dmg`],
+	['Linux', 'x64 (Intel / AMD)', 'AppImage', `Noctrinth_${version}_amd64.AppImage`],
+	['Linux', 'x64 (Intel / AMD)', '.deb', `Noctrinth_${version}_amd64.deb`],
+	['Linux', 'ARM64', 'AppImage', `Noctrinth_${version}_aarch64.AppImage`],
+	['Linux', 'ARM64', '.deb', `Noctrinth_${version}_arm64.deb`],
+]
+const assets = process.env.RELEASE_ASSETS ? new Set(JSON.parse(process.env.RELEASE_ASSETS)) : null
+const rows = installers
+	.filter(([, , , file]) => !assets || assets.has(file))
+	.map(([os, arch, format, file]) => `| ${os} | ${arch} | [${format}](${download(file)}) |`)
+	.join('\n')
 const header = `<p align="center"><img src="${raw('.github/assets/noctrinth-banner.svg')}" alt="Noctrinth" width="100%"></p>
 
-<p align="center">
-${button('windows', 'Windows', `Noctrinth_${version}_x64-setup.exe`)}
-${button('macos', 'macOS', `Noctrinth_${version}_universal.dmg`)}
-${button('linux', 'Linux', `Noctrinth_${version}_amd64.AppImage`)}
-</p>
+| System | Architecture | Download |
+| --- | --- | --- |
+${rows}
 
-<p align="center"><a href="${SITE}/news/">News</a> · <a href="${SITE}/changelog/#v${versionArg}">Changelog</a> · <a href="${download(`Noctrinth_${version}_amd64.deb`)}">Linux x64 .deb</a> · <a href="${download(`Noctrinth_${version}_arm64-setup.exe`)}">Windows ARM64</a> · <a href="${download(`Noctrinth_${version}_aarch64.AppImage`)}">Linux ARM64 AppImage</a> · <a href="${download(`Noctrinth_${version}_arm64.deb`)}">Linux ARM64 .deb</a></p>
+[News](${SITE}/news/) · [Changelog](${SITE}/changelog/#v${versionArg})
 
 ---
 

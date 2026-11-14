@@ -51,6 +51,8 @@ on:
       # builds that would fight over the same GitHub release.
       - '!v*-*'
       - '!noctrinth-v*-*'
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       tag:
@@ -62,11 +64,12 @@ on:
         default: false
 
 concurrency:
-  group: noctrinth-release-${{ github.ref }}
+  group: noctrinth-release-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   release:
+    if: github.event_name != 'release'
     permissions:
       contents: write
 
@@ -323,11 +326,8 @@ jobs:
 
           exit "$failed"
 
-  # Moves the updater manifest off the release page: `latest.json` is committed
-  # to the `updater` branch and, together with the `.sig` signature files, is
-  # removed from the release so only the actual installers remain visible.
   finalize:
-    name: Publish updater manifest
+    name: Prepare release notes
     needs: release
     runs-on: ubuntu-24.04
     permissions:
@@ -340,6 +340,7 @@ jobs:
       - name: Set release notes from Noctrinth changelog
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
           TAG: ${{ github.event.inputs.tag || github.ref_name }}
         shell: bash
         run: |
@@ -353,6 +354,8 @@ jobs:
           # Pull the matching entry out of noctrinth-changelog.ts. If there
           # isn't one we leave the auto-generated body alone rather than fail
           # the whole release pipeline.
+          RELEASE_ASSETS=$(gh release view "$TAG" --json assets --jq '[.assets[].name]')
+          export RELEASE_ASSETS
           if node scripts/extract-changelog.mjs "$VERSION" RELEASE_BODY.md; then
             echo "Updating release body for $TAG"
             gh release edit "$TAG" --notes-file RELEASE_BODY.md
@@ -360,16 +363,58 @@ jobs:
             echo "::warning::No changelog entry for $VERSION — release body left as-is"
           fi
 
+  publish-updater:
+    name: Publish updater for public release
+    needs: [release, finalize]
+    if: >-
+      always() && !cancelled() &&
+      ((github.event_name == 'release' && github.event.release.prerelease == false) ||
+       (needs.finalize.result == 'success' && github.event.inputs.micropatch == 'true'))
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    concurrency:
+      group: noctrinth-updater
+      cancel-in-progress: false
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      TAG: ${{ github.event.release.tag_name || github.event.inputs.tag || github.ref_name }}
+    steps:
+      - name: Checkout release source
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.release.tag_name || github.sha }}
+
       - name: Relocate updater manifest and strip signatures
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ github.event.inputs.tag || github.ref_name }}
         run: |
           set -euo pipefail
+
+          gh release view "$TAG" --json isDraft,isPrerelease,assets > release.json
+          jq -e '.isDraft == false and .isPrerelease == false' release.json > /dev/null
+          latest=$(gh api "repos/$GH_REPO/releases/latest" --jq .tag_name)
+          if [ "$latest" != "$TAG" ]; then
+            echo "Skipping $TAG: latest stable release is $latest"
+            exit 0
+          fi
 
           # Grab the updater manifest produced by the build jobs.
           mkdir -p manifest
           gh release download "$TAG" --pattern latest.json --dir manifest --clobber
+
+          DECLARED=$(tr -d "[:space:]" < VERSION)
+          BASE_VERSION=${DECLARED%%+*}
+          jq -e --arg version "$BASE_VERSION" --slurpfile release release.json '
+            .version == $version and
+            (.platforms as $platforms |
+              ["windows-x86_64", "windows-aarch64", "linux-x86_64", "linux-aarch64", "darwin-x86_64", "darwin-aarch64",
+               "windows-x86_64-nsis", "windows-aarch64-nsis", "linux-x86_64-appimage", "linux-aarch64-appimage",
+               "linux-x86_64-deb", "linux-aarch64-deb", "darwin-x86_64-app", "darwin-aarch64-app"] |
+              all(. as $key | $platforms[$key] != null)) and
+            (.platforms | to_entries | all(.value as $platform |
+              ($platform.signature | type == "string" and length > 0) and
+              any($release[0].assets[]; .url == $platform.url)))
+          ' manifest/latest.json > /dev/null
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"

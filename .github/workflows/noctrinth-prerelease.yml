@@ -237,6 +237,8 @@ jobs:
           # which has an entry of its own; the script reads both.
           VERSION=$(tr -d "[:space:]" < VERSION)
 
+          RELEASE_ASSETS=$(gh release view "$TAG" --json assets --jq '[.assets[].name]')
+          export RELEASE_ASSETS
           if node scripts/extract-changelog.mjs "$VERSION" RELEASE_BODY.md; then
             echo "Updating release body for $TAG"
           else

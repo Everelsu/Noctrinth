@@ -126,3 +126,46 @@ jobs:
       # its test target, so running them costs a link and nothing else.
       - name: Run app unit tests
         run: cargo test -p theseus_gui
+
+  windows-arm-build-tools:
+    name: Windows ARM build tools
+    runs-on: windows-11-arm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          architecture: x64
+          cache: pnpm
+
+      - name: Bind Corepack to Node x64
+        run: |
+          corepack enable --install-directory (Split-Path -Parent (Get-Command node).Source)
+          node -e "if (process.arch !== 'x64') throw new Error('Expected Node x64 for build dependencies')"
+
+      - name: Setup Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+          architecture: x64
+          cache: gradle
+          cache-dependency-path: |
+            packages/app-lib/java/*.gradle*
+            packages/app-lib/java/gradle/wrapper/gradle-wrapper.properties
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build app frontend
+        run: pnpm --filter @modrinth/app-frontend run build
+
+      - name: Build Java helpers
+        working-directory: packages/app-lib/java
+        run: ./gradlew.bat build --no-daemon

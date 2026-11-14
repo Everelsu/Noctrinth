@@ -136,7 +136,15 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
+          # workerd and other build dependencies do not support Windows ARM64.
+          architecture: ${{ matrix.platform == 'windows-11-arm' && 'x64' || '' }}
           cache: pnpm
+
+      - name: Bind Corepack to Node x64
+        if: matrix.platform == 'windows-11-arm'
+        run: |
+          corepack enable --install-directory (Split-Path -Parent (Get-Command node).Source)
+          node -e "if (process.arch !== 'x64') throw new Error('Expected Node x64 for build dependencies')"
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable

@@ -179,3 +179,24 @@ test('Windows ARM uses a Java 17 x64 build tool while Rust still targets ARM64',
 		}
 	}
 })
+
+test('Windows ARM installs frontend dependencies with Node x64 and matching Corepack shims', () => {
+	for (const file of ['noctrinth-release.yml', 'noctrinth-prerelease.yml']) {
+		const release = parse(
+			readFileSync(new URL('../.github/workflows/' + file, import.meta.url), 'utf8'),
+		)
+		const build = Object.values(release.jobs).find((job) => job.strategy?.matrix?.include)
+		const nodeIndex = build.steps.findIndex((step) => step.uses?.startsWith('actions/setup-node@'))
+		const bindIndex = build.steps.findIndex((step) => step.name === 'Bind Corepack to Node x64')
+		const installIndex = build.steps.findIndex((step) => step.name === 'Install dependencies')
+		const expression = build.steps[nodeIndex].with.architecture.slice(3, -2).trim()
+		for (const matrix of build.strategy.matrix.include)
+			assert.equal(
+				vm.runInNewContext(expression, { matrix }),
+				matrix.platform === 'windows-11-arm' ? 'x64' : '',
+			)
+		assert.ok(nodeIndex < bindIndex && bindIndex < installIndex)
+		assert.equal(build.steps[bindIndex].if, "matrix.platform == 'windows-11-arm'")
+		assert.match(build.steps[bindIndex].run, /corepack enable --install-directory/)
+	}
+})

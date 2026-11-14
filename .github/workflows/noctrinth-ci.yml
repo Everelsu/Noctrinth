@@ -164,7 +164,7 @@ jobs:
         run: pnpm install --cpu=x64
 
       - name: Build app frontend
-        run: pnpm --filter @modrinth/app-frontend run build
+        run: pnpm turbo run build --filter=@modrinth/app-frontend
 
       - name: Build Java helpers
         working-directory: packages/app-lib/java

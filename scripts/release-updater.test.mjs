@@ -208,3 +208,28 @@ test('Windows ARM installs frontend dependencies with Node x64 and matching Core
 		assert.match(build.steps[bindIndex].run, /corepack enable --install-directory/)
 	}
 })
+
+test('ARM build preflight uses the same frontend preparation as Tauri packaging', () => {
+	const ci = parse(
+		readFileSync(new URL('../.github/workflows/noctrinth-ci.yml', import.meta.url), 'utf8'),
+	).jobs['windows-arm-build-tools']
+	const tauri = JSON.parse(
+		readFileSync(new URL('../apps/app/tauri.conf.json', import.meta.url), 'utf8'),
+	)
+	assert.equal(
+		ci.steps.find((step) => step.name === 'Build app frontend').run,
+		tauri.build.beforeBuildCommand,
+	)
+	assert.equal(
+		ci.steps.find((step) => step.name === 'Install dependencies').run,
+		'pnpm install --cpu=x64',
+	)
+	assert.equal(
+		ci.steps.find((step) => step.uses?.startsWith('actions/setup-node@')).with.architecture,
+		'x64',
+	)
+	assert.equal(
+		ci.steps.find((step) => step.uses?.startsWith('actions/setup-java@')).with.architecture,
+		'x64',
+	)
+})

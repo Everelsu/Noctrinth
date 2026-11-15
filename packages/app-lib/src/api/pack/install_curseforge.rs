@@ -10,18 +10,20 @@
 //!      creation-modal preview) knows the pack name, Minecraft version and
 //!      loader up-front,
 //!   2. `install_curseforge_pack_files_with_reporter` resolves every mod file
-//!      through the CurseForge API, downloads them concurrently, records each
-//!      as `CurseForge`-sourced content, extracts `overrides/`, and installs
-//!      Minecraft — reporting phase/progress through the job reporter. Files
-//!      whose author does not allow launcher downloads are left to
+//!      through the CurseForge API, extracts bundled content, reuses verified
+//!      files and downloads only missing ones, records their CurseForge source,
+//!      and installs Minecraft — reporting phase/progress through the job reporter.
+//!      Files whose author does not allow launcher downloads are left to
 //!      `curseforge_blocked`, which looks for them on disk and otherwise
 //!      leaves them for the user to download by hand.
 //!
 //! The pure zip-inspection helpers are also used by `install_from.rs` and the
 //! job runner to route a dropped `.zip` to the right format.
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
+use std::future::Future;
 use std::io::Cursor;
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -158,6 +160,28 @@ impl CfFileData {
             .map(|h| h.value.as_str())
     }
 
+    fn matches_bytes(&self, bytes: &[u8]) -> bool {
+        if self
+            .file_length
+            .is_some_and(|length| length > 0 && length != bytes.len() as u64)
+        {
+            return false;
+        }
+        if let Some(expected) = self.sha1() {
+            return expected.eq_ignore_ascii_case(
+                &sha1_smol::Sha1::from(bytes).hexdigest(),
+            );
+        }
+        if let Some(hash) = self.hashes.iter().find(|hash| hash.algo == 2) {
+            use md5::Digest;
+            return hash.value.eq_ignore_ascii_case(&format!(
+                "{:x}",
+                md5::Md5::digest(bytes)
+            ));
+        }
+        false
+    }
+
     /// The file as one its author does not let launchers download, to be
     /// looked for on disk instead.
     fn as_blocked(&self) -> crate::api::curseforge_blocked::BlockedFile {
@@ -255,8 +279,8 @@ pub async fn read_curseforge_pack_meta(
 ///
 /// The full sequence: read the manifest, apply the pack's name / version /
 /// loader to the instance, resolve every file through the CurseForge API,
-/// download all files concurrently (aggregating failures into one error
-/// instead of dying on the first), extract `overrides/`, and install
+/// extract bundled files, reuse verified content or download missing files
+/// concurrently (aggregating failures into one error), and install
 /// Minecraft. The job runner rolls the instance back if any step fails.
 pub(crate) async fn install_curseforge_pack_files_with_reporter(
     pack_file: bytes::Bytes,
@@ -302,15 +326,19 @@ pub(crate) async fn install_curseforge_pack_files_with_reporter(
                 .build(),
         )
         .await?;
-    let (resolved, blocked): (Vec<_>, Vec<_>) =
-        resolve_manifest_files(&state, &manifest, curseforge_api_key)
-            .await?
-            .into_iter()
-            .partition(|file| file.download_url.is_some());
+    let resolved =
+        resolve_manifest_files(&state, &manifest, curseforge_api_key).await?;
+    let bundled = Arc::new(
+        extract_overrides(
+            &pack_file,
+            &manifest,
+            instance_id,
+            &reporter,
+            &details,
+        )
+        .await?,
+    );
 
-    // Download every resolved mod file concurrently and record each as
-    // CurseForge-sourced content. Failures are collected and reported
-    // together so the user learns about ALL broken files at once.
     let total = resolved.len() as u64;
     reporter
         .update(
@@ -330,6 +358,7 @@ pub(crate) async fn install_curseforge_pack_files_with_reporter(
         loader: pick_loader(&manifest).0.as_str().to_string(),
         dependent_on: None,
     };
+    let blocked = Arc::new(tokio::sync::Mutex::new(Vec::<CfFileData>::new()));
     let completed = Arc::new(AtomicU64::new(0));
     let failures = Arc::new(tokio::sync::Mutex::new(Vec::<String>::new()));
 
@@ -341,21 +370,26 @@ pub(crate) async fn install_curseforge_pack_files_with_reporter(
             let details = details.clone();
             let completed = completed.clone();
             let failures = failures.clone();
+            let blocked = blocked.clone();
+            let bundled = bundled.clone();
             let download_meta = download_meta.clone();
             let instance_id = instance_id.to_string();
             async move {
-                if let Err(err) = download_cf_file(
+                match install_cf_file(
                     &state,
                     &cf_file,
                     &download_meta,
                     &instance_id,
+                    &bundled,
                 )
                 .await
                 {
-                    failures
+                    Ok(true) => {}
+                    Ok(false) => blocked.lock().await.push(cf_file),
+                    Err(err) => failures
                         .lock()
                         .await
-                        .push(format!("{}: {}", cf_file.file_name, err));
+                        .push(format!("{}: {}", cf_file.file_name, err)),
                 }
                 let done = completed.fetch_add(1, Ordering::Relaxed) + 1;
                 reporter
@@ -402,6 +436,9 @@ pub(crate) async fn install_curseforge_pack_files_with_reporter(
     // Noctrinth's own: the files CurseForge will not hand a launcher are
     // looked for on disk, and whatever is not there waits for the user. The
     // pack still installs; it is the content page that says what is missing.
+    let blocked = Arc::try_unwrap(blocked)
+        .map(|mutex| mutex.into_inner())
+        .unwrap_or_default();
     if !blocked.is_empty() {
         let pending = crate::api::curseforge_blocked::settle(
             instance_id,
@@ -417,9 +454,6 @@ pub(crate) async fn install_curseforge_pack_files_with_reporter(
             );
         }
     }
-
-    extract_overrides(&pack_file, &manifest, instance_id, &reporter, &details)
-        .await?;
 
     // Noctrinth's own: a manifest has no icon field, so a pack's instance used
     // to come out blank even when the zip was carrying the pack's picture all
@@ -551,30 +585,91 @@ async fn resolve_manifest_files(
     Ok(resolved.data)
 }
 
-async fn download_cf_file(
+async fn cf_file_bytes<'a, F, Fut>(
+    file: &'a CfFileData,
+    bundled: &[PathBuf],
+    download: F,
+) -> crate::Result<Option<bytes::Bytes>>
+where
+    F: FnOnce(&'a str) -> Fut,
+    Fut: Future<Output = crate::Result<bytes::Bytes>>,
+{
+    for path in bundled {
+        if let Some(length) = file.file_length.filter(|length| *length > 0)
+            && !tokio::fs::metadata(path)
+                .await
+                .is_ok_and(|meta| meta.len() == length)
+        {
+            continue;
+        }
+        match tokio::fs::read(path).await {
+            Ok(bytes) if file.matches_bytes(&bytes) => {
+                tracing::info!(
+                    "Reusing bundled CurseForge file {} from {}",
+                    file.id,
+                    path.display()
+                );
+                return Ok(Some(bytes.into()));
+            }
+            Ok(_) => {}
+            Err(error) => tracing::warn!(
+                "Could not read bundled file {}: {error}",
+                path.display()
+            ),
+        }
+    }
+    let Some(url) = file.download_url.as_deref() else {
+        return Ok(None);
+    };
+    let bytes = download(url).await?;
+    if file
+        .file_length
+        .is_some_and(|length| length > 0 && length != bytes.len() as u64)
+        || (file.hashes.iter().any(|hash| matches!(hash.algo, 1 | 2))
+            && !file.matches_bytes(&bytes))
+    {
+        return Err(crate::ErrorKind::InputError(format!(
+            "CurseForge file {} failed its size or checksum check",
+            file.id
+        ))
+        .into());
+    }
+    Ok(Some(bytes))
+}
+
+async fn install_cf_file(
     state: &State,
     cf_file: &CfFileData,
     download_meta: &DownloadMeta,
     instance_id: &str,
-) -> crate::Result<()> {
-    let Some(url) = cf_file.download_url.as_deref() else {
-        return Err(crate::ErrorKind::InputError(format!(
-            "CurseForge gives no download URL for file {}",
-            cf_file.id
-        ))
-        .into());
-    };
-    let bytes = fetch_mirrors(
-        &[url],
-        cf_file.sha1(),
-        Some(download_meta),
-        None,
-        &state.fetch_semaphore,
-        &state.pool,
-    )
-    .await?;
-
+    bundled: &HashMap<String, Vec<PathBuf>>,
+) -> crate::Result<bool> {
     let safe_file_name = sanitize_filename(&cf_file.file_name);
+    let sha1 = cf_file.sha1().map(str::to_ascii_lowercase);
+    let expected_hash = sha1.as_deref();
+    let Some(bytes) = cf_file_bytes(
+        cf_file,
+        bundled
+            .get(&safe_file_name)
+            .map(Vec::as_slice)
+            .unwrap_or_default(),
+        |url| async move {
+            fetch_mirrors(
+                &[url],
+                expected_hash,
+                Some(download_meta),
+                None,
+                &state.fetch_semaphore,
+                &state.pool,
+            )
+            .await
+        },
+    )
+    .await?
+    else {
+        return Ok(false);
+    };
+
     let cf_project_id = cf_file.mod_id.to_string();
     let cf_file_id = cf_file.id.to_string();
     // Serialize the DB-and-filesystem bookkeeping while the downloads above
@@ -585,7 +680,7 @@ async fn download_cf_file(
         instance_id,
         &safe_file_name,
         bytes,
-        cf_file.sha1(),
+        expected_hash,
         None,
         // The pack's own, as against a CurseForge mod the user adds later —
         // which is what tells the pack's content list from everything beside
@@ -596,7 +691,7 @@ async fn download_cf_file(
         state,
     )
     .await?;
-    Ok(())
+    Ok(true)
 }
 
 /// Noctrinth's own: names a CurseForge pack ships its own picture under, in
@@ -733,15 +828,37 @@ async fn apply_pack_icon(
     Ok(())
 }
 
-/// Extract the modpack's overrides folder into the instance directory,
-/// reporting extraction progress through the job reporter.
+fn pack_entry_path(
+    name: &str,
+    prefixes: &[String],
+) -> crate::Result<Option<String>> {
+    if name.ends_with('/') {
+        return Ok(None);
+    }
+    let relative = prefixes
+        .iter()
+        .find_map(|prefix| name.strip_prefix(&format!("{prefix}/")))
+        .or_else(|| {
+            crate::state::content_store::is_managed_content_path(name)
+                .then_some(name)
+        });
+    let Some(relative) = relative else {
+        return Ok(None);
+    };
+    SafeRelativeUtf8UnixPathBuf::try_from(name.to_string())?;
+    SafeRelativeUtf8UnixPathBuf::try_from(relative.to_string())?;
+    Ok(Some(crate::util::io::sanitize_relative_path(relative)))
+}
+
+/// Extract overrides and root content into the instance directory, returning
+/// candidate files for verified reuse while reporting preparation progress.
 async fn extract_overrides(
     pack_file: &bytes::Bytes,
     manifest: &CfManifest,
     instance_id: &str,
     reporter: &InstallProgressReporter,
     details: &InstallPhaseDetails,
-) -> crate::Result<()> {
+) -> crate::Result<HashMap<String, Vec<PathBuf>>> {
     let instance_dir = crate::api::instance::get_full_path(instance_id).await?;
     let mut zip_reader = ZipFileReader::with_tokio(Cursor::new(pack_file))
         .await
@@ -763,28 +880,22 @@ async fn extract_overrides(
     {
         override_prefixes.push(custom);
     }
-    let matches_prefix = |name: &str| {
-        override_prefixes
-            .iter()
-            .any(|p| name.starts_with(&format!("{p}/")))
-    };
+    let mut override_entries = Vec::new();
+    for (index, file) in zip_reader.file().entries().iter().enumerate() {
+        if let Some(relative) = pack_entry_path(
+            file.filename().as_str().unwrap_or_default(),
+            &override_prefixes,
+        )? {
+            override_entries.push((index, relative));
+        }
+    }
+    let mut bundled: HashMap<String, Vec<PathBuf>> = HashMap::new();
 
-    let override_entries = zip_reader
-        .file()
-        .entries()
-        .iter()
-        .enumerate()
-        .filter_map(|(index, file)| {
-            let filename = file.filename().as_str().unwrap_or_default();
-            (matches_prefix(filename) && !filename.ends_with('/'))
-                .then_some(index)
-        })
-        .collect::<Vec<_>>();
-
+    // Bundled content is prepared before the download phase starts.
     let total = override_entries.len() as u64;
     reporter
         .update(
-            InstallPhaseId::ExtractingOverrides,
+            InstallPhaseId::ReadingPackManifest,
             Some(InstallProgress {
                 current: 0,
                 total,
@@ -794,27 +905,9 @@ async fn extract_overrides(
         )
         .await?;
 
-    for (done, index) in override_entries.into_iter().enumerate() {
-        let entry_name = {
-            let entries = zip_reader.file().entries();
-            entries[index]
-                .filename()
-                .as_str()
-                .unwrap_or_default()
-                .to_string()
-        };
-        let raw_path = SafeRelativeUtf8UnixPathBuf::try_from(entry_name)?;
-        let relative_path = override_prefixes
-            .iter()
-            .find_map(|p| raw_path.strip_prefix(p).ok())
-            .ok_or_else(|| {
-                crate::Error::from(anyhow::anyhow!(
-                    "Failed to strip override prefix".to_string(),
-                ))
-            })?;
-        let safe_relative_path =
-            crate::util::io::sanitize_relative_path(relative_path.as_str());
-
+    for (done, (index, safe_relative_path)) in
+        override_entries.into_iter().enumerate()
+    {
         let mut file_bytes = vec![];
         {
             let mut reader = zip_reader.reader_with_entry(index).await?;
@@ -834,9 +927,28 @@ async fn extract_overrides(
             .await
             .map_err(|e| crate::util::io::IOError::with_path(e, &dest))?;
 
+        out.flush()
+            .await
+            .map_err(|e| crate::util::io::IOError::with_path(e, &dest))?;
+        drop(out);
+
+        if crate::state::content_store::is_managed_content_path(
+            &safe_relative_path,
+        ) {
+            let file_name = dest
+                .file_name()
+                .and_then(|name| name.to_str())
+                .unwrap_or_default()
+                .to_string();
+            let paths = bundled.entry(file_name).or_default();
+            if !paths.contains(&dest) {
+                paths.push(dest);
+            }
+        }
+
         reporter
             .update(
-                InstallPhaseId::ExtractingOverrides,
+                InstallPhaseId::ReadingPackManifest,
                 Some(InstallProgress {
                     current: done as u64 + 1,
                     total,
@@ -847,12 +959,196 @@ async fn extract_overrides(
             .await?;
     }
 
-    Ok(())
+    Ok(bundled)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn mod_file(bytes: &[u8]) -> CfFileData {
+        CfFileData {
+            id: 123,
+            mod_id: 456,
+            file_name: "mod.jar".into(),
+            download_url: Some("https://example.invalid/mod.jar".into()),
+            file_length: Some(bytes.len() as u64),
+            hashes: vec![CfFileHash {
+                algo: 1,
+                value: sha1_smol::Sha1::from(bytes).hexdigest(),
+            }],
+        }
+    }
+
+    #[tokio::test]
+    async fn bundled_mod_skips_the_download() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("mod.jar");
+        tokio::fs::write(&path, b"correct mod").await.unwrap();
+        let mut file = mod_file(b"correct mod");
+        file.hashes[0].value.make_ascii_uppercase();
+        let bytes = cf_file_bytes(&file, &[path], |_| async {
+            panic!("bundled mod must not be downloaded")
+        })
+        .await
+        .unwrap()
+        .unwrap();
+        assert_eq!(bytes.as_ref(), b"correct mod");
+    }
+
+    #[tokio::test]
+    async fn same_name_with_wrong_contents_or_size_is_downloaded() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("mod.jar");
+        let file = mod_file(b"correct mod");
+        for contents in [b"invalid mod".as_slice(), b"short".as_slice()] {
+            tokio::fs::write(&path, contents).await.unwrap();
+            let downloaded = std::sync::atomic::AtomicBool::new(false);
+            let bytes =
+                cf_file_bytes(&file, std::slice::from_ref(&path), |url| {
+                    assert_eq!(url, "https://example.invalid/mod.jar");
+                    downloaded.store(true, Ordering::Relaxed);
+                    std::future::ready(Ok(bytes::Bytes::from_static(
+                        b"correct mod",
+                    )))
+                })
+                .await
+                .unwrap()
+                .unwrap();
+            assert!(downloaded.load(Ordering::Relaxed));
+            assert_eq!(bytes.as_ref(), b"correct mod");
+        }
+    }
+
+    #[tokio::test]
+    async fn unavailable_download_is_satisfied_only_by_verified_local_bytes() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("mod.jar");
+        tokio::fs::write(&path, b"correct mod").await.unwrap();
+        let mut file = mod_file(b"correct mod");
+        file.download_url = None;
+        assert!(
+            cf_file_bytes(&file, &[path], |_| async {
+                panic!("restricted file must not be fetched")
+            })
+            .await
+            .unwrap()
+            .is_some()
+        );
+        assert!(
+            cf_file_bytes(&file, &[], |_| async {
+                panic!("restricted file must remain pending")
+            })
+            .await
+            .unwrap()
+            .is_none()
+        );
+    }
+
+    #[tokio::test]
+    async fn unverified_or_missing_local_files_fall_back_to_download() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("mod.jar");
+        let mut file = mod_file(b"correct mod");
+        let downloaded = std::sync::atomic::AtomicU64::new(0);
+        for write in [false, true] {
+            if write {
+                tokio::fs::write(&path, b"correct mod").await.unwrap();
+                file.hashes.clear();
+            }
+            cf_file_bytes(&file, std::slice::from_ref(&path), |_| {
+                downloaded.fetch_add(1, Ordering::Relaxed);
+                std::future::ready(Ok(bytes::Bytes::from_static(
+                    b"correct mod",
+                )))
+            })
+            .await
+            .unwrap()
+            .unwrap();
+        }
+        assert_eq!(downloaded.load(Ordering::Relaxed), 2);
+    }
+
+    #[tokio::test]
+    async fn another_bundled_copy_can_satisfy_the_file() {
+        let directory = tempfile::tempdir().unwrap();
+        let bad = directory.path().join("bad.jar");
+        let good = directory.path().join("good.jar");
+        tokio::fs::write(&bad, b"invalid mod").await.unwrap();
+        tokio::fs::write(&good, b"correct mod").await.unwrap();
+        assert!(
+            cf_file_bytes(&mod_file(b"correct mod"), &[bad, good], |_| async {
+                panic!("valid bundled copy exists")
+            })
+            .await
+            .unwrap()
+            .is_some()
+        );
+    }
+
+    #[test]
+    fn md5_is_supported_but_cannot_override_a_mismatched_sha1() {
+        use md5::Digest;
+        let mut file = mod_file(b"correct mod");
+        let md5 = CfFileHash {
+            algo: 2,
+            value: format!("{:x}", md5::Md5::digest(b"correct mod")),
+        };
+        file.hashes = vec![md5];
+        assert!(file.matches_bytes(b"correct mod"));
+        assert!(!file.matches_bytes(b"invalid mod"));
+        file.hashes.push(CfFileHash {
+            algo: 1,
+            value: "0".repeat(40),
+        });
+        assert!(!file.matches_bytes(b"correct mod"));
+    }
+
+    #[tokio::test]
+    async fn corrupt_download_is_rejected() {
+        assert!(
+            cf_file_bytes(&mod_file(b"correct mod"), &[], |_| async {
+                Ok(bytes::Bytes::from_static(b"invalid mod"))
+            })
+            .await
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn extraction_accepts_pack_content_and_rejects_escape_paths() {
+        let prefixes = vec![
+            "overrides".into(),
+            "client-overrides".into(),
+            "custom/files".into(),
+        ];
+        for (source, target) in [
+            ("overrides/mods/mod.jar", "mods/mod.jar"),
+            ("client-overrides/mods/mod.jar", "mods/mod.jar"),
+            ("custom/files/config/options.txt", "config/options.txt"),
+            ("mods/mod.jar", "mods/mod.jar"),
+            ("resourcepacks/pack.zip", "resourcepacks/pack.zip"),
+            ("overrides/config/options.txt", "config/options.txt"),
+        ] {
+            assert_eq!(
+                pack_entry_path(source, &prefixes).unwrap().as_deref(),
+                Some(target)
+            );
+        }
+        for source in [
+            "manifest.json",
+            "unrelated/mod.jar",
+            "override/mod.jar",
+            "overrides/",
+            "mods/nested/mod.jar",
+        ] {
+            assert!(pack_entry_path(source, &prefixes).unwrap().is_none());
+        }
+        assert!(
+            pack_entry_path("overrides/../../escape.jar", &prefixes).is_err()
+        );
+        assert!(pack_entry_path("overrides/C:/escape.jar", &prefixes).is_err());
+    }
 
     #[test]
     fn a_pack_icon_is_only_looked_for_where_a_pack_puts_one() {

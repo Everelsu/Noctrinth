@@ -58,6 +58,10 @@ on:
       tag:
         description: 'Existing release tag to build (e.g. v0.17.3)'
         required: true
+      publish_only:
+        description: 'Publish the current version updater from existing public release files without rebuilding'
+        type: boolean
+        default: false
       micropatch:
         description: 'Rebuild an already published release under the same version (add a +build to VERSION first)'
         type: boolean
@@ -69,7 +73,7 @@ concurrency:
 
 jobs:
   release:
-    if: github.event_name != 'release'
+    if: github.event_name != 'release' && github.event.inputs.publish_only != 'true'
     permissions:
       contents: write
 
@@ -379,7 +383,7 @@ jobs:
     if: >-
       always() && !cancelled() &&
       ((github.event_name == 'release' && github.event.release.prerelease == false) ||
-       (needs.finalize.result == 'success' && github.event.inputs.micropatch == 'true'))
+       needs.finalize.result == 'success' || github.event.inputs.publish_only == 'true')
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -401,7 +405,10 @@ jobs:
           set -euo pipefail
 
           gh release view "$TAG" --json isDraft,isPrerelease,assets > release.json
-          jq -e '.isDraft == false and .isPrerelease == false' release.json > /dev/null
+          if ! jq -e '.isDraft == false and .isPrerelease == false' release.json > /dev/null; then
+            echo "Skipping updater: $TAG is a draft or prerelease"
+            exit 0
+          fi
           latest=$(gh api "repos/$GH_REPO/releases/latest" --jq .tag_name)
           if [ "$latest" != "$TAG" ]; then
             echo "Skipping $TAG: latest stable release is $latest"

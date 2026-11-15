@@ -62,27 +62,34 @@ function checkManifest(change = () => {}) {
 	}
 }
 
-test('updater publication runs only after stable publication or a successful micropatch', () => {
+test('updater publication handles published releases, successful rebuilds and publish-only recovery', () => {
 	assert.deepEqual(workflow.on.release.types, ['published'])
-	assert.equal(workflow.jobs.release.if, "github.event_name != 'release'")
-	for (const [event, prerelease, micropatch, result, expected] of [
-		['push', false, undefined, 'success', false],
-		['workflow_dispatch', false, 'false', 'success', false],
-		['workflow_dispatch', false, 'true', 'success', true],
-		['workflow_dispatch', false, 'true', 'failure', false],
+	for (const [event, prerelease, publishOnly, result, expected] of [
+		['push', false, undefined, 'success', true],
+		['workflow_dispatch', false, 'false', 'success', true],
+		['workflow_dispatch', false, 'false', 'failure', false],
+		['workflow_dispatch', false, 'true', 'skipped', true],
 		['release', false, undefined, 'skipped', true],
 		['release', true, undefined, 'skipped', false],
 	]) {
+		const context = {
+			always: () => true,
+			cancelled: () => false,
+			github: {
+				event_name: event,
+				event: { release: { prerelease }, inputs: { publish_only: publishOnly } },
+			},
+			needs: { finalize: { result } },
+		}
+		assert.equal(vm.runInNewContext(job.if, context), expected)
+		assert.equal(vm.runInNewContext(job.if, { ...context, cancelled: () => true }), false)
 		assert.equal(
-			vm.runInNewContext(job.if, {
-				always: () => true,
-				cancelled: () => false,
-				github: { event_name: event, event: { release: { prerelease }, inputs: { micropatch } } },
-				needs: { finalize: { result } },
-			}),
-			expected,
+			vm.runInNewContext(workflow.jobs.release.if, context),
+			event !== 'release' && publishOnly !== 'true',
 		)
 	}
+	assert.equal(workflow.on.workflow_dispatch.inputs.publish_only.default, false)
+	assert.match(script, /if ! jq -e/)
 })
 
 test('drafts and prereleases cannot publish an updater', () => {

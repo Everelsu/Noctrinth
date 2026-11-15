@@ -117,6 +117,8 @@ fn main() {
                         "logs_get_logs",
                         "logs_get_logs_by_filename",
                         "logs_get_output_by_filename",
+                        "logs_get_historical_page",
+                        "logs_analyze_historical",
                         "logs_delete_logs",
                         "logs_delete_logs_by_filename",
                         "logs_get_latest_log_cursor",

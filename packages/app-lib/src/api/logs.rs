@@ -1,3 +1,8 @@
+mod history;
+pub use history::{
+    HistoricalLogCursor, HistoricalLogPage, get_historical_log_page,
+};
+
 use std::fmt::Write as _;
 use std::io::{BufRead, SeekFrom};
 use std::time::SystemTime;
@@ -170,6 +175,12 @@ impl CensoredString {
         }
 
         Self(s)
+    }
+}
+
+impl AsRef<str> for CensoredString {
+    fn as_ref(&self) -> &str {
+        &self.0
     }
 }
 
@@ -490,36 +501,31 @@ async fn get_output_by_filename_from_path(
         .await
         .unwrap_or_default();
 
-    if let Some(ext) = path.extension() {
-        if ext == "gz" {
+    let file_name_owned = file_name.to_owned();
+    let compacted =
+        tokio::task::spawn_blocking(move || -> crate::Result<CompactedLog> {
             let file = std::fs::File::open(&path)
-                .map_err(|e| IOError::with_path(e, &path))?;
-            let gz =
-                flate2::read::GzDecoder::new(std::io::BufReader::new(file));
-            let mut reader = std::io::BufReader::new(gz);
-            let compacted = read_compacted_log(&mut reader)
-                .map_err(|e| IOError::with_path(e, &path))?;
-            maybe_emit_log_compaction_warning(file_name, compacted.stats).await;
-            return Ok(CensoredString::censor_all(
-                compacted.output,
-                &credentials,
-                &ely_credentials,
-            ));
-        } else if ext == "log" || ext == "txt" {
-            let file = std::fs::File::open(&path)
-                .map_err(|e| IOError::with_path(e, &path))?;
-            let mut reader = std::io::BufReader::new(file);
-            let compacted = read_compacted_log(&mut reader)
-                .map_err(|e| IOError::with_path(e, &path))?;
-            maybe_emit_log_compaction_warning(file_name, compacted.stats).await;
-            return Ok(CensoredString::censor_all(
-                compacted.output,
-                &credentials,
-                &ely_credentials,
-            ));
-        }
-    }
-    bail!("file extension not supported {}", path.display())
+                .map_err(|error| IOError::with_path(error, &path))?;
+            match path.extension().and_then(|ext| ext.to_str()) {
+                Some("gz") => {
+                    let gz = flate2::read::GzDecoder::new(
+                        std::io::BufReader::new(file),
+                    );
+                    Ok(read_compacted_log(&mut std::io::BufReader::new(gz))?)
+                }
+                Some("log" | "txt") => {
+                    Ok(read_compacted_log(&mut std::io::BufReader::new(file))?)
+                }
+                _ => bail!("file extension not supported {}", path.display()),
+            }
+        })
+        .await??;
+    maybe_emit_log_compaction_warning(&file_name_owned, compacted.stats).await;
+    Ok(CensoredString::censor_all(
+        compacted.output,
+        &credentials,
+        &ely_credentials,
+    ))
 }
 
 #[tracing::instrument]

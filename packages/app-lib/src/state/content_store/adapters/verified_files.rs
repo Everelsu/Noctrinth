@@ -1,4 +1,5 @@
 use crate::util::content_hash::{ContentHasher, FileHashes};
+use crate::util::file_stamp::FileStamp;
 use parking_lot::Mutex;
 #[cfg(test)]
 use sha2::{Digest, Sha512};
@@ -7,7 +8,7 @@ use std::fs::File;
 use std::io::{self, Read};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::time::{Instant, SystemTime};
+use std::time::Instant;
 
 const MAX_VERIFIED_FILES: usize = 4096;
 
@@ -20,67 +21,6 @@ struct VerifiedFile {
     stamp: FileStamp,
     hashes: FileHashes,
     last_used: Instant,
-}
-
-#[derive(PartialEq, Eq)]
-struct FileStamp {
-    identity: (u64, u64),
-    size: u64,
-    modified: SystemTime,
-    changed: (i64, i64),
-}
-
-impl FileStamp {
-    fn read(file: &File) -> Option<Self> {
-        let metadata = file.metadata().ok()?;
-        #[cfg(unix)]
-        let (identity, changed) = {
-            use std::os::unix::fs::MetadataExt;
-            (
-                (metadata.dev(), metadata.ino()),
-                (metadata.ctime(), metadata.ctime_nsec()),
-            )
-        };
-        #[cfg(windows)]
-        let (identity, changed) = {
-            use std::os::windows::io::AsRawHandle;
-            use windows::Win32::Foundation::HANDLE;
-            use windows::Win32::Storage::FileSystem::{
-                BY_HANDLE_FILE_INFORMATION, FILE_BASIC_INFO, FileBasicInfo,
-                GetFileInformationByHandle, GetFileInformationByHandleEx,
-            };
-            let handle = HANDLE(file.as_raw_handle());
-            let mut information = BY_HANDLE_FILE_INFORMATION::default();
-            let mut basic = FILE_BASIC_INFO::default();
-            unsafe {
-                GetFileInformationByHandle(handle, &mut information).ok()?;
-                GetFileInformationByHandleEx(
-                    handle,
-                    FileBasicInfo,
-                    (&mut basic as *mut FILE_BASIC_INFO).cast(),
-                    size_of::<FILE_BASIC_INFO>() as u32,
-                )
-                .ok()?;
-            }
-            if basic.ChangeTime == 0 {
-                return None;
-            }
-            (
-                (
-                    u64::from(information.dwVolumeSerialNumber),
-                    (u64::from(information.nFileIndexHigh) << 32)
-                        | u64::from(information.nFileIndexLow),
-                ),
-                (basic.ChangeTime, 0),
-            )
-        };
-        Some(Self {
-            identity,
-            size: metadata.len(),
-            modified: metadata.modified().ok()?,
-            changed,
-        })
-    }
 }
 
 impl VerifiedFiles {

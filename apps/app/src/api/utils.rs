@@ -88,7 +88,7 @@ pub enum OS {
 /// interpreted.
 #[tauri::command]
 pub fn log_startup_event(event: String, details: String) {
-    tracing::info!(target: "noctrinth::startup", "Startup: {event} {details}");
+    tracing::info!(target: "theseus::startup", "Startup: {event} {details}");
 }
 
 #[tauri::command]

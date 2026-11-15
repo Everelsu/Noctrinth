@@ -434,6 +434,9 @@
   "console.filter.warn": {
     "defaultMessage": "Warn"
   },
+  "console.history.load-earlier": {
+    "defaultMessage": "Load earlier lines"
+  },
   "console.search.placeholder": {
     "defaultMessage": "Search logs"
   },

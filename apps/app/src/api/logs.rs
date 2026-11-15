@@ -19,6 +19,8 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
             logs_get_logs,
             logs_get_logs_by_filename,
             logs_get_output_by_filename,
+            logs_get_historical_page,
+            logs_analyze_historical,
             logs_delete_logs,
             logs_delete_logs_by_filename,
             logs_get_latest_log_cursor,
@@ -84,6 +86,42 @@ pub async fn logs_get_output_by_filename(
     filename: String,
 ) -> Result<CensoredString> {
     Ok(logs::get_output_by_filename(instance_id, log_type, &filename).await?)
+}
+
+#[tauri::command]
+pub async fn logs_get_historical_page(
+    instance_id: &str,
+    log_type: LogType,
+    filename: String,
+    cursor: Option<logs::HistoricalLogCursor>,
+) -> Result<logs::HistoricalLogPage> {
+    Ok(
+        logs::get_historical_log_page(instance_id, log_type, &filename, cursor)
+            .await?,
+    )
+}
+
+#[tauri::command]
+pub async fn logs_analyze_historical(
+    instance_id: &str,
+    log_type: LogType,
+    filename: String,
+) -> Result<theseus::crash_analysis::CrashDiagnosis> {
+    let output =
+        logs::get_output_by_filename(instance_id, log_type, &filename).await?;
+    let kind = match log_type {
+        LogType::InfoLog => theseus::crash_analysis::CrashSourceKind::Log,
+        LogType::CrashReport => {
+            theseus::crash_analysis::CrashSourceKind::CrashReport
+        }
+    };
+    Ok(theseus::crash_analysis::analyze_text_for_instance(
+        instance_id,
+        output.as_ref(),
+        kind,
+        &filename,
+    )
+    .await?)
 }
 
 /// Delete all logs for an instance.

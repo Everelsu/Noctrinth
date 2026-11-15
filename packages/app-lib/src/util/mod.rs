@@ -2,6 +2,7 @@
 pub mod authlib_injector;
 pub(crate) mod content_hash;
 pub mod fetch;
+pub(crate) mod file_stamp;
 pub mod io;
 pub mod jre;
 pub mod network;

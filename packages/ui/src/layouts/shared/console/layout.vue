@@ -66,6 +66,14 @@
 			</div>
 		</div>
 
+		<Button
+			v-if="ctx.hasEarlier?.value"
+			type="outlined"
+			:disabled="ctx.loadingEarlier?.value"
+			@click="loadEarlier"
+		>
+			{{ formatMessage(messages.loadEarlier) }}
+		</Button>
 		<BaseTerminal
 			ref="terminalRef"
 			class="flex-1"
@@ -79,6 +87,9 @@
 			:loading="resolvedLoading"
 			@command="handleCommand"
 			@ready="handleTerminalReady"
+			@wheel.capture="handleHistoryWheel"
+			@pointerup.capture="maybeLoadEarlier"
+			@keyup.capture="handleHistoryKey"
 		/>
 	</div>
 	<ShareModal
@@ -152,6 +163,7 @@ import type { LogLevel, LogLine } from './types'
 const { formatMessage } = useVIntl()
 
 const messages = defineMessages({
+	loadEarlier: { id: 'console.history.load-earlier', defaultMessage: 'Load earlier lines' },
 	searchPlaceholder: { id: 'console.search.placeholder', defaultMessage: 'Search logs' },
 	shareModalHeader: { id: 'console.share-modal.header', defaultMessage: 'Share Logs' },
 	deleteModalHeader: { id: 'console.delete-modal.header', defaultMessage: 'Delete log file' },
@@ -184,7 +196,7 @@ const ctx = injectConsoleManager()
 const client = injectModrinthClient()
 const modalBehavior = injectModalBehavior()
 const pageContext = injectPageContext(null)
-const { addNotification } = injectNotificationManager()
+const { addNotification, handleError } = injectNotificationManager()
 const { hasModal } = useModalStack()
 
 const crashHeader = computed(() =>
@@ -339,7 +351,7 @@ function activeSearchQuery(): string {
 	return searchQuery.value.trim().toLowerCase()
 }
 
-function rewriteFiltered() {
+function rewriteFiltered(callback?: () => void) {
 	const term = terminalRef.value?.terminal
 	if (!term) return
 	const lines = ctx.logLines.value
@@ -354,7 +366,7 @@ function rewriteFiltered() {
 	}
 	terminalRef.value?.clearEmptyState()
 	const predicate = buildCombinedPredicate()
-	rewriteTerminal(term, lines, predicate, activeSearchQuery())
+	rewriteTerminal(term, lines, predicate, activeSearchQuery(), callback)
 	lastWrittenIndex = lines.length
 }
 
@@ -414,7 +426,16 @@ watch(ctx.logLines, (lines, oldLines) => {
 		lines.length < lastWrittenIndex
 	) {
 		terminalRef.value?.clearEmptyState()
-		rewriteFiltered()
+		const anchor = historyAnchor
+		historyAnchor = undefined
+		rewriteFiltered(
+			anchor && anchor.source === ctx.activeLogSourceIndex?.value
+				? () =>
+						term.scrollToLine(
+							Math.max(0, anchor.position + term.buffer.active.length - anchor.length),
+						)
+				: undefined,
+		)
 		return
 	}
 
@@ -440,10 +461,49 @@ watch(ctx.logLines, (lines, oldLines) => {
 
 watch(searchQuery, () => {
 	if (searchDebounce) clearTimeout(searchDebounce)
-	searchDebounce = setTimeout(() => {
-		rewriteFiltered()
+	searchDebounce = setTimeout(async () => {
+		try {
+			if (searchQuery.value.trim()) await ctx.loadAll?.()
+			rewriteFiltered()
+		} catch (error) {
+			handleError(error)
+		}
 	}, 200)
 })
+
+let historyLoading = false
+let historyAnchor: { length: number; position: number; source: number | undefined } | undefined
+async function loadEarlier() {
+	if (historyLoading || !ctx.hasEarlier?.value || !ctx.loadEarlier) return
+	const term = terminalRef.value?.terminal
+	historyAnchor = {
+		length: term?.buffer.active.length ?? 0,
+		position: term?.buffer.active.viewportY ?? 0,
+		source: ctx.activeLogSourceIndex?.value,
+	}
+	historyLoading = true
+	try {
+		await ctx.loadEarlier()
+		await nextTick()
+	} catch (error) {
+		handleError(error)
+	} finally {
+		historyAnchor = undefined
+		historyLoading = false
+	}
+}
+
+function maybeLoadEarlier() {
+	if ((terminalRef.value?.terminal?.buffer.active.viewportY ?? 1) === 0) void loadEarlier()
+}
+
+function handleHistoryWheel(event: WheelEvent) {
+	if (event.deltaY < 0) maybeLoadEarlier()
+}
+
+function handleHistoryKey(event: KeyboardEvent) {
+	if (['Home', 'PageUp', 'ArrowUp'].includes(event.key)) maybeLoadEarlier()
+}
 
 watch(resolvedLoading, (loading) => {
 	if (!loading) {
@@ -488,12 +548,13 @@ async function confirmDelete() {
 }
 
 async function handleShare() {
-	const predicate = buildCombinedPredicate()
-	const lines = predicate ? ctx.logLines.value.filter(predicate) : ctx.logLines.value
-	const content = lines.map((l) => l.text).join('\n')
-
 	isSharing.value = true
 	try {
+		await ctx.loadAll?.()
+		await nextTick()
+		const predicate = buildCombinedPredicate()
+		const lines = predicate ? ctx.logLines.value.filter(predicate) : ctx.logLines.value
+		const content = lines.map((line) => line.text).join('\n')
 		const data = await client.mclogs.logs_v1.create(content)
 		if (data.url) {
 			shareModal.value?.show(data.url)

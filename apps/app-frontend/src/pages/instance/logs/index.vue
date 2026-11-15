@@ -39,8 +39,9 @@ import NoctrinthCopiesConsole from '@/components/ui/NoctrinthCopiesConsole.vue'
 import NoctrinthCrashDiagnosis from '@/components/ui/NoctrinthCrashDiagnosis.vue'
 import { useAppEvent } from '@/composables/use-app-event'
 import { useInstanceConsole } from '@/composables/useInstanceConsole'
-import { delete_logs_by_filename, get_output_by_filename } from '@/helpers/logs.js'
-import { analyzeCrashText, analyzeInstanceCrash } from '@/helpers/noctrinth-crash'
+import { useHistoricalLog } from '@/features/instances/logs/use-historical-log'
+import { delete_logs_by_filename } from '@/helpers/logs.js'
+import { analyzeInstanceCrash } from '@/helpers/noctrinth-crash'
 
 import { injectInstancePage } from '../instance-context'
 import { instanceKeys, instanceProcessesQueryOptions } from '../query-options'
@@ -61,7 +62,6 @@ const {
 	historicalConsole,
 	hydrate,
 	getHistoricalLogs,
-	getHistoricalContent,
 	invalidate,
 	clearLive,
 	release,
@@ -173,17 +173,6 @@ async function diagnoseInstance() {
 	localFindings.value = diagnosis.findings
 }
 
-/** The same rules against a log the player has picked out of the list. */
-async function diagnoseText(output, logType, filename) {
-	const diagnosis = await analyzeCrashText(
-		output,
-		logType === 'CrashReport' ? 'crash_report' : 'log',
-		filename,
-		instanceId.value,
-	)
-	localFindings.value = diagnosis.findings
-}
-
 async function analyseForCrash() {
 	const lines = liveConsole.output.value
 	if (lines.length === 0) return
@@ -200,6 +189,17 @@ async function analyseForCrash() {
 }
 
 const selectedLog = computed(() => filteredLogs.value[selectedLogIndex.value])
+const history = useHistoricalLog(instanceId, selectedLog)
+watch(history.output, (output) => {
+	historicalConsole.clear()
+	if (output) historicalConsole.addLegacyLog(output)
+})
+watch(history.diagnosis, (diagnosis) => {
+	if (!isLive.value && diagnosis) localFindings.value = diagnosis.findings
+})
+watch(history.error, (error) => {
+	if (error) handleError(error)
+})
 
 const deleteDisabled = computed(() => {
 	const log = selectedLog.value
@@ -222,7 +222,11 @@ provideConsoleManager({
 	logSources,
 	activeLogSourceIndex: selectedLogIndex,
 	showCommandInput: false,
-	loading: ref(false),
+	loading: history.loading,
+	hasEarlier: history.hasEarlier,
+	loadingEarlier: history.loadingEarlier,
+	loadEarlier: history.loadEarlier,
+	loadAll: history.loadAll,
 	onClear: () => {
 		if (!isLive.value) return
 		void clearLive()
@@ -238,33 +242,9 @@ provideConsoleManager({
 	},
 })
 
-watch(selectedLogIndex, async (newIndex) => {
-	if (newIndex === 0) {
-		// Back to the live console, where what is on disk is what there is to say.
-		void diagnoseInstance()
-		return
-	}
-	const log = filteredLogs.value[newIndex]
-	if (!log) return
-
-	const cached = getHistoricalContent(log.filename)
-	if (cached) {
-		historicalConsole.clear()
-		historicalConsole.addLegacyLog(cached)
-		void diagnoseText(cached, log.log_type, log.filename)
-		return
-	}
-
-	const output = await get_output_by_filename(instanceId.value, log.log_type, log.filename).catch(
-		handleError,
-	)
-	if (output) {
-		historicalConsole.clear()
-		historicalConsole.addLegacyLog(output)
-		// A log picked out of the list is read by the same rules, so an old
-		// crash can be looked at as well as the last one.
-		void diagnoseText(output, log.log_type, log.filename)
-	}
+watch(selectedLogIndex, (newIndex) => {
+	localFindings.value = []
+	if (newIndex === 0) void diagnoseInstance()
 })
 
 selectedLogIndex.value = 0

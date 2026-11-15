@@ -130,3 +130,23 @@ pub fn start_logger(app_identifier: &str) -> Option<()> {
 
     Some(())
 }
+
+#[cfg(test)]
+mod startup_tests {
+    use tracing_subscriber::prelude::*;
+
+    #[test]
+    fn startup_measurements_pass_the_production_filter() {
+        let subscriber = tracing_subscriber::registry().with(
+            tracing_subscriber::EnvFilter::new("theseus=info,webview=trace"),
+        );
+        tracing::subscriber::with_default(subscriber, || {
+            assert!(
+                tracing::enabled!(target: "theseus::startup", tracing::Level::INFO)
+            );
+            assert!(
+                !tracing::enabled!(target: "noctrinth::startup", tracing::Level::INFO)
+            );
+        });
+    }
+}

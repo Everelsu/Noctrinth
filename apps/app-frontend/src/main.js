@@ -33,9 +33,7 @@ app.use(VueQueryPlugin, {
 	queryClientConfig: { defaultOptions: { queries: { refetchOnWindowFocus: false } } },
 })
 app.use(router)
-if (import.meta.env.DEV) {
-	void traceStartupStep('Initial router readiness', () => router.isReady()).catch(() => {})
-}
+void traceStartupStep('Initial router readiness', () => router.isReady()).catch(() => {})
 app.use(i18nPlugin)
 app.use(i18nDebugPlugin)
 installTooltipDirective(app)

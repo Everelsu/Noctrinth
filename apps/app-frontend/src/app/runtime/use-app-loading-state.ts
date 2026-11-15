@@ -12,9 +12,6 @@ export function useAppLoadingState(
 	getContext: () => Record<string, unknown> = () => ({}),
 ): AppLoadingStateProvider {
 	const core = createLoadingStateCore({ barEnabled: false })
-	if (!import.meta.env.DEV) {
-		return core
-	}
 	const queryClient = useQueryClient()
 	const active = new Map<symbol, { id: number; label: string; startedAt: number }>()
 	let nextId = 0
@@ -29,7 +26,7 @@ export function useAppLoadingState(
 		...core,
 		begin(label) {
 			const token = core.begin()
-			if (!import.meta.env.DEV || core.barEnabled.value) return token
+			if (core.barEnabled.value) return token
 			const instance = getCurrentInstance()
 			const owner = instance?.type.name ?? instance?.type.__name ?? 'unknown component'
 			const parent = instance?.parent?.type.name ?? instance?.parent?.type.__name
@@ -63,7 +60,7 @@ export function useAppLoadingState(
 									(query.state.status === 'pending' || query.state.fetchStatus !== 'idle'),
 							)
 							.map((query) => ({
-								key: query.queryKey,
+								...(import.meta.env.DEV ? { key: query.queryKey } : {}),
 								status: query.state.status,
 								fetchStatus: query.state.fetchStatus,
 								failureCount: query.state.fetchFailureCount,

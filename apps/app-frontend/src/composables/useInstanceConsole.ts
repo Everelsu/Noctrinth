@@ -23,7 +23,6 @@ interface LogEntry {
 interface InstanceConsoleEntry {
 	liveConsole: ConsoleState
 	historicalConsole: ConsoleState
-	historicalCache: Map<string, string>
 	logList: LogEntry[] | null
 }
 
@@ -44,7 +43,6 @@ function getOrCreate(instanceId: string): InstanceConsoleEntry {
 	entry = {
 		liveConsole: createConsoleState(),
 		historicalConsole: createConsoleState(),
-		historicalCache: new Map(),
 		logList: null,
 	}
 	instances.set(instanceId, entry)
@@ -71,23 +69,12 @@ async function getHistoricalLogs(instanceId: string): Promise<LogEntry[]> {
 	const logs: LogEntry[] = await get_logs(instanceId, true)
 	entry.logList = logs
 
-	for (const log of logs) {
-		if (log.output) {
-			entry.historicalCache.set(log.filename, log.output)
-		}
-	}
-
 	return logs
-}
-
-function getHistoricalContent(instanceId: string, filename: string): string | undefined {
-	return instances.get(instanceId)?.historicalCache.get(filename)
 }
 
 function invalidate(instanceId: string): void {
 	const entry = instances.get(instanceId)
 	if (!entry) return
-	entry.historicalCache.clear()
 	entry.logList = null
 }
 
@@ -159,7 +146,6 @@ export function useInstanceConsole(instanceId: string) {
 		historicalConsole: entry.historicalConsole,
 		hydrate: () => hydrate(instanceId),
 		getHistoricalLogs: () => getHistoricalLogs(instanceId),
-		getHistoricalContent: (filename: string) => getHistoricalContent(instanceId, filename),
 		invalidate: () => invalidate(instanceId),
 		clearLive: () => clearLive(instanceId),
 		destroy: () => destroy(instanceId),

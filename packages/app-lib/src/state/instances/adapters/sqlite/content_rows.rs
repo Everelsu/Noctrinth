@@ -1363,7 +1363,7 @@ pub(crate) async fn upsert_content_update_check(
     content_entry_id: &str,
     update_channel: ReleaseChannel,
     update_version_id: Option<&str>,
-    pool: &SqlitePool,
+    tx: &mut Transaction<'_, Sqlite>,
 ) -> crate::Result<()> {
     let update_channel = update_channel.key();
     let checked_at = Utc::now().timestamp();
@@ -1387,7 +1387,7 @@ pub(crate) async fn upsert_content_update_check(
         update_version_id,
         checked_at,
     )
-    .execute(pool)
+    .execute(&mut **tx)
     .await?;
 
     Ok(())
@@ -1418,4 +1418,51 @@ fn unsigned(value: i64, column: &str) -> crate::Result<u64> {
     }
 
     Ok(value as u64)
+}
+
+#[cfg(test)]
+mod update_check_tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn update_results_commit_and_rollback_as_one_batch() {
+        let pool = sqlx::sqlite::SqlitePoolOptions::new()
+            .max_connections(1)
+            .connect("sqlite::memory:")
+            .await
+            .unwrap();
+        sqlx::query("CREATE TABLE instance_content_update_checks (content_entry_id TEXT PRIMARY KEY, update_channel TEXT NOT NULL, update_version_id TEXT, checked_at INTEGER NOT NULL)").execute(&pool).await.unwrap();
+        let channel = ReleaseChannel::Release;
+        let mut tx = pool.begin().await.unwrap();
+        for (id, version) in [("first", Some("v2")), ("second", None)] {
+            upsert_content_update_check(id, channel, version, &mut tx)
+                .await
+                .unwrap();
+        }
+        tx.rollback().await.unwrap();
+        assert_eq!(
+            sqlx::query_scalar::<_, i64>(
+                "SELECT COUNT(*) FROM instance_content_update_checks"
+            )
+            .fetch_one(&pool)
+            .await
+            .unwrap(),
+            0
+        );
+        let mut tx = pool.begin().await.unwrap();
+        for (id, version) in [("first", Some("v3")), ("second", None)] {
+            upsert_content_update_check(id, channel, version, &mut tx)
+                .await
+                .unwrap();
+        }
+        tx.commit().await.unwrap();
+        let rows = sqlx::query_as::<_, (String, Option<String>)>("SELECT content_entry_id, update_version_id FROM instance_content_update_checks ORDER BY content_entry_id").fetch_all(&pool).await.unwrap();
+        assert_eq!(
+            rows,
+            vec![
+                ("first".to_owned(), Some("v3".to_owned())),
+                ("second".to_owned(), None)
+            ]
+        );
+    }
 }

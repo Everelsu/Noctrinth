@@ -17,6 +17,10 @@ export interface ConsoleManagerContext {
 	disableCommandInputTooltip?: string | Ref<string | undefined> | ComputedRef<string | undefined>
 
 	loading?: Ref<boolean> | ComputedRef<boolean>
+	hasEarlier?: Ref<boolean> | ComputedRef<boolean>
+	loadingEarlier?: Ref<boolean> | ComputedRef<boolean>
+	loadEarlier?: () => Promise<void>
+	loadAll?: () => Promise<void>
 
 	onClear?: () => void
 	clearDisabled?: Ref<boolean> | ComputedRef<boolean>

@@ -150,6 +150,7 @@ async fn check_content_updates_with_cache_behaviours(
         resolve_update_versions(updates, update_cache_behaviour, state).await?;
 
     let mut output = Vec::new();
+    let mut tx = state.pool.begin().await?;
     for candidate in candidates {
         let update_version_id = updates_by_hash
             .remove(&candidate.file.sha1)
@@ -173,7 +174,7 @@ async fn check_content_updates_with_cache_behaviours(
                 &entry.id,
                 instance.update_channel,
                 update_version_id.as_deref(),
-                &state.pool,
+                &mut tx,
             )
             .await?;
         }
@@ -190,6 +191,7 @@ async fn check_content_updates_with_cache_behaviours(
         }
     }
 
+    tx.commit().await?;
     Ok(output)
 }
 

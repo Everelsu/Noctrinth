@@ -21,11 +21,14 @@ use either::Either;
 use enumset::{EnumSet, EnumSetType};
 use fs4::tokio::AsyncFileExt;
 
+use crate::util::file_stamp::FileStamp;
+use parking_lot::Mutex;
 use quartz_nbt::{NbtCompound, NbtTag};
 use regex::{Regex, RegexBuilder};
 use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;
 use std::cmp::Reverse;
+use std::collections::HashMap;
 use std::fs as stdfs;
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
@@ -332,21 +335,105 @@ async fn get_singleplayer_worlds_in_instance(
         if !world_path.join("level.dat").exists() {
             continue;
         }
+        if tasks.len() >= 4 {
+            collect_world_read(tasks.join_next().await.unwrap(), worlds);
+        }
         tasks.spawn(read_singleplayer_world(world_path).in_current_span());
     }
     while let Some(result) = tasks.join_next().await {
-        match result {
-            Ok(Ok(world)) => worlds.push(world),
-            Ok(Err(e)) => {
-                tracing::warn!("Skipping unreadable world: {e}");
-            }
-            Err(e) => {
-                tracing::warn!("World read task panicked: {e}");
-            }
-        }
+        collect_world_read(result, worlds);
     }
 
     Ok(())
+}
+
+fn collect_world_read(
+    result: std::result::Result<Result<World>, tokio::task::JoinError>,
+    worlds: &mut Vec<World>,
+) {
+    match result {
+        Ok(Ok(world)) => worlds.push(world),
+        Ok(Err(error)) => tracing::warn!("Skipping unreadable world: {error}"),
+        Err(error) => tracing::warn!("World read task panicked: {error}"),
+    }
+}
+
+#[derive(Clone)]
+struct LevelMetadata {
+    name: String,
+    last_played: i64,
+    game_type: i32,
+    hardcore: bool,
+}
+
+struct CachedLevel {
+    stamp: FileStamp,
+    metadata: LevelMetadata,
+    last_used: Instant,
+}
+
+static WORLD_READS: tokio::sync::Semaphore =
+    tokio::sync::Semaphore::const_new(4);
+
+static LEVEL_METADATA: LazyLock<Mutex<HashMap<PathBuf, CachedLevel>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
+
+fn read_level_metadata(path: &Path) -> Result<LevelMetadata> {
+    use std::io::Read;
+    let mut file = stdfs::File::open(path)?;
+    let stamp = FileStamp::read(&file);
+    if let Some(stamp) = &stamp {
+        let mut cache = LEVEL_METADATA.lock();
+        if let Some(cached) = cache.get_mut(path)
+            && cached.stamp == *stamp
+        {
+            cached.last_used = Instant::now();
+            return Ok(cached.metadata.clone());
+        }
+        cache.remove(path);
+    }
+    let mut raw = Vec::new();
+    file.read_to_end(&mut raw)?;
+    let (root, _) = quartz_nbt::io::read_nbt(
+        &mut Cursor::new(raw),
+        quartz_nbt::io::Flavor::GzCompressed,
+    )?;
+    let data =
+        root.get::<_, &NbtCompound>("Data")
+            .context(ErrorKind::InputError(
+                "missing Data tag in level.dat".into(),
+            ))?;
+    let metadata = LevelMetadata {
+        name: data
+            .get::<_, &str>("LevelName")
+            .unwrap_or_default()
+            .to_owned(),
+        last_played: data.get::<_, i64>("LastPlayed").unwrap_or(0),
+        game_type: data.get::<_, i32>("GameType").unwrap_or(0),
+        hardcore: read_hardcore(data),
+    };
+    if let Some(stamp) = stamp
+        && FileStamp::read(&file).as_ref() == Some(&stamp)
+    {
+        let mut cache = LEVEL_METADATA.lock();
+        if cache.len() >= 1024
+            && let Some(oldest) = cache
+                .iter()
+                .min_by_key(|(_, value)| value.last_used)
+                .map(|(path, _)| path.clone())
+        {
+            cache.remove(&oldest);
+        }
+        cache.insert(
+            path.to_path_buf(),
+            CachedLevel {
+                stamp,
+                metadata: metadata.clone(),
+                last_used: Instant::now(),
+            },
+        );
+    }
+    Ok(metadata)
 }
 
 pub async fn get_singleplayer_world(
@@ -390,25 +477,11 @@ async fn read_singleplayer_world_maybe_locked(
     world_path: PathBuf,
     locked: bool,
 ) -> Result<World> {
-    let raw = io::read(world_path.join("level.dat")).await?;
-    let (root, _) = quartz_nbt::io::read_nbt(
-        &mut Cursor::new(raw),
-        quartz_nbt::io::Flavor::GzCompressed,
-    )?;
-
-    let data =
-        root.get::<_, &NbtCompound>("Data")
-            .context(ErrorKind::InputError(
-                "missing Data tag in level.dat".into(),
-            ))?;
-
-    let level_name = data
-        .get::<_, &str>("LevelName")
-        .unwrap_or_default()
-        .to_string();
-    let last_played = data.get::<_, i64>("LastPlayed").unwrap_or(0);
-    let game_type = data.get::<_, i32>("GameType").unwrap_or(0);
-    let hardcore = read_hardcore(data);
+    let _permit = WORLD_READS.acquire().await?;
+    let level_path = world_path.join("level.dat");
+    let metadata =
+        tokio::task::spawn_blocking(move || read_level_metadata(&level_path))
+            .await??;
 
     let icon = if tokio::fs::try_exists(world_path.join("icon.png"))
         .await
@@ -419,7 +492,7 @@ async fn read_singleplayer_world_maybe_locked(
         None
     };
 
-    let game_mode = match game_type {
+    let game_mode = match metadata.game_type {
         0 => SingleplayerGameMode::Survival,
         1 => SingleplayerGameMode::Creative,
         2 => SingleplayerGameMode::Adventure,
@@ -428,8 +501,8 @@ async fn read_singleplayer_world_maybe_locked(
     };
 
     Ok(World {
-        name: level_name,
-        last_played: Utc.timestamp_millis_opt(last_played).single(),
+        name: metadata.name,
+        last_played: Utc.timestamp_millis_opt(metadata.last_played).single(),
         icon,
         display_status: DisplayStatus::Normal,
         details: WorldDetails::Singleplayer {
@@ -439,7 +512,7 @@ async fn read_singleplayer_world_maybe_locked(
                 .to_string_lossy()
                 .to_string(),
             game_mode,
-            hardcore,
+            hardcore: metadata.hardcore,
             locked,
         },
     })
@@ -1124,6 +1197,58 @@ mod tests {
     use super::backup_world;
     use std::fs;
     use std::io::Read;
+
+    #[tokio::test]
+    async fn level_cache_invalidates_and_refreshes_icons_and_locks() {
+        use super::*;
+        fn write_level(path: &Path, name: &str) {
+            let mut data = NbtCompound::new();
+            data.insert("LevelName", name.to_owned());
+            let mut root = NbtCompound::new();
+            root.insert("Data", data);
+            let mut bytes = Vec::new();
+            quartz_nbt::io::write_nbt(
+                &mut bytes,
+                None,
+                &root,
+                quartz_nbt::io::Flavor::GzCompressed,
+            )
+            .unwrap();
+            fs::write(path, bytes).unwrap();
+        }
+        let dir = tempfile::tempdir().unwrap();
+        let level = dir.path().join("level.dat");
+        write_level(&level, "Alpha");
+        let first =
+            read_singleplayer_world_maybe_locked(dir.path().to_owned(), false)
+                .await
+                .unwrap();
+        assert_eq!(first.name, "Alpha");
+        assert!(first.icon.is_none());
+        let used = LEVEL_METADATA.lock().get(&level).unwrap().last_used;
+        fs::write(dir.path().join("icon.png"), b"icon").unwrap();
+        let cached =
+            read_singleplayer_world_maybe_locked(dir.path().to_owned(), true)
+                .await
+                .unwrap();
+        assert!(LEVEL_METADATA.lock().get(&level).unwrap().last_used > used);
+        assert!(cached.icon.is_some());
+        assert!(matches!(
+            cached.details,
+            WorldDetails::Singleplayer { locked: true, .. }
+        ));
+        let modified = fs::metadata(&level).unwrap().modified().unwrap();
+        write_level(&level, "Bravo");
+        fs::File::options()
+            .write(true)
+            .open(&level)
+            .unwrap()
+            .set_modified(modified)
+            .unwrap();
+        assert_eq!(read_level_metadata(&level).unwrap().name, "Bravo");
+        fs::write(&level, b"corrupt").unwrap();
+        assert!(read_level_metadata(&level).is_err());
+    }
 
     #[tokio::test]
     async fn backup_world_preserves_files_and_leaves_only_completed_zip() {

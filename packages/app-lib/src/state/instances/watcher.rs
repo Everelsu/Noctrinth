@@ -16,7 +16,7 @@ use notify_debouncer_mini::{
     DebounceEventResult, Debouncer, new_debouncer_opt,
 };
 use sqlx::SqlitePool;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 use std::{
     collections::{HashMap, HashSet},
@@ -87,17 +87,17 @@ impl Watcher for WriteOnlyWatcher {
     }
 }
 
-static CONTENT_SYNCS: LazyLock<DashMap<String, bool>> =
+static CONTENT_SYNCS: LazyLock<DashMap<String, HashSet<PathBuf>>> =
     LazyLock::new(DashMap::new);
 
-fn queue_content_sync(instance_id: String, state: Arc<State>) {
+fn queue_content_sync(instance_id: String, path: PathBuf, state: Arc<State>) {
     match CONTENT_SYNCS.entry(instance_id.clone()) {
         Entry::Occupied(mut entry) => {
-            *entry.get_mut() = true;
+            entry.get_mut().insert(path);
             return;
         }
         Entry::Vacant(entry) => {
-            entry.insert(false);
+            entry.insert(HashSet::from([path]));
         }
     }
     tokio::spawn(async move {
@@ -109,6 +109,7 @@ fn queue_content_sync(instance_id: String, state: Arc<State>) {
                 )
                 .await?
                 else {
+                    CONTENT_SYNCS.remove(&instance_id);
                     return Ok(true);
                 };
                 if matches!(
@@ -118,10 +119,22 @@ fn queue_content_sync(instance_id: String, state: Arc<State>) {
                 ) {
                     return Ok(false);
                 }
-                if let Some(mut queued) = CONTENT_SYNCS.get_mut(&instance_id) {
-                    *queued = false;
+                let paths = CONTENT_SYNCS
+                    .get_mut(&instance_id)
+                    .map(|mut queued| std::mem::take(&mut *queued))
+                    .unwrap_or_default();
+                let sync = if paths.contains(&PathBuf::new()) {
+                    crate::state::sync_content_files(&instance_id, &state).await
+                } else {
+                    super::commands::sync_changed_content_files(
+                        &instance, &paths, &state,
+                    )
+                    .await
+                };
+                if sync.is_err() {
+                    crate::state::sync_content_files(&instance_id, &state)
+                        .await?;
                 }
-                crate::state::sync_content_files(&instance_id, &state).await?;
                 crate::api::instance::queue_synced_pack_reconciliation(
                     &instance_id,
                 );
@@ -141,9 +154,7 @@ fn queue_content_sync(instance_id: String, state: Arc<State>) {
             let _ =
                 emit_instance(&instance_id, InstancePayloadType::Synced).await;
             match CONTENT_SYNCS.entry(instance_id.clone()) {
-                Entry::Occupied(mut entry) if *entry.get() => {
-                    *entry.get_mut() = false
-                }
+                Entry::Occupied(entry) if !entry.get().is_empty() => {}
                 Entry::Occupied(entry) => {
                     entry.remove();
                     break;
@@ -227,6 +238,18 @@ pub async fn init_watcher() -> crate::Result<FileWatcher> {
                                 *name == "resourcepacks" || *name == "datapacks"
                             }) {
                                 pack_instances.insert(instance_id.clone());
+                            }
+                            let sync_content =
+                                first_file_name.as_ref().is_some_and(|name| {
+                                    ProjectType::iterator()
+                                        .any(|kind| *name == kind.get_folder())
+                                });
+                            if sync_content {
+                                queue_content_sync(
+                                    instance_id.clone(),
+                                    e.path.clone(),
+                                    Arc::clone(&state),
+                                );
                             }
                             let is_screenshot_event = first_file_name
                                 .as_ref()
@@ -334,23 +357,7 @@ pub async fn init_watcher() -> crate::Result<FileWatcher> {
                                         &event,
                                         InstancePayloadType::ScreenshotsUpdated
                                     );
-                                    let sync_content = first_file_name
-                                        .as_ref()
-                                        .is_some_and(|name| {
-                                            ProjectType::iterator().any(
-                                                |project_type| {
-                                                    *name
-                                                        == project_type
-                                                            .get_folder()
-                                                },
-                                            )
-                                        });
-                                    if sync_content {
-                                        queue_content_sync(
-                                            emit_instance_id,
-                                            Arc::clone(&state),
-                                        );
-                                    } else {
+                                    if !sync_content {
                                         tokio::spawn(async move {
                                             if reconcile_screenshots
 												&& let Err(error) =
@@ -404,7 +411,17 @@ pub async fn init_watcher() -> crate::Result<FileWatcher> {
                         });
                     }
                 }
-                Err(error) => tracing::warn!("Unable to watch file: {error}"),
+                Err(error) => {
+                    tracing::warn!("Unable to watch file: {error}");
+                    for instance_id in event_instance_ids.read().await.values()
+                    {
+                        queue_content_sync(
+                            instance_id.clone(),
+                            PathBuf::new(),
+                            Arc::clone(&state),
+                        );
+                    }
+                }
             }
         }
     });

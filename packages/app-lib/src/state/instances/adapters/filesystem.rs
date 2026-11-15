@@ -17,6 +17,14 @@ pub(crate) fn scan_content_files(
     instances_dir: &Path,
     instance_path: &str,
 ) -> crate::Result<Vec<ScannedContentFile>> {
+    scan_content_paths(instances_dir, instance_path, None)
+}
+
+pub(crate) fn scan_content_paths(
+    instances_dir: &Path,
+    instance_path: &str,
+    paths: Option<&std::collections::HashSet<String>>,
+) -> crate::Result<Vec<ScannedContentFile>> {
     crate::state::content_store::validate_instance_path(instance_path)?;
     let instance_full_path = instances_dir.join(instance_path);
     let instance_dir = io::canonicalize(instance_full_path)?;
@@ -26,6 +34,13 @@ pub(crate) fn scan_content_files(
 
     for project_type in ProjectType::iterator() {
         let folder = project_type.get_folder();
+        if paths.is_some_and(|paths| {
+            !paths
+                .iter()
+                .any(|path| path.starts_with(&format!("{folder}/")))
+        }) {
+            continue;
+        }
         let folder_path = instance_dir.join(folder);
         let has_linked_parent = linked_instance
             || std::fs::symlink_metadata(&folder_path)
@@ -35,10 +50,26 @@ pub(crate) fn scan_content_files(
             continue;
         }
 
-        for entry in std::fs::read_dir(&folder_path)
-            .map_err(|err| IOError::with_path(err, &folder_path))?
-        {
-            let path = entry.map_err(IOError::from)?.path();
+        let candidates = if let Some(paths) = paths {
+            paths
+                .iter()
+                .filter(|path| path.starts_with(&format!("{folder}/")))
+                .flat_map(|path| {
+                    [
+                        instance_dir.join(path),
+                        instance_dir.join(format!("{path}.disabled")),
+                    ]
+                })
+                .collect::<Vec<_>>()
+        } else {
+            std::fs::read_dir(&folder_path)
+                .map_err(|err| IOError::with_path(err, &folder_path))?
+                .map(|entry| {
+                    entry.map(|entry| entry.path()).map_err(IOError::from)
+                })
+                .collect::<std::result::Result<Vec<_>, _>>()?
+        };
+        for path in candidates {
             if !path.is_file() {
                 continue;
             }
@@ -108,5 +139,41 @@ fn is_scannable_project_file(
             extension.eq_ignore_ascii_case("zip")
                 || extension.eq_ignore_ascii_case("jar")
         }
+    }
+}
+
+#[cfg(test)]
+mod incremental_tests {
+    use super::*;
+    use std::collections::HashSet;
+
+    #[test]
+    fn selected_paths_include_both_enabled_forms_without_scanning_other_folders()
+     {
+        let dir = tempfile::tempdir().unwrap();
+        let instance = dir.path().join("example");
+        std::fs::create_dir_all(instance.join("mods")).unwrap();
+        std::fs::write(instance.join("mods/a.jar"), b"a").unwrap();
+        std::fs::write(instance.join("mods/a.jar.disabled"), b"disabled")
+            .unwrap();
+        std::fs::write(instance.join("mods/b.jar"), b"unrelated").unwrap();
+        std::fs::write(instance.join("resourcepacks"), b"not a directory")
+            .unwrap();
+        let paths = HashSet::from(["mods/a.jar".to_owned()]);
+        let files =
+            scan_content_paths(dir.path(), "example", Some(&paths)).unwrap();
+        assert_eq!(files.len(), 2);
+        assert!(
+            files
+                .iter()
+                .all(|file| file.relative_path.starts_with("mods/a.jar"))
+        );
+        std::fs::remove_file(instance.join("mods/a.jar")).unwrap();
+        assert_eq!(
+            scan_content_paths(dir.path(), "example", Some(&paths))
+                .unwrap()
+                .len(),
+            1
+        );
     }
 }

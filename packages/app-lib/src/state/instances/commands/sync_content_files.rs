@@ -30,10 +30,108 @@ pub(crate) async fn sync_content_files(
     sync_instance_content_files(&instance, state).await
 }
 
+pub(crate) async fn sync_changed_content_files(
+    instance: &Instance,
+    paths: &HashSet<std::path::PathBuf>,
+    state: &State,
+) -> crate::Result<Vec<InstanceFile>> {
+    let existing =
+        sqlite::content_rows::get_instance_files(&instance.id, &state.pool)
+            .await?;
+    let bound_ids = crate::state::content_store::instance_storage(
+        &state.pool,
+        &instance.id,
+    )
+    .await?
+    .into_iter()
+    .map(|binding| binding.file_id)
+    .collect::<HashSet<_>>();
+    let scope = changed_content_scope(
+        &state.directories.instances_dir(),
+        &instance.path,
+        paths,
+        &existing,
+        &bound_ids,
+    )?;
+    sync_instance_content_scope(instance, scope.as_ref(), state).await
+}
+
+fn changed_content_scope(
+    instances_dir: &std::path::Path,
+    instance_path: &str,
+    paths: &HashSet<std::path::PathBuf>,
+    existing: &[InstanceFile],
+    bound_ids: &HashSet<String>,
+) -> crate::Result<Option<HashSet<String>>> {
+    let root = instances_dir.join(instance_path);
+    let mut scope = HashSet::new();
+    for path in paths {
+        let Ok(relative) = path.strip_prefix(&root) else {
+            return Ok(None);
+        };
+        let parts = relative.components().collect::<Vec<_>>();
+        if parts.len() != 2
+            || parts
+                .iter()
+                .any(|part| !matches!(part, std::path::Component::Normal(_)))
+            || path.is_dir()
+        {
+            return Ok(None);
+        }
+        let relative = relative.to_string_lossy().replace('\\', "/");
+        if !crate::state::content_store::is_managed_content_path(&relative) {
+            return Ok(None);
+        }
+        scope.insert(relative.trim_end_matches(".disabled").to_owned());
+    }
+    let scanned = filesystem::scan_content_paths(
+        instances_dir,
+        instance_path,
+        Some(&scope),
+    )?;
+    for file in existing {
+        let canonical = file.relative_path.trim_end_matches(".disabled");
+        let touched = scope
+            .iter()
+            .any(|path| path.eq_ignore_ascii_case(canonical));
+        if touched && !scope.contains(canonical) {
+            return Ok(None);
+        }
+        let possible_rename = scanned.iter().any(|candidate| {
+            candidate.size == file.size
+                && candidate.enabled == file.enabled
+                && filesystem::project_type_from_relative_path(
+                    &candidate.relative_path,
+                ) == project_type_for_file(file)
+        });
+        if bound_ids.contains(&file.id)
+            && (touched || possible_rename)
+            && !root.join(content_file_path(file)).try_exists()?
+        {
+            // Renames need the complete set to preserve bindings and resolve ambiguous matches.
+            return Ok(None);
+        }
+    }
+    Ok(Some(scope))
+}
+
 pub(crate) async fn sync_instance_content_files(
     instance: &Instance,
     state: &State,
 ) -> crate::Result<Vec<InstanceFile>> {
+    sync_instance_content_scope(instance, None, state).await
+}
+
+async fn sync_instance_content_scope(
+    instance: &Instance,
+    scope: Option<&HashSet<String>>,
+    state: &State,
+) -> crate::Result<Vec<InstanceFile>> {
+    let in_scope = |file: &InstanceFile| {
+        scope.is_none_or(|paths| {
+            paths.contains(file.relative_path.trim_end_matches(".disabled"))
+        })
+    };
     let (snapshot, known_files, known_bindings) = {
         let instance_content =
             InstanceContent::lock(&instance.id, state).await?;
@@ -49,9 +147,10 @@ pub(crate) async fn sync_instance_content_files(
             )
             .await;
         }
-        let snapshot = filesystem::scan_content_files(
+        let snapshot = filesystem::scan_content_paths(
             &state.directories.instances_dir(),
             &instance.path,
+            scope,
         )?
         .into_iter()
         .map(|file| (file.relative_path.clone(), file))
@@ -72,7 +171,7 @@ pub(crate) async fn sync_instance_content_files(
 
     // Warm hashes without the store lock; their stamps are checked again below.
     let mut changed_outside = HashSet::new();
-    for file in &known_files {
+    for file in known_files.iter().filter(|file| in_scope(file)) {
         if let Some(binding) = known_bindings.get(&file.id)
             && changed_outside_app(instance, file, binding, state)
                 .await
@@ -134,8 +233,9 @@ pub(crate) async fn sync_instance_content_files(
     }
     let running =
         crate::state::instance_has_running_process(&instance.id, state).await?;
-    let renamed =
-        !running && reconcile_instance_renames(instance, state).await?;
+    let renamed = scope.is_none()
+        && !running
+        && reconcile_instance_renames(instance, state).await?;
     let mut existing =
         sqlite::content_rows::get_instance_files(&instance.id, &state.pool)
             .await?;
@@ -147,9 +247,10 @@ pub(crate) async fn sync_instance_content_files(
     .into_iter()
     .map(|binding| (binding.file_id.clone(), binding))
     .collect::<HashMap<_, _>>();
-    let scanned = filesystem::scan_content_files(
+    let scanned = filesystem::scan_content_paths(
         &state.directories.instances_dir(),
         &instance.path,
+        scope,
     )?;
     let normalized = normalize_legacy_content_files(
         instance, &existing, &bindings, &scanned, state,
@@ -191,9 +292,13 @@ pub(crate) async fn sync_instance_content_files(
             duplicate_paths.insert(canonical);
         }
     }
-    let mut files = Vec::new();
+    let mut files = existing
+        .iter()
+        .filter(|file| !in_scope(file))
+        .cloned()
+        .collect::<Vec<_>>();
     let mut saved_files = HashSet::new();
-    for previous in &existing {
+    for previous in existing.iter().filter(|file| in_scope(file)) {
         let Some(binding) = bindings.get(&previous.id) else {
             continue;
         };
@@ -311,15 +416,12 @@ pub(crate) async fn sync_instance_content_files(
         || !unbound.is_empty()
         || !missing.is_empty()
         || files.iter().any(|file| {
-            existing
-                .iter()
-                .find(|previous| previous.id == file.id)
-                .is_none_or(|previous| {
-                    previous.missing != file.missing
-                        || previous.enabled != file.enabled
-                        || previous.sha1 != file.sha1
-                        || previous.relative_path != file.relative_path
-                })
+            existing_by_id.get(file.id.as_str()).is_none_or(|previous| {
+                previous.missing != file.missing
+                    || previous.enabled != file.enabled
+                    || previous.sha1 != file.sha1
+                    || previous.relative_path != file.relative_path
+            })
         });
     let mut tx = state.pool.begin_with("BEGIN IMMEDIATE").await?;
     for file_id in &unbound {
@@ -617,4 +719,83 @@ pub(crate) fn project_type_for_file(
 
 pub(super) fn instance_file_id() -> String {
     format!("instance-file:{}", Uuid::new_v4())
+}
+
+#[cfg(test)]
+mod incremental_tests {
+    use super::*;
+
+    #[test]
+    fn additions_and_unmanaged_deletions_are_scoped_but_managed_renames_recover()
+     {
+        let dir = tempfile::tempdir().unwrap();
+        let mods = dir.path().join("instance/mods");
+        std::fs::create_dir_all(&mods).unwrap();
+        std::fs::write(mods.join("new.jar"), b"new").unwrap();
+        let file = InstanceFile {
+            id: "old".into(),
+            instance_id: "test".into(),
+            relative_path: "mods/old.jar".into(),
+            file_name: "old.jar".into(),
+            enabled: true,
+            sha1: "hash".into(),
+            size: 3,
+            missing: false,
+            added_at: Utc::now(),
+            modified_at: Utc::now(),
+        };
+        let paths = HashSet::from([mods.join("new.jar"), mods.join("old.jar")]);
+        let scope = changed_content_scope(
+            dir.path(),
+            "instance",
+            &paths,
+            std::slice::from_ref(&file),
+            &HashSet::new(),
+        )
+        .unwrap()
+        .unwrap();
+        assert_eq!(
+            scope,
+            HashSet::from([
+                "mods/new.jar".to_owned(),
+                "mods/old.jar".to_owned()
+            ])
+        );
+        let bound = HashSet::from([file.id.clone()]);
+        assert!(
+            changed_content_scope(
+                dir.path(),
+                "instance",
+                &paths,
+                std::slice::from_ref(&file),
+                &bound
+            )
+            .unwrap()
+            .is_none()
+        );
+        let only_new = HashSet::from([mods.join("new.jar")]);
+        assert!(
+            changed_content_scope(
+                dir.path(),
+                "instance",
+                &only_new,
+                &[file],
+                &bound
+            )
+            .unwrap()
+            .is_none(),
+            "rename recovery must work even if the old path event is missing"
+        );
+        assert!(
+            changed_content_scope(
+                dir.path(),
+                "instance",
+                &HashSet::from([mods]),
+                &[],
+                &bound
+            )
+            .unwrap()
+            .is_none()
+        );
+    }
 }

@@ -16,7 +16,7 @@ impl ContentStore {
         state: &State,
     ) -> crate::Result<StoredFileHandle> {
         let staged = self.stage_file(source).await?;
-        let hash = staged.sha512.clone();
+        let hash = staged.hashes.sha512.clone();
         let _files_lock = self.files_lock.lock().await;
         let mut repaired = false;
         if let Some(stored_file) = self.get_file_record(&hash).await?

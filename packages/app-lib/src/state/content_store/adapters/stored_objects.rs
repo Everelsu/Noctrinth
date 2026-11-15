@@ -109,7 +109,7 @@ async fn adopt(
     if !metadata.is_file() {
         return Ok(None);
     }
-    let FileHashes { sha512, size } = hash_file(&path).await?;
+    let FileHashes { sha512, size, .. } = hash_file(&path).await?;
     if sha512 != hash {
         tracing::warn!(path = %path.display(), "Preserving an unregistered store object with an unexpected hash");
         return Ok(None);

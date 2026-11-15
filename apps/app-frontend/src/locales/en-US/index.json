@@ -1164,7 +1164,7 @@
     "message": "Paused"
   },
   "app.download-manager.rate-limited": {
-    "message": "Modrinth asked to slow down, resuming in {seconds, plural, one {# second} other {# seconds}}"
+    "message": "The server asked to slow down, resuming in {seconds, plural, one {# second} other {# seconds}}"
   },
   "app.download-manager.remove": {
     "message": "Remove from history"

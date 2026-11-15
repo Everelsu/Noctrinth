@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT OR IGNORE INTO store_blob_checksums (algorithm, digest, blob_sha512) VALUES ('sha1', ?, ?), ('md5', ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "ef8a332394c96b6fb51f13b6623255f61f469c33c69cc44800f678d534a02e78"
+}

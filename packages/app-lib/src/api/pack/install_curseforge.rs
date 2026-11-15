@@ -21,7 +21,6 @@
 //! job runner to route a dropped `.zip` to the right format.
 
 use std::collections::{HashMap, HashSet};
-use std::future::Future;
 use std::io::Cursor;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -42,9 +41,7 @@ use crate::state::{
     AppliedContentSetPatch, ContentSourceKind, EditInstance,
     InstanceInstallStage, InstanceLink, ModLoader, State,
 };
-use crate::util::fetch::{
-    DownloadMeta, DownloadReason, fetch_advanced, fetch_mirrors,
-};
+use crate::util::fetch::{DownloadMeta, DownloadReason, fetch_advanced};
 use crate::util::io::sanitize_filename;
 
 const CF_FILES_ENDPOINT: &str = "https://api.curseforge.com/v1/mods/files";
@@ -160,26 +157,16 @@ impl CfFileData {
             .map(|h| h.value.as_str())
     }
 
-    fn matches_bytes(&self, bytes: &[u8]) -> bool {
-        if self
-            .file_length
-            .is_some_and(|length| length > 0 && length != bytes.len() as u64)
-        {
-            return false;
+    fn integrity(&self) -> crate::util::content_hash::FileIntegrity<'_> {
+        crate::util::content_hash::FileIntegrity {
+            sha1: self.sha1(),
+            md5: self
+                .hashes
+                .iter()
+                .find(|hash| hash.algo == 2)
+                .map(|hash| hash.value.as_str()),
+            size: self.file_length.filter(|length| *length > 0),
         }
-        if let Some(expected) = self.sha1() {
-            return expected.eq_ignore_ascii_case(
-                &sha1_smol::Sha1::from(bytes).hexdigest(),
-            );
-        }
-        if let Some(hash) = self.hashes.iter().find(|hash| hash.algo == 2) {
-            use md5::Digest;
-            return hash.value.eq_ignore_ascii_case(&format!(
-                "{:x}",
-                md5::Md5::digest(bytes)
-            ));
-        }
-        false
     }
 
     /// The file as one its author does not let launchers download, to be
@@ -191,6 +178,7 @@ impl CfFileData {
             file_name: self.file_name.clone(),
             size: self.file_length.filter(|length| *length > 0),
             sha1: self.sha1().map(str::to_string),
+            md5: self.integrity().md5.map(str::to_string),
             source_kind: ContentSourceKind::CurseForgeModpack,
             disabled: false,
         }
@@ -585,58 +573,6 @@ async fn resolve_manifest_files(
     Ok(resolved.data)
 }
 
-async fn cf_file_bytes<'a, F, Fut>(
-    file: &'a CfFileData,
-    bundled: &[PathBuf],
-    download: F,
-) -> crate::Result<Option<bytes::Bytes>>
-where
-    F: FnOnce(&'a str) -> Fut,
-    Fut: Future<Output = crate::Result<bytes::Bytes>>,
-{
-    for path in bundled {
-        if let Some(length) = file.file_length.filter(|length| *length > 0)
-            && !tokio::fs::metadata(path)
-                .await
-                .is_ok_and(|meta| meta.len() == length)
-        {
-            continue;
-        }
-        match tokio::fs::read(path).await {
-            Ok(bytes) if file.matches_bytes(&bytes) => {
-                tracing::info!(
-                    "Reusing bundled CurseForge file {} from {}",
-                    file.id,
-                    path.display()
-                );
-                return Ok(Some(bytes.into()));
-            }
-            Ok(_) => {}
-            Err(error) => tracing::warn!(
-                "Could not read bundled file {}: {error}",
-                path.display()
-            ),
-        }
-    }
-    let Some(url) = file.download_url.as_deref() else {
-        return Ok(None);
-    };
-    let bytes = download(url).await?;
-    if file
-        .file_length
-        .is_some_and(|length| length > 0 && length != bytes.len() as u64)
-        || (file.hashes.iter().any(|hash| matches!(hash.algo, 1 | 2))
-            && !file.matches_bytes(&bytes))
-    {
-        return Err(crate::ErrorKind::InputError(format!(
-            "CurseForge file {} failed its size or checksum check",
-            file.id
-        ))
-        .into());
-    }
-    Ok(Some(bytes))
-}
-
 async fn install_cf_file(
     state: &State,
     cf_file: &CfFileData,
@@ -645,27 +581,24 @@ async fn install_cf_file(
     bundled: &HashMap<String, Vec<PathBuf>>,
 ) -> crate::Result<bool> {
     let safe_file_name = sanitize_filename(&cf_file.file_name);
-    let sha1 = cf_file.sha1().map(str::to_ascii_lowercase);
-    let expected_hash = sha1.as_deref();
-    let Some(bytes) = cf_file_bytes(
-        cf_file,
-        bundled
-            .get(&safe_file_name)
-            .map(Vec::as_slice)
-            .unwrap_or_default(),
-        |url| async move {
-            fetch_mirrors(
-                &[url],
-                expected_hash,
-                Some(download_meta),
-                None,
-                &state.fetch_semaphore,
-                &state.pool,
-            )
-            .await
-        },
-    )
-    .await?
+    let mirrors = cf_file
+        .download_url
+        .as_deref()
+        .into_iter()
+        .collect::<Vec<_>>();
+    let Some(acquired) = state
+        .content_store
+        .get_or_download_file_by_checksum(
+            &mirrors,
+            cf_file.integrity(),
+            bundled
+                .get(&safe_file_name)
+                .map(Vec::as_slice)
+                .unwrap_or_default(),
+            Some(download_meta),
+            &state.fetch_semaphore,
+        )
+        .await?
     else {
         return Ok(false);
     };
@@ -676,12 +609,10 @@ async fn install_cf_file(
     // still run in parallel — mirrors the mrpack installer's use of the
     // install DB semaphore.
     let _permit = state.installs.db_semaphore.acquire().await?;
-    crate::state::instances::commands::add_project_bytes(
+    crate::state::instances::commands::add_project_file(
         instance_id,
         &safe_file_name,
-        bytes,
-        expected_hash,
-        None,
+        &acquired.stored_file,
         // The pack's own, as against a CurseForge mod the user adds later —
         // which is what tells the pack's content list from everything beside
         // it. Both carry CurseForge ids; only this one is part of the pack.
@@ -965,155 +896,6 @@ async fn extract_overrides(
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn mod_file(bytes: &[u8]) -> CfFileData {
-        CfFileData {
-            id: 123,
-            mod_id: 456,
-            file_name: "mod.jar".into(),
-            download_url: Some("https://example.invalid/mod.jar".into()),
-            file_length: Some(bytes.len() as u64),
-            hashes: vec![CfFileHash {
-                algo: 1,
-                value: sha1_smol::Sha1::from(bytes).hexdigest(),
-            }],
-        }
-    }
-
-    #[tokio::test]
-    async fn bundled_mod_skips_the_download() {
-        let directory = tempfile::tempdir().unwrap();
-        let path = directory.path().join("mod.jar");
-        tokio::fs::write(&path, b"correct mod").await.unwrap();
-        let mut file = mod_file(b"correct mod");
-        file.hashes[0].value.make_ascii_uppercase();
-        let bytes = cf_file_bytes(&file, &[path], |_| async {
-            panic!("bundled mod must not be downloaded")
-        })
-        .await
-        .unwrap()
-        .unwrap();
-        assert_eq!(bytes.as_ref(), b"correct mod");
-    }
-
-    #[tokio::test]
-    async fn same_name_with_wrong_contents_or_size_is_downloaded() {
-        let directory = tempfile::tempdir().unwrap();
-        let path = directory.path().join("mod.jar");
-        let file = mod_file(b"correct mod");
-        for contents in [b"invalid mod".as_slice(), b"short".as_slice()] {
-            tokio::fs::write(&path, contents).await.unwrap();
-            let downloaded = std::sync::atomic::AtomicBool::new(false);
-            let bytes =
-                cf_file_bytes(&file, std::slice::from_ref(&path), |url| {
-                    assert_eq!(url, "https://example.invalid/mod.jar");
-                    downloaded.store(true, Ordering::Relaxed);
-                    std::future::ready(Ok(bytes::Bytes::from_static(
-                        b"correct mod",
-                    )))
-                })
-                .await
-                .unwrap()
-                .unwrap();
-            assert!(downloaded.load(Ordering::Relaxed));
-            assert_eq!(bytes.as_ref(), b"correct mod");
-        }
-    }
-
-    #[tokio::test]
-    async fn unavailable_download_is_satisfied_only_by_verified_local_bytes() {
-        let directory = tempfile::tempdir().unwrap();
-        let path = directory.path().join("mod.jar");
-        tokio::fs::write(&path, b"correct mod").await.unwrap();
-        let mut file = mod_file(b"correct mod");
-        file.download_url = None;
-        assert!(
-            cf_file_bytes(&file, &[path], |_| async {
-                panic!("restricted file must not be fetched")
-            })
-            .await
-            .unwrap()
-            .is_some()
-        );
-        assert!(
-            cf_file_bytes(&file, &[], |_| async {
-                panic!("restricted file must remain pending")
-            })
-            .await
-            .unwrap()
-            .is_none()
-        );
-    }
-
-    #[tokio::test]
-    async fn unverified_or_missing_local_files_fall_back_to_download() {
-        let directory = tempfile::tempdir().unwrap();
-        let path = directory.path().join("mod.jar");
-        let mut file = mod_file(b"correct mod");
-        let downloaded = std::sync::atomic::AtomicU64::new(0);
-        for write in [false, true] {
-            if write {
-                tokio::fs::write(&path, b"correct mod").await.unwrap();
-                file.hashes.clear();
-            }
-            cf_file_bytes(&file, std::slice::from_ref(&path), |_| {
-                downloaded.fetch_add(1, Ordering::Relaxed);
-                std::future::ready(Ok(bytes::Bytes::from_static(
-                    b"correct mod",
-                )))
-            })
-            .await
-            .unwrap()
-            .unwrap();
-        }
-        assert_eq!(downloaded.load(Ordering::Relaxed), 2);
-    }
-
-    #[tokio::test]
-    async fn another_bundled_copy_can_satisfy_the_file() {
-        let directory = tempfile::tempdir().unwrap();
-        let bad = directory.path().join("bad.jar");
-        let good = directory.path().join("good.jar");
-        tokio::fs::write(&bad, b"invalid mod").await.unwrap();
-        tokio::fs::write(&good, b"correct mod").await.unwrap();
-        assert!(
-            cf_file_bytes(&mod_file(b"correct mod"), &[bad, good], |_| async {
-                panic!("valid bundled copy exists")
-            })
-            .await
-            .unwrap()
-            .is_some()
-        );
-    }
-
-    #[test]
-    fn md5_is_supported_but_cannot_override_a_mismatched_sha1() {
-        use md5::Digest;
-        let mut file = mod_file(b"correct mod");
-        let md5 = CfFileHash {
-            algo: 2,
-            value: format!("{:x}", md5::Md5::digest(b"correct mod")),
-        };
-        file.hashes = vec![md5];
-        assert!(file.matches_bytes(b"correct mod"));
-        assert!(!file.matches_bytes(b"invalid mod"));
-        file.hashes.push(CfFileHash {
-            algo: 1,
-            value: "0".repeat(40),
-        });
-        assert!(!file.matches_bytes(b"correct mod"));
-    }
-
-    #[tokio::test]
-    async fn corrupt_download_is_rejected() {
-        assert!(
-            cf_file_bytes(&mod_file(b"correct mod"), &[], |_| async {
-                Ok(bytes::Bytes::from_static(b"invalid mod"))
-            })
-            .await
-            .is_err()
-        );
-    }
 
     #[test]
     fn extraction_accepts_pack_content_and_rejects_escape_paths() {

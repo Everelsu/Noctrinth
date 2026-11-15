@@ -3,7 +3,7 @@ use super::io::{self, IOError};
 use crate::event::LoadingBarId;
 use crate::event::emit::emit_loading;
 use crate::state::content_store::ContentStore;
-use crate::util::content_hash::{ContentHasher, temporary_file};
+use crate::util::content_hash::{ContentHasher, FileHashes, temporary_file};
 use crate::{ErrorKind, LabrinthError};
 use anyhow::{Context, bail};
 use bytes::Bytes;
@@ -246,7 +246,7 @@ const API_RATE_LIMIT_RECOVERY_SIZE: u32 = 20;
 struct ApiRateLimit {
     block_until: Mutex<Option<Instant>>,
     check_lock: Mutex<()>,
-    local: Arc<DefaultDirectRateLimiter>,
+    local: Option<Arc<DefaultDirectRateLimiter>>,
     recovery_padding: Duration,
 }
 
@@ -260,10 +260,19 @@ impl ApiRateLimit {
         Self {
             block_until: Mutex::new(None),
             check_lock: Mutex::new(()),
-            local: Arc::new(RateLimiter::direct(quota)),
+            local: Some(Arc::new(RateLimiter::direct(quota))),
             recovery_padding: quota
                 .replenish_interval()
                 .saturating_mul(recovery_size.saturating_sub(1)),
+        }
+    }
+
+    fn response_only() -> Self {
+        Self {
+            block_until: Mutex::new(None),
+            check_lock: Mutex::new(()),
+            local: None,
+            recovery_padding: Duration::ZERO,
         }
     }
 
@@ -271,7 +280,9 @@ impl ApiRateLimit {
         let _check_guard = self.check_lock.lock();
         self.ensure_not_blocked()?;
 
-        if let Err(not_until) = self.local.check() {
+        if let Some(local) = &self.local
+            && let Err(not_until) = local.check()
+        {
             // Adds hysteresis to the rate limiting system, ensuring recovery happens
             // for longer but for more units, avoiding the "flapping" effect when running
             // out of units.
@@ -297,8 +308,8 @@ impl ApiRateLimit {
     async fn acquire<'a>(
         &self,
         semaphore: &'a FetchSemaphore,
+        patience: &mut Duration,
     ) -> crate::Result<SemaphorePermit<'a>> {
-        let mut patience = RATE_LIMIT_PATIENCE;
         loop {
             let permit =
                 crate::install::control::download_step(semaphore.0.acquire())
@@ -307,7 +318,7 @@ impl ApiRateLimit {
                 Ok(()) => return Ok(permit),
                 Err(error) => {
                     drop(permit);
-                    wait_out_rate_limit(error, &mut patience).await?;
+                    wait_out_rate_limit(error, patience).await?;
                 }
             }
         }
@@ -372,8 +383,20 @@ impl ApiRateLimit {
     }
 }
 
-static GLOBAL_API_RATE_LIMIT: LazyLock<ApiRateLimit> =
-    LazyLock::new(ApiRateLimit::new);
+static GLOBAL_API_RATE_LIMIT: LazyLock<Arc<ApiRateLimit>> =
+    LazyLock::new(|| Arc::new(ApiRateLimit::new()));
+static RESPONSE_RATE_LIMITS: LazyLock<
+    Mutex<HashMap<String, Arc<ApiRateLimit>>>,
+> = LazyLock::new(|| Mutex::new(HashMap::new()));
+
+fn response_rate_limit(url: &str) -> crate::Result<Arc<ApiRateLimit>> {
+    let origin = url::Url::parse(url)?.origin().ascii_serialization();
+    Ok(RESPONSE_RATE_LIMITS
+        .lock()
+        .entry(origin)
+        .or_insert_with(|| Arc::new(ApiRateLimit::response_only()))
+        .clone())
+}
 
 /// How long, in all, one request from patient work may sit out rate limits
 /// before it gives up with [`ErrorKind::RateLimited`].
@@ -383,7 +406,7 @@ tokio::task_local! {
     static PATIENT: ();
 }
 
-/// Runs background work whose Modrinth API requests should wait out rate
+/// Runs background work whose HTTP requests should wait out rate
 /// limits (honouring `Retry-After`) instead of failing fast. Install jobs are
 /// always patient; anything else fails fast, so the UI can say so at once.
 pub async fn patiently<F: Future>(future: F) -> F::Output {
@@ -696,14 +719,14 @@ pub struct DownloadedFile {
 
 #[derive(Clone, Debug)]
 enum DownloadedFilePath {
-    Temporary(Arc<tempfile::TempPath>),
+    Temporary(Arc<tempfile::TempPath>, FileHashes),
     Stored(crate::state::content_store::StoredFileHandle),
 }
 
 impl DownloadedFile {
     pub fn path(&self) -> &Path {
         match &self.path {
-            DownloadedFilePath::Temporary(path) => path.as_ref().as_ref(),
+            DownloadedFilePath::Temporary(path, _) => path.as_ref().as_ref(),
             DownloadedFilePath::Stored(stored_file) => &stored_file.path,
         }
     }
@@ -721,7 +744,7 @@ impl DownloadedFile {
     }
 
     pub(crate) fn into_staged(self) -> crate::Result<StagedDownload> {
-        let DownloadedFilePath::Temporary(path) = self.path else {
+        let DownloadedFilePath::Temporary(path, hashes) = self.path else {
             bail!(ErrorKind::InputError(
                 "stored content cannot be staged again".to_string(),
             ));
@@ -732,11 +755,7 @@ impl DownloadedFile {
                     .to_string(),
             )
         })?;
-        Ok(StagedDownload {
-            path,
-            size: self.size,
-            sha512: self.sha512,
-        })
+        Ok(StagedDownload { path, hashes })
     }
 
     pub(crate) async fn store_file(
@@ -745,7 +764,7 @@ impl DownloadedFile {
     ) -> crate::Result<crate::state::content_store::StoredFileHandle> {
         match &self.path {
             DownloadedFilePath::Stored(stored_file) => Ok(stored_file.clone()),
-            DownloadedFilePath::Temporary(_) => {
+            DownloadedFilePath::Temporary(_, _) => {
                 content_store.store_file(self.path()).await
             }
         }
@@ -783,8 +802,7 @@ impl DownloadedFile {
 #[derive(Debug)]
 pub(crate) struct StagedDownload {
     pub(crate) path: tempfile::TempPath,
-    pub(crate) size: u64,
-    pub(crate) sha512: String,
+    pub(crate) hashes: FileHashes,
 }
 
 enum FetchBody {
@@ -827,6 +845,19 @@ pub async fn fetch_file(
     }
 }
 
+#[cfg(test)]
+tokio::task_local! {
+    pub(crate) static TEST_FILE_DOWNLOAD_CLIENT: reqwest::Client;
+}
+
+fn file_download_client() -> reqwest::Client {
+    #[cfg(test)]
+    if let Ok(client) = TEST_FILE_DOWNLOAD_CLIENT.try_with(Clone::clone) {
+        return client;
+    }
+    REQWEST_CLIENT.clone()
+}
+
 #[allow(clippy::too_many_arguments)]
 pub(crate) async fn fetch_file_mirrors_in(
     mirrors: &[&str],
@@ -841,6 +872,7 @@ pub(crate) async fn fetch_file_mirrors_in(
     if mirrors.is_empty() {
         bail!(ErrorKind::InputError("no mirrors provided".to_string()));
     }
+    let client = file_download_client();
     for (index, mirror) in mirrors.iter().enumerate() {
         let body = fetch_advanced_with_target(
             Method::GET,
@@ -854,7 +886,7 @@ pub(crate) async fn fetch_file_mirrors_in(
             uri_path,
             semaphore,
             exec,
-            &REQWEST_CLIENT,
+            &client,
             progress.as_deref_mut(),
             true,
             staging,
@@ -898,10 +930,10 @@ async fn read_file_response(
     drop(file);
     let hashes = hasher.finish(size);
     Ok(DownloadedFile {
-        path: DownloadedFilePath::Temporary(Arc::new(path)),
         reused: false,
         size,
-        sha512: hashes.sha512,
+        sha512: hashes.sha512.clone(),
+        path: DownloadedFilePath::Temporary(Arc::new(path), hashes),
     })
 }
 
@@ -1251,15 +1283,25 @@ async fn fetch_advanced_with_target(
         .map(|m| (DOWNLOAD_META_HEADER.to_string(), m.to_header_value()));
 
     let mut patience = rate_limit_patience();
+    let mut local_patience = RATE_LIMIT_PATIENCE;
+    let rate_limit = if is_api_url {
+        GLOBAL_API_RATE_LIMIT.clone()
+    } else {
+        response_rate_limit(url)?
+    };
 
     for attempt in 1..=(FETCH_ATTEMPTS + 1) {
         let (result, _permit) = loop {
-            let permit = if is_api_url {
-                GLOBAL_API_RATE_LIMIT.acquire(semaphore).await?
-            } else {
-                crate::install::control::download_step(semaphore.0.acquire())
-                    .await??
-            };
+            let permit = rate_limit
+                .acquire(
+                    semaphore,
+                    if is_api_url {
+                        &mut local_patience
+                    } else {
+                        &mut patience
+                    },
+                )
+                .await?;
             if let Some(fence_key) = fence_key
                 && GLOBAL_FETCH_FENCE.is_blocked(fence_key)
             {
@@ -1291,9 +1333,8 @@ async fn fetch_advanced_with_target(
 
             let result =
                 crate::install::control::download_step(req.send()).await?;
-            if is_api_url
-                && let Ok(resp) = &result
-                && let Some(error) = GLOBAL_API_RATE_LIMIT.handle_response(resp)
+            if let Ok(resp) = &result
+                && let Some(error) = rate_limit.handle_response(resp)
             {
                 drop(permit);
                 wait_out_rate_limit(error.into(), &mut patience).await?;
@@ -1353,6 +1394,10 @@ async fn fetch_advanced_with_target(
                             FetchBody::Memory(bytes) => {
                                 sha1_async(bytes.clone()).await?
                             }
+                            FetchBody::File(DownloadedFile {
+                                path: DownloadedFilePath::Temporary(_, hashes),
+                                ..
+                            }) => hashes.sha1.clone(),
                             FetchBody::File(file) => {
                                 sha1_file_async(file.path()).await?.1
                             }
@@ -1594,13 +1639,108 @@ mod tests {
     use chrono::{TimeDelta, Utc};
 
     #[tokio::test]
+    async fn response_limits_coordinate_concurrent_requests_to_one_origin() {
+        crate::install_crypto_provider();
+        let listener =
+            tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let base = format!("http://{}", listener.local_addr().unwrap());
+        let url = format!("{base}/first");
+        let other_url = format!("{base}/second");
+        let limit = response_rate_limit(&url).unwrap();
+        assert!(Arc::ptr_eq(
+            &limit,
+            &response_rate_limit(&other_url).unwrap()
+        ));
+        assert!(!Arc::ptr_eq(
+            &limit,
+            &response_rate_limit("http://example.invalid").unwrap()
+        ));
+        let server = tokio::spawn(async move {
+            let started = Instant::now();
+            let mut times = Vec::new();
+            for index in 0..3 {
+                let (mut stream, _) = listener.accept().await.unwrap();
+                let mut request = Vec::new();
+                loop {
+                    assert!(stream.read_buf(&mut request).await.unwrap() > 0);
+                    if request.windows(4).any(|bytes| bytes == b"\r\n\r\n") {
+                        break;
+                    }
+                    assert!(request.len() < 8192);
+                }
+                times.push(started.elapsed());
+                let response = if index == 0 {
+                    "HTTP/1.1 429 Too Many Requests\r\nRetry-After: 1\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+                } else {
+                    "HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok"
+                };
+                stream.write_all(response.as_bytes()).await.unwrap();
+            }
+            times
+        });
+        let pool = sqlx::sqlite::SqlitePoolOptions::new()
+            .connect_lazy("sqlite::memory:")
+            .unwrap();
+        let client = reqwest::Client::builder().no_proxy().build().unwrap();
+        let semaphore = FetchSemaphore(Semaphore::new(2));
+        let first = patiently(fetch_advanced_with_client(
+            Method::GET,
+            &url,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            &semaphore,
+            &pool,
+            &client,
+        ));
+        let second = patiently(async {
+            while limit.retry_in().is_none() {
+                tokio::task::yield_now().await;
+            }
+            let mut no_patience = Duration::ZERO;
+            assert!(limit.acquire(&semaphore, &mut no_patience).await.is_err());
+            assert_eq!(semaphore.0.available_permits(), 2);
+            fetch_advanced_with_client(
+                Method::GET,
+                &other_url,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                &semaphore,
+                &pool,
+                &client,
+            )
+            .await
+        });
+        let (first, second) =
+            tokio::time::timeout(Duration::from_secs(5), async {
+                tokio::join!(first, second)
+            })
+            .await
+            .unwrap();
+        assert_eq!(first.unwrap().as_ref(), b"ok");
+        assert_eq!(second.unwrap().as_ref(), b"ok");
+        let times = server.await.unwrap();
+        assert!(times[1] >= Duration::from_millis(900));
+        assert!(times[2] >= Duration::from_millis(900));
+    }
+
+    #[tokio::test]
     async fn test_local_quota_wait_releases_download_slot() {
         let limit = ApiRateLimit::new();
         for _ in 0..50 {
             limit.check().unwrap();
         }
         let semaphore = FetchSemaphore(Semaphore::new(1));
-        let mut request = std::pin::pin!(limit.acquire(&semaphore));
+        let mut patience = RATE_LIMIT_PATIENCE;
+        let mut request =
+            std::pin::pin!(limit.acquire(&semaphore, &mut patience));
         assert!(
             tokio::time::timeout(Duration::from_millis(20), request.as_mut())
                 .await

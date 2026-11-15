@@ -60,6 +60,7 @@ pub struct BlockedFile {
     pub file_name: String,
     pub size: Option<u64>,
     pub sha1: Option<String>,
+    pub md5: Option<String>,
     pub source_kind: ContentSourceKind,
     pub disabled: bool,
 }
@@ -232,21 +233,28 @@ async fn install_from_path(
     path: &Path,
     state: &State,
 ) -> crate::Result<()> {
-    let bytes = bytes::Bytes::from(
-        tokio::fs::read(path)
-            .await
-            .map_err(|e| crate::util::io::IOError::with_path(e, path))?,
-    );
+    let stored_file = state.content_store.import_file(path, state).await?;
+    if !(crate::util::content_hash::FileIntegrity {
+        sha1: file.sha1.as_deref(),
+        md5: file.md5.as_deref(),
+        size: file.size,
+    })
+    .matches_path(&stored_file.path)
+    .await?
+    {
+        return Err(crate::ErrorKind::InputError(
+            "local CurseForge file failed its checksum check".into(),
+        )
+        .into());
+    }
     let project_id = file.project_id.to_string();
     let file_id = file.file_id.to_string();
     let relative_path = {
         let _permit = state.installs.db_semaphore.acquire().await?;
-        crate::state::instances::commands::add_project_bytes(
+        crate::state::instances::commands::add_project_file(
             instance_id,
             &sanitize_filename(&file.file_name),
-            bytes,
-            file.sha1.as_deref(),
-            None,
+            &stored_file,
             file.source_kind,
             Some(&project_id),
             Some(&file_id),
@@ -378,12 +386,21 @@ fn find_on_disk_blocking(
                 return;
             }
 
-            let Ok(bytes) = std::fs::read(path) else {
+            let Ok(input) = std::fs::File::open(path) else {
                 return;
             };
-            let sha1 = sha1_smol::Sha1::from(&bytes).hexdigest();
+            let Ok(hashes) = crate::util::content_hash::hash_reader(input)
+            else {
+                return;
+            };
             for file in candidates {
-                if matches_file(file, name.as_deref(), size, &sha1) {
+                if matches_file(
+                    file,
+                    name.as_deref(),
+                    hashes.size,
+                    &hashes.sha1,
+                    &hashes.md5,
+                ) {
                     found.insert(file.file_id, path.to_path_buf());
                 }
             }
@@ -403,10 +420,15 @@ fn matches_file(
     name_on_disk: Option<&str>,
     size: u64,
     sha1: &str,
+    md5: &str,
 ) -> bool {
-    match &file.sha1 {
-        Some(expected) => expected.eq_ignore_ascii_case(sha1),
-        None => {
+    if file.size.is_some_and(|expected| expected != size) {
+        return false;
+    }
+    match (&file.sha1, &file.md5) {
+        (Some(expected), _) => expected.eq_ignore_ascii_case(sha1),
+        (_, Some(expected)) => expected.eq_ignore_ascii_case(md5),
+        _ => {
             file.size.is_none_or(|expected| expected == size)
                 && name_on_disk == Some(file.file_name.to_lowercase().as_str())
         }
@@ -471,15 +493,16 @@ async fn write_pending(
     sqlx::query!(
         "
         INSERT INTO curseforge_pending_files (
-            instance_id, file_id, project_id, file_name, size, sha1,
+            instance_id, file_id, project_id, file_name, size, sha1, md5,
             source_kind, disabled, added
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         ON CONFLICT(instance_id, file_id) DO UPDATE SET
             project_id = excluded.project_id,
             file_name = excluded.file_name,
             size = excluded.size,
             sha1 = excluded.sha1,
+            md5 = excluded.md5,
             source_kind = excluded.source_kind,
             disabled = excluded.disabled
         ",
@@ -489,6 +512,7 @@ async fn write_pending(
         file.file_name,
         size,
         file.sha1,
+        file.md5,
         source_kind,
         file.disabled,
         added,
@@ -504,7 +528,7 @@ async fn read_pending(
 ) -> crate::Result<Vec<BlockedFile>> {
     let rows = sqlx::query!(
         "
-        SELECT file_id, project_id, file_name, size, sha1, source_kind,
+        SELECT file_id, project_id, file_name, size, sha1, md5, source_kind,
                disabled
         FROM curseforge_pending_files
         WHERE instance_id = $1
@@ -524,6 +548,7 @@ async fn read_pending(
                 file_name: row.file_name,
                 size: row.size.and_then(|size| u64::try_from(size).ok()),
                 sha1: row.sha1,
+                md5: row.md5,
                 source_kind: ContentSourceKind::from_str(&row.source_kind)
                     .ok()?,
                 disabled: row.disabled != 0,
@@ -561,24 +586,47 @@ mod tests {
             file_name: "Thing-1.0.jar".to_string(),
             size,
             sha1: sha1.map(str::to_string),
+            md5: None,
             source_kind: ContentSourceKind::CurseForge,
             disabled: false,
         }
     }
 
     #[test]
+    fn md5_only_files_cannot_fall_back_to_name_and_size() {
+        let mut file = blocked(Some(3), None);
+        file.md5 = Some("900150983CD24FB0D6963F7D28E17F72".into());
+        assert!(!matches_file(&file, Some("thing-1.0.jar"), 3, "x", "bad"));
+        assert!(matches_file(
+            &file,
+            Some("renamed.jar"),
+            3,
+            "x",
+            "900150983cd24fb0d6963f7d28e17f72"
+        ));
+        file.sha1 = Some("expected".into());
+        assert!(!matches_file(
+            &file,
+            Some("thing-1.0.jar"),
+            3,
+            "wrong",
+            "900150983cd24fb0d6963f7d28e17f72"
+        ));
+    }
+
+    #[test]
     fn a_hash_decides_on_its_own() {
         let file = blocked(Some(3), Some("ABC"));
-        assert!(matches_file(&file, Some("renamed (1).jar"), 3, "abc"));
-        assert!(!matches_file(&file, Some("thing-1.0.jar"), 3, "abd"));
+        assert!(matches_file(&file, Some("renamed (1).jar"), 3, "abc", ""));
+        assert!(!matches_file(&file, Some("thing-1.0.jar"), 3, "abd", ""));
     }
 
     #[test]
     fn without_a_hash_size_and_name_both_have_to_agree() {
         let file = blocked(Some(3), None);
-        assert!(matches_file(&file, Some("thing-1.0.jar"), 3, "x"));
-        assert!(!matches_file(&file, Some("thing-1.0.jar"), 4, "x"));
-        assert!(!matches_file(&file, Some("other.jar"), 3, "x"));
+        assert!(matches_file(&file, Some("thing-1.0.jar"), 3, "x", ""));
+        assert!(!matches_file(&file, Some("thing-1.0.jar"), 4, "x", ""));
+        assert!(!matches_file(&file, Some("other.jar"), 3, "x", ""));
     }
 
     #[test]

@@ -109,3 +109,26 @@ pub(in crate::state::content_store) fn encode_sources(
 ) -> crate::Result<String> {
     Ok(serde_json::to_string(sources)?)
 }
+
+pub(in crate::state::content_store) async fn find_checksums(
+    pool: &SqlitePool,
+    algorithm: &str,
+    digest: &str,
+) -> crate::Result<Vec<String>> {
+    Ok(sqlx::query_scalar!(
+        "SELECT blob_sha512 FROM store_blob_checksums WHERE algorithm = ? AND digest = ?",
+        algorithm,
+        digest
+    ).fetch_all(pool).await?)
+}
+
+pub(in crate::state::content_store) async fn save_checksums(
+    pool: &SqlitePool,
+    hashes: &crate::util::content_hash::FileHashes,
+) -> crate::Result<()> {
+    sqlx::query!(
+        "INSERT OR IGNORE INTO store_blob_checksums (algorithm, digest, blob_sha512) VALUES ('sha1', ?, ?), ('md5', ?, ?)",
+        hashes.sha1, hashes.sha512, hashes.md5, hashes.sha512
+    ).execute(pool).await?;
+    Ok(())
+}

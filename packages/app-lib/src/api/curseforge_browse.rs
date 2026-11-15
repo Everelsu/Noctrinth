@@ -24,7 +24,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::api::curseforge_blocked::{self, BlockedFile, PendingFile};
 use crate::state::{ContentSourceKind, ModLoader, State};
-use crate::util::fetch::{fetch_advanced, fetch_mirrors};
+use crate::util::fetch::fetch_advanced;
 use crate::util::io::sanitize_filename;
 
 const API: &str = "https://api.curseforge.com/v1";
@@ -422,6 +422,18 @@ impl ApiFile {
             .map(|hash| hash.value.as_str())
     }
 
+    fn integrity(&self) -> crate::util::content_hash::FileIntegrity<'_> {
+        crate::util::content_hash::FileIntegrity {
+            sha1: self.sha1(),
+            md5: self
+                .hashes
+                .iter()
+                .find(|hash| hash.algo == 2)
+                .map(|hash| hash.value.as_str()),
+            size: self.file_length.filter(|length| *length > 0),
+        }
+    }
+
     fn as_blocked(&self) -> BlockedFile {
         BlockedFile {
             project_id: self.mod_id,
@@ -429,6 +441,7 @@ impl ApiFile {
             file_name: self.file_name.clone(),
             size: self.file_length.filter(|length| *length > 0),
             sha1: self.sha1().map(str::to_string),
+            md5: self.integrity().md5.map(str::to_string),
             source_kind: ContentSourceKind::CurseForge,
             disabled: false,
         }
@@ -1229,6 +1242,19 @@ pub async fn install_project(
     project_id: &str,
     file_id: Option<String>,
 ) -> crate::Result<InstallOutcome> {
+    crate::util::fetch::patiently(install_project_inner(
+        instance_id,
+        project_id,
+        file_id,
+    ))
+    .await
+}
+
+async fn install_project_inner(
+    instance_id: &str,
+    project_id: &str,
+    file_id: Option<String>,
+) -> crate::Result<InstallOutcome> {
     let state = State::get().await?;
     let instance = crate::api::instance::get(instance_id)
         .await?
@@ -1343,29 +1369,25 @@ pub async fn install_project(
             }
         }
 
-        match &file.download_url {
-            Some(url) => {
-                install_file(instance_id, &file, url, &state).await?;
+        if install_file(instance_id, &file, &state).await? {
+            installed_ids.insert(file.mod_id.to_string());
+            outcome
+                .installed
+                .push(format!("{ID_PREFIX}{}", file.mod_id));
+        } else {
+            let pending = curseforge_blocked::settle(
+                instance_id,
+                vec![file.as_blocked()],
+                &state,
+            )
+            .await;
+            if pending.is_empty() {
                 installed_ids.insert(file.mod_id.to_string());
                 outcome
                     .installed
                     .push(format!("{ID_PREFIX}{}", file.mod_id));
             }
-            None => {
-                let pending = curseforge_blocked::settle(
-                    instance_id,
-                    vec![file.as_blocked()],
-                    &state,
-                )
-                .await;
-                if pending.is_empty() {
-                    installed_ids.insert(file.mod_id.to_string());
-                    outcome
-                        .installed
-                        .push(format!("{ID_PREFIX}{}", file.mod_id));
-                }
-                outcome.pending.extend(pending);
-            }
+            outcome.pending.extend(pending);
         }
     }
 
@@ -1442,34 +1464,36 @@ async fn remove_installed(
 async fn install_file(
     instance_id: &str,
     file: &ApiFile,
-    url: &str,
     state: &State,
-) -> crate::Result<()> {
-    let bytes = fetch_mirrors(
-        &[url],
-        file.sha1(),
-        None,
-        None,
-        &state.fetch_semaphore,
-        &state.pool,
-    )
-    .await?;
+) -> crate::Result<bool> {
+    let mirrors = file.download_url.as_deref().into_iter().collect::<Vec<_>>();
+    let Some(acquired) = state
+        .content_store
+        .get_or_download_file_by_checksum(
+            &mirrors,
+            file.integrity(),
+            &[],
+            None,
+            &state.fetch_semaphore,
+        )
+        .await?
+    else {
+        return Ok(false);
+    };
     let project_id = file.mod_id.to_string();
     let file_id = file.id.to_string();
     let _permit = state.installs.db_semaphore.acquire().await?;
-    crate::state::instances::commands::add_project_bytes(
+    crate::state::instances::commands::add_project_file(
         instance_id,
         &sanitize_filename(&file.file_name),
-        bytes,
-        file.sha1(),
-        None,
+        &acquired.stored_file,
         ContentSourceKind::CurseForge,
         Some(&project_id),
         Some(&file_id),
         state,
     )
     .await?;
-    Ok(())
+    Ok(true)
 }
 
 /// Download a modpack's zip, for the regular CurseForge pack installer to
@@ -1493,24 +1517,27 @@ pub async fn download_modpack_bytes(
         None => pick_file(list_files(project_id, None, None, &state).await?)
             .ok_or_else(|| input("This modpack has no files"))?,
     };
-    let Some(url) = file.download_url.as_deref() else {
+    let mirrors = file.download_url.as_deref().into_iter().collect::<Vec<_>>();
+    let Some(acquired) = state
+        .content_store
+        .get_or_download_file_by_checksum(
+            &mirrors,
+            file.integrity(),
+            &[],
+            None,
+            &state.fetch_semaphore,
+        )
+        .await?
+    else {
         return Err(input(format!(
             "The author of {} does not allow launchers to download it; \
              download the zip from CurseForge and drop it on the launcher",
             file.file_name
         )));
     };
-
-    let bytes = fetch_mirrors(
-        &[url],
-        file.sha1(),
-        None,
-        None,
-        &state.fetch_semaphore,
-        &state.pool,
-    )
-    .await?;
-    Ok(bytes)
+    Ok(crate::util::io::read(&acquired.stored_file.path)
+        .await?
+        .into())
 }
 
 /// The code out of what was pasted: the code itself, or a share link such as

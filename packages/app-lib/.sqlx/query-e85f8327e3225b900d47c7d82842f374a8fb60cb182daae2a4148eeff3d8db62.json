@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT blob_sha512 FROM store_blob_checksums WHERE algorithm = ? AND digest = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "blob_sha512",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "store_blob_checksums",
+            "name": "blob_sha512"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "e85f8327e3225b900d47c7d82842f374a8fb60cb182daae2a4148eeff3d8db62"
+}

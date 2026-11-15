@@ -1,0 +1,110 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT file_id, project_id, file_name, size, sha1, md5, source_kind,\n               disabled\n        FROM curseforge_pending_files\n        WHERE instance_id = $1\n        ORDER BY added, file_name\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "file_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "curseforge_pending_files",
+            "name": "file_id"
+          }
+        }
+      },
+      {
+        "name": "project_id",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "curseforge_pending_files",
+            "name": "project_id"
+          }
+        }
+      },
+      {
+        "name": "file_name",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "curseforge_pending_files",
+            "name": "file_name"
+          }
+        }
+      },
+      {
+        "name": "size",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "curseforge_pending_files",
+            "name": "size"
+          }
+        }
+      },
+      {
+        "name": "sha1",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "curseforge_pending_files",
+            "name": "sha1"
+          }
+        }
+      },
+      {
+        "name": "md5",
+        "ordinal": 5,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "curseforge_pending_files",
+            "name": "md5"
+          }
+        }
+      },
+      {
+        "name": "source_kind",
+        "ordinal": 6,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "curseforge_pending_files",
+            "name": "source_kind"
+          }
+        }
+      },
+      {
+        "name": "disabled",
+        "ordinal": 7,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "curseforge_pending_files",
+            "name": "disabled"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "fdc2c9e29383901609d2850c4bb779e931c15716fd6fc10c148fd23bcf0fa577"
+}

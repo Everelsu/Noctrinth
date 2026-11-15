@@ -40,7 +40,8 @@ use crate::install::{
     InstallProgressReporter,
 };
 use crate::state::{ContentSourceKind, State};
-use crate::util::{fetch, io};
+use crate::util::content_hash::FileIntegrity;
+use crate::util::io;
 
 use super::get_all_subfiles;
 
@@ -126,9 +127,18 @@ struct ExpectedFile {
     download_url: Option<String>,
     length: Option<u64>,
     sha1: Option<String>,
+    md5: Option<String>,
 }
 
 impl ExpectedFile {
+    fn integrity(&self) -> FileIntegrity<'_> {
+        FileIntegrity {
+            sha1: self.sha1.as_deref(),
+            md5: self.md5.as_deref(),
+            size: self.length,
+        }
+    }
+
     fn from_addon(addon: InstalledAddon) -> Option<Self> {
         let file = addon.installed_file?;
         let file_name = file
@@ -149,9 +159,14 @@ impl ExpectedFile {
             length: file.file_length.filter(|length| *length > 0),
             sha1: file
                 .hashes
-                .into_iter()
+                .iter()
                 .find(|hash| hash.algo == 1 && !hash.value.is_empty())
-                .map(|hash| hash.value),
+                .map(|hash| hash.value.to_ascii_lowercase()),
+            md5: file
+                .hashes
+                .iter()
+                .find(|hash| hash.algo == 2 && !hash.value.is_empty())
+                .map(|hash| hash.value.to_ascii_lowercase()),
         })
     }
 
@@ -168,6 +183,7 @@ impl ExpectedFile {
             file_name: self.file_name.clone(),
             size: self.length,
             sha1: self.sha1.clone(),
+            md5: self.md5.clone(),
             source_kind: ContentSourceKind::CurseForge,
             disabled,
         })
@@ -246,18 +262,22 @@ async fn index_instance_files(
     Ok(present)
 }
 
-/// Whether the copy of this file that is on disk can be taken at its word.
-///
-/// The manifest records the exact byte length of every file it lists, so a
-/// copy that was cut short — an interrupted download in CurseForge, a drive
-/// that filled up mid-import — is recognisable without hashing anything.
-fn is_intact(expected: &ExpectedFile, present: &PresentFile) -> bool {
-    if present.size == 0 {
+/// Checks the recorded size and, when available, the manifest checksum.
+async fn is_intact(expected: &ExpectedFile, present: &PresentFile) -> bool {
+    if present.size == 0
+        || expected.length.is_some_and(|length| length != present.size)
+    {
         return false;
     }
-    match expected.length {
-        Some(length) => present.size == length,
-        None => true,
+    if expected.integrity().checksum().is_none() {
+        return true;
+    }
+    match expected.integrity().matches_path(&present.path).await {
+        Ok(intact) => intact,
+        Err(error) => {
+            tracing::warn!(path = %present.path.display(), %error, "Could not verify imported content");
+            false
+        }
     }
 }
 
@@ -268,22 +288,25 @@ async fn restore_one(
     instance_id: &str,
     expected: &ExpectedFile,
     disabled: bool,
-) -> crate::Result<()> {
-    let Some(url) = expected.download_url.as_deref() else {
-        return Err(crate::ErrorKind::InputError(
-            "CurseForge gives no way to download it".to_string(),
+) -> crate::Result<Option<String>> {
+    let mirrors = expected
+        .download_url
+        .as_deref()
+        .into_iter()
+        .collect::<Vec<_>>();
+    let Some(acquired) = state
+        .content_store
+        .get_or_download_file_by_checksum(
+            &mirrors,
+            expected.integrity(),
+            &[],
+            None,
+            &state.fetch_semaphore,
         )
-        .into());
+        .await?
+    else {
+        return Ok(None);
     };
-    let bytes = fetch::fetch_mirrors(
-        &[url],
-        expected.sha1.as_deref(),
-        None,
-        None,
-        &state.fetch_semaphore,
-        &state.pool,
-    )
-    .await?;
 
     let file_name = io::sanitize_filename(&expected.file_name);
     let project_id = expected.project_id.map(|id| id.to_string());
@@ -292,14 +315,10 @@ async fn restore_one(
         // Serialised against the rest of the install bookkeeping, exactly as
         // the modpack installer does when it writes content of its own.
         let _permit = state.installs.db_semaphore.acquire().await?;
-        crate::state::instances::commands::add_project_bytes(
+        crate::state::instances::commands::add_project_file(
             instance_id,
             &file_name,
-            bytes,
-            expected.sha1.as_deref(),
-            // Left to the installer to infer from the archive itself, which
-            // tells a resource pack from a mod far better than an extension.
-            None,
+            &acquired.stored_file,
             ContentSourceKind::CurseForge,
             project_id.as_deref(),
             file_id.as_deref(),
@@ -318,7 +337,19 @@ async fn restore_one(
         .await?;
     }
 
-    Ok(())
+    Ok(Some(crate::state::content_store::file_path_on_disk(
+        &relative_path,
+        !disabled,
+    )))
+}
+
+async fn remove_replaced_file(path: &Path, replacement: &Path) {
+    if same_file::is_same_file(path, replacement).unwrap_or(true) {
+        return;
+    }
+    if let Err(error) = io::remove_file(path).await {
+        tracing::warn!(path = %path.display(), %error, "Could not remove the replaced damaged file");
+    }
 }
 
 /// Puts back every file `minecraftinstance.json` lists that the copy did not
@@ -346,21 +377,16 @@ pub(super) async fn restore_missing_addons(
         crate::api::instance::get_full_path(instance_id).await?;
     let present = index_instance_files(&instance_path).await?;
 
-    // `truncated` carries the path of a copy that is there but the wrong size,
-    // which has to go before its replacement is written: the replacement lands
-    // under the pack's own name for the file, which need not be that one.
-    let missing = expected
-        .into_iter()
-        .filter_map(|expected| {
-            match present.get(&expected.file_name.to_lowercase()) {
-                Some(file) if is_intact(&expected, file) => None,
-                Some(file) => {
-                    Some((expected, file.disabled, Some(file.path.clone())))
-                }
-                None => Some((expected, false, None)),
+    let mut missing = Vec::new();
+    for expected in expected {
+        match present.get(&expected.file_name.to_lowercase()) {
+            Some(file) if is_intact(&expected, file).await => {}
+            Some(file) => {
+                missing.push((expected, file.disabled, Some(file.path.clone())))
             }
-        })
-        .collect::<Vec<_>>();
+            None => missing.push((expected, false, None)),
+        }
+    }
     if missing.is_empty() {
         return Ok(());
     }
@@ -390,28 +416,23 @@ pub(super) async fn restore_missing_addons(
             )
             .await?;
 
-        if let Some(path) = truncated
-            && let Err(error) = io::remove_file(&path).await
-        {
-            tracing::warn!(
-                "Could not remove the incomplete {}: {error}",
-                path.display()
-            );
-        }
-
-        // A file its author keeps off launchers is looked for on disk with
-        // the others below, rather than fetched.
-        if expected.download_url.is_none()
-            && let Some(file) = expected.as_blocked(disabled)
-        {
-            blocked.push(file);
-            continue;
-        }
-
-        if let Err(error) =
-            restore_one(&state, instance_id, &expected, disabled).await
-        {
-            failures.push(format!("{} ({error})", expected.file_name));
+        match restore_one(&state, instance_id, &expected, disabled).await {
+            Ok(Some(relative_path)) => {
+                if let Some(path) = truncated {
+                    remove_replaced_file(
+                        &path,
+                        &instance_path.join(relative_path),
+                    )
+                    .await;
+                }
+            }
+            Ok(None) => match expected.as_blocked(disabled) {
+                Some(file) => blocked.push(file),
+                None => failures.push(expected.file_name),
+            },
+            Err(error) => {
+                failures.push(format!("{} ({error})", expected.file_name))
+            }
         }
     }
 
@@ -646,8 +667,8 @@ mod tests {
         assert!(file.download_url.is_none());
     }
 
-    #[test]
-    fn a_copy_is_only_trusted_at_the_length_the_pack_recorded() {
+    #[tokio::test]
+    async fn a_copy_is_only_trusted_at_the_length_the_pack_recorded() {
         let expected = addon(
             r#"{
                 "addonID": 1,
@@ -665,13 +686,13 @@ mod tests {
             disabled: false,
         };
 
-        assert!(is_intact(&expected, &present(100)));
-        assert!(!is_intact(&expected, &present(99)));
-        assert!(!is_intact(&expected, &present(0)));
+        assert!(is_intact(&expected, &present(100)).await);
+        assert!(!is_intact(&expected, &present(99)).await);
+        assert!(!is_intact(&expected, &present(0)).await);
     }
 
-    #[test]
-    fn a_pack_that_records_no_length_is_taken_at_its_word() {
+    #[tokio::test]
+    async fn a_pack_that_records_no_length_is_taken_at_its_word() {
         let expected = addon(
             r#"{
                 "addonID": 1,
@@ -680,14 +701,69 @@ mod tests {
         )
         .unwrap();
 
-        assert!(is_intact(
-            &expected,
-            &PresentFile {
-                path: PathBuf::from("mods/mod.jar"),
-                size: 7,
-                disabled: false,
-            }
-        ));
+        assert!(
+            is_intact(
+                &expected,
+                &PresentFile {
+                    path: PathBuf::from("mods/mod.jar"),
+                    size: 7,
+                    disabled: false,
+                }
+            )
+            .await
+        );
+    }
+
+    #[tokio::test]
+    async fn cleanup_keeps_the_replacement_and_preserves_files_when_recovery_fails()
+     {
+        let directory = tempfile::tempdir().unwrap();
+        let original = directory.path().join("original.jar");
+        let replacement = directory.path().join("replacement.jar");
+        tokio::fs::write(&original, b"old").await.unwrap();
+        remove_replaced_file(&original, &replacement).await;
+        assert!(original.exists());
+        tokio::fs::write(&replacement, b"new").await.unwrap();
+        remove_replaced_file(&replacement, &replacement).await;
+        assert_eq!(tokio::fs::read(&replacement).await.unwrap(), b"new");
+        #[cfg(windows)]
+        {
+            remove_replaced_file(
+                &replacement,
+                &directory.path().join("REPLACEMENT.JAR"),
+            )
+            .await;
+            assert!(replacement.exists());
+        }
+        remove_replaced_file(&original, &replacement).await;
+        assert!(!original.exists());
+        assert_eq!(tokio::fs::read(&replacement).await.unwrap(), b"new");
+    }
+
+    #[tokio::test]
+    async fn same_size_corruption_is_detected_with_sha1_or_md5() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("mod.jar.disabled");
+        tokio::fs::write(&path, b"abc").await.unwrap();
+        let present = PresentFile {
+            path: path.clone(),
+            size: 3,
+            disabled: true,
+        };
+        for (algo, value) in [
+            (1, "A9993E364706816ABA3E25717850C26C9CD0D89D"),
+            (2, "900150983CD24FB0D6963F7D28E17F72"),
+        ] {
+            let expected = addon(&serde_json::json!({
+                "addonID": 1,
+                "installedFile": { "id": 2, "fileName": "mod.jar", "fileLength": 3,
+                    "hashes": [{ "algo": algo, "value": value }] }
+            }).to_string()).unwrap();
+            assert!(is_intact(&expected, &present).await);
+            tokio::fs::write(&path, b"bad").await.unwrap();
+            assert!(!is_intact(&expected, &present).await);
+            tokio::fs::write(&path, b"abc").await.unwrap();
+        }
     }
 
     #[tokio::test]

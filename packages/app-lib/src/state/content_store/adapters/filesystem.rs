@@ -1,9 +1,7 @@
 use crate::ErrorKind;
 use crate::state::content_store::FileStorageKind;
 use crate::state::content_store::model::InstancePathContent;
-use crate::util::content_hash::{
-    FileHashes, copy_and_hash, hash_file, temporary_file,
-};
+use crate::util::content_hash::{copy_and_hash, hash_file, temporary_file};
 use crate::util::fetch;
 use anyhow::bail;
 use std::fs::Metadata;
@@ -177,14 +175,13 @@ pub(in crate::state::content_store) async fn stage_file(
     }
     require_staging_space(staging, before.len())?;
     let (mut output, temporary) = temporary_file(Some(staging)).await?;
-    let FileHashes { sha512, size } =
-        copy_and_hash(&mut input_file, &mut output, &|_| {}).await?;
+    let hashes = copy_and_hash(&mut input_file, &mut output, &|_| {}).await?;
     output.sync_all().await?;
     drop(output);
     let after = input_file.metadata().await?;
     if before.len() != after.len()
         || before.modified()? != after.modified()?
-        || size != after.len()
+        || hashes.size != after.len()
     {
         bail!(ErrorKind::ContentStoreError(
             "content changed while it was being imported; try again after closing the instance"
@@ -193,8 +190,7 @@ pub(in crate::state::content_store) async fn stage_file(
     }
     Ok(fetch::StagedDownload {
         path: temporary,
-        size,
-        sha512,
+        hashes,
     })
 }
 

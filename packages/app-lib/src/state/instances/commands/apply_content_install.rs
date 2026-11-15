@@ -581,6 +581,64 @@ pub(crate) async fn add_project_from_path(
     .await
 }
 
+pub(crate) async fn add_project_file(
+    instance_id: &str,
+    file_name: &str,
+    stored_file: &crate::state::content_store::StoredFileHandle,
+    source_kind: ContentSourceKind,
+    project_id: Option<&str>,
+    version_id: Option<&str>,
+    state: &State,
+) -> crate::Result<String> {
+    if !path_util::is_safe_file_name(file_name) {
+        bail!(ErrorKind::InputError(
+            "invalid project filename".to_string()
+        ));
+    }
+    let path = stored_file.path.clone();
+    let name = file_name.to_string();
+    let project_type =
+        match super::embedded_content_metadata::infer_project_type_path(&path)
+            .await
+        {
+            Ok(project_type) => project_type,
+            Err(error) => {
+                tokio::task::spawn_blocking(move || {
+                    let file = std::fs::File::open(path)?;
+                    infer_project_type_loosely_archive(
+                        &name,
+                        zip::ZipArchive::new(file),
+                    )
+                    .ok_or(error)
+                })
+                .await??
+            }
+        };
+    install_stored_file(
+        instance_id,
+        InstallContent {
+            requested_path: &format!(
+                "{}/{}",
+                project_type.get_folder(),
+                file_name
+            ),
+            stored_file,
+            project_type,
+            source_kind,
+            origin: project_id.zip(version_id).map(
+                |(project_id, version_id)| ContentOrigin {
+                    project_id,
+                    version_id,
+                },
+            ),
+            enabled_override: None,
+            previous_path: None,
+        },
+        state,
+    )
+    .await
+}
+
 pub(crate) async fn add_project_bytes(
     instance_id: &str,
     file_name: &str,
@@ -816,6 +874,16 @@ fn infer_project_type_loosely(
     file_name: &str,
     bytes: &Bytes,
 ) -> Option<ProjectType> {
+    infer_project_type_loosely_archive(
+        file_name,
+        zip::ZipArchive::new(std::io::Cursor::new(&**bytes)),
+    )
+}
+
+fn infer_project_type_loosely_archive<R: std::io::Read + std::io::Seek>(
+    file_name: &str,
+    archive: Result<zip::ZipArchive<R>, zip::result::ZipError>,
+) -> Option<ProjectType> {
     // Legacy tweaker/coremod jars (the "!mixinbootstrap.jar" kind) often carry
     // no fabric.mod.json / mods.toml / mcmod.info at all, yet a .jar dropped
     // into an instance is a mod for every practical purpose — assuming so
@@ -825,8 +893,7 @@ fn infer_project_type_loosely(
         || lower_name.ends_with(".litemod"))
     .then_some(ProjectType::Mod);
 
-    let cursor = std::io::Cursor::new(&**bytes);
-    let Ok(archive) = zip::ZipArchive::new(cursor) else {
+    let Ok(archive) = archive else {
         return extension_fallback;
     };
 

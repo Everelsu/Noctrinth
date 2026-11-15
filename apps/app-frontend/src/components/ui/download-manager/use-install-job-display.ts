@@ -9,7 +9,7 @@ const messages = defineMessages({
 	rateLimited: {
 		id: 'app.download-manager.rate-limited',
 		defaultMessage:
-			'Modrinth asked to slow down, resuming in {seconds, plural, one {# second} other {# seconds}}',
+			'The server asked to slow down, resuming in {seconds, plural, one {# second} other {# seconds}}',
 	},
 	unknownInstance: {
 		id: 'app.action-bar.install.unknown-instance',

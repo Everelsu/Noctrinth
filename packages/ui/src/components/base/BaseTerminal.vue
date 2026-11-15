@@ -79,18 +79,14 @@ const props = withDefaults(
 	},
 )
 
-// Noctrinth's own, in place of Modrinth's frog: a night owl on a branch under
-// the moon, in the launcher's purple with amber eyes.
 const PURPLE = '\x1B[35m'
 const AMBER = '\x1B[93m'
-const GREY = '\x1B[90m'
 const WHITE = '\x1B[37m'
 const OWL = [
-	`${PURPLE}      \\${WHITE}`,
-	`${PURPLE}       \\   ,___,${AMBER}        .-.${WHITE}`,
-	`${PURPLE}           {${AMBER}O${PURPLE},${AMBER}O${PURPLE}}${AMBER}       (  (${WHITE}`,
-	`${PURPLE}           |)__)${AMBER}        \`-'${WHITE}`,
-	`${GREY}        ----${PURPLE}"${GREY}-${PURPLE}"${GREY}-----${WHITE}`,
+	`${PURPLE}      /\\_/\\${WHITE}`,
+	`${PURPLE}     ((${AMBER}o${PURPLE} ${AMBER}o${PURPLE}))${WHITE}`,
+	`${PURPLE}     /)   (\\${WHITE}`,
+	`${PURPLE}      "   "${WHITE}`,
 ]
 
 const BUBBLE_WIDTH = 56

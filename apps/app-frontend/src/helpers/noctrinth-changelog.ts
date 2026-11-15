@@ -42,6 +42,52 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.23.3+1',
+		date: '2026-11-15T00:00:00+00:00',
+		body: `### Added
+- Resuming interrupted downloads during automatic retries when supported by the server, without keeping partial downloads across app restarts.
+- Reusing verified mods bundled inside CurseForge archives instead of downloading them again.
+- Reusing downloaded CurseForge files across instances and combining simultaneous downloads of the same file.
+
+### Changed
+- Reduced memory use when installing large CurseForge and Modrinth modpacks by processing archives from disk.
+- Reduced repeated disk reads when verifying unchanged files and repeated CurseForge requests during modpack installation.
+- Updated the mod list using changed files, while retaining full reconciliation for rename recovery and watcher errors.
+- Opened historical logs at their latest lines, with earlier lines loaded when scrolling up while preserving the viewing position.
+- Preserved full-text search, sharing and crash analysis for historical logs.
+- Cached unchanged world metadata and limited simultaneous world reads to reduce disk load on the Worlds tab.
+- Reduced database writes when checking Modrinth updates in large instances.
+- Replaced the owl in the empty console with a compact design.
+
+### Fixed
+- Fixed repeated requests during server rate limits by coordinating downloads around the server's retry delay.
+- Fixed imported and manually downloaded CurseForge files being accepted without matching the expected checksums.
+- Preserved the existing file until its replacement completed successfully during CurseForge imports.
+- Fixed expired cached CurseForge download links by refreshing them before retrying.
+- Fixed startup timing events missing from the launcher log.`,
+		body_ru: `### Добавлено
+- Докачка после обрыва соединения при автоматических повторных попытках, если сервер её поддерживает, без сохранения частичных загрузок между перезапусками приложения.
+- Использование проверенных модов из архивов CurseForge без повторного скачивания.
+- Повторное использование скачанных файлов CurseForge между сборками и объединение одновременных загрузок одинаковых файлов.
+
+### Изменено
+- Снижено потребление памяти при установке больших сборок CurseForge и Modrinth благодаря обработке архивов с диска.
+- Сокращены повторные чтения неизменённых файлов при проверке и повторные запросы к CurseForge при установке сборок.
+- Список модов обновляется по изменённым файлам; для восстановления после переименований и ошибок наблюдателя сохранена полная сверка.
+- Исторические логи открываются с последних строк, а предыдущие подгружаются при прокрутке вверх с сохранением позиции просмотра.
+- Для исторических логов сохранены поиск по полному тексту, отправка и анализ сбоев.
+- Кэшируются сведения о неизменённых мирах и ограничено число одновременных чтений для снижения нагрузки на диск во вкладке миров.
+- Сокращено число записей в базу данных при проверке обновлений Modrinth в больших сборках.
+- Обновлена сова в пустой консоли.
+
+### Исправлено
+- Загрузки согласованно дожидаются снятия ограничения запросов, учитывая указанную сервером задержку повторной попытки.
+- При импорте и ручном скачивании файлов CurseForge проверяется соответствие ожидаемым контрольным суммам.
+- При импорте CurseForge старый файл сохраняется до успешного завершения замены.
+- Просроченные ссылки на скачивание из кэша CurseForge обновляются перед повторной попыткой.
+- Исправлено отсутствие замеров запуска в журнале приложения.`,
+	},
+	{
 		version: '0.23.3',
 		date: '2026-11-15T00:00:00+00:00',
 		body: `### Added

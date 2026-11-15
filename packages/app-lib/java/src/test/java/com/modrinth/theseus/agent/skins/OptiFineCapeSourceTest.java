@@ -4,16 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.sun.net.httpserver.HttpServer;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.InetSocketAddress;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -31,41 +27,32 @@ import org.junit.jupiter.api.io.TempDir;
  * cape-only source answers with a cape and nothing else, which is what the merged lookup needs.
  */
 class OptiFineCapeSourceTest {
-    private static ServerSocket capes;
-    private static Thread server;
+    private static HttpServer capes;
 
     @BeforeAll
     static void startCapeServer() throws Exception {
-        capes = new ServerSocket(0, 0, InetAddress.getLoopbackAddress());
-        server = new Thread(
-                () -> {
-                    while (!capes.isClosed()) {
-                        try (Socket socket = capes.accept()) {
-                            readRequest(socket.getInputStream());
-
-                            final byte[] png = pngOf(optiFineCape());
-                            final OutputStream out = socket.getOutputStream();
-                            out.write(("HTTP/1.1 200 OK\r\nContent-Type: image/png\r\nContent-Length: " + png.length
-                                            + "\r\nConnection: close\r\n\r\n")
-                                    .getBytes(Charset.forName("UTF-8")));
-                            out.write(png);
-                            out.flush();
-                        } catch (IOException closed) {
-                            return;
-                        } catch (Exception ignored) {
-                            // The next request is its own business.
-                        }
-                    }
-                },
-                "optifine-cape-test");
-        server.setDaemon(true);
-        server.start();
+        // ImageIO initialization must finish before the HTTP timeout starts.
+        final byte[] png = pngOf(optiFineCape());
+        capes = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        capes.createContext("/capes/", exchange -> {
+            try {
+                exchange.getResponseHeaders().set("Content-Type", "image/png");
+                exchange.sendResponseHeaders(200, png.length);
+                try (OutputStream out = exchange.getResponseBody()) {
+                    out.write(png);
+                }
+            } finally {
+                exchange.close();
+            }
+        });
+        capes.start();
     }
 
     @AfterAll
-    static void stopCapeServer() throws Exception {
-        capes.close();
-        server.join(2000);
+    static void stopCapeServer() {
+        if (capes != null) {
+            capes.stop(0);
+        }
     }
 
     @Test
@@ -118,7 +105,7 @@ class OptiFineCapeSourceTest {
     }
 
     private static String baseUrl() {
-        return "http://" + capes.getInetAddress().getHostAddress() + ":" + capes.getLocalPort() + "/capes/";
+        return "http://127.0.0.1:" + capes.getAddress().getPort() + "/capes/";
     }
 
     /** A cape in OptiFine's shape, filled so every pixel of it can be told from the canvas. */
@@ -136,16 +123,5 @@ class OptiFineCapeSourceTest {
         final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         ImageIO.write(image, "PNG", bytes);
         return bytes.toByteArray();
-    }
-
-    private static void readRequest(InputStream stream) throws IOException {
-        final StringBuilder request = new StringBuilder();
-        int read;
-        while ((read = stream.read()) != -1) {
-            request.append((char) read);
-            if (request.length() >= 4 && request.indexOf("\r\n\r\n", request.length() - 4) >= 0) {
-                return;
-            }
-        }
     }
 }

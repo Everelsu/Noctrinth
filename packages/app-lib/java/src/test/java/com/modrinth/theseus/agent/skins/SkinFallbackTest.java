@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.modrinth.theseus.agent.transformers.SessionServiceTransformer;
@@ -14,15 +15,15 @@ import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftProfileTextures;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.yggdrasil.YggdrasilMinecraftSessionService;
+import com.sun.net.httpserver.HttpServer;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -57,31 +58,23 @@ class SkinFallbackTest {
     private static final List<String> firstSourcePaths = Collections.synchronizedList(new ArrayList<>());
 
     /** Knows nobody, so every lookup has to fall through to the one after it. */
-    private static ServerSocket emptySource;
+    private static HttpServer emptySource;
 
-    private static ServerSocket server;
-    private static Thread emptySourceThread;
-    private static Thread serverThread;
+    private static HttpServer server;
     private static Object service;
     private static Object interfaceService;
 
     @BeforeAll
     static void startStubSkinSystem() throws Exception {
-        emptySource = new ServerSocket(0, 0, InetAddress.getByName("127.0.0.1"));
-        emptySourceThread = new Thread(() -> serve(emptySource, firstSourcePaths, null), "stub-skin-system-empty");
-        emptySourceThread.setDaemon(true);
-        emptySourceThread.start();
-
-        server = new ServerSocket(0, 0, InetAddress.getByName("127.0.0.1"));
-        serverThread = new Thread(() -> serve(server, requestedPaths, RESPONSE), "stub-skin-system");
-        serverThread.setDaemon(true);
-        serverThread.start();
+        emptySource = serve(firstSourcePaths, null);
+        server = serve(requestedPaths, RESPONSE);
 
         // Read by SkinSource when it is first touched, which is why this has to
         // happen before the hook runs for the first time.
         System.setProperty(
                 "noctrinth.skins.source",
-                "http://127.0.0.1:" + emptySource.getLocalPort() + ",http://127.0.0.1:" + server.getLocalPort());
+                "http://127.0.0.1:" + emptySource.getAddress().getPort() + ",http://127.0.0.1:"
+                        + server.getAddress().getPort());
 
         service = transformedService();
         interfaceService = transformedInterfaceService();
@@ -89,10 +82,12 @@ class SkinFallbackTest {
 
     @AfterAll
     static void stopStubSkinSystem() throws Exception {
-        emptySource.close();
-        server.close();
-        emptySourceThread.join(2000);
-        serverThread.join(2000);
+        if (emptySource != null) {
+            emptySource.stop(0);
+        }
+        if (server != null) {
+            server.stop(0);
+        }
         System.clearProperty("noctrinth.skins.source");
     }
 
@@ -244,10 +239,12 @@ class SkinFallbackTest {
     void warmsANameBeforeAnythingAsksAboutIt() throws Exception {
         SkinSource.prefetch("Warmed_One");
 
-        // It happens off the caller's thread, which is the whole point of it.
-        for (int i = 0; i < 200 && !requestedPaths.contains("/textures/Warmed_One"); i++) {
-            Thread.sleep(20);
-        }
+        // Wait for the cache, not just the request arriving at the server.
+        assertTimeoutPreemptively(Duration.ofSeconds(10), () -> {
+            while (SkinSource.remembered("Warmed_One") == null) {
+                Thread.sleep(10);
+            }
+        });
         assertTrue(requestedPaths.contains("/textures/Warmed_One"), "the name should have been looked up on its own");
 
         final int asked = countRequests("/textures/Warmed_One");
@@ -383,41 +380,26 @@ class SkinFallbackTest {
      *
      * <p>A null body stands for a skin system that has never heard of anyone.
      */
-    private static void serve(ServerSocket source, List<String> seen, String payload) {
-        final Charset utf8 = Charset.forName("UTF-8");
-        while (!source.isClosed()) {
-            try (Socket socket = source.accept()) {
-                final StringBuilder requestLine = new StringBuilder();
-                final InputStream in = socket.getInputStream();
-                int c;
-                while ((c = in.read()) != -1 && c != '\n') {
-                    if (c != '\r') {
-                        requestLine.append((char) c);
-                    }
+    private static HttpServer serve(List<String> seen, String payload) throws IOException {
+        final HttpServer source = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        final byte[] body = payload == null ? null : payload.getBytes(Charset.forName("UTF-8"));
+        source.createContext("/", exchange -> {
+            try {
+                seen.add(exchange.getRequestURI().getPath());
+                if (body == null) {
+                    exchange.sendResponseHeaders(204, -1);
+                    return;
                 }
-
-                final String[] parts = requestLine.toString().split(" ");
-                if (parts.length >= 2) {
-                    seen.add(parts[1]);
+                exchange.getResponseHeaders().set("Content-Type", "application/json");
+                exchange.sendResponseHeaders(200, body.length);
+                try (OutputStream out = exchange.getResponseBody()) {
+                    out.write(body);
                 }
-
-                final OutputStream out = socket.getOutputStream();
-                if (payload == null) {
-                    out.write("HTTP/1.1 204 No Content\r\nConnection: close\r\n\r\n".getBytes(utf8));
-                    out.flush();
-                    continue;
-                }
-
-                final byte[] body = payload.getBytes(utf8);
-                out.write(("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: " + body.length
-                                + "\r\nConnection: close\r\n\r\n")
-                        .getBytes(utf8));
-                out.write(body);
-                out.flush();
-            } catch (IOException e) {
-                // The socket closing is how this thread is asked to stop.
-                return;
+            } finally {
+                exchange.close();
             }
-        }
+        });
+        source.start();
+        return source;
     }
 }

@@ -6,9 +6,9 @@ use crate::state::content_store::{
     ContentStore, GetFileResult, StoredFileHandle, StoredFileMetadata,
     StoredFileStatus, validate_digest,
 };
-use crate::util::content_hash::{
-    ContentHasher, FileIntegrity, hash_file, temporary_file,
-};
+#[cfg(test)]
+use crate::util::content_hash::hash_file;
+use crate::util::content_hash::{ContentHasher, FileIntegrity, temporary_file};
 use crate::util::fetch::{self, DownloadMeta, FetchProgressFn, FetchSemaphore};
 use anyhow::{Context, bail};
 use std::path::Path;
@@ -109,7 +109,7 @@ impl ContentStore {
             {
                 if let Some(stored_file) =
                     self.lookup(Some(&sha512), integrity.size).await?
-                    && integrity.matches_path(&stored_file.path).await?
+                    && self.matches_integrity(&stored_file, integrity).await?
                 {
                     return Ok(Some(GetFileResult {
                         stored_file,
@@ -118,29 +118,40 @@ impl ContentStore {
                 }
             }
             for path in local_files {
-                match integrity.matches_path(path).await {
-                    Ok(true) => {
-                        let staged = self.stage_file(path).await?;
-                        if !integrity.matches(&staged.hashes) {
-                            bail!(ErrorKind::ContentStoreError(
-                                "local content changed while being imported"
-                                    .into()
-                            ));
-                        }
-                        let stored_file =
-                            self.save_staged_file(staged, &[]).await?;
-                        return Ok(Some(GetFileResult {
-                            stored_file,
-                            reused: true,
-                        }));
+                let metadata = match tokio::fs::metadata(path).await {
+                    Ok(metadata)
+                        if metadata.is_file()
+                            && integrity
+                                .size
+                                .is_none_or(|size| size == metadata.len()) =>
+                    {
+                        metadata
                     }
-                    Ok(false) => {}
+                    Ok(_) => continue,
                     Err(error) => {
-                        tracing::warn!(path = %path.display(), %error, "Could not verify local content")
+                        tracing::warn!(path = %path.display(), %error, "Could not inspect local content");
+                        continue;
                     }
+                };
+                self.require_staging_space(metadata.len())?;
+                let staged = match self.stage_file(path).await {
+                    Ok(staged) => staged,
+                    Err(error) => {
+                        tracing::warn!(path = %path.display(), %error, "Could not import local content");
+                        continue;
+                    }
+                };
+                if integrity.matches(&staged.hashes) {
+                    let stored_file =
+                        self.save_staged_file(staged, &[]).await?;
+                    return Ok(Some(GetFileResult {
+                        stored_file,
+                        reused: true,
+                    }));
                 }
             }
         }
+
         if mirrors.is_empty() {
             return Ok(None);
         }
@@ -183,6 +194,16 @@ impl ContentStore {
         }))
     }
 
+    pub(crate) async fn matches_integrity(
+        &self,
+        stored_file: &StoredFileHandle,
+        integrity: FileIntegrity<'_>,
+    ) -> crate::Result<bool> {
+        let hashes = self.verified_files.hashes_file(&stored_file.path).await?;
+        Ok(hashes.sha512 == stored_file.metadata.sha512
+            && integrity.matches(&hashes))
+    }
+
     pub(crate) async fn store_file(
         &self,
         source: &Path,
@@ -190,17 +211,11 @@ impl ContentStore {
         if let Some(stored_file) = self.find_file_by_path(source).await? {
             return Ok(stored_file);
         }
-        let hashes = hash_file(source).await?;
-        if let Some(stored_file) =
-            self.lookup(Some(&hashes.sha512), Some(hashes.size)).await?
-        {
-            return Ok(stored_file);
-        }
         let staged = self.stage_file(source).await?;
         self.save_staged_file(staged, &[]).await
     }
 
-    pub(in crate::state::content_store) async fn save_staged_file(
+    pub(crate) async fn save_staged_file(
         &self,
         staged: fetch::StagedDownload,
         sources: &[String],

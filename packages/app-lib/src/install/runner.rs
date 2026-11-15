@@ -1994,13 +1994,13 @@ async fn install_pack_inner(
                         "This build has no CurseForge API key.".to_string(),
                     )
                 })?;
-            let bytes = crate::api::curseforge_browse::download_modpack_bytes(
+            let file = crate::api::curseforge_browse::download_modpack_file(
                 &project_id,
                 file_id,
             )
             .await?;
             install_curseforge_pack_files_with_reporter(
-                bytes,
+                crate::pack::install_from::CreatePackFile::Downloaded(file),
                 &api_key,
                 &instance_id,
                 reason,
@@ -2037,10 +2037,8 @@ async fn install_pack_inner(
                                 .to_string(),
                         )
                     })?;
-                let bytes =
-                    bytes::Bytes::from(crate::util::io::read(&path).await?);
                 install_curseforge_pack_files_with_reporter(
-                    bytes,
+                    crate::pack::install_from::CreatePackFile::Path(path),
                     &api_key,
                     &instance_id,
                     reason,

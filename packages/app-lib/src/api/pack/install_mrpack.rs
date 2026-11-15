@@ -18,6 +18,7 @@ use crate::state::instances::commands::{
 use crate::state::{
     CachedEntry, CachedFile, EditInstance, InstanceInstallStage, SideType,
 };
+use crate::util::content_hash::{ContentHasher, FileHashes};
 use crate::util::fetch::{
     DownloadMeta, DownloadReason, FetchProgressFn, fetch_content_file,
 };
@@ -40,7 +41,7 @@ use std::path::{Path, PathBuf};
 
 use tokio::sync::Mutex;
 
-type ExtractProgressFn<'a> = dyn FnMut(u64) -> Pin<Box<dyn Future<Output = crate::Result<()>> + Send + 'a>>
+pub(crate) type ExtractProgressFn<'a> = dyn FnMut(u64) -> Pin<Box<dyn Future<Output = crate::Result<()>> + Send + 'a>>
     + Send
     + 'a;
 type HashProgressFn<'a> = dyn FnMut(u64) -> crate::Result<()> + Send + 'a;
@@ -132,18 +133,18 @@ impl<T: Read + Seek + Send> ZipReadSeek for T {}
 type MrpackZipArchive = zip::ZipArchive<Box<dyn ZipReadSeek>>;
 
 #[derive(Clone)]
-struct MrpackZipEntry {
-    name: String,
-    size: u64,
+pub(crate) struct MrpackZipEntry {
+    pub(crate) name: String,
+    pub(crate) size: u64,
 }
 
-struct MrpackZipReader {
+pub(crate) struct MrpackZipReader {
     archive: Arc<std::sync::Mutex<MrpackZipArchive>>,
     entries: Vec<MrpackZipEntry>,
 }
 
 impl MrpackZipReader {
-    async fn new(file: &CreatePackFile) -> crate::Result<Self> {
+    pub(crate) async fn new(file: &CreatePackFile) -> crate::Result<Self> {
         let source = match file {
             CreatePackFile::Bytes(bytes) => either::Either::Left(bytes.clone()),
             CreatePackFile::Downloaded(file) => {
@@ -180,8 +181,32 @@ impl MrpackZipReader {
         .await?
     }
 
-    fn entries(&self) -> &[MrpackZipEntry] {
+    pub(crate) fn entries(&self) -> &[MrpackZipEntry] {
         &self.entries
+    }
+
+    pub(crate) async fn read_entry_bytes(
+        &self,
+        index: usize,
+        limit: u64,
+    ) -> crate::Result<Vec<u8>> {
+        let archive = Arc::clone(&self.archive);
+        tokio::task::spawn_blocking(move || -> crate::Result<Vec<u8>> {
+            let mut archive = archive
+                .lock()
+                .map_err(|_| anyhow!("modpack ZIP reader lock poisoned"))?;
+            let entry = archive.by_index(index)?;
+            if entry.size() > limit {
+                bail!("modpack metadata exceeds its size limit");
+            }
+            let mut bytes = Vec::new();
+            entry.take(limit + 1).read_to_end(&mut bytes)?;
+            if bytes.len() as u64 > limit {
+                bail!("modpack metadata exceeds its size limit");
+            }
+            Ok(bytes)
+        })
+        .await?
     }
 
     async fn read_entry_to_string(
@@ -231,8 +256,21 @@ impl MrpackZipReader {
         index: usize,
         path: &Path,
         semaphore: &crate::util::fetch::IoSemaphore,
-        mut progress: Option<&mut ExtractProgressFn<'_>>,
+        progress: Option<&mut ExtractProgressFn<'_>>,
     ) -> crate::Result<(u64, String)> {
+        let hashes = self
+            .extract_entry_hashed(index, path, semaphore, progress)
+            .await?;
+        Ok((hashes.size, hashes.sha1))
+    }
+
+    pub(crate) async fn extract_entry_hashed(
+        &mut self,
+        index: usize,
+        path: &Path,
+        semaphore: &crate::util::fetch::IoSemaphore,
+        mut progress: Option<&mut ExtractProgressFn<'_>>,
+    ) -> crate::Result<FileHashes> {
         let _permit = semaphore.0.acquire().await?;
         let archive = Arc::clone(&self.archive);
         let destination = path.to_path_buf();
@@ -253,12 +291,12 @@ impl MrpackZipReader {
                 progress(bytes).await?;
             }
         }
-        let (temporary, size, hash) = task.await??;
+        let (temporary, hashes) = task.await??;
         // Keep publication in this task so cancellation cannot detach a pending rename.
         temporary.persist(&destination).map_err(|error| {
             io::IOError::with_path(error.error, &destination)
         })?;
-        Ok((size, hash))
+        Ok(hashes)
     }
 }
 
@@ -458,7 +496,7 @@ fn extract_zip_entry(
     mut reader: impl Read,
     path: &Path,
     mut progress: impl FnMut(u64) -> crate::Result<()>,
-) -> crate::Result<(tempfile::TempPath, u64, String)> {
+) -> crate::Result<(tempfile::TempPath, FileHashes)> {
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)
             .map_err(|error| io::IOError::with_path(error, parent))?;
@@ -470,7 +508,7 @@ fn extract_zip_entry(
     })?;
     let mut temporary = tempfile::NamedTempFile::new_in(parent)
         .map_err(|error| io::IOError::with_path(error, parent))?;
-    let mut hasher = sha1_smol::Sha1::new();
+    let mut hasher = ContentHasher::default();
     let mut size = 0;
     let mut buffer = vec![0; 262144];
     loop {
@@ -488,11 +526,11 @@ fn extract_zip_entry(
     temporary
         .flush()
         .map_err(|error| io::IOError::with_path(error, temporary.path()))?;
-    Ok((
-        temporary.into_temp_path(),
-        size,
-        hasher.digest().to_string(),
-    ))
+    temporary
+        .as_file()
+        .sync_all()
+        .map_err(|error| io::IOError::with_path(error, temporary.path()))?;
+    Ok((temporary.into_temp_path(), hasher.finish(size)))
 }
 
 pub(crate) fn install_zipped_mrpack_files_with_reporter(
@@ -1180,7 +1218,7 @@ async fn install_zipped_mrpack_files_with_reporter_inner(
             let progress =
                 &mut report_override_progress as &mut ExtractProgressFn<'_>;
             zip_reader
-                .extract_entry(
+                .extract_entry_hashed(
                     index,
                     &path,
                     &state.io_semaphore,
@@ -1189,10 +1227,10 @@ async fn install_zipped_mrpack_files_with_reporter_inner(
                 .await
         } else {
             zip_reader
-                .extract_entry(index, &path, &state.io_semaphore, None)
+                .extract_entry_hashed(index, &path, &state.io_semaphore, None)
                 .await
         };
-        let (size, hash) = reporter
+        let hashes = reporter
             .preserve_failure_context(override_context, extract_result)
             .await?;
         let modified_at_ns =
@@ -1214,9 +1252,9 @@ async fn install_zipped_mrpack_files_with_reporter_inner(
                     crate::state::cache_file_hash_metadata(
                         &instance_path,
                         relative_override_file_path.as_str(),
-                        size,
+                        hashes.size,
                         modified_at_ns,
-                        hash.clone(),
+                        hashes.sha1.clone(),
                         ProjectType::get_from_parent_folder(
                             relative_override_file_path.as_str(),
                         ),
@@ -1232,7 +1270,18 @@ async fn install_zipped_mrpack_files_with_reporter_inner(
                     relative_override_file_path.as_str(),
                 )
             {
-                let stored_file = state.content_store.store_file(&path).await?;
+                let stored_file = state
+                    .content_store
+                    .save_staged_file(
+                        crate::util::fetch::StagedDownload {
+                            path: temporary.ok_or_else(|| {
+                                anyhow!("managed override has no staging file")
+                            })?,
+                            hashes,
+                        },
+                        &[],
+                    )
+                    .await?;
                 reporter
                     .preserve_failure_context(
                         record_context,
@@ -1530,6 +1579,28 @@ mod zip_reader_tests {
             .unwrap();
         writer.write_all(contents).unwrap();
         writer.finish().unwrap().into_inner().into()
+    }
+
+    #[tokio::test]
+    async fn extraction_produces_all_hashes_and_metadata_reads_are_bounded() {
+        let contents = vec![b'a'; 600_000];
+        let source = CreatePackFile::Bytes(archive_bytes(&contents));
+        let mut reader = MrpackZipReader::new(&source).await.unwrap();
+        assert!(reader.read_entry_bytes(0, 10).await.is_err());
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("extracted.jar");
+        let semaphore =
+            crate::util::fetch::IoSemaphore(tokio::sync::Semaphore::new(1));
+        let hashes = reader
+            .extract_entry_hashed(0, &path, &semaphore, None)
+            .await
+            .unwrap();
+        assert_eq!(
+            hashes,
+            crate::util::content_hash::hash_reader(contents.as_slice())
+                .unwrap()
+        );
+        assert_eq!(std::fs::read(path).unwrap(), contents);
     }
 
     #[tokio::test]

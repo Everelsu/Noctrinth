@@ -1,4 +1,6 @@
+use crate::util::content_hash::{ContentHasher, FileHashes};
 use parking_lot::Mutex;
+#[cfg(test)]
 use sha2::{Digest, Sha512};
 use std::collections::HashMap;
 use std::fs::File;
@@ -16,7 +18,7 @@ pub(in crate::state::content_store) struct VerifiedFiles {
 
 struct VerifiedFile {
     stamp: FileStamp,
-    sha512: String,
+    hashes: FileHashes,
     last_used: Instant,
 }
 
@@ -86,15 +88,31 @@ impl VerifiedFiles {
         &self,
         path: &Path,
     ) -> crate::Result<String> {
+        Ok(self.hashes_file(path).await?.sha512)
+    }
+
+    pub(in crate::state::content_store) async fn hashes_file(
+        &self,
+        path: &Path,
+    ) -> crate::Result<FileHashes> {
         let cache = self.clone();
         let path = path.to_path_buf();
         Ok(
-            tokio::task::spawn_blocking(move || cache.hash(&path, &|_| {}))
+            tokio::task::spawn_blocking(move || cache.hashes(&path, &|_| {}))
                 .await??,
         )
     }
 
+    #[cfg(test)]
     fn hash(&self, path: &Path, on_read: &dyn Fn(u64)) -> io::Result<String> {
+        Ok(self.hashes(path, on_read)?.sha512)
+    }
+
+    fn hashes(
+        &self,
+        path: &Path,
+        on_read: &dyn Fn(u64),
+    ) -> io::Result<FileHashes> {
         let mut file = File::open(path)?;
         let before = FileStamp::read(&file);
         if let Some(stamp) = &before {
@@ -103,10 +121,10 @@ impl VerifiedFiles {
                 && &verified.stamp == stamp
             {
                 verified.last_used = Instant::now();
-                return Ok(verified.sha512.clone());
+                return Ok(verified.hashes.clone());
             }
         }
-        let mut hasher = Sha512::new();
+        let mut hasher = ContentHasher::default();
         let mut buffer = vec![0; 256 * 1024];
         let mut size = 0;
         loop {
@@ -118,8 +136,7 @@ impl VerifiedFiles {
             size += read as u64;
             on_read(read as u64);
         }
-        let sha512 =
-            crate::util::content_hash::encode_hex(hasher.finalize().as_slice());
+        let hashes = hasher.finish(size);
         if let Some(stamp) = before
             && FileStamp::read(&file).as_ref() == Some(&stamp)
             && size == stamp.size
@@ -138,12 +155,12 @@ impl VerifiedFiles {
                 path.to_path_buf(),
                 VerifiedFile {
                     stamp,
-                    sha512: sha512.clone(),
+                    hashes: hashes.clone(),
                     last_used: Instant::now(),
                 },
             );
         }
-        Ok(sha512)
+        Ok(hashes)
     }
 }
 
@@ -165,6 +182,11 @@ mod tests {
         let expected = cache.hash(&path, &on_read).unwrap();
         assert_eq!(bytes.get(), 14);
         assert_eq!(cache.hash(&path, &on_read).unwrap(), expected);
+        assert_eq!(
+            cache.hashes(&path, &on_read).unwrap(),
+            crate::util::content_hash::hash_reader(&b"cached content"[..])
+                .unwrap()
+        );
         assert_eq!(bytes.get(), 14);
     }
 

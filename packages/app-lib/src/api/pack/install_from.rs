@@ -286,11 +286,9 @@ pub async fn get_instance_from_pack(
                 // loader from the manifest so the creation modal (and the
                 // instance created by the job) shows accurate info instead
                 // of the filename and placeholder defaults.
-                let file_bytes =
-                    bytes::Bytes::from(crate::util::io::read(&path).await?);
                 let meta =
                     crate::pack::install_curseforge::read_curseforge_pack_meta(
-                        &file_bytes,
+                        &CreatePackFile::Path(path.clone()),
                     )
                     .await?;
                 return Ok(CreatePackInstance {

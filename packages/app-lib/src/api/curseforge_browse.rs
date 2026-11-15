@@ -1189,11 +1189,16 @@ fn newest_file(
         .max()
 }
 
-/// Forgets every CurseForge answer kept in memory.
-pub fn clear_cache() {
+/// Forgets cached browse answers and pack-install metadata.
+pub async fn clear_cache() -> crate::Result<()> {
     if let Ok(mut cache) = CACHE.lock() {
         cache.clear();
     }
+    let state = State::get().await?;
+    sqlx::query!("DELETE FROM curseforge_install_file_cache")
+        .execute(&state.pool)
+        .await?;
+    Ok(())
 }
 
 // ---------------------------------------------------------------------------
@@ -1499,10 +1504,10 @@ async fn install_file(
 /// Download a modpack's zip, for the regular CurseForge pack installer to
 /// install from. Called from inside the install job, so the download is part
 /// of the task the user sees.
-pub async fn download_modpack_bytes(
+pub async fn download_modpack_file(
     project_id: &str,
     file_id: Option<String>,
-) -> crate::Result<bytes::Bytes> {
+) -> crate::Result<crate::util::fetch::DownloadedFile> {
     let state = State::get().await?;
     let project_id = parse_project_id(project_id)?;
     let file = match file_id {
@@ -1535,9 +1540,10 @@ pub async fn download_modpack_bytes(
             file.file_name
         )));
     };
-    Ok(crate::util::io::read(&acquired.stored_file.path)
-        .await?
-        .into())
+    Ok(crate::util::fetch::DownloadedFile::from_stored_file(
+        acquired.stored_file,
+        acquired.reused,
+    ))
 }
 
 /// The code out of what was pasted: the code itself, or a share link such as

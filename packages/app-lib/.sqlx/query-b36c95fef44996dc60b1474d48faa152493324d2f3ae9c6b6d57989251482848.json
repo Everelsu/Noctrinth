@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO curseforge_install_file_cache (key_hash, file_id, payload, expires) VALUES (?, ?, ?, ?) ON CONFLICT(key_hash, file_id) DO UPDATE SET payload = excluded.payload, expires = excluded.expires",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "b36c95fef44996dc60b1474d48faa152493324d2f3ae9c6b6d57989251482848"
+}

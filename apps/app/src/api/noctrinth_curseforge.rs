@@ -81,7 +81,7 @@ pub async fn curseforge_set_options(
 
 #[tauri::command]
 pub async fn curseforge_clear_cache() -> Result<()> {
-    curseforge_browse::clear_cache();
+    curseforge_browse::clear_cache().await?;
     Ok(())
 }
 

@@ -1,9 +1,10 @@
 //! Functions for fetching information from the Internet
+mod partial;
 use super::io::{self, IOError};
 use crate::event::LoadingBarId;
 use crate::event::emit::emit_loading;
 use crate::state::content_store::ContentStore;
-use crate::util::content_hash::{ContentHasher, FileHashes, temporary_file};
+use crate::util::content_hash::{FileHashes, temporary_file};
 use crate::{ErrorKind, LabrinthError};
 use anyhow::{Context, bail};
 use bytes::Bytes;
@@ -904,39 +905,6 @@ pub(crate) async fn fetch_file_mirrors_in(
     unreachable!()
 }
 
-async fn read_file_response(
-    response: reqwest::Response,
-    mut progress: Option<&mut FetchProgressFn<'_>>,
-    staging: Option<&Path>,
-) -> crate::Result<DownloadedFile> {
-    use futures::StreamExt;
-    let (mut file, path) = temporary_file(staging).await?;
-    let total = response.content_length().unwrap_or(0);
-    let mut stream = response.bytes_stream();
-    let mut hasher = ContentHasher::default();
-    let mut size = 0_u64;
-    while let Some(chunk) =
-        crate::install::control::download_step(stream.next()).await?
-    {
-        let chunk = chunk?;
-        file.write_all(&chunk).await?;
-        hasher.update(&chunk);
-        size += chunk.len() as u64;
-        if let Some(progress) = progress.as_mut() {
-            progress(size, total).await?;
-        }
-    }
-    file.sync_all().await?;
-    drop(file);
-    let hashes = hasher.finish(size);
-    Ok(DownloadedFile {
-        reused: false,
-        size,
-        sha512: hashes.sha512.clone(),
-        path: DownloadedFilePath::Temporary(Arc::new(path), hashes),
-    })
-}
-
 pub(crate) async fn fetch_content_file(
     state: &crate::State,
     mirrors: &[&str],
@@ -1290,7 +1258,13 @@ async fn fetch_advanced_with_target(
         response_rate_limit(url)?
     };
 
+    let mut partial = None;
     for attempt in 1..=(FETCH_ATTEMPTS + 1) {
+        if to_file && partial.is_none() {
+            partial = Some(Box::new(
+                Box::pin(partial::PartialDownload::new(file_staging)).await?,
+            ));
+        }
         let (result, _permit) = loop {
             let permit = rate_limit
                 .acquire(
@@ -1311,6 +1285,9 @@ async fn fetch_advanced_with_target(
             }
 
             let mut req = client.request(method.clone(), url);
+            if let Some(partial) = &partial {
+                req = partial.headers(req);
+            }
 
             if let Some(body) = &json_body {
                 req = req.json(body);
@@ -1344,6 +1321,15 @@ async fn fetch_advanced_with_target(
         };
         match result {
             Ok(resp) => {
+                if resp.status() == reqwest::StatusCode::RANGE_NOT_SATISFIABLE
+                    && let Some(partial) = partial.as_mut()
+                    && partial.has_prefix()
+                {
+                    partial.reset().await?;
+                    if attempt <= FETCH_ATTEMPTS {
+                        continue;
+                    }
+                }
                 if resp.status().is_server_error() {
                     if let Some(fence_key) = fence_key {
                         GLOBAL_FETCH_FENCE.record_fail(fence_key);
@@ -1369,14 +1355,22 @@ async fn fetch_advanced_with_target(
                     return Err(backup_error.into());
                 }
 
-                let bytes = if to_file {
-                    read_file_response(
-                        resp,
-                        progress.as_deref_mut(),
-                        file_staging,
+                let bytes = if let Some(download) = partial.as_mut() {
+                    match Box::pin(
+                        download.read_response(resp, progress.as_deref_mut()),
                     )
                     .await
-                    .map(FetchBody::File)
+                    {
+                        Ok(()) => {
+                            let download = partial.take().ok_or_else(|| {
+                                anyhow::anyhow!("download state disappeared")
+                            })?;
+                            Box::pin((*download).finish())
+                                .await
+                                .map(FetchBody::File)
+                        }
+                        Err(error) => Err(error),
+                    }
                 } else {
                     read_memory_response(
                         resp,

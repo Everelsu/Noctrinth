@@ -21,8 +21,6 @@
 //! job runner to route a dropped `.zip` to the right format.
 
 use std::collections::{HashMap, HashSet};
-use std::io::Cursor;
-use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -30,19 +28,30 @@ use async_zip::base::read::seek::ZipFileReader;
 use futures::{StreamExt, TryStreamExt};
 use path_util::SafeRelativeUtf8UnixPathBuf;
 use reqwest::Method;
-use serde::Deserialize;
-use tokio::io::AsyncWriteExt;
+use serde::{Deserialize, Serialize};
+use sha2::Digest;
 
+use super::install_from::CreatePackFile;
+use super::install_mrpack::MrpackZipReader;
 use crate::install::{
     InstallErrorContext, InstallPhaseDetails, InstallPhaseId, InstallProgress,
     InstallProgressReporter,
 };
+use crate::state::content_store::StoredFileHandle;
 use crate::state::{
     AppliedContentSetPatch, ContentSourceKind, EditInstance,
     InstanceInstallStage, InstanceLink, ModLoader, State,
 };
+use crate::util::content_hash::FileHashes;
 use crate::util::fetch::{DownloadMeta, DownloadReason, fetch_advanced};
 use crate::util::io::sanitize_filename;
+
+const MAX_PACK_METADATA_BYTES: u64 = 16 * 1024 * 1024;
+
+struct BundledContent {
+    stored_file: StoredFileHandle,
+    hashes: FileHashes,
+}
 
 const CF_FILES_ENDPOINT: &str = "https://api.curseforge.com/v1/mods/files";
 
@@ -128,7 +137,7 @@ struct CfFilesResponse {
     data: Vec<CfFileData>,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct CfFileData {
     id: i64,
@@ -140,9 +149,11 @@ struct CfFileData {
     file_length: Option<u64>,
     #[serde(default)]
     hashes: Vec<CfFileHash>,
+    #[serde(skip)]
+    cached: bool,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize, Serialize)]
 struct CfFileHash {
     value: String,
     /// 1 = SHA1, 2 = MD5.
@@ -208,33 +219,22 @@ fn pick_loader(manifest: &CfManifest) -> (ModLoader, Option<String>) {
         .unwrap_or((ModLoader::Vanilla, None))
 }
 
-async fn read_manifest(pack_file: &bytes::Bytes) -> crate::Result<CfManifest> {
-    let mut zip_reader = ZipFileReader::with_tokio(Cursor::new(pack_file))
-        .await
-        .map_err(|_| {
-            crate::Error::from(crate::ErrorKind::InputError(
-                "Failed to read CurseForge modpack zip".to_string(),
-            ))
-        })?;
-
-    let Some(manifest_idx) = zip_reader
-        .file()
+async fn read_manifest(
+    zip_reader: &MrpackZipReader,
+) -> crate::Result<CfManifest> {
+    let manifest_idx = zip_reader
         .entries()
         .iter()
-        .position(|f| matches!(f.filename().as_str(), Ok("manifest.json")))
-    else {
-        return Err(crate::ErrorKind::InputError(
-            "No manifest.json found — not a CurseForge modpack".to_string(),
-        )
-        .into());
-    };
-
-    let mut manifest_str = String::new();
-    {
-        let mut reader = zip_reader.reader_with_entry(manifest_idx).await?;
-        reader.read_to_string_checked(&mut manifest_str).await?;
-    }
-    Ok(serde_json::from_str(&manifest_str)?)
+        .position(|entry| entry.name == "manifest.json")
+        .ok_or_else(|| {
+            crate::ErrorKind::InputError(
+                "No manifest.json found — not a CurseForge modpack".to_string(),
+            )
+        })?;
+    let bytes = zip_reader
+        .read_entry_bytes(manifest_idx, MAX_PACK_METADATA_BYTES)
+        .await?;
+    Ok(serde_json::from_slice(&bytes)?)
 }
 
 /// Pack metadata extracted from a CurseForge modpack zip — used by the
@@ -249,9 +249,10 @@ pub struct CurseforgePackMeta {
 }
 
 pub async fn read_curseforge_pack_meta(
-    pack_file: &bytes::Bytes,
+    pack_file: &CreatePackFile,
 ) -> crate::Result<CurseforgePackMeta> {
-    let manifest = read_manifest(pack_file).await?;
+    let reader = MrpackZipReader::new(pack_file).await?;
+    let manifest = read_manifest(&reader).await?;
     let (loader, loader_version) = pick_loader(&manifest);
     Ok(CurseforgePackMeta {
         name: manifest.name,
@@ -271,7 +272,7 @@ pub async fn read_curseforge_pack_meta(
 /// concurrently (aggregating failures into one error), and install
 /// Minecraft. The job runner rolls the instance back if any step fails.
 pub(crate) async fn install_curseforge_pack_files_with_reporter(
-    pack_file: bytes::Bytes,
+    pack_file: CreatePackFile,
     curseforge_api_key: &str,
     instance_id: &str,
     reason: DownloadReason,
@@ -293,7 +294,8 @@ pub(crate) async fn install_curseforge_pack_files_with_reporter(
             InstallPhaseDetails::Empty,
         )
         .await?;
-    let manifest = read_manifest(&pack_file).await?;
+    let mut zip_reader = MrpackZipReader::new(&pack_file).await?;
+    let manifest = read_manifest(&zip_reader).await?;
     let details = InstallPhaseDetails::Modpack {
         project_id: None,
         version_id: None,
@@ -318,8 +320,9 @@ pub(crate) async fn install_curseforge_pack_files_with_reporter(
         resolve_manifest_files(&state, &manifest, curseforge_api_key).await?;
     let bundled = Arc::new(
         extract_overrides(
-            &pack_file,
+            &mut zip_reader,
             &manifest,
+            &resolved,
             instance_id,
             &reporter,
             &details,
@@ -369,6 +372,7 @@ pub(crate) async fn install_curseforge_pack_files_with_reporter(
                     &download_meta,
                     &instance_id,
                     &bundled,
+                    curseforge_api_key,
                 )
                 .await
                 {
@@ -447,7 +451,7 @@ pub(crate) async fn install_curseforge_pack_files_with_reporter(
     // to come out blank even when the zip was carrying the pack's picture all
     // along. Never worth failing an install over.
     if let Err(error) =
-        apply_pack_icon(&pack_file, &manifest, instance_id, &state).await
+        apply_pack_icon(&zip_reader, &manifest, instance_id, &state).await
     {
         tracing::warn!("Could not read the pack's own icon: {error}");
     }
@@ -510,23 +514,161 @@ async fn apply_manifest_to_instance(
     Ok(())
 }
 
+const INSTALL_METADATA_TTL_SECONDS: i64 = 6 * 60 * 60;
+
+fn metadata_key_hash(key: &str) -> String {
+    crate::util::content_hash::encode_hex(
+        sha2::Sha256::digest(key.as_bytes()).as_slice(),
+    )
+}
+
+fn cacheable_metadata(file: &CfFileData) -> bool {
+    file.id > 0
+        && file.mod_id > 0
+        && path_util::is_safe_file_name(&sanitize_filename(&file.file_name))
+        && file
+            .integrity()
+            .checksum()
+            .is_some_and(|(algorithm, digest)| {
+                crate::state::content_store::validate_digest(
+                    &digest,
+                    if algorithm == "sha1" { 40 } else { 32 },
+                )
+                .is_ok()
+            })
+        && file.download_url.as_deref().is_none_or(|value| {
+            url::Url::parse(value).is_ok_and(|url| {
+                url.scheme() == "https"
+                    && url.username().is_empty()
+                    && url.password().is_none()
+            })
+        })
+}
+
+async fn cached_manifest_files(
+    pool: &sqlx::SqlitePool,
+    files: &[CfManifestFile],
+    key: &str,
+) -> crate::Result<HashMap<i64, CfFileData>> {
+    let key_hash = metadata_key_hash(key);
+    let ids = serde_json::to_string(
+        &files.iter().map(|file| file.file_id).collect::<Vec<_>>(),
+    )?;
+    let now = chrono::Utc::now().timestamp();
+    let rows = sqlx::query!(
+        "SELECT file_id, payload FROM curseforge_install_file_cache WHERE key_hash = ? AND expires > ? AND file_id IN (SELECT value FROM json_each(?))",
+        key_hash, now, ids
+    ).fetch_all(pool).await?;
+    Ok(rows
+        .into_iter()
+        .filter_map(|row| {
+            let mut file: CfFileData =
+                serde_json::from_str(&row.payload).ok()?;
+            if file.id != row.file_id
+                || !cacheable_metadata(&file)
+                || !files.iter().any(|expected| {
+                    expected.file_id == file.id
+                        && expected.project_id == file.mod_id
+                })
+            {
+                return None;
+            }
+            file.cached = true;
+            Some((file.id, file))
+        })
+        .collect())
+}
+
+async fn cache_manifest_files(
+    pool: &sqlx::SqlitePool,
+    files: &[CfFileData],
+    key: &str,
+) -> crate::Result<()> {
+    let key_hash = metadata_key_hash(key);
+    let now = chrono::Utc::now().timestamp();
+    let expires = now + INSTALL_METADATA_TTL_SECONDS;
+    let mut tx = pool.begin().await?;
+    sqlx::query!(
+        "DELETE FROM curseforge_install_file_cache WHERE expires <= ?",
+        now
+    )
+    .execute(&mut *tx)
+    .await?;
+    for file in files.iter().filter(|file| cacheable_metadata(file)) {
+        let payload = serde_json::to_string(file)?;
+        sqlx::query!(
+            "INSERT INTO curseforge_install_file_cache (key_hash, file_id, payload, expires) VALUES (?, ?, ?, ?) ON CONFLICT(key_hash, file_id) DO UPDATE SET payload = excluded.payload, expires = excluded.expires",
+            key_hash, file.id, payload, expires
+        ).execute(&mut *tx).await?;
+    }
+    tx.commit().await?;
+    Ok(())
+}
+
+async fn fresh_manifest_file(
+    state: &State,
+    project_id: i64,
+    file_id: i64,
+    key: &str,
+) -> crate::Result<CfFileData> {
+    #[derive(Deserialize)]
+    struct Response {
+        data: CfFileData,
+    }
+    let body = fetch_advanced(
+        Method::GET,
+        &format!(
+            "https://api.curseforge.com/v1/mods/{project_id}/files/{file_id}"
+        ),
+        None,
+        None,
+        Some(("x-api-key", key)),
+        None,
+        None,
+        None,
+        &state.fetch_semaphore,
+        &state.pool,
+    )
+    .await?;
+    let response: Response = serde_json::from_slice(&body)?;
+    if response.data.id != file_id || response.data.mod_id != project_id {
+        return Err(crate::ErrorKind::InputError(
+            "CurseForge returned a different file".into(),
+        )
+        .into());
+    }
+    cache_manifest_files(
+        &state.pool,
+        std::slice::from_ref(&response.data),
+        key,
+    )
+    .await?;
+    Ok(response.data)
+}
+
 async fn resolve_manifest_files(
     state: &State,
     manifest: &CfManifest,
-    curseforge_api_key: &str,
+    key: &str,
 ) -> crate::Result<Vec<CfFileData>> {
-    let file_ids: Vec<i64> = manifest.files.iter().map(|f| f.file_id).collect();
-    if file_ids.is_empty() {
-        return Ok(Vec::new());
-    }
-
-    let mut resolved: CfFilesResponse = {
+    let mut resolved =
+        cached_manifest_files(&state.pool, &manifest.files, key).await?;
+    let missing = manifest
+        .files
+        .iter()
+        .filter(|file| !resolved.contains_key(&file.file_id))
+        .collect::<Vec<_>>();
+    if !missing.is_empty() {
+        let ids = missing
+            .iter()
+            .map(|file| file.file_id)
+            .collect::<HashSet<_>>();
         let body = fetch_advanced(
             Method::POST,
             CF_FILES_ENDPOINT,
             None,
-            Some(serde_json::json!({ "fileIds": file_ids })),
-            Some(("x-api-key", curseforge_api_key)),
+            Some(serde_json::json!({ "fileIds": ids })),
+            Some(("x-api-key", key)),
             None,
             None,
             None,
@@ -534,43 +676,49 @@ async fn resolve_manifest_files(
             &state.pool,
         )
         .await?;
-        serde_json::from_slice(&body)?
-    };
-
-    // The bulk endpoint silently drops some ids (and de-dups) — re-fetch the
-    // missing ones individually, the same strategy XMCL uses.
-    let returned: HashSet<i64> = resolved.data.iter().map(|f| f.id).collect();
-    let missing: Vec<&CfManifestFile> = manifest
-        .files
-        .iter()
-        .filter(|f| !returned.contains(&f.file_id))
-        .collect();
-    for file in missing {
-        #[derive(Deserialize)]
-        struct CfSingleFileResponse {
-            data: CfFileData,
+        let response: CfFilesResponse = serde_json::from_slice(&body)?;
+        let fetched = response
+            .data
+            .into_iter()
+            .filter(|file| {
+                missing.iter().any(|expected| {
+                    expected.file_id == file.id
+                        && expected.project_id == file.mod_id
+                })
+            })
+            .collect::<Vec<_>>();
+        cache_manifest_files(&state.pool, &fetched, key).await?;
+        resolved.extend(fetched.into_iter().map(|file| (file.id, file)));
+        for file in missing {
+            if let std::collections::hash_map::Entry::Vacant(entry) =
+                resolved.entry(file.file_id)
+            {
+                entry.insert(
+                    fresh_manifest_file(
+                        state,
+                        file.project_id,
+                        file.file_id,
+                        key,
+                    )
+                    .await?,
+                );
+            }
         }
-        let body = fetch_advanced(
-            Method::GET,
-            &format!(
-                "https://api.curseforge.com/v1/mods/{}/files/{}",
-                file.project_id, file.file_id
-            ),
-            None,
-            None,
-            Some(("x-api-key", curseforge_api_key)),
-            None,
-            None,
-            None,
-            &state.fetch_semaphore,
-            &state.pool,
-        )
-        .await?;
-        let single: CfSingleFileResponse = serde_json::from_slice(&body)?;
-        resolved.data.push(single.data);
     }
+    Ok(resolved.into_values().collect())
+}
 
-    Ok(resolved.data)
+fn stale_metadata_error(error: &crate::Error) -> bool {
+    let status = error
+        .downcast_ref::<reqwest::Error>()
+        .and_then(reqwest::Error::status)
+        .map(|status| status.as_u16())
+        .or_else(|| {
+            error
+                .downcast_ref::<crate::LabrinthError>()
+                .and_then(|error| error.status)
+        });
+    matches!(status, Some(401 | 403 | 404))
 }
 
 async fn install_cf_file(
@@ -578,29 +726,64 @@ async fn install_cf_file(
     cf_file: &CfFileData,
     download_meta: &DownloadMeta,
     instance_id: &str,
-    bundled: &HashMap<String, Vec<PathBuf>>,
+    bundled: &HashMap<String, Vec<BundledContent>>,
+    api_key: &str,
 ) -> crate::Result<bool> {
     let safe_file_name = sanitize_filename(&cf_file.file_name);
-    let mirrors = cf_file
-        .download_url
-        .as_deref()
-        .into_iter()
-        .collect::<Vec<_>>();
-    let Some(acquired) = state
-        .content_store
-        .get_or_download_file_by_checksum(
-            &mirrors,
-            cf_file.integrity(),
-            bundled
-                .get(&safe_file_name)
-                .map(Vec::as_slice)
-                .unwrap_or_default(),
-            Some(download_meta),
-            &state.fetch_semaphore,
-        )
-        .await?
-    else {
-        return Ok(false);
+    let bundled_file =
+        bundled
+            .get(&safe_file_name)
+            .into_iter()
+            .flatten()
+            .find(|file| {
+                cf_file.integrity().checksum().is_some()
+                    && cf_file.integrity().matches(&file.hashes)
+            });
+    let stored_file = match bundled_file {
+        Some(file) => file.stored_file.clone(),
+        None => {
+            let mut file = cf_file.clone();
+            let mut retried = false;
+            loop {
+                let mirrors = file
+                    .download_url
+                    .as_deref()
+                    .into_iter()
+                    .collect::<Vec<_>>();
+                let result = state
+                    .content_store
+                    .get_or_download_file_by_checksum(
+                        &mirrors,
+                        file.integrity(),
+                        &[],
+                        Some(download_meta),
+                        &state.fetch_semaphore,
+                    )
+                    .await;
+                let refresh = !retried
+                    && file.cached
+                    && match &result {
+                        Ok(None) => false,
+                        Err(error) => stale_metadata_error(error),
+                        _ => false,
+                    };
+                if refresh {
+                    file = fresh_manifest_file(
+                        state,
+                        file.mod_id,
+                        file.id,
+                        api_key,
+                    )
+                    .await?;
+                    retried = true;
+                    continue;
+                }
+                match result? {
+                    Some(acquired) => break acquired.stored_file,
+                    None => return Ok(false),
+                }
+            }
+        }
     };
 
     let cf_project_id = cf_file.mod_id.to_string();
@@ -612,7 +795,7 @@ async fn install_cf_file(
     crate::state::instances::commands::add_project_file(
         instance_id,
         &safe_file_name,
-        &acquired.stored_file,
+        &stored_file,
         // The pack's own, as against a CurseForge mod the user adds later —
         // which is what tells the pack's content list from everything beside
         // it. Both carry CurseForge ids; only this one is part of the pack.
@@ -662,37 +845,22 @@ fn pack_icon_rank(entry_name: &str) -> Option<(usize, usize, usize)> {
 
 /// The picture a pack ships inside its own zip, if it ships one.
 async fn pack_icon_from_zip(
-    pack_file: &bytes::Bytes,
+    zip_reader: &MrpackZipReader,
 ) -> crate::Result<Option<Vec<u8>>> {
-    let mut zip_reader = ZipFileReader::with_tokio(Cursor::new(pack_file))
-        .await
-        .map_err(|_| {
-            crate::Error::from(crate::ErrorKind::InputError(
-                "Failed to read CurseForge modpack zip".to_string(),
-            ))
-        })?;
-
     let Some((_, index)) = zip_reader
-        .file()
         .entries()
         .iter()
         .enumerate()
-        .filter_map(|(index, file)| {
-            let name = file.filename().as_str().ok()?;
-            Some((pack_icon_rank(name)?, index))
-        })
+        .filter_map(|(index, file)| Some((pack_icon_rank(&file.name)?, index)))
         .min()
     else {
         return Ok(None);
     };
-
-    let mut icon_bytes = Vec::new();
-    {
-        let mut reader = zip_reader.reader_with_entry(index).await?;
-        reader.read_to_end_checked(&mut icon_bytes).await?;
-    }
-
-    Ok(Some(icon_bytes))
+    Ok(Some(
+        zip_reader
+            .read_entry_bytes(index, MAX_PACK_METADATA_BYTES)
+            .await?,
+    ))
 }
 
 /// Gives the instance the pack's picture, if the pack has one and the instance
@@ -705,7 +873,7 @@ async fn pack_icon_from_zip(
 /// picture at all is the common case, so the URL is not a fallback worth
 /// skipping — without it such a pack installs blank.
 async fn apply_pack_icon(
-    pack_file: &bytes::Bytes,
+    zip_reader: &MrpackZipReader,
     manifest: &CfManifest,
     instance_id: &str,
     state: &State,
@@ -717,7 +885,7 @@ async fn apply_pack_icon(
         return Ok(());
     }
 
-    let icon_bytes = match pack_icon_from_zip(pack_file).await? {
+    let icon_bytes = match pack_icon_from_zip(zip_reader).await? {
         Some(bytes) => bytes::Bytes::from(bytes),
         None => {
             // Fetched only over TLS, and only from the manifest's own field —
@@ -784,20 +952,15 @@ fn pack_entry_path(
 /// Extract overrides and root content into the instance directory, returning
 /// candidate files for verified reuse while reporting preparation progress.
 async fn extract_overrides(
-    pack_file: &bytes::Bytes,
+    zip_reader: &mut MrpackZipReader,
     manifest: &CfManifest,
+    resolved: &[CfFileData],
     instance_id: &str,
     reporter: &InstallProgressReporter,
     details: &InstallPhaseDetails,
-) -> crate::Result<HashMap<String, Vec<PathBuf>>> {
+) -> crate::Result<HashMap<String, Vec<BundledContent>>> {
+    let state = State::get().await?;
     let instance_dir = crate::api::instance::get_full_path(instance_id).await?;
-    let mut zip_reader = ZipFileReader::with_tokio(Cursor::new(pack_file))
-        .await
-        .map_err(|_| {
-            crate::Error::from(crate::ErrorKind::InputError(
-                "Failed to read CurseForge modpack zip".to_string(),
-            ))
-        })?;
 
     // The manifest can name a custom overrides folder; `overrides` and
     // `client-overrides` are always accepted as well.
@@ -812,15 +975,13 @@ async fn extract_overrides(
         override_prefixes.push(custom);
     }
     let mut override_entries = Vec::new();
-    for (index, file) in zip_reader.file().entries().iter().enumerate() {
-        if let Some(relative) = pack_entry_path(
-            file.filename().as_str().unwrap_or_default(),
-            &override_prefixes,
-        )? {
+    for (index, file) in zip_reader.entries().iter().enumerate() {
+        if let Some(relative) = pack_entry_path(&file.name, &override_prefixes)?
+        {
             override_entries.push((index, relative));
         }
     }
-    let mut bundled: HashMap<String, Vec<PathBuf>> = HashMap::new();
+    let mut bundled: HashMap<String, Vec<BundledContent>> = HashMap::new();
 
     // Bundled content is prepared before the download phase starts.
     let total = override_entries.len() as u64;
@@ -839,42 +1000,60 @@ async fn extract_overrides(
     for (done, (index, safe_relative_path)) in
         override_entries.into_iter().enumerate()
     {
-        let mut file_bytes = vec![];
-        {
-            let mut reader = zip_reader.reader_with_entry(index).await?;
-            reader.read_to_end_checked(&mut file_bytes).await?;
-        }
-
         let dest = instance_dir.join(&safe_relative_path);
-        if let Some(parent) = dest.parent() {
-            tokio::fs::create_dir_all(parent)
-                .await
-                .map_err(|e| crate::util::io::IOError::with_path(e, parent))?;
-        }
-        let mut out = tokio::fs::File::create(&dest)
-            .await
-            .map_err(|e| crate::util::io::IOError::with_path(e, &dest))?;
-        out.write_all(&file_bytes)
-            .await
-            .map_err(|e| crate::util::io::IOError::with_path(e, &dest))?;
-
-        out.flush()
-            .await
-            .map_err(|e| crate::util::io::IOError::with_path(e, &dest))?;
-        drop(out);
-
         if crate::state::content_store::is_managed_content_path(
             &safe_relative_path,
         ) {
+            state
+                .content_store
+                .require_staging_space(zip_reader.entries()[index].size)?;
+            let (file, temporary) = state.content_store.temporary().await?;
+            drop(file);
+            let hashes = zip_reader
+                .extract_entry_hashed(
+                    index,
+                    &temporary,
+                    &state.io_semaphore,
+                    None,
+                )
+                .await?;
             let file_name = dest
                 .file_name()
                 .and_then(|name| name.to_str())
                 .unwrap_or_default()
                 .to_string();
-            let paths = bundled.entry(file_name).or_default();
-            if !paths.contains(&dest) {
-                paths.push(dest);
+            let matches_manifest = resolved.iter().any(|file| {
+                sanitize_filename(&file.file_name) == file_name
+                    && file.integrity().checksum().is_some()
+                    && file.integrity().matches(&hashes)
+            });
+            if matches_manifest {
+                let stored_file = state
+                    .content_store
+                    .save_staged_file(
+                        crate::util::fetch::StagedDownload {
+                            path: temporary,
+                            hashes: hashes.clone(),
+                        },
+                        &[],
+                    )
+                    .await?;
+                bundled.entry(file_name).or_default().push(BundledContent {
+                    stored_file,
+                    hashes,
+                });
+            } else {
+                if let Some(parent) = dest.parent() {
+                    crate::util::io::create_dir_all(parent).await?;
+                }
+                temporary.persist(&dest).map_err(|error| {
+                    crate::util::io::IOError::with_path(error.error, &dest)
+                })?;
             }
+        } else {
+            zip_reader
+                .extract_entry_hashed(index, &dest, &state.io_semaphore, None)
+                .await?;
         }
 
         reporter
@@ -896,6 +1075,137 @@ async fn extract_overrides(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn test_metadata() -> CfFileData {
+        CfFileData {
+            id: 42,
+            mod_id: 21,
+            file_name: "mod.jar".into(),
+            download_url: Some("https://example.invalid/mod.jar".into()),
+            file_length: Some(3),
+            hashes: vec![CfFileHash {
+                algo: 1,
+                value: sha1_smol::Sha1::from(b"abc").hexdigest(),
+            }],
+            cached: false,
+        }
+    }
+
+    #[tokio::test]
+    async fn install_metadata_cache_is_key_scoped_validated_and_expires() {
+        let pool = sqlx::sqlite::SqlitePoolOptions::new()
+            .max_connections(1)
+            .connect("sqlite::memory:")
+            .await
+            .unwrap();
+        sqlx::raw_sql(include_str!(
+            "../../../migrations/20261115121501_curseforge-install-metadata.sql"
+        ))
+        .execute(&pool)
+        .await
+        .unwrap();
+        let files = [CfManifestFile {
+            project_id: 21,
+            file_id: 42,
+        }];
+        cache_manifest_files(&pool, &[test_metadata()], "private-api-key")
+            .await
+            .unwrap();
+        let cached = cached_manifest_files(&pool, &files, "private-api-key")
+            .await
+            .unwrap();
+        assert!(cached[&42].cached);
+        assert_eq!(cached[&42].mod_id, 21);
+        assert!(
+            cached_manifest_files(&pool, &files, "different-key")
+                .await
+                .unwrap()
+                .is_empty()
+        );
+        let wrong_project = [CfManifestFile {
+            project_id: 22,
+            file_id: 42,
+        }];
+        assert!(
+            cached_manifest_files(&pool, &wrong_project, "private-api-key")
+                .await
+                .unwrap()
+                .is_empty()
+        );
+        let key: String = sqlx::query_scalar(
+            "SELECT key_hash FROM curseforge_install_file_cache",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+        assert_ne!(key, "private-api-key");
+        sqlx::query("UPDATE curseforge_install_file_cache SET expires = 0")
+            .execute(&pool)
+            .await
+            .unwrap();
+        assert!(
+            cached_manifest_files(&pool, &files, "private-api-key")
+                .await
+                .unwrap()
+                .is_empty()
+        );
+        cache_manifest_files(&pool, &[test_metadata()], "private-api-key")
+            .await
+            .unwrap();
+        sqlx::query(
+            "UPDATE curseforge_install_file_cache SET payload = 'invalid json'",
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+        assert!(
+            cached_manifest_files(&pool, &files, "private-api-key")
+                .await
+                .unwrap()
+                .is_empty()
+        );
+    }
+
+    #[tokio::test]
+    async fn previews_and_icons_work_from_file_backed_archives() {
+        use std::io::{Cursor, Write};
+        let mut writer = zip::ZipWriter::new(Cursor::new(Vec::new()));
+        let options = zip::write::SimpleFileOptions::default();
+        writer.start_file("manifest.json", options).unwrap();
+        writer.write_all(br#"{"minecraft":{"version":"1.20.1","modLoaders":[]},"name":"Test pack","files":[]}"#).unwrap();
+        writer.start_file("overrides/icon.png", options).unwrap();
+        writer.write_all(b"icon bytes").unwrap();
+        let bytes: bytes::Bytes = writer.finish().unwrap().into_inner().into();
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("pack.zip");
+        tokio::fs::write(&path, &bytes).await.unwrap();
+        for source in [CreatePackFile::Path(path), CreatePackFile::Bytes(bytes)]
+        {
+            let meta = read_curseforge_pack_meta(&source).await.unwrap();
+            assert_eq!(meta.name, "Test pack");
+            assert_eq!(meta.game_version, "1.20.1");
+            let reader = MrpackZipReader::new(&source).await.unwrap();
+            assert_eq!(
+                pack_icon_from_zip(&reader).await.unwrap().unwrap(),
+                b"icon bytes"
+            );
+        }
+    }
+
+    #[test]
+    fn unsafe_metadata_is_not_persisted() {
+        let mut file = test_metadata();
+        assert!(cacheable_metadata(&file));
+        file.download_url = Some("http://example.invalid/mod.jar".into());
+        assert!(!cacheable_metadata(&file));
+        file.download_url =
+            Some("https://user:secret@example.invalid/mod.jar".into());
+        assert!(!cacheable_metadata(&file));
+        file.download_url = None;
+        assert!(cacheable_metadata(&file));
+        file.hashes.clear();
+        assert!(!cacheable_metadata(&file));
+    }
 
     #[test]
     fn extraction_accepts_pack_content_and_rejects_escape_paths() {

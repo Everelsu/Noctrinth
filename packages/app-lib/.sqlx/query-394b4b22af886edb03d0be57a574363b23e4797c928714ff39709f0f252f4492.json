@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM curseforge_install_file_cache",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "394b4b22af886edb03d0be57a574363b23e4797c928714ff39709f0f252f4492"
+}

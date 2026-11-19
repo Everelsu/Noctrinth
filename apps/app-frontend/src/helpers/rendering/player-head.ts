@@ -1,7 +1,3 @@
-import type { Skin } from '../skins'
-import { get_normalized_skin_texture } from '../skins'
-import { headStorage } from '../storage/head-storage'
-
 export async function generatePlayerHeadBlob(skinUrl: string, size: number = 64): Promise<Blob> {
 	return new Promise((resolve, reject) => {
 		const img = new Image()
@@ -97,13 +93,4 @@ export async function generatePlayerHeadBlob(skinUrl: string, size: number = 64)
 
 		img.src = skinUrl
 	})
-}
-
-export async function getPlayerHeadUrl(skin: Skin): Promise<string> {
-	const key = `${skin.texture_key}-head`
-	const cached = await headStorage.retrieve(key).catch(() => null)
-	if (cached) return cached
-	const blob = await generatePlayerHeadBlob(await get_normalized_skin_texture(skin), 64)
-	await headStorage.store(key, blob).catch(() => {})
-	return URL.createObjectURL(blob)
 }

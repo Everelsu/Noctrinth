@@ -2398,5 +2398,17 @@
 	},
 	"instance.settings.tabs.java.java-memory": {
 		"message": "Выделение памяти"
+	},
+	"app.settings.java-installations.location.title": {
+		"message": "Java {version, number}"
+	},
+	"noctrinth.screenshots.launcher-background-set": {
+		"message": "Фон лаунчера обновлён"
+	},
+	"noctrinth.screenshots.set-launcher-background": {
+		"message": "Сделать фоном лаунчера"
+	},
+	"noctrinth.settings.appearance.show-hosting": {
+		"message": "Показывать Modrinth Hosting в боковой панели"
 	}
 }

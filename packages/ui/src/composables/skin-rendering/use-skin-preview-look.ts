@@ -1,4 +1,3 @@
-import { useRenderLoop } from '@tresjs/core'
 import * as THREE from 'three'
 import { onMounted, onUnmounted, type Ref, type ShallowRef } from 'vue'
 
@@ -22,7 +21,7 @@ const FOLLOW_RATE = 6
  * them, the way a player in the game turns to look at you, and settles back to
  * looking ahead once the pointer stops or goes elsewhere.
  *
- * Called after `useSkinPreviewAnimation`, so its frame runs after the mixer has
+ * Updated after the mixer has
  * posed the head and the turn goes on top of the animation instead of being
  * overwritten by it.
  */
@@ -96,8 +95,7 @@ export function useSkinPreviewLook(options: {
 		]
 	}
 
-	const { onLoop } = useRenderLoop()
-	onLoop(({ delta }) => {
+	return function updateLook(delta: number) {
 		const root = options.scene.value
 		if (root !== headOwner) {
 			headOwner = root
@@ -123,5 +121,5 @@ export function useSkinPreviewLook(options: {
 		head.quaternion.premultiply(turn.setFromEuler(euler))
 		lookedQuaternion.copy(head.quaternion)
 		looked = true
-	})
+	}
 }

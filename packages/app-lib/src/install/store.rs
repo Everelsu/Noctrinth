@@ -456,7 +456,8 @@ pub async fn update_state(
 		SET
 			instance_id = (SELECT id FROM instances WHERE id = ?),
 			state = ?,
-			modified = ?
+			modified = ?,
+			support_paste_url = NULL
 		WHERE id = ? AND status IN ('queued', 'running')
 		",
     )
@@ -493,7 +494,13 @@ pub async fn update_status(
     sqlx::query!(
         "
 		UPDATE install_jobs
-		SET instance_id = ?, status = ?, state = ?, modified = ?, finished = ?
+		SET
+			instance_id = ?,
+			status = ?,
+			state = ?,
+			modified = ?,
+			finished = ?,
+			support_paste_url = NULL
 		WHERE id = ?
 		",
         instance_id,
@@ -533,7 +540,13 @@ pub async fn update_status_if(
     let result = sqlx::query(
         "
 		UPDATE install_jobs
-		SET instance_id = ?, status = ?, state = ?, modified = ?, finished = ?
+		SET
+			instance_id = ?,
+			status = ?,
+			state = ?,
+			modified = ?,
+			finished = ?,
+			support_paste_url = NULL
 		WHERE id = ? AND status = ?
 		",
     )
@@ -581,7 +594,8 @@ pub async fn finish_active(
 			status = ?,
 			state = ?,
 			modified = ?,
-			finished = ?
+			finished = ?,
+			support_paste_url = NULL
 		WHERE id = ? AND status IN ('queued', 'running')
 		",
     )
@@ -629,7 +643,8 @@ pub async fn complete_success(
 			status = 'succeeded',
 			state = ?,
 			modified = ?,
-			finished = ?
+			finished = ?,
+			support_paste_url = NULL
 		WHERE id = ? AND status = 'running'
 		",
     )
@@ -690,6 +705,48 @@ pub async fn dismiss(id: Uuid, pool: &SqlitePool) -> crate::Result<()> {
 		",
         modified,
         id,
+    )
+    .execute(pool)
+    .await?;
+
+    Ok(())
+}
+
+pub async fn get_support_paste_url(
+    id: Uuid,
+    pool: &SqlitePool,
+) -> crate::Result<Option<String>> {
+    let id = id.to_string();
+    let url = sqlx::query_scalar!(
+        "
+		SELECT support_paste_url
+		FROM install_jobs
+		WHERE id = ? AND status NOT IN ('queued', 'running')
+		",
+        id,
+    )
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(url.flatten())
+}
+
+pub async fn set_support_paste_url(
+    id: Uuid,
+    url: &str,
+    finished_modified: i64,
+    pool: &SqlitePool,
+) -> crate::Result<()> {
+    let id = id.to_string();
+    sqlx::query!(
+        "
+		UPDATE install_jobs
+		SET support_paste_url = ?
+		WHERE id = ? AND modified = ? AND status NOT IN ('queued', 'running')
+		",
+        url,
+        id,
+        finished_modified,
     )
     .execute(pool)
     .await?;

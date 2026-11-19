@@ -13,6 +13,7 @@ import {
 	EditIcon,
 	FileArchiveIcon,
 	FolderOpenIcon,
+	ImageIcon,
 	MinusIcon,
 	SquarePlusIcon,
 	TrashIcon,
@@ -68,6 +69,7 @@ import {
 	set_screenshot_group_memberships,
 } from '@/helpers/instance'
 import { MAX_INSTANCE_GROUP_NAME_LENGTH } from '@/helpers/instance-groups'
+import { setBackgroundFromPath } from '@/helpers/noctrinth-background'
 import { copyFilesToClipboard } from '@/helpers/noctrinth-clipboard'
 import {
 	instanceListQueryOptions,
@@ -228,6 +230,14 @@ const { width: windowWidth } = useWindowSize()
 const formatDateTime = useFormatDateTime({ dateStyle: 'long', timeStyle: 'short' })
 const formatMonth = useFormatDateTime({ month: 'long', year: 'numeric' })
 const messages = defineMessages({
+	setLauncherBackground: {
+		id: 'noctrinth.screenshots.set-launcher-background',
+		defaultMessage: 'Set as launcher background',
+	},
+	launcherBackgroundSet: {
+		id: 'noctrinth.screenshots.launcher-background-set',
+		defaultMessage: 'Launcher background updated',
+	},
 	heading: { id: 'app.screenshots.heading', defaultMessage: 'Screenshots' },
 	emptyHeading: { id: 'app.screenshots.empty-heading', defaultMessage: 'No screenshots yet' },
 	emptyDescription: {
@@ -1111,6 +1121,17 @@ function screenshotBySelectionKey(selectionKey: string) {
 	return screenshots.value.find((screenshot) => getSelectionKey(screenshot) === selectionKey)
 }
 
+async function setScreenshotBackground(selectionKey: string) {
+	const screenshot = screenshotBySelectionKey(selectionKey)
+	if (!screenshot) return
+	try {
+		await setBackgroundFromPath(screenshot.path)
+		addNotification({ type: 'success', title: formatMessage(messages.launcherBackgroundSet) })
+	} catch (error) {
+		handleError(error)
+	}
+}
+
 function copyScreenshotBySelectionKey(selectionKey: string) {
 	const screenshot = screenshotBySelectionKey(selectionKey)
 	if (screenshot) void copyScreenshot(screenshot)
@@ -1530,6 +1551,14 @@ onBeforeUnmount(() => {
 				@click="openScreenshotBySelectionKey(item.id)"
 			>
 				<FolderOpenIcon />
+			</IconButton>
+			<IconButton
+				v-tooltip="formatMessage(messages.setLauncherBackground)"
+				:label="formatMessage(messages.setLauncherBackground)"
+				type="quiet"
+				@click="setScreenshotBackground(item.id)"
+			>
+				<ImageIcon />
 			</IconButton>
 			<IconButton
 				v-tooltip="formatMessage(commonMessages.deleteLabel)"

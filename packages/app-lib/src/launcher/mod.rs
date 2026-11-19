@@ -1213,6 +1213,7 @@ pub async fn launch_minecraft(
                 .chain(java_args.iter().cloned())
                 .collect(),
             &java_version.architecture,
+            java_version.parsed_version,
             &quick_play_type,
             quick_play_version,
             version_info

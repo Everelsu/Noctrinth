@@ -159,6 +159,9 @@ fn main() {
                         "flush_pending_skin_change_for_profile",
                         "normalize_skin_texture",
                         "get_dragged_skin_data",
+                        "render_skin_preview",
+                        "render_skin_head",
+                        "get_skin_ears",
                     ])
                     .default_permission(
                         DefaultPermissionRule::AllowAllCommands,
@@ -218,6 +221,8 @@ fn main() {
                         "install_job_cancel",
                         "install_job_dismiss",
                         "install_job_support_details",
+                        "install_job_support_paste_url",
+                        "install_job_set_support_paste_url",
                     ])
                     .default_permission(
                         DefaultPermissionRule::AllowAllCommands,

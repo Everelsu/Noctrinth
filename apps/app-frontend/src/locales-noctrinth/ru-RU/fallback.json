@@ -149,6 +149,12 @@
 	"app.download-manager.verifying": {
 		"message": "Проверка"
 	},
+	"app.error.copied-debug-info": {
+		"message": "Скопировано"
+	},
+	"app.error.inspect-debug-info": {
+		"message": "Просмотреть отладочные данные"
+	},
 	"app.error.state-init.open-backups-folder": {
 		"message": "Открыть папку резервных копий"
 	},

@@ -42,6 +42,34 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.23.4',
+		date: '2026-11-19T00:00:00+00:00',
+		body: `### Security
+- Synced with Modrinth App 0.23.4 and included its mitigation for CVE-2026-114938 (Java4Shell). Please update Noctrinth and restart any running instances.
+
+### Added
+- Added a setting to hide the Modrinth Hosting button in the sidebar. It is shown by default.
+- Added an action to set a screenshot as the launcher background directly from the viewer.
+
+### Changed
+- Grouped the graphics adapter setting with each Java installation and put adapter names next to the available choices.
+
+### Fixed
+- Highlighted the active result when navigating the Minecraft version search with the arrow keys. Press Enter to select it.`,
+		body_ru: `### Безопасность
+- Перенесли защиту Modrinth App 0.23.4 от CVE-2026-114938 (Java4Shell). Пожалуйста, обновите Noctrinth и перезапустите уже открытые сборки.
+
+### Добавлено
+- В настройках внешнего вида можно скрыть кнопку Modrinth Hosting в боковой панели. По умолчанию она видна.
+- Из просмотра скриншотов теперь можно сразу установить снимок фоном лаунчера.
+
+### Изменено
+- Перенесли выбор видеокарты в карточку каждой установки Java и подписали варианты названиями адаптеров.
+
+### Исправлено
+- При поиске версии Minecraft стрелки подсвечивают активный результат, а Enter выбирает его.`,
+	},
+	{
 		version: '0.23.3+1',
 		date: '2026-11-15T00:00:00+00:00',
 		body: `### Added

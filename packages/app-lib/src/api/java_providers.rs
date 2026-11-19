@@ -171,6 +171,12 @@ impl JavaPackageQuery {
                 archive_type: "tar.gz",
                 package_type: "jre",
             },
+            ("linux", "x86_64") => Self {
+                os,
+                arch,
+                archive_type: "tar.gz",
+                package_type: "jre",
+            },
             ("windows", "aarch64")
                 if java_version < WINDOWS_ARM64_MIN_NATIVE_JAVA =>
             {
@@ -614,11 +620,7 @@ pub async fn unpack_archive(
             "Java extraction task failed: {e}"
         )))
     })??;
-    let executable = |directory: &Path| {
-        #[cfg(target_os = "macos")]
-        let directory = directory.join("Contents").join("Home");
-        directory.join("bin").join(crate::util::jre::JAVA_BIN)
-    };
+    let executable = super::jre::runtime_executable;
     crate::util::jre::check_java_at_filepath(&executable(&extracted)).await?;
     let target = install_root.join(extracted.file_name().ok_or_else(|| {
         crate::ErrorKind::InputError(
@@ -997,16 +999,18 @@ mod tests {
 mod platform_tests {
     use super::JavaPackageQuery;
     #[test]
-    fn linux_arm64_uses_glibc_tarballs() {
-        assert_eq!(
-            JavaPackageQuery::new("linux", "aarch64", 16),
-            JavaPackageQuery {
-                os: "linux-glibc",
-                arch: "aarch64",
-                archive_type: "tar.gz",
-                package_type: "jre",
-            }
-        );
+    fn linux_uses_tarballs_for_both_architectures() {
+        for (arch, os) in [("aarch64", "linux-glibc"), ("x86_64", "linux")] {
+            assert_eq!(
+                JavaPackageQuery::new("linux", arch, 16),
+                JavaPackageQuery {
+                    os,
+                    arch,
+                    archive_type: "tar.gz",
+                    package_type: "jre",
+                }
+            );
+        }
     }
 
     #[test]
@@ -1034,11 +1038,7 @@ mod platform_tests {
 
     #[test]
     fn other_platforms_use_native_zips() {
-        for (os, arch) in [
-            ("linux", "x86_64"),
-            ("windows", "x86_64"),
-            ("macos", "aarch64"),
-        ] {
+        for (os, arch) in [("windows", "x86_64"), ("macos", "aarch64")] {
             assert_eq!(
                 JavaPackageQuery::new(os, arch, 8),
                 JavaPackageQuery {

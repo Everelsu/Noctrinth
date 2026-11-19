@@ -73,6 +73,7 @@
 				</SplitButton>
 			</div>
 		</div>
+		<slot name="footer" />
 	</div>
 </template>
 

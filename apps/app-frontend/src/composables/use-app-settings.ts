@@ -1,3 +1,4 @@
+import { useStorage } from '@vueuse/core'
 import { reactive, ref } from 'vue'
 
 export const DEFAULT_FEATURE_FLAGS = {
@@ -54,6 +55,7 @@ const appSettings = reactive({
 	showWorldsTabInInstances: true,
 	showScreenshotsTabInInstances: false,
 	showSkinSelectorInSidebar: true,
+	showModrinthHosting: useStorage('noctrinth:show-modrinth-hosting', true),
 	nativeDecorations: false,
 	devMode: false,
 	featureFlags,

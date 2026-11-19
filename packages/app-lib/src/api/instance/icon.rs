@@ -20,8 +20,9 @@ use std::path::{Path, PathBuf};
 
 const INSTANCE_ICON_MAX_BYTES: usize = 4 * 1024 * 1024;
 const INSTANCE_ICON_MAX_DIMENSION: u32 = 512;
-const INSTANCE_ICON_MAX_SOURCE_DIMENSION: u32 = 8_192;
-const INSTANCE_ICON_MAX_DECODE_BYTES: u64 = 64 * 1024 * 1024;
+const INSTANCE_ICON_MAX_DECODE_BYTES: u64 = 256 * 1024 * 1024;
+static INSTANCE_ICON_DECODES: tokio::sync::Semaphore =
+    tokio::sync::Semaphore::const_new(2);
 const GENERATED_ICON_SIZE: u32 = 256;
 /// Noctrinth's own: what an icon that was kept animated is stored as.
 const ANIMATED_EXTENSION: &str = "gif";
@@ -273,7 +274,9 @@ pub(crate) async fn cache_icon(
     bytes: Bytes,
     state: &State,
 ) -> crate::Result<PathBuf> {
+    let permit = INSTANCE_ICON_DECODES.acquire().await?;
     let (bytes, animated) = tokio::task::spawn_blocking(move || {
+        let _permit = permit;
         if looks_like_svg(&bytes) {
             return Err(svg_not_supported_error());
         }
@@ -299,7 +302,9 @@ pub(crate) async fn cache_icon_from_path(
     state: &State,
 ) -> crate::Result<PathBuf> {
     let icon_path = icon_path.to_path_buf();
+    let permit = INSTANCE_ICON_DECODES.acquire().await?;
     let (bytes, animated) = tokio::task::spawn_blocking(move || {
+        let _permit = permit;
         let file = StdFile::open(&icon_path).context(ErrorKind::InputError(
             format!("could not open instance icon {}", icon_path.display()),
         ))?;
@@ -545,8 +550,6 @@ where
             "could not identify instance icon format".to_string(),
         ))?;
     let mut limits = image::Limits::default();
-    limits.max_image_width = Some(INSTANCE_ICON_MAX_SOURCE_DIMENSION);
-    limits.max_image_height = Some(INSTANCE_ICON_MAX_SOURCE_DIMENSION);
     limits.max_alloc = Some(INSTANCE_ICON_MAX_DECODE_BYTES);
     reader.limits(limits);
 
@@ -559,7 +562,7 @@ where
         image.resize(
             INSTANCE_ICON_MAX_DIMENSION,
             INSTANCE_ICON_MAX_DIMENSION,
-            image::imageops::FilterType::Lanczos3,
+            FilterType::Lanczos3,
         )
     } else {
         image
@@ -593,8 +596,14 @@ fn inspect_legacy_icon(icon_path: &Path) -> crate::Result<LegacyIconAction> {
     }
     let format = image::guess_format(bytes).ok();
 
-    if metadata.len() < INSTANCE_ICON_MAX_BYTES as u64
-        && format == Some(ImageFormat::Png)
+    if format == Some(ImageFormat::Png)
+        && metadata.len() < INSTANCE_ICON_MAX_BYTES as u64
+        && ImageReader::with_format(&mut reader, ImageFormat::Png)
+            .into_dimensions()
+            .is_ok_and(|(width, height)| {
+                width <= INSTANCE_ICON_MAX_DIMENSION
+                    && height <= INSTANCE_ICON_MAX_DIMENSION
+            })
     {
         return Ok(LegacyIconAction::Keep);
     }

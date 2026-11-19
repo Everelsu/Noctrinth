@@ -47,11 +47,11 @@
   "app.action-bar.install.copied-details": {
     "message": "Copied"
   },
-  "app.action-bar.install.copy-details": {
-    "message": "Copy details"
-  },
   "app.action-bar.install.dismiss": {
     "message": "Dismiss"
+  },
+  "app.action-bar.install.inspect-details": {
+    "message": "Inspect details"
   },
   "app.action-bar.install.open-instance": {
     "message": "Open instance"
@@ -1187,9 +1187,6 @@
   "app.download-manager.title": {
     "message": "Download manager"
   },
-  "app.error-modal.copy-debug-info": {
-    "message": "Copy debug info"
-  },
   "app.error-modal.debug-information": {
     "message": "Debug information"
   },
@@ -1291,6 +1288,12 @@
   },
   "app.error-modal.try-signing-in-again": {
     "message": "Try signing in again"
+  },
+  "app.error.copied-debug-info": {
+    "message": "Copied"
+  },
+  "app.error.inspect-debug-info": {
+    "message": "Inspect debug info"
   },
   "app.error.state-init.open-backups-folder": {
     "message": "Open backups folder"
@@ -2392,9 +2395,6 @@
   },
   "app.minecraft-auth-error.contact-support": {
     "message": "Contact support"
-  },
-  "app.minecraft-auth-error.copy-debug-info": {
-    "message": "Copy debug info"
   },
   "app.minecraft-auth-error.debug-information": {
     "message": "Debug information"
@@ -4248,7 +4248,7 @@
     "message": "Some of your instances cannot use this setting"
   },
   "app.settings.java-installations.location.title": {
-    "message": "Java {version, number} location"
+    "message": "Java {version, number}"
   },
   "app.settings.java.gpu.choice.auto": {
     "message": "Let Windows decide"
@@ -4261,18 +4261,6 @@
   },
   "app.settings.java.gpu.label": {
     "message": "Graphics adapter"
-  },
-  "app.settings.java.gpu.no-preference": {
-    "message": "No preference is set, so Windows picks — on a laptop that is usually the integrated adapter. Available: {adapters}"
-  },
-  "app.settings.java.gpu.on-high-performance": {
-    "message": "Windows will run this runtime on the high-performance adapter."
-  },
-  "app.settings.java.gpu.on-named-adapter": {
-    "message": "Windows will run this runtime on {adapter}."
-  },
-  "app.settings.java.gpu.on-power-saving": {
-    "message": "Windows will run this runtime on the power-saving adapter — usually the integrated one, which is the slow option for Minecraft."
   },
   "app.settings.java.runtimes.delete-label": {
     "message": "Delete runtime"
@@ -4320,10 +4308,10 @@
     "message": "Telemetry"
   },
   "app.settings.resource-management.always-show-copy-details.description": {
-    "message": "Show the Copy details action while an install is queued or running. It is always available for failed or interrupted installs."
+    "message": "Show the Inspect details action while an install is queued or running. It is always available for failed or interrupted installs."
   },
   "app.settings.resource-management.always-show-copy-details.title": {
-    "message": "Always show copy details"
+    "message": "Always show inspect details"
   },
   "app.settings.resource-management.app-cache.confirm.description": {
     "message": "The app may load more slowly until the cache is rebuilt."
@@ -6476,6 +6464,15 @@
   "noctrinth.quick-search.update-available": {
     "message": "Update available"
   },
+  "noctrinth.screenshots.launcher-background-set": {
+    "message": "Launcher background updated"
+  },
+  "noctrinth.screenshots.set-launcher-background": {
+    "message": "Set as launcher background"
+  },
+  "noctrinth.settings.appearance.show-hosting": {
+    "message": "Show Modrinth Hosting in the sidebar"
+  },
   "noctrinth.settings.background.blur.description": {
     "message": "Softens it, so it stays behind what is in front of it."
   },
@@ -6623,14 +6620,8 @@
   "noctrinth.settings.java-provider.auto": {
     "message": "Automatically"
   },
-  "noctrinth.settings.java-provider.auto-hint": {
-    "message": "Tries Azul, then Temurin, then Temurin from GitHub, then Mojang, then Mojang through the BMCLAPI mirror, and stops at the first that answers. GitHub usually stays reachable where the others are blocked."
-  },
   "noctrinth.settings.java-provider.azul": {
     "message": "Azul Zulu"
-  },
-  "noctrinth.settings.java-provider.description": {
-    "message": "Where the launcher gets Java when an instance needs one it does not have. Every download is checked against the checksum its source publishes."
   },
   "noctrinth.settings.java-provider.mojang": {
     "message": "Mojang"

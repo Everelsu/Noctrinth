@@ -25,17 +25,7 @@ const { settings } = useDefaultInstanceSettings(
 
 const messages = defineMessages({
 	title: { id: 'noctrinth.settings.java-provider.title', defaultMessage: 'Download Java from' },
-	description: {
-		id: 'noctrinth.settings.java-provider.description',
-		defaultMessage:
-			'Where the launcher gets Java when an instance needs one it does not have. Every download is checked against the checksum its source publishes.',
-	},
 	auto: { id: 'noctrinth.settings.java-provider.auto', defaultMessage: 'Automatically' },
-	autoHint: {
-		id: 'noctrinth.settings.java-provider.auto-hint',
-		defaultMessage:
-			'Tries Azul, then Temurin, then Temurin from GitHub, then Mojang, then Mojang through the BMCLAPI mirror, and stops at the first that answers. GitHub usually stays reachable where the others are blocked.',
-	},
 	azul: { id: 'noctrinth.settings.java-provider.azul', defaultMessage: 'Azul Zulu' },
 	temurin: { id: 'noctrinth.settings.java-provider.temurin', defaultMessage: 'Eclipse Temurin' },
 	'temurin-github': {
@@ -61,7 +51,6 @@ const options = computed<ComboboxOption<Provider>[]>(() =>
 				<h2 id="java-provider-label" class="m-0 text-lg font-semibold text-contrast">
 					{{ formatMessage(messages.title) }}
 				</h2>
-				<p class="m-0 mt-1">{{ formatMessage(messages.description) }}</p>
 			</div>
 			<Combobox
 				v-model="settings.provider"
@@ -70,8 +59,5 @@ const options = computed<ComboboxOption<Provider>[]>(() =>
 				class="w-72 max-w-full"
 			/>
 		</div>
-		<p v-if="settings.provider === 'auto'" class="m-0 text-sm text-secondary">
-			{{ formatMessage(messages.autoHint) }}
-		</p>
 	</div>
 </template>

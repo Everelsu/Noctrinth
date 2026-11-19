@@ -85,6 +85,10 @@ const messages = defineMessages({
 		id: 'app.appearance-settings.font.title',
 		defaultMessage: 'Interface font',
 	},
+	showHosting: {
+		id: 'noctrinth.settings.appearance.show-hosting',
+		defaultMessage: 'Show Modrinth Hosting in the sidebar',
+	},
 	fontDescription: {
 		id: 'app.appearance-settings.font.description',
 		defaultMessage:
@@ -508,6 +512,12 @@ provideAppearanceSettings({
 		</Collapsible>
 	</div>
 
+	<div class="flex items-center justify-between gap-4">
+		<h2 id="show-hosting-label" class="m-0 text-lg font-semibold text-contrast">
+			{{ formatMessage(messages.showHosting) }}
+		</h2>
+		<Toggle v-model="appSettings.showModrinthHosting" aria-labelledby="show-hosting-label" />
+	</div>
 	<NoctrinthBackgroundSettings />
 </template>
 

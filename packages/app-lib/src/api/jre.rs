@@ -724,14 +724,27 @@ pub async fn list_installed_runtimes() -> crate::Result<Vec<InstalledRuntime>> {
 }
 
 /// Where the executable lives inside a runtime directory.
-fn runtime_executable(runtime_dir: &Path) -> PathBuf {
+pub(super) fn runtime_executable(runtime_dir: &Path) -> PathBuf {
     #[cfg(target_os = "macos")]
     {
-        runtime_dir
-            .join("Contents")
-            .join("Home")
-            .join("bin")
-            .join("java")
+        let direct = runtime_dir.join("Contents/Home/bin/java");
+        if direct.is_file() {
+            return direct;
+        }
+        let mut candidates = std::fs::read_dir(runtime_dir)
+            .into_iter()
+            .flatten()
+            .filter_map(Result::ok)
+            .map(|entry| entry.path())
+            .filter(|path| {
+                path.extension().is_some_and(|extension| extension == "jre")
+            })
+            .map(|bundle| bundle.join("Contents/Home/bin/java"))
+            .filter(|java| java.is_file());
+        match (candidates.next(), candidates.next()) {
+            (Some(java), None) => java,
+            _ => direct,
+        }
     }
     #[cfg(not(target_os = "macos"))]
     {

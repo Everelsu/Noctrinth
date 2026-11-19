@@ -26,7 +26,7 @@
 				:autocapitalize="searchAutocapitalize"
 				:spellcheck="searchSpellcheck"
 				:inputmode="searchInputmode"
-				:input-attrs="searchInputAttrs"
+				:input-attrs="resolvedSearchInputAttrs"
 				:appearance="searchInputVariant"
 				wrapper-class="w-full"
 				:input-class="resolvedSearchInputClass"
@@ -121,6 +121,7 @@
 						openDirection === 'up' ? 'shadow-[0_-25px_50px_-12px_rgb(0,0,0,0.25)]' : 'shadow-2xl',
 					]"
 					:style="[dropdownStyle, { transformOrigin: dropdownTransformOrigin }]"
+					:id="listbox ? listboxId : undefined"
 					:role="listbox ? 'listbox' : 'menu'"
 					@pointerdown.stop
 					@mousedown.stop
@@ -148,6 +149,7 @@
 										:ref="(el: HTMLElement) => setOptionRef(el as HTMLElement, index)"
 										:href="item.type === 'link' && !item.disabled ? item.href : undefined"
 										:target="item.type === 'link' && !item.disabled ? item.target : undefined"
+										:id="listbox ? `${listboxId}-${index}` : undefined"
 										:role="listbox ? 'option' : 'menuitem'"
 										:aria-selected="listbox && item.value === modelValue"
 										:aria-disabled="item.disabled || undefined"
@@ -223,6 +225,7 @@ import {
 	onUnmounted,
 	ref,
 	shallowRef,
+	useId,
 	useSlots,
 	watch,
 } from 'vue'
@@ -519,8 +522,26 @@ const shouldRenderDropdown = computed(() => {
 	return isOpen.value && hasDropdownContent.value
 })
 
-function getOptionClasses(item: ComboboxOption<T> & { key: string }, _index: number) {
+const listboxId = useId()
+const resolvedSearchInputAttrs = computed(() =>
+	props.listbox
+		? {
+				role: 'combobox',
+				'aria-autocomplete': 'list',
+				'aria-expanded': shouldRenderDropdown.value,
+				'aria-controls': shouldRenderDropdown.value ? listboxId : undefined,
+				'aria-activedescendant':
+					shouldRenderDropdown.value && filteredOptions.value[focusedIndex.value]
+						? `${listboxId}-${focusedIndex.value}`
+						: undefined,
+				...props.searchInputAttrs,
+			}
+		: props.searchInputAttrs,
+)
+
+function getOptionClasses(item: ComboboxOption<T> & { key: string }, index: number) {
 	const isSelected = props.listbox && item.value === props.modelValue
+	const isFocused = index === focusedIndex.value
 
 	return [
 		item.class,
@@ -528,6 +549,7 @@ function getOptionClasses(item: ComboboxOption<T> & { key: string }, _index: num
 			'bg-surface-4 text-contrast hover:brightness-[115%] focus:brightness-[115%]': !isSelected,
 			'bg-brand-highlight text-brand hover:bg-brand-highlight focus:bg-brand-highlight': isSelected,
 			'cursor-not-allowed opacity-50 pointer-events-none': item.disabled,
+			'brightness-[115%] outline outline-1 -outline-offset-2 outline-current': isFocused,
 		},
 	]
 }
@@ -880,7 +902,7 @@ function findNextFocusableOption(currentIndex: number, direction: 'next' | 'prev
 	const length = filteredOptions.value.length
 	if (length === 0) return -1
 
-	let index = currentIndex
+	let index = currentIndex < 0 && direction === 'previous' ? 0 : currentIndex
 
 	for (let i = 0; i < length; i++) {
 		index = direction === 'next' ? (index + 1) % length : (index - 1 + length) % length
@@ -949,7 +971,7 @@ function handleDropdownKeydown(event: KeyboardEvent) {
 			event.preventDefault()
 			if (focusedIndex.value >= 0) {
 				const option = filteredOptions.value[focusedIndex.value]
-				if (!isDivider(option)) {
+				if (option && !isDivider(option)) {
 					handleOptionClick(option, focusedIndex.value)
 				}
 			}
@@ -1001,6 +1023,7 @@ function handleSearchKeydown(event: KeyboardEvent) {
 
 function handleSearchInput() {
 	userHasTyped.value = true
+	focusedIndex.value = -1
 	emit('searchInput', searchQuery.value)
 	if (!hasMinimumSearchLength.value) {
 		closeDropdown()

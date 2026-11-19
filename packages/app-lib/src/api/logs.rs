@@ -88,7 +88,7 @@ fn redact(s: String, secret: &str, placeholder: &str) -> String {
     s.replace(secret, placeholder)
 }
 
-#[derive(Serialize, Debug)] // Not deserialize
+#[derive(Default, Serialize, Debug)] // Not deserialize
 #[serde(transparent)]
 pub struct CensoredString(String);
 impl CensoredString {
@@ -174,7 +174,7 @@ impl CensoredString {
             );
         }
 
-        Self(s)
+        Self(crate::util::redactions::censor_log_text(s))
     }
 }
 
@@ -653,7 +653,7 @@ pub async fn get_generic_live_log_cursor(
         return Ok(LatestLogCursor {
             cursor: 0,
             new_file: false,
-            output: CensoredString("".to_string()),
+            output: CensoredString::default(),
         });
     }
 

@@ -1216,6 +1216,17 @@ async fn fetch_advanced_with_client_and_progress(
     }
 }
 
+/// Whether `url` points at the Modrinth CDN, compared by scheme and exact
+/// domain so that look-alike hosts such as `cdn.modrinth.com.example.com`
+/// never receive the user's credentials.
+fn is_modrinth_cdn_url(url: &str) -> bool {
+    let url = url::Url::parse(url);
+
+    url.is_ok_and(|url| {
+        url.domain() == Some("cdn.modrinth.com") && url.scheme() == "https"
+    })
+}
+
 async fn fetch_advanced_with_target(
     method: Method,
     url: &str,
@@ -1240,7 +1251,7 @@ async fn fetch_advanced_with_target(
     let creds = if header
         .as_ref()
         .is_none_or(|x| &*x.0.to_lowercase() != "authorization")
-        && (url.starts_with("https://cdn.modrinth.com") || is_api_url)
+        && (is_modrinth_cdn_url(url) || is_api_url)
     {
         crate::state::ModrinthCredentials::get_active(exec).await?
     } else {
@@ -1793,6 +1804,25 @@ mod tests {
                 .await
                 .is_err()
         );
+    }
+
+    #[test]
+    fn test_modrinth_cdn_url_matches_exact_domain() {
+        assert!(is_modrinth_cdn_url(
+            "https://cdn.modrinth.com/data/AANobbMI/versions/1/sodium.jar"
+        ));
+        assert!(is_modrinth_cdn_url("https://cdn.modrinth.com:443/data/x"));
+        assert!(is_modrinth_cdn_url("https://CDN.modrinth.com/data/x"));
+
+        assert!(!is_modrinth_cdn_url(
+            "https://cdn.modrinth.com.example.com/data/x"
+        ));
+        assert!(!is_modrinth_cdn_url(
+            "https://cdn.modrinth.com@example.com/"
+        ));
+        assert!(!is_modrinth_cdn_url("https://cdn.modrinth.comexample.com/"));
+        assert!(!is_modrinth_cdn_url("http://cdn.modrinth.com/data/x"));
+        assert!(!is_modrinth_cdn_url("not a url"));
     }
 
     #[test]

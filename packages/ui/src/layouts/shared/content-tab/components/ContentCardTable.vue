@@ -465,7 +465,7 @@ function handleSort(column: ContentCardTableSortColumn) {
 								? 'bg-surface-1.5'
 								: 'bg-surface-2',
 						'border-0 border-t border-solid border-surface-4',
-						item.id === highlightedItemId
+						highlightedItemId && item.id === highlightedItemId
 							? 'outline outline-2 -outline-offset-2 outline-brand'
 							: '',
 						visibleRange.start + idx === items.length - 1 && !flat ? 'rounded-b-[20px]' : '',
@@ -543,7 +543,9 @@ function handleSort(column: ContentCardTableSortColumn) {
 							? 'bg-surface-1.5'
 							: 'bg-surface-2',
 					'border-0 border-t border-solid border-surface-4',
-					item.id === highlightedItemId ? 'outline outline-2 -outline-offset-2 outline-brand' : '',
+					highlightedItemId && item.id === highlightedItemId
+						? 'outline outline-2 -outline-offset-2 outline-brand'
+						: '',
 					index === items.length - 1 && !flat ? 'rounded-b-[20px]' : '',
 				]"
 				@select="(val, event) => toggleItemSelection(item.id, val ?? false, index, event)"

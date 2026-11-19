@@ -8,6 +8,7 @@ import {
 	onUnmounted,
 	type Ref,
 	ref,
+	type ShallowRef,
 	shallowRef,
 	watch,
 } from 'vue'
@@ -19,7 +20,7 @@ import {
 	loadTexture as loadSkinTexture,
 } from '#ui/utils/webgl/skin-rendering.ts'
 
-import type { SkinPreviewBounds, SkinPreviewTuple } from './types'
+import type { SkinEarsData, SkinEarsLoader, SkinPreviewBounds, SkinPreviewTuple } from './types'
 import { applyEarsMod, isEarsModFeature, removeEarsMod } from './use-ears-mod-features'
 
 const TRANSPARENT_PIXEL =
@@ -84,20 +85,40 @@ function cloneSceneForRenderer(source: THREE.Object3D) {
 	return markRaw(cloned)
 }
 
-function disposeSceneMaterials(root: THREE.Object3D | null) {
+function disposeScene(root: THREE.Object3D | null) {
 	if (!root) return
 
-	const materials = new Set<THREE.Material>()
+	const resources = new Set<THREE.BufferGeometry | THREE.Material>()
 
 	root.traverse((object) => {
 		const mesh = object as THREE.Mesh
-		if (!mesh.isMesh || !mesh.material) return
+		if (!mesh.isMesh) return
+
+		if (mesh.geometry) resources.add(mesh.geometry)
+		if (!mesh.material) return
 
 		const meshMaterials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
-		meshMaterials.forEach((material) => materials.add(material))
+		meshMaterials.forEach((material) => resources.add(material))
 	})
 
-	materials.forEach((material) => material.dispose())
+	resources.forEach((resource) => resource.dispose())
+}
+
+function getMappedTextures(root: THREE.Object3D | null) {
+	const textures = new Set<THREE.Texture>()
+
+	root?.traverse((object) => {
+		const mesh = object as THREE.Mesh
+		if (!mesh.isMesh || !mesh.material) return
+
+		const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+		materials.forEach((material) => {
+			const map = (material as THREE.MeshStandardMaterial).map
+			if (map) textures.add(map)
+		})
+	})
+
+	return textures
 }
 
 function getVisibleMeshBox(
@@ -151,6 +172,8 @@ export function useSkinPreviewScene({
 	selectedModelSrc,
 	textureSrc,
 	earsTextureSrc,
+	earsLoader,
+	slim,
 	capeSrc,
 	earsEnabled,
 	initializeAnimations,
@@ -159,6 +182,8 @@ export function useSkinPreviewScene({
 	selectedModelSrc: MaybeReadonlyRef<string>
 	textureSrc: MaybeReadonlyRef<string>
 	earsTextureSrc: MaybeReadonlyRef<string | undefined>
+	earsLoader: MaybeReadonlyRef<SkinEarsLoader | undefined>
+	slim: MaybeReadonlyRef<boolean>
 	capeSrc: MaybeReadonlyRef<string | undefined>
 	earsEnabled: MaybeReadonlyRef<boolean>
 	initializeAnimations: (loadedScene: THREE.Object3D, clips: THREE.AnimationClip[]) => void
@@ -168,12 +193,13 @@ export function useSkinPreviewScene({
 	const lastCapeSrc = ref<string | undefined>(undefined)
 	const loadedModelSrc = ref<string | undefined>(undefined)
 	const loadedTextureSrc = ref<string | undefined>(undefined)
-	const loadedEarsTextureSrc = ref<string | undefined>(undefined)
+	const loadedEarsKey = ref<string | undefined>(undefined)
 	const loadedCapeSrc = ref<string | undefined>(undefined)
 	const texture = shallowRef<THREE.Texture | null>(null)
-	const earsTexture = shallowRef<THREE.Texture | null>(null)
+	const earsData = shallowRef<SkinEarsData | null>(null)
 	const capeTexture = shallowRef<THREE.Texture | null>(null)
 	const transparentTexture = createTransparentTexture()
+	const retiredTextures = new Set<THREE.Texture>()
 	const modelCenter = ref<SkinPreviewTuple>([0, 1, 0])
 	const modelSize = ref<SkinPreviewTuple>([1, 2, 1])
 	const visibleBounds = ref<SkinPreviewBounds>({
@@ -200,18 +226,18 @@ export function useSkinPreviewScene({
 		}
 
 		applyTexture(scene.value, texture.value)
-		const featureTextureSrc = earsTextureSrc.value
-		const featureTexture = featureTextureSrc ? earsTexture.value : texture.value
-		if (
-			!featureTexture ||
-			(featureTextureSrc && loadedEarsTextureSrc.value !== featureTextureSrc)
-		) {
+		const ears = loadedEarsKey.value === getEarsKey() ? earsData.value : null
+		hasEarsFeatures.value = ears !== null
+		if (ears && earsEnabled.value) {
+			applyEarsMod(scene.value, ears)
+		} else {
 			removeEarsMod(scene.value)
-			hasEarsFeatures.value = false
-			return
 		}
+	}
 
-		hasEarsFeatures.value = applyEarsMod(scene.value, featureTexture, earsEnabled.value)
+	function getEarsKey() {
+		const src = earsTextureSrc.value
+		return src && earsLoader.value ? `${slim.value}:${src}` : undefined
 	}
 
 	function applyCapeTextureToLoadedModel() {
@@ -232,20 +258,21 @@ export function useSkinPreviewScene({
 			const { scene: loadedScene, animations } = await loadGltf(src)
 			const clonedScene = cloneSceneForRenderer(loadedScene)
 			if (isUnmounted || loadVersion !== modelLoadVersion) {
-				disposeSceneMaterials(clonedScene)
+				disposeScene(clonedScene)
 				return
 			}
 
 			const previousScene = scene.value
 			cleanupAnimationState(previousScene)
 			removeEarsMod(previousScene)
-			disposeSceneMaterials(previousScene)
+			disposeScene(previousScene)
 			scene.value = clonedScene
 			loadedModelSrc.value = src
 
 			applyTextureToLoadedModel()
 
 			applyCapeTextureToLoadedModel()
+			disposeRetiredTextures()
 
 			if (animations && animations.length > 0) {
 				initializeAnimations(clonedScene, animations)
@@ -265,20 +292,43 @@ export function useSkinPreviewScene({
 		if (!src) return null
 
 		try {
-			try {
-				return await loadSkinTexture(src)
-			} catch {
+			const loadedTexture = await loadSkinTexture(src).catch(async () => {
 				const tex = await new THREE.TextureLoader().loadAsync(src)
 				tex.colorSpace = THREE.SRGBColorSpace
 				tex.flipY = false
 				tex.magFilter = THREE.NearestFilter
 				tex.minFilter = THREE.NearestFilter
 				return tex
+			})
+			if (isUnmounted) {
+				loadedTexture.dispose()
+				return null
 			}
+			return loadedTexture
 		} catch (error) {
 			console.error('Failed to load texture:', error)
 			return null
 		}
+	}
+
+	function replaceTexture(
+		slot: ShallowRef<THREE.Texture | null>,
+		nextTexture: THREE.Texture | null,
+	) {
+		if (slot.value) retiredTextures.add(slot.value)
+		slot.value = nextTexture
+	}
+
+	function disposeRetiredTextures() {
+		if (retiredTextures.size === 0) return
+
+		const mappedTextures = getMappedTextures(scene.value)
+		retiredTextures.forEach((retiredTexture) => {
+			if (mappedTextures.has(retiredTexture)) return
+
+			retiredTexture.dispose()
+			retiredTextures.delete(retiredTexture)
+		})
 	}
 
 	async function loadAndApplyCapeTexture(src: string | undefined) {
@@ -291,23 +341,37 @@ export function useSkinPreviewScene({
 		if (src) {
 			loadedCapeTexture = await loadAndApplyTexture(src)
 		}
-		if (isUnmounted || loadVersion !== capeLoadVersion) return
+		if (isUnmounted || loadVersion !== capeLoadVersion) {
+			loadedCapeTexture?.dispose()
+			return
+		}
 
-		capeTexture.value = loadedCapeTexture
+		replaceTexture(capeTexture, loadedCapeTexture)
 		loadedCapeSrc.value = src
 		applyCapeTextureToLoadedModel()
+		disposeRetiredTextures()
 		updateModelInfo()
 	}
 
-	async function loadAndApplyEarsTexture(src: string | undefined) {
+	async function loadAndApplyEars() {
 		const loadVersion = ++earsTextureLoadVersion
 		hasEarsFeatures.value = false
 
-		const loadedEarsTexture = src ? await loadAndApplyTexture(src) : null
+		const key = getEarsKey()
+		const src = earsTextureSrc.value
+		const load = earsLoader.value
+		let loadedEars: SkinEarsData | null = null
+		if (key && src && load) {
+			try {
+				loadedEars = await load(src, slim.value)
+			} catch (error) {
+				console.error('Failed to load Ears features:', error)
+			}
+		}
 		if (isUnmounted || loadVersion !== earsTextureLoadVersion) return
 
-		earsTexture.value = loadedEarsTexture
-		loadedEarsTextureSrc.value = src
+		earsData.value = loadedEars
+		loadedEarsKey.value = key
 		applyTextureToLoadedModel()
 		updateModelInfo()
 	}
@@ -366,21 +430,20 @@ export function useSkinPreviewScene({
 			isTextureLoaded.value = false
 			hasEarsFeatures.value = false
 			const loadedTexture = await loadAndApplyTexture(newSrc)
-			if (isUnmounted || loadVersion !== textureLoadVersion) return
+			if (isUnmounted || loadVersion !== textureLoadVersion) {
+				loadedTexture?.dispose()
+				return
+			}
 
-			texture.value = loadedTexture
+			replaceTexture(texture, loadedTexture)
 			loadedTextureSrc.value = newSrc
 			applyTextureToLoadedModel()
+			disposeRetiredTextures()
 			updateModelInfo()
 			isTextureLoaded.value = true
 		},
 	)
-	watch(
-		() => earsTextureSrc.value,
-		async (newEarsTextureSrc) => {
-			await loadAndApplyEarsTexture(newEarsTextureSrc)
-		},
-	)
+	watch([() => earsTextureSrc.value, () => earsLoader.value, () => slim.value], loadAndApplyEars)
 	watch(
 		() => earsEnabled.value,
 		() => {
@@ -398,11 +461,11 @@ export function useSkinPreviewScene({
 	onBeforeMount(async () => {
 		try {
 			isTextureLoaded.value = false
-			texture.value = await loadAndApplyTexture(textureSrc.value)
+			replaceTexture(texture, await loadAndApplyTexture(textureSrc.value))
 			loadedTextureSrc.value = textureSrc.value
 			isTextureLoaded.value = true
 
-			await loadAndApplyEarsTexture(earsTextureSrc.value)
+			await loadAndApplyEars()
 			await loadModel(selectedModelSrc.value)
 
 			if (capeSrc.value) {
@@ -422,9 +485,12 @@ export function useSkinPreviewScene({
 
 		cleanupAnimationState(scene.value)
 		removeEarsMod(scene.value)
-		disposeSceneMaterials(scene.value)
+		disposeScene(scene.value)
 		scene.value = null
 		transparentTexture.dispose()
+		replaceTexture(texture, null)
+		replaceTexture(capeTexture, null)
+		disposeRetiredTextures()
 	})
 
 	return {

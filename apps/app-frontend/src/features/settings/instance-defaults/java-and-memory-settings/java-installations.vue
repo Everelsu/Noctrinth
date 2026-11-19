@@ -61,19 +61,19 @@ async function reloadJavaVersions() {
 const messages = defineMessages({
 	javaLocation: {
 		id: 'app.settings.java-installations.location.title',
-		defaultMessage: 'Java {version, number} location',
+		defaultMessage: 'Java {version, number}',
 	},
 })
 </script>
 
 <template>
-	<div class="flex flex-col gap-6">
+	<div class="flex flex-col gap-4">
 		<div
-			v-for="(majorVersion, index) in shownJavaMajors"
+			v-for="majorVersion in shownJavaMajors"
 			:key="`java-${majorVersion}`"
 			class="flex flex-col gap-2.5"
 		>
-			<h3 class="m-0 text-lg font-semibold text-contrast" :class="{ 'mt-4': index !== 0 }">
+			<h3 class="m-0 text-base font-semibold text-contrast">
 				{{ formatMessage(messages.javaLocation, { version: majorVersion }) }}
 			</h3>
 			<JavaSelector
@@ -81,8 +81,11 @@ const messages = defineMessages({
 				:model-value="javaVersions?.[majorVersion]"
 				:version="majorVersion"
 				@update:model-value="(selection) => updateJavaVersion(majorVersion, selection)"
-			/>
-			<JavaGpuPreference :path="javaVersions?.[majorVersion]?.path ?? ''" />
+			>
+				<template #footer>
+					<JavaGpuPreference :path="javaVersions?.[majorVersion]?.path ?? ''" />
+				</template>
+			</JavaSelector>
 		</div>
 		<Suspense
 			><JavaRuntimeManager :key="runtimeManagerKey" @changed="reloadJavaVersions"

@@ -1,5 +1,4 @@
 <template>
-	<!-- eslint-disable vue/no-undef-components -->
 	<div
 		ref="skinPreviewContainer"
 		class="relative w-full h-full overflow-visible cursor-grab"
@@ -53,57 +52,15 @@
 			</div>
 		</div>
 
-		<TresCanvas
-			alpha
-			:antialias="true"
-			:dpr="rendererDpr"
-			:renderer-options="{
-				outputColorSpace: THREE.SRGBColorSpace,
-				toneMapping: THREE.NoToneMapping,
-				toneMappingExposure: 10.0,
-			}"
-			class="object-contain transition-opacity duration-500"
+		<canvas
+			ref="previewCanvas"
+			class="block size-full touch-none transition-opacity duration-500"
 			:class="{ 'opacity-0': !isPreviewVisible, 'opacity-100': isPreviewVisible }"
 			@pointerdown="onPointerDown"
 			@pointermove="onPointerMove"
 			@pointerup="onPointerUp"
 			@pointerleave="onPointerUp"
-		>
-			<Suspense>
-				<TresGroup
-					:rotation="animatedModelGroupRotation"
-					:position="animatedModelGroupPosition"
-					:scale="animatedModelGroupScale"
-				>
-					<TresGroup :position="modelOffset">
-						<primitive v-if="scene" :object="scene" />
-					</TresGroup>
-				</TresGroup>
-			</Suspense>
-
-			<Suspense>
-				<TresGroup :rotation="[modelPitch, 0, 0]">
-					<TresMesh
-						:position="animatedSpotlightPosition"
-						:rotation="[-Math.PI / 2, 0, 0]"
-						:scale="animatedSpotlightScale"
-					>
-						<TresCircleGeometry :args="[1, 128]" />
-						<TresShaderMaterial v-bind="radialSpotlightShader" />
-					</TresMesh>
-				</TresGroup>
-			</Suspense>
-
-			<TresPerspectiveCamera
-				:make-default.camel="true"
-				:fov="cameraConfig.fov"
-				:position="cameraConfig.position"
-				:look-at="cameraConfig.target"
-			/>
-
-			<TresAmbientLight :intensity="2" />
-			<TresDirectionalLight :position="[-3, 4, -2]" :intensity="1.2" />
-		</TresCanvas>
+		/>
 
 		<div v-if="showLoading" class="absolute inset-0 flex items-center justify-center">
 			<div class="text-primary">Loading...</div>
@@ -113,7 +70,6 @@
 
 <script setup lang="ts">
 import { ChevronsUpDownIcon, ClassicPlayerModel, MoveIcon, SlimPlayerModel } from '@modrinth/assets'
-import { TresCanvas } from '@tresjs/core'
 import * as THREE from 'three'
 import {
 	computed,
@@ -129,6 +85,7 @@ import {
 
 import { defineMessages, useVIntl } from '#ui/composables/i18n'
 import type {
+	SkinEarsLoader,
 	SkinPreviewAnimationConfig,
 	SkinPreviewFitPadding,
 	SkinPreviewFraming,
@@ -144,7 +101,8 @@ import {
 } from '#ui/composables/skin-rendering'
 
 import { useDynamicFontSize } from '../../composables'
-import { createRadialSpotlightShader, syncDamageFlashShader } from './skin-preview-shader'
+import { syncDamageFlashShader } from './skin-preview-shader'
+import { useSkinPreviewRenderer } from './use-skin-preview-renderer'
 
 const { formatMessage } = useVIntl()
 
@@ -163,6 +121,7 @@ const props = withDefaults(
 	defineProps<{
 		textureSrc: string
 		earsTextureSrc?: string
+		earsLoader?: SkinEarsLoader
 		capeSrc?: string
 		variant?: 'SLIM' | 'CLASSIC' | 'UNKNOWN'
 		nametag?: string
@@ -182,6 +141,7 @@ const props = withDefaults(
 	{
 		variant: 'CLASSIC',
 		earsTextureSrc: undefined,
+		earsLoader: undefined,
 		capeSrc: undefined,
 		initialRotation: 15.75,
 		nametag: undefined,
@@ -204,6 +164,7 @@ const emit = defineEmits<{
 }>()
 
 const skinPreviewContainer = useTemplateRef<HTMLElement>('skinPreviewContainer')
+const previewCanvas = useTemplateRef<HTMLCanvasElement>('previewCanvas')
 const subtitleElement = useTemplateRef<HTMLElement>('subtitleElement')
 const slots = useSlots()
 const nametagText = computed(() => props.nametag)
@@ -280,6 +241,7 @@ const {
 	playAnimation,
 	playClickInteraction,
 	stopAnimations,
+	updateAnimations,
 } = useSkinPreviewAnimation(toRef(props, 'animationConfig'))
 
 const {
@@ -311,13 +273,15 @@ const {
 	selectedModelSrc,
 	textureSrc: toRef(props, 'textureSrc'),
 	earsTextureSrc: toRef(props, 'earsTextureSrc'),
+	earsLoader: toRef(props, 'earsLoader'),
+	slim: computed(() => props.variant === 'SLIM'),
 	capeSrc: toRef(props, 'capeSrc'),
 	earsEnabled: toRef(props, 'earsEnabled'),
 	initializeAnimations,
 	cleanupAnimationState,
 })
 
-useSkinPreviewLook({ scene, container: skinPreviewContainer, modelRotation })
+const updateLook = useSkinPreviewLook({ scene, container: skinPreviewContainer, modelRotation })
 
 function syncDamageFlashShaderMaterials() {
 	syncDamageFlashShader(scene.value, damageFlashIntensity.value)
@@ -357,8 +321,6 @@ const {
 	isModelLoaded,
 })
 
-const rendererDpr: [number, number] = [1, 1.5]
-const radialSpotlightShader = createRadialSpotlightShader()
 const isReady = computed(() => isModelLoaded.value && isTextureLoaded.value && hasResolvedFit.value)
 const { isPreviewVisible, showLoading } = useSkinPreviewLoading(isReady)
 
@@ -494,6 +456,19 @@ const animatedSpotlightScale = computed<SkinPreviewTuple>(() => {
 	// A circle lying in its own XY plane, turned to face up: its Y is the
 	// floor's Z, so only its X takes the horizontal squash.
 	return [x * clickImpulseScaleX.value * zoom, y * zoom, z * zoom]
+})
+
+useSkinPreviewRenderer({
+	canvasElement: computed(() => previewCanvas.value),
+	scene,
+	cameraConfig,
+	modelGroupRotation: animatedModelGroupRotation,
+	modelGroupPosition: animatedModelGroupPosition,
+	modelGroupScale: animatedModelGroupScale,
+	modelOffset,
+	spotlightPosition,
+	spotlightScale,
+	onBeforeRender: () => updateLook(updateAnimations()),
 })
 
 defineExpose({

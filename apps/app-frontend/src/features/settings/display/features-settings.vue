@@ -89,6 +89,14 @@ const messages = defineMessages({
 		id: 'app.features-settings.show-skin-selector.description',
 		defaultMessage: 'Show a button in the left sidebar to open the skin selector.',
 	},
+	showSidebarNews: {
+		id: 'noctrinth.settings.appearance.show-sidebar-news',
+		defaultMessage: 'Show news in the sidebar',
+	},
+	showHosting: {
+		id: 'noctrinth.settings.appearance.show-hosting',
+		defaultMessage: 'Show Modrinth Hosting in the sidebar',
+	},
 	quickInstancesTitle: {
 		id: 'app.features-settings.quick-instances.title',
 		defaultMessage: 'Quick instances in sidebar',
@@ -119,6 +127,8 @@ type FeaturesSettingsState = {
 	showScreenshotsTab: boolean
 	showAllScreenshots: boolean
 	showSkinSelector: boolean
+	showModrinthHosting: boolean
+	showSidebarNews: boolean
 	quickInstanceCount: number
 	showJumpIn: boolean
 }
@@ -138,6 +148,8 @@ function getFeaturesSettingsState(
 		showScreenshotsTab: settings.show_screenshots_tab_in_instances,
 		showAllScreenshots: globalSyncedOptions.screenshots,
 		showSkinSelector: settings.show_skin_selector_in_sidebar,
+		showModrinthHosting: appSettings.showModrinthHosting,
+		showSidebarNews: appSettings.showSidebarNews,
 		quickInstanceCount: quickInstances.limit.value ?? QUICK_INSTANCE_LIMIT_MAX,
 		showJumpIn: settings.show_jump_in,
 	}
@@ -217,11 +229,17 @@ const settingsMutation = useMutation({
 
 const { saved, current, changes, saving, hasChanges, reset, save } = useSavable(
 	() => getFeaturesSettingsState(settingsQuery.data.value!, globalOptionsQuery.data.value!),
-	(changedValues) =>
-		settingsMutation.mutateAsync({
-			value: { ...current.value },
-			updateQuickInstanceCount: changedValues.quickInstanceCount !== undefined,
-		}),
+	async ({ showModrinthHosting, showSidebarNews, ...otherChanges }) => {
+		if (Object.keys(otherChanges).length > 0) {
+			await settingsMutation.mutateAsync({
+				value: { ...current.value },
+				updateQuickInstanceCount: otherChanges.quickInstanceCount !== undefined,
+			})
+		}
+
+		if (showModrinthHosting !== undefined) appSettings.showModrinthHosting = showModrinthHosting
+		if (showSidebarNews !== undefined) appSettings.showSidebarNews = showSidebarNews
+	},
 )
 
 async function saveFeaturesSettings(): Promise<void> {
@@ -354,6 +372,28 @@ onBeforeUnmount(() => {
 					id="show-skin-selector-in-sidebar"
 					v-model="current.showSkinSelector"
 					:aria-label="formatMessage(messages.showSkinSelectorTitle)"
+				/>
+			</div>
+
+			<div class="flex items-center justify-between gap-4">
+				<h3 class="m-0 text-lg font-semibold text-contrast">
+					{{ formatMessage(messages.showHosting) }}
+				</h3>
+				<Toggle
+					id="show-modrinth-hosting"
+					v-model="current.showModrinthHosting"
+					:aria-label="formatMessage(messages.showHosting)"
+				/>
+			</div>
+
+			<div class="flex items-center justify-between gap-4">
+				<h3 class="m-0 text-lg font-semibold text-contrast">
+					{{ formatMessage(messages.showSidebarNews) }}
+				</h3>
+				<Toggle
+					id="show-sidebar-news"
+					v-model="current.showSidebarNews"
+					:aria-label="formatMessage(messages.showSidebarNews)"
 				/>
 			</div>
 

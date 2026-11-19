@@ -48,6 +48,7 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 - Synced with Modrinth App 0.23.4 and included its mitigation for CVE-2026-114938 (Java4Shell). Please update Noctrinth and restart any running instances.
 
 ### Added
+- Added a setting to hide sidebar news and separate links to Noctrinth and Modrinth news.
 - Added a setting to hide the Modrinth Hosting button in the sidebar. It is shown by default.
 - Added an action to set a screenshot as the launcher background directly from the viewer.
 
@@ -60,6 +61,7 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 - Перенесли защиту Modrinth App 0.23.4 от CVE-2026-114938 (Java4Shell). Пожалуйста, обновите Noctrinth и перезапустите уже открытые сборки.
 
 ### Добавлено
+- В настройках внешнего вида можно скрыть новости. Под лентой теперь есть отдельные ссылки на новости Noctrinth и Modrinth.
 - В настройках внешнего вида можно скрыть кнопку Modrinth Hosting в боковой панели. По умолчанию она видна.
 - Из просмотра скриншотов теперь можно сразу установить снимок фоном лаунчера.
 

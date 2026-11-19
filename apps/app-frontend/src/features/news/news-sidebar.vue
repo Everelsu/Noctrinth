@@ -4,7 +4,7 @@ import { ButtonLink, defineMessages, NewsArticleCard, useVIntl } from '@modrinth
 import { useQuery } from '@tanstack/vue-query'
 import { computed, watch } from 'vue'
 
-import { useNoctrinthNews } from './noctrinth-news'
+import { NOCTRINTH_NEWS_URL, useNoctrinthNews } from './noctrinth-news'
 import { newsArticlesQueryOptions } from './queries'
 
 const { formatMessage } = useVIntl()
@@ -13,9 +13,13 @@ const messages = defineMessages({
 		id: 'app.news.title',
 		defaultMessage: 'News',
 	},
-	viewAllNews: {
-		id: 'app.news.view-all',
-		defaultMessage: 'View all news',
+	noctrinthNews: {
+		id: 'noctrinth.news.noctrinth-news',
+		defaultMessage: 'Noctrinth News',
+	},
+	modrinthNews: {
+		id: 'noctrinth.news.modrinth-news',
+		defaultMessage: 'Modrinth News',
 	},
 })
 
@@ -34,22 +38,32 @@ watch(error, (error) => {
 </script>
 
 <template>
-	<div v-if="news && news.length > 0" class="p-4 flex flex-col items-center">
+	<div class="p-4 flex flex-col items-center">
 		<h3 class="text-base mb-4 text-primary font-medium m-0 text-left w-full">
 			{{ formatMessage(messages.news) }}
 		</h3>
 		<div class="space-y-4 flex flex-col items-center w-full">
 			<NewsArticleCard v-for="item in news" :key="item.path" :article="item" />
+		</div>
+		<div class="my-4 flex w-full flex-col gap-2">
 			<ButtonLink
 				type="colored"
 				color="brand"
 				size="xl"
-				href="https://modrinth.com/news"
+				:href="NOCTRINTH_NEWS_URL"
 				target="_blank"
-				class="my-4"
+				class="justify-center"
 			>
 				<NewspaperIcon />
-				{{ formatMessage(messages.viewAllNews) }}
+				{{ formatMessage(messages.noctrinthNews) }}
+			</ButtonLink>
+			<ButtonLink
+				type="quiet"
+				href="https://modrinth.com/news"
+				target="_blank"
+				class="justify-center"
+			>
+				{{ formatMessage(messages.modrinthNews) }}
 			</ButtonLink>
 		</div>
 	</div>

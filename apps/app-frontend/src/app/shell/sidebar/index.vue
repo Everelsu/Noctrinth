@@ -3,6 +3,7 @@ import { defineMessages, useScrollIndicator, useVIntl } from '@modrinth/ui'
 import { OverlayScrollbars } from 'overlayscrollbars'
 import { computed, onMounted, onScopeDispose, ref, watch } from 'vue'
 
+import { useAppSettings } from '@/composables/use-app-settings'
 import { useTheme } from '@/composables/use-theme'
 import PrideFundraiserBanner from '@/features/campaigns/pride-fundraiser-banner.vue'
 import FriendsList from '@/features/friends/friends-list/index.vue'
@@ -50,6 +51,7 @@ const emit = defineEmits<{
 
 const { formatMessage } = useVIntl()
 const appTheme = useTheme()
+const appSettings = useAppSettings()
 const { hasLoggedIntoMinecraft, hasLoggedIntoModrinth, showChecklist } = injectOnboardingChecklist()
 const showFriendsList = computed(() => !showChecklist.value || hasLoggedIntoModrinth.value)
 const accounts = ref<InstanceType<typeof AccountsCard> | null>(null)
@@ -157,7 +159,7 @@ const messages = defineMessages({
 					<PrideFundraiserBanner
 						class="p-4 border-0 border-b-[1px] border-[--brand-gradient-border] border-solid"
 					/>
-					<NewsSidebar :style="promotionPaddingStyle" />
+					<NewsSidebar v-if="appSettings.showSidebarNews" :style="promotionPaddingStyle" />
 				</div>
 			</div>
 			<div

@@ -85,6 +85,10 @@ const messages = defineMessages({
 		id: 'app.appearance-settings.font.title',
 		defaultMessage: 'Interface font',
 	},
+	showSidebarNews: {
+		id: 'noctrinth.settings.appearance.show-sidebar-news',
+		defaultMessage: 'Show news in the sidebar',
+	},
 	showHosting: {
 		id: 'noctrinth.settings.appearance.show-hosting',
 		defaultMessage: 'Show Modrinth Hosting in the sidebar',
@@ -517,6 +521,12 @@ provideAppearanceSettings({
 			{{ formatMessage(messages.showHosting) }}
 		</h2>
 		<Toggle v-model="appSettings.showModrinthHosting" aria-labelledby="show-hosting-label" />
+	</div>
+	<div class="flex items-center justify-between gap-4">
+		<h2 id="show-sidebar-news-label" class="m-0 text-lg font-semibold text-contrast">
+			{{ formatMessage(messages.showSidebarNews) }}
+		</h2>
+		<Toggle v-model="appSettings.showSidebarNews" aria-labelledby="show-sidebar-news-label" />
 	</div>
 	<NoctrinthBackgroundSettings />
 </template>

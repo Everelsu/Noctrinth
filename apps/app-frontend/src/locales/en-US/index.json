@@ -2813,9 +2813,6 @@
   "app.news.title": {
     "message": "News"
   },
-  "app.news.view-all": {
-    "message": "View all news"
-  },
   "app.notification.warning": {
     "message": "Warning"
   },
@@ -6416,6 +6413,12 @@
   "noctrinth.instance.stop-copy": {
     "message": "Stop {name} · {time}"
   },
+  "noctrinth.news.modrinth-news": {
+    "message": "Modrinth News"
+  },
+  "noctrinth.news.noctrinth-news": {
+    "message": "Noctrinth News"
+  },
   "noctrinth.quick-search.discover": {
     "message": "Not installed yet"
   },
@@ -6472,6 +6475,9 @@
   },
   "noctrinth.settings.appearance.show-hosting": {
     "message": "Show Modrinth Hosting in the sidebar"
+  },
+  "noctrinth.settings.appearance.show-sidebar-news": {
+    "message": "Show news in the sidebar"
   },
   "noctrinth.settings.background.blur.description": {
     "message": "Softens it, so it stays behind what is in front of it."

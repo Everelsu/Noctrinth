@@ -11,7 +11,8 @@ import { proxiedFetch } from '@/helpers/proxy-fetch'
 
 const CHANGELOG_SITE = 'https://everelsu.github.io/Noctrinth/'
 const CHANGELOG_FEED = `${CHANGELOG_SITE}changelog.json`
-const NEWS_FEED = `${CHANGELOG_SITE}news/feed/articles.json`
+export const NOCTRINTH_NEWS_URL = new URL('news/', CHANGELOG_SITE).href
+const NEWS_FEED = `${NOCTRINTH_NEWS_URL}feed/articles.json`
 
 function isEntry(value: unknown): value is NoctrinthVersionEntry {
 	const entry = value as Partial<NoctrinthVersionEntry> | null

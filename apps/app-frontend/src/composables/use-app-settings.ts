@@ -55,6 +55,7 @@ const appSettings = reactive({
 	showWorldsTabInInstances: true,
 	showScreenshotsTabInInstances: false,
 	showSkinSelectorInSidebar: true,
+	showSidebarNews: useStorage('noctrinth:show-sidebar-news', true),
 	showModrinthHosting: useStorage('noctrinth:show-modrinth-hosting', true),
 	nativeDecorations: false,
 	devMode: false,

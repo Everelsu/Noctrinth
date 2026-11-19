@@ -2410,5 +2410,14 @@
 	},
 	"noctrinth.settings.appearance.show-hosting": {
 		"message": "Показывать Modrinth Hosting в боковой панели"
+	},
+	"noctrinth.settings.appearance.show-sidebar-news": {
+		"message": "Показывать новости в боковой панели"
+	},
+	"noctrinth.news.noctrinth-news": {
+		"message": "Новости Noctrinth"
+	},
+	"noctrinth.news.modrinth-news": {
+		"message": "Новости Modrinth"
 	}
 }

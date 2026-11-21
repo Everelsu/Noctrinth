@@ -65,7 +65,11 @@ interface CurseforgePendingModalRef {
 	show: (instanceId: string, known?: CurseforgePendingFile[]) => void
 }
 
-export type ContentInstallCallback = (versionId?: string, installedProjectIds?: string[]) => void
+export type ContentInstallCallback = (
+	versionId?: string,
+	installedProjectIds?: string[],
+	instanceId?: string,
+) => void
 type InstallingProjectDisplay = {
 	id?: string
 	slug?: string | null
@@ -758,7 +762,11 @@ export function createContentInstall(opts: {
 					if (versionId && storeInstance) {
 						storeInstance.installed = true
 					}
-					currentCallback(versionId, versionId && currentProject ? [currentProject.id] : undefined)
+					currentCallback(
+						versionId,
+						versionId && currentProject ? [currentProject.id] : undefined,
+						selectedInstance.id,
+					)
 				}
 				await showIncompatibilityWarning(
 					selectedInstance,
@@ -782,7 +790,7 @@ export function createContentInstall(opts: {
 					storeInstance.installed = true
 					storeInstance.installing = false
 				}
-				currentCallback(version.id, installed)
+				currentCallback(version.id, installed, instance.id)
 			} catch (err) {
 				if (storeInstance) storeInstance.installing = false
 				opts.handleError(err)
@@ -827,7 +835,7 @@ export function createContentInstall(opts: {
 				title: currentProject!.title,
 				source: 'ProjectInstallModal',
 			})
-			currentCallback(version.id, installedProjectIds)
+			currentCallback(version.id, installedProjectIds, instance.id)
 		} catch (err) {
 			installWaiter.cancel()
 			if (storeInstance) storeInstance.installing = false
@@ -897,7 +905,11 @@ export function createContentInstall(opts: {
 
 		incompatibilityWarningInstalling.value = false
 		incompatibilityWarningInstalled = true
-		incompatibilityWarningCallback(version.id, [incompatibilityWarningProject.id])
+		incompatibilityWarningCallback(
+			version.id,
+			[incompatibilityWarningProject.id],
+			incompatibilityWarningInstance.id,
+		)
 		markInstanceContentChanged(incompatibilityWarningInstance.id)
 		incompatibilityWarningModalRef?.hide()
 		removeInstallingItems(incompatibilityWarningInstance.id, [incompatibilityWarningProject.id])
@@ -978,7 +990,7 @@ export function createContentInstall(opts: {
 				source: 'ProjectInstallModal',
 			})
 
-			currentCallback(version.id, installedIds)
+			currentCallback(version.id, installedIds, id)
 			modalRef?.hide()
 		} catch (err) {
 			if (createdInstanceId && currentProject) {
@@ -1130,7 +1142,7 @@ export function createContentInstall(opts: {
 						title: project.title,
 						source,
 					})
-					callback(version.id, installedProjectIds)
+					callback(version.id, installedProjectIds, instance.id)
 				} catch (err) {
 					installWaiter.cancel()
 					removeInstallingItems(instanceId, plannedProjectIds)
@@ -1193,7 +1205,7 @@ export function createContentInstall(opts: {
 			}
 			if (isVersionCompatible(version, project, instance)) {
 				const installed = await installCurseforgeVersion(instanceId, project, version)
-				callback(version.id, installed)
+				callback(version.id, installed, instanceId)
 			} else {
 				await showIncompatibilityWarning(instance, project, versions, version, callback)
 			}

@@ -24,6 +24,7 @@ export function useSkinPreviewRenderer({
 	modelOffset,
 	spotlightPosition,
 	spotlightScale,
+	spotlightOpacityFactor,
 	onBeforeRender,
 }: {
 	canvasElement: MaybeReadonlyRef<HTMLCanvasElement | null>
@@ -39,16 +40,16 @@ export function useSkinPreviewRenderer({
 	modelOffset: MaybeReadonlyRef<SkinPreviewTuple>
 	spotlightPosition: MaybeReadonlyRef<SkinPreviewTuple>
 	spotlightScale: MaybeReadonlyRef<SkinPreviewTuple>
+	spotlightOpacityFactor?: MaybeReadonlyRef<number>
 	onBeforeRender: () => void
 }) {
 	const root = new THREE.Scene()
 	const camera = new THREE.PerspectiveCamera()
 	const modelGroup = new THREE.Group()
 	const modelOffsetGroup = new THREE.Group()
-	const spotlight = new THREE.Mesh(
-		new THREE.CircleGeometry(1, 128),
-		new THREE.ShaderMaterial(createRadialSpotlightShader()),
-	)
+	const spotlightMaterial = new THREE.ShaderMaterial(createRadialSpotlightShader())
+	const baseSpotlightOpacity: number = spotlightMaterial.uniforms.innerOpacity.value
+	const spotlight = new THREE.Mesh(new THREE.CircleGeometry(1, 128), spotlightMaterial)
 	const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2)
 	const drawingBufferSize = new THREE.Vector2()
 
@@ -95,6 +96,8 @@ export function useSkinPreviewRenderer({
 		modelOffsetGroup.position.set(...modelOffset.value)
 		spotlight.position.set(...spotlightPosition.value)
 		spotlight.scale.set(...spotlightScale.value)
+		spotlightMaterial.uniforms.innerOpacity.value =
+			baseSpotlightOpacity * (spotlightOpacityFactor?.value ?? 1)
 
 		const { fov, position, target } = cameraConfig.value
 		camera.fov = fov

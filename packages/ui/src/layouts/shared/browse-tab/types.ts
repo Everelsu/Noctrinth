@@ -51,6 +51,9 @@ export interface CardAction {
 	label: string
 	icon: Component
 	iconClass?: string
+	hoverLabel?: string
+	hoverIcon?: Component
+	hoverColor?: 'brand' | 'red' | 'green'
 	disabled?: boolean
 	color?: 'brand' | 'red' | 'green'
 	type?: 'standard' | 'outlined' | 'transparent'

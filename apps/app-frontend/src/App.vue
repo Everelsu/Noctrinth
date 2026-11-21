@@ -282,7 +282,14 @@ const forceSidebar = computed(
 		route.path.startsWith('/user'),
 )
 const sidebarVisible = computed(() => sidebarToggled.value || forceSidebar.value)
-watch(sidebarVisible, (visible) => markSidebarMoving(visible))
+watch(
+	() => [sidebarVisible.value, forceSidebar.value],
+	([visible, forced], [prevVisible, prevForced]) => {
+		if (visible !== prevVisible && forced === prevForced) {
+			markSidebarMoving(visible)
+		}
+	},
+)
 const hostingRouteActive = computed(() => route.path.startsWith('/hosting'))
 const hostingUpdateRequired = computed(
 	() =>
@@ -2563,10 +2570,15 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 				</Admonition>
 			</Transition>
 			<HostingUpdateRequired v-if="hostingUpdateRequired" />
-			<RouterView v-else v-slot="{ Component }">
+			<RouterView v-else v-slot="{ Component, route: currentRoute }">
 				<template v-if="Component">
 					<Suspense @pending="onSuspensePending" @resolve="onSuspenseResolve">
-						<component :is="Component"></component>
+						<div
+							:key="currentRoute.matched[0]?.path ?? currentRoute.path"
+							class="nm-page-enter min-h-full"
+						>
+							<component :is="Component"></component>
+						</div>
 					</Suspense>
 				</template>
 			</RouterView>

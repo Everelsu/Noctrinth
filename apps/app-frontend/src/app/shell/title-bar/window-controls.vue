@@ -59,9 +59,18 @@ const messages = defineMessages({
 
 const appSettings = useAppSettings()
 
-const nativeDecorations = ref(true)
+function detectInitialOs() {
+	const ua = navigator.userAgent
+	if (ua.includes('Windows')) return 'Windows'
+	if (ua.includes('Mac')) return 'MacOS'
+	if (ua.includes('Linux')) return 'Linux'
+	return ''
+}
+
+const initialOs = detectInitialOs()
+const nativeDecorations = ref(initialOs === 'MacOS')
 const isMaximized = ref(false)
-const os = ref('')
+const os = ref(initialOs)
 const controlsEl = ref(null)
 
 const alwaysShowAppControls = computed(() => appSettings.getFeatureFlag('always_show_app_controls'))
@@ -92,28 +101,38 @@ watch(controlsEl, (el) => {
 	setWindowControlsWidth(el.getBoundingClientRect().width)
 })
 
-onMounted(async () => {
-	os.value = await getOS()
+let unlistenResized
+let unmounted = false
 
-	const settings = await getSettings()
+onMounted(async () => {
+	const [detectedOs, settings, maximized] = await Promise.all([
+		getOS(),
+		getSettings(),
+		getCurrentWindow().isMaximized(),
+	])
+	if (unmounted) return
+
+	os.value = detectedOs
 	nativeDecorations.value = settings.native_decorations
+	isMaximized.value = maximized
 
 	if (os.value !== 'MacOS') {
-		await getCurrentWindow().setDecorations(nativeDecorations.value)
+		void getCurrentWindow().setDecorations(nativeDecorations.value)
 	}
-
-	isMaximized.value = await getCurrentWindow().isMaximized()
 
 	const unlisten = await getCurrentWindow().onResized(async () => {
 		isMaximized.value = await getCurrentWindow().isMaximized()
 	})
-
-	onUnmounted(() => {
+	if (unmounted) {
 		unlisten()
-	})
+	} else {
+		unlistenResized = unlisten
+	}
 })
 
 onUnmounted(() => {
+	unmounted = true
+	unlistenResized?.()
 	resizeObserver?.disconnect()
 	document.documentElement.style.removeProperty('--window-controls-width')
 })

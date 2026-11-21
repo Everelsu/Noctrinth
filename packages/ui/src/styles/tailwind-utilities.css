@@ -56,7 +56,7 @@
 .floating-expand-enter-from,
 .floating-expand-leave-to {
 	opacity: 0;
-	scale: var(--floating-expand-x, 0.9) var(--floating-expand-y, 0.3);
+	scale: var(--floating-expand-x, 0.96) var(--floating-expand-y, 0.92);
 }
 
 .floating-expand-enter-to,
@@ -68,8 +68,8 @@
 .floating-expand-enter-active,
 .floating-expand-leave-active {
 	transition:
-		opacity 0.125s var(--ease-out-expo),
-		scale 0.125s var(--ease-out-expo);
+		opacity 0.16s var(--ease-out-expo),
+		scale 0.16s var(--ease-out-expo);
 	transform-origin: var(--floating-expand-origin, top);
 }
 

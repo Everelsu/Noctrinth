@@ -7,7 +7,6 @@ import Admonition from '#ui/components/base/Admonition.vue'
 import { Button, IconButton } from '#ui/components/base/buttons'
 import Combobox, { type ComboboxOption } from '#ui/components/base/Combobox.vue'
 import Input from '#ui/components/base/inputs/Input.vue'
-import LoadingIndicator from '#ui/components/base/LoadingIndicator.vue'
 import NavTabs from '#ui/components/base/NavTabs.vue'
 import Pagination from '#ui/components/base/Pagination.vue'
 import ProjectCard from '#ui/components/project/card/ProjectCard.vue'
@@ -114,13 +113,26 @@ function cardActionColor(action: CardAction) {
 }
 
 function cardActionClass(action: CardAction) {
-	if (action.type !== 'outlined' || !action.color || action.color === 'standard') return undefined
-
-	return {
-		brand: '!text-brand [&>svg]:!text-brand !shadow-[inset_0_0_0_1px_var(--color-brand)]',
-		red: '!text-red [&>svg]:!text-red !shadow-[inset_0_0_0_1px_var(--color-red)]',
-		green: '!text-green [&>svg]:!text-green !shadow-[inset_0_0_0_1px_var(--color-green)]',
-	}[action.color]
+	const classes: string[] = []
+	if (action.type === 'outlined' && action.color && action.color !== 'standard') {
+		const outlinedColor = {
+			brand: '!text-brand [&_svg]:!text-current !shadow-[inset_0_0_0_1px_var(--color-brand)]',
+			red: '!text-red [&_svg]:!text-current !shadow-[inset_0_0_0_1px_var(--color-red)]',
+			green: '!text-green [&_svg]:!text-current !shadow-[inset_0_0_0_1px_var(--color-green)]',
+		}[action.color]
+		if (outlinedColor) classes.push(outlinedColor)
+	}
+	if (action.hoverLabel) {
+		classes.push(
+			'group/action !opacity-60 hover:!opacity-100 focus-visible:!opacity-100 !transition-[color,background-color,box-shadow,opacity,transform] !duration-200 !ease-out',
+		)
+		if (action.hoverColor === 'red') {
+			classes.push(
+				'hover:!text-red hover:!shadow-[inset_0_0_0_1px_var(--color-red)] hover:!bg-red-highlight focus-visible:!text-red focus-visible:!shadow-[inset_0_0_0_1px_var(--color-red)] focus-visible:!bg-red-highlight',
+			)
+		}
+	}
+	return classes.length ? classes.join(' ') : undefined
 }
 
 function getLoaderFieldValues(
@@ -285,9 +297,39 @@ function getProjectCardTags(result: Labrinth.Search.v3.ResultSearchProject, disp
 	/>
 
 	<div class="search mt-1 [overflow-anchor:none]">
-		<section v-if="ctx.loading.value" class="offline">
-			<component :is="ctx.loadingComponent ?? LoadingIndicator" />
+		<section v-if="ctx.loading.value && ctx.loadingComponent" class="offline">
+			<component :is="ctx.loadingComponent" />
 		</section>
+		<ProjectCardList v-else-if="ctx.loading.value" :layout="ctx.effectiveLayout.value">
+			<div
+				v-for="n in 6"
+				:key="`browse-skeleton-${n}`"
+				class="flex gap-4 rounded-2xl border border-solid border-surface-5 bg-surface-2 p-4 animate-pulse"
+				:class="ctx.effectiveLayout.value === 'grid' ? 'flex-col' : 'items-center'"
+				aria-hidden="true"
+			>
+				<div
+					class="shrink-0 rounded-2xl bg-surface-3"
+					:class="ctx.effectiveLayout.value === 'grid' ? 'h-32 w-full' : 'size-24'"
+				/>
+				<div class="flex min-w-0 flex-1 flex-col gap-2.5">
+					<div class="h-5 w-48 max-w-[70%] rounded-md bg-surface-3" />
+					<div class="h-4 w-full max-w-[90%] rounded-md bg-surface-3/80" />
+					<div class="mt-1 flex gap-2">
+						<div class="h-5 w-16 rounded-full bg-surface-3/70" />
+						<div class="h-5 w-20 rounded-full bg-surface-3/70" />
+						<div class="h-5 w-14 rounded-full bg-surface-3/70" />
+					</div>
+				</div>
+				<div
+					v-if="ctx.effectiveLayout.value !== 'grid'"
+					class="flex shrink-0 flex-col items-end gap-2"
+				>
+					<div class="h-9 w-36 rounded-xl bg-surface-3" />
+					<div class="h-4 w-24 rounded-md bg-surface-3/70" />
+				</div>
+			</div>
+		</ProjectCardList>
 		<section v-else-if="ctx.offline?.value && ctx.totalHits.value === 0" class="offline">
 			{{ formatMessage(messages.offline) }}
 		</section>
@@ -305,8 +347,10 @@ function getProjectCardTags(result: Labrinth.Search.v3.ResultSearchProject, disp
 		<ProjectCardList v-else :layout="ctx.effectiveLayout.value">
 			<template v-if="ctx.isServerType.value">
 				<ProjectCard
-					v-for="result in ctx.serverHits.value"
+					v-for="(result, index) in ctx.serverHits.value"
 					:key="`server-card-${result.project_id}`"
+					class="browse-card-enter"
+					:style="{ '--card-index': Math.min(index, 8) }"
 					:title="result.name"
 					:icon-url="result.icon_url || undefined"
 					:summary="result.summary"
@@ -357,8 +401,24 @@ function getProjectCardTags(result: Labrinth.Search.v3.ResultSearchProject, disp
 									:disabled="action.disabled"
 									@click.stop="action.onClick"
 								>
-									<component :is="action.icon" :class="action.iconClass" />
-									{{ action.label }}
+									<span v-if="action.hoverLabel" class="grid place-items-center overflow-hidden">
+										<span
+											class="col-start-1 row-start-1 inline-flex items-center gap-2 transition-[opacity,transform] duration-200 ease-out group-hover/action:-translate-y-1.5 group-hover/action:opacity-0 group-focus-visible/action:-translate-y-1.5 group-focus-visible/action:opacity-0"
+										>
+											<component :is="action.icon" :class="action.iconClass" />
+											{{ action.label }}
+										</span>
+										<span
+											class="col-start-1 row-start-1 inline-flex translate-y-1.5 items-center gap-2 opacity-0 transition-[opacity,transform] duration-200 ease-out group-hover/action:translate-y-0 group-hover/action:opacity-100 group-focus-visible/action:translate-y-0 group-focus-visible/action:opacity-100"
+										>
+											<component :is="action.hoverIcon ?? action.icon" :class="action.iconClass" />
+											{{ action.hoverLabel }}
+										</span>
+									</span>
+									<template v-else>
+										<component :is="action.icon" :class="action.iconClass" />
+										{{ action.label }}
+									</template>
 								</Button>
 							</template>
 						</div>
@@ -367,8 +427,10 @@ function getProjectCardTags(result: Labrinth.Search.v3.ResultSearchProject, disp
 			</template>
 			<template v-else>
 				<ProjectCard
-					v-for="result in ctx.projectHits.value"
+					v-for="(result, index) in ctx.projectHits.value"
 					:key="result.project_id"
+					class="browse-card-enter"
+					:style="{ '--card-index': Math.min(index, 8) }"
 					:link="ctx.getProjectLink(result)"
 					:title="result.name"
 					:icon-url="result.icon_url ?? undefined"
@@ -432,8 +494,24 @@ function getProjectCardTags(result: Labrinth.Search.v3.ResultSearchProject, disp
 									:disabled="action.disabled"
 									@click.stop="action.onClick"
 								>
-									<component :is="action.icon" :class="action.iconClass" />
-									{{ action.label }}
+									<span v-if="action.hoverLabel" class="grid place-items-center overflow-hidden">
+										<span
+											class="col-start-1 row-start-1 inline-flex items-center gap-2 transition-[opacity,transform] duration-200 ease-out group-hover/action:-translate-y-1.5 group-hover/action:opacity-0 group-focus-visible/action:-translate-y-1.5 group-focus-visible/action:opacity-0"
+										>
+											<component :is="action.icon" :class="action.iconClass" />
+											{{ action.label }}
+										</span>
+										<span
+											class="col-start-1 row-start-1 inline-flex translate-y-1.5 items-center gap-2 opacity-0 transition-[opacity,transform] duration-200 ease-out group-hover/action:translate-y-0 group-hover/action:opacity-100 group-focus-visible/action:translate-y-0 group-focus-visible/action:opacity-100"
+										>
+											<component :is="action.hoverIcon ?? action.icon" :class="action.iconClass" />
+											{{ action.hoverLabel }}
+										</span>
+									</span>
+									<template v-else>
+										<component :is="action.icon" :class="action.iconClass" />
+										{{ action.label }}
+									</template>
 								</Button>
 							</template>
 						</div>
@@ -454,3 +532,27 @@ function getProjectCardTags(result: Labrinth.Search.v3.ResultSearchProject, disp
 
 	<slot name="after" />
 </template>
+
+<style scoped>
+.browse-card-enter {
+	animation: browse-card-in 210ms cubic-bezier(0.22, 1, 0.36, 1) both;
+	animation-delay: calc(var(--card-index, 0) * 22ms);
+}
+
+@keyframes browse-card-in {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.browse-card-enter {
+		animation: none;
+	}
+}
+</style>

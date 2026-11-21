@@ -337,14 +337,8 @@ watch(
 watch(scene, syncDamageFlashShaderMaterials, { immediate: true })
 // The shadow tilts with the model now, so a pitch that shows the soles would
 // have it painted over them, seen from under the floor. It fades out first.
-const SHADOW_OPACITY = radialSpotlightShader.uniforms.innerOpacity.value
-watch(
-	modelPitch,
-	(pitch) => {
-		radialSpotlightShader.uniforms.innerOpacity.value =
-			SHADOW_OPACITY * Math.min(1, Math.max(0, 1 - pitch / (Math.PI / 4)))
-	},
-	{ immediate: true },
+const spotlightOpacityFactor = computed(() =>
+	Math.min(1, Math.max(0, 1 - modelPitch.value / (Math.PI / 4))),
 )
 watch(damageFlashIntensity, syncDamageFlashShaderMaterials)
 
@@ -466,8 +460,9 @@ useSkinPreviewRenderer({
 	modelGroupPosition: animatedModelGroupPosition,
 	modelGroupScale: animatedModelGroupScale,
 	modelOffset,
-	spotlightPosition,
-	spotlightScale,
+	spotlightPosition: animatedSpotlightPosition,
+	spotlightScale: animatedSpotlightScale,
+	spotlightOpacityFactor,
 	onBeforeRender: () => updateLook(updateAnimations()),
 })
 

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { LoaderCircleIcon } from '@modrinth/assets'
 import {
 	Accordion,
 	defineMessages,
@@ -466,15 +465,28 @@ onUnmounted(() => {
 				{{ formatMessage(messages.jumpIn) }}
 			</span>
 		</template>
-		<div v-if="loading" class="text-center py-4">
-			<LoaderCircleIcon class="mx-auto size-8 animate-spin text-contrast" />
+		<div v-if="loading" class="grid-when-huge flex w-full flex-col gap-3">
+			<div
+				v-for="n in 4"
+				:key="`recent-skeleton-${n}`"
+				class="flex h-20 items-center gap-3 rounded-xl border border-solid border-surface-5 bg-surface-2 px-3 py-2 animate-pulse"
+				aria-hidden="true"
+			>
+				<div class="size-14 shrink-0 rounded-xl bg-surface-3" />
+				<div class="flex min-w-0 flex-1 flex-col gap-2">
+					<div class="h-4 w-44 max-w-[65%] rounded-md bg-surface-3" />
+					<div class="h-3.5 w-32 max-w-[45%] rounded-md bg-surface-3/80" />
+				</div>
+				<div class="h-9 w-24 shrink-0 rounded-xl bg-surface-3" />
+			</div>
 		</div>
 		<div v-else ref="itemsGrid" class="grid-when-huge relative flex w-full flex-col gap-3">
 			<TransitionGroup name="jump-back-in-item">
 				<div
-					v-for="item in visibleJumpBackInItems"
+					v-for="(item, index) in visibleJumpBackInItems"
 					:key="`${item.instance.id}-${item.type === 'world' ? getWorldIdentifier(item.world) : 'instance'}`"
-					class="jump-back-in-item min-w-0"
+					class="jump-back-in-item recent-item-enter min-w-0"
+					:style="{ '--item-index': Math.min(index, 6) }"
 				>
 					<WorldItem
 						v-if="item.type === 'world'"
@@ -585,6 +597,22 @@ onUnmounted(() => {
 	overflow: hidden;
 }
 
+.recent-item-enter {
+	animation: recent-item-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+	animation-delay: calc(var(--item-index, 0) * 28ms);
+}
+
+@keyframes recent-item-in {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
 .jump-back-in-item-enter-active,
 .jump-back-in-item-leave-active {
 	transition:
@@ -601,6 +629,10 @@ onUnmounted(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
+	.recent-item-enter {
+		animation: none;
+	}
+
 	.jump-back-in-item-enter-active,
 	.jump-back-in-item-leave-active {
 		transition: none;

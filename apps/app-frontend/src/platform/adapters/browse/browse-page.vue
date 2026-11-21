@@ -8,6 +8,7 @@ import {
 	PlusIcon,
 	ServerStackIcon,
 	SpinnerIcon,
+	TrashIcon,
 } from '@modrinth/assets'
 import type {
 	BrowseInstallContentType,
@@ -62,15 +63,18 @@ import {
 	curseforgeKeys,
 	curseforgeProjectQueryOptions,
 	curseforgeSearch,
+	isCurseforgeContent,
 	isCurseforgeId,
 } from '@/helpers/curseforge'
 import { curseforgeSettings } from '@/helpers/curseforge-settings'
 import {
 	get as getInstance,
+	get_content_items,
 	get_installed_project_ids as getInstalledProjectIds,
 	get_linked_modpack_content,
 	getInstanceIconUrl,
 	list as listInstances,
+	remove_project,
 } from '@/helpers/instance'
 import { get_loader_versions as getLoaderManifest } from '@/helpers/metadata'
 import { get as getSettings, set as setSettings } from '@/helpers/settings.ts'
@@ -196,6 +200,8 @@ const linkedInstanceProjectQuery = useQuery(
 const installedProjectIds: Ref<string[] | null> = ref(null)
 const instanceHideInstalled = ref(route.query.ai === 'true')
 const newlyInstalled = ref<string[]>([])
+const newlyInstalledInstances = ref<Map<string, Set<string>>>(new Map())
+const removingProjectIds = ref<Set<string>>(new Set())
 const hiddenInstanceProjectIds = ref<Set<string>>(new Set())
 const hiddenInstanceProjectIdsInitialized = ref(false)
 const isServerInstance = computed(
@@ -779,6 +785,8 @@ function resetInstanceContext() {
 	installedProjectIds.value = null
 	instanceHideInstalled.value = false
 	newlyInstalled.value = []
+	newlyInstalledInstances.value = new Map()
+	removingProjectIds.value = new Set()
 	hiddenInstanceProjectIds.value = new Set()
 	hiddenInstanceProjectIdsInitialized.value = false
 	// isServerInstance and the breadcrumbs follow the route by themselves; the
@@ -1213,25 +1221,37 @@ function getCardActions(
 
 	const isModpack = projectResult.project_types?.includes('modpack')
 	const shouldUseInstallIcon = !!instance.value || isModpack
+	const isRemoving = removingProjectIds.value.has(projectResult.project_id)
+	const canRemove = showAsInstalled && canRemoveNewlyInstalled(projectResult.project_id)
 
 	return [
 		{
 			key: 'install',
 			label: formatMessage(
-				isInstalling
-					? messages.installingToServer
-					: showAsInstalled
-						? commonMessages.installedLabel
-						: shouldUseInstallIcon
-							? commonMessages.installButton
-							: messages.addToAnInstance,
+				isRemoving
+					? commonMessages.removeButton
+					: isInstalling
+						? messages.installingToServer
+						: showAsInstalled
+							? commonMessages.installedLabel
+							: shouldUseInstallIcon
+								? commonMessages.installButton
+								: messages.addToAnInstance,
 			),
-			icon: isInstalling ? SpinnerIcon : showAsInstalled ? CheckIcon : PlusIcon,
-			iconClass: isInstalling ? 'animate-spin' : undefined,
-			disabled: showAsInstalled || isInstalling,
-			color: 'brand',
+			icon: isInstalling || isRemoving ? SpinnerIcon : showAsInstalled ? CheckIcon : PlusIcon,
+			iconClass: isInstalling || isRemoving ? 'animate-spin' : undefined,
+			hoverLabel:
+				canRemove && !isRemoving ? formatMessage(commonMessages.removeButton) : undefined,
+			hoverIcon: canRemove && !isRemoving ? TrashIcon : undefined,
+			hoverColor: canRemove && !isRemoving ? 'red' : undefined,
+			disabled: (showAsInstalled && !canRemove) || isInstalling || isRemoving,
+			color: isRemoving ? 'red' : 'brand',
 			type: 'outlined',
 			onClick: async () => {
+				if (canRemove) {
+					await removeNewlyInstalledProject(projectResult)
+					return
+				}
 				setProjectInstalling(projectResult.project_id, true)
 				try {
 					const selectedInstall = instance.value
@@ -1249,10 +1269,13 @@ function getCardActions(
 						selectedInstall.versionId,
 						instance.value ? instance.value.id : null,
 						'SearchCard',
-						(versionId, installedProjectIds) => {
+						(versionId, installedProjectIds, targetInstanceId) => {
 							setProjectInstalling(projectResult.project_id, false)
 							if (versionId) {
-								onSearchResultsInstalled(installedProjectIds ?? [projectResult.project_id])
+								onSearchResultsInstalled(
+									installedProjectIds ?? [projectResult.project_id],
+									targetInstanceId ?? instance.value?.id,
+								)
 							}
 						},
 						(profile) => {
@@ -1288,28 +1311,40 @@ function getCurseforgeCardActions(
 	const projectResult = result as Labrinth.Search.v3.ResultSearchProject & { installed?: boolean }
 	const isModpack = currentProjectType === 'modpack'
 	const isInstalling = installingProjectIds.value.has(projectResult.project_id)
+	const isRemoving = removingProjectIds.value.has(projectResult.project_id)
 	const isInstalled =
 		!isModpack && (projectResult.installed || allInstalledIds.value.has(projectResult.project_id))
 	const shouldUseInstallIcon = !!instance.value || isModpack
+	const canRemove = isInstalled && canRemoveNewlyInstalled(projectResult.project_id)
 
 	return [
 		{
 			key: 'install',
 			label: formatMessage(
-				isInstalling
-					? messages.installingToServer
-					: isInstalled
-						? commonMessages.installedLabel
-						: shouldUseInstallIcon
-							? commonMessages.installButton
-							: messages.addToAnInstance,
+				isRemoving
+					? commonMessages.removeButton
+					: isInstalling
+						? messages.installingToServer
+						: isInstalled
+							? commonMessages.installedLabel
+							: shouldUseInstallIcon
+								? commonMessages.installButton
+								: messages.addToAnInstance,
 			),
-			icon: isInstalling ? SpinnerIcon : isInstalled ? CheckIcon : PlusIcon,
-			iconClass: isInstalling ? 'animate-spin' : undefined,
-			disabled: isInstalled || isInstalling,
-			color: 'brand',
+			icon: isInstalling || isRemoving ? SpinnerIcon : isInstalled ? CheckIcon : PlusIcon,
+			iconClass: isInstalling || isRemoving ? 'animate-spin' : undefined,
+			hoverLabel:
+				canRemove && !isRemoving ? formatMessage(commonMessages.removeButton) : undefined,
+			hoverIcon: canRemove && !isRemoving ? TrashIcon : undefined,
+			hoverColor: canRemove && !isRemoving ? 'red' : undefined,
+			disabled: (isInstalled && !canRemove) || isInstalling || isRemoving,
+			color: isRemoving ? 'red' : 'brand',
 			type: 'outlined',
 			onClick: async () => {
+				if (canRemove) {
+					await removeNewlyInstalledProject(projectResult)
+					return
+				}
 				setProjectInstalling(projectResult.project_id, true)
 				try {
 					const selectedPreferences = getCurrentSelectedInstallPreferences(currentProjectType)
@@ -1318,10 +1353,13 @@ function getCurseforgeCardActions(
 						null,
 						instance.value ? instance.value.id : null,
 						'SearchCard',
-						(versionId, installedProjectIds) => {
+						(versionId, installedProjectIds, targetInstanceId) => {
 							setProjectInstalling(projectResult.project_id, false)
 							if (versionId) {
-								onSearchResultsInstalled(installedProjectIds ?? [projectResult.project_id])
+								onSearchResultsInstalled(
+									installedProjectIds ?? [projectResult.project_id],
+									targetInstanceId ?? instance.value?.id,
+								)
 							}
 						},
 						(profile) => {
@@ -1364,14 +1402,98 @@ function onSearchResultInstalled(id: string) {
 	}
 }
 
-function onSearchResultsInstalled(ids: string[]) {
+function onSearchResultsInstalled(ids: string[], targetInstanceId?: string) {
 	if (isServerContext.value) {
 		for (const id of ids) {
 			markServerProjectInstalled(id)
 		}
 		return
 	}
-	newlyInstalled.value = Array.from(new Set([...newlyInstalled.value, ...ids]))
+	const expandedIds = Array.from(
+		new Set([
+			...ids,
+			...ids.filter((id) => /^\d+$/.test(id)).map(curseforgeIdOf),
+		]),
+	)
+	newlyInstalled.value = Array.from(new Set([...newlyInstalled.value, ...expandedIds]))
+	if (targetInstanceId) {
+		const next = new Map(newlyInstalledInstances.value)
+		for (const id of expandedIds) {
+			const instanceIds = new Set(next.get(id) ?? [])
+			instanceIds.add(targetInstanceId)
+			next.set(id, instanceIds)
+		}
+		newlyInstalledInstances.value = next
+	}
+}
+
+function setProjectRemoving(projectId: string, removing: boolean) {
+	const next = new Set(removingProjectIds.value)
+	if (removing) next.add(projectId)
+	else next.delete(projectId)
+	removingProjectIds.value = next
+}
+
+async function removeNewlyInstalledProject(
+	projectResult: Labrinth.Search.v3.ResultSearchProject & { installed?: boolean },
+) {
+	const projectId = projectResult.project_id
+	const instanceIds = Array.from(newlyInstalledInstances.value.get(projectId) ?? [])
+	if (instanceIds.length === 0 || removingProjectIds.value.has(projectId)) return
+
+	const isCurseforgeProject = isCurseforgeId(projectId)
+	const matchingIds = new Set<string>([projectId])
+	if (isCurseforgeProject) {
+		matchingIds.add(projectId.slice(3))
+	}
+
+	setProjectRemoving(projectId, true)
+	try {
+		for (const targetInstanceId of instanceIds) {
+			const items = await get_content_items(targetInstanceId, 'bypass')
+			const matchingPaths = items
+				.filter((item) => {
+					const itemId = item.project?.id
+					if (!itemId || !item.file_path) return false
+					if (itemId === projectId) return true
+					return (
+						isCurseforgeProject && isCurseforgeContent(item) && curseforgeIdOf(itemId) === projectId
+					)
+				})
+				.map((item) => item.file_path)
+			for (const filePath of matchingPaths) {
+				await remove_project(targetInstanceId, filePath)
+			}
+			await Promise.all([
+				queryClient.invalidateQueries({
+					queryKey: instanceKeys.installedProjectIds(targetInstanceId, 'content'),
+				}),
+				queryClient.invalidateQueries({
+					queryKey: instanceKeys.content(targetInstanceId),
+				}),
+			])
+		}
+
+		projectResult.installed = false
+		newlyInstalled.value = newlyInstalled.value.filter((id) => !matchingIds.has(id))
+		const nextInstances = new Map(newlyInstalledInstances.value)
+		for (const id of matchingIds) {
+			nextInstances.delete(id)
+		}
+		newlyInstalledInstances.value = nextInstances
+		if (installedProjectIds.value) {
+			installedProjectIds.value = installedProjectIds.value.filter((id) => !matchingIds.has(id))
+		}
+	} catch (err) {
+		handleError(err as Error)
+	} finally {
+		setProjectRemoving(projectId, false)
+	}
+}
+
+function canRemoveNewlyInstalled(projectId: string): boolean {
+	const targetInstances = newlyInstalledInstances.value.get(projectId)
+	return !!targetInstances && targetInstances.size > 0
 }
 
 /**

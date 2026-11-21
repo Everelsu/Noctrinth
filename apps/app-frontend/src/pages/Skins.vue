@@ -10,12 +10,14 @@ import {
 	SpinnerIcon,
 	UpdatedIcon,
 	WindowsIcon,
+	XIcon,
 } from '@modrinth/assets'
 import {
 	Button,
 	commonMessages,
 	ConfirmModal,
 	defineMessages,
+	IconButton,
 	injectAuth,
 	injectModrinthClient,
 	injectNotificationManager,
@@ -26,7 +28,7 @@ import {
 import { arrayBufferToBase64 } from '@modrinth/utils'
 import { useQuery } from '@tanstack/vue-query'
 import { listen } from '@tauri-apps/api/event'
-import { computedAsync } from '@vueuse/core'
+import { computedAsync, useStorage } from '@vueuse/core'
 import { computed, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
 
 import EarsModIcon from '@/assets/skins/ears-mod.png'
@@ -79,6 +81,7 @@ import { useRootBreadcrumb } from '@/shared/breadcrumbs'
 import { appMessages } from '@/utils/app-messages'
 
 const { formatMessage } = useVIntl()
+const demoBannerDismissed = useStorage('noctrinth:skins-demo-banner-dismissed', false)
 
 useRootBreadcrumb({
 	slot: 'root',
@@ -300,6 +303,7 @@ const offline = ref(!navigator.onLine)
 const minecraftAccounts = injectMinecraftAccounts()
 const currentUser = ref(undefined)
 const currentUserId = ref<string | undefined>(undefined)
+const userLoaded = ref(false)
 
 type ElySelectedAccount = {
 	profile: {
@@ -1489,6 +1493,8 @@ async function loadCurrentUser() {
 		handleError(e as Error)
 		currentUser.value = undefined
 		currentUserId.value = undefined
+	} finally {
+		userLoaded.value = true
 	}
 }
 
@@ -2121,34 +2127,49 @@ async function checkUserChanges() {
 		</div>
 	</div>
 
-	<div v-if="!currentUser && !elyAccount" class="sticky w-full bottom-0 z-20 p-4 pt-0">
+	<Transition name="nm-rise">
 		<div
-			class="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 rounded-[20px] border border-solid border-surface-5 bg-surface-3 p-4"
+			v-if="userLoaded && !currentUser && !elyAccount && !demoBannerDismissed"
+			class="sticky w-full bottom-0 z-20 p-4 pt-0"
 		>
-			<div class="flex min-w-0 grow items-start gap-3">
-				<InfoIcon class="size-6 shrink-0 text-blue" />
-				<div class="flex min-w-0 flex-col gap-1">
-					<p class="m-0 text-lg font-semibold leading-6 text-contrast">
-						{{ formatMessage(messages.demoTitle) }}
-					</p>
-					<p class="m-0 text-base leading-6 text-primary">
-						{{ formatMessage(messages.demoDescription) }}
-					</p>
+			<div
+				class="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 rounded-[20px] border border-solid border-surface-5 bg-surface-3 p-4"
+			>
+				<div class="flex min-w-0 grow items-start gap-3">
+					<InfoIcon class="size-6 shrink-0 text-blue" />
+					<div class="flex min-w-0 flex-col gap-1">
+						<p class="m-0 text-lg font-semibold leading-6 text-contrast">
+							{{ formatMessage(messages.demoTitle) }}
+						</p>
+						<p class="m-0 text-base leading-6 text-primary">
+							{{ formatMessage(messages.demoDescription) }}
+						</p>
+					</div>
+				</div>
+				<div class="flex shrink-0 items-center gap-2">
+					<Button
+						v-show="minecraftAccounts"
+						type="colored"
+						color="brand"
+						:disabled="minecraftAccounts?.loginDisabled"
+						@click="login"
+					>
+						<SpinnerIcon v-if="minecraftAccounts?.loginDisabled" class="animate-spin" />
+						<WindowsIcon v-else />
+						{{ formatMessage(messages.signInButton) }}
+					</Button>
+					<IconButton
+						v-tooltip="formatMessage(commonMessages.closeButton)"
+						type="quiet"
+						:label="formatMessage(commonMessages.closeButton)"
+						@click="demoBannerDismissed = true"
+					>
+						<XIcon />
+					</IconButton>
 				</div>
 			</div>
-			<Button
-				v-show="minecraftAccounts"
-				type="colored"
-				color="brand"
-				:disabled="minecraftAccounts?.loginDisabled"
-				@click="login"
-			>
-				<SpinnerIcon v-if="minecraftAccounts?.loginDisabled" class="animate-spin" />
-				<WindowsIcon v-else />
-				{{ formatMessage(messages.signInButton) }}
-			</Button>
 		</div>
-	</div>
+	</Transition>
 </template>
 
 <style lang="scss" scoped>

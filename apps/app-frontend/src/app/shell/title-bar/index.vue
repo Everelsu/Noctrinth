@@ -76,9 +76,7 @@ const messages = defineMessages({
 				<RightArrowIcon />
 			</IconButton>
 			<div class="flex mr-3">
-				<Suspense>
-					<AppActionBar />
-				</Suspense>
+				<AppActionBar />
 			</div>
 			<WindowControls />
 		</section>

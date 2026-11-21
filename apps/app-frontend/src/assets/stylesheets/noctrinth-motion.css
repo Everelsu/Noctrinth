@@ -159,6 +159,21 @@
 	opacity: 0;
 }
 
+/* Switching top-level launcher pages: fast GPU-only slide + fade (safe with <Suspense>). */
+.nm-page-enter {
+	animation: nm-page-in 180ms var(--nm-ease-out) both;
+}
+@keyframes nm-page-in {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
 /* Something running: a ring that grows out of it and fades. */
 .nm-live {
 	position: relative;
@@ -219,6 +234,9 @@
 	.nm-press,
 	.nm-nudge svg {
 		transition: none;
+	}
+	.nm-page-enter {
+		animation: none;
 	}
 	.nm-live::after {
 		animation: none;

@@ -290,8 +290,6 @@ const refresh = async () => {
 	}
 }
 
-await refresh()
-
 const offline = ref(!navigator.onLine)
 function handleOffline() {
 	offline.value = true
@@ -301,6 +299,7 @@ function handleOnline() {
 }
 
 onMounted(() => {
+	void Promise.all([refresh(), refreshLoadingBars()])
 	window.addEventListener('offline', handleOffline)
 	window.addEventListener('online', handleOnline)
 })
@@ -509,8 +508,6 @@ async function refreshLoadingBars() {
 
 	updateNotification()
 }
-
-await refreshLoadingBars()
 
 useAppEvent('loading', async () => {
 	await refreshLoadingBars()

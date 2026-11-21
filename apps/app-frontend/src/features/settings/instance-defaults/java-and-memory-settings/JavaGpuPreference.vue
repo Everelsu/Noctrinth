@@ -95,6 +95,9 @@ const options = computed(() =>
 					: undefined,
 	})),
 )
+const selectedSubLabel = computed(
+	() => options.value.find((option) => option.value === status.value?.preference)?.subLabel,
+)
 </script>
 
 <template>
@@ -112,11 +115,8 @@ const options = computed(() =>
 				class="w-full"
 				@update:model-value="choose"
 			/>
-			<div
-				v-if="options.find((option) => option.value === status.preference)?.subLabel"
-				class="px-1 text-xs text-secondary"
-			>
-				{{ options.find((option) => option.value === status.preference)?.subLabel }}
+			<div v-if="selectedSubLabel" class="px-1 text-xs text-secondary">
+				{{ selectedSubLabel }}
 			</div>
 		</div>
 	</div>

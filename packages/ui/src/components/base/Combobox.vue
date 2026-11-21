@@ -154,7 +154,7 @@
 										:aria-selected="listbox && item.value === modelValue"
 										:aria-disabled="item.disabled || undefined"
 										:data-focused="focusedIndex === index"
-										class="group/option flex items-center gap-2.5 cursor-pointer px-4 py-3 text-left transition-all duration-150"
+										class="group/option flex items-center gap-2.5 cursor-pointer px-4 py-3 text-left outline-none focus-visible:outline-none transition-all duration-150"
 										:class="getOptionClasses(item, index)"
 										tabindex="-1"
 										@mousedown.prevent
@@ -549,7 +549,7 @@ function getOptionClasses(item: ComboboxOption<T> & { key: string }, index: numb
 			'bg-surface-4 text-contrast hover:brightness-[115%] focus:brightness-[115%]': !isSelected,
 			'bg-brand-highlight text-brand hover:bg-brand-highlight focus:bg-brand-highlight': isSelected,
 			'cursor-not-allowed opacity-50 pointer-events-none': item.disabled,
-			'brightness-[115%] outline outline-1 -outline-offset-2 outline-current': isFocused,
+			'brightness-[115%]': isFocused && !isSelected,
 		},
 	]
 }

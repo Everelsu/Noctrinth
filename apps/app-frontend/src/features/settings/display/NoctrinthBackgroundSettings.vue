@@ -7,10 +7,10 @@ import {
 	injectNotificationManager,
 	Slider,
 	Toggle,
+	useFileDropTarget,
 	useVIntl,
 } from '@modrinth/ui'
-import { getCurrentWebview } from '@tauri-apps/api/webview'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onUnmounted, ref } from 'vue'
 
 import {
 	backgroundBlur,
@@ -74,33 +74,16 @@ async function run(action: () => Promise<unknown>) {
 	}
 }
 
-/** True while a picture is dragged over the window, so the preview can say where it goes. */
-const dragging = ref(false)
-let unlistenDrop: (() => void) | undefined
-let unmounted = false
-
-onMounted(() => {
-	void getCurrentWebview()
-		.onDragDropEvent((event) => {
-			const { payload } = event
-			if (payload.type === 'leave') {
-				dragging.value = false
-				return
-			}
-			if (payload.type === 'enter') {
-				dragging.value = payload.paths.some(isBackgroundFile)
-				return
-			}
-			if (payload.type !== 'drop') return
-			dragging.value = false
-			const picture = payload.paths.find(isBackgroundFile)
-			if (picture) void run(() => setBackgroundFromPath(picture))
-		})
-		.then((unlisten) => {
-			if (unmounted) unlisten()
-			else unlistenDrop = unlisten
-		})
-		.catch(handleError)
+const dropZoneRef = ref<HTMLElement | null>(null)
+const { isDragging: dragging, dropTargetProps } = useFileDropTarget({
+	target: dropZoneRef,
+	disabled: busy,
+	onFiles: () => {},
+	onLocalFiles: (files) => {
+		const picture = files.find((file) => isBackgroundFile(file.path))
+		if (picture) void run(() => setBackgroundFromPath(picture.path))
+	},
+	onError: (error) => handleError(error as Error),
 })
 
 /** The darkening shows as the slider moves; it is saved once it rests. */
@@ -112,14 +95,12 @@ function setDim(value: number) {
 }
 
 onUnmounted(() => {
-	unmounted = true
-	unlistenDrop?.()
 	clearTimeout(saveDimTimer)
 })
 </script>
 
 <template>
-	<div class="mt-6 flex flex-col gap-3">
+	<div ref="dropZoneRef" class="mt-6 flex flex-col gap-3" v-bind="dropTargetProps">
 		<div>
 			<h2 class="m-0 text-lg font-semibold text-contrast">{{ formatMessage(messages.title) }}</h2>
 			<p class="m-0 mt-1 text-secondary">{{ formatMessage(messages.description) }}</p>

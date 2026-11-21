@@ -91,7 +91,9 @@ export function useQuickSearch(query: Ref<string>, active: Ref<boolean>) {
 		}[]
 		running.value = new Set(processes.map((process) => process.instance_id))
 	}
-	useAppEvent('process', () => void refreshRunning())
+	useAppEvent('process', () => {
+		if (active.value) void refreshRunning()
+	})
 
 	watch(
 		[active, instances],
@@ -103,59 +105,76 @@ export function useQuickSearch(query: Ref<string>, active: Ref<boolean>) {
 		{ immediate: true },
 	)
 
+	const instancesByRecency = computed(() =>
+		instances.value
+			.map((instance) => ({ instance, playedAt: lastPlayed(instance) }))
+			.sort((a, b) => b.playedAt - a.playedAt)
+			.map(({ instance }) => instance),
+	)
+
 	const parsed = computed(() => parseQuery(query.value))
 
 	const results = computed<QuickSearchResult[]>(() => {
+		if (!active.value) return []
 		void contentIndex.version.value
-		const list = instances.value
+		const list = instancesByRecency.value
 		const text = query.value.trim()
 
 		// Nothing typed: what was played last, the likeliest thing to want again.
 		if (parsed.value.isEmpty) {
-			return [...list]
-				.sort((a, b) => lastPlayed(b) - lastPlayed(a))
-				.slice(0, MAX_INSTANCES)
-				.map((instance) => ({
-					kind: 'instance' as const,
-					key: `instance:${instance.id}`,
-					instance,
-					running: running.value.has(instance.id),
-				}))
-		}
-
-		const found: QuickSearchResult[] = list
-			.filter((instance) =>
-				matchInstance(instance, parsed.value, contentIndex.contentFor(instance.id)),
-			)
-			.sort((a, b) => lastPlayed(b) - lastPlayed(a))
-			.slice(0, MAX_INSTANCES)
-			.map((instance) => ({
-				kind: 'instance',
+			return list.slice(0, MAX_INSTANCES).map((instance) => ({
+				kind: 'instance' as const,
 				key: `instance:${instance.id}`,
 				instance,
 				running: running.value.has(instance.id),
 			}))
+		}
+
+		const found: QuickSearchResult[] = []
+		for (const instance of list) {
+			if (!matchInstance(instance, parsed.value, contentIndex.contentFor(instance.id))) continue
+			found.push({
+				kind: 'instance',
+				key: `instance:${instance.id}`,
+				instance,
+				running: running.value.has(instance.id),
+			})
+			if (found.length >= MAX_INSTANCES) break
+		}
 
 		// What is installed, newest-played instance first, and what can be
 		// updated before what cannot: that is the row worth an action.
-		const content: QuickSearchResult[] = []
-		for (const instance of [...list].sort((a, b) => lastPlayed(b) - lastPlayed(a))) {
+		const updatableContent: QuickSearchResult[] = []
+		const regularContent: QuickSearchResult[] = []
+		for (const instance of list) {
+			if (updatableContent.length >= MAX_CONTENT) break
 			for (const item of contentIndex.contentFor(instance.id) ?? []) {
 				if (!matchContentItem(parsed.value, item)) continue
-				content.push({
-					kind: 'content',
-					key: `content:${instance.id}:${item.file_name}`,
-					instance,
-					item,
-					canUpdate: canUpdateContentIn(instance, item),
-				})
+				const canUpdate = canUpdateContentIn(instance, item)
+				if (canUpdate) {
+					updatableContent.push({
+						kind: 'content',
+						key: `content:${instance.id}:${item.file_name}`,
+						instance,
+						item,
+						canUpdate: true,
+					})
+					if (updatableContent.length >= MAX_CONTENT) break
+				} else if (updatableContent.length + regularContent.length < MAX_CONTENT) {
+					regularContent.push({
+						kind: 'content',
+						key: `content:${instance.id}:${item.file_name}`,
+						instance,
+						item,
+						canUpdate: false,
+					})
+				}
 			}
 		}
-		content.sort(
-			(a, b) =>
-				Number(b.kind === 'content' && b.canUpdate) - Number(a.kind === 'content' && a.canUpdate),
+		found.push(
+			...updatableContent,
+			...regularContent.slice(0, Math.max(0, MAX_CONTENT - updatableContent.length)),
 		)
-		found.push(...content.slice(0, MAX_CONTENT))
 
 		// A query in the query language is about what is installed; plain words
 		// can also be a setting, or be looked for in Discover.

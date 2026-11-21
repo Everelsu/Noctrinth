@@ -107,6 +107,13 @@ const GPU_PREFERENCES_KEY: &str =
 
 #[cfg(target_os = "windows")]
 pub fn list_adapters() -> Vec<GpuAdapter> {
+    static ADAPTERS: std::sync::OnceLock<Vec<GpuAdapter>> =
+        std::sync::OnceLock::new();
+    ADAPTERS.get_or_init(enumerate_adapters).clone()
+}
+
+#[cfg(target_os = "windows")]
+fn enumerate_adapters() -> Vec<GpuAdapter> {
     use winreg::RegKey;
     use winreg::enums::{HKEY_LOCAL_MACHINE, KEY_READ};
 

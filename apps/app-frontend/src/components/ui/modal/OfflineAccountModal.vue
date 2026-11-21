@@ -25,7 +25,7 @@
 					:disabled="loading"
 					@keyup.enter="submit"
 				/>
-				<span v-if="username && !uuid" class="text-sm text-brand-red">
+				<span v-if="username && !uuid" class="text-sm text-red">
 					{{ formatMessage(messages.invalid) }}
 				</span>
 				<span v-else-if="uuid" class="text-sm text-secondary">

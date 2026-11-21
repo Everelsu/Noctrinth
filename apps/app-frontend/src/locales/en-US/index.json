@@ -6476,8 +6476,14 @@
   "noctrinth.settings.appearance.show-hosting": {
     "message": "Show Modrinth Hosting in the sidebar"
   },
+  "noctrinth.settings.appearance.show-hosting.description": {
+    "message": "Show a button in the left sidebar to open Modrinth Hosting."
+  },
   "noctrinth.settings.appearance.show-sidebar-news": {
     "message": "Show news in the sidebar"
+  },
+  "noctrinth.settings.appearance.show-sidebar-news.description": {
+    "message": "Show the latest Noctrinth and Modrinth news in the right sidebar."
   },
   "noctrinth.settings.background.blur.description": {
     "message": "Softens it, so it stays behind what is in front of it."

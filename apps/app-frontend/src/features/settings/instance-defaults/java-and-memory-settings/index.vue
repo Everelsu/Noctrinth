@@ -65,7 +65,7 @@ const messages = defineMessages({
 
 <template>
 	<div class="flex flex-col gap-6">
-		<section class="border-0 border-b border-solid border-divider pb-6">
+		<section class="border-0 border-b border-solid border-surface-5 pb-6">
 			<JavaProviderSetting />
 		</section>
 		<section class="flex flex-col gap-4">

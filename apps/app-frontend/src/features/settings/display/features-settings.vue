@@ -93,9 +93,17 @@ const messages = defineMessages({
 		id: 'noctrinth.settings.appearance.show-sidebar-news',
 		defaultMessage: 'Show news in the sidebar',
 	},
+	showSidebarNewsDescription: {
+		id: 'noctrinth.settings.appearance.show-sidebar-news.description',
+		defaultMessage: 'Show the latest Noctrinth and Modrinth news in the right sidebar.',
+	},
 	showHosting: {
 		id: 'noctrinth.settings.appearance.show-hosting',
 		defaultMessage: 'Show Modrinth Hosting in the sidebar',
+	},
+	showHostingDescription: {
+		id: 'noctrinth.settings.appearance.show-hosting.description',
+		defaultMessage: 'Show a button in the left sidebar to open Modrinth Hosting.',
 	},
 	quickInstancesTitle: {
 		id: 'app.features-settings.quick-instances.title',
@@ -376,9 +384,12 @@ onBeforeUnmount(() => {
 			</div>
 
 			<div class="flex items-center justify-between gap-4">
-				<h3 class="m-0 text-lg font-semibold text-contrast">
-					{{ formatMessage(messages.showHosting) }}
-				</h3>
+				<div>
+					<h3 class="m-0 text-lg font-semibold text-contrast">
+						{{ formatMessage(messages.showHosting) }}
+					</h3>
+					<p class="m-0 mt-1">{{ formatMessage(messages.showHostingDescription) }}</p>
+				</div>
 				<Toggle
 					id="show-modrinth-hosting"
 					v-model="current.showModrinthHosting"
@@ -387,9 +398,12 @@ onBeforeUnmount(() => {
 			</div>
 
 			<div class="flex items-center justify-between gap-4">
-				<h3 class="m-0 text-lg font-semibold text-contrast">
-					{{ formatMessage(messages.showSidebarNews) }}
-				</h3>
+				<div>
+					<h3 class="m-0 text-lg font-semibold text-contrast">
+						{{ formatMessage(messages.showSidebarNews) }}
+					</h3>
+					<p class="m-0 mt-1">{{ formatMessage(messages.showSidebarNewsDescription) }}</p>
+				</div>
 				<Toggle
 					id="show-sidebar-news"
 					v-model="current.showSidebarNews"

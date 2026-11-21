@@ -28,7 +28,6 @@ async function loadOne(instanceId: string): Promise<void> {
 		// as having no content and let the other instances still match.
 		cache.set(instanceId, [])
 	}
-	version.value += 1
 }
 
 function ensureOne(instanceId: string): Promise<void> {
@@ -61,6 +60,7 @@ export function useInstanceContentIndex() {
 		try {
 			for (let index = 0; index < missing.length; index += CONCURRENCY) {
 				await Promise.all(missing.slice(index, index + CONCURRENCY).map(ensureOne))
+				version.value += 1
 			}
 		} finally {
 			loadingCount.value -= 1

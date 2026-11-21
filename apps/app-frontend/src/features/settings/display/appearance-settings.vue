@@ -361,7 +361,7 @@ provideAppearanceSettings({
 				v-for="preset in ACCENT_PRESETS"
 				:key="preset.id"
 				type="button"
-				class="accent-option flex items-center gap-3 rounded-xl border border-solid border-button-border bg-button-bg p-3 text-left"
+				class="accent-option flex items-center gap-3 rounded-xl border border-solid border-surface-5 bg-surface-3 p-3 text-left"
 				:class="{ 'accent-option--selected': current.accentPreset === preset.id }"
 				:style="{ '--accent-swatch': accentColorFor(preset, theme.active) }"
 				:aria-pressed="current.accentPreset === preset.id"
@@ -374,7 +374,7 @@ provideAppearanceSettings({
 			</button>
 			<button
 				type="button"
-				class="accent-option flex items-center gap-3 rounded-xl border border-solid border-button-border bg-button-bg p-3 text-left"
+				class="accent-option flex items-center gap-3 rounded-xl border border-solid border-surface-5 bg-surface-3 p-3 text-left"
 				:class="{ 'accent-option--selected': customSelected }"
 				:style="{ '--accent-swatch': customColor }"
 				:aria-pressed="customSelected"
@@ -430,7 +430,7 @@ provideAppearanceSettings({
 				v-for="option in fontOptions"
 				:key="option.id"
 				type="button"
-				class="accent-option flex items-center gap-3 rounded-xl border border-solid border-button-border bg-button-bg p-3 text-left"
+				class="accent-option flex items-center gap-3 rounded-xl border border-solid border-surface-5 bg-surface-3 p-3 text-left"
 				:class="{
 					'accent-option--selected': !customFontOpen && current.interfaceFont === option.id,
 				}"
@@ -454,7 +454,7 @@ provideAppearanceSettings({
 			</button>
 			<button
 				type="button"
-				class="accent-option flex items-center gap-3 rounded-xl border border-solid border-button-border bg-button-bg p-3 text-left"
+				class="accent-option flex items-center gap-3 rounded-xl border border-solid border-surface-5 bg-surface-3 p-3 text-left"
 				:class="{ 'accent-option--selected': customFontOpen }"
 				:aria-pressed="customFontSelected"
 				:aria-expanded="customFontOpen"
@@ -519,12 +519,12 @@ provideAppearanceSettings({
 }
 
 .accent-option:hover {
-	border-color: var(--accent-swatch);
+	border-color: var(--accent-swatch, var(--color-brand));
 }
 
 .accent-option--selected {
-	border-color: var(--accent-swatch);
-	box-shadow: 0 0 0 1px var(--accent-swatch);
+	border-color: var(--accent-swatch, var(--color-brand));
+	box-shadow: 0 0 0 1px var(--accent-swatch, var(--color-brand));
 }
 
 .accent-option__swatch {

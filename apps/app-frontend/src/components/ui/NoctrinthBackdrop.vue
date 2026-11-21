@@ -33,7 +33,12 @@ watch([visibility, video], ([state, element]) => {
 })
 
 watchEffect(() => {
-	document.documentElement.classList.toggle('noctrinth-backdrop-active', !!backgroundUrl.value)
+	const active = !!backgroundUrl.value
+	document.documentElement.classList.toggle('noctrinth-backdrop-active', active)
+	document.documentElement.classList.toggle(
+		'noctrinth-backdrop-video',
+		active && backgroundIsVideo.value,
+	)
 })
 </script>
 
@@ -72,6 +77,8 @@ watchEffect(() => {
 	background-position: center;
 	background-size: cover;
 	background-repeat: no-repeat;
+	contain: strict;
+	will-change: transform;
 }
 
 .noctrinth-backdrop__video {
@@ -190,5 +197,19 @@ watchEffect(() => {
 			color-mix(in srgb, var(--noctrinth-solid-surface-3) 45%, transparent),
 			color-mix(in srgb, var(--noctrinth-solid-surface-3) 45%, transparent)
 		);
+}
+
+/* Lighter compositing over live video so menus and modals stay smooth on integrated GPUs. */
+:root.noctrinth-backdrop-video .modal-body,
+:root.noctrinth-backdrop-video .download-manager-panel,
+:root.noctrinth-backdrop-video .browse-install-header {
+	backdrop-filter: blur(12px);
+}
+
+:root.noctrinth-backdrop-video [role='menu'],
+:root.noctrinth-backdrop-video .v-popper--theme-dropdown .v-popper__inner,
+:root.noctrinth-backdrop-video .v-popper__inner.v-popper--theme-tooltip {
+	--surface-3: color-mix(in srgb, var(--noctrinth-solid-surface-3) 94%, transparent);
+	backdrop-filter: none;
 }
 </style>

@@ -4,7 +4,7 @@
  * video. It is a file the app keeps next to its database; how it is blurred and
  * darkened are settings.
  */
-import { invoke } from '@tauri-apps/api/core'
+import { convertFileSrc, invoke } from '@tauri-apps/api/core'
 import { open } from '@tauri-apps/plugin-dialog'
 import { ref } from 'vue'
 
@@ -22,26 +22,16 @@ export const BACKGROUND_EXTENSIONS = [
 	...VIDEO_EXTENSIONS,
 ]
 
-/** An object URL for the picture, or null when there is none. */
+type BackgroundInfo = {
+	path: string
+	is_video: boolean
+	revision: number
+}
+
+/** Asset URL for the background, or null when there is none. */
 export const backgroundUrl = ref<string | null>(null)
 /** Whether that is a video, which is played rather than painted. */
 export const backgroundIsVideo = ref(false)
-
-/**
- * The video type a file's first bytes say it is, or null for a picture.
- *
- * The file is kept without its extension, so this is how a video is told from
- * a picture again; a `<video>` also wants the type its blob was made with.
- */
-export function videoTypeOf(bytes: Uint8Array): string | null {
-	const ascii = (from: number, to: number) => String.fromCharCode(...bytes.subarray(from, to))
-	// AVIF is an ISO media file too; its brand, `avif` or `avis`, says picture.
-	if (ascii(4, 8) === 'ftyp' && !ascii(8, 12).startsWith('avi')) return 'video/mp4'
-	if (bytes[0] === 0x1a && bytes[1] === 0x45 && bytes[2] === 0xdf && bytes[3] === 0xa3) {
-		return 'video/webm'
-	}
-	return null
-}
 export const backgroundBlur = ref(true)
 /** From 0, the picture as it is, to 100. */
 export const backgroundDim = ref(0)
@@ -49,13 +39,9 @@ export const backgroundDim = ref(0)
 export async function loadBackground(blur: boolean, dim = backgroundDim.value): Promise<void> {
 	backgroundBlur.value = blur
 	backgroundDim.value = dim
-	const bytes = await invoke<ArrayBuffer>('plugin:noctrinth-background|background_get')
-	if (backgroundUrl.value) URL.revokeObjectURL(backgroundUrl.value)
-	const type = videoTypeOf(new Uint8Array(bytes, 0, Math.min(16, bytes.byteLength)))
-	backgroundIsVideo.value = type !== null
-	backgroundUrl.value = bytes.byteLength
-		? URL.createObjectURL(new Blob([bytes], type ? { type } : undefined))
-		: null
+	const info = await invoke<BackgroundInfo | null>('plugin:noctrinth-background|background_get')
+	backgroundIsVideo.value = info?.is_video ?? false
+	backgroundUrl.value = info ? `${convertFileSrc(info.path)}?v=${info.revision}` : null
 }
 
 export function isBackgroundFile(path: string): boolean {
@@ -82,14 +68,30 @@ export async function chooseBackground(): Promise<boolean> {
 
 export async function clearBackground(): Promise<void> {
 	await invoke('plugin:noctrinth-background|background_clear')
-	await loadBackground(backgroundBlur.value)
+	backgroundUrl.value = null
+	backgroundIsVideo.value = false
+}
+
+let pendingSettingsWrite: Promise<void> = Promise.resolve()
+
+function patchBackgroundSettings(patch: {
+	background_blur?: boolean
+	background_dim?: number
+}): Promise<void> {
+	const next = pendingSettingsWrite.then(async () => {
+		const current = await getSettings()
+		await setSettings({ ...current, ...patch })
+	})
+	pendingSettingsWrite = next.catch(() => {})
+	return next
 }
 
 export async function saveBackgroundBlur(blur: boolean): Promise<void> {
 	backgroundBlur.value = blur
-	await setSettings({ ...(await getSettings()), background_blur: blur })
+	await patchBackgroundSettings({ background_blur: blur })
 }
 
 export async function saveBackgroundDim(dim: number): Promise<void> {
-	await setSettings({ ...(await getSettings()), background_dim: dim })
+	backgroundDim.value = dim
+	await patchBackgroundSettings({ background_dim: dim })
 }

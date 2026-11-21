@@ -222,9 +222,9 @@ const messages = defineMessages({
 					{{ formatMessage(messages.modernJavaBeta) }}
 				</span>
 			</h2>
-			<div class="flex gap-3 items-start p-4 bg-bg rounded-2xl">
+			<div class="flex gap-3 items-start p-4 rounded-2xl border border-solid border-surface-5 bg-surface-3">
 				<div
-					class="w-10 h-10 flex items-center justify-center rounded-full bg-button-bg border-solid border-[1px] border-button-border p-2 mt-1 shrink-0 [&_svg]:h-full [&_svg]:w-full"
+					class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-4 border border-solid border-surface-5 p-2 mt-1 shrink-0 [&_svg]:h-full [&_svg]:w-full"
 				>
 					<RocketIcon />
 				</div>
@@ -268,7 +268,8 @@ const messages = defineMessages({
 							<Button
 								v-for="major in modernJava.java_majors"
 								:key="major"
-								:color="major === activeJavaMajor ? 'primary' : undefined"
+								:type="major === activeJavaMajor ? 'colored' : 'base'"
+								:color="major === activeJavaMajor ? 'brand' : undefined"
 								:disabled="modernJavaBusy"
 								@click="selectJavaMajor(major)"
 							>
@@ -285,7 +286,8 @@ const messages = defineMessages({
 					<div class="flex gap-2 mt-1">
 						<Button
 							v-if="!modernJava.installed"
-							color="primary"
+							type="colored"
+							color="brand"
 							:disabled="modernJavaBusy"
 							@click="applyModernJava(install_modern_java)"
 						>

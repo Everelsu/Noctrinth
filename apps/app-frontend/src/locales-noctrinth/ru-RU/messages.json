@@ -2411,8 +2411,14 @@
 	"noctrinth.settings.appearance.show-hosting": {
 		"message": "Показывать Modrinth Hosting в боковой панели"
 	},
+	"noctrinth.settings.appearance.show-hosting.description": {
+		"message": "Показывать кнопку в левой боковой панели для перехода к Modrinth Hosting."
+	},
 	"noctrinth.settings.appearance.show-sidebar-news": {
 		"message": "Показывать новости в боковой панели"
+	},
+	"noctrinth.settings.appearance.show-sidebar-news.description": {
+		"message": "Показывать последние новости Noctrinth и Modrinth в правой боковой панели."
 	},
 	"noctrinth.news.noctrinth-news": {
 		"message": "Новости Noctrinth"

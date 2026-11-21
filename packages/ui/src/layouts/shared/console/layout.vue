@@ -30,7 +30,36 @@
 					wrapper-class="flex-1"
 					size="medium"
 					clearable
-				/>
+					@keydown.enter.prevent="handleSearchEnter"
+				>
+					<template v-if="activeSearchQuery()" #trailing>
+						<div class="flex items-center gap-1 pr-1 text-xs text-secondary tabular-nums">
+							<span>
+								{{
+									searchMatchRows.length > 0
+										? `${activeSearchMatchIndex + 1} / ${searchMatchRows.length}`
+										: '0 / 0'
+								}}
+							</span>
+							<button
+								type="button"
+								class="flex size-6 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent p-0 text-secondary transition-colors hover:bg-surface-4 hover:text-contrast disabled:cursor-not-allowed disabled:opacity-40"
+								:disabled="searchMatchRows.length === 0"
+								@click="jumpToSearchMatch(-1)"
+							>
+								<ChevronUpIcon class="size-4" aria-hidden="true" />
+							</button>
+							<button
+								type="button"
+								class="flex size-6 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent p-0 text-secondary transition-colors hover:bg-surface-4 hover:text-contrast disabled:cursor-not-allowed disabled:opacity-40"
+								:disabled="searchMatchRows.length === 0"
+								@click="jumpToSearchMatch(1)"
+							>
+								<ChevronDownIcon class="size-4" aria-hidden="true" />
+							</button>
+						</div>
+					</template>
+				</Input>
 				<div v-if="ctx.logSources?.value && ctx.activeLogSourceIndex" class="w-[220px]">
 					<Combobox
 						:model-value="ctx.activeLogSourceIndex.value"
@@ -45,11 +74,14 @@
 				<ConsoleFilterPills
 					v-model="activeFilters"
 					:present-levels="presentLevels"
+					:level-counts="levelCounts"
 					@toggle="handleFilterToggle"
 				/>
 				<ConsoleActionButtons
 					:show-clear="isLiveSource"
 					:has-logs="hasLogs"
+					:show-open-file="ctx.onOpenFile != null"
+					:open-file-label="resolvedOpenFileLabel"
 					:share-disabled="resolvedShareDisabled"
 					:sharing="isSharing"
 					:fullscreen="isFullscreen"
@@ -59,6 +91,7 @@
 					:delete-disabled="resolvedDeleteDisabled"
 					:delete-disabled-tooltip="ctx.deleteDisabledTooltip"
 					@clear="handleClear"
+					@open-file="handleOpenFile"
 					@share="handleShare"
 					@toggle-fullscreen="toggleFullscreen"
 					@delete="handleDelete"
@@ -125,9 +158,9 @@
 </template>
 
 <script setup lang="ts">
-import { SearchIcon, TrashIcon, XIcon } from '@modrinth/assets'
+import { ChevronDownIcon, ChevronUpIcon, SearchIcon, TrashIcon, XIcon } from '@modrinth/assets'
 import type { Terminal } from '@xterm/xterm'
-import { computed, isRef, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, isRef, nextTick, onActivated, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import Admonition from '#ui/components/base/Admonition.vue'
 import BaseTerminal from '#ui/components/base/BaseTerminal.vue'
@@ -338,6 +371,74 @@ const resolvedClearDisabledTooltip = computed(() =>
 	resolvedClearDisabled.value ? unwrapMaybeRef(ctx.clearDisabledTooltip) : undefined,
 )
 
+const resolvedOpenFileLabel = computed(() => unwrapMaybeRef(ctx.openFileLabel))
+
+const levelCounts = computed(() => {
+	let error = 0
+	let warn = 0
+	for (const line of ctx.logLines.value) {
+		if (line.level === 'error') error++
+		else if (line.level === 'warn') warn++
+	}
+	return { error, warn }
+})
+
+const searchMatchRows = ref<number[]>([])
+const activeSearchMatchIndex = ref(0)
+
+function refreshSearchMatches(scrollToCurrent = false) {
+	const term = terminalRef.value?.terminal
+	const query = activeSearchQuery()
+	if (!term || !query) {
+		searchMatchRows.value = []
+		activeSearchMatchIndex.value = 0
+		return
+	}
+	const buffer = term.buffer.active
+	const rows: number[] = []
+	for (let row = 0; row < buffer.length; row++) {
+		const line = buffer.getLine(row)
+		if (!line) continue
+		if (line.translateToString(true).toLowerCase().includes(query)) {
+			rows.push(row)
+		}
+	}
+	searchMatchRows.value = rows
+	if (rows.length === 0) {
+		activeSearchMatchIndex.value = 0
+		return
+	}
+	if (activeSearchMatchIndex.value >= rows.length) {
+		activeSearchMatchIndex.value = 0
+	}
+	if (scrollToCurrent) {
+		scrollToSearchMatch(activeSearchMatchIndex.value)
+	}
+}
+
+function scrollToSearchMatch(index: number) {
+	const term = terminalRef.value?.terminal
+	const targetRow = searchMatchRows.value[index]
+	if (!term || targetRow === undefined) return
+	term.scrollToLine(Math.max(0, targetRow - Math.floor(term.rows / 3)))
+}
+
+function jumpToSearchMatch(delta: number) {
+	const total = searchMatchRows.value.length
+	if (total === 0) return
+	activeSearchMatchIndex.value = (activeSearchMatchIndex.value + delta + total) % total
+	scrollToSearchMatch(activeSearchMatchIndex.value)
+}
+
+function handleSearchEnter(event: KeyboardEvent) {
+	if (!activeSearchQuery()) return
+	jumpToSearchMatch(event.shiftKey ? -1 : 1)
+}
+
+function handleOpenFile() {
+	void ctx.onOpenFile?.()
+}
+
 function handleTerminalReady(_terminal: Terminal) {
 	rewriteFiltered()
 }
@@ -358,15 +459,21 @@ function rewriteFiltered(callback?: () => void) {
 	if (resolvedLoading.value && lines.length === 0 && isLiveSource.value) {
 		terminalRef.value?.clearEmptyState()
 		lastWrittenIndex = 0
+		searchMatchRows.value = []
 		return
 	}
 	if (lines.length === 0 && isLiveSource.value) {
 		writeEmptyState()
+		searchMatchRows.value = []
 		return
 	}
 	terminalRef.value?.clearEmptyState()
 	const predicate = buildCombinedPredicate()
-	rewriteTerminal(term, lines, predicate, activeSearchQuery(), callback)
+	const hasQuery = !!activeSearchQuery()
+	rewriteTerminal(term, lines, predicate, activeSearchQuery(), () => {
+		refreshSearchMatches(hasQuery && !callback)
+		callback?.()
+	})
 	lastWrittenIndex = lines.length
 }
 
@@ -410,6 +517,7 @@ watch(ctx.logLines, (lines, oldLines) => {
 	if (!term) return
 
 	if (lines.length === 0 && isLiveSource.value) {
+		searchMatchRows.value = []
 		if (resolvedLoading.value) {
 			terminalRef.value?.clearEmptyState()
 			lastWrittenIndex = 0
@@ -454,12 +562,16 @@ watch(ctx.logLines, (lines, oldLines) => {
 		const version = getHighlightVersion(term)
 		term.write(data, () => {
 			highlightAppendedRange(term, fromRow, version)
+			if (activeSearchQuery()) {
+				refreshSearchMatches(false)
+			}
 		})
 	}
 	lastWrittenIndex = lines.length
 })
 
 watch(searchQuery, () => {
+	activeSearchMatchIndex.value = 0
 	if (searchDebounce) clearTimeout(searchDebounce)
 	searchDebounce = setTimeout(async () => {
 		try {
@@ -570,6 +682,11 @@ async function handleShare() {
 		isSharing.value = false
 	}
 }
+onActivated(() => {
+	nextTick(() => {
+		terminalRef.value?.fit()
+	})
+})
 </script>
 
 <style>

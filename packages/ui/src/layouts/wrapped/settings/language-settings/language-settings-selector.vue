@@ -110,7 +110,9 @@ const $locales = computed(() => {
 		})
 	}
 
-	return result.sort((a, b) => (b.coverage?.percentage ?? -1) - (a.coverage?.percentage ?? -1))
+	return result.sort(
+		(a, b) => (b.coverage?.translationCoverage ?? -1) - (a.coverage?.translationCoverage ?? -1),
+	)
 })
 
 const $query = ref('')
@@ -192,7 +194,7 @@ function showTranslatedName(loc: LocaleInfo): boolean {
 
 function getItemLabel(loc: LocaleInfo) {
 	const coverageLabel = loc.coverage
-		? `. ${formatMessage(messages.coverageLabel, { percentage: loc.coverage.percentage })}`
+		? `. ${formatMessage(messages.coverageLabel, { percentage: loc.coverage.translationCoverage })}`
 		: ''
 	const translatedName = showTranslatedName(loc) ? `. ${loc.translatedName}` : ''
 	return `${loc.displayName}${translatedName}${coverageLabel}`
@@ -203,7 +205,7 @@ function getCoverageTooltip(coverage: LanguageCoverageStats): string {
 		props.product === 'app' ? messages.appCoverageTooltip : messages.websiteCoverageTooltip
 
 	return formatMessage(message, {
-		percentage: coverage.percentage,
+		percentage: coverage.translationCoverage,
 	})
 }
 
@@ -289,9 +291,9 @@ function getCategoryName(category: Category): string {
 						<span
 							v-if="loc.coverage"
 							v-tooltip="getCoverageTooltip(loc.coverage)"
-							class="ml-auto shrink-0 text-xs font-normal text-secondary sm:text-sm"
+							class="ml-auto shrink-0 text-xs font-normal text-secondary sm:text-sm tabular-nums"
 						>
-							{{ loc.coverage.percentage }}%
+							{{ loc.coverage.translationCoverage }}%
 						</span>
 					</CheckCircleButton>
 				</template>

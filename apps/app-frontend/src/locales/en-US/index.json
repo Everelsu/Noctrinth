@@ -569,6 +569,15 @@
   "app.crash-modal.status": {
     "message": "Exit status: {status}"
   },
+  "app.crash.copied-line": {
+    "message": "Copied"
+  },
+  "app.crash.copy-line": {
+    "message": "Copy line"
+  },
+  "app.crash.details": {
+    "message": "Details"
+  },
   "app.crash.disable-mod": {
     "message": "Disable {mod}"
   },
@@ -587,8 +596,26 @@
   "app.crash.header-note": {
     "message": "Worth knowing about this run"
   },
+  "app.crash.hide-details": {
+    "message": "Collapse"
+  },
   "app.crash.hide-evidence": {
     "message": "Hide the line"
+  },
+  "app.crash.other-causes": {
+    "message": "Other possible causes ({count})"
+  },
+  "app.crash.primary-cause": {
+    "message": "Most likely cause"
+  },
+  "app.crash.severity.critical": {
+    "message": "Critical"
+  },
+  "app.crash.severity.note": {
+    "message": "Note"
+  },
+  "app.crash.severity.warning": {
+    "message": "Warning"
   },
   "app.crash.memory-hint": {
     "message": "It had {current} GB for {mods} mods. {gb} GB is what a pack this size usually needs, and this computer has it to spare."
@@ -6418,6 +6445,12 @@
   },
   "noctrinth.news.noctrinth-news": {
     "message": "Noctrinth News"
+  },
+  "noctrinth.instance.logs.open-file": {
+    "message": "Open file"
+  },
+  "noctrinth.instance.logs.open-folder": {
+    "message": "Logs folder"
   },
   "noctrinth.quick-search.discover": {
     "message": "Not installed yet"

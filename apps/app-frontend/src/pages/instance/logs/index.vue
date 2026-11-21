@@ -11,7 +11,8 @@
 			:instance-id="instanceId"
 			:findings="localFindings"
 			:on-open-settings="instancePage.openSettings"
-			@dismiss="localFindings = []"
+			collapsible
+			@dismiss="dismissLocalFindings"
 		/>
 		<!--
 			One console is two games talking over each other once an instance is
@@ -40,8 +41,10 @@ import NoctrinthCrashDiagnosis from '@/components/ui/NoctrinthCrashDiagnosis.vue
 import { useAppEvent } from '@/composables/use-app-event'
 import { useInstanceConsole } from '@/composables/useInstanceConsole'
 import { useHistoricalLog } from '@/features/instances/logs/use-historical-log'
+import { get_full_path } from '@/helpers/instance'
 import { delete_logs_by_filename } from '@/helpers/logs.js'
 import { analyzeInstanceCrash } from '@/helpers/noctrinth-crash'
+import { highlightInFolder, openPath } from '@/helpers/utils.js'
 
 import { injectInstancePage } from '../instance-context'
 import { instanceKeys, instanceProcessesQueryOptions } from '../query-options'
@@ -51,6 +54,8 @@ const { formatMessage } = useVIntl()
 const messages = defineMessages({
 	liveLog: { id: 'app.instance.logs.live', defaultMessage: 'Live Log' },
 	unknownLog: { id: 'app.instance.logs.unknown-file', defaultMessage: 'Unknown' },
+	openLogFile: { id: 'noctrinth.instance.logs.open-file', defaultMessage: 'Open file' },
+	openLogsFolder: { id: 'noctrinth.instance.logs.open-folder', defaultMessage: 'Logs folder' },
 })
 
 const client = injectModrinthClient()
@@ -162,6 +167,28 @@ watchEffect(() => {
 const crashAnalysis = ref(null)
 
 const localFindings = ref([])
+const currentDiagnosisFingerprint = ref(null)
+
+function diagnosisFingerprint(diagnosis) {
+	const latestModified = diagnosis.sources.reduce((max, s) => Math.max(max, s.modified || 0), 0)
+	const rules = diagnosis.findings.map((f) => f.rule).join(',')
+	return `${latestModified}:${rules}`
+}
+
+function dismissedCrashKey() {
+	return `noctrinth:dismissed-crash:${instanceId.value}`
+}
+
+function dismissLocalFindings() {
+	if (isLive.value && currentDiagnosisFingerprint.value) {
+		try {
+			localStorage.setItem(dismissedCrashKey(), currentDiagnosisFingerprint.value)
+		} catch {
+			// Ignore storage quota errors
+		}
+	}
+	localFindings.value = []
+}
 
 /**
  * Reads what the instance left on disk: the crash report, the JVM error file
@@ -170,6 +197,21 @@ const localFindings = ref([])
  */
 async function diagnoseInstance() {
 	const diagnosis = await analyzeInstanceCrash(instanceId.value)
+	if (!diagnosis.findings.length) {
+		currentDiagnosisFingerprint.value = null
+		localFindings.value = []
+		return
+	}
+	const fingerprint = diagnosisFingerprint(diagnosis)
+	currentDiagnosisFingerprint.value = fingerprint
+	try {
+		if (localStorage.getItem(dismissedCrashKey()) === fingerprint) {
+			localFindings.value = []
+			return
+		}
+	} catch {
+		// Ignore storage access errors
+	}
 	localFindings.value = diagnosis.findings
 }
 
@@ -217,6 +259,35 @@ async function deleteSelectedLog() {
 	selectedLogIndex.value = 0
 }
 
+const openFileLabel = computed(() =>
+	formatMessage(isLive.value ? messages.openLogsFolder : messages.openLogFile),
+)
+
+async function openSelectedLog() {
+	try {
+		const instancePath = await get_full_path(instanceId.value)
+		const log = selectedLog.value
+		if (log && !log.live && log.filename) {
+			const folder = log.log_type === 'crash_report' ? 'crash-reports' : 'logs'
+			const filePath = `${instancePath}/${folder}/${log.filename}`
+			try {
+				await openPath(filePath)
+			} catch {
+				await highlightInFolder(filePath)
+			}
+			return
+		}
+		const logsFolder = `${instancePath}/logs`
+		try {
+			await openPath(logsFolder)
+		} catch {
+			await openPath(instancePath)
+		}
+	} catch (error) {
+		handleError(error)
+	}
+}
+
 provideConsoleManager({
 	logLines,
 	logSources,
@@ -231,6 +302,8 @@ provideConsoleManager({
 		if (!isLive.value) return
 		void clearLive()
 	},
+	onOpenFile: openSelectedLog,
+	openFileLabel,
 	onDelete: deleteSelectedLog,
 	deleteDisabled,
 	deleteDisabledTooltip: 'Cannot delete latest.log while the instance is running',
@@ -277,6 +350,8 @@ useAppEvent('process', async (e) => {
 	void processesQuery.refetch()
 	if (e.event === 'launched') {
 		liveConsole.clear()
+		localFindings.value = []
+		currentDiagnosisFingerprint.value = null
 		invalidate()
 		void historicalLogsQuery.refetch()
 		selectedLogIndex.value = 0

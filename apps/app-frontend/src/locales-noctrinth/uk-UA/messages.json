@@ -1,0 +1,2369 @@
+{
+	"app.account-provider.description": {
+		"message": "З якого акаунта ви граєте?"
+	},
+	"app.account-provider.ely": {
+		"message": "Акаунт Ely.by"
+	},
+	"app.account-provider.ely-hint": {
+		"message": "Для серверів, які приймають Ely.by."
+	},
+	"app.account-provider.header": {
+		"message": "Додати акаунт"
+	},
+	"app.account-provider.microsoft": {
+		"message": "Акаунт Microsoft"
+	},
+	"app.account-provider.microsoft-hint": {
+		"message": "Акаунт Minecraft, придбаний у Mojang."
+	},
+	"app.account-provider.offline": {
+		"message": "Офлайн-акаунт"
+	},
+	"app.account-provider.offline-hint": {
+		"message": "Просто нікнейм. Одиночна гра та сервери в офлайн-режимі."
+	},
+	"app.account.collections": {
+		"message": "Колекції"
+	},
+	"app.account.notifications": {
+		"message": "Сповіщення"
+	},
+	"app.action-bar.install.inspect-details": {
+		"message": "Переглянути деталі"
+	},
+	"app.appearance-settings.accent-tint.description": {
+		"message": "Надає сірим елементам застосунку — фонам і панелям — легкого відтінку цього ж кольору. Акцент, бічна панель і смуга завантаження в будь-якому разі слідують за обраним стилем."
+	},
+	"app.appearance-settings.accent-tint.title": {
+		"message": "Тонувати також фон"
+	},
+	"app.appearance-settings.accent.custom": {
+		"message": "Власний"
+	},
+	"app.appearance-settings.accent.custom.brightness": {
+		"message": "Яскравість"
+	},
+	"app.appearance-settings.accent.custom.hex": {
+		"message": "HEX-колір"
+	},
+	"app.appearance-settings.accent.custom.wheel": {
+		"message": "Відтінок і насиченість"
+	},
+	"app.appearance-settings.accent.description": {
+		"message": "Колір, яким виділено інтерфейс. На світлих темах він глибший, а на темних — яскравіший."
+	},
+	"app.appearance-settings.accent.ember": {
+		"message": "Жар"
+	},
+	"app.appearance-settings.accent.lantern": {
+		"message": "Ліхтар"
+	},
+	"app.appearance-settings.accent.midnight": {
+		"message": "Північ"
+	},
+	"app.appearance-settings.accent.nightshade": {
+		"message": "Паслін"
+	},
+	"app.appearance-settings.accent.rose": {
+		"message": "Троянда"
+	},
+	"app.appearance-settings.accent.theme": {
+		"message": "Тема"
+	},
+	"app.appearance-settings.accent.title": {
+		"message": "Колір акценту"
+	},
+	"app.appearance-settings.accent.verdant": {
+		"message": "Смарагд"
+	},
+	"app.appearance-settings.font.custom": {
+		"message": "Власний"
+	},
+	"app.appearance-settings.font.custom.none": {
+		"message": "Встановленого шрифту з такою назвою не знайдено"
+	},
+	"app.appearance-settings.font.custom.placeholder": {
+		"message": "Виберіть шрифт, встановлений на цьому комп’ютері"
+	},
+	"app.appearance-settings.font.custom.search": {
+		"message": "Пошук шрифтів"
+	},
+	"app.appearance-settings.font.default": {
+		"message": "Inter"
+	},
+	"app.appearance-settings.font.default.badge": {
+		"message": "Типовий"
+	},
+	"app.appearance-settings.font.description": {
+		"message": "Шрифт інтерфейсу застосунку. Символи, яких немає в обраному шрифті, відображатимуться шрифтом Inter."
+	},
+	"app.appearance-settings.font.minecraft": {
+		"message": "Minecraft"
+	},
+	"app.appearance-settings.font.system": {
+		"message": "Системний"
+	},
+	"app.appearance-settings.font.title": {
+		"message": "Шрифт інтерфейсу"
+	},
+	"app.browse.source.label": {
+		"message": "Де шукати"
+	},
+	"app.changelog.author": {
+		"message": "Автор"
+	},
+	"app.changelog.installed": {
+		"message": "Встановлено"
+	},
+	"app.changelog.modrinth-note": {
+		"message": "Показано останні випуски. Повний список змін Modrinth App доступний на їхньому вебсайті."
+	},
+	"app.changelog.noctrinth-note": {
+		"message": "Повний список змін Noctrinth також доступний онлайн."
+	},
+	"app.changelog.open-modrinth": {
+		"message": "Відкрити список змін Modrinth"
+	},
+	"app.changelog.open-noctrinth": {
+		"message": "Відкрити список змін Noctrinth"
+	},
+	"app.changelog.source.modrinth": {
+		"message": "Modrinth"
+	},
+	"app.changelog.source.noctrinth": {
+		"message": "Noctrinth"
+	},
+	"app.changelog.support": {
+		"message": "Підтримати на Boosty"
+	},
+	"app.collection.create.created": {
+		"message": "Колекцію створено"
+	},
+	"app.collection.create.created.detail": {
+		"message": "Створено «{name}»."
+	},
+	"app.collection.create.header": {
+		"message": "Створення колекції"
+	},
+	"app.collection.create.name": {
+		"message": "Назва"
+	},
+	"app.collection.create.name.placeholder": {
+		"message": "Введіть назву колекції..."
+	},
+	"app.collection.create.submit": {
+		"message": "Створити колекцію"
+	},
+	"app.collection.create.submitting": {
+		"message": "Створення..."
+	},
+	"app.collection.create.summary": {
+		"message": "Короткий опис"
+	},
+	"app.collection.create.summary.hint": {
+		"message": "Одне-два речення, що описують вашу колекцію."
+	},
+	"app.collection.create.summary.placeholder": {
+		"message": "Це колекція..."
+	},
+	"app.collection.create.visibility-note": {
+		"message": "Вашу нову колекцію буде створено як публічну з {count, plural, =0 {нулем проєктів} one {# проєктом} few {# проєктами} many {# проєктами} other {# проєктами}}."
+	},
+	"app.collection.delete-modal.description": {
+		"message": "Цю колекцію буде видалено назавжди. Цю дію неможливо скасувати."
+	},
+	"app.collection.delete-modal.title": {
+		"message": "Ви впевнені, що хочете видалити цю колекцію?"
+	},
+	"app.collection.edit.description": {
+		"message": "Опис"
+	},
+	"app.collection.edit.header": {
+		"message": "Редагування колекції"
+	},
+	"app.collection.edit.saving": {
+		"message": "Збереження..."
+	},
+	"app.collection.edit.title": {
+		"message": "Назва"
+	},
+	"app.collection.edit.visibility": {
+		"message": "Видимість"
+	},
+	"app.collection.save-button.create": {
+		"message": "Створити нову колекцію"
+	},
+	"app.collection.save-button.empty": {
+		"message": "У вас ще немає жодної колекції."
+	},
+	"app.collection.save-button.loading": {
+		"message": "Завантаження колекцій..."
+	},
+	"app.collection.save-button.no-matches": {
+		"message": "Жодна колекція не відповідає вашому пошуку."
+	},
+	"app.collection.save-button.save": {
+		"message": "Зберегти до колекції"
+	},
+	"app.collection.save-button.save-tooltip": {
+		"message": "Зберегти"
+	},
+	"app.collection.save-button.saved": {
+		"message": "Збережено до колекції"
+	},
+	"app.collection.save-button.saved-tooltip": {
+		"message": "Збережено"
+	},
+	"app.collection.save-button.search": {
+		"message": "Пошук..."
+	},
+	"app.collection.save-button.sign-in": {
+		"message": "Увійдіть у Modrinth, щоб зберігати проєкти."
+	},
+	"app.collection.visibility.listed": {
+		"message": "Публічна"
+	},
+	"app.collection.visibility.private": {
+		"message": "Приватна"
+	},
+	"app.collection.visibility.unlisted": {
+		"message": "За посиланням"
+	},
+	"app.content-install.curseforge.missing-dependencies.text": {
+		"message": "Для них немає версії під цей примірник, тому їх потрібно додати іншим способом: {names}"
+	},
+	"app.content-install.curseforge.missing-dependencies.title": {
+		"message": "Встановлено без частини залежностей"
+	},
+	"app.crash-modal.close": {
+		"message": "Закрити"
+	},
+	"app.crash-modal.header": {
+		"message": "Примірник {instance} аварійно завершився"
+	},
+	"app.crash-modal.nothing-found": {
+		"message": "Лаунчеру не вдалося розпізнати причину. Подробиці є в журналі, і звідти ним можна поділитися."
+	},
+	"app.crash-modal.open-logs": {
+		"message": "Відкрити журнали"
+	},
+	"app.crash-modal.status": {
+		"message": "Код виходу: {status}"
+	},
+	"app.crash.copied-line": {
+		"message": "Скопійовано"
+	},
+	"app.crash.copy-line": {
+		"message": "Копіювати рядок"
+	},
+	"app.crash.details": {
+		"message": "Деталі"
+	},
+	"app.crash.disable-mod": {
+		"message": "Вимкнути {mod}"
+	},
+	"app.crash.dismiss": {
+		"message": "Приховати"
+	},
+	"app.crash.found-in": {
+		"message": "У файлі {file}"
+	},
+	"app.crash.game-said": {
+		"message": "Гра повідомила: {description}"
+	},
+	"app.crash.header-count": {
+		"message": "{count, plural, one {Лаунчер знайшов імовірну причину} few {Лаунчер знайшов # імовірні причини} many {Лаунчер знайшов # імовірних причин} other {Лаунчер знайшов # імовірних причин}}"
+	},
+	"app.crash.header-note": {
+		"message": "Варто знати про цей запуск"
+	},
+	"app.crash.hide-details": {
+		"message": "Згорнути"
+	},
+	"app.crash.hide-evidence": {
+		"message": "Сховати рядок"
+	},
+	"app.crash.memory-hint": {
+		"message": "Було виділено {current} ГБ на {mods} модів. Для збірки такого розміру зазвичай потрібно {gb} ГБ, і на цьому комп’ютері є вільна пам’ять."
+	},
+	"app.crash.memory-set": {
+		"message": "Пам’ять змінено на {gb} ГБ"
+	},
+	"app.crash.mod-disabled": {
+		"message": "Мод {mod} вимкнено"
+	},
+	"app.crash.open-folder": {
+		"message": "Відкрити папку примірника"
+	},
+	"app.crash.open-settings": {
+		"message": "Відкрити налаштування"
+	},
+	"app.crash.other-causes": {
+		"message": "Інші можливі причини ({count})"
+	},
+	"app.crash.primary-cause": {
+		"message": "Найімовірніша причина"
+	},
+	"app.crash.rule.broken-mod-file.fix": {
+		"message": "Це нечитабельний архів — завантаження обірвалося. Вимкніть його та завантажте знову."
+	},
+	"app.crash.rule.broken-mod-file.title": {
+		"message": "Файл {mod_file} пошкоджено"
+	},
+	"app.crash.rule.chunk-unreadable.fix": {
+		"message": "Спершу зробіть резервну копію світу. Один пошкоджений файл регіону можна видалити й перегенерувати, втративши лише те, що було збудовано в ньому."
+	},
+	"app.crash.rule.chunk-unreadable.title": {
+		"message": "Частину світу не вдалося прочитати (чанк {chunk})"
+	},
+	"app.crash.rule.config-file-empty.fix": {
+		"message": "Гра аварійно завершилася під час збереження. Видаліть цей файл, і мод створить його заново з типовими налаштуваннями."
+	},
+	"app.crash.rule.config-file-empty.title": {
+		"message": "Файл {file} порожній"
+	},
+	"app.crash.rule.config-truncated.fix": {
+		"message": "Гра аварійно завершилася під час збереження. Видаліть файл, зазначений у рядку нижче, і його буде створено заново з типовими налаштуваннями."
+	},
+	"app.crash.rule.config-truncated.title": {
+		"message": "Файл налаштувань порожній або обірваний"
+	},
+	"app.crash.rule.config-unreadable.fix": {
+		"message": "Видаліть цей файл і запустіть гру знову — мод створить новий із типовими налаштуваннями."
+	},
+	"app.crash.rule.config-unreadable.title": {
+		"message": "Файл налаштувань пошкоджено ({file})"
+	},
+	"app.crash.rule.connector-fabric-mod.fix": {
+		"message": "На NeoForge встановлюйте офіційну версію мода для NeoForge, якщо вона існує — у Sodium та Iris є власні офіційні збірки, і вони не працюють через Connector. На Forge 1.20.1 та старіших версіях аналогами є Embeddium та Oculus."
+	},
+	"app.crash.rule.connector-fabric-mod.title": {
+		"message": "Sinytra Connector не зміг завантажити мод для Fabric ({exception})"
+	},
+	"app.crash.rule.corrupted-archive.fix": {
+		"message": "Відновіть примірник, щоб лаунчер завантажив файл повторно. Саме так проявляється перерване завантаження."
+	},
+	"app.crash.rule.corrupted-archive.title": {
+		"message": "Файл, який гра намагалася прочитати, пошкоджений або недозавантажений"
+	},
+	"app.crash.rule.crash-description.title": {
+		"message": "Опис помилки від гри: {description}"
+	},
+	"app.crash.rule.datapack-blocked-world.fix": {
+		"message": "Мод, який додає рецепти або генерацію світу, було видалено чи змінено. Поверніть його або відкрийте світ у «безпечному режимі», щоб завантажити його без зламаного пакета даних."
+	},
+	"app.crash.rule.datapack-blocked-world.title": {
+		"message": "Світ не завантажився через помилки в пакеті даних"
+	},
+	"app.crash.rule.disk-full.fix": {
+		"message": "Звільніть трохи місця на диску, де розташований примірник, і запустіть гру знову."
+	},
+	"app.crash.rule.disk-full.title": {
+		"message": "На диску закінчилося місце"
+	},
+	"app.crash.rule.duplicate-mod-files.fix": {
+		"message": "Залиште один із цих файлів, а решту видаліть: {files}"
+	},
+	"app.crash.rule.duplicate-mod-files.title": {
+		"message": "Мод {mod_name} встановлено більше одного разу"
+	},
+	"app.crash.rule.duplicate-mods.fix": {
+		"message": "Відкрийте папку mods і залиште по одній копії кожного мода — зазвичай причиною є дві версії одного й того ж файлу."
+	},
+	"app.crash.rule.duplicate-mods.title": {
+		"message": "Один і той самий мод встановлено більше одного разу"
+	},
+	"app.crash.rule.exit-access-violation.fix": {
+		"message": "Найчастіше це драйвер відеокарти або оверлей. Оновіть драйвер, вимкніть шейдери й оверлеї та запустіть гру знову."
+	},
+	"app.crash.rule.exit-access-violation.title": {
+		"message": "Нативний код аварійно завершив гру без звіту"
+	},
+	"app.crash.rule.exit-killed-by-system.fix": {
+		"message": "На комп’ютері закінчилася оперативна пам’ять. Виділіть грі менше пам’яті або закрийте інші запущені програми."
+	},
+	"app.crash.rule.exit-killed-by-system.title": {
+		"message": "Система примусово закрила гру, щоб звільнити пам’ять"
+	},
+	"app.crash.rule.exit-missing-system-library.fix": {
+		"message": "Встановіть останню версію Microsoft Visual C++ Redistributable (x64), а потім дозвольте лаунчеру перевстановити Java для цього примірника."
+	},
+	"app.crash.rule.exit-missing-system-library.title": {
+		"message": "Java не змогла завантажити системну бібліотеку ({code})"
+	},
+	"app.crash.rule.exit-not-responding.fix": {
+		"message": "Великі збірки на певний час зависають під час завантаження світу, і клік по вікну змушує Windows запропонувати закрити гру. Не чіпайте вікно, доки йде завантаження. Якщо гра зависла назавжди, імовірно, їй забракло пам’яті."
+	},
+	"app.crash.rule.exit-not-responding.title": {
+		"message": "Windows закрила гру, оскільки вона перестала відповідати"
+	},
+	"app.crash.rule.exit-stack-buffer-overrun.fix": {
+		"message": "Зазвичай це оверлей або програма запису екрана, яка вбудовується в гру — MSI Afterburner, RivaTuner, OBS, оверлей Discord — або драйвер відеокарти. Вимкніть оверлеї та оновіть драйвер."
+	},
+	"app.crash.rule.exit-stack-buffer-overrun.title": {
+		"message": "Стороння програма, що вбудувалася в гру, спричинила збій"
+	},
+	"app.crash.rule.exit-stack-overflow.fix": {
+		"message": "Найчастіше два моди нескінченно викликають один одного. Перевірте моди, які змінювалися відтоді, як усе працювало."
+	},
+	"app.crash.rule.exit-stack-overflow.title": {
+		"message": "У грі сталося переповнення стека"
+	},
+	"app.crash.rule.fabric-missing-dependency.fix": {
+		"message": "Встановіть {dependency} або видаліть {mod_name}."
+	},
+	"app.crash.rule.fabric-missing-dependency.title": {
+		"message": "Моду {mod_name} потрібен {dependency}, який не встановлено"
+	},
+	"app.crash.rule.fabric-wrong-dependency-version.fix": {
+		"message": "Оновіть {dependency} до {requirement} або скористайтеся сумісною збіркою {mod_name}."
+	},
+	"app.crash.rule.fabric-wrong-dependency-version.title": {
+		"message": "Моду {mod_name} потрібна інша версія {dependency}"
+	},
+	"app.crash.rule.feature-order-cycle.fix": {
+		"message": "Кожен мод чекає на інший, тому правильного порядку не існує. Видаліть один із модів на генерацію світу або встановіть мод, що виправляє порядок завантаження."
+	},
+	"app.crash.rule.feature-order-cycle.title": {
+		"message": "Два моди на генерацію світу конфліктують щодо черговості"
+	},
+	"app.crash.rule.ferritecore-neighbor-table.fix": {
+		"message": "Встановіть replaceNeighborLookup = false у файлі config/ferritecore-mixin.toml, доки мод, зазначений у рядку нижче, не буде виправлено."
+	},
+	"app.crash.rule.ferritecore-neighbor-table.title": {
+		"message": "Мод конфліктує з оптимізацією пам’яті FerriteCore"
+	},
+	"app.crash.rule.file-locked.fix": {
+		"message": "Закрийте інші лаунчери та будь-які запущені копії гри, а також перевірте, чи не сканує цю папку антивірус."
+	},
+	"app.crash.rule.file-locked.title": {
+		"message": "Інша програма заблокувала один із файлів гри"
+	},
+	"app.crash.rule.forge-missing-dependency.fix": {
+		"message": "Встановіть {dependency} або видаліть {mod_id}."
+	},
+	"app.crash.rule.forge-missing-dependency.title": {
+		"message": "Моду {mod_id} потрібен {dependency}, який відсутній"
+	},
+	"app.crash.rule.gpu-driver-amd.title": {
+		"message": "Збій драйвера відеокарти AMD ({library})"
+	},
+	"app.crash.rule.gpu-driver-generic.title": {
+		"message": "Збій драйвера відеокарти"
+	},
+	"app.crash.rule.gpu-driver-intel.title": {
+		"message": "Збій драйвера відеокарти Intel ({library})"
+	},
+	"app.crash.rule.gpu-driver-nvidia.title": {
+		"message": "Збій драйвера відеокарти NVIDIA ({library})"
+	},
+	"app.crash.rule.gpu-driver.fix": {
+		"message": "Оновіть драйвер відеокарти з офіційного сайту виробника, а не через Windows Update, і вимкніть шейдери на час перевірки."
+	},
+	"app.crash.rule.heap-too-large-to-start.fix": {
+		"message": "Зменште обсяг виділеної пам’яті для цього примірника та запустіть гру знову."
+	},
+	"app.crash.rule.heap-too-large-to-start.title": {
+		"message": "Примірник запросив більше пам’яті, ніж вдалося зарезервувати ({size})"
+	},
+	"app.crash.rule.install-incomplete.fix": {
+		"message": "Завантажувач не зміг знайти сам Minecraft. Відновіть примірник, щоб лаунчер встановив його заново."
+	},
+	"app.crash.rule.install-incomplete.title": {
+		"message": "Гру або її завантажувач встановлено не повністю"
+	},
+	"app.crash.rule.integrated-gpu-in-use.fix": {
+		"message": "Якщо в цьому комп’ютері є дискретна відеокарта, гра зараз використовує повільнішу вбудовану. Лаунчер може попросити Windows перемкнутися на іншу."
+	},
+	"app.crash.rule.integrated-gpu-in-use.title": {
+		"message": "Гра працює на вбудованому графічному адаптері ({renderer})"
+	},
+	"app.crash.rule.intel-cpu-instability.fix": {
+		"message": "Настільні процесори Intel 13-го та 14-го поколінь схильні до деградації та збоїв під навантаженням. Оновіть BIOS материнської плати до версії з виправленням мікрокоду Intel; зміни в модах тут не допоможуть."
+	},
+	"app.crash.rule.intel-cpu-instability.title": {
+		"message": "Цей процесор ({model}) відомий нестабільною роботою"
+	},
+	"app.crash.rule.java-module-error.fix": {
+		"message": "Java відмовляється запускатися, коли два файли претендують на той самий модуль. Його назву вказано нижче — знайдіть, які моди містять його, і залиште новіший."
+	},
+	"app.crash.rule.java-module-error.title": {
+		"message": "Два моди містять ту саму бібліотеку ({exception})"
+	},
+	"app.crash.rule.java-too-new.fix": {
+		"message": "Старіші версії Minecraft потребують старішої Java. Дозвольте лаунчеру встановити версію, яку очікує ця гра."
+	},
+	"app.crash.rule.java-too-new.title": {
+		"message": "Ця версія Java занадто нова для гри"
+	},
+	"app.crash.rule.java-too-old.fix": {
+		"message": "Вкажіть для цього примірника встановлену Java {needs} або дозвольте лаунчеру завантажити її."
+	},
+	"app.crash.rule.java-too-old.title": {
+		"message": "Деякий компонент потребує Java {needs}, а примірник запущено на Java {has}"
+	},
+	"app.crash.rule.java-unsupported-class.fix": {
+		"message": "Змініть версію Java, яку використовує цей примірник, у його налаштуваннях."
+	},
+	"app.crash.rule.java-unsupported-class.title": {
+		"message": "Мод зібрано для новішої версії Java, ніж використана"
+	},
+	"app.crash.rule.jna-blocked.fix": {
+		"message": "Цьому заважає антивірус або тимчасова папка без прав на запис. Додайте папку лаунчера до винятків антивіруса й перевірте, чи доступний для запису каталог TEMP у Windows."
+	},
+	"app.crash.rule.jna-blocked.title": {
+		"message": "Бібліотеці не вдалося розпакуватися в тимчасову папку"
+	},
+	"app.crash.rule.jvm-itself-failed.fix": {
+		"message": "Збій усередині самої Java свідчить або про несправне обладнання, або про помилку в цій збірці Java. Спершу перевірте оперативну пам’ять; якщо вона справна, встановіть іншу версію Java для цього примірника."
+	},
+	"app.crash.rule.jvm-itself-failed.title": {
+		"message": "Збій стався в самій Java, а не у грі"
+	},
+	"app.crash.rule.jvm-problematic-frame.title": {
+		"message": "Сама Java зупинилася у фреймі {frame}"
+	},
+	"app.crash.rule.jvm-signal.title": {
+		"message": "Процес було зупинено сигналом {signal}"
+	},
+	"app.crash.rule.kubejs-datapack.fix": {
+		"message": "Цей файл створюється скриптом у папці kubejs. Виправте або видаліть цей скрипт — власні скрипти збірки зазвичай ламаються після оновлення одного з її модів."
+	},
+	"app.crash.rule.kubejs-datapack.title": {
+		"message": "Скрипт KubeJS створив пошкоджений файл пакета даних ({file})"
+	},
+	"app.crash.rule.language-provider-mismatch.fix": {
+		"message": "У рядках нижче вказано, що саме вимагалося. Оновіть завантажувач для цього примірника або встановіть версію мода для вашого завантажувача."
+	},
+	"app.crash.rule.language-provider-mismatch.title": {
+		"message": "Мод зібрано для іншої версії завантажувача"
+	},
+	"app.crash.rule.loader-suggestion.fix": {
+		"message": "{suggestion}"
+	},
+	"app.crash.rule.loader-suggestion.title": {
+		"message": "Завантажувач модів сам запропонував виправлення"
+	},
+	"app.crash.rule.missing-class-owner.fix": {
+		"message": "Очікувався {symbol}, якого немає у встановленому {owner_name}. Доповнення має відповідати версії мода, який воно розширює: оновіть обидва або поверніть {owner_name} до версії, для якої створено доповнення."
+	},
+	"app.crash.rule.missing-class-owner.title": {
+		"message": "Мод зібрано для іншої версії {owner_name}"
+	},
+	"app.crash.rule.missing-class.fix": {
+		"message": "Він шукав {symbol}, але жоден зі встановлених модів цього не має. Встановіть потрібну залежність або видаліть мод, який її вимагає."
+	},
+	"app.crash.rule.missing-class.title": {
+		"message": "Моду потрібен компонент, який не встановлено"
+	},
+	"app.crash.rule.missing-indium.fix": {
+		"message": "Sodium не включає інтерфейс рендерингу, через який малюють деякі моди, а Indium повертає його. Встановіть Indium для цієї ж версії Minecraft."
+	},
+	"app.crash.rule.missing-indium.title": {
+		"message": "Моду потрібен Indium для роботи із Sodium"
+	},
+	"app.crash.rule.missing-main-class.fix": {
+		"message": "Примірник неповний — зазвичай це наслідок перерваного встановлення. Відновіть або перевстановіть його."
+	},
+	"app.crash.rule.missing-main-class.title": {
+		"message": "Гру взагалі не вдалося запустити (відсутній {class_name})"
+	},
+	"app.crash.rule.missing-native-library.fix": {
+		"message": "Відновіть примірник. Якщо помилка повториться, перевірте, чи не відправляє антивірус файли з папки natives до карантину."
+	},
+	"app.crash.rule.missing-native-library.title": {
+		"message": "Не вдалося завантажити бібліотеку, яку гра зчитує з диска"
+	},
+	"app.crash.rule.mixin-failed.fix": {
+		"message": "Назва перед .mixins.json вказує на мод, який варто оновити або видалити першим; якщо два моди змінюють те саме місце, потрібно скоригувати цю пару."
+	},
+	"app.crash.rule.mixin-failed.title": {
+		"message": "Мод не зміг застосувати патч до гри ({config})"
+	},
+	"app.crash.rule.mixin-injection-failed.fix": {
+		"message": "Майже завжди мод, якому належить цей файл, зібрано для іншої версії гри або іншого мода. Оновіть його, а якщо версія вже актуальна — видаліть мод, із яким він конфліктує."
+	},
+	"app.crash.rule.mixin-injection-failed.title": {
+		"message": "Мод не зміг застосувати патч у потрібному місці гри ({config})"
+	},
+	"app.crash.rule.mixin-invalid-injection.fix": {
+		"message": "Перевірте моди, зазначені в рядках нижче, та оновіть їх. Якщо серед них є мод для продуктивності або рендерингу, спершу спробуйте без нього — вони змінюють найбільше коду."
+	},
+	"app.crash.rule.mixin-invalid-injection.title": {
+		"message": "Два моди змінили одну й ту саму частину гри"
+	},
+	"app.crash.rule.mod-for-other-version.fix": {
+		"message": "Він шукав {symbol}, якого немає в цій версії. Оновіть мод або скористайтеся версією, зібраною саме для цієї версії гри."
+	},
+	"app.crash.rule.mod-for-other-version.title": {
+		"message": "Мод зібрано для іншої версії Minecraft"
+	},
+	"app.crash.rule.mod-incompatible.fix": {
+		"message": "Ці два моди не можуть бути встановлені разом. Залиште той, який вам потрібен, а інший видаліть."
+	},
+	"app.crash.rule.mod-incompatible.title": {
+		"message": "Мод {mod_name} несумісний із {conflict}"
+	},
+	"app.crash.rule.mods-changed-since-working.fix": {
+		"message": "Додано: {added_count}, видалено: {removed_count}. Якщо ніщо інше тут не пояснює збій, почніть із них — список наведено в рядках нижче."
+	},
+	"app.crash.rule.mods-changed-since-working.title": {
+		"message": "Моди змінилися з моменту останнього успішного запуску цього примірника"
+	},
+	"app.crash.rule.native-allocator.fix": {
+		"message": "Майже завжди це несправна оперативна пам’ять або її розгін. Перевірте ОЗП тестом і вимкніть XMP чи EXPO в BIOS, щоб перевірити, чи зникне проблема."
+	},
+	"app.crash.rule.native-allocator.title": {
+		"message": "Менеджер пам’яті аварійно завершив процес ({library})"
+	},
+	"app.crash.rule.native-audio.fix": {
+		"message": "Зазвичай це трапляється через зміну аудіопристрою під час гри — від’єдналися навушники або заснула Bluetooth-колонка. Оновіть аудіодрайвер і задайте фіксований пристрій виведення."
+	},
+	"app.crash.rule.native-audio.title": {
+		"message": "Звукова підсистема аварійно завершила процес"
+	},
+	"app.crash.rule.native-shader-macos.fix": {
+		"message": "Пакет шейдерів, який macOS не може скомпілювати. Вимкніть шейдери — більшість пакетів написано для драйверів, яких Apple не постачає."
+	},
+	"app.crash.rule.native-shader-macos.title": {
+		"message": "Графічний шар macOS аварійно завершив процес"
+	},
+	"app.crash.rule.native-window-linux.fix": {
+		"message": "Оновіть драйвер відеокарти та Mesa. У Wayland запуск гри через XWayland зазвичай усуває більшість таких збоїв."
+	},
+	"app.crash.rule.native-window-linux.title": {
+		"message": "Системна графічна бібліотека аварійно завершила процес ({library})"
+	},
+	"app.crash.rule.neoforge-dependency-version.fix": {
+		"message": "Оновіть {dependency} до версії в цьому діапазоні або поверніть {mod_id} до версії, сумісної з вашою."
+	},
+	"app.crash.rule.neoforge-dependency-version.title": {
+		"message": "Моду {mod_id} потрібен {dependency} {expected}, але знайдено {actual}"
+	},
+	"app.crash.rule.not-a-mod-file.fix": {
+		"message": "Зазвичай це завантаження, яке зберегло вебсторінку замість файлу, або пакет ресурсів, помилково покладений у папку mods. Видаліть його й завантажте заново."
+	},
+	"app.crash.rule.not-a-mod-file.title": {
+		"message": "Файл {file} не є модом"
+	},
+	"app.crash.rule.oculus-without-embeddium.fix": {
+		"message": "Oculus працює через Embeddium і не може запуститися без нього. Встановіть Embeddium або на NeoForge використовуйте офіційні збірки Sodium та Iris замість обох."
+	},
+	"app.crash.rule.oculus-without-embeddium.title": {
+		"message": "Oculus встановлено без Embeddium"
+	},
+	"app.crash.rule.opengl-unsupported.fix": {
+		"message": "Оновіть драйвер відеокарти. На ноутбуці з двома відеокартами переконайтеся, що для гри вибрано продуктивнішу."
+	},
+	"app.crash.rule.opengl-unsupported.title": {
+		"message": "Драйвер відеокарти не зміг надати грі потрібну версію OpenGL"
+	},
+	"app.crash.rule.optifine-present.fix": {
+		"message": "OptiFine часто конфліктує з більшістю сучасних модів. Sodium з Iris або Embeddium з Oculus виконують ту саму роботу й створені для сумісності з модами."
+	},
+	"app.crash.rule.optifine-present.title": {
+		"message": "Під час збою було завантажено OptiFine"
+	},
+	"app.crash.rule.out-of-memory-heap.fix": {
+		"message": "Виділіть цьому примірнику більше пам’яті або зменште навантаження: менша дальність промальовування та менше модів на генерацію світу зазвичай дають найбільший ефект."
+	},
+	"app.crash.rule.out-of-memory-heap.title": {
+		"message": "Грі забракло виділеної пам’яті"
+	},
+	"app.crash.rule.out-of-memory-metaspace.fix": {
+		"message": "Це дуже велика збірка з малим обсягом виділеної пам’яті. Збільште обсяг пам’яті для цього примірника."
+	},
+	"app.crash.rule.out-of-memory-metaspace.title": {
+		"message": "Грі забракло місця для завантажуваного коду"
+	},
+	"app.crash.rule.out-of-memory-system.fix": {
+		"message": "Зменште обсяг пам’яті, який запитує цей примірник, або закрийте інші програми. Запит більшого обсягу, ніж доступно системі, не дає грі навіть запуститися."
+	},
+	"app.crash.rule.out-of-memory-system.title": {
+		"message": "У системі не залишилося вільної пам’яті"
+	},
+	"app.crash.rule.resource-location-invalid.fix": {
+		"message": "Minecraft приймає в таких шляхах лише малі латинські літери, цифри й кілька символів. Зазвичай причина в імені облікового запису Windows нелатинськими літерами, які потрапляють у шлях до всіх файлів. Перемістіть папку лаунчера в місце зі звичайним латинським шляхом."
+	},
+	"app.crash.rule.resource-location-invalid.title": {
+		"message": "У шлях потрапила назва, яку гра не може використати"
+	},
+	"app.crash.rule.server-config-broken.fix": {
+		"message": "Він міститься в папці serverconfig цього світу, а не в config. Видаліть файл і відкрийте світ знову — мод створить новий."
+	},
+	"app.crash.rule.server-config-broken.title": {
+		"message": "Файл налаштувань світу пошкоджено ({file})"
+	},
+	"app.crash.rule.server-thread-stuck.fix": {
+		"message": "Щось виконувалося настільки довго, що гра перестала чекати — зазвичай це генерація світу на повільному диску або зависання одного з модів у циклі. У рядках нижче вказано, що саме відбувалося."
+	},
+	"app.crash.rule.server-thread-stuck.title": {
+		"message": "Світ перестав відповідати й був зупинений"
+	},
+	"app.crash.rule.software-renderer.fix": {
+		"message": "Windows перемикається на програмний рендеринг, на якому Minecraft працювати не може. Встановіть драйвер відеокарти із сайту її виробника."
+	},
+	"app.crash.rule.software-renderer.title": {
+		"message": "Гра запускається без драйвера відеокарти ({renderer})"
+	},
+	"app.crash.rule.spark-profiler-crash.fix": {
+		"message": "Його нативний профайлер не працює на новіших версіях Java. Оновіть Spark або запускайте цей примірник на Java 21."
+	},
+	"app.crash.rule.spark-profiler-crash.title": {
+		"message": "Профайлер Spark аварійно завершив процес"
+	},
+	"app.crash.rule.suspect-mod.fix": {
+		"message": "У момент збою виконувався саме його код. Спершу оновіть його; якщо це не допоможе, вимкніть і запустіть гру знову для перевірки."
+	},
+	"app.crash.rule.suspect-mod.title": {
+		"message": "Збій стався всередині {mod_name}"
+	},
+	"app.crash.rule.suspected-mods.fix": {
+		"message": "Вимкніть ці моди по одному, щоразу перевіряючи запуск гри."
+	},
+	"app.crash.rule.suspected-mods.title": {
+		"message": "Завантажувач модів підозрює: {mods}"
+	},
+	"app.crash.rule.too-many-block-ids.fix": {
+		"message": "Старі версії Minecraft мають жорстке обмеження. Видаліть частину контент-модів або встановіть мод, що розширює цей ліміт для вашої версії."
+	},
+	"app.crash.rule.too-many-block-ids.title": {
+		"message": "У збірці закінчилися ID для блоків або предметів"
+	},
+	"app.crash.rule.wrong-jdk-apple-silicon.fix": {
+		"message": "На Mac з Apple Silicon запущено Java для Intel або навпаки. Дозвольте лаунчеру встановити Java для цього примірника замість використання вже наявної в системі."
+	},
+	"app.crash.rule.wrong-jdk-apple-silicon.title": {
+		"message": "Неправильна збірка Java для цього Mac"
+	},
+	"app.crash.set-memory": {
+		"message": "Виділити {gb} ГБ"
+	},
+	"app.crash.severity.critical": {
+		"message": "Критично"
+	},
+	"app.crash.severity.note": {
+		"message": "Примітка"
+	},
+	"app.crash.severity.warning": {
+		"message": "Попередження"
+	},
+	"app.crash.show-evidence": {
+		"message": "Показати рядок"
+	},
+	"app.crash.show-less": {
+		"message": "Показати менше"
+	},
+	"app.crash.show-more": {
+		"message": "Показати ще {count}"
+	},
+	"app.curseforge.pending.all-done": {
+		"message": "Усе встановлено"
+	},
+	"app.curseforge.pending.description": {
+		"message": "{count, plural, one {Автор цього файлу не дозволяє} few {Автори цих файлів не дозволяють} many {Автори цих файлів не дозволяють} other {Автори цих файлів не дозволяють}} лаунчерам завантажувати {count, plural, one {його} few {їх} many {їх} other {їх}}. Завантажте {count, plural, one {його} few {кожен із них} many {кожен із них} other {кожен із них}} з CurseForge, і файл автоматично підхопиться з вашої папки «Завантаження»."
+	},
+	"app.curseforge.pending.done": {
+		"message": "Готово"
+	},
+	"app.curseforge.pending.found": {
+		"message": "Встановлено"
+	},
+	"app.curseforge.pending.header": {
+		"message": "Завантажити вручну"
+	},
+	"app.curseforge.pending.open-all": {
+		"message": "Відкрити сторінки завантаження"
+	},
+	"app.curseforge.pending.open-downloads": {
+		"message": "Відкрити папку «Завантаження»"
+	},
+	"app.curseforge.pending.open-page": {
+		"message": "Завантажити"
+	},
+	"app.curseforge.pending.skip": {
+		"message": "Обійтися без цього"
+	},
+	"app.curseforge.pending.waiting": {
+		"message": "Відстежуємо вашу папку «Завантаження»…"
+	},
+	"app.curseforge.project.add-favorite": {
+		"message": "Додати до вибраного"
+	},
+	"app.curseforge.project.load-error": {
+		"message": "Не вдалося завантажити цей проєкт CurseForge."
+	},
+	"app.curseforge.project.open-on-curseforge": {
+		"message": "Відкрити на CurseForge"
+	},
+	"app.curseforge.project.remove-favorite": {
+		"message": "Видалити з вибраного"
+	},
+	"app.download-manager.rate-limited": {
+		"message": "Сервер попросив сповільнитися, продовження через {seconds, plural, one {# секунду} few {# секунди} many {# секунд} other {# секунди}}"
+	},
+	"app.error-modal.copy-debug-info": {
+		"message": "Копіювати дані налагодження"
+	},
+	"app.error-modal.debug-information": {
+		"message": "Дані налагодження"
+	},
+	"app.error-modal.directory.cancel": {
+		"message": "Скасувати зміну папки"
+	},
+	"app.error-modal.directory.generic.body": {
+		"message": "Noctrinth не може перенести дані до вибраної вами нової папки. Зверніться по допомогу до підтримки або скасуйте зміну папки."
+	},
+	"app.error-modal.directory.no-space.body": {
+		"message": "Схоже, на диску з вибраною папкою недостатньо місця. Звільніть трохи простору й спробуйте ще раз або скасуйте зміну папки."
+	},
+	"app.error-modal.directory.no-space.heading": {
+		"message": "Недостатньо місця"
+	},
+	"app.error-modal.directory.read-only.body": {
+		"message": "Схоже, Noctrinth не має прав на запис у вибрану папку. Змініть права доступу до папки й спробуйте ще раз або скасуйте зміну папки."
+	},
+	"app.error-modal.directory.read-only.heading": {
+		"message": "Змініть права доступу до папки"
+	},
+	"app.error-modal.directory.retry": {
+		"message": "Повторити зміну папки"
+	},
+	"app.error-modal.game-pass.body": {
+		"message": "Спробуйте спершу увійти через <launcher-link>офіційний Minecraft Launcher</launcher-link>. Коли закінчите, поверніться сюди й увійдіть знову!"
+	},
+	"app.error-modal.game-pass.heading": {
+		"message": "Користуєтеся PC Game Pass, перейшли з Bedrock або щойно купили гру?"
+	},
+	"app.error-modal.get-support": {
+		"message": "Отримати підтримку"
+	},
+	"app.error-modal.hosts-file.body": {
+		"message": "Noctrinth спробував підключитися до сервісів Microsoft / Xbox / Minecraft, але віддалений сервер відхилив з’єднання. Це може означати, що ці сервіси заблоковано у файлі hosts. Перегляньте <support-article>нашу статтю підтримки</support-article>, щоб дізнатися, як це виправити."
+	},
+	"app.error-modal.network.body": {
+		"message": "Схоже, у Noctrinth виникли проблеми з підключенням до серверів Microsoft. Часто це трапляється через нестабільне з’єднання, тому радимо спробувати ще раз. Якщо проблема не зникає, виконайте кроки з <support-article>нашої статті підтримки</support-article>."
+	},
+	"app.error-modal.network.heading": {
+		"message": "Проблеми з мережею"
+	},
+	"app.error-modal.no-error-message": {
+		"message": "Немає повідомлення про помилку."
+	},
+	"app.error-modal.no-loader.body": {
+		"message": "Noctrinth не вдалося знайти версію завантажувача для цього примірника."
+	},
+	"app.error-modal.no-loader.fix": {
+		"message": "Щоб вирішити це, потрібно відновити примірник. Натисніть кнопку нижче."
+	},
+	"app.error-modal.no-loader.repair": {
+		"message": "Відновити примірник"
+	},
+	"app.error-modal.other-account.body": {
+		"message": "Перевірте, чи ви увійшли в правильний акаунт. Можливо, Minecraft придбано на іншому акаунті Microsoft."
+	},
+	"app.error-modal.other-account.button": {
+		"message": "Спробувати інший акаунт"
+	},
+	"app.error-modal.other-account.heading": {
+		"message": "Спробуйте інший акаунт Microsoft"
+	},
+	"app.error-modal.service-outage.body": {
+		"message": "Сервери входу Microsoft відповіли помилкою, і Noctrinth не зміг пробитися навіть після повторних спроб. Проблема на їхньому боці й зазвичай зникає за кілька хвилин — зачекайте трохи та спробуйте знову."
+	},
+	"app.error-modal.service-outage.heading": {
+		"message": "Сервіси Microsoft недоступні"
+	},
+	"app.error-modal.state-init.body": {
+		"message": "Noctrinth не вдалося коректно завантажитися. Причиною може бути пошкоджений файл або відсутність важливих файлів застосунку."
+	},
+	"app.error-modal.state-init.fix-internet": {
+		"message": "Переконайтеся, що маєте підключення до інтернету, а потім перезапустіть застосунок."
+	},
+	"app.error-modal.state-init.fix-redownload": {
+		"message": "Завантажте застосунок повторно."
+	},
+	"app.error-modal.state-init.fixes": {
+		"message": "Ви можете спробувати виправити це одним із таких способів:"
+	},
+	"app.error-modal.support-prompt": {
+		"message": "Якщо нічого не допомагає і вам потрібна допомога, відвідайте <support-page>нашу сторінку підтримки</support-page> й почніть чат через віджет у правому нижньому куті — ми радо допоможемо! Обов’язково передайте агенту ці дані налагодження:"
+	},
+	"app.error-modal.title.directory-move": {
+		"message": "Не вдалося змінити папку застосунку"
+	},
+	"app.error-modal.title.minecraft-auth": {
+		"message": "Не вдалося увійти в Minecraft"
+	},
+	"app.error-modal.title.no-loader": {
+		"message": "Завантажувач не вибрано"
+	},
+	"app.error-modal.title.state-init": {
+		"message": "Помилка ініціалізації Noctrinth"
+	},
+	"app.error-modal.title.unknown": {
+		"message": "Сталася помилка"
+	},
+	"app.error-modal.try-signing-in-again": {
+		"message": "Спробувати увійти знову"
+	},
+	"app.export-modal.include-icon": {
+		"message": "Додати іконку примірника"
+	},
+	"app.export-modal.include-icon-hint": {
+		"message": "Зберігається як іконка збірки, яку Modrinth App та інші лаунчери показують під час її встановлення."
+	},
+	"app.hosting.title": {
+		"message": "Хостинг"
+	},
+	"app.instance.add-content.from-file": {
+		"message": "Додати з файлу"
+	},
+	"app.instance.add-content.install": {
+		"message": "Встановити вміст"
+	},
+	"app.instance.content.curseforge-pending.action": {
+		"message": "Завантажити"
+	},
+	"app.instance.content.curseforge-pending.body": {
+		"message": "Їхні автори не дозволяють лаунчерам завантажувати ці файли, і їх не знайдено ніде на цьому комп’ютері."
+	},
+	"app.instance.content.curseforge-pending.header": {
+		"message": "{count, plural, one {# файл потрібно} few {# файли потрібно} many {# файлів потрібно} other {# файлів потрібно}} завантажити вручну"
+	},
+	"app.instance.logs.live": {
+		"message": "Журнал у реальному часі"
+	},
+	"app.instance.logs.unknown-file": {
+		"message": "Невідомо"
+	},
+	"app.instance.share.members.column.joined": {
+		"message": "Приєднався"
+	},
+	"app.instance.share.members.column.method": {
+		"message": "Спосіб"
+	},
+	"app.instance.share.members.never-played": {
+		"message": "Ніколи"
+	},
+	"app.instance.share.members.search": {
+		"message": "Пошук серед {count, plural, one {# користувача} few {# користувачів} many {# користувачів} other {# користувачів}}..."
+	},
+	"app.instance.share.method.direct": {
+		"message": "Пряме запрошення"
+	},
+	"app.instance.share.method.link": {
+		"message": "Посилання для спільного доступу"
+	},
+	"app.library.search.hint": {
+		"message": "↑↓ для вибору · Tab для вставки · умови поєднуються, а - інвертує умову"
+	},
+	"app.library.search.pending": {
+		"message": "Ще зчитуємо встановлений вміст…"
+	},
+	"app.library.search.sigil.mod": {
+		"message": "за модом"
+	},
+	"app.library.search.sigil.mod.hint": {
+		"message": "Примірники з певним модом, пакетом ресурсів або шейдером"
+	},
+	"app.library.search.sigil.state": {
+		"message": "за станом"
+	},
+	"app.library.search.sigil.state.hint": {
+		"message": "Примірники із застарілим, вимкненим або пошкодженим вмістом"
+	},
+	"app.library.search.sigil.type": {
+		"message": "за типом"
+	},
+	"app.library.search.sigil.type.hint": {
+		"message": "Примірники з будь-якими модами, шейдерами, пакетами ресурсів або даних"
+	},
+	"app.library.search.state.broken": {
+		"message": "Сам примірник потребує відновлення"
+	},
+	"app.library.search.state.disabled": {
+		"message": "Щось встановлено, але вимкнено"
+	},
+	"app.library.search.state.outdated": {
+		"message": "Для встановленого вмісту є оновлення"
+	},
+	"app.library.search.type.datapack": {
+		"message": "Має пакети даних"
+	},
+	"app.library.search.type.mod": {
+		"message": "Має моди"
+	},
+	"app.library.search.type.resourcepack": {
+		"message": "Має пакети ресурсів"
+	},
+	"app.library.search.type.shader": {
+		"message": "Має шейдери"
+	},
+	"app.migration.modrinth.action.choose": {
+		"message": "Вибрати примірники"
+	},
+	"app.migration.modrinth.action.dismiss": {
+		"message": "Приховати"
+	},
+	"app.migration.modrinth.action.import-all": {
+		"message": "Імпортувати всі"
+	},
+	"app.migration.modrinth.action.importing": {
+		"message": "Імпортування..."
+	},
+	"app.migration.modrinth.description": {
+		"message": "У вашому Modrinth App знайдено {count, plural, one {# примірник} few {# примірники} many {# примірників} other {# примірників}}. Імпорт скопіює їх сюди — ваш Modrinth App залишиться недоторканим."
+	},
+	"app.migration.modrinth.title": {
+		"message": "Перенесіть свої примірники з Modrinth App"
+	},
+	"app.minecraft-auth-error.contact-support": {
+		"message": "Звернутися до підтримки"
+	},
+	"app.minecraft-auth-error.copy-debug-info": {
+		"message": "Копіювати дані налагодження"
+	},
+	"app.minecraft-auth-error.debug-information": {
+		"message": "Дані налагодження"
+	},
+	"app.minecraft-auth-error.header": {
+		"message": "Помилка входу"
+	},
+	"app.minecraft-auth-error.how-to-fix": {
+		"message": "Як це виправити"
+	},
+	"app.minecraft-auth-error.korea-adult-verification-alt.step-1": {
+		"message": "Перейдіть на <link>Xbox</link> і увійдіть"
+	},
+	"app.minecraft-auth-error.korea-adult-verification-alt.step-2": {
+		"message": "Пройдіть процедуру підтвердження особи"
+	},
+	"app.minecraft-auth-error.korea-adult-verification-alt.step-3": {
+		"message": "Після завершення спробуйте увійти знову"
+	},
+	"app.minecraft-auth-error.korea-adult-verification-alt.what": {
+		"message": "Для цього акаунта потрібне підтвердження повноліття відповідно до законодавства Південної Кореї."
+	},
+	"app.minecraft-auth-error.korea-adult-verification.step-1": {
+		"message": "Перейдіть на <link>Xbox</link> і увійдіть"
+	},
+	"app.minecraft-auth-error.korea-adult-verification.step-2": {
+		"message": "Пройдіть процедуру підтвердження особи"
+	},
+	"app.minecraft-auth-error.korea-adult-verification.step-3": {
+		"message": "Після завершення спробуйте увійти знову"
+	},
+	"app.minecraft-auth-error.korea-adult-verification.what": {
+		"message": "Для цього акаунта потрібне підтвердження повноліття відповідно до законодавства Південної Кореї."
+	},
+	"app.minecraft-auth-error.minecraft-server-error.step-1": {
+		"message": "Зачекайте кілька хвилин і спробуйте увійти знову"
+	},
+	"app.minecraft-auth-error.minecraft-server-error.step-2": {
+		"message": "Перевірте <link>Стан Xbox</link> щодо поточних збоїв сервісів"
+	},
+	"app.minecraft-auth-error.minecraft-server-error.step-3": {
+		"message": "Спробуйте увійти через <link>офіційний Minecraft Launcher</link>, щоб перевірити, чи проблема також виникає там"
+	},
+	"app.minecraft-auth-error.minecraft-server-error.step-4": {
+		"message": "Якщо сервіси працюють справно, а помилка повторюється, зверніться до підтримки з даними налагодження нижче"
+	},
+	"app.minecraft-auth-error.minecraft-server-error.what": {
+		"message": "Сервіс автентифікації Minecraft повертає серверну помилку, тому Noctrinth зараз не може завершити вхід."
+	},
+	"app.minecraft-auth-error.network.step-1": {
+		"message": "Перезапустіть Noctrinth і спробуйте увійти знову"
+	},
+	"app.minecraft-auth-error.network.step-2": {
+		"message": "Перевірте, чи працює ваше підключення до інтернету"
+	},
+	"app.minecraft-auth-error.network.step-3": {
+		"message": "Дозвольте Noctrinth доступ у брандмауері, антивірусі, проксі, VPN та правилах файлу hosts"
+	},
+	"app.minecraft-auth-error.network.step-4": {
+		"message": "Спробуйте іншу мережу або тимчасово вимкніть VPN/проксі, якщо користуєтеся ними"
+	},
+	"app.minecraft-auth-error.network.step-5": {
+		"message": "Якщо проблема в маршрутизації або DNS, інколи може допомогти сервіс на кшталт Cloudflare WARP"
+	},
+	"app.minecraft-auth-error.network.what": {
+		"message": "Noctrinth не зміг підключитися до сервісів Microsoft, Xbox або Minecraft, потрібних для входу. Зазвичай це спричинено локальною мережею, DNS, проксі, брандмауером, файлом hosts, VPN або антивірусом."
+	},
+	"app.minecraft-auth-error.no-xbox-profile.step-1": {
+		"message": "Переконайтеся, що Minecraft придбано на цьому акаунті"
+	},
+	"app.minecraft-auth-error.no-xbox-profile.step-2": {
+		"message": "Перейдіть на сторінку <link>входу в Minecraft</link> і увійдіть"
+	},
+	"app.minecraft-auth-error.no-xbox-profile.step-3": {
+		"message": "Завершіть налаштування профілю Xbox, якщо буде запропоновано"
+	},
+	"app.minecraft-auth-error.no-xbox-profile.step-4": {
+		"message": "Після завершення спробуйте увійти знову"
+	},
+	"app.minecraft-auth-error.no-xbox-profile.what": {
+		"message": "На цьому акаунті не налаштовано профіль Xbox або на ньому не придбано Minecraft."
+	},
+	"app.minecraft-auth-error.player-profile.step-1": {
+		"message": "Увійдіть через <link>офіційний Minecraft Launcher</link>"
+	},
+	"app.minecraft-auth-error.player-profile.step-2": {
+		"message": "Запустіть Minecraft: Java Edition один раз через офіційний лаунчер"
+	},
+	"app.minecraft-auth-error.player-profile.step-3": {
+		"message": "Зачекайте до години, якщо покупку або налаштування профілю виконано нещодавно"
+	},
+	"app.minecraft-auth-error.player-profile.step-4": {
+		"message": "Переконайтеся, що використовуєте акаунт Microsoft, на якому придбано Minecraft. Див. <link>Як знайти потрібний акаунт Xbox</link>"
+	},
+	"app.minecraft-auth-error.player-profile.step-5": {
+		"message": "Спробуйте знову увійти в Noctrinth"
+	},
+	"app.minecraft-auth-error.player-profile.what": {
+		"message": "Сервіси Minecraft не змогли повернути профіль Java Edition для цього акаунта. Найчастіше це трапляється, коли гру придбано нещодавно, профіль Java ще не створено до кінця або використовується інший акаунт Microsoft."
+	},
+	"app.minecraft-auth-error.refresh-token.step-1": {
+		"message": "Вийдіть із проблемного акаунта Minecraft у Noctrinth"
+	},
+	"app.minecraft-auth-error.refresh-token.step-2": {
+		"message": "Увійдіть у цей акаунт знову"
+	},
+	"app.minecraft-auth-error.refresh-token.step-3": {
+		"message": "Після завершення входу спробуйте знову запустити Minecraft"
+	},
+	"app.minecraft-auth-error.refresh-token.what": {
+		"message": "Термін дії збереженого токена входу Microsoft закінчився або його було відкликано, тому Noctrinth не може оновити вашу сесію Minecraft."
+	},
+	"app.minecraft-auth-error.region-unavailable.step-1": {
+		"message": "Сервіси Xbox мають підтримуватися у вашій країні, щоб ви могли увійти"
+	},
+	"app.minecraft-auth-error.region-unavailable.step-2": {
+		"message": "Перевірте <link>доступність Xbox</link> у підтримуваних регіонах"
+	},
+	"app.minecraft-auth-error.region-unavailable.what": {
+		"message": "Xbox Live недоступний у вашому регіоні, тому вхід заблоковано."
+	},
+	"app.minecraft-auth-error.restricted-online-play.step-1": {
+		"message": "Попросіть одного з батьків або опікуна увійти в <link>Microsoft Family</link>"
+	},
+	"app.minecraft-auth-error.restricted-online-play.step-2": {
+		"message": "Оновіть дозволи на мережеву гру"
+	},
+	"app.minecraft-auth-error.restricted-online-play.step-3": {
+		"message": "Після завершення спробуйте увійти знову"
+	},
+	"app.minecraft-auth-error.restricted-online-play.what": {
+		"message": "Цей акаунт має обмеження і не має дозволу на мережеву гру."
+	},
+	"app.minecraft-auth-error.sign-in-again": {
+		"message": "Увійти знову"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.step-1": {
+		"message": "Відкрийте системні налаштування дати й часу"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.step-2": {
+		"message": "Увімкніть автоматичне визначення часового поясу й часу, якщо доступно"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.step-3": {
+		"message": "Скористайтеся функцією синхронізації годинника в налаштуваннях системи"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.step-4": {
+		"message": "Перезапустіть Noctrinth"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.step-5": {
+		"message": "Спробуйте увійти знову"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.what": {
+		"message": "Сервіси Xbox відхилили першу відповідь входу. Найчастіше це спричинено розсинхронізацією системного годинника або часового поясу."
+	},
+	"app.minecraft-auth-error.summary": {
+		"message": "Не вдалося увійти у ваш акаунт Microsoft. Причиною можуть бути обмеження акаунта або регіональні обмеження."
+	},
+	"app.minecraft-auth-error.suspended.step-1": {
+		"message": "Перейдіть на <link>Підтримку Xbox</link> та перегляньте подробиці блокування"
+	},
+	"app.minecraft-auth-error.suspended.step-2": {
+		"message": "Подайте апеляцію, якщо вона доступна"
+	},
+	"app.minecraft-auth-error.suspended.what": {
+		"message": "Цей акаунт було призупинено за порушення стандартів спільноти Xbox."
+	},
+	"app.minecraft-auth-error.terms-not-accepted.step-1": {
+		"message": "Перейдіть на <link>Xbox</link> і увійдіть"
+	},
+	"app.minecraft-auth-error.terms-not-accepted.step-2": {
+		"message": "Прийміть Умови використання, якщо буде запропоновано"
+	},
+	"app.minecraft-auth-error.terms-not-accepted.step-3": {
+		"message": "Після завершення спробуйте увійти знову"
+	},
+	"app.minecraft-auth-error.terms-not-accepted.what": {
+		"message": "Цей акаунт не прийняв Умови надання послуг Xbox."
+	},
+	"app.minecraft-auth-error.too-many-requests.step-1": {
+		"message": "Зачекайте близько години перед наступною спробою"
+	},
+	"app.minecraft-auth-error.too-many-requests.step-2": {
+		"message": "Перезапустіть Noctrinth після очікування"
+	},
+	"app.minecraft-auth-error.too-many-requests.step-3": {
+		"message": "Спробуйте увійти ще раз"
+	},
+	"app.minecraft-auth-error.too-many-requests.step-4": {
+		"message": "Якщо з’явиться те саме повідомлення, зачекайте довше перед повтором, щоб тимчасове обмеження було знято"
+	},
+	"app.minecraft-auth-error.too-many-requests.what": {
+		"message": "Microsoft або Minecraft тимчасово заблокували запит на вхід через занадто велику кількість недавніх спроб."
+	},
+	"app.minecraft-auth-error.uk-age-verification.step-1": {
+		"message": "Перейдіть на сторінку <link>входу в Minecraft</link> і увійдіть"
+	},
+	"app.minecraft-auth-error.uk-age-verification.step-2": {
+		"message": "Дотримуйтеся інструкцій для підтвердження віку"
+	},
+	"app.minecraft-auth-error.uk-age-verification.step-3": {
+		"message": "Після підтвердження спробуйте увійти знову"
+	},
+	"app.minecraft-auth-error.uk-age-verification.step-4": {
+		"message": "Щоб отримати додаткову допомогу, відвідайте <link>Перевірка віку у Великій Британії на Xbox</link>"
+	},
+	"app.minecraft-auth-error.uk-age-verification.what": {
+		"message": "Ваш акаунт Minecraft/Xbox Live потребує підтвердження віку відповідно до законодавства Великої Британії. Необхідно пройти перевірку перед входом."
+	},
+	"app.minecraft-auth-error.underage-no-family.step-1": {
+		"message": "Ознайомтеся з <link>посібником із налаштування сімейної групи</link>"
+	},
+	"app.minecraft-auth-error.underage-no-family.step-2": {
+		"message": "Приєднайтеся до сімейної групи або створіть її відповідно до інструкції"
+	},
+	"app.minecraft-auth-error.underage-no-family.step-3": {
+		"message": "Після завершення спробуйте увійти знову"
+	},
+	"app.minecraft-auth-error.underage-no-family.what": {
+		"message": "Цей акаунт належить неповнолітньому користувачу та не прив’язаний до сімейної групи Microsoft."
+	},
+	"app.minecraft-auth-error.unknown": {
+		"message": "Невідома помилка"
+	},
+	"app.minecraft-auth-error.unknown-advice": {
+		"message": "Спробуйте перейти на сторінку <login-link>входу в Minecraft</login-link> і увійти — можливо, система підкаже необхідні кроки. Ви також можете звернутися до підтримки, щоб ми розглянули ситуацію детальніше."
+	},
+	"app.minecraft-auth-error.unknown-body": {
+		"message": "Ми не розпізнали цю помилку й не можемо порадити конкретних кроків для її вирішення."
+	},
+	"app.minecraft-auth-error.what-happened": {
+		"message": "Що, на нашу думку, сталося"
+	},
+	"app.minecraft-auth-error.xsts-authorize.step-1": {
+		"message": "Увійдіть через <link>офіційний Minecraft Launcher</link>"
+	},
+	"app.minecraft-auth-error.xsts-authorize.step-2": {
+		"message": "Виконайте всі запити від Microsoft, Xbox або Minecraft"
+	},
+	"app.minecraft-auth-error.xsts-authorize.step-3": {
+		"message": "Спробуйте знову увійти в Noctrinth"
+	},
+	"app.minecraft-auth-error.xsts-authorize.step-4": {
+		"message": "Якщо офіційний лаунчер також видає помилку, дотримуйтеся його підказок або зверніться до підтримки Xbox"
+	},
+	"app.minecraft-auth-error.xsts-authorize.what": {
+		"message": "Сервіси Xbox відхилили запит на авторизацію цього акаунта для сервісів Minecraft, але не повернули конкретне обмеження, яке розпізнає Noctrinth."
+	},
+	"app.notifications.accept": {
+		"message": "Прийняти"
+	},
+	"app.notifications.decline": {
+		"message": "Відхилити"
+	},
+	"app.notifications.error.accept": {
+		"message": "Помилка прийняття запрошення"
+	},
+	"app.notifications.error.decline": {
+		"message": "Помилка відхилення запрошення"
+	},
+	"app.notifications.error.mark-read": {
+		"message": "Помилка позначення сповіщення як прочитаного"
+	},
+	"app.notifications.invited-to-join": {
+		"message": "запрошує вас приєднатися до <target>{name}</target>."
+	},
+	"app.notifications.mark-as-read": {
+		"message": "Позначити як прочитане"
+	},
+	"app.notifications.moderator-message": {
+		"message": "Ваш проєкт <project>{title}</project> отримав {count, plural, one {повідомлення} few {повідомлення} many {повідомлень} other {повідомлення}} від модераторів."
+	},
+	"app.notifications.not-signed-in": {
+		"message": "Вхід не виконано"
+	},
+	"app.notifications.project-updated": {
+		"message": "Проєкт, на який ви підписані, <project>{title}</project>, було оновлено:"
+	},
+	"app.notifications.read-badge": {
+		"message": "Прочитано"
+	},
+	"app.notifications.received": {
+		"message": "Отримано {time}"
+	},
+	"app.notifications.status-changed": {
+		"message": "Модератори змінили статус <project>{title}</project> з <strong>{oldStatus}</strong> на <strong>{newStatus}</strong>."
+	},
+	"app.notifications.version-for": {
+		"message": "для"
+	},
+	"app.project.copy-link.copied": {
+		"message": "Посилання скопійовано до буфера обміну"
+	},
+	"app.project.sign-in-to-follow": {
+		"message": "Увійдіть, щоб підписатися"
+	},
+	"app.recover-instances.description": {
+		"message": "Шукає папки примірників, про які лаунчер не має запису — те, що лишається, коли базу даних втрачено, а самі папки вціліли."
+	},
+	"app.recover-instances.found": {
+		"message": "{count, plural, one {# папки немає в лаунчері} few {# папок немає в лаунчері} many {# папок немає в лаунчері} other {# папок немає в лаунчері}}"
+	},
+	"app.recover-instances.import": {
+		"message": "Імпортувати"
+	},
+	"app.recover-instances.imported": {
+		"message": "Примірник {name} повернуто"
+	},
+	"app.recover-instances.imported-body": {
+		"message": "Його папку не змінено. Файли версії буде завантажено під час наступного запуску."
+	},
+	"app.recover-instances.mods": {
+		"message": "{count, plural, one {# мод} few {# моди} many {# модів} other {# мода}}"
+	},
+	"app.recover-instances.none": {
+		"message": "Кожна папка там уже є примірником."
+	},
+	"app.recover-instances.scan": {
+		"message": "Просканувати папку"
+	},
+	"app.recover-instances.scanning": {
+		"message": "Сканування..."
+	},
+	"app.recover-instances.title": {
+		"message": "Примірники в папці лаунчера"
+	},
+	"app.recover-instances.unknown-version": {
+		"message": "Немає журналу чи звіту про збій, щоб визначити версію — імпортуйте вручну."
+	},
+	"app.recover-instances.worlds": {
+		"message": "{count, plural, one {# світ} few {# світи} many {# світів} other {# світу}}"
+	},
+	"app.resource-settings.proxy.description": {
+		"message": "Спрямовує весь мережевий трафік лаунчера (API Modrinth і завантаження з CDN) через проксі. Підтримуються адреси http://, https://, socks5:// та socks5h://. Корисно, якщо Modrinth недоступний у вашому регіоні. Залиште порожнім для прямого підключення. (Потрібен перезапуск застосунку)"
+	},
+	"app.resource-settings.proxy.title": {
+		"message": "Проксі"
+	},
+	"app.settings.default-instance-options.universal-skins.description": {
+		"message": "Сервери в офлайн-режимі взагалі не надсилають скіни, тому всі гравці там виглядають як Стів. Натомість скіни шукатимуться за нікнеймом через Ely.by — для зареєстрованих там гравців, і через Mojang для всіх інших. Не потребує модів і ніколи не замінює скін, який надіслав сам сервер."
+	},
+	"app.settings.default-instance-options.universal-skins.title": {
+		"message": "Скіни для всіх гравців"
+	},
+	"app.settings.feature-flags.search.placeholder": {
+		"message": "Пошук прапорців..."
+	},
+	"app.settings.java.gpu.choice.auto": {
+		"message": "На розсуд Windows"
+	},
+	"app.settings.java.gpu.choice.high-performance": {
+		"message": "Висока продуктивність"
+	},
+	"app.settings.java.gpu.choice.power-saving": {
+		"message": "Енергозбереження"
+	},
+	"app.settings.java.gpu.label": {
+		"message": "Графічний адаптер"
+	},
+	"app.settings.java.gpu.no-preference": {
+		"message": "Пріоритет не задано, тому вибирає Windows — на ноутбуці це зазвичай вбудований адаптер. Доступні: {adapters}"
+	},
+	"app.settings.java.gpu.on-high-performance": {
+		"message": "Windows запускатиме це середовище на високопродуктивному адаптері."
+	},
+	"app.settings.java.gpu.on-named-adapter": {
+		"message": "Windows запускатиме це середовище на {adapter}."
+	},
+	"app.settings.java.gpu.on-power-saving": {
+		"message": "Windows запускатиме це середовище на енергоощадному адаптері — зазвичай це вбудована графіка, що є повільним варіантом для Minecraft."
+	},
+	"app.settings.java.runtimes.delete-label": {
+		"message": "Видалити середовище"
+	},
+	"app.settings.java.runtimes.delete-tooltip": {
+		"message": "Видалити це середовище виконання"
+	},
+	"app.settings.java.runtimes.description": {
+		"message": "Версії Java, які лаунчер завантажив для вас — загалом {size}. Оновлення Java залишає попередню копію, тому з часом вони накопичуються."
+	},
+	"app.settings.java.runtimes.in-use": {
+		"message": "Використовується"
+	},
+	"app.settings.java.runtimes.in-use-tooltip": {
+		"message": "На цю версію вказує налаштування Java — спершу змініть його"
+	},
+	"app.settings.java.runtimes.remove-unused": {
+		"message": "Видалити {count} невикористаних ({size})"
+	},
+	"app.settings.java.runtimes.removed-text": {
+		"message": "Звільнено {size}."
+	},
+	"app.settings.java.runtimes.removed-title": {
+		"message": "Середовища видалено"
+	},
+	"app.settings.java.runtimes.title": {
+		"message": "Завантажені середовища виконання"
+	},
+	"app.settings.tabs.changelog": {
+		"message": "Список змін"
+	},
+	"app.settings.tabs.curseforge": {
+		"message": "CurseForge"
+	},
+	"app.skins.cape-from": {
+		"message": "Плащ від {source}"
+	},
+	"app.skins.ely.edit.texture-locked": {
+		"message": "Ely.by зберігає текстуру та її скін разом, тому цю текстуру не можна замінити. Завантажте нову текстуру як інший скін."
+	},
+	"app.skins.ely.edit.upload-new": {
+		"message": "Завантажити новий скін"
+	},
+	"app.skins.ely.my-skins.empty": {
+		"message": "Ще нічого не завантажено. Додайте скін за допомогою плитки нижче або перетягніть на неї PNG-файл."
+	},
+	"app.skins.ely.my-skins.title": {
+		"message": "Ваші скіни Ely.by"
+	},
+	"app.skins.ely.sign-in-needed.text": {
+		"message": "Для цього Ely.by вимагає входу на своєму вебсайті. Натисніть «Змінити скін на Ely.by», щоб увійти, а потім спробуйте ще раз."
+	},
+	"app.skins.ely.sign-in-needed.title": {
+		"message": "Ely.by не прийняв зміну"
+	},
+	"app.update-popup.body": {
+		"message": "Noctrinth v{version} готовий до встановлення! Перезавантажте, щоб оновитися зараз, або оновлення встановиться автоматично після закриття Noctrinth."
+	},
+	"app.update-popup.body.downloading": {
+		"message": "Noctrinth v{version} — {downloaded} із {size}"
+	},
+	"app.update-popup.body.downloading-unknown-size": {
+		"message": "Завантаження Noctrinth v{version}…"
+	},
+	"app.update-popup.downloading": {
+		"message": "Завантаження оновлення"
+	},
+	"app.window-controls.close": {
+		"message": "Закрити вікно"
+	},
+	"app.window-controls.minimize": {
+		"message": "Згорнути вікно"
+	},
+	"app.window-controls.toggle-maximize": {
+		"message": "Розгорнути / відновити вікно"
+	},
+	"collection.delete": {
+		"message": "Видалити"
+	},
+	"collection.edit": {
+		"message": "Редагувати"
+	},
+	"collection.filter.all": {
+		"message": "Усі"
+	},
+	"collection.following.description": {
+		"message": "Автоматично створена колекція всіх проєктів, на які ви підписані."
+	},
+	"collection.following.name": {
+		"message": "Відстежувані проєкти"
+	},
+	"collection.loading": {
+		"message": "Завантаження..."
+	},
+	"collection.no-followed": {
+		"message": "Ви ще не підписалися на жоден проєкт"
+	},
+	"collection.no-matching": {
+		"message": "Немає відповідних проєктів"
+	},
+	"collection.no-projects": {
+		"message": "У цій колекції немає проєктів"
+	},
+	"collection.open-on-web": {
+		"message": "Відкрити у браузері"
+	},
+	"collection.projects-count.one": {
+		"message": "проєкт"
+	},
+	"collection.projects-count.other": {
+		"message": "проєктів"
+	},
+	"collection.remove-project": {
+		"message": "Видалити проєкт"
+	},
+	"collection.remove-tooltip": {
+		"message": "Видалити з колекції"
+	},
+	"collection.removing": {
+		"message": "Видалення..."
+	},
+	"collection.search-placeholder": {
+		"message": "Пошук проєктів..."
+	},
+	"collection.sort-by": {
+		"message": "Сортувати: "
+	},
+	"collection.sort-by-name": {
+		"message": "Сортувати"
+	},
+	"collection.sort.downloads": {
+		"message": "Завантаження"
+	},
+	"collection.sort.followers": {
+		"message": "Підписники"
+	},
+	"collection.sort.name": {
+		"message": "Назва (А–Я)"
+	},
+	"collection.sort.updated": {
+		"message": "Нещодавно оновлені"
+	},
+	"collection.status.private": {
+		"message": "Приватна"
+	},
+	"collection.status.public": {
+		"message": "Публічна"
+	},
+	"collection.status.rejected": {
+		"message": "Відхилено"
+	},
+	"collection.status.unlisted": {
+		"message": "За посиланням"
+	},
+	"collection.type.datapack": {
+		"message": "Пакети даних"
+	},
+	"collection.type.mod": {
+		"message": "Моди"
+	},
+	"collection.type.modpack": {
+		"message": "Збірки"
+	},
+	"collection.type.plugin": {
+		"message": "Плагіни"
+	},
+	"collection.type.resourcepack": {
+		"message": "Пакети ресурсів"
+	},
+	"collection.type.shader": {
+		"message": "Шейдери"
+	},
+	"collection.unfollow-project": {
+		"message": "Відписатися від проєкту"
+	},
+	"collection.unfollowing": {
+		"message": "Відписка..."
+	},
+	"collection.updated-ago": {
+		"message": "Оновлено {time}"
+	},
+	"collections.create-new": {
+		"message": "Створити нову"
+	},
+	"collections.followed-projects": {
+		"message": "Відстежувані проєкти"
+	},
+	"collections.followed-projects-desc": {
+		"message": "Автоматично створена колекція всіх проєктів, на які ви підписані."
+	},
+	"collections.loading": {
+		"message": "Завантаження колекцій..."
+	},
+	"collections.no-collections": {
+		"message": "У вас ще немає жодної колекції"
+	},
+	"collections.no-collections-body": {
+		"message": "Створіть свою першу колекцію на modrinth.com, щоб почати!"
+	},
+	"collections.no-match": {
+		"message": "Жодна колекція не відповідає вашому пошуку"
+	},
+	"collections.no-match-body": {
+		"message": "Спробуйте змінити фільтри або пошуковий запит."
+	},
+	"collections.projects-count.one": {
+		"message": "проєкт"
+	},
+	"collections.projects-count.other": {
+		"message": "проєктів"
+	},
+	"collections.search-placeholder": {
+		"message": "Пошук колекцій..."
+	},
+	"collections.sign-in-prompt": {
+		"message": "Увійдіть, щоб переглядати свої колекції"
+	},
+	"collections.sign-in-prompt-body": {
+		"message": "Увійдіть у свій акаунт Modrinth, щоб бачити свої колекції тут."
+	},
+	"collections.sort-by": {
+		"message": "Сортувати: "
+	},
+	"collections.sort-by-name": {
+		"message": "Сортувати"
+	},
+	"collections.sort.created": {
+		"message": "Нещодавно створені"
+	},
+	"collections.sort.name": {
+		"message": "Назва (А–Я)"
+	},
+	"collections.sort.updated": {
+		"message": "Нещодавно оновлені"
+	},
+	"collections.status.private": {
+		"message": "Приватна"
+	},
+	"collections.status.public": {
+		"message": "Публічна"
+	},
+	"collections.status.rejected": {
+		"message": "Відхилено"
+	},
+	"collections.status.unlisted": {
+		"message": "За посиланням"
+	},
+	"console.actions.collapse": {
+		"message": "Згорнути"
+	},
+	"console.actions.expand": {
+		"message": "Розгорнути"
+	},
+	"console.crash.problems-detected": {
+		"message": "Виявлено {count, plural, one {# проблему} few {# проблеми} many {# проблем} other {# проблеми}}"
+	},
+	"console.delete-modal.header": {
+		"message": "Видалити файл журналу"
+	},
+	"console.delete-modal.irreversible": {
+		"message": "Цю дію неможливо скасувати"
+	},
+	"console.delete-modal.warning": {
+		"message": "Видалення цього файлу журналу неможливо скасувати. Ви впевнені, що хочете продовжити?"
+	},
+	"console.empty-state.instance": {
+		"message": "Запустіть свій примірник у правому верхньому куті, щоб отримувати журнали в реальному часі!"
+	},
+	"console.empty-state.server": {
+		"message": "Ласкаво просимо на ваш сервер Modrinth! Натисніть зелену кнопку запуску, щоб увімкнути сервер!"
+	},
+	"console.filter.all": {
+		"message": "Усі"
+	},
+	"console.filter.debug": {
+		"message": "Налагодження"
+	},
+	"console.filter.error": {
+		"message": "Помилки"
+	},
+	"console.filter.info": {
+		"message": "Інформація"
+	},
+	"console.filter.trace": {
+		"message": "Трасування"
+	},
+	"console.filter.warn": {
+		"message": "Попередження"
+	},
+	"console.search.placeholder": {
+		"message": "Пошук у журналах"
+	},
+	"console.share-modal.header": {
+		"message": "Поділитися журналами"
+	},
+	"console.terminal.input-disabled": {
+		"message": "Введення команд вимкнено"
+	},
+	"console.terminal.send-command": {
+		"message": "Надіслати команду"
+	},
+	"console.terminal.server-not-running": {
+		"message": "Сервер не запущено"
+	},
+	"ely-login.back": {
+		"message": "Назад"
+	},
+	"ely-login.cancel": {
+		"message": "Скасувати"
+	},
+	"ely-login.error.generic": {
+		"message": "Не вдалося увійти. Перевірте облікові дані."
+	},
+	"ely-login.error.network": {
+		"message": "Не вдалося підключитися до серверів Ely.by. Перевірте підключення до інтернету."
+	},
+	"ely-login.error.page": {
+		"message": "Вхід не завершився. Спробуйте ще раз або скористайтеся паролем."
+	},
+	"ely-login.forgot-password": {
+		"message": "Забули?"
+	},
+	"ely-login.header": {
+		"message": "Увійти через Ely.by"
+	},
+	"ely-login.hide-password": {
+		"message": "Сховати пароль"
+	},
+	"ely-login.intro": {
+		"message": "Акаунт Ely.by дає змогу грати на серверах, які його підтримують, без купівлі Minecraft."
+	},
+	"ely-login.no-account": {
+		"message": "Немає акаунта?"
+	},
+	"ely-login.page-button": {
+		"message": "Продовжити на ely.by"
+	},
+	"ely-login.page-button-hint": {
+		"message": "Відкриває сторінку входу Ely.by."
+	},
+	"ely-login.page-description": {
+		"message": "Ely.by запитає ваші дані на власній сторінці в окремому вікні. Пароль вводиться там і ніколи не передається через лаунчер."
+	},
+	"ely-login.page-waiting": {
+		"message": "Очікування Ely.by..."
+	},
+	"ely-login.password-label": {
+		"message": "Пароль"
+	},
+	"ely-login.password-placeholder": {
+		"message": "Введіть ваш пароль..."
+	},
+	"ely-login.password-warning-body": {
+		"message": "Це працює, і пароль надсилається напряму до Ely.by. Проте під час входу на їхній власній сторінці лаунчер узагалі його не бачить — користуйтеся тим способом, якщо сторінка відкривається."
+	},
+	"ely-login.password-warning-header": {
+		"message": "Тут лаунчер запитує ваш пароль Ely.by"
+	},
+	"ely-login.show-password": {
+		"message": "Показати пароль"
+	},
+	"ely-login.sign-in": {
+		"message": "Увійти"
+	},
+	"ely-login.sign-up-link": {
+		"message": "Зареєструватися на ely.by"
+	},
+	"ely-login.signing-in": {
+		"message": "Вхід..."
+	},
+	"ely-login.totp-hint": {
+		"message": "Цей акаунт захищено двофакторною автентифікацією."
+	},
+	"ely-login.totp-label": {
+		"message": "Код двофакторної автентифікації"
+	},
+	"ely-login.totp-placeholder": {
+		"message": "Введіть 6-значний код..."
+	},
+	"ely-login.use-password": {
+		"message": "Натомість увійти за паролем"
+	},
+	"ely-login.username-hint": {
+		"message": "Те, з чим ви входите на ely.by."
+	},
+	"ely-login.username-label": {
+		"message": "Ім’я користувача або ел. пошта"
+	},
+	"ely-login.username-placeholder": {
+		"message": "Введіть ім’я користувача або ел. пошту Ely.by..."
+	},
+	"ely-skins.change-button": {
+		"message": "Змінити скін на Ely.by"
+	},
+	"ely-skins.default-notice": {
+		"message": "Для цього акаунта не завантажено власний скін (або його не вдалося завантажити), тому показано типовий скін."
+	},
+	"ely-skins.description": {
+		"message": "Керування скінами для акаунтів Ely.by відбувається на сайті Ely.by. Кнопка нижче відкриває його у вікні прямо в застосунку — якщо ви не ввійшли, Ely.by спершу попросить авторизуватися. Щойно ви закриєте вікно, попередній перегляд оновиться автоматично."
+	},
+	"ely-skins.page-title": {
+		"message": "Скіни"
+	},
+	"ely-skins.refresh-button": {
+		"message": "Оновити перегляд"
+	},
+	"ely-skins.section-title": {
+		"message": "Скін Ely.by"
+	},
+	"friends.friend.more-options": {
+		"message": "Більше параметрів"
+	},
+	"friends.requests.none": {
+		"message": "У вас немає вхідних запитів у друзі :C"
+	},
+	"instance.action.play-again": {
+		"message": "Запустити ще одну копію"
+	},
+	"instance.badge.locked": {
+		"message": "Заблоковано"
+	},
+	"instance.badge.locked.label": {
+		"message": "Інформація про заблокований примірник"
+	},
+	"instance.badge.shared": {
+		"message": "Спільний"
+	},
+	"instance.badge.shared.label": {
+		"message": "Інформація про спільний примірник"
+	},
+	"instance.console.copies-running": {
+		"message": "{count, plural, one {Запущено # копію} few {Запущено # копії} many {Запущено # копій} other {Запущено # копій}}"
+	},
+	"instance.console.copy-started-at": {
+		"message": "запущено {time}"
+	},
+	"instance.console.copy-unknown-account": {
+		"message": "Невідомий акаунт"
+	},
+	"instance.console.one-at-a-time": {
+		"message": "По одному"
+	},
+	"instance.console.side-by-side": {
+		"message": "Поруч"
+	},
+	"instance.metadata.loader-tooltip": {
+		"message": "Завантажувач модів і версія Minecraft"
+	},
+	"instance.metadata.total-playtime": {
+		"message": "Загальний час гри"
+	},
+	"instance.playtime.hours": {
+		"message": "{hours, plural, one {# година} few {# години} many {# годин} other {# години}}"
+	},
+	"instance.playtime.minutes": {
+		"message": "{minutes, plural, one {# хвилина} few {# хвилини} many {# хвилин} other {# хвилини}}"
+	},
+	"instance.playtime.seconds": {
+		"message": "{seconds, plural, one {# секунда} few {# секунди} many {# секунд} other {# секунди}}"
+	},
+	"instance.settings.tabs.java.modern-java": {
+		"message": "Сучасна Java"
+	},
+	"instance.settings.tabs.java.modern-java-beta": {
+		"message": "Бета"
+	},
+	"instance.settings.tabs.java.modern-java-beta-note": {
+		"message": "Це нова функція, яка ще недостатньо протестована. Зробіть резервну копію примірника перед її ввімкненням і майте на увазі, що моди, розраховані на Java 8, можуть працювати некоректно."
+	},
+	"instance.settings.tabs.java.modern-java-description": {
+		"message": "Minecraft {gameVersion} зазвичай працює лише на Java 8. {provider} замінює LWJGL 2 і переробляє Forge, щоб примірник міг працювати на сучасному випуску Java."
+	},
+	"instance.settings.tabs.java.modern-java-install": {
+		"message": "Увімкнути"
+	},
+	"instance.settings.tabs.java.modern-java-installed": {
+		"message": "Встановлено — {provider} {version}, працює на Java {javaMajor}"
+	},
+	"instance.settings.tabs.java.modern-java-installing": {
+		"message": "Увімкнення..."
+	},
+	"instance.settings.tabs.java.modern-java-mods-note": {
+		"message": "Вимкнення видаляє патчі лаунчера. Будь-які встановлені ним моди залишаються у примірнику — видаліть їх на вкладці «Моди», якщо вони більше не потрібні."
+	},
+	"instance.settings.tabs.java.modern-java-remove": {
+		"message": "Вимкнути"
+	},
+	"instance.settings.tabs.java.modern-java-version": {
+		"message": "Версія Java"
+	},
+	"instance.settings.tabs.java.modern-java-version-hint": {
+		"message": "Вибір версії завантажує її. Натисніть «Зберегти», щоб використовувати її для цього примірника. Найнижча версія перевірена найкраще; новіші підтримуються, але менш перевірені з модами для цієї версії Minecraft."
+	},
+	"minecraft-account.add-ely-account": {
+		"message": "Додати акаунт Ely.by"
+	},
+	"minecraft-account.add-offline-account": {
+		"message": "Додати офлайн-акаунт"
+	},
+	"minecraft-account.label-ely-by": {
+		"message": "Акаунт Ely.by"
+	},
+	"minecraft-account.label-microsoft": {
+		"message": "Акаунт Microsoft"
+	},
+	"minecraft-account.label-offline": {
+		"message": "Офлайн-акаунт"
+	},
+	"minecraft-account.label-offline-short": {
+		"message": "Офлайн"
+	},
+	"noctrinth.auth-servers.unreachable.retry": {
+		"message": "Перевірити знову"
+	},
+	"noctrinth.auth-servers.unreachable.scope": {
+		"message": "Вхід і гра з акаунтом Microsoft можуть не працювати до відновлення. Офлайн-акаунти та акаунти Ely.by працюють без змін."
+	},
+	"noctrinth.creation-flow.curseforge-code.import": {
+		"message": "Імпортувати"
+	},
+	"noctrinth.creation-flow.curseforge-code.placeholder": {
+		"message": "Код або посилання для спільного доступу із застосунку CurseForge"
+	},
+	"noctrinth.creation-flow.curseforge-code.title": {
+		"message": "Код профілю CurseForge"
+	},
+	"noctrinth.instance.logs.open-file": {
+		"message": "Відкрити файл"
+	},
+	"noctrinth.instance.logs.open-folder": {
+		"message": "Папка журналів"
+	},
+	"noctrinth.instance.stop-all-copies": {
+		"message": "Зупинити всі копії"
+	},
+	"noctrinth.instance.stop-copy": {
+		"message": "Зупинити {name} · {time}"
+	},
+	"noctrinth.news.modrinth-news": {
+		"message": "Новини Modrinth"
+	},
+	"noctrinth.news.noctrinth-news": {
+		"message": "Новини Noctrinth"
+	},
+	"noctrinth.quick-search.discover": {
+		"message": "Ще не встановлено"
+	},
+	"noctrinth.quick-search.hint": {
+		"message": "↑↓ для вибору · Enter щоб відкрити · Ctrl+Enter щоб грати або оновити · Esc щоб закрити"
+	},
+	"noctrinth.quick-search.in-instance": {
+		"message": "У {instance}"
+	},
+	"noctrinth.quick-search.installed": {
+		"message": "Встановлено"
+	},
+	"noctrinth.quick-search.instances": {
+		"message": "Примірники"
+	},
+	"noctrinth.quick-search.nothing": {
+		"message": "Нічого не знайдено"
+	},
+	"noctrinth.quick-search.placeholder": {
+		"message": "Пошук примірників, встановленого в них вмісту та налаштувань"
+	},
+	"noctrinth.quick-search.play": {
+		"message": "Грати"
+	},
+	"noctrinth.quick-search.reading": {
+		"message": "Ще зчитуємо встановлений вміст…"
+	},
+	"noctrinth.quick-search.recent": {
+		"message": "Нещодавні ігри"
+	},
+	"noctrinth.quick-search.search-curseforge": {
+		"message": "Шукати «{query}» на CurseForge"
+	},
+	"noctrinth.quick-search.search-modrinth": {
+		"message": "Шукати «{query}» на Modrinth"
+	},
+	"noctrinth.quick-search.settings": {
+		"message": "Налаштування"
+	},
+	"noctrinth.quick-search.stop": {
+		"message": "Зупинити"
+	},
+	"noctrinth.quick-search.update": {
+		"message": "Оновити"
+	},
+	"noctrinth.quick-search.update-available": {
+		"message": "Доступне оновлення"
+	},
+	"noctrinth.screenshots.launcher-background-set": {
+		"message": "Фон лаунчера оновлено"
+	},
+	"noctrinth.screenshots.set-launcher-background": {
+		"message": "Встановити як фон лаунчера"
+	},
+	"noctrinth.settings.appearance.show-hosting": {
+		"message": "Показувати Modrinth Hosting на бічній панелі"
+	},
+	"noctrinth.settings.appearance.show-hosting.description": {
+		"message": "Показувати на лівій бічній панелі кнопку для відкриття Modrinth Hosting."
+	},
+	"noctrinth.settings.appearance.show-sidebar-news": {
+		"message": "Показувати новини на бічній панелі"
+	},
+	"noctrinth.settings.appearance.show-sidebar-news.description": {
+		"message": "Показувати останні новини Noctrinth і Modrinth на правій бічній панелі."
+	},
+	"noctrinth.settings.background.blur.description": {
+		"message": "Пом’якшує фон, щоб він не відволікав від основного інтерфейсу."
+	},
+	"noctrinth.settings.background.blur.title": {
+		"message": "Розмити фон"
+	},
+	"noctrinth.settings.background.change": {
+		"message": "Змінити фон"
+	},
+	"noctrinth.settings.background.choose": {
+		"message": "Вибрати файл"
+	},
+	"noctrinth.settings.background.description": {
+		"message": "Зображення, анімований GIF або зациклене відео позаду лаунчера, що просвічується крізь його рамку та трохи крізь картки на сторінці. Зображення й GIF до 32 МБ, відео MP4 або WebM до 100 МБ."
+	},
+	"noctrinth.settings.background.dim.description": {
+		"message": "Для яскравого або строкатого фону, щоб текст поверх нього залишався легко читабельним."
+	},
+	"noctrinth.settings.background.dim.title": {
+		"message": "Затемнити фон"
+	},
+	"noctrinth.settings.background.drop-here": {
+		"message": "Перетягніть сюди"
+	},
+	"noctrinth.settings.background.drop-hint": {
+		"message": "Або перетягніть зображення чи відео на вікно."
+	},
+	"noctrinth.settings.background.remove": {
+		"message": "Видалити"
+	},
+	"noctrinth.settings.background.title": {
+		"message": "Фон"
+	},
+	"noctrinth.settings.curseforge.cache.title": {
+		"message": "Кеш"
+	},
+	"noctrinth.settings.curseforge.check-updates": {
+		"message": "Перевіряти оновлення модів і збірок із CurseForge"
+	},
+	"noctrinth.settings.curseforge.check-updates.title": {
+		"message": "Перевірка оновлень"
+	},
+	"noctrinth.settings.curseforge.clear-cache": {
+		"message": "Очистити кеш відповідей CurseForge"
+	},
+	"noctrinth.settings.curseforge.clear-cache-hint": {
+		"message": "Вони зберігаються п’ять хвилин; ця кнопка одразу запитає свіжі дані."
+	},
+	"noctrinth.settings.curseforge.cleared": {
+		"message": "Очищено"
+	},
+	"noctrinth.settings.curseforge.default-source": {
+		"message": "Пошук відкривається на"
+	},
+	"noctrinth.settings.curseforge.default-source.description": {
+		"message": "Який каталог відкривається першим у розділі «Огляд». Перемикач над результатами дозволяє змінити його будь-коли."
+	},
+	"noctrinth.settings.curseforge.description": {
+		"message": "Шукайте та встановлюйте вміст із CurseForge, розпізнавайте його файли у ваших примірниках і підтримуйте їх актуальними. Якщо вимкнути, лаунчер узагалі не звертатиметься до CurseForge."
+	},
+	"noctrinth.settings.curseforge.install-links.description": {
+		"message": "Кнопка «Install» на curseforge.com відкриватиме проєкт тут, а не в застосунку CurseForge. Якщо той застосунок встановлено, під час наступного запуску він поверне ці посилання собі."
+	},
+	"noctrinth.settings.curseforge.install-links.title": {
+		"message": "Відкривати посилання Install із сайту CurseForge"
+	},
+	"noctrinth.settings.curseforge.no-key": {
+		"message": "У цій збірці немає API-ключа CurseForge. Додайте власний нижче, щоб користуватися CurseForge."
+	},
+	"noctrinth.settings.curseforge.own-key": {
+		"message": "Власний API-ключ"
+	},
+	"noctrinth.settings.curseforge.own-key.check": {
+		"message": "Перевірити"
+	},
+	"noctrinth.settings.curseforge.own-key.check-and-save": {
+		"message": "Перевірити й зберегти"
+	},
+	"noctrinth.settings.curseforge.own-key.check-failed": {
+		"message": "Не вдалося зв’язатися з CurseForge для перевірки ключа"
+	},
+	"noctrinth.settings.curseforge.own-key.forget": {
+		"message": "Забути мій ключ"
+	},
+	"noctrinth.settings.curseforge.own-key.hint": {
+		"message": "Використовується замість вбудованого та зберігається на цьому комп’ютері. Увійдіть у консоль CurseForge і скопіюйте ключ зі сторінки API keys:"
+	},
+	"noctrinth.settings.curseforge.own-key.invalid": {
+		"message": "CurseForge не приймає цей ключ"
+	},
+	"noctrinth.settings.curseforge.own-key.ok": {
+		"message": "CurseForge приймає цей ключ"
+	},
+	"noctrinth.settings.curseforge.own-key.placeholder": {
+		"message": "Ваш ключ збережено"
+	},
+	"noctrinth.settings.curseforge.own-key.saved": {
+		"message": "CurseForge приймає ключ; його збережено"
+	},
+	"noctrinth.settings.curseforge.recognize-files": {
+		"message": "Розпізнавати моди, додані вручну або з інших лаунчерів, за їхнім відбитком"
+	},
+	"noctrinth.settings.curseforge.recognize-files.title": {
+		"message": "Розпізнавання файлів"
+	},
+	"noctrinth.settings.curseforge.release-type": {
+		"message": "Оновлювати до"
+	},
+	"noctrinth.settings.curseforge.release-type.alpha": {
+		"message": "Будь-які файли, включно з альфами"
+	},
+	"noctrinth.settings.curseforge.release-type.beta": {
+		"message": "Релізи та бети"
+	},
+	"noctrinth.settings.curseforge.release-type.description": {
+		"message": "Які файли вважати оновленням."
+	},
+	"noctrinth.settings.curseforge.release-type.release": {
+		"message": "Лише релізи"
+	},
+	"noctrinth.settings.curseforge.search-other-launchers": {
+		"message": "Шукати файли, заборонені для лаунчерів, у примірниках інших лаунчерів, а не лише в «Завантаженнях»"
+	},
+	"noctrinth.settings.curseforge.search-other-launchers.title": {
+		"message": "Пошук в інших лаунчерах"
+	},
+	"noctrinth.settings.curseforge.section.discover": {
+		"message": "Огляд"
+	},
+	"noctrinth.settings.curseforge.section.files": {
+		"message": "Файли та оновлення"
+	},
+	"noctrinth.settings.curseforge.section.restricted": {
+		"message": "Файли, заборонені для лаунчерів"
+	},
+	"noctrinth.settings.curseforge.source.curseforge": {
+		"message": "CurseForge"
+	},
+	"noctrinth.settings.curseforge.source.modrinth": {
+		"message": "Modrinth"
+	},
+	"noctrinth.settings.curseforge.title": {
+		"message": "CurseForge"
+	},
+	"noctrinth.settings.java-provider.auto": {
+		"message": "Автоматично"
+	},
+	"noctrinth.settings.java-provider.auto-hint": {
+		"message": "Пробує Azul, далі Temurin, далі Temurin із GitHub, далі Mojang, а потім Mojang через дзеркало BMCLAPI, зупиняючись на першому, що відповість. GitHub зазвичай лишається доступним там, де інші заблоковано."
+	},
+	"noctrinth.settings.java-provider.azul": {
+		"message": "Azul Zulu"
+	},
+	"noctrinth.settings.java-provider.description": {
+		"message": "Звідки лаунчер бере Java, коли примірнику потрібна версія, якої ще немає. Кожне завантаження перевіряється за контрольною сумою, опублікованою джерелом."
+	},
+	"noctrinth.settings.java-provider.mojang": {
+		"message": "Mojang"
+	},
+	"noctrinth.settings.java-provider.mojang-mirror": {
+		"message": "Mojang через BMCLAPI (стороннє дзеркало)"
+	},
+	"noctrinth.settings.java-provider.temurin": {
+		"message": "Eclipse Temurin"
+	},
+	"noctrinth.settings.java-provider.temurin-github": {
+		"message": "Eclipse Temurin із GitHub"
+	},
+	"noctrinth.settings.java-provider.title": {
+		"message": "Завантажувати Java з"
+	},
+	"noctrinth.settings.splash-cube.description": {
+		"message": "Який куб показувати на екрані заставки. Набуде чинності під час наступного запуску."
+	},
+	"noctrinth.settings.splash-cube.inverted": {
+		"message": "Інвертований: чорний на білому, білий на чорному"
+	},
+	"noctrinth.settings.splash-cube.random": {
+		"message": "Випадковий щоразу під час запуску"
+	},
+	"noctrinth.settings.splash-cube.theme": {
+		"message": "Відповідає темі (рідко — навпаки)"
+	},
+	"noctrinth.settings.splash-cube.title": {
+		"message": "Куб на заставці"
+	},
+	"noctrinth.settings.translation.auto": {
+		"message": "Перекладати одразу після відкриття опису"
+	},
+	"noctrinth.settings.translation.deepl": {
+		"message": "DeepL: природніший переклад, потрібен власний безкоштовний API-ключ"
+	},
+	"noctrinth.settings.translation.deepl-key": {
+		"message": "API-ключ DeepL"
+	},
+	"noctrinth.settings.translation.deepl-key-hint": {
+		"message": "Безкоштовний ключ перекладає 500 000 символів на місяць. Отримати його можна на"
+	},
+	"noctrinth.settings.translation.description": {
+		"message": "Пропонує перекласти опис проєкту вашою мовою з можливістю повернутися до оригіналу."
+	},
+	"noctrinth.settings.translation.google": {
+		"message": "Google Translate: безкоштовно, без ключа"
+	},
+	"noctrinth.settings.translation.precheck": {
+		"message": "Спершу перевіряти мову й приховувати кнопку, якщо перекладати нічого"
+	},
+	"noctrinth.settings.translation.service": {
+		"message": "Сервіс"
+	},
+	"noctrinth.settings.translation.skip": {
+		"message": "Мови, які ви й так читаєте"
+	},
+	"noctrinth.settings.translation.skip-hint": {
+		"message": "Описи цими мовами залишатимуться без змін."
+	},
+	"noctrinth.settings.translation.target": {
+		"message": "Перекладати на"
+	},
+	"noctrinth.settings.translation.target-app": {
+		"message": "Мова лаунчера ({language})"
+	},
+	"noctrinth.settings.translation.test": {
+		"message": "Перевірити сервіс"
+	},
+	"noctrinth.settings.translation.test-ok": {
+		"message": "Працює, {milliseconds} мс: «{text}»"
+	},
+	"noctrinth.settings.translation.title": {
+		"message": "Переклад описів"
+	},
+	"noctrinth.translate.button": {
+		"message": "Перекласти на {language}"
+	},
+	"noctrinth.translate.failed": {
+		"message": "Не вдалося перекласти: {reason}"
+	},
+	"noctrinth.translate.original": {
+		"message": "Оригінал"
+	},
+	"noctrinth.translate.retry": {
+		"message": "Спробувати ще раз"
+	},
+	"noctrinth.translate.source-language": {
+		"message": "Написано мовою: {language}"
+	},
+	"noctrinth.translate.translated-by": {
+		"message": "Перекладено за допомогою {service}"
+	},
+	"noctrinth.translate.translating": {
+		"message": "Переклад..."
+	},
+	"notifications.back": {
+		"message": "Назад"
+	},
+	"notifications.heading": {
+		"message": "Сповіщення"
+	},
+	"notifications.heading-history": {
+		"message": "Історія сповіщень"
+	},
+	"notifications.history-empty": {
+		"message": "Історія сповіщень порожня."
+	},
+	"notifications.loading": {
+		"message": "Завантаження сповіщень..."
+	},
+	"notifications.mark-all-read": {
+		"message": "Позначити всі як прочитані"
+	},
+	"notifications.sign-in-prompt": {
+		"message": "Увійдіть, щоб переглядати сповіщення"
+	},
+	"notifications.sign-in-prompt-body": {
+		"message": "Увійдіть у свій акаунт Modrinth, щоб бачити свої сповіщення тут."
+	},
+	"notifications.type.all": {
+		"message": "Усі"
+	},
+	"notifications.type.moderator-message": {
+		"message": "Повідомлення модераторів"
+	},
+	"notifications.type.organization-invite": {
+		"message": "Запрошення до організацій"
+	},
+	"notifications.type.other": {
+		"message": "Інше"
+	},
+	"notifications.type.project-update": {
+		"message": "Оновлення"
+	},
+	"notifications.type.status-change": {
+		"message": "Зміни статусу"
+	},
+	"notifications.type.team-invite": {
+		"message": "Запрошення до команд"
+	},
+	"notifications.unread-empty": {
+		"message": "У вас немає непрочитаних сповіщень."
+	},
+	"notifications.view-history": {
+		"message": "Переглянути історію"
+	},
+	"offline-account.add": {
+		"message": "Додати акаунт"
+	},
+	"offline-account.description": {
+		"message": "Лише ім’я — і нічого більше. Саме під ним лаунчер запускатиме гру, коли немає підключення для входу."
+	},
+	"offline-account.header": {
+		"message": "Додати офлайн-акаунт"
+	},
+	"offline-account.invalid": {
+		"message": "Від 3 до 16 літер, цифр або підкреслень — те, що приймають сервери."
+	},
+	"offline-account.limitation-body": {
+		"message": "Сервери в онлайн-режимі перевіряють у Mojang, чи справжня сесія, а тут її немає. Усе інше — світи на цьому комп’ютері, гра по локальній мережі та сервери в офлайн-режимі — працює як завжди."
+	},
+	"offline-account.limitation-header": {
+		"message": "Лише одиночна гра та офлайн-сервери"
+	},
+	"offline-account.username-label": {
+		"message": "Ім’я"
+	},
+	"offline-account.username-placeholder": {
+		"message": "Ім’я для гри..."
+	},
+	"offline-account.uuid": {
+		"message": "Гратиме як {uuid}"
+	},
+	"search.sort.date-published": {
+		"message": "Дата публікації"
+	},
+	"search.sort.date-updated": {
+		"message": "Дата оновлення"
+	},
+	"search.sort.downloads": {
+		"message": "Завантаження"
+	},
+	"search.sort.followers": {
+		"message": "Підписники"
+	},
+	"search.sort.players": {
+		"message": "Гравці"
+	},
+	"search.sort.relevance": {
+		"message": "Релевантність"
+	},
+	"search.sort.verified-plays": {
+		"message": "Підтверджені запуски"
+	},
+	"servers.list-empty.no-servers-description": {
+		"message": "Встановлюйте моди, запрошуйте друзів і грайте разом — усе в Noctrinth."
+	},
+	"servers.list-empty.play-with-friends-description": {
+		"message": "Запрошуйте друзів на свій сервер із запуском в один клік через Noctrinth."
+	},
+	"settings.display.theme.description": {
+		"message": "Виберіть бажану колірну тему інтерфейсу Noctrinth."
+	},
+	"settings.language.coverage.app-tooltip": {
+		"message": "Близько {percentage}% інтерфейсу Noctrinth доступно цією мовою."
+	}
+}

@@ -17,118 +17,140 @@
 			<span class="text-sm text-contrast"> {{ formatMessage(messages.offline) }} </span>
 		</div>
 		<AppUpdateButton />
-		<div
-			class="flex border-solid border-surface-5 text-sm font-medium items-center gap-2 py-1.5 px-3 rounded-xl border"
+		<Motion
+			as="div"
+			v-tooltip="!selectedProcess ? formatMessage(messages.noInstancesRunning) : undefined"
+			class="relative flex h-[34px] shrink-0 origin-right items-center overflow-hidden border border-solid text-sm font-medium transition-colors duration-200"
+			:class="selectedProcess ? 'border-surface-5 bg-surface-2/60' : 'border-surface-5'"
+			:initial="false"
+			:animate="{
+				width: runningPillWidth,
+				borderRadius: selectedProcess ? 12 : 17,
+				scaleX: runningPillCompressed && runningPillAnimate ? 0.92 : 1,
+			}"
+			:transition="runningPillTransition"
+			@animation-complete="finishRunningPillResize"
 		>
-			<Transition name="nm-swap-seq" mode="out-in">
-				<div v-if="selectedProcess" :key="selectedProcess.uuid" class="flex items-center gap-2">
-					<span class="nm-live"><OnlineIndicatorIcon /></span>
-					<div class="text-contrast flex items-center gap-2">
-						<router-link
-							v-tooltip="formatMessage(messages.viewInstance)"
-							:to="`/instance/${encodeURIComponent(selectedProcess.instance.id)}`"
-							class="hover:underline"
-						>
-							{{ selectedProcess.instance.name }}
-						</router-link>
-						<FloatingMenu
-							v-if="currentProcesses.length > 1"
-							placement="bottom"
-							@open="showInstances = true"
-							@close="showInstances = false"
-						>
-							<IconButton
-								v-tooltip="
-									showInstances
-										? formatMessage(messages.hideMoreRunningInstances)
-										: formatMessage(messages.showMoreRunningInstances)
-								"
-								class="!size-6"
-								type="quiet"
-								size="xs"
-								:label="
-									showInstances
-										? formatMessage(messages.hideMoreRunningInstances)
-										: formatMessage(messages.showMoreRunningInstances)
-								"
+			<div
+				ref="runningPillContent"
+				class="flex h-full items-center whitespace-nowrap"
+				:class="selectedProcess ? 'w-max gap-2 px-3' : 'w-[34px] justify-center px-0'"
+			>
+				<Transition name="nm-pop" mode="out-in">
+					<span v-if="selectedProcess" key="live" class="nm-live shrink-0">
+						<OnlineIndicatorIcon />
+					</span>
+					<span v-else key="idle" class="size-2 shrink-0 rounded-full bg-secondary" />
+				</Transition>
+				<Transition name="nm-swap-seq" mode="out-in">
+					<div
+						v-if="selectedProcess"
+						:key="selectedProcess.uuid"
+						class="flex items-center gap-2 whitespace-nowrap"
+					>
+						<div class="text-contrast flex items-center gap-2">
+							<router-link
+								v-tooltip="formatMessage(messages.viewInstance)"
+								:to="`/instance/${encodeURIComponent(selectedProcess.instance.id)}`"
+								class="hover:underline"
 							>
-								<DropdownIcon :class="{ 'rotate-180': !!showInstances }" />
-							</IconButton>
-							<template #popper>
-								<div class="flex w-[20rem] max-h-[24rem] flex-col gap-2 overflow-auto">
-									<div
-										v-for="process in currentProcesses"
-										:key="process.uuid"
-										class="flex w-full items-center gap-2 rounded-xl bg-surface-4 p-2 text-sm"
-									>
-										<button
-											v-tooltip.left="
-												process.uuid === selectedProcess.uuid
-													? formatMessage(messages.primaryInstance)
-													: formatMessage(messages.makePrimaryInstance)
-											"
-											class="flex flex-grow items-center gap-2"
-											:class="{
-												'active:scale-95 transition-transform':
-													process.uuid !== selectedProcess.uuid,
-											}"
-											:disabled="process.uuid === selectedProcess.uuid"
-											@click="selectProcess(process)"
+								{{ selectedProcess.instance.name }}
+							</router-link>
+							<FloatingMenu
+								v-if="currentProcesses.length > 1"
+								placement="bottom"
+								@open="showInstances = true"
+								@close="showInstances = false"
+							>
+								<IconButton
+									v-tooltip="
+										showInstances
+											? formatMessage(messages.hideMoreRunningInstances)
+											: formatMessage(messages.showMoreRunningInstances)
+									"
+									class="!size-6"
+									type="quiet"
+									size="xs"
+									:label="
+										showInstances
+											? formatMessage(messages.hideMoreRunningInstances)
+											: formatMessage(messages.showMoreRunningInstances)
+									"
+								>
+									<DropdownIcon :class="{ 'rotate-180': !!showInstances }" />
+								</IconButton>
+								<template #popper>
+									<div class="flex w-[20rem] max-h-[24rem] flex-col gap-2 overflow-auto">
+										<div
+											v-for="process in currentProcesses"
+											:key="process.uuid"
+											class="flex w-full items-center gap-2 rounded-xl bg-surface-4 p-2 text-sm"
 										>
-											<OnlineIndicatorIcon />
-											<span class="mr-auto flex flex-col items-start">
-												<span class="text-contrast flex items-center gap-2">
-													{{ process.instance.name }}
-													<StarIcon
-														v-if="process.uuid === selectedProcess.uuid"
-														class="text-orange"
-													/>
+											<button
+												v-tooltip.left="
+													process.uuid === selectedProcess.uuid
+														? formatMessage(messages.primaryInstance)
+														: formatMessage(messages.makePrimaryInstance)
+												"
+												class="flex flex-grow items-center gap-2"
+												:class="{
+													'active:scale-95 transition-transform':
+														process.uuid !== selectedProcess.uuid,
+												}"
+												:disabled="process.uuid === selectedProcess.uuid"
+												@click="selectProcess(process)"
+											>
+												<OnlineIndicatorIcon />
+												<span class="mr-auto flex flex-col items-start">
+													<span class="text-contrast flex items-center gap-2">
+														{{ process.instance.name }}
+														<StarIcon
+															v-if="process.uuid === selectedProcess.uuid"
+															class="text-orange"
+														/>
+													</span>
+													<span v-if="process.account_name" class="text-xs text-secondary">
+														{{ process.account_name }}
+													</span>
 												</span>
-												<span v-if="process.account_name" class="text-xs text-secondary">
-													{{ process.account_name }}
-												</span>
-											</span>
-										</button>
-										<button
-											v-tooltip="formatMessage(messages.stopInstance)"
-											class="active:scale-95 flex"
-											@click.stop="stop(process)"
-										>
-											<StopCircleIcon class="text-red size-5" />
-										</button>
-										<button
-											v-tooltip="formatMessage(messages.viewLogs)"
-											class="active:scale-95 flex"
-											@click.stop="goToTerminal(process.instance.id)"
-										>
-											<TerminalSquareIcon class="text-secondary size-5" />
-										</button>
+											</button>
+											<button
+												v-tooltip="formatMessage(messages.stopInstance)"
+												class="active:scale-95 flex"
+												@click.stop="stop(process)"
+											>
+												<StopCircleIcon class="text-red size-5" />
+											</button>
+											<button
+												v-tooltip="formatMessage(messages.viewLogs)"
+												class="active:scale-95 flex"
+												@click.stop="goToTerminal(process.instance.id)"
+											>
+												<TerminalSquareIcon class="text-secondary size-5" />
+											</button>
+										</div>
 									</div>
-								</div>
-							</template>
-						</FloatingMenu>
+								</template>
+							</FloatingMenu>
+						</div>
+						<button
+							v-tooltip="formatMessage(messages.stopInstance)"
+							class="active:scale-95 flex"
+							@click="stop(selectedProcess)"
+						>
+							<StopCircleIcon class="text-red size-5" />
+						</button>
+						<button
+							v-tooltip="formatMessage(messages.viewLogs)"
+							class="active:scale-95 flex"
+							@click="goToTerminal()"
+						>
+							<TerminalSquareIcon class="text-secondary size-5" />
+						</button>
 					</div>
-					<button
-						v-tooltip="formatMessage(messages.stopInstance)"
-						class="active:scale-95 flex"
-						@click="stop(selectedProcess)"
-					>
-						<StopCircleIcon class="text-red size-5" />
-					</button>
-					<button
-						v-tooltip="formatMessage(messages.viewLogs)"
-						class="active:scale-95 flex"
-						@click="goToTerminal()"
-					>
-						<TerminalSquareIcon class="text-secondary size-5" />
-					</button>
-				</div>
-				<div v-else key="none" class="flex items-center gap-2">
-					<span class="size-2 rounded-full bg-secondary" />
-					<span class="text-secondary"> {{ formatMessage(messages.noInstancesRunning) }} </span>
-				</div>
-			</Transition>
-		</div>
+				</Transition>
+			</div>
+		</Motion>
 	</div>
 </template>
 
@@ -153,7 +175,9 @@ import {
 	useVIntl,
 } from '@modrinth/ui'
 import { convertFileSrc } from '@tauri-apps/api/core'
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { usePreferredReducedMotion } from '@vueuse/core'
+import { Motion } from 'motion-v'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import AppUpdateButton from '@/components/ui/app-update-button/index.vue'
@@ -521,7 +545,68 @@ function selectProcess(process: RunningProcess) {
 	selectedProcess.value = process
 }
 
+const runningPillContent = ref<HTMLElement | null>(null)
+const runningPillWidth = ref(34)
+const runningPillCompressed = ref(false)
+let compressAfterPillCollapse = false
+let pillCompressionTimer: ReturnType<typeof setTimeout> | undefined
+const reducedMotion = usePreferredReducedMotion()
+const runningPillAnimate = computed(() => reducedMotion.value !== 'reduce')
+const runningPillTransition = computed(() =>
+	runningPillAnimate.value
+		? { type: 'spring' as const, stiffness: 260, damping: 32 }
+		: { duration: 0 },
+)
+
+let runningPillObserver: ResizeObserver | undefined
+
+async function measureRunningPillWidth() {
+	if (!selectedProcess.value) {
+		runningPillWidth.value = 34
+		return
+	}
+	await nextTick()
+	const el = runningPillContent.value
+	if (!el) return
+	runningPillWidth.value = Math.max(34, Math.ceil(el.getBoundingClientRect().width) + 2)
+}
+
+watch(runningPillContent, (el) => {
+	runningPillObserver?.disconnect()
+	runningPillObserver = undefined
+	if (!el) return
+	runningPillObserver = new ResizeObserver(() => {
+		if (selectedProcess.value) {
+			runningPillWidth.value = Math.max(34, Math.ceil(el.getBoundingClientRect().width) + 2)
+		}
+	})
+	runningPillObserver.observe(el)
+})
+
+watch(
+	() => [selectedProcess.value?.uuid, currentProcesses.value.length] as const,
+	([uuid], prev) => {
+		const prevUuid = prev?.[0]
+		clearTimeout(pillCompressionTimer)
+		runningPillCompressed.value = false
+		compressAfterPillCollapse = !uuid && !!prevUuid && runningPillAnimate.value
+		void measureRunningPillWidth()
+	},
+	{ immediate: true },
+)
+
+function finishRunningPillResize() {
+	if (!compressAfterPillCollapse || selectedProcess.value || !runningPillAnimate.value) return
+	compressAfterPillCollapse = false
+	runningPillCompressed.value = true
+	pillCompressionTimer = setTimeout(() => {
+		runningPillCompressed.value = false
+	}, 110)
+}
+
 onBeforeUnmount(() => {
+	runningPillObserver?.disconnect()
+	clearTimeout(pillCompressionTimer)
 	removeNotification()
 	dismissed.value = false
 	window.removeEventListener('offline', handleOffline)

@@ -88,7 +88,7 @@ export function instanceScreenshotsQueryOptions(instanceId: string) {
 		queryKey: screenshotKeys.instance(instanceId),
 		networkMode: 'always',
 		queryFn: () => list_instance_screenshots(instanceId),
-		staleTime: 0,
+		staleTime: 30_000,
 	})
 }
 
@@ -177,7 +177,7 @@ export function instanceContentQueryOptions(
 		queryKey: instanceKeys.content(instanceId),
 		networkMode: 'always',
 		queryFn: () => loadInstanceContentData(instanceId, undefined, onError),
-		staleTime: 30_000,
+		staleTime: 2 * 60_000,
 	})
 }
 
@@ -186,6 +186,6 @@ export function instanceWorldsQueryOptions(instanceId: string) {
 		queryKey: instanceKeys.worlds(instanceId),
 		networkMode: 'always',
 		queryFn: () => refreshWorlds(instanceId),
-		staleTime: 0,
+		staleTime: 30_000,
 	})
 }

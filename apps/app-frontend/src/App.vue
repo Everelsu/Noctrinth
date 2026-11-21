@@ -2575,7 +2575,7 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 					<Suspense @pending="onSuspensePending" @resolve="onSuspenseResolve">
 						<div
 							:key="currentRoute.matched[0]?.path ?? currentRoute.path"
-							class="nm-page-enter min-h-full"
+							class="nm-page-enter h-full"
 						>
 							<component :is="Component"></component>
 						</div>

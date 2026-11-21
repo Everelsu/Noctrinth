@@ -172,7 +172,7 @@ useAppEvent('loading', (e) => {
 .splash-screen {
 	position: fixed;
 	inset: 0;
-	z-index: 10000;
+	z-index: 10002;
 	overflow: hidden;
 	background: var(--color-bg);
 	contain: strict;

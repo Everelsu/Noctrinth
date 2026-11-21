@@ -87,15 +87,20 @@
 				@review-update="reviewSharedInstanceUpdate"
 			/>
 		</div>
-		<div :class="['p-6 pt-4', { 'min-h-0 flex-1 overflow-y-auto': isFixedRender }]">
-			<RouterView v-slot="{ Component }">
+		<div :class="['p-6 pt-4', { 'flex min-h-0 flex-1 flex-col overflow-y-auto': isFixedRender }]">
+			<RouterView v-slot="{ Component, route: tabRoute }">
 				<template v-if="Component">
 					<Suspense
 						:key="instance.id"
 						@pending="subpagePending = true"
 						@resolve="subpagePending = false"
 					>
-						<component :is="Component" />
+						<KeepAlive>
+							<component
+								:is="Component"
+								:key="`${instance.id}:${String(tabRoute.name ?? tabRoute.path)}`"
+							/>
+						</KeepAlive>
 					</Suspense>
 				</template>
 			</RouterView>
@@ -300,8 +305,10 @@ const contentSyncQuery = useQuery(
 			queryKey: instanceKeys.contentSync(targetInstanceId),
 			queryFn: async () => {
 				try {
-					await sync_content_files(targetInstanceId)
-					await invalidateContent(targetInstanceId)
+					const changed = await sync_content_files(targetInstanceId)
+					if (changed) {
+						await invalidateContent(targetInstanceId)
+					}
 					return targetInstanceId
 				} catch (error) {
 					handleError(toError(error))
@@ -310,8 +317,8 @@ const contentSyncQuery = useQuery(
 			},
 			enabled: !!targetInstanceId && instance.value?.install_stage === 'installed',
 			networkMode: 'always' as const,
-			staleTime: 0,
-			gcTime: 0,
+			staleTime: 15_000,
+			gcTime: 60_000,
 			refetchOnWindowFocus: false,
 			refetchOnReconnect: false,
 			retry: false,

@@ -8,15 +8,16 @@
 import {
 	CurseForgeIcon,
 	DownloadIcon,
-	ModrinthIcon,
 	PlayIcon,
 	SearchIcon,
 	SpinnerIcon,
 	StopCircleIcon,
 } from '@modrinth/assets'
 import { Avatar, Button, defineMessages, injectNotificationManager, useVIntl } from '@modrinth/ui'
-import { computed, ref, toRef, watch } from 'vue'
+import { computed, nextTick, ref, toRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
+
+import ModrinthPlatformIcon from '@/assets/icons/modrinth-platform.svg'
 
 import { handleSevereError } from '@/composables/use-error.js'
 import { type QuickSearchResult, useQuickSearch } from '@/composables/use-quick-search'
@@ -76,7 +77,28 @@ const { results, loading, contentTitle, openSettingsTab } = useQuickSearch(
 )
 
 const activeIndex = ref(0)
-watch(results, () => (activeIndex.value = 0))
+const rowElements = new Map<number, HTMLElement>()
+function setRowRef(index: number, el: unknown) {
+	if (el instanceof HTMLElement) rowElements.set(index, el)
+	else rowElements.delete(index)
+}
+watch(results, () => {
+	activeIndex.value = 0
+	rowElements.clear()
+})
+watch(activeIndex, async (index) => {
+	await nextTick()
+	rowElements.get(index)?.scrollIntoView({ block: 'nearest' })
+})
+
+const hintSegments = computed(() =>
+	formatMessage(messages.hint)
+		.split(' · ')
+		.map((segment) => {
+			const match = /^(\S+)\s+(.+)$/.exec(segment.trim())
+			return match ? { key: match[1], label: match[2] } : { key: '', label: segment.trim() }
+		}),
+)
 
 /** Rows an action is running for, so their button spins instead of firing twice. */
 const busy = ref(new Set<string>())
@@ -188,6 +210,7 @@ defineExpose({ onKeydown })
 				<div
 					v-for="{ result, index } in section.rows"
 					:key="result.key"
+					:ref="(el) => setRowRef(index, el)"
 					role="option"
 					:aria-selected="index === activeIndex"
 					class="relative flex cursor-pointer items-center gap-3 py-2 pl-4 pr-3 before:absolute before:bottom-1 before:left-0 before:top-1 before:w-1 before:rounded-r before:content-['']"
@@ -222,7 +245,7 @@ defineExpose({ onKeydown })
 							class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-5 text-contrast"
 						>
 							<CurseForgeIcon v-if="result.source === 'curseforge'" class="size-5" />
-							<ModrinthIcon v-else class="size-5" />
+							<ModrinthPlatformIcon v-else class="size-5" />
 						</span>
 						<span class="min-w-0 flex-1 truncate font-semibold text-contrast">
 							{{
@@ -296,9 +319,26 @@ defineExpose({ onKeydown })
 				{{ formatMessage(loading ? messages.reading : messages.nothing) }}
 			</p>
 		</div>
-		<p class="m-0 border-0 border-t border-solid border-surface-5 px-4 py-2 text-xs text-secondary">
-			<template v-if="loading && results.length">{{ formatMessage(messages.reading) }} · </template
-			>{{ formatMessage(messages.hint) }}
-		</p>
+		<div
+			class="flex flex-wrap items-center gap-x-3 gap-y-1 border-0 border-t border-solid border-surface-5 px-4 py-2 text-xs text-secondary"
+		>
+			<span v-if="loading && results.length" class="inline-flex items-center gap-1.5">
+				<SpinnerIcon class="size-3.5 animate-spin" aria-hidden="true" />
+				{{ formatMessage(messages.reading) }}
+			</span>
+			<span
+				v-for="segment in hintSegments"
+				:key="segment.label"
+				class="inline-flex items-center gap-1.5"
+			>
+				<kbd
+					v-if="segment.key"
+					class="rounded border border-solid border-surface-5 bg-surface-4 px-1.5 py-0.5 font-mono text-[11px] font-medium leading-none text-primary"
+				>
+					{{ segment.key }}
+				</kbd>
+				<span>{{ segment.label }}</span>
+			</span>
+		</div>
 	</div>
 </template>

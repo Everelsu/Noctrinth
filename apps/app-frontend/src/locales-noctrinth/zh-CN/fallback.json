@@ -1,0 +1,125 @@
+{
+	"app.error.copied-debug-info": {
+		"message": "已复制"
+	},
+	"app.error.inspect-debug-info": {
+		"message": "查看调试信息"
+	},
+	"app.library.leave-shared-instance.modal.header": {
+		"message": "{count, plural, other {退出 # 个共享实例}}"
+	},
+	"app.library.unpublish-and-leave-shared-instances.modal.admonition-body": {
+		"message": "{unpublishCount, plural, other {你拥有的 # 个共享实例将从 Modrinth 服务器上删除，正在使用它们的用户}}将不再收到更新。{leaveCount, plural, other {你将失去对其余 # 个共享实例的访问权限，需要新的邀请才能重新加入。}}所有这些实例都将从你的库中移除。"
+	},
+	"app.library.unpublish-and-leave-shared-instances.modal.header": {
+		"message": "取消发布并退出 {count} 个共享实例"
+	},
+	"app.library.unpublish-shared-instance.modal.admonition-header": {
+		"message": "{count, plural, other {正在取消发布 # 个共享实例}}"
+	},
+	"app.library.unpublish-shared-instance.modal.header": {
+		"message": "{count, plural, other {取消发布 # 个共享实例}}"
+	},
+	"app.settings.resource-management.app-directory.pending": {
+		"message": "下次打开 Modrinth App 时，你的应用目录将迁移至 {path}。"
+	},
+	"button.switch-version": {
+		"message": "切换版本"
+	},
+	"hosting.play.not-ready": {
+		"message": "此实例暂不可启动。请在你的库中检查其安装状态。"
+	},
+	"hosting.play.update-description": {
+		"message": "加入前请先将此实例更新至服务器最新的共享内容。"
+	},
+	"hosting.play.update-to-play": {
+		"message": "更新并游玩"
+	},
+	"hosting.play.world-changed": {
+		"message": "此世界已不再处于活动状态或尚未共享。请打开服务器面板并再次点击“游玩服务器”。"
+	},
+	"installation-settings.advanced.title": {
+		"message": "高级"
+	},
+	"installation-settings.relink-shared-instance.button": {
+		"message": "重新关联共享实例"
+	},
+	"installation-settings.relink-shared-instance.description": {
+		"message": "使用邀请链接或 ID 将此实例重新连接到之前取消关联的共享实例。"
+	},
+	"installation-settings.relink-shared-instance.modal.already-linked": {
+		"message": "你的实例“{name}”已关联到此共享实例。"
+	},
+	"installation-settings.relink-shared-instance.modal.blocked-header": {
+		"message": "无法重新关联此实例"
+	},
+	"installation-settings.relink-shared-instance.modal.confirm-body": {
+		"message": "此实例将再次成为共享实例的源实例。当你发布更新时，成员将收到你的更改。"
+	},
+	"installation-settings.relink-shared-instance.modal.description": {
+		"message": "将此实例重新连接到你拥有的共享实例。"
+	},
+	"installation-settings.relink-shared-instance.modal.find-button": {
+		"message": "查找共享实例"
+	},
+	"installation-settings.relink-shared-instance.modal.header": {
+		"message": "重新关联共享实例"
+	},
+	"installation-settings.relink-shared-instance.modal.input-label": {
+		"message": "邀请链接或共享实例 ID"
+	},
+	"installation-settings.relink-shared-instance.modal.input-placeholder": {
+		"message": "https://modrinth.com/share/..."
+	},
+	"installation-settings.relink-shared-instance.modal.mismatch-body": {
+		"message": "此实例使用 {localLoader} {localGameVersion}，但共享实例使用 {loader} {gameVersion}。你下次发布时将更改共享实例以与此实例匹配。"
+	},
+	"installation-settings.relink-shared-instance.modal.mismatch-header": {
+		"message": "游戏或加载器版本不同"
+	},
+	"installation-settings.relink-shared-instance.modal.not-owner": {
+		"message": "只有所有者才能重新关联共享实例。若要作为成员获取更新，请从你的库中重新安装它。"
+	},
+	"installation-settings.relink-shared-instance.modal.relink-button": {
+		"message": "重新关联"
+	},
+	"installation-settings.relink-shared-instance.modal.server-managed": {
+		"message": "此共享实例由服务器管理，因此无法重新关联。"
+	},
+	"installation-settings.relink-shared-instance.modal.version-summary": {
+		"message": "{loader} {gameVersion} · 版本 {version}"
+	},
+	"installation-settings.relink-shared-instance.title": {
+		"message": "重新关联共享实例"
+	},
+	"instance.settings.reset-setting-to-default": {
+		"message": "将 {setting} 重置为默认值"
+	},
+	"instance.settings.reset-to-default": {
+		"message": "重置为默认值"
+	},
+	"instance.settings.tabs.general.duplicate-button.tooltip.locked": {
+		"message": "无法复制已锁定的实例。"
+	},
+	"instance.settings.tabs.java.recommended-java-version": {
+		"message": "建议为此实例的 Minecraft 版本使用 Java {version}。"
+	},
+	"instance.settings.using-defaults": {
+		"message": "使用默认设置"
+	},
+	"instance.shared-instance.limit-reached.text": {
+		"message": "你无法共享更多实例。"
+	},
+	"instance.shared-instance.limit-reached.title": {
+		"message": "已达到共享实例数量上限"
+	},
+	"instance.shared-instance.owner-behind.text": {
+		"message": "另一台设备上的 Modrinth App 已推送了更新的版本。请先下载更新，然后再试。"
+	},
+	"instance.shared-instance.unavailable.locked-owner-text": {
+		"message": "此共享实例已被内容审核团队锁定。你不能再推送更新或重新共享此实例。"
+	},
+	"search.filter.locked.server-game-version.title": {
+		"message": "游戏版本由服务器提供"
+	}
+}

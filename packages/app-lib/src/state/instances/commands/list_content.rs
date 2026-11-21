@@ -315,14 +315,14 @@ async fn list_content_inner(
         state,
     )
     .await?;
-    mark_curseforge_updates(&mut items, &resolved.content_set).await;
+    mark_curseforge_updates(&mut items, &resolved.content_set);
     Ok(items)
 }
 
-/// Noctrinth's own: Modrinth's update check goes by file hash, which no
-/// CurseForge file has on Modrinth, so CurseForge is asked about those.
-/// Never fails the listing: without an answer the rows just show no update.
-async fn mark_curseforge_updates(
+/// Applies already-cached CurseForge update info synchronously so listing
+/// never blocks on live CurseForge HTTP requests. The background
+/// `refresh_content_updates` task populates the cache.
+fn mark_curseforge_updates(
     items: &mut [ContentItem],
     content_set: &ContentSet,
 ) {
@@ -344,19 +344,11 @@ async fn mark_curseforge_updates(
     if installed.is_empty() {
         return;
     }
-    let updates = match crate::api::curseforge_browse::available_updates(
+    let updates = crate::api::curseforge_browse::cached_available_updates(
         &installed,
         &content_set.game_version,
         content_set.loader.as_str(),
-    )
-    .await
-    {
-        Ok(updates) => updates,
-        Err(error) => {
-            tracing::warn!("Could not check CurseForge for updates: {error}");
-            return;
-        }
-    };
+    );
     for item in items {
         let Some(update) = item
             .project
@@ -746,16 +738,37 @@ async fn content_projects_for_scope_inner(
     packs_only: bool,
     read_mode: ContentReadMode,
 ) -> crate::Result<DashMap<String, ContentFile>> {
-    let mut files = match read_mode {
+    let (mut files, entries, locked_file_ids) = match read_mode {
         ContentReadMode::Indexed => {
-            sqlite::content_rows::get_instance_files(
-                &resolved.instance.id,
-                &state.pool,
-            )
-            .await?
+            tokio::try_join!(
+                sqlite::content_rows::get_instance_files(
+                    &resolved.instance.id,
+                    &state.pool,
+                ),
+                sqlite::content_rows::get_content_entries(
+                    &resolved.content_set.id,
+                    &state.pool,
+                ),
+                sqlite::content_rows::get_locked_instance_file_ids(
+                    &resolved.instance.id,
+                    &state.pool,
+                ),
+            )?
         }
         ContentReadMode::Reconcile => {
-            sync_instance_content_files(&resolved.instance, state).await?
+            let files =
+                sync_instance_content_files(&resolved.instance, state).await?;
+            let (entries, locked_file_ids) = tokio::try_join!(
+                sqlite::content_rows::get_content_entries(
+                    &resolved.content_set.id,
+                    &state.pool,
+                ),
+                sqlite::content_rows::get_locked_instance_file_ids(
+                    &resolved.instance.id,
+                    &state.pool,
+                ),
+            )?;
+            (files, entries, locked_file_ids)
         }
     };
     if packs_only {
@@ -766,33 +779,32 @@ async fn content_projects_for_scope_inner(
             )
         });
     }
-    let entries = sqlite::content_rows::get_content_entries(
-        &resolved.content_set.id,
-        &state.pool,
-    )
-    .await?;
     let entries_by_file_id = entries
         .iter()
         .filter_map(|entry| {
             entry.file_id.as_deref().map(|file_id| (file_id, entry))
         })
         .collect::<HashMap<_, _>>();
-    let locked_file_ids = sqlite::content_rows::get_locked_instance_file_ids(
-        &resolved.instance.id,
-        &state.pool,
-    )
-    .await?;
     let hashes = files
         .iter()
+        .filter(|file| {
+            !entries_by_file_id
+                .get(file.id.as_str())
+                .is_some_and(|entry| entry.source_kind.has_curseforge_ids())
+        })
         .map(|file| file.sha1.as_str())
         .collect::<Vec<_>>();
-    let file_info = CachedEntry::get_file_many(
-        &hashes,
-        cache_behaviour,
-        &state.pool,
-        &state.api_semaphore,
-    )
-    .await?;
+    let file_info = if hashes.is_empty() {
+        Vec::new()
+    } else {
+        CachedEntry::get_file_many(
+            &hashes,
+            cache_behaviour,
+            &state.pool,
+            &state.api_semaphore,
+        )
+        .await?
+    };
     let file_info_by_hash = file_info
         .into_iter()
         .map(|file| (file.hash.clone(), file))
@@ -1055,85 +1067,134 @@ async fn content_files_to_content_items(
         })
         .collect::<Vec<_>>();
 
-    let (meta, (fingerprinted, curseforge)) = tokio::join!(
-        resolve_metadata(
-            &project_ids,
-            &version_ids,
-            cache_behaviour,
-            &state.pool,
-            &state.api_semaphore,
-        ),
-        async {
-            let fingerprinted =
-                crate::api::curseforge_metadata::identify(&unidentified, state)
-                    .await;
-            // From now on the entries themselves say what these files are.
-            if let Err(error) = crate::api::curseforge_metadata::adopt(
-                &instance.id,
-                &fingerprinted,
-                state,
-            )
-            .await
-            {
-                tracing::warn!(
-                    "Could not record recognised CurseForge files: {error}"
-                );
-            }
-            for ids in fingerprinted.values() {
-                curseforge_project_ids.insert(ids.project_id.clone());
-                curseforge_file_ids.insert(ids.version_id.clone());
-            }
-            let curseforge = crate::api::curseforge_metadata::resolve(
-                &curseforge_project_ids,
-                &curseforge_file_ids,
-                state,
-            )
-            .await;
-            (fingerprinted, curseforge)
-        },
-    );
-    let meta = meta?;
-    let embedded_metadata =
-        super::embedded_content_metadata::resolve_embedded_content_metadata(
-            instance, loader, files, state,
-        )
-        .await?;
     let paths = files
         .iter()
         .map(|(_, file)| instance_path.join(&file.on_disk_path))
         .collect::<Vec<_>>();
-    let modification_times: Vec<Option<String>> =
-        tokio::task::spawn_blocking(move || {
-            paths
-                .iter()
-                .map(|path| {
-                    std::fs::metadata(path)
-                        .and_then(|metadata| metadata.modified())
-                        .ok()
-                        .map(|time| {
-                            chrono::DateTime::<chrono::Utc>::from(time)
-                                .to_rfc3339()
-                        })
-                })
-                .collect()
+
+    let (meta, (fingerprinted, curseforge), embedded_metadata, modification_times) =
+        tokio::join!(
+            resolve_metadata(
+                &project_ids,
+                &version_ids,
+                cache_behaviour,
+                &state.pool,
+                &state.api_semaphore,
+            ),
+            async {
+                let fingerprinted =
+                    crate::api::curseforge_metadata::identify(&unidentified, state)
+                        .await;
+                // From now on the entries themselves say what these files are.
+                if let Err(error) = crate::api::curseforge_metadata::adopt(
+                    &instance.id,
+                    &fingerprinted,
+                    state,
+                )
+                .await
+                {
+                    tracing::warn!(
+                        "Could not record recognised CurseForge files: {error}"
+                    );
+                }
+                for ids in fingerprinted.values() {
+                    curseforge_project_ids.insert(ids.project_id.clone());
+                    curseforge_file_ids.insert(ids.version_id.clone());
+                }
+                let curseforge = crate::api::curseforge_metadata::resolve(
+                    &curseforge_project_ids,
+                    &curseforge_file_ids,
+                    state,
+                )
+                .await;
+                (fingerprinted, curseforge)
+            },
+            super::embedded_content_metadata::resolve_embedded_content_metadata(
+                instance, loader, files, state,
+            ),
+            tokio::task::spawn_blocking(move || {
+                paths
+                    .iter()
+                    .map(|path| {
+                        std::fs::metadata(path)
+                            .and_then(|metadata| metadata.modified())
+                            .ok()
+                            .map(|time| {
+                                chrono::DateTime::<chrono::Utc>::from(time)
+                                    .to_rfc3339()
+                            })
+                    })
+                    .collect::<Vec<Option<String>>>()
+            }),
+        );
+    let meta = meta?;
+    let embedded_metadata = embedded_metadata?;
+    let modification_times = modification_times?;
+
+    let projects_by_id: HashMap<&str, &Project> = meta
+        .projects
+        .iter()
+        .map(|project| (project.id.as_str(), project))
+        .collect();
+    let versions_by_id: HashMap<&str, &Version> = meta
+        .versions
+        .iter()
+        .map(|version| (version.id.as_str(), version))
+        .collect();
+    let env_by_version_id: HashMap<&str, VersionEnvironment> = meta
+        .versions_v3
+        .iter()
+        .filter_map(|version| {
+            version
+                .environment
+                .map(|env| (version.id.as_str(), env))
         })
-        .await?;
+        .collect();
+    let orgs_by_id: HashMap<&str, &Organization> = meta
+        .organizations
+        .iter()
+        .map(|org| (org.id.as_str(), org))
+        .collect();
+    let team_owners_by_id: HashMap<&str, &TeamMember> = meta
+        .teams
+        .iter()
+        .filter_map(|team| {
+            let team_id = team.first()?.team_id.as_str();
+            let owner = team.iter().find(|member| member.is_owner)?;
+            Some((team_id, owner))
+        })
+        .collect();
+
     let mut items = files
         .iter()
         .enumerate()
         .map(|(index, (path, file))| {
-            let project = file.metadata.as_ref().and_then(|metadata| {
-                meta.projects
-                    .iter()
-                    .find(|project| project.id == metadata.project_id)
-            });
-            let version = file.metadata.as_ref().and_then(|metadata| {
-                meta.versions
-                    .iter()
-                    .find(|version| version.id == metadata.version_id)
-            });
+            let project = file
+                .metadata
+                .as_ref()
+                .and_then(|metadata| projects_by_id.get(metadata.project_id.as_str()).copied());
+            let version = file
+                .metadata
+                .as_ref()
+                .and_then(|metadata| versions_by_id.get(metadata.version_id.as_str()).copied());
             let owner = project.and_then(|project| {
-                resolve_owner(project, &meta.teams, &meta.organizations)
+                if let Some(org_id) = &project.organization {
+                    orgs_by_id.get(org_id.as_str()).map(|organization| ContentItemOwner {
+                        id: organization.id.clone(),
+                        name: organization.name.clone(),
+                        avatar_url: organization.icon_url.clone(),
+                        owner_type: OwnerType::Organization,
+                        external_url: None,
+                    })
+                } else {
+                    team_owners_by_id.get(project.team.as_str()).map(|member| ContentItemOwner {
+                        id: member.user.id.clone(),
+                        name: member.user.username.clone(),
+                        avatar_url: member.user.avatar_url.clone(),
+                        owner_type: OwnerType::User,
+                        external_url: None,
+                    })
+                }
             });
             // Noctrinth's own: what CurseForge answered, in the shape the row
             // draws. Only reached for a file whose ids were CurseForge's, or
@@ -1183,12 +1244,10 @@ async fn content_files_to_content_items(
                             date_published: cf_file.file_date.clone(),
                         })
                     }),
-                environment: resolve_environment(
-                    file.metadata
-                        .as_ref()
-                        .map(|metadata| metadata.version_id.as_str()),
-                    &meta.versions_v3,
-                ),
+                environment: file
+                    .metadata
+                    .as_ref()
+                    .and_then(|metadata| env_by_version_id.get(metadata.version_id.as_str()).copied()),
                 owner: owner.or_else(|| {
                     curseforge_project.and_then(curseforge_content_item_owner)
                 }),

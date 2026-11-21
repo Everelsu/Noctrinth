@@ -20,6 +20,14 @@ pub(crate) async fn sync_content_files(
     instance_id: &str,
     state: &State,
 ) -> crate::Result<Vec<InstanceFile>> {
+    let (files, _) = sync_content_files_with_changed(instance_id, state).await?;
+    Ok(files)
+}
+
+pub(crate) async fn sync_content_files_with_changed(
+    instance_id: &str,
+    state: &State,
+) -> crate::Result<(Vec<InstanceFile>, bool)> {
     let instance =
         sqlite::instance_rows::get_instance_by_id(instance_id, &state.pool)
             .await?
@@ -27,7 +35,7 @@ pub(crate) async fn sync_content_files(
                 "unknown instance".to_string(),
             ))?;
 
-    sync_instance_content_files(&instance, state).await
+    sync_instance_content_scope(&instance, None, state).await
 }
 
 pub(crate) async fn sync_changed_content_files(
@@ -53,7 +61,8 @@ pub(crate) async fn sync_changed_content_files(
         &existing,
         &bound_ids,
     )?;
-    sync_instance_content_scope(instance, scope.as_ref(), state).await
+    let (files, _) = sync_instance_content_scope(instance, scope.as_ref(), state).await?;
+    Ok(files)
 }
 
 fn changed_content_scope(
@@ -119,14 +128,15 @@ pub(crate) async fn sync_instance_content_files(
     instance: &Instance,
     state: &State,
 ) -> crate::Result<Vec<InstanceFile>> {
-    sync_instance_content_scope(instance, None, state).await
+    let (files, _) = sync_instance_content_scope(instance, None, state).await?;
+    Ok(files)
 }
 
 async fn sync_instance_content_scope(
     instance: &Instance,
     scope: Option<&HashSet<String>>,
     state: &State,
-) -> crate::Result<Vec<InstanceFile>> {
+) -> crate::Result<(Vec<InstanceFile>, bool)> {
     let in_scope = |file: &InstanceFile| {
         scope.is_none_or(|paths| {
             paths.contains(file.relative_path.trim_end_matches(".disabled"))
@@ -141,11 +151,12 @@ async fn sync_instance_content_scope(
             InstanceInstallStage::MinecraftInstalling
                 | InstanceInstallStage::PackInstalling
         ) {
-            return sqlite::content_rows::get_instance_files(
+            let files = sqlite::content_rows::get_instance_files(
                 &instance.id,
                 &state.pool,
             )
-            .await;
+            .await?;
+            return Ok((files, false));
         }
         let snapshot = filesystem::scan_content_paths(
             &state.directories.instances_dir(),
@@ -225,11 +236,12 @@ async fn sync_instance_content_scope(
         InstanceInstallStage::MinecraftInstalling
             | InstanceInstallStage::PackInstalling
     ) {
-        return sqlite::content_rows::get_instance_files(
+        let files = sqlite::content_rows::get_instance_files(
             &instance.id,
             &state.pool,
         )
-        .await;
+        .await?;
+        return Ok((files, false));
     }
     let running =
         crate::state::instance_has_running_process(&instance.id, state).await?;
@@ -423,42 +435,57 @@ async fn sync_instance_content_scope(
                     || previous.relative_path != file.relative_path
             })
         });
-    let mut tx = state.pool.begin_with("BEGIN IMMEDIATE").await?;
-    for file_id in &unbound {
-        crate::state::content_store::remove_file_storage(&mut tx, file_id)
-            .await?;
-    }
-    for file in missing {
-        sqlite::content_rows::set_instance_file_missing(
-            &file.id, true, &mut tx,
-        )
-        .await?;
-    }
-    let mut stored = Vec::new();
-    for file in files {
-        if saved_files.contains(&file.id)
+    let needs_upsert = files.iter().any(|file| {
+        !(saved_files.contains(&file.id)
             || existing_by_id
                 .get(file.id.as_str())
                 .is_some_and(|previous| {
-                    is_content_unchanged(&file, previous)
+                    is_content_unchanged(file, previous)
                         && file.modified_at.timestamp()
                             == previous.modified_at.timestamp()
-                })
-        {
-            stored.push(file);
-        } else {
-            stored.push(
-                sqlite::content_rows::upsert_instance_file(&file, &mut tx)
-                    .await?,
-            );
+                }))
+    });
+    let stored = if unbound.is_empty() && missing.is_empty() && !needs_upsert {
+        files
+    } else {
+        let mut tx = state.pool.begin_with("BEGIN IMMEDIATE").await?;
+        for file_id in &unbound {
+            crate::state::content_store::remove_file_storage(&mut tx, file_id)
+                .await?;
         }
-    }
-    tx.commit().await?;
+        for file in missing {
+            sqlite::content_rows::set_instance_file_missing(
+                &file.id, true, &mut tx,
+            )
+            .await?;
+        }
+        let mut stored = Vec::with_capacity(files.len());
+        for file in files {
+            if saved_files.contains(&file.id)
+                || existing_by_id
+                    .get(file.id.as_str())
+                    .is_some_and(|previous| {
+                        is_content_unchanged(&file, previous)
+                            && file.modified_at.timestamp()
+                                == previous.modified_at.timestamp()
+                    })
+            {
+                stored.push(file);
+            } else {
+                stored.push(
+                    sqlite::content_rows::upsert_instance_file(&file, &mut tx)
+                        .await?,
+                );
+            }
+        }
+        tx.commit().await?;
+        stored
+    };
     if changed {
         super::mark_shared_instance_stale(&instance.id, &state.pool).await?;
         crate::api::instance::queue_game_locale_index();
     }
-    Ok(stored)
+    Ok((stored, changed))
 }
 
 async fn changed_outside_app(

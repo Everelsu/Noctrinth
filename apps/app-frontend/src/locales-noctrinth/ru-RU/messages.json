@@ -239,6 +239,15 @@
 	"app.crash-modal.status": {
 		"message": "Статус завершения: {status}"
 	},
+	"app.crash.copied-line": {
+		"message": "Скопировано"
+	},
+	"app.crash.copy-line": {
+		"message": "Копировать строку"
+	},
+	"app.crash.details": {
+		"message": "Подробнее"
+	},
 	"app.crash.disable-mod": {
 		"message": "Отключить {mod}"
 	},
@@ -257,8 +266,26 @@
 	"app.crash.header-note": {
 		"message": "Об этом запуске стоит знать"
 	},
+	"app.crash.hide-details": {
+		"message": "Свернуть"
+	},
 	"app.crash.hide-evidence": {
 		"message": "Скрыть строку"
+	},
+	"app.crash.other-causes": {
+		"message": "Другие возможные причины ({count})"
+	},
+	"app.crash.primary-cause": {
+		"message": "Вероятная причина"
+	},
+	"app.crash.severity.critical": {
+		"message": "Критично"
+	},
+	"app.crash.severity.note": {
+		"message": "Заметка"
+	},
+	"app.crash.severity.warning": {
+		"message": "Предупреждение"
 	},
 	"app.crash.memory-hint": {
 		"message": "У игры было {current} ГБ на {mods} модов. Сборке такого размера обычно нужно {gb} ГБ, и у этого компьютера они есть."
@@ -2425,5 +2452,14 @@
 	},
 	"noctrinth.news.modrinth-news": {
 		"message": "Новости Modrinth"
+	},
+	"app.action-bar.install.inspect-details": {
+		"message": "Подробнее"
+	},
+	"noctrinth.instance.logs.open-file": {
+		"message": "Открыть файл"
+	},
+	"noctrinth.instance.logs.open-folder": {
+		"message": "Папка логов"
 	}
 }

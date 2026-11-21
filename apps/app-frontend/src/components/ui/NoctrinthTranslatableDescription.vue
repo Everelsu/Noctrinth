@@ -12,7 +12,7 @@
 import { LanguagesIcon, SpinnerIcon } from '@modrinth/assets'
 import { defineMessages, useVIntl } from '@modrinth/ui'
 import { renderHighlightedString } from '@modrinth/utils'
-import { computed, ref, unref, watch } from 'vue'
+import { computed, onMounted, ref, unref, watch } from 'vue'
 
 import {
 	detectLanguage,
@@ -118,86 +118,103 @@ watch(
 	},
 	{ immediate: true },
 )
+const tabsActionHost = ref<HTMLElement | null>(null)
+onMounted(() => {
+	tabsActionHost.value = document.getElementById('project-tabs-actions')
+})
 </script>
 
 <template>
 	<div class="nt" :class="{ 'is-working': translating }">
-		<Transition name="nt-bar">
-			<div v-if="offered" class="nt-bar">
-				<span class="nt-bar__info">
-					<LanguagesIcon class="nt-bar__icon" aria-hidden="true" />
-					<Transition name="nt-fade" mode="out-in">
-						<span v-if="error" key="error" class="text-red">
-							{{ formatMessage(messages.failed, { reason: error }) }}
-						</span>
-						<span v-else-if="showTranslated && translation" key="by">
-							{{
-								formatMessage(messages.translatedBy, {
-									service: SERVICE_NAMES[translation.provider],
-								})
-							}}
-						</span>
-						<span v-else-if="detected" key="lang">
-							{{
-								formatMessage(messages.sourceLanguage, {
-									language: languageName(detected, locale),
-								})
-							}}
-						</span>
-					</Transition>
-				</span>
+		<Teleport :to="tabsActionHost" :disabled="!tabsActionHost">
+			<Transition name="nt-bar">
+				<div
+					v-if="offered"
+					class="nt-bar"
+					:class="{
+						'nt-bar--compact': !(error || (showTranslated && translation) || detected),
+						'nt-bar--in-tabs': !!tabsActionHost,
+						'is-working': translating,
+					}"
+				>
+					<span
+						v-if="error || (showTranslated && translation) || detected"
+						class="nt-bar__info"
+					>
+						<LanguagesIcon class="nt-bar__icon" aria-hidden="true" />
+						<Transition name="nt-fade" mode="out-in">
+							<span v-if="error" key="error" class="text-red">
+								{{ formatMessage(messages.failed, { reason: error }) }}
+							</span>
+							<span v-else-if="showTranslated && translation" key="by">
+								{{
+									formatMessage(messages.translatedBy, {
+										service: SERVICE_NAMES[translation.provider],
+									})
+								}}
+							</span>
+							<span v-else-if="detected" key="lang">
+								{{
+									formatMessage(messages.sourceLanguage, {
+										language: languageName(detected, locale),
+									})
+								}}
+							</span>
+						</Transition>
+					</span>
 
-				<Transition name="nt-fade" mode="out-in">
-					<div
-						v-if="translation"
-						key="switch"
-						class="nt-switch"
-						role="radiogroup"
-						:class="{ 'is-right': showTranslated }"
-					>
-						<span class="nt-switch__thumb" aria-hidden="true" />
-						<button
-							type="button"
-							role="radio"
-							:aria-checked="!showTranslated"
-							:class="{ 'is-active': !showTranslated }"
-							@click="showTranslated = false"
+					<Transition name="nt-fade" mode="out-in">
+						<div
+							v-if="translation"
+							key="switch"
+							class="nt-switch"
+							role="radiogroup"
+							:class="{ 'is-right': showTranslated }"
 						>
-							{{ formatMessage(messages.original) }}
-						</button>
+							<span class="nt-switch__thumb" aria-hidden="true" />
+							<button
+								type="button"
+								role="radio"
+								:aria-checked="!showTranslated"
+								:class="{ 'is-active': !showTranslated }"
+								@click="showTranslated = false"
+							>
+								{{ formatMessage(messages.original) }}
+							</button>
+							<button
+								type="button"
+								role="radio"
+								:aria-checked="showTranslated"
+								:class="{ 'is-active': showTranslated }"
+								@click="showTranslated = true"
+							>
+								{{ targetName }}
+							</button>
+						</div>
 						<button
+							v-else
+							key="pill"
 							type="button"
-							role="radio"
-							:aria-checked="showTranslated"
-							:class="{ 'is-active': showTranslated }"
-							@click="showTranslated = true"
+							class="nt-pill"
+							:disabled="translating"
+							@click="translate"
 						>
-							{{ targetName }}
+							<SpinnerIcon v-if="translating" class="animate-spin" aria-hidden="true" />
+							<LanguagesIcon v-else aria-hidden="true" />
+							<span>
+								{{
+									translating
+										? formatMessage(messages.translating)
+										: error
+											? formatMessage(messages.retry)
+											: formatMessage(messages.translate, { language: languageName(target, locale) })
+								}}
+							</span>
 						</button>
-					</div>
-					<button
-						v-else
-						key="pill"
-						type="button"
-						class="nt-pill"
-						:disabled="translating"
-						@click="translate"
-					>
-						<SpinnerIcon v-if="translating" class="animate-spin" aria-hidden="true" />
-						<LanguagesIcon v-else aria-hidden="true" />
-						<span>
-							{{
-								translating
-									? formatMessage(messages.translating)
-									: error
-										? formatMessage(messages.retry)
-										: formatMessage(messages.translate, { language: languageName(target, locale) })
-							}}
-						</span>
-					</button>
-				</Transition>
-			</div>
-		</Transition>
+					</Transition>
+				</div>
+			</Transition>
+		</Teleport>
 
 		<Transition name="nt-swap" mode="out-in">
 			<!-- Both sides went through the description sanitiser. -->
@@ -214,16 +231,47 @@ watch(
 
 <style scoped lang="scss">
 .nt-bar {
-	display: flex;
+	display: inline-flex;
 	flex-wrap: wrap;
 	align-items: center;
-	justify-content: space-between;
-	gap: 0.5rem 1rem;
-	margin-bottom: 1rem;
-	padding: 0.375rem 0.375rem 0.375rem 0.875rem;
+	gap: 0.5rem 0.75rem;
+	max-width: 100%;
+	margin-bottom: 0.75rem;
+	padding: 0.25rem 0.25rem 0.25rem 0.75rem;
 	border: 1px solid var(--surface-5);
 	border-radius: 999px;
 	background: var(--surface-2);
+	transition:
+		padding 200ms ease,
+		border-color 200ms ease,
+		background-color 200ms ease;
+}
+
+.nt-bar--compact {
+	padding: 0;
+	border-color: transparent;
+	background: transparent;
+}
+
+.nt-bar--in-tabs {
+	margin-bottom: 0;
+}
+
+.nt-bar--in-tabs.nt-bar--compact .nt-pill {
+	padding: 0.5rem 1rem;
+	border: 1px solid var(--surface-5);
+	background: var(--surface-2);
+	color: var(--color-primary);
+
+	svg {
+		color: var(--color-brand);
+	}
+
+	&:hover:not(:disabled) {
+		border-color: color-mix(in srgb, var(--color-brand) 45%, transparent);
+		background: color-mix(in srgb, var(--color-brand) 14%, var(--surface-2));
+		color: var(--color-brand);
+	}
 }
 
 .nt-bar__info {

@@ -485,7 +485,7 @@ static RULES: &[Rule] = &[
     Rule {
         id: "optifine_present",
         severity: CrashSeverity::Warning,
-        pattern: r"(?P<frame>(?:net\.optifine|optifine)[\w.$]*)",
+        pattern: r"(?P<frame>(?:net\.optifine\.|optifine\.OptiFine|at\s+optifine\.|OptiFine_1\.\d+)[\w.$]*)",
         also: Some(r"(?i)(?:exception|error|crash)"),
         unless: None,
         kinds: &[],
@@ -513,7 +513,7 @@ static RULES: &[Rule] = &[
     Rule {
         id: "corrupted_archive",
         severity: CrashSeverity::Critical,
-        pattern: r"(?:java\.util\.zip\.ZipException|Invalid CEN header|zip END header not found|zip file is empty|error in opening zip file|Failed to create secure jar for|UnionFileSystem\$UncheckedIOException|java\.io\.EOFException)",
+        pattern: r"(?:java\.util\.zip\.ZipException|Invalid CEN header|zip END header not found|zip file is empty|error in opening zip file|Failed to create secure jar for|UnionFileSystem\$UncheckedIOException)",
         also: None,
         unless: None,
         kinds: &[],
@@ -562,7 +562,7 @@ static RULES: &[Rule] = &[
     Rule {
         id: "opengl_unsupported",
         severity: CrashSeverity::Critical,
-        pattern: r"(?:GLFW error 6554[0-9]|WGL: The driver does not appear to support OpenGL|Pixel format not accelerated|Failed to create window|OpenGL 3\.2|GL_ARB_framebuffer_object)",
+        pattern: r"(?:GLFW error 6554[0-9]|WGL: The driver does not appear to support OpenGL|Pixel format not accelerated|Failed to create window|requires OpenGL 3\.2|OpenGL 3\.2[^\n]{0,40}?not supported|GL_ARB_framebuffer_object[^\n]{0,40}?not supported)",
         also: None,
         unless: None,
         kinds: &[],
@@ -968,6 +968,21 @@ pub async fn analyze_instance(
         .iter()
         .find(|(kind, _, _)| *kind == CrashSourceKind::LauncherLog)
         .and_then(|(_, _, text)| exit_of(text));
+    let has_crash_artifact = diagnosis.sources.iter().any(|source| {
+        matches!(
+            source.kind,
+            CrashSourceKind::CrashReport | CrashSourceKind::JvmError
+        )
+    });
+    if !has_crash_artifact
+        && diagnosis
+            .exit
+            .as_ref()
+            .is_some_and(|exit| exit.success || exit.stopped)
+    {
+        diagnosis.findings.clear();
+        return Ok(diagnosis);
+    }
     let crashed = diagnosis.exit.as_ref().is_some_and(CrashExit::crashed);
 
     if crashed || !diagnosis.findings.is_empty() {

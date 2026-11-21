@@ -190,41 +190,49 @@
 						</template>
 					</template>
 				</ProjectPageHeader>
-				<NavTabs
-					:links="[
-						{
-							label: formatMessage(messages.descriptionTab),
-							href: projectDescriptionHref,
-						},
-						{
-							label: formatMessage(messages.versionsTab),
-							href: versionsHref,
-							subpages: ['version'],
-							shown: projectV3?.minecraft_server == null,
-						},
-						{
-							label: formatMessage(messages.galleryTab),
-							href: projectGalleryHref,
-							shown: data.gallery.length > 0,
-						},
-					]"
-				/>
-				<RouterView
-					:route="displayedProjectRoute"
-					:project="data"
-					:versions="versions"
-					:members="members"
-					:instance="instance"
-					:install="install"
-					:installed="installed"
-					:installing="installing"
-					:installed-version="installedVersion"
-					:server-install-context="serverProjectInstallContext"
-					:server-installed="serverProjectInstalled"
-					:server-selected-version-id="serverSelectedVersionId"
-					:loader-tags="allLoaders ?? []"
-					:game-version-tags="allGameVersions ?? []"
-				/>
+				<div class="flex flex-wrap items-center justify-between gap-3">
+					<NavTabs
+						:links="[
+							{
+								label: formatMessage(messages.descriptionTab),
+								href: projectDescriptionHref,
+							},
+							{
+								label: formatMessage(messages.versionsTab),
+								href: versionsHref,
+								subpages: ['version'],
+								shown: projectV3?.minecraft_server == null,
+							},
+							{
+								label: formatMessage(messages.galleryTab),
+								href: projectGalleryHref,
+								shown: data.gallery.length > 0,
+							},
+						]"
+					/>
+					<div id="project-tabs-actions" class="flex items-center empty:hidden" />
+				</div>
+				<RouterView v-slot="{ Component, route: tabRoute }">
+					<div v-if="Component" :key="tabRoute.path" class="nm-page-enter">
+						<component
+							:is="Component"
+							:route="displayedProjectRoute"
+							:project="data"
+							:versions="versions"
+							:members="members"
+							:instance="instance"
+							:install="install"
+							:installed="installed"
+							:installing="installing"
+							:installed-version="installedVersion"
+							:server-install-context="serverProjectInstallContext"
+							:server-installed="serverProjectInstalled"
+							:server-selected-version-id="serverSelectedVersionId"
+							:loader-tags="allLoaders ?? []"
+							:game-version-tags="allGameVersions ?? []"
+						/>
+					</div>
+				</RouterView>
 			</template>
 			<template v-else>{{ formatMessage(messages.loadError) }}</template>
 		</div>
@@ -257,6 +265,36 @@
 			@browse-modpacks="() => {}"
 			@create="serverInstallContent.handleServerModpackFlowCreate"
 		/>
+	</div>
+	<div v-else class="flex flex-col gap-5 p-6 animate-pulse" aria-hidden="true">
+		<div class="flex flex-wrap items-center justify-between gap-4">
+			<div class="flex min-w-0 flex-1 items-center gap-4">
+				<div class="size-24 shrink-0 rounded-2xl bg-surface-3" />
+				<div class="flex min-w-0 flex-1 flex-col gap-2.5">
+					<div class="h-7 w-64 max-w-[70%] rounded-lg bg-surface-3" />
+					<div class="h-4 w-96 max-w-[90%] rounded-md bg-surface-3/80" />
+					<div class="flex gap-2">
+						<div class="h-5 w-24 rounded-full bg-surface-3/70" />
+						<div class="h-5 w-20 rounded-full bg-surface-3/70" />
+						<div class="h-5 w-16 rounded-full bg-surface-3/70" />
+					</div>
+				</div>
+			</div>
+			<div class="h-11 w-36 shrink-0 rounded-xl bg-surface-3" />
+		</div>
+		<div class="flex gap-2">
+			<div class="h-10 w-28 rounded-full bg-surface-3" />
+			<div class="h-10 w-24 rounded-full bg-surface-3/70" />
+		</div>
+		<div
+			class="flex flex-col gap-3 rounded-2xl border border-solid border-surface-5 bg-surface-2 p-6"
+		>
+			<div class="h-5 w-48 rounded-md bg-surface-3" />
+			<div class="h-4 w-full rounded-md bg-surface-3/80" />
+			<div class="h-4 w-11/12 rounded-md bg-surface-3/80" />
+			<div class="h-4 w-4/5 rounded-md bg-surface-3/70" />
+			<div class="mt-2 h-40 w-full rounded-xl bg-surface-3/60" />
+		</div>
 	</div>
 </template>
 

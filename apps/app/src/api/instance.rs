@@ -658,9 +658,8 @@ pub async fn instance_get_content_items(
 }
 
 #[tauri::command]
-pub async fn instance_sync_content_files(instance_id: &str) -> Result<()> {
-    theseus::instance::sync_content_files(instance_id).await?;
-    Ok(())
+pub async fn instance_sync_content_files(instance_id: &str) -> Result<bool> {
+    Ok(theseus::instance::sync_content_files_with_changed(instance_id).await?)
 }
 
 #[tauri::command]

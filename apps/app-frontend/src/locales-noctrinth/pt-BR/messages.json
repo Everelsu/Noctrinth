@@ -1,0 +1,2369 @@
+{
+	"app.account-provider.description": {
+		"message": "Com qual conta você joga?"
+	},
+	"app.account-provider.ely": {
+		"message": "Conta Ely.by"
+	},
+	"app.account-provider.ely-hint": {
+		"message": "Para servidores que aceitam Ely.by."
+	},
+	"app.account-provider.header": {
+		"message": "Adicionar uma conta"
+	},
+	"app.account-provider.microsoft": {
+		"message": "Conta Microsoft"
+	},
+	"app.account-provider.microsoft-hint": {
+		"message": "Uma conta do Minecraft comprada da Mojang."
+	},
+	"app.account-provider.offline": {
+		"message": "Conta offline"
+	},
+	"app.account-provider.offline-hint": {
+		"message": "Apenas um nome. Um jogador e servidores em modo offline."
+	},
+	"app.account.collections": {
+		"message": "Coleções"
+	},
+	"app.account.notifications": {
+		"message": "Notificações"
+	},
+	"app.action-bar.install.inspect-details": {
+		"message": "Inspecionar detalhes"
+	},
+	"app.appearance-settings.accent-tint.description": {
+		"message": "Dá aos tons de cinza do aplicativo — seus fundos e painéis — um leve reflexo da mesma cor. O destaque, a barra lateral e a barra de carregamento seguem a predefinição de qualquer forma."
+	},
+	"app.appearance-settings.accent-tint.title": {
+		"message": "Colorir o fundo também"
+	},
+	"app.appearance-settings.accent.custom": {
+		"message": "Personalizado"
+	},
+	"app.appearance-settings.accent.custom.brightness": {
+		"message": "Brilho"
+	},
+	"app.appearance-settings.accent.custom.hex": {
+		"message": "Cor hexadecimal"
+	},
+	"app.appearance-settings.accent.custom.wheel": {
+		"message": "Matiz e saturação"
+	},
+	"app.appearance-settings.accent.description": {
+		"message": "A cor usada para destacar a interface. Cada uma fica mais profunda em temas claros e mais vibrante em temas escuros."
+	},
+	"app.appearance-settings.accent.ember": {
+		"message": "Brasa"
+	},
+	"app.appearance-settings.accent.lantern": {
+		"message": "Lanterna"
+	},
+	"app.appearance-settings.accent.midnight": {
+		"message": "Meia-noite"
+	},
+	"app.appearance-settings.accent.nightshade": {
+		"message": "Beladona"
+	},
+	"app.appearance-settings.accent.rose": {
+		"message": "Rosa"
+	},
+	"app.appearance-settings.accent.theme": {
+		"message": "Tema"
+	},
+	"app.appearance-settings.accent.title": {
+		"message": "Cor de destaque"
+	},
+	"app.appearance-settings.accent.verdant": {
+		"message": "Verdejante"
+	},
+	"app.appearance-settings.font.custom": {
+		"message": "Personalizada"
+	},
+	"app.appearance-settings.font.custom.none": {
+		"message": "Nenhuma fonte instalada tem esse nome"
+	},
+	"app.appearance-settings.font.custom.placeholder": {
+		"message": "Escolha uma fonte instalada neste computador"
+	},
+	"app.appearance-settings.font.custom.search": {
+		"message": "Pesquisar fontes"
+	},
+	"app.appearance-settings.font.default": {
+		"message": "Inter"
+	},
+	"app.appearance-settings.font.default.badge": {
+		"message": "Padrão"
+	},
+	"app.appearance-settings.font.description": {
+		"message": "A fonte usada pelo aplicativo. Qualquer caractere que a fonte escolhida não tiver será exibido em Inter."
+	},
+	"app.appearance-settings.font.minecraft": {
+		"message": "Minecraft"
+	},
+	"app.appearance-settings.font.system": {
+		"message": "Sistema"
+	},
+	"app.appearance-settings.font.title": {
+		"message": "Fonte da interface"
+	},
+	"app.browse.source.label": {
+		"message": "Onde explorar"
+	},
+	"app.changelog.author": {
+		"message": "Autor"
+	},
+	"app.changelog.installed": {
+		"message": "Instalado"
+	},
+	"app.changelog.modrinth-note": {
+		"message": "Exibindo lançamentos recentes. O registro de alterações completo do Modrinth App está disponível no site deles."
+	},
+	"app.changelog.noctrinth-note": {
+		"message": "O registro de alterações completo do Noctrinth também está disponível online."
+	},
+	"app.changelog.open-modrinth": {
+		"message": "Abrir registro de alterações do Modrinth"
+	},
+	"app.changelog.open-noctrinth": {
+		"message": "Abrir registro de alterações do Noctrinth"
+	},
+	"app.changelog.source.modrinth": {
+		"message": "Modrinth"
+	},
+	"app.changelog.source.noctrinth": {
+		"message": "Noctrinth"
+	},
+	"app.changelog.support": {
+		"message": "Apoiar no Boosty"
+	},
+	"app.collection.create.created": {
+		"message": "Coleção criada"
+	},
+	"app.collection.create.created.detail": {
+		"message": "“{name}” criada."
+	},
+	"app.collection.create.header": {
+		"message": "Criando uma coleção"
+	},
+	"app.collection.create.name": {
+		"message": "Nome"
+	},
+	"app.collection.create.name.placeholder": {
+		"message": "Digite o nome da coleção..."
+	},
+	"app.collection.create.submit": {
+		"message": "Criar coleção"
+	},
+	"app.collection.create.submitting": {
+		"message": "Criando..."
+	},
+	"app.collection.create.summary": {
+		"message": "Resumo"
+	},
+	"app.collection.create.summary.hint": {
+		"message": "Uma ou duas frases que descrevam sua coleção."
+	},
+	"app.collection.create.summary.placeholder": {
+		"message": "Esta é uma coleção de..."
+	},
+	"app.collection.create.visibility-note": {
+		"message": "Sua nova coleção será criada como uma coleção pública com {count, plural, =0 {nenhum projeto} one {# projeto} other {# projetos}}."
+	},
+	"app.collection.delete-modal.description": {
+		"message": "Isso excluirá permanentemente esta coleção. Esta ação não pode ser desfeita."
+	},
+	"app.collection.delete-modal.title": {
+		"message": "Tem certeza de que deseja excluir esta coleção?"
+	},
+	"app.collection.edit.description": {
+		"message": "Descrição"
+	},
+	"app.collection.edit.header": {
+		"message": "Editando coleção"
+	},
+	"app.collection.edit.saving": {
+		"message": "Salvando..."
+	},
+	"app.collection.edit.title": {
+		"message": "Título"
+	},
+	"app.collection.edit.visibility": {
+		"message": "Visibilidade"
+	},
+	"app.collection.save-button.create": {
+		"message": "Criar nova coleção"
+	},
+	"app.collection.save-button.empty": {
+		"message": "Você ainda não tem nenhuma coleção."
+	},
+	"app.collection.save-button.loading": {
+		"message": "Carregando coleções..."
+	},
+	"app.collection.save-button.no-matches": {
+		"message": "Nenhuma coleção corresponde à sua pesquisa."
+	},
+	"app.collection.save-button.save": {
+		"message": "Salvar na coleção"
+	},
+	"app.collection.save-button.save-tooltip": {
+		"message": "Salvar"
+	},
+	"app.collection.save-button.saved": {
+		"message": "Salvo em uma coleção"
+	},
+	"app.collection.save-button.saved-tooltip": {
+		"message": "Salvo"
+	},
+	"app.collection.save-button.search": {
+		"message": "Pesquisar..."
+	},
+	"app.collection.save-button.sign-in": {
+		"message": "Entre no Modrinth para salvar projetos."
+	},
+	"app.collection.visibility.listed": {
+		"message": "Pública"
+	},
+	"app.collection.visibility.private": {
+		"message": "Privada"
+	},
+	"app.collection.visibility.unlisted": {
+		"message": "Não listada"
+	},
+	"app.content-install.curseforge.missing-dependencies.text": {
+		"message": "Estes não têm versão para esta instância e precisam ser adicionados de outra forma: {names}"
+	},
+	"app.content-install.curseforge.missing-dependencies.title": {
+		"message": "Instalado sem algumas de suas dependências"
+	},
+	"app.crash-modal.close": {
+		"message": "Fechar"
+	},
+	"app.crash-modal.header": {
+		"message": "{instance} fechou inesperadamente"
+	},
+	"app.crash-modal.nothing-found": {
+		"message": "O launcher não reconheceu a causa. O log tem os detalhes e pode ser compartilhado a partir de lá."
+	},
+	"app.crash-modal.open-logs": {
+		"message": "Abrir logs"
+	},
+	"app.crash-modal.status": {
+		"message": "Código de saída: {status}"
+	},
+	"app.crash.copied-line": {
+		"message": "Copiado"
+	},
+	"app.crash.copy-line": {
+		"message": "Copiar linha"
+	},
+	"app.crash.details": {
+		"message": "Detalhes"
+	},
+	"app.crash.disable-mod": {
+		"message": "Desativar {mod}"
+	},
+	"app.crash.dismiss": {
+		"message": "Dispensar"
+	},
+	"app.crash.found-in": {
+		"message": "Em {file}"
+	},
+	"app.crash.game-said": {
+		"message": "O jogo informou: {description}"
+	},
+	"app.crash.header-count": {
+		"message": "{count, plural, one {O launcher encontrou uma causa provável} other {O launcher encontrou # causas prováveis}}"
+	},
+	"app.crash.header-note": {
+		"message": "Vale saber sobre esta execução"
+	},
+	"app.crash.hide-details": {
+		"message": "Recolher"
+	},
+	"app.crash.hide-evidence": {
+		"message": "Ocultar a linha"
+	},
+	"app.crash.memory-hint": {
+		"message": "Ela tinha {current} GB para {mods} mods. {gb} GB é o que um modpack desse tamanho geralmente precisa, e este computador tem memória sobrando."
+	},
+	"app.crash.memory-set": {
+		"message": "Memória definida para {gb} GB"
+	},
+	"app.crash.mod-disabled": {
+		"message": "{mod} foi desativado"
+	},
+	"app.crash.open-folder": {
+		"message": "Abrir pasta da instância"
+	},
+	"app.crash.open-settings": {
+		"message": "Abrir configurações"
+	},
+	"app.crash.other-causes": {
+		"message": "Outras causas possíveis ({count})"
+	},
+	"app.crash.primary-cause": {
+		"message": "Causa mais provável"
+	},
+	"app.crash.rule.broken-mod-file.fix": {
+		"message": "Não é um arquivo legível — um download que foi interrompido. Desative-o e baixe novamente."
+	},
+	"app.crash.rule.broken-mod-file.title": {
+		"message": "{mod_file} está danificado"
+	},
+	"app.crash.rule.chunk-unreadable.fix": {
+		"message": "Faça backup do mundo antes de qualquer outra coisa. Um único arquivo de região danificado pode ser excluído e regenerado, perdendo apenas o que foi construído ali."
+	},
+	"app.crash.rule.chunk-unreadable.title": {
+		"message": "Parte do mundo não pôde ser lida (chunk {chunk})"
+	},
+	"app.crash.rule.config-file-empty.fix": {
+		"message": "O jogo fechou enquanto salvava o arquivo. Exclua-o e o mod criará outro com os padrões."
+	},
+	"app.crash.rule.config-file-empty.title": {
+		"message": "{file} está vazio"
+	},
+	"app.crash.rule.config-truncated.fix": {
+		"message": "O jogo fechou enquanto salvava o arquivo. Exclua o arquivo indicado na linha abaixo e ele será recriado com os padrões."
+	},
+	"app.crash.rule.config-truncated.title": {
+		"message": "Um arquivo de configuração está vazio ou incompleto"
+	},
+	"app.crash.rule.config-unreadable.fix": {
+		"message": "Exclua esse arquivo e inicie o jogo novamente — o mod criará um novo com os padrões."
+	},
+	"app.crash.rule.config-unreadable.title": {
+		"message": "Um arquivo de configuração está danificado ({file})"
+	},
+	"app.crash.rule.connector-fabric-mod.fix": {
+		"message": "No NeoForge, instale a versão própria para NeoForge do mod quando existir — Sodium e Iris têm versões oficiais e não passam pelo Connector. No Forge 1.20.1 e anteriores, os equivalentes são Embeddium e Oculus."
+	},
+	"app.crash.rule.connector-fabric-mod.title": {
+		"message": "O Sinytra Connector não conseguiu carregar um mod do Fabric ({exception})"
+	},
+	"app.crash.rule.corrupted-archive.fix": {
+		"message": "Repare a instância para que o launcher baixe o arquivo novamente. Um download interrompido deixa exatamente isso."
+	},
+	"app.crash.rule.corrupted-archive.title": {
+		"message": "Um arquivo que o jogo precisava ler está danificado ou baixado pela metade"
+	},
+	"app.crash.rule.crash-description.title": {
+		"message": "O jogo descreveu como: {description}"
+	},
+	"app.crash.rule.datapack-blocked-world.fix": {
+		"message": "Um mod que adiciona receitas ou geração de mundo foi removido ou alterado. Coloque-o de volta ou abra o mundo em \"modo de segurança\" para carregá-lo sem o datapack quebrado."
+	},
+	"app.crash.rule.datapack-blocked-world.title": {
+		"message": "O mundo não carregou porque um datapack tem erros"
+	},
+	"app.crash.rule.disk-full.fix": {
+		"message": "Libere espaço na unidade onde a instância está salva e inicie novamente."
+	},
+	"app.crash.rule.disk-full.title": {
+		"message": "O disco está cheio"
+	},
+	"app.crash.rule.duplicate-mod-files.fix": {
+		"message": "Mantenha um destes e remova o restante: {files}"
+	},
+	"app.crash.rule.duplicate-mod-files.title": {
+		"message": "{mod_name} está instalado mais de uma vez"
+	},
+	"app.crash.rule.duplicate-mods.fix": {
+		"message": "Abra a pasta mods e deixe apenas uma cópia de cada — duas versões do mesmo arquivo é a causa mais comum."
+	},
+	"app.crash.rule.duplicate-mods.title": {
+		"message": "O mesmo mod está instalado mais de uma vez"
+	},
+	"app.crash.rule.exit-access-violation.fix": {
+		"message": "Na maioria das vezes é o driver de vídeo ou um overlay. Atualize o driver, desative shaders e overlays e inicie novamente."
+	},
+	"app.crash.rule.exit-access-violation.title": {
+		"message": "Código nativo travou o jogo sem gerar relatório"
+	},
+	"app.crash.rule.exit-killed-by-system.fix": {
+		"message": "O computador ficou sem memória no geral. Aloque menos memória para o jogo ou feche outros programas abertos."
+	},
+	"app.crash.rule.exit-killed-by-system.title": {
+		"message": "O sistema encerrou o jogo para liberar memória"
+	},
+	"app.crash.rule.exit-missing-system-library.fix": {
+		"message": "Instale o Microsoft Visual C++ Redistributable (x64) mais recente e depois deixe o launcher reinstalar o Java para esta instância."
+	},
+	"app.crash.rule.exit-missing-system-library.title": {
+		"message": "O Java não conseguiu carregar uma biblioteca do sistema ({code})"
+	},
+	"app.crash.rule.exit-not-responding.fix": {
+		"message": "Modpacks grandes travam por um tempo ao carregar um mundo, e clicar na janela faz o Windows oferecer para fechá-lo. Deixe-o quieto enquanto carrega. Se travou de vez, provavelmente faltou memória."
+	},
+	"app.crash.rule.exit-not-responding.title": {
+		"message": "O Windows fechou o jogo porque ele parou de responder"
+	},
+	"app.crash.rule.exit-stack-buffer-overrun.fix": {
+		"message": "Geralmente um overlay ou gravador injetado no jogo — MSI Afterburner, RivaTuner, OBS, overlay do Discord — ou o driver de vídeo. Desative overlays e atualize o driver."
+	},
+	"app.crash.rule.exit-stack-buffer-overrun.title": {
+		"message": "Algo injetado no jogo causou o travamento"
+	},
+	"app.crash.rule.exit-stack-overflow.fix": {
+		"message": "Na maioria das vezes são dois mods chamando um ao outro sem parar. Verifique os mods alterados desde a última vez que funcionou."
+	},
+	"app.crash.rule.exit-stack-overflow.title": {
+		"message": "O jogo ficou sem espaço na pilha (stack overflow)"
+	},
+	"app.crash.rule.fabric-missing-dependency.fix": {
+		"message": "Instale {dependency} ou remova {mod_name}."
+	},
+	"app.crash.rule.fabric-missing-dependency.title": {
+		"message": "{mod_name} precisa de {dependency}, que não está instalado"
+	},
+	"app.crash.rule.fabric-wrong-dependency-version.fix": {
+		"message": "Atualize {dependency} para {requirement} ou use uma versão de {mod_name} compatível."
+	},
+	"app.crash.rule.fabric-wrong-dependency-version.title": {
+		"message": "{mod_name} precisa de outra versão de {dependency}"
+	},
+	"app.crash.rule.feature-order-cycle.fix": {
+		"message": "Cada um espera pelo outro, então não há uma ordem válida. Remova um dos mods de geração de mundo ou instale um mod que resolva a ordenação."
+	},
+	"app.crash.rule.feature-order-cycle.title": {
+		"message": "Dois mods de geração de mundo discordam sobre o que vem primeiro"
+	},
+	"app.crash.rule.ferritecore-neighbor-table.fix": {
+		"message": "Defina replaceNeighborLookup como false em config/ferritecore-mixin.toml até que o mod indicado na linha abaixo seja corrigido."
+	},
+	"app.crash.rule.ferritecore-neighbor-table.title": {
+		"message": "Um mod entrou em conflito com a economia de memória do FerriteCore"
+	},
+	"app.crash.rule.file-locked.fix": {
+		"message": "Feche outros launchers e qualquer cópia do jogo que ainda esteja aberta, e verifique se algum antivírus está verificando esta pasta."
+	},
+	"app.crash.rule.file-locked.title": {
+		"message": "Outro programa estava usando um dos arquivos do jogo"
+	},
+	"app.crash.rule.forge-missing-dependency.fix": {
+		"message": "Instale {dependency} ou remova {mod_id}."
+	},
+	"app.crash.rule.forge-missing-dependency.title": {
+		"message": "{mod_id} precisa de {dependency}, que está faltando"
+	},
+	"app.crash.rule.gpu-driver-amd.title": {
+		"message": "O driver de vídeo da AMD falhou ({library})"
+	},
+	"app.crash.rule.gpu-driver-generic.title": {
+		"message": "O driver de vídeo falhou"
+	},
+	"app.crash.rule.gpu-driver-intel.title": {
+		"message": "O driver de vídeo da Intel falhou ({library})"
+	},
+	"app.crash.rule.gpu-driver-nvidia.title": {
+		"message": "O driver de vídeo da NVIDIA falhou ({library})"
+	},
+	"app.crash.rule.gpu-driver.fix": {
+		"message": "Atualize o driver de vídeo pelo site do fabricante em vez do Windows Update, e desative shaders durante os testes."
+	},
+	"app.crash.rule.heap-too-large-to-start.fix": {
+		"message": "Reduza a memória alocada para esta instância e inicie novamente."
+	},
+	"app.crash.rule.heap-too-large-to-start.title": {
+		"message": "A instância pediu mais memória do que pôde ser reservada ({size})"
+	},
+	"app.crash.rule.install-incomplete.fix": {
+		"message": "O carregador não conseguiu encontrar o próprio Minecraft. Repare a instância para que o launcher o instale novamente."
+	},
+	"app.crash.rule.install-incomplete.title": {
+		"message": "O jogo ou seu carregador não está totalmente instalado"
+	},
+	"app.crash.rule.integrated-gpu-in-use.fix": {
+		"message": "Se este computador também tiver uma placa de vídeo dedicada, o jogo está usando a mais lenta. O launcher pode pedir ao Windows para usar a outra."
+	},
+	"app.crash.rule.integrated-gpu-in-use.title": {
+		"message": "O jogo está rodando no chip gráfico integrado ({renderer})"
+	},
+	"app.crash.rule.intel-cpu-instability.fix": {
+		"message": "Processadores Intel desktop de 13ª e 14ª geração se degradam e travam sob carga. Atualize a BIOS da placa-mãe para uma versão com a correção de microcódigo da Intel; nenhuma alteração em mods resolve se essa for a causa."
+	},
+	"app.crash.rule.intel-cpu-instability.title": {
+		"message": "Este processador ({model}) é conhecido por ficar instável"
+	},
+	"app.crash.rule.java-module-error.fix": {
+		"message": "O Java recusa iniciar quando dois arquivos reivindicam o mesmo módulo. O detalhe abaixo mostra o nome — descubra quais mods o incluem e mantenha o mais recente."
+	},
+	"app.crash.rule.java-module-error.title": {
+		"message": "Dois mods incluíram a mesma biblioteca ({exception})"
+	},
+	"app.crash.rule.java-too-new.fix": {
+		"message": "Versões mais antigas do Minecraft precisam de um Java mais antigo. Deixe o launcher instalar a versão esperada para este Minecraft."
+	},
+	"app.crash.rule.java-too-new.title": {
+		"message": "Este Java é mais recente do que o jogo consegue usar"
+	},
+	"app.crash.rule.java-too-old.fix": {
+		"message": "Aponte esta instância para uma instalação do Java {needs} ou deixe o launcher baixar uma."
+	},
+	"app.crash.rule.java-too-old.title": {
+		"message": "Algo precisa do Java {needs}, mas a instância rodou no Java {has}"
+	},
+	"app.crash.rule.java-unsupported-class.fix": {
+		"message": "Altere o Java usado por esta instância nas configurações dela."
+	},
+	"app.crash.rule.java-unsupported-class.title": {
+		"message": "Um mod foi compilado para um Java mais recente do que o usado"
+	},
+	"app.crash.rule.jna-blocked.fix": {
+		"message": "Um antivírus, ou uma pasta temporária sem permissão de escrita, impede isso. Adicione a pasta do launcher às exclusões do antivírus e verifique se a pasta TEMP do Windows permite escrita."
+	},
+	"app.crash.rule.jna-blocked.title": {
+		"message": "Uma biblioteca não conseguiu se descompactar na pasta temporária"
+	},
+	"app.crash.rule.jvm-itself-failed.fix": {
+		"message": "Um travamento dentro do próprio Java costuma ser falha de hardware ou um bug nessa compilação do Java. Teste a memória RAM primeiro; se estiver limpa, instale outra versão do Java para esta instância."
+	},
+	"app.crash.rule.jvm-itself-failed.title": {
+		"message": "O próprio Java parou, não o jogo"
+	},
+	"app.crash.rule.jvm-problematic-frame.title": {
+		"message": "O próprio Java parou em {frame}"
+	},
+	"app.crash.rule.jvm-signal.title": {
+		"message": "O processo foi encerrado por {signal}"
+	},
+	"app.crash.rule.kubejs-datapack.fix": {
+		"message": "O arquivo vem de um script na pasta kubejs. Corrija ou remova esse script; scripts próprios de modpacks costumam quebrar depois que um dos mods é atualizado."
+	},
+	"app.crash.rule.kubejs-datapack.title": {
+		"message": "Um script KubeJS gerou um arquivo de datapack quebrado ({file})"
+	},
+	"app.crash.rule.language-provider-mismatch.fix": {
+		"message": "As linhas abaixo indicam o que ele esperava. Atualize o carregador desta instância ou use a versão desse mod feita para o carregador que você tem."
+	},
+	"app.crash.rule.language-provider-mismatch.title": {
+		"message": "Um mod foi feito para uma versão diferente do carregador"
+	},
+	"app.crash.rule.loader-suggestion.fix": {
+		"message": "{suggestion}"
+	},
+	"app.crash.rule.loader-suggestion.title": {
+		"message": "O próprio carregador de mods encontrou uma solução"
+	},
+	"app.crash.rule.missing-class-owner.fix": {
+		"message": "Ele esperava {symbol}, que o {owner_name} instalado não tem. Um complemento precisa corresponder à versão do mod que ele estende: atualize ambos ou volte o {owner_name} para a versão para a qual o complemento foi feito."
+	},
+	"app.crash.rule.missing-class-owner.title": {
+		"message": "Um mod foi feito para uma versão diferente de {owner_name}"
+	},
+	"app.crash.rule.missing-class.fix": {
+		"message": "Ele procurou por {symbol} e nenhum mod instalado tem isso. Instale o mod do qual ele depende ou remova o que precisa dele."
+	},
+	"app.crash.rule.missing-class.title": {
+		"message": "Um mod precisa de algo que não está instalado"
+	},
+	"app.crash.rule.missing-indium.fix": {
+		"message": "O Sodium não inclui a interface de renderização que alguns mods usam para desenhar, e o Indium a traz de volta. Instale o Indium para a mesma versão do Minecraft."
+	},
+	"app.crash.rule.missing-indium.title": {
+		"message": "Um mod precisa do Indium para renderizar com o Sodium"
+	},
+	"app.crash.rule.missing-main-class.fix": {
+		"message": "A instância está incompleta — geralmente uma instalação interrompida. Repare ou reinstale-a."
+	},
+	"app.crash.rule.missing-main-class.title": {
+		"message": "O jogo nem conseguiu iniciar ({class_name} está faltando)"
+	},
+	"app.crash.rule.missing-native-library.fix": {
+		"message": "Repare a instância. Se acontecer novamente, verifique se um antivírus não está colocando a pasta natives em quarentena."
+	},
+	"app.crash.rule.missing-native-library.title": {
+		"message": "Uma biblioteca que o jogo carrega do disco não pôde ser carregada"
+	},
+	"app.crash.rule.mixin-failed.fix": {
+		"message": "O nome antes de .mixins.json é o primeiro mod a atualizar ou remover; quando dois mods modificam a mesma coisa, é o par que precisa mudar."
+	},
+	"app.crash.rule.mixin-failed.title": {
+		"message": "Um mod não conseguiu aplicar patch no jogo ({config})"
+	},
+	"app.crash.rule.mixin-injection-failed.fix": {
+		"message": "Quase sempre é o mod desse arquivo compilado para outra versão do jogo ou de outro mod. Atualize-o e, se já estiver atualizado, remova o mod com o qual ele conflita."
+	},
+	"app.crash.rule.mixin-injection-failed.title": {
+		"message": "Um mod não conseguiu aplicar patch no jogo onde esperava ({config})"
+	},
+	"app.crash.rule.mixin-invalid-injection.fix": {
+		"message": "Veja os mods citados nas linhas abaixo e atualize-os. Se um deles for um mod de desempenho ou renderização, teste sem ele primeiro — esses são os que mais alteram o jogo."
+	},
+	"app.crash.rule.mixin-invalid-injection.title": {
+		"message": "Dois mods alteraram a mesma parte do jogo"
+	},
+	"app.crash.rule.mod-for-other-version.fix": {
+		"message": "Ele procurou por {symbol}, que esta versão não possui. Atualize o mod ou use a versão dele feita para esta versão do Minecraft."
+	},
+	"app.crash.rule.mod-for-other-version.title": {
+		"message": "Um mod foi feito para uma versão diferente do Minecraft"
+	},
+	"app.crash.rule.mod-incompatible.fix": {
+		"message": "Os dois não podem ficar instalados juntos. Mantenha o que você precisa e remova o outro."
+	},
+	"app.crash.rule.mod-incompatible.title": {
+		"message": "{mod_name} se recusa a rodar junto com {conflict}"
+	},
+	"app.crash.rule.mods-changed-since-working.fix": {
+		"message": "Adicionados: {added_count}, removidos: {removed_count}. Se nada mais aqui explicar o travamento, comece por estes — a lista está nas linhas abaixo."
+	},
+	"app.crash.rule.mods-changed-since-working.title": {
+		"message": "Mods foram alterados desde a última vez que esta instância rodou sem travar"
+	},
+	"app.crash.rule.native-allocator.fix": {
+		"message": "Quase sempre memória RAM com defeito ou overclock de memória. Faça um teste de RAM e desative o XMP ou EXPO na BIOS para ver se o problema para."
+	},
+	"app.crash.rule.native-allocator.title": {
+		"message": "O alocador de memória derrubou o processo ({library})"
+	},
+	"app.crash.rule.native-audio.fix": {
+		"message": "Geralmente o dispositivo de áudio mudou enquanto o jogo rodava — fones desconectados ou uma caixa Bluetooth entrando em suspensão. Atualize o driver de som e defina um dispositivo de saída fixo."
+	},
+	"app.crash.rule.native-audio.title": {
+		"message": "O sistema de som derrubou o processo"
+	},
+	"app.crash.rule.native-shader-macos.fix": {
+		"message": "Um pacote de shaders que o macOS não consegue compilar. Desative os shaders — a maioria dos pacotes é escrita para drivers que a Apple não oferece."
+	},
+	"app.crash.rule.native-shader-macos.title": {
+		"message": "A camada gráfica do macOS derrubou o processo"
+	},
+	"app.crash.rule.native-window-linux.fix": {
+		"message": "Atualize o driver de vídeo e o Mesa. No Wayland, rodar o jogo pelo XWayland evita a maioria desses problemas."
+	},
+	"app.crash.rule.native-window-linux.title": {
+		"message": "Uma biblioteca gráfica do sistema derrubou o processo ({library})"
+	},
+	"app.crash.rule.neoforge-dependency-version.fix": {
+		"message": "Atualize {dependency} para uma versão nessa faixa ou volte {mod_id} para uma versão que aceite o que você tem."
+	},
+	"app.crash.rule.neoforge-dependency-version.title": {
+		"message": "{mod_id} precisa de {dependency} {expected}, mas encontrou {actual}"
+	},
+	"app.crash.rule.not-a-mod-file.fix": {
+		"message": "Geralmente um download que salvou a página da web em vez do arquivo, ou um pacote de recursos colocado na pasta mods por engano. Remova-o e baixe novamente."
+	},
+	"app.crash.rule.not-a-mod-file.title": {
+		"message": "{file} não é um mod"
+	},
+	"app.crash.rule.oculus-without-embeddium.fix": {
+		"message": "O Oculus renderiza através do Embeddium e não consegue iniciar sem ele. Instale o Embeddium ou, no NeoForge, use as compilações oficiais do Sodium e Iris no lugar de ambos."
+	},
+	"app.crash.rule.oculus-without-embeddium.title": {
+		"message": "Oculus está instalado sem o Embeddium"
+	},
+	"app.crash.rule.opengl-unsupported.fix": {
+		"message": "Atualize o driver de vídeo. Em um notebook com duas GPUs, certifique-se de que o jogo esteja configurado para rodar na mais rápida."
+	},
+	"app.crash.rule.opengl-unsupported.title": {
+		"message": "O driver de vídeo não conseguiu fornecer o OpenGL que o jogo precisa"
+	},
+	"app.crash.rule.optifine-present.fix": {
+		"message": "O OptiFine quebra com a maioria dos mods modernos. Sodium com Iris, ou Embeddium com Oculus, fazem o mesmo trabalho e foram feitos para funcionar junto com eles."
+	},
+	"app.crash.rule.optifine-present.title": {
+		"message": "O OptiFine estava carregado quando isso aconteceu"
+	},
+	"app.crash.rule.out-of-memory-heap.fix": {
+		"message": "Dê mais memória para esta instância ou exija menos dela: menor distância de renderização e menos mods de geração de mundo costumam ser o que mais pesa."
+	},
+	"app.crash.rule.out-of-memory-heap.title": {
+		"message": "O jogo ficou sem a memória que lhe foi dada"
+	},
+	"app.crash.rule.out-of-memory-metaspace.fix": {
+		"message": "Este é um modpack muito grande para pouca memória alocada. Aumente a memória desta instância."
+	},
+	"app.crash.rule.out-of-memory-metaspace.title": {
+		"message": "O jogo ficou sem espaço para o código que estava carregando"
+	},
+	"app.crash.rule.out-of-memory-system.fix": {
+		"message": "Reduza a memória que esta instância pede ou feche outros programas abertos. Pedir mais do que o computador tem impede o jogo de iniciar."
+	},
+	"app.crash.rule.out-of-memory-system.title": {
+		"message": "O computador não tinha mais memória disponível"
+	},
+	"app.crash.rule.resource-location-invalid.fix": {
+		"message": "O Minecraft só aceita letras latinas minúsculas, dígitos e alguns símbolos nesses nomes. A causa mais comum é a conta do Windows ter um nome em outro alfabeto, o que coloca essas letras no caminho de tudo. Mova a pasta do launcher para um caminho apenas com caracteres latinos simples."
+	},
+	"app.crash.rule.resource-location-invalid.title": {
+		"message": "Um nome que o jogo não consegue usar entrou em um caminho"
+	},
+	"app.crash.rule.server-config-broken.fix": {
+		"message": "Ele fica na pasta serverconfig desse mundo, não na pasta config. Exclua o arquivo e abra o mundo novamente — o mod criará um novo."
+	},
+	"app.crash.rule.server-config-broken.title": {
+		"message": "Um arquivo de configuração do mundo está danificado ({file})"
+	},
+	"app.crash.rule.server-thread-stuck.fix": {
+		"message": "Algo demorou tanto que o jogo desistiu de esperar — geralmente geração de mundo em um disco lento ou um mod preso em loop. As linhas abaixo mostram o que ele estava fazendo."
+	},
+	"app.crash.rule.server-thread-stuck.title": {
+		"message": "O mundo parou de responder e foi encerrado"
+	},
+	"app.crash.rule.software-renderer.fix": {
+		"message": "O Windows está recorrendo à renderização por software, na qual o Minecraft não consegue rodar. Instale o driver da sua placa de vídeo diretamente do fabricante."
+	},
+	"app.crash.rule.software-renderer.title": {
+		"message": "O jogo está renderizando sem um driver de vídeo ({renderer})"
+	},
+	"app.crash.rule.spark-profiler-crash.fix": {
+		"message": "O profiler nativo dele não funciona em versões mais novas do Java. Atualize o Spark ou rode esta instância no Java 21."
+	},
+	"app.crash.rule.spark-profiler-crash.title": {
+		"message": "O profiler do Spark derrubou o processo"
+	},
+	"app.crash.rule.suspect-mod.fix": {
+		"message": "O código dele estava rodando quando o jogo caiu. Atualize-o primeiro; se não mudar nada, desative-o e inicie novamente para confirmar."
+	},
+	"app.crash.rule.suspect-mod.title": {
+		"message": "O travamento aconteceu dentro de {mod_name}"
+	},
+	"app.crash.rule.suspected-mods.fix": {
+		"message": "Desative esses primeiro, um de cada vez, e inicie o jogo novamente após cada um."
+	},
+	"app.crash.rule.suspected-mods.title": {
+		"message": "O carregador de mods suspeita de: {mods}"
+	},
+	"app.crash.rule.too-many-block-ids.fix": {
+		"message": "Versões antigas do Minecraft têm um limite rígido aqui. Remova alguns mods de conteúdo ou instale um mod que aumente esse limite para essa versão."
+	},
+	"app.crash.rule.too-many-block-ids.title": {
+		"message": "O modpack ficou sem IDs para blocos ou itens"
+	},
+	"app.crash.rule.wrong-jdk-apple-silicon.fix": {
+		"message": "Um Mac Apple Silicon rodando um Java Intel, ou o contrário. Deixe o launcher instalar o Java para esta instância em vez de usar um já instalado no sistema."
+	},
+	"app.crash.rule.wrong-jdk-apple-silicon.title": {
+		"message": "O Java está na versão errada para este Mac"
+	},
+	"app.crash.set-memory": {
+		"message": "Alocar {gb} GB"
+	},
+	"app.crash.severity.critical": {
+		"message": "Crítico"
+	},
+	"app.crash.severity.note": {
+		"message": "Nota"
+	},
+	"app.crash.severity.warning": {
+		"message": "Aviso"
+	},
+	"app.crash.show-evidence": {
+		"message": "Mostrar a linha"
+	},
+	"app.crash.show-less": {
+		"message": "Mostrar menos"
+	},
+	"app.crash.show-more": {
+		"message": "Mostrar mais {count}"
+	},
+	"app.curseforge.pending.all-done": {
+		"message": "Tudo está instalado"
+	},
+	"app.curseforge.pending.description": {
+		"message": "{count, plural, one {O autor deste arquivo não permite} other {Os autores destes arquivos não permitem}} que launchers façam o download. Baixe {count, plural, one {o arquivo} other {cada um}} no CurseForge e ele será capturado automaticamente da sua pasta de Downloads."
+	},
+	"app.curseforge.pending.done": {
+		"message": "Concluído"
+	},
+	"app.curseforge.pending.found": {
+		"message": "Instalado"
+	},
+	"app.curseforge.pending.header": {
+		"message": "Baixar manualmente"
+	},
+	"app.curseforge.pending.open-all": {
+		"message": "Abrir páginas de download"
+	},
+	"app.curseforge.pending.open-downloads": {
+		"message": "Abrir pasta de Downloads"
+	},
+	"app.curseforge.pending.open-page": {
+		"message": "Baixar"
+	},
+	"app.curseforge.pending.skip": {
+		"message": "Ignorar"
+	},
+	"app.curseforge.pending.waiting": {
+		"message": "Monitorando sua pasta de Downloads…"
+	},
+	"app.curseforge.project.add-favorite": {
+		"message": "Adicionar aos favoritos"
+	},
+	"app.curseforge.project.load-error": {
+		"message": "Não foi possível carregar este projeto do CurseForge."
+	},
+	"app.curseforge.project.open-on-curseforge": {
+		"message": "Abrir no CurseForge"
+	},
+	"app.curseforge.project.remove-favorite": {
+		"message": "Remover dos favoritos"
+	},
+	"app.download-manager.rate-limited": {
+		"message": "O servidor pediu para desacelerar, retomando em {seconds, plural, one {# segundo} other {# segundos}}"
+	},
+	"app.error-modal.copy-debug-info": {
+		"message": "Copiar informações de depuração"
+	},
+	"app.error-modal.debug-information": {
+		"message": "Informações de depuração"
+	},
+	"app.error-modal.directory.cancel": {
+		"message": "Cancelar alteração de diretório"
+	},
+	"app.error-modal.directory.generic.body": {
+		"message": "O Noctrinth não conseguiu migrar para o novo diretório selecionado. Entre em contato com o suporte para obter ajuda ou cancele a alteração de diretório."
+	},
+	"app.error-modal.directory.no-space.body": {
+		"message": "Parece que não há espaço suficiente no disco que contém o diretório selecionado. Libere algum espaço e tente novamente ou cancele a alteração de diretório."
+	},
+	"app.error-modal.directory.no-space.heading": {
+		"message": "Espaço insuficiente"
+	},
+	"app.error-modal.directory.read-only.body": {
+		"message": "Parece que o Noctrinth não consegue gravar no diretório selecionado. Ajuste as permissões do diretório e tente novamente ou cancele a alteração de diretório."
+	},
+	"app.error-modal.directory.read-only.heading": {
+		"message": "Alterar permissões do diretório"
+	},
+	"app.error-modal.directory.retry": {
+		"message": "Tentar alterar o diretório novamente"
+	},
+	"app.error-modal.game-pass.body": {
+		"message": "Tente entrar primeiro pelo <launcher-link>Minecraft Launcher oficial</launcher-link>. Depois de concluir, volte aqui e entre!"
+	},
+	"app.error-modal.game-pass.heading": {
+		"message": "Usa PC Game Pass, veio do Bedrock ou acabou de comprar o jogo?"
+	},
+	"app.error-modal.get-support": {
+		"message": "Obter suporte"
+	},
+	"app.error-modal.hosts-file.body": {
+		"message": "O Noctrinth tentou se conectar aos serviços da Microsoft / Xbox / Minecraft, mas o servidor remoto recusou a conexão. Isso pode indicar que esses serviços estão bloqueados pelo arquivo hosts. Visite <support-article>nosso artigo de suporte</support-article> para ver como corrigir o problema."
+	},
+	"app.error-modal.network.body": {
+		"message": "Parece que houve problemas para o Noctrinth se conectar aos servidores da Microsoft. Isso geralmente ocorre devido a uma conexão instável, então recomendamos tentar novamente. Se o problema persistir, siga as etapas em <support-article>nosso artigo de suporte</support-article> para solucionar."
+	},
+	"app.error-modal.network.heading": {
+		"message": "Problemas de rede"
+	},
+	"app.error-modal.no-error-message": {
+		"message": "Nenhuma mensagem de erro."
+	},
+	"app.error-modal.no-loader.body": {
+		"message": "O Noctrinth não conseguiu encontrar a versão do carregador para esta instância."
+	},
+	"app.error-modal.no-loader.fix": {
+		"message": "Para resolver isso, você precisa reparar a instância. Clique no botão abaixo para fazer isso."
+	},
+	"app.error-modal.no-loader.repair": {
+		"message": "Reparar instância"
+	},
+	"app.error-modal.other-account.body": {
+		"message": "Verifique se você entrou com a conta certa. Você pode ter o Minecraft em outra conta Microsoft."
+	},
+	"app.error-modal.other-account.button": {
+		"message": "Tentar outra conta"
+	},
+	"app.error-modal.other-account.heading": {
+		"message": "Tentar outra conta Microsoft"
+	},
+	"app.error-modal.service-outage.body": {
+		"message": "Os servidores de login da Microsoft responderam com um erro, e o Noctrinth tentou várias vezes sem sucesso. O problema está do lado deles e geralmente se resolve em alguns minutos — aguarde um momento e tente novamente."
+	},
+	"app.error-modal.service-outage.heading": {
+		"message": "Os serviços da Microsoft estão indisponíveis"
+	},
+	"app.error-modal.state-init.body": {
+		"message": "O Noctrinth não conseguiu carregar corretamente. Isso pode ser causado por um arquivo corrompido ou pela falta de arquivos essenciais do aplicativo."
+	},
+	"app.error-modal.state-init.fix-internet": {
+		"message": "Verificar se você está conectado à internet e tentar reiniciar o aplicativo."
+	},
+	"app.error-modal.state-init.fix-redownload": {
+		"message": "Baixar o aplicativo novamente."
+	},
+	"app.error-modal.state-init.fixes": {
+		"message": "Você pode tentar corrigir isso de uma das seguintes formas:"
+	},
+	"app.error-modal.support-prompt": {
+		"message": "Se nada funcionar e você precisar de ajuda, visite <support-page>nossa página de suporte</support-page> e inicie um chat usando o widget no canto inferior direito que teremos prazer em ajudar! Certifique-se de enviar as seguintes informações de depuração ao atendente:"
+	},
+	"app.error-modal.title.directory-move": {
+		"message": "Não foi possível alterar o diretório do aplicativo"
+	},
+	"app.error-modal.title.minecraft-auth": {
+		"message": "Não foi possível entrar no Minecraft"
+	},
+	"app.error-modal.title.no-loader": {
+		"message": "Nenhum carregador selecionado"
+	},
+	"app.error-modal.title.state-init": {
+		"message": "Erro ao inicializar o Noctrinth"
+	},
+	"app.error-modal.title.unknown": {
+		"message": "Ocorreu um erro"
+	},
+	"app.error-modal.try-signing-in-again": {
+		"message": "Tentar entrar novamente"
+	},
+	"app.export-modal.include-icon": {
+		"message": "Incluir o ícone da instância"
+	},
+	"app.export-modal.include-icon-hint": {
+		"message": "Salvo como o ícone do pacote, exibido pelo Modrinth App e outros launchers ao instalar o pacote."
+	},
+	"app.hosting.title": {
+		"message": "Hospedagem"
+	},
+	"app.instance.add-content.from-file": {
+		"message": "Adicionar de arquivo"
+	},
+	"app.instance.add-content.install": {
+		"message": "Instalar conteúdo"
+	},
+	"app.instance.content.curseforge-pending.action": {
+		"message": "Baixar"
+	},
+	"app.instance.content.curseforge-pending.body": {
+		"message": "Os autores deles não permitem que launchers façam o download, e eles não foram encontrados em nenhum lugar deste computador."
+	},
+	"app.instance.content.curseforge-pending.header": {
+		"message": "{count, plural, one {# arquivo precisa} other {# arquivos precisam}} ser baixados manualmente"
+	},
+	"app.instance.logs.live": {
+		"message": "Log ao vivo"
+	},
+	"app.instance.logs.unknown-file": {
+		"message": "Desconhecido"
+	},
+	"app.instance.share.members.column.joined": {
+		"message": "Entrou em"
+	},
+	"app.instance.share.members.column.method": {
+		"message": "Método"
+	},
+	"app.instance.share.members.never-played": {
+		"message": "Nunca"
+	},
+	"app.instance.share.members.search": {
+		"message": "Pesquisar {count, plural, one {# usuário} other {# usuários}}..."
+	},
+	"app.instance.share.method.direct": {
+		"message": "Convite direto"
+	},
+	"app.instance.share.method.link": {
+		"message": "Link de compartilhamento"
+	},
+	"app.library.search.hint": {
+		"message": "↑↓ para escolher · Tab para inserir · termos se combinam e - inverte um filtro"
+	},
+	"app.library.search.pending": {
+		"message": "Ainda lendo o que está instalado…"
+	},
+	"app.library.search.sigil.mod": {
+		"message": "por mod"
+	},
+	"app.library.search.sigil.mod.hint": {
+		"message": "Instâncias que têm um determinado mod, pacote de recursos ou shader"
+	},
+	"app.library.search.sigil.state": {
+		"message": "por estado"
+	},
+	"app.library.search.sigil.state.hint": {
+		"message": "Instâncias com algo desatualizado, desativado ou quebrado"
+	},
+	"app.library.search.sigil.type": {
+		"message": "por tipo"
+	},
+	"app.library.search.sigil.type.hint": {
+		"message": "Instâncias que têm algum mod, shader, pacote de recursos ou pacote de dados"
+	},
+	"app.library.search.state.broken": {
+		"message": "A própria instância precisa ser reparada"
+	},
+	"app.library.search.state.disabled": {
+		"message": "Algo está instalado, mas desativado"
+	},
+	"app.library.search.state.outdated": {
+		"message": "Algo instalado tem uma atualização"
+	},
+	"app.library.search.type.datapack": {
+		"message": "Tem pacotes de dados"
+	},
+	"app.library.search.type.mod": {
+		"message": "Tem mods"
+	},
+	"app.library.search.type.resourcepack": {
+		"message": "Tem pacotes de recursos"
+	},
+	"app.library.search.type.shader": {
+		"message": "Tem pacotes de shaders"
+	},
+	"app.migration.modrinth.action.choose": {
+		"message": "Escolher instâncias"
+	},
+	"app.migration.modrinth.action.dismiss": {
+		"message": "Dispensar"
+	},
+	"app.migration.modrinth.action.import-all": {
+		"message": "Importar tudo"
+	},
+	"app.migration.modrinth.action.importing": {
+		"message": "Importando..."
+	},
+	"app.migration.modrinth.description": {
+		"message": "{count, plural, one {# instância foi encontrada} other {# instâncias foram encontradas}} na sua instalação do Modrinth App. A importação copia tudo para cá — seu Modrinth App continua intacto."
+	},
+	"app.migration.modrinth.title": {
+		"message": "Traga suas instâncias do Modrinth App"
+	},
+	"app.minecraft-auth-error.contact-support": {
+		"message": "Contatar suporte"
+	},
+	"app.minecraft-auth-error.copy-debug-info": {
+		"message": "Copiar informações de depuração"
+	},
+	"app.minecraft-auth-error.debug-information": {
+		"message": "Informações de depuração"
+	},
+	"app.minecraft-auth-error.header": {
+		"message": "Falha ao entrar"
+	},
+	"app.minecraft-auth-error.how-to-fix": {
+		"message": "Como corrigir"
+	},
+	"app.minecraft-auth-error.korea-adult-verification-alt.step-1": {
+		"message": "Acesse o <link>Xbox</link> e entre na sua conta"
+	},
+	"app.minecraft-auth-error.korea-adult-verification-alt.step-2": {
+		"message": "Conclua o processo de verificação de identidade"
+	},
+	"app.minecraft-auth-error.korea-adult-verification-alt.step-3": {
+		"message": "Quando terminar, tente entrar novamente"
+	},
+	"app.minecraft-auth-error.korea-adult-verification-alt.what": {
+		"message": "Esta conta exige verificação de maioridade de acordo com as regulamentações da Coreia do Sul."
+	},
+	"app.minecraft-auth-error.korea-adult-verification.step-1": {
+		"message": "Acesse o <link>Xbox</link> e entre na sua conta"
+	},
+	"app.minecraft-auth-error.korea-adult-verification.step-2": {
+		"message": "Conclua o processo de verificação de identidade"
+	},
+	"app.minecraft-auth-error.korea-adult-verification.step-3": {
+		"message": "Quando terminar, tente entrar novamente"
+	},
+	"app.minecraft-auth-error.korea-adult-verification.what": {
+		"message": "Esta conta exige verificação de maioridade de acordo com as regulamentações da Coreia do Sul."
+	},
+	"app.minecraft-auth-error.minecraft-server-error.step-1": {
+		"message": "Aguarde alguns minutos e tente entrar novamente"
+	},
+	"app.minecraft-auth-error.minecraft-server-error.step-2": {
+		"message": "Verifique o <link>Status do Xbox</link> para ver se há problemas no serviço"
+	},
+	"app.minecraft-auth-error.minecraft-server-error.step-3": {
+		"message": "Tente entrar pelo <link>Minecraft Launcher oficial</link> para confirmar se o login do Minecraft também está afetado lá"
+	},
+	"app.minecraft-auth-error.minecraft-server-error.step-4": {
+		"message": "Se o serviço estiver normal e isso continuar acontecendo, entre em contato com o suporte enviando as informações de depuração abaixo"
+	},
+	"app.minecraft-auth-error.minecraft-server-error.what": {
+		"message": "O serviço de autenticação do Minecraft está retornando um erro de servidor, então o Noctrinth não consegue concluir seu login agora."
+	},
+	"app.minecraft-auth-error.network.step-1": {
+		"message": "Reinicie o Noctrinth e tente entrar novamente"
+	},
+	"app.minecraft-auth-error.network.step-2": {
+		"message": "Verifique se sua conexão com a internet está funcionando"
+	},
+	"app.minecraft-auth-error.network.step-3": {
+		"message": "Permita o Noctrinth no firewall, antivírus, proxy, VPN e nas regras do arquivo hosts"
+	},
+	"app.minecraft-auth-error.network.step-4": {
+		"message": "Tente outra rede ou desative temporariamente VPN/proxy se estiver usando"
+	},
+	"app.minecraft-auth-error.network.step-5": {
+		"message": "Se o problema for rota ou DNS, um serviço como o Cloudflare WARP às vezes pode ajudar"
+	},
+	"app.minecraft-auth-error.network.what": {
+		"message": "O Noctrinth não conseguiu se conectar a um serviço da Microsoft, Xbox ou Minecraft necessário para entrar. Isso geralmente é causado por rede local, DNS, proxy, firewall, arquivo hosts, VPN ou antivírus."
+	},
+	"app.minecraft-auth-error.no-xbox-profile.step-1": {
+		"message": "Verifique se o Minecraft foi comprado nesta conta"
+	},
+	"app.minecraft-auth-error.no-xbox-profile.step-2": {
+		"message": "Acesse o <link>Login do Minecraft</link> e entre na sua conta"
+	},
+	"app.minecraft-auth-error.no-xbox-profile.step-3": {
+		"message": "Conclua a configuração do perfil Xbox se solicitado"
+	},
+	"app.minecraft-auth-error.no-xbox-profile.step-4": {
+		"message": "Quando terminar, tente entrar novamente"
+	},
+	"app.minecraft-auth-error.no-xbox-profile.what": {
+		"message": "Esta conta não tem um perfil Xbox configurado ou não possui o Minecraft."
+	},
+	"app.minecraft-auth-error.player-profile.step-1": {
+		"message": "Entre pelo <link>Minecraft Launcher oficial</link>"
+	},
+	"app.minecraft-auth-error.player-profile.step-2": {
+		"message": "Inicie o Minecraft: Java Edition uma vez pelo launcher oficial"
+	},
+	"app.minecraft-auth-error.player-profile.step-3": {
+		"message": "Aguarde até uma hora se a compra ou configuração do perfil for recente"
+	},
+	"app.minecraft-auth-error.player-profile.step-4": {
+		"message": "Certifique-se de estar usando a conta Microsoft que possui o Minecraft. Veja <link>Como encontrar a conta Xbox certa</link> para obter ajuda"
+	},
+	"app.minecraft-auth-error.player-profile.step-5": {
+		"message": "Tente entrar no Noctrinth novamente"
+	},
+	"app.minecraft-auth-error.player-profile.what": {
+		"message": "Os serviços do Minecraft não conseguiram retornar um perfil da Java Edition para esta conta. Isso geralmente acontece quando o jogo foi comprado recentemente, o perfil Java ainda não terminou de ser criado ou a conta Microsoft errada está sendo usada."
+	},
+	"app.minecraft-auth-error.refresh-token.step-1": {
+		"message": "Saia da conta do Minecraft afetada no Noctrinth"
+	},
+	"app.minecraft-auth-error.refresh-token.step-2": {
+		"message": "Entre na conta novamente"
+	},
+	"app.minecraft-auth-error.refresh-token.step-3": {
+		"message": "Quando o novo login terminar, tente iniciar o Minecraft novamente"
+	},
+	"app.minecraft-auth-error.refresh-token.what": {
+		"message": "Seu token de login salvo da Microsoft expirou ou foi revogado, então o Noctrinth não consegue renovar sua sessão do Minecraft."
+	},
+	"app.minecraft-auth-error.region-unavailable.step-1": {
+		"message": "Os serviços do Xbox precisam estar disponíveis no seu país para que você possa entrar"
+	},
+	"app.minecraft-auth-error.region-unavailable.step-2": {
+		"message": "Verifique a <link>Disponibilidade do Xbox</link> para regiões suportadas"
+	},
+	"app.minecraft-auth-error.region-unavailable.what": {
+		"message": "O Xbox Live não está disponível na sua região, portanto o login está bloqueado."
+	},
+	"app.minecraft-auth-error.restricted-online-play.step-1": {
+		"message": "Peça a um responsável para entrar no <link>Microsoft Family</link>"
+	},
+	"app.minecraft-auth-error.restricted-online-play.step-2": {
+		"message": "Atualize as permissões de jogo online"
+	},
+	"app.minecraft-auth-error.restricted-online-play.step-3": {
+		"message": "Quando terminar, tente entrar novamente"
+	},
+	"app.minecraft-auth-error.restricted-online-play.what": {
+		"message": "Esta conta tem restrições e não tem permissão para jogar online."
+	},
+	"app.minecraft-auth-error.sign-in-again": {
+		"message": "Entrar novamente"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.step-1": {
+		"message": "Abra as configurações de data e hora do sistema"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.step-2": {
+		"message": "Ative o fuso horário automático e a hora automática, se disponíveis"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.step-3": {
+		"message": "Use a opção de sincronização nas configurações do sistema para sincronizar o relógio"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.step-4": {
+		"message": "Reinicie o Noctrinth"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.step-5": {
+		"message": "Tente entrar novamente"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.what": {
+		"message": "Os serviços do Xbox rejeitaram a primeira resposta de login. Isso geralmente ocorre porque o relógio ou fuso horário do sistema está fora de sincronia."
+	},
+	"app.minecraft-auth-error.summary": {
+		"message": "Não foi possível entrar na sua conta Microsoft. Isso pode ser devido a restrições da conta ou limitações regionais."
+	},
+	"app.minecraft-auth-error.suspended.step-1": {
+		"message": "Acesse o <link>Suporte do Xbox</link> e confira os detalhes da suspensão"
+	},
+	"app.minecraft-auth-error.suspended.step-2": {
+		"message": "Envie uma contestação se houver uma opção disponível"
+	},
+	"app.minecraft-auth-error.suspended.what": {
+		"message": "Esta conta foi suspensa por violar os Padrões da Comunidade Xbox."
+	},
+	"app.minecraft-auth-error.terms-not-accepted.step-1": {
+		"message": "Acesse o <link>Xbox</link> e entre na sua conta"
+	},
+	"app.minecraft-auth-error.terms-not-accepted.step-2": {
+		"message": "Aceite os Termos se solicitado"
+	},
+	"app.minecraft-auth-error.terms-not-accepted.step-3": {
+		"message": "Quando terminar, tente entrar novamente"
+	},
+	"app.minecraft-auth-error.terms-not-accepted.what": {
+		"message": "Esta conta ainda não aceitou os Termos de Serviço do Xbox."
+	},
+	"app.minecraft-auth-error.too-many-requests.step-1": {
+		"message": "Aguarde cerca de uma hora antes de tentar novamente"
+	},
+	"app.minecraft-auth-error.too-many-requests.step-2": {
+		"message": "Reinicie o Noctrinth após aguardar"
+	},
+	"app.minecraft-auth-error.too-many-requests.step-3": {
+		"message": "Tente entrar mais uma vez"
+	},
+	"app.minecraft-auth-error.too-many-requests.step-4": {
+		"message": "Se a mesma mensagem aparecer, aguarde mais tempo antes de tentar novamente para que o limite temporário seja liberado"
+	},
+	"app.minecraft-auth-error.too-many-requests.what": {
+		"message": "A Microsoft ou o Minecraft bloqueou temporariamente a solicitação de login devido a muitas tentativas recentes."
+	},
+	"app.minecraft-auth-error.uk-age-verification.step-1": {
+		"message": "Acesse a página de <link>Login do Minecraft</link> e entre na sua conta"
+	},
+	"app.minecraft-auth-error.uk-age-verification.step-2": {
+		"message": "Siga as instruções para verificar sua idade"
+	},
+	"app.minecraft-auth-error.uk-age-verification.step-3": {
+		"message": "Após a verificação, tente entrar novamente"
+	},
+	"app.minecraft-auth-error.uk-age-verification.step-4": {
+		"message": "Para mais ajuda, acesse <link>Verificação de idade do Reino Unido no Xbox</link>"
+	},
+	"app.minecraft-auth-error.uk-age-verification.what": {
+		"message": "Sua conta Minecraft/Xbox Live exige verificação de idade para cumprir as regulamentações do Reino Unido. Você precisa concluir isso antes de entrar."
+	},
+	"app.minecraft-auth-error.underage-no-family.step-1": {
+		"message": "Consulte o <link>Guia de configuração de família</link>"
+	},
+	"app.minecraft-auth-error.underage-no-family.step-2": {
+		"message": "Entre ou crie um grupo familiar conforme as instruções"
+	},
+	"app.minecraft-auth-error.underage-no-family.step-3": {
+		"message": "Quando terminar, tente entrar novamente"
+	},
+	"app.minecraft-auth-error.underage-no-family.what": {
+		"message": "Esta conta é de menor de idade e não está vinculada a um grupo familiar da Microsoft."
+	},
+	"app.minecraft-auth-error.unknown": {
+		"message": "Erro desconhecido"
+	},
+	"app.minecraft-auth-error.unknown-advice": {
+		"message": "Tente acessar o <login-link>Login do Minecraft</login-link> e entrar, pois ele pode exibir as etapas necessárias. Você também pode entrar em contato com o suporte para investigarmos melhor."
+	},
+	"app.minecraft-auth-error.unknown-body": {
+		"message": "Não reconhecemos este erro e não podemos recomendar etapas específicas para resolvê-lo."
+	},
+	"app.minecraft-auth-error.what-happened": {
+		"message": "O que achamos que aconteceu"
+	},
+	"app.minecraft-auth-error.xsts-authorize.step-1": {
+		"message": "Entre pelo <link>Minecraft Launcher oficial</link>"
+	},
+	"app.minecraft-auth-error.xsts-authorize.step-2": {
+		"message": "Conclua quaisquer solicitações exibidas pela Microsoft, Xbox ou Minecraft"
+	},
+	"app.minecraft-auth-error.xsts-authorize.step-3": {
+		"message": "Tente entrar no Noctrinth novamente"
+	},
+	"app.minecraft-auth-error.xsts-authorize.step-4": {
+		"message": "Se o launcher oficial também falhar, siga o erro exibido lá ou entre em contato com o Suporte do Xbox"
+	},
+	"app.minecraft-auth-error.xsts-authorize.what": {
+		"message": "Os serviços do Xbox rejeitaram a solicitação para autorizar esta conta nos serviços do Minecraft, mas não retornaram uma restrição específica que o Noctrinth reconheça."
+	},
+	"app.notifications.accept": {
+		"message": "Aceitar"
+	},
+	"app.notifications.decline": {
+		"message": "Recusar"
+	},
+	"app.notifications.error.accept": {
+		"message": "Erro ao aceitar convite"
+	},
+	"app.notifications.error.decline": {
+		"message": "Erro ao recusar convite"
+	},
+	"app.notifications.error.mark-read": {
+		"message": "Erro ao marcar notificação como lida"
+	},
+	"app.notifications.invited-to-join": {
+		"message": "convidou você para entrar em <target>{name}</target>."
+	},
+	"app.notifications.mark-as-read": {
+		"message": "Marcar como lida"
+	},
+	"app.notifications.moderator-message": {
+		"message": "Seu projeto, <project>{title}</project>, recebeu {count, plural, one {uma mensagem} other {mensagens}} dos moderadores."
+	},
+	"app.notifications.not-signed-in": {
+		"message": "Desconectado"
+	},
+	"app.notifications.project-updated": {
+		"message": "Um projeto que você segue, <project>{title}</project>, foi atualizado:"
+	},
+	"app.notifications.read-badge": {
+		"message": "Lida"
+	},
+	"app.notifications.received": {
+		"message": "Recebida {time}"
+	},
+	"app.notifications.status-changed": {
+		"message": "<project>{title}</project> foi atualizado de <strong>{oldStatus}</strong> para <strong>{newStatus}</strong> pelos moderadores."
+	},
+	"app.notifications.version-for": {
+		"message": "para"
+	},
+	"app.project.copy-link.copied": {
+		"message": "Link copiado para a área de transferência"
+	},
+	"app.project.sign-in-to-follow": {
+		"message": "Entre para seguir"
+	},
+	"app.recover-instances.description": {
+		"message": "Procura pastas de instâncias que o launcher não tem registradas — o que sobra quando o banco de dados se perde, mas as pastas continuam lá."
+	},
+	"app.recover-instances.found": {
+		"message": "{count, plural, one {# pasta não está no launcher} other {# pastas não estão no launcher}}"
+	},
+	"app.recover-instances.import": {
+		"message": "Importar"
+	},
+	"app.recover-instances.imported": {
+		"message": "{name} está de volta"
+	},
+	"app.recover-instances.imported-body": {
+		"message": "A pasta dela está intacta. Os arquivos da versão serão baixados no próximo lançamento."
+	},
+	"app.recover-instances.mods": {
+		"message": "{count, plural, one {# mod} other {# mods}}"
+	},
+	"app.recover-instances.none": {
+		"message": "Todas as pastas lá já são instâncias."
+	},
+	"app.recover-instances.scan": {
+		"message": "Verificar a pasta"
+	},
+	"app.recover-instances.scanning": {
+		"message": "Verificando..."
+	},
+	"app.recover-instances.title": {
+		"message": "Instâncias na pasta do launcher"
+	},
+	"app.recover-instances.unknown-version": {
+		"message": "Nenhum log ou relatório de erro para identificar a versão — importe manualmente."
+	},
+	"app.recover-instances.worlds": {
+		"message": "{count, plural, one {# mundo} other {# mundos}}"
+	},
+	"app.resource-settings.proxy.description": {
+		"message": "Roteia todo o tráfego de rede do launcher (API do Modrinth e downloads da CDN) através de um proxy. Suporta URLs http://, https://, socks5:// e socks5h://. Útil quando o Modrinth não está acessível na sua região. Deixe vazio para conectar diretamente. (é necessário reiniciar o aplicativo para entrar em vigor)"
+	},
+	"app.resource-settings.proxy.title": {
+		"message": "Proxy"
+	},
+	"app.settings.default-instance-options.universal-skins.description": {
+		"message": "Servidores em modo offline não enviam nenhuma skin, e é por isso que todo mundo aparece como Steve lá. Busque-as pelo nome no Ely.by — que responde pelos jogadores registrados lá e recorre à Mojang para todos os outros. Não precisa de mods e nunca substitui uma skin que o servidor tenha enviado."
+	},
+	"app.settings.default-instance-options.universal-skins.title": {
+		"message": "Skins para todos os jogadores"
+	},
+	"app.settings.feature-flags.search.placeholder": {
+		"message": "Pesquisar flags..."
+	},
+	"app.settings.java.gpu.choice.auto": {
+		"message": "Deixar o Windows decidir"
+	},
+	"app.settings.java.gpu.choice.high-performance": {
+		"message": "Alto desempenho"
+	},
+	"app.settings.java.gpu.choice.power-saving": {
+		"message": "Economia de energia"
+	},
+	"app.settings.java.gpu.label": {
+		"message": "Adaptador gráfico"
+	},
+	"app.settings.java.gpu.no-preference": {
+		"message": "Nenhuma preferência definida, então o Windows escolhe — em um notebook, geralmente é o adaptador integrado. Disponíveis: {adapters}"
+	},
+	"app.settings.java.gpu.on-high-performance": {
+		"message": "O Windows executará este runtime no adaptador de alto desempenho."
+	},
+	"app.settings.java.gpu.on-named-adapter": {
+		"message": "O Windows executará este runtime em {adapter}."
+	},
+	"app.settings.java.gpu.on-power-saving": {
+		"message": "O Windows executará este runtime no adaptador de economia de energia — geralmente o integrado, que é a opção mais lenta para o Minecraft."
+	},
+	"app.settings.java.runtimes.delete-label": {
+		"message": "Excluir runtime"
+	},
+	"app.settings.java.runtimes.delete-tooltip": {
+		"message": "Excluir este runtime"
+	},
+	"app.settings.java.runtimes.description": {
+		"message": "Versões do Java que o launcher baixou para você, {size} no total. Atualizar o Java deixa a cópia anterior para trás, então elas se acumulam com o tempo."
+	},
+	"app.settings.java.runtimes.in-use": {
+		"message": "Em uso"
+	},
+	"app.settings.java.runtimes.in-use-tooltip": {
+		"message": "Uma configuração do Java aponta para este — altere-a primeiro"
+	},
+	"app.settings.java.runtimes.remove-unused": {
+		"message": "Remover {count} não utilizados ({size})"
+	},
+	"app.settings.java.runtimes.removed-text": {
+		"message": "{size} liberados."
+	},
+	"app.settings.java.runtimes.removed-title": {
+		"message": "Runtimes removidos"
+	},
+	"app.settings.java.runtimes.title": {
+		"message": "Runtimes baixados"
+	},
+	"app.settings.tabs.changelog": {
+		"message": "Registro de alterações"
+	},
+	"app.settings.tabs.curseforge": {
+		"message": "CurseForge"
+	},
+	"app.skins.cape-from": {
+		"message": "Capa de {source}"
+	},
+	"app.skins.ely.edit.texture-locked": {
+		"message": "O Ely.by mantém a textura e a skin juntas, então esta não pode ser trocada. Envie a nova textura como outra skin."
+	},
+	"app.skins.ely.edit.upload-new": {
+		"message": "Enviar uma nova skin"
+	},
+	"app.skins.ely.my-skins.empty": {
+		"message": "Nada enviado ainda. Adicione uma skin no bloco abaixo ou solte um PNG sobre ele."
+	},
+	"app.skins.ely.my-skins.title": {
+		"message": "Suas skins do Ely.by"
+	},
+	"app.skins.ely.sign-in-needed.text": {
+		"message": "O Ely.by exige que você esteja conectado no site deles para isso. Use \"Alterar skin no Ely.by\" para entrar e tente novamente."
+	},
+	"app.skins.ely.sign-in-needed.title": {
+		"message": "O Ely.by não aceitou a alteração"
+	},
+	"app.update-popup.body": {
+		"message": "Noctrinth v{version} está pronto para instalar! Recarregue para atualizar agora, ou automaticamente ao fechar o Noctrinth."
+	},
+	"app.update-popup.body.downloading": {
+		"message": "Noctrinth v{version} — {downloaded} de {size}"
+	},
+	"app.update-popup.body.downloading-unknown-size": {
+		"message": "Baixando Noctrinth v{version}…"
+	},
+	"app.update-popup.downloading": {
+		"message": "Baixando atualização"
+	},
+	"app.window-controls.close": {
+		"message": "Fechar janela"
+	},
+	"app.window-controls.minimize": {
+		"message": "Minimizar janela"
+	},
+	"app.window-controls.toggle-maximize": {
+		"message": "Alternar maximização da janela"
+	},
+	"collection.delete": {
+		"message": "Excluir"
+	},
+	"collection.edit": {
+		"message": "Editar"
+	},
+	"collection.filter.all": {
+		"message": "Todos"
+	},
+	"collection.following.description": {
+		"message": "Coleção gerada automaticamente com todos os projetos que você segue."
+	},
+	"collection.following.name": {
+		"message": "Projetos seguidos"
+	},
+	"collection.loading": {
+		"message": "Carregando..."
+	},
+	"collection.no-followed": {
+		"message": "Você ainda não seguiu nenhum projeto"
+	},
+	"collection.no-matching": {
+		"message": "Nenhum projeto correspondente"
+	},
+	"collection.no-projects": {
+		"message": "Nenhum projeto nesta coleção"
+	},
+	"collection.open-on-web": {
+		"message": "Abrir na web"
+	},
+	"collection.projects-count.one": {
+		"message": "projeto"
+	},
+	"collection.projects-count.other": {
+		"message": "projetos"
+	},
+	"collection.remove-project": {
+		"message": "Remover projeto"
+	},
+	"collection.remove-tooltip": {
+		"message": "Remover da coleção"
+	},
+	"collection.removing": {
+		"message": "Removendo..."
+	},
+	"collection.search-placeholder": {
+		"message": "Pesquisar projetos..."
+	},
+	"collection.sort-by": {
+		"message": "Ordenar por: "
+	},
+	"collection.sort-by-name": {
+		"message": "Ordenar por"
+	},
+	"collection.sort.downloads": {
+		"message": "Downloads"
+	},
+	"collection.sort.followers": {
+		"message": "Seguidores"
+	},
+	"collection.sort.name": {
+		"message": "Nome (A-Z)"
+	},
+	"collection.sort.updated": {
+		"message": "Atualizados recentemente"
+	},
+	"collection.status.private": {
+		"message": "Privada"
+	},
+	"collection.status.public": {
+		"message": "Pública"
+	},
+	"collection.status.rejected": {
+		"message": "Rejeitada"
+	},
+	"collection.status.unlisted": {
+		"message": "Não listada"
+	},
+	"collection.type.datapack": {
+		"message": "Pacotes de dados"
+	},
+	"collection.type.mod": {
+		"message": "Mods"
+	},
+	"collection.type.modpack": {
+		"message": "Modpacks"
+	},
+	"collection.type.plugin": {
+		"message": "Plugins"
+	},
+	"collection.type.resourcepack": {
+		"message": "Pacotes de recursos"
+	},
+	"collection.type.shader": {
+		"message": "Shaders"
+	},
+	"collection.unfollow-project": {
+		"message": "Deixar de seguir projeto"
+	},
+	"collection.unfollowing": {
+		"message": "Deixando de seguir..."
+	},
+	"collection.updated-ago": {
+		"message": "Atualizado {time}"
+	},
+	"collections.create-new": {
+		"message": "Criar nova"
+	},
+	"collections.followed-projects": {
+		"message": "Projetos seguidos"
+	},
+	"collections.followed-projects-desc": {
+		"message": "Coleção gerada automaticamente com todos os projetos que você segue."
+	},
+	"collections.loading": {
+		"message": "Carregando coleções..."
+	},
+	"collections.no-collections": {
+		"message": "Você ainda não tem nenhuma coleção"
+	},
+	"collections.no-collections-body": {
+		"message": "Crie sua primeira coleção em modrinth.com para começar!"
+	},
+	"collections.no-match": {
+		"message": "Nenhuma coleção corresponde à sua pesquisa"
+	},
+	"collections.no-match-body": {
+		"message": "Tente ajustar seus filtros ou termos de pesquisa."
+	},
+	"collections.projects-count.one": {
+		"message": "projeto"
+	},
+	"collections.projects-count.other": {
+		"message": "projetos"
+	},
+	"collections.search-placeholder": {
+		"message": "Pesquisar coleções..."
+	},
+	"collections.sign-in-prompt": {
+		"message": "Entre para ver suas coleções"
+	},
+	"collections.sign-in-prompt-body": {
+		"message": "Entre na sua conta Modrinth para ver suas coleções aqui."
+	},
+	"collections.sort-by": {
+		"message": "Ordenar por: "
+	},
+	"collections.sort-by-name": {
+		"message": "Ordenar por"
+	},
+	"collections.sort.created": {
+		"message": "Criadas recentemente"
+	},
+	"collections.sort.name": {
+		"message": "Nome (A-Z)"
+	},
+	"collections.sort.updated": {
+		"message": "Atualizadas recentemente"
+	},
+	"collections.status.private": {
+		"message": "Privada"
+	},
+	"collections.status.public": {
+		"message": "Pública"
+	},
+	"collections.status.rejected": {
+		"message": "Rejeitada"
+	},
+	"collections.status.unlisted": {
+		"message": "Não listada"
+	},
+	"console.actions.collapse": {
+		"message": "Recolher"
+	},
+	"console.actions.expand": {
+		"message": "Expandir"
+	},
+	"console.crash.problems-detected": {
+		"message": "{count, plural, one {# problema detectado} other {# problemas detectados}}"
+	},
+	"console.delete-modal.header": {
+		"message": "Excluir arquivo de log"
+	},
+	"console.delete-modal.irreversible": {
+		"message": "Isso é irreversível"
+	},
+	"console.delete-modal.warning": {
+		"message": "A exclusão deste arquivo de log não pode ser desfeita. Tem certeza de que deseja continuar?"
+	},
+	"console.empty-state.instance": {
+		"message": "Inicie sua instância no canto superior direito para começar a receber logs ao vivo!"
+	},
+	"console.empty-state.server": {
+		"message": "Bem-vindo ao seu servidor Modrinth! Pressione o botão verde de iniciar para ligar seu servidor!"
+	},
+	"console.filter.all": {
+		"message": "Todos"
+	},
+	"console.filter.debug": {
+		"message": "Debug"
+	},
+	"console.filter.error": {
+		"message": "Erro"
+	},
+	"console.filter.info": {
+		"message": "Info"
+	},
+	"console.filter.trace": {
+		"message": "Trace"
+	},
+	"console.filter.warn": {
+		"message": "Aviso"
+	},
+	"console.search.placeholder": {
+		"message": "Pesquisar logs"
+	},
+	"console.share-modal.header": {
+		"message": "Compartilhar logs"
+	},
+	"console.terminal.input-disabled": {
+		"message": "Entrada de comandos desativada"
+	},
+	"console.terminal.send-command": {
+		"message": "Enviar um comando"
+	},
+	"console.terminal.server-not-running": {
+		"message": "O servidor não está em execução"
+	},
+	"ely-login.back": {
+		"message": "Voltar"
+	},
+	"ely-login.cancel": {
+		"message": "Cancelar"
+	},
+	"ely-login.error.generic": {
+		"message": "Falha ao entrar. Verifique suas credenciais."
+	},
+	"ely-login.error.network": {
+		"message": "Não foi possível conectar aos servidores do Ely.by. Verifique sua conexão com a internet."
+	},
+	"ely-login.error.page": {
+		"message": "O login não foi concluído. Tente novamente ou use uma senha."
+	},
+	"ely-login.forgot-password": {
+		"message": "Esqueceu?"
+	},
+	"ely-login.header": {
+		"message": "Entrar com Ely.by"
+	},
+	"ely-login.hide-password": {
+		"message": "Ocultar senha"
+	},
+	"ely-login.intro": {
+		"message": "Uma conta Ely.by permite jogar em servidores que a aceitam, sem precisar comprar o Minecraft."
+	},
+	"ely-login.no-account": {
+		"message": "Não tem uma conta?"
+	},
+	"ely-login.page-button": {
+		"message": "Continuar em ely.by"
+	},
+	"ely-login.page-button-hint": {
+		"message": "Abre a página de login do Ely.by."
+	},
+	"ely-login.page-description": {
+		"message": "O Ely.by pedirá seus dados na própria página dele, em uma janela separada. Sua senha é digitada lá e nunca passa pelo launcher."
+	},
+	"ely-login.page-waiting": {
+		"message": "Aguardando o Ely.by..."
+	},
+	"ely-login.password-label": {
+		"message": "Senha"
+	},
+	"ely-login.password-placeholder": {
+		"message": "Digite sua senha..."
+	},
+	"ely-login.password-warning-body": {
+		"message": "Funciona, e a senha é enviada diretamente ao Ely.by. Mas entrar pela página deles garante que nada aqui tenha acesso a ela — use essa opção, a menos que a página não abra."
+	},
+	"ely-login.password-warning-header": {
+		"message": "Isso pede ao launcher a sua senha do Ely.by"
+	},
+	"ely-login.show-password": {
+		"message": "Mostrar senha"
+	},
+	"ely-login.sign-in": {
+		"message": "Entrar"
+	},
+	"ely-login.sign-up-link": {
+		"message": "Criar conta em ely.by"
+	},
+	"ely-login.signing-in": {
+		"message": "Entrando..."
+	},
+	"ely-login.totp-hint": {
+		"message": "Esta conta está protegida com autenticação em dois fatores."
+	},
+	"ely-login.totp-label": {
+		"message": "Código de dois fatores"
+	},
+	"ely-login.totp-placeholder": {
+		"message": "Digite o código de 6 dígitos..."
+	},
+	"ely-login.use-password": {
+		"message": "Entrar com senha em vez disso"
+	},
+	"ely-login.username-hint": {
+		"message": "O mesmo que você usa para entrar em ely.by."
+	},
+	"ely-login.username-label": {
+		"message": "Nome de usuário ou e-mail"
+	},
+	"ely-login.username-placeholder": {
+		"message": "Digite seu nome de usuário ou e-mail do Ely.by..."
+	},
+	"ely-skins.change-button": {
+		"message": "Alterar skin no Ely.by"
+	},
+	"ely-skins.default-notice": {
+		"message": "Esta conta não tem nenhuma skin personalizada enviada (ou não foi possível carregá-la), portanto a skin padrão está sendo exibida."
+	},
+	"ely-skins.description": {
+		"message": "As skins para contas Ely.by são gerenciadas no site do Ely.by. O botão abaixo abre o site em uma janela aqui no aplicativo — se você não estiver conectado, o Ely.by pedirá para fazer login primeiro. Assim que você fechar a janela, a prévia será atualizada automaticamente."
+	},
+	"ely-skins.page-title": {
+		"message": "Skins"
+	},
+	"ely-skins.refresh-button": {
+		"message": "Atualizar prévia"
+	},
+	"ely-skins.section-title": {
+		"message": "Skin do Ely.by"
+	},
+	"friends.friend.more-options": {
+		"message": "Mais opções"
+	},
+	"friends.requests.none": {
+		"message": "Você não tem pedidos de amizade pendentes :C"
+	},
+	"instance.action.play-again": {
+		"message": "Iniciar outra cópia"
+	},
+	"instance.badge.locked": {
+		"message": "Bloqueada"
+	},
+	"instance.badge.locked.label": {
+		"message": "Informações da instância bloqueada"
+	},
+	"instance.badge.shared": {
+		"message": "Compartilhada"
+	},
+	"instance.badge.shared.label": {
+		"message": "Informações da instância compartilhada"
+	},
+	"instance.console.copies-running": {
+		"message": "{count, plural, one {# cópia em execução} other {# cópias em execução}}"
+	},
+	"instance.console.copy-started-at": {
+		"message": "iniciada {time}"
+	},
+	"instance.console.copy-unknown-account": {
+		"message": "Conta desconhecida"
+	},
+	"instance.console.one-at-a-time": {
+		"message": "Uma por vez"
+	},
+	"instance.console.side-by-side": {
+		"message": "Lado a lado"
+	},
+	"instance.metadata.loader-tooltip": {
+		"message": "Carregador de mods e versão do Minecraft"
+	},
+	"instance.metadata.total-playtime": {
+		"message": "Tempo total de jogo"
+	},
+	"instance.playtime.hours": {
+		"message": "{hours, plural, one {# hora} other {# horas}}"
+	},
+	"instance.playtime.minutes": {
+		"message": "{minutes, plural, one {# minuto} other {# minutos}}"
+	},
+	"instance.playtime.seconds": {
+		"message": "{seconds, plural, one {# segundo} other {# segundos}}"
+	},
+	"instance.settings.tabs.java.modern-java": {
+		"message": "Java moderno"
+	},
+	"instance.settings.tabs.java.modern-java-beta": {
+		"message": "Beta"
+	},
+	"instance.settings.tabs.java.modern-java-beta-note": {
+		"message": "Isso é novo e ainda não foi amplamente testado. Faça backup da instância antes de ativar e espere que mods feitos apenas para o Java 8 possam se comportar mal."
+	},
+	"instance.settings.tabs.java.modern-java-description": {
+		"message": "O Minecraft {gameVersion} normalmente só roda no Java 8. O {provider} substitui o LWJGL 2 e adapta o Forge para que a instância possa rodar em uma versão atual do Java."
+	},
+	"instance.settings.tabs.java.modern-java-install": {
+		"message": "Ativar"
+	},
+	"instance.settings.tabs.java.modern-java-installed": {
+		"message": "Instalado — {provider} {version}, rodando no Java {javaMajor}"
+	},
+	"instance.settings.tabs.java.modern-java-installing": {
+		"message": "Ativando..."
+	},
+	"instance.settings.tabs.java.modern-java-mods-note": {
+		"message": "Desativar remove os patches do launcher. Quaisquer mods instalados permanecem na instância — remova-os na aba Mods se não quiser mais usá-los."
+	},
+	"instance.settings.tabs.java.modern-java-remove": {
+		"message": "Desativar"
+	},
+	"instance.settings.tabs.java.modern-java-version": {
+		"message": "Versão do Java"
+	},
+	"instance.settings.tabs.java.modern-java-version-hint": {
+		"message": "Escolher uma versão faz o download dela. Clique em Salvar para usá-la nesta instância. A versão mais baixa é a mais testada; versões mais recentes são suportadas, mas menos comprovadas com mods para esta versão do Minecraft."
+	},
+	"minecraft-account.add-ely-account": {
+		"message": "Adicionar conta Ely.by"
+	},
+	"minecraft-account.add-offline-account": {
+		"message": "Adicionar conta offline"
+	},
+	"minecraft-account.label-ely-by": {
+		"message": "Conta Ely.by"
+	},
+	"minecraft-account.label-microsoft": {
+		"message": "Conta Microsoft"
+	},
+	"minecraft-account.label-offline": {
+		"message": "Conta offline"
+	},
+	"minecraft-account.label-offline-short": {
+		"message": "Offline"
+	},
+	"noctrinth.auth-servers.unreachable.retry": {
+		"message": "Verificar novamente"
+	},
+	"noctrinth.auth-servers.unreachable.scope": {
+		"message": "Entrar e jogar com uma conta Microsoft pode falhar até lá. Contas offline e Ely.by não são afetadas."
+	},
+	"noctrinth.creation-flow.curseforge-code.import": {
+		"message": "Importar"
+	},
+	"noctrinth.creation-flow.curseforge-code.placeholder": {
+		"message": "Um código ou link de compartilhamento do aplicativo CurseForge"
+	},
+	"noctrinth.creation-flow.curseforge-code.title": {
+		"message": "Código de perfil do CurseForge"
+	},
+	"noctrinth.instance.logs.open-file": {
+		"message": "Abrir arquivo"
+	},
+	"noctrinth.instance.logs.open-folder": {
+		"message": "Pasta de logs"
+	},
+	"noctrinth.instance.stop-all-copies": {
+		"message": "Parar todas as cópias"
+	},
+	"noctrinth.instance.stop-copy": {
+		"message": "Parar {name} · {time}"
+	},
+	"noctrinth.news.modrinth-news": {
+		"message": "Notícias do Modrinth"
+	},
+	"noctrinth.news.noctrinth-news": {
+		"message": "Notícias do Noctrinth"
+	},
+	"noctrinth.quick-search.discover": {
+		"message": "Ainda não instalado"
+	},
+	"noctrinth.quick-search.hint": {
+		"message": "↑↓ para escolher · Enter para abrir · Ctrl+Enter para jogar ou atualizar · Esc para fechar"
+	},
+	"noctrinth.quick-search.in-instance": {
+		"message": "Em {instance}"
+	},
+	"noctrinth.quick-search.installed": {
+		"message": "Instalado"
+	},
+	"noctrinth.quick-search.instances": {
+		"message": "Instâncias"
+	},
+	"noctrinth.quick-search.nothing": {
+		"message": "Nada encontrado"
+	},
+	"noctrinth.quick-search.placeholder": {
+		"message": "Pesquisar instâncias, o que está instalado nelas e configurações"
+	},
+	"noctrinth.quick-search.play": {
+		"message": "Jogar"
+	},
+	"noctrinth.quick-search.reading": {
+		"message": "Ainda lendo o que está instalado…"
+	},
+	"noctrinth.quick-search.recent": {
+		"message": "Jogadas recentemente"
+	},
+	"noctrinth.quick-search.search-curseforge": {
+		"message": "Pesquisar “{query}” no CurseForge"
+	},
+	"noctrinth.quick-search.search-modrinth": {
+		"message": "Pesquisar “{query}” no Modrinth"
+	},
+	"noctrinth.quick-search.settings": {
+		"message": "Configurações"
+	},
+	"noctrinth.quick-search.stop": {
+		"message": "Parar"
+	},
+	"noctrinth.quick-search.update": {
+		"message": "Atualizar"
+	},
+	"noctrinth.quick-search.update-available": {
+		"message": "Atualização disponível"
+	},
+	"noctrinth.screenshots.launcher-background-set": {
+		"message": "Plano de fundo do launcher atualizado"
+	},
+	"noctrinth.screenshots.set-launcher-background": {
+		"message": "Definir como plano de fundo do launcher"
+	},
+	"noctrinth.settings.appearance.show-hosting": {
+		"message": "Mostrar Modrinth Hosting na barra lateral"
+	},
+	"noctrinth.settings.appearance.show-hosting.description": {
+		"message": "Mostra um botão na barra lateral esquerda para abrir o Modrinth Hosting."
+	},
+	"noctrinth.settings.appearance.show-sidebar-news": {
+		"message": "Mostrar notícias na barra lateral"
+	},
+	"noctrinth.settings.appearance.show-sidebar-news.description": {
+		"message": "Mostra as últimas notícias do Noctrinth e do Modrinth na barra lateral direita."
+	},
+	"noctrinth.settings.background.blur.description": {
+		"message": "Suaviza o fundo para que fique discreto atrás do conteúdo."
+	},
+	"noctrinth.settings.background.blur.title": {
+		"message": "Desfocar o plano de fundo"
+	},
+	"noctrinth.settings.background.change": {
+		"message": "Alterar plano de fundo"
+	},
+	"noctrinth.settings.background.choose": {
+		"message": "Escolher um arquivo"
+	},
+	"noctrinth.settings.background.description": {
+		"message": "Uma imagem, GIF animado ou vídeo em loop atrás do launcher, aparecendo pela moldura e levemente pelos cartões da página. Imagens e GIFs de até 32 MB, vídeos MP4 ou WebM de até 100 MB."
+	},
+	"noctrinth.settings.background.dim.description": {
+		"message": "Ideal para um plano de fundo claro ou muito detalhado, mantendo o conteúdo fácil de ler."
+	},
+	"noctrinth.settings.background.dim.title": {
+		"message": "Escurecer o plano de fundo"
+	},
+	"noctrinth.settings.background.drop-here": {
+		"message": "Solte aqui"
+	},
+	"noctrinth.settings.background.drop-hint": {
+		"message": "Ou solte uma imagem ou vídeo na janela."
+	},
+	"noctrinth.settings.background.remove": {
+		"message": "Remover"
+	},
+	"noctrinth.settings.background.title": {
+		"message": "Plano de fundo"
+	},
+	"noctrinth.settings.curseforge.cache.title": {
+		"message": "Cache"
+	},
+	"noctrinth.settings.curseforge.check-updates": {
+		"message": "Verificar atualizações no CurseForge para seus mods e modpacks"
+	},
+	"noctrinth.settings.curseforge.check-updates.title": {
+		"message": "Verificar atualizações"
+	},
+	"noctrinth.settings.curseforge.clear-cache": {
+		"message": "Limpar respostas do CurseForge"
+	},
+	"noctrinth.settings.curseforge.clear-cache-hint": {
+		"message": "Elas ficam salvas por cinco minutos; isto consulta novamente na hora."
+	},
+	"noctrinth.settings.curseforge.cleared": {
+		"message": "Limpo"
+	},
+	"noctrinth.settings.curseforge.default-source": {
+		"message": "Explorar abre em"
+	},
+	"noctrinth.settings.curseforge.default-source.description": {
+		"message": "Qual catálogo a aba Explorar mostra primeiro. O seletor acima dos resultados muda isso a qualquer momento."
+	},
+	"noctrinth.settings.curseforge.description": {
+		"message": "Explore e instale do CurseForge, reconheça os arquivos dele nas suas instâncias e mantenha-os atualizados. Desativado, o launcher não faz nenhuma requisição ao CurseForge."
+	},
+	"noctrinth.settings.curseforge.install-links.description": {
+		"message": "O botão Instalar em curseforge.com abre o projeto aqui em vez de no aplicativo do CurseForge. Se esse aplicativo estiver instalado, ele retoma esses links na próxima vez que for aberto."
+	},
+	"noctrinth.settings.curseforge.install-links.title": {
+		"message": "Abrir links de instalação do site do CurseForge"
+	},
+	"noctrinth.settings.curseforge.no-key": {
+		"message": "Esta compilação não possui chave de API do CurseForge. Adicione a sua abaixo para usar o CurseForge."
+	},
+	"noctrinth.settings.curseforge.own-key": {
+		"message": "Sua própria chave de API"
+	},
+	"noctrinth.settings.curseforge.own-key.check": {
+		"message": "Verificar"
+	},
+	"noctrinth.settings.curseforge.own-key.check-and-save": {
+		"message": "Verificar e salvar"
+	},
+	"noctrinth.settings.curseforge.own-key.check-failed": {
+		"message": "Não foi possível conectar ao CurseForge para verificar a chave"
+	},
+	"noctrinth.settings.curseforge.own-key.forget": {
+		"message": "Esquecer minha chave"
+	},
+	"noctrinth.settings.curseforge.own-key.hint": {
+		"message": "Usada no lugar da chave integrada e salva neste computador. Entre no console do CurseForge e copie uma chave da página de chaves de API:"
+	},
+	"noctrinth.settings.curseforge.own-key.invalid": {
+		"message": "O CurseForge não aceita esta chave"
+	},
+	"noctrinth.settings.curseforge.own-key.ok": {
+		"message": "O CurseForge aceita a chave"
+	},
+	"noctrinth.settings.curseforge.own-key.placeholder": {
+		"message": "Sua chave está salva"
+	},
+	"noctrinth.settings.curseforge.own-key.saved": {
+		"message": "O CurseForge aceita a chave; ela foi salva"
+	},
+	"noctrinth.settings.curseforge.recognize-files": {
+		"message": "Reconhecer mods adicionados manualmente ou de outros launchers pela assinatura digital"
+	},
+	"noctrinth.settings.curseforge.recognize-files.title": {
+		"message": "Reconhecer arquivos"
+	},
+	"noctrinth.settings.curseforge.release-type": {
+		"message": "Atualizar para"
+	},
+	"noctrinth.settings.curseforge.release-type.alpha": {
+		"message": "Qualquer arquivo, incluindo alfas"
+	},
+	"noctrinth.settings.curseforge.release-type.beta": {
+		"message": "Lançamentos e betas"
+	},
+	"noctrinth.settings.curseforge.release-type.description": {
+		"message": "Quais arquivos contam como atualização."
+	},
+	"noctrinth.settings.curseforge.release-type.release": {
+		"message": "Apenas lançamentos"
+	},
+	"noctrinth.settings.curseforge.search-other-launchers": {
+		"message": "Procurar arquivos restritos em instâncias de outros launchers, não apenas em Downloads"
+	},
+	"noctrinth.settings.curseforge.search-other-launchers.title": {
+		"message": "Procurar em outros launchers"
+	},
+	"noctrinth.settings.curseforge.section.discover": {
+		"message": "Explorar"
+	},
+	"noctrinth.settings.curseforge.section.files": {
+		"message": "Arquivos e atualizações"
+	},
+	"noctrinth.settings.curseforge.section.restricted": {
+		"message": "Arquivos restritos a launchers"
+	},
+	"noctrinth.settings.curseforge.source.curseforge": {
+		"message": "CurseForge"
+	},
+	"noctrinth.settings.curseforge.source.modrinth": {
+		"message": "Modrinth"
+	},
+	"noctrinth.settings.curseforge.title": {
+		"message": "CurseForge"
+	},
+	"noctrinth.settings.java-provider.auto": {
+		"message": "Automaticamente"
+	},
+	"noctrinth.settings.java-provider.auto-hint": {
+		"message": "Tenta Azul, depois Temurin, depois Temurin do GitHub, depois Mojang, depois Mojang pelo espelho BMCLAPI, e para no primeiro que responder. O GitHub geralmente continua acessível onde os outros estão bloqueados."
+	},
+	"noctrinth.settings.java-provider.azul": {
+		"message": "Azul Zulu"
+	},
+	"noctrinth.settings.java-provider.description": {
+		"message": "De onde o launcher baixa o Java quando uma instância precisa de uma versão que ainda não tem. Todo download é verificado com o checksum publicado pela fonte."
+	},
+	"noctrinth.settings.java-provider.mojang": {
+		"message": "Mojang"
+	},
+	"noctrinth.settings.java-provider.mojang-mirror": {
+		"message": "Mojang via BMCLAPI (espelho de terceiros)"
+	},
+	"noctrinth.settings.java-provider.temurin": {
+		"message": "Eclipse Temurin"
+	},
+	"noctrinth.settings.java-provider.temurin-github": {
+		"message": "Eclipse Temurin do GitHub"
+	},
+	"noctrinth.settings.java-provider.title": {
+		"message": "Baixar Java de"
+	},
+	"noctrinth.settings.splash-cube.description": {
+		"message": "Qual cubo a tela inicial exibe. Entra em vigor na próxima inicialização."
+	},
+	"noctrinth.settings.splash-cube.inverted": {
+		"message": "Invertido: preto no branco, branco no preto"
+	},
+	"noctrinth.settings.splash-cube.random": {
+		"message": "Aleatório a cada inicialização"
+	},
+	"noctrinth.settings.splash-cube.theme": {
+		"message": "Combina com o tema (raramente o contrário)"
+	},
+	"noctrinth.settings.splash-cube.title": {
+		"message": "Cubo da tela inicial"
+	},
+	"noctrinth.settings.translation.auto": {
+		"message": "Traduzir assim que uma descrição for aberta"
+	},
+	"noctrinth.settings.translation.deepl": {
+		"message": "DeepL: mais natural, exige sua própria chave de API gratuita"
+	},
+	"noctrinth.settings.translation.deepl-key": {
+		"message": "Chave de API do DeepL"
+	},
+	"noctrinth.settings.translation.deepl-key-hint": {
+		"message": "Uma chave gratuita traduz 500.000 caracteres por mês. Obtenha uma em"
+	},
+	"noctrinth.settings.translation.description": {
+		"message": "Oferece traduzir a descrição de um projeto para o seu idioma, com uma opção para voltar ao original."
+	},
+	"noctrinth.settings.translation.google": {
+		"message": "Google Tradutor: gratuito, sem necessidade de chave"
+	},
+	"noctrinth.settings.translation.precheck": {
+		"message": "Verificar o idioma primeiro e ocultar o botão quando não houver nada para traduzir"
+	},
+	"noctrinth.settings.translation.service": {
+		"message": "Serviço"
+	},
+	"noctrinth.settings.translation.skip": {
+		"message": "Idiomas que você já lê"
+	},
+	"noctrinth.settings.translation.skip-hint": {
+		"message": "Descrições nesses idiomas são mantidas como estão."
+	},
+	"noctrinth.settings.translation.target": {
+		"message": "Traduzir para"
+	},
+	"noctrinth.settings.translation.target-app": {
+		"message": "O idioma do launcher ({language})"
+	},
+	"noctrinth.settings.translation.test": {
+		"message": "Testar o serviço"
+	},
+	"noctrinth.settings.translation.test-ok": {
+		"message": "Funcionou, {milliseconds} ms: \"{text}\""
+	},
+	"noctrinth.settings.translation.title": {
+		"message": "Traduzir descrições"
+	},
+	"noctrinth.translate.button": {
+		"message": "Traduzir para {language}"
+	},
+	"noctrinth.translate.failed": {
+		"message": "Não foi possível traduzir: {reason}"
+	},
+	"noctrinth.translate.original": {
+		"message": "Original"
+	},
+	"noctrinth.translate.retry": {
+		"message": "Tentar novamente"
+	},
+	"noctrinth.translate.source-language": {
+		"message": "Escrito em {language}"
+	},
+	"noctrinth.translate.translated-by": {
+		"message": "Traduzido por {service}"
+	},
+	"noctrinth.translate.translating": {
+		"message": "Traduzindo..."
+	},
+	"notifications.back": {
+		"message": "Voltar"
+	},
+	"notifications.heading": {
+		"message": "Notificações"
+	},
+	"notifications.heading-history": {
+		"message": "Histórico de notificações"
+	},
+	"notifications.history-empty": {
+		"message": "Nenhuma notificação no histórico."
+	},
+	"notifications.loading": {
+		"message": "Carregando notificações..."
+	},
+	"notifications.mark-all-read": {
+		"message": "Marcar todas como lidas"
+	},
+	"notifications.sign-in-prompt": {
+		"message": "Entre para ver as notificações"
+	},
+	"notifications.sign-in-prompt-body": {
+		"message": "Entre na sua conta Modrinth para ver suas notificações aqui."
+	},
+	"notifications.type.all": {
+		"message": "Todas"
+	},
+	"notifications.type.moderator-message": {
+		"message": "Mensagens de moderadores"
+	},
+	"notifications.type.organization-invite": {
+		"message": "Convites de organização"
+	},
+	"notifications.type.other": {
+		"message": "Outras"
+	},
+	"notifications.type.project-update": {
+		"message": "Atualizações"
+	},
+	"notifications.type.status-change": {
+		"message": "Alterações de status"
+	},
+	"notifications.type.team-invite": {
+		"message": "Convites de equipe"
+	},
+	"notifications.unread-empty": {
+		"message": "Você não tem nenhuma notificação não lida."
+	},
+	"notifications.view-history": {
+		"message": "Ver histórico"
+	},
+	"offline-account.add": {
+		"message": "Adicionar conta"
+	},
+	"offline-account.description": {
+		"message": "Um nome e nada mais. É como o launcher joga quando não há conexão para fazer login."
+	},
+	"offline-account.header": {
+		"message": "Adicionar uma conta offline"
+	},
+	"offline-account.invalid": {
+		"message": "De 3 a 16 letras, números ou sublinhados — o que um servidor aceita."
+	},
+	"offline-account.limitation-body": {
+		"message": "Servidores em modo online perguntam à Mojang se a sessão é real, e não existe uma aqui. Todo o resto — mundos neste computador, LAN e servidores em modo offline — funciona normalmente."
+	},
+	"offline-account.limitation-header": {
+		"message": "Apenas um jogador e servidores offline"
+	},
+	"offline-account.username-label": {
+		"message": "Nome"
+	},
+	"offline-account.username-placeholder": {
+		"message": "O nome para jogar..."
+	},
+	"offline-account.uuid": {
+		"message": "Jogará como {uuid}"
+	},
+	"search.sort.date-published": {
+		"message": "Data de publicação"
+	},
+	"search.sort.date-updated": {
+		"message": "Data de atualização"
+	},
+	"search.sort.downloads": {
+		"message": "Downloads"
+	},
+	"search.sort.followers": {
+		"message": "Seguidores"
+	},
+	"search.sort.players": {
+		"message": "Jogadores"
+	},
+	"search.sort.relevance": {
+		"message": "Relevância"
+	},
+	"search.sort.verified-plays": {
+		"message": "Partidas verificadas"
+	},
+	"servers.list-empty.no-servers-description": {
+		"message": "Instale mods, convide amigos e joguem juntos, tudo pelo Noctrinth."
+	},
+	"servers.list-empty.play-with-friends-description": {
+		"message": "Convide amigos para jogar no seu servidor com apenas um clique pelo Noctrinth."
+	},
+	"settings.display.theme.description": {
+		"message": "Selecione seu tema de cores preferido no Noctrinth."
+	},
+	"settings.language.coverage.app-tooltip": {
+		"message": "Cerca de {percentage}% do Noctrinth está disponível neste idioma."
+	}
+}

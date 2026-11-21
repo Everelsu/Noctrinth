@@ -29,6 +29,9 @@ export interface ConsoleManagerContext {
 	deleteDisabled?: Ref<boolean> | ComputedRef<boolean>
 	deleteDisabledTooltip?: string
 
+	onOpenFile?: () => void | Promise<void>
+	openFileLabel?: string | Ref<string | undefined> | ComputedRef<string | undefined>
+
 	shareDisabled?: Ref<boolean> | ComputedRef<boolean>
 
 	emptyStateType?: 'server' | 'instance'

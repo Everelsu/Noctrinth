@@ -1,0 +1,206 @@
+{
+	"app.error.copied-debug-info": {
+		"message": "Copiado"
+	},
+	"app.error.inspect-debug-info": {
+		"message": "Ver información de depuración"
+	},
+	"app.java-selector.copy-failed-title": {
+		"message": "No se pudo copiar la ruta"
+	},
+	"app.java-selector.copy-path": {
+		"message": "Copiar ruta"
+	},
+	"app.java-selector.edit-path": {
+		"message": "Editar ruta"
+	},
+	"app.java-selector.install-java": {
+		"message": "Instalar Java {version}"
+	},
+	"app.java-selector.invalid": {
+		"message": "No válida"
+	},
+	"app.java-selector.more-options": {
+		"message": "Más opciones de Java"
+	},
+	"app.java-selector.not-set": {
+		"message": "No se seleccionó Java"
+	},
+	"app.java-selector.path-copied-text": {
+		"message": "La ruta de Java se copió al portapapeles."
+	},
+	"app.java-selector.path-copied-title": {
+		"message": "Ruta copiada"
+	},
+	"app.java-selector.valid": {
+		"message": "Válida"
+	},
+	"app.settings.resource-management.app-directory.cancel-move": {
+		"message": "Cancelar traslado"
+	},
+	"app.settings.resource-management.app-directory.change": {
+		"message": "Cambiar directorio"
+	},
+	"app.settings.resource-management.app-directory.change-to-default": {
+		"message": "Restaurar predeterminado"
+	},
+	"app.settings.resource-management.app-directory.modal.admonition-body": {
+		"message": "No podrás usar Modrinth App mientras movemos tus datos. Esto puede tardar un poco."
+	},
+	"app.settings.resource-management.app-directory.modal.admonition-header": {
+		"message": "Se moverán todos tus archivos"
+	},
+	"app.settings.resource-management.app-directory.modal.choose": {
+		"message": "Elegir una carpeta"
+	},
+	"app.settings.resource-management.app-directory.modal.current": {
+		"message": "Actual"
+	},
+	"app.settings.resource-management.app-directory.modal.drive-root": {
+		"message": "Elige una carpeta en lugar de la raíz de una unidad, para que tus archivos no se mezclen con el resto."
+	},
+	"app.settings.resource-management.app-directory.modal.header": {
+		"message": "Cambiar directorio de la aplicación"
+	},
+	"app.settings.resource-management.app-directory.modal.instances-running": {
+		"message": "Cierra todas las instancias en ejecución antes de cambiar el directorio de la aplicación."
+	},
+	"app.settings.resource-management.app-directory.modal.more-options": {
+		"message": "Más opciones de traslado"
+	},
+	"app.settings.resource-management.app-directory.modal.move-and-restart": {
+		"message": "Mover y reiniciar"
+	},
+	"app.settings.resource-management.app-directory.modal.move-later": {
+		"message": "Mover en el próximo inicio"
+	},
+	"app.settings.resource-management.app-directory.modal.nested": {
+		"message": "La nueva carpeta no puede estar dentro de tu directorio actual ni contenerlo."
+	},
+	"app.settings.resource-management.app-directory.modal.new": {
+		"message": "Nuevo"
+	},
+	"app.settings.resource-management.app-directory.modal.picker-title": {
+		"message": "Seleccionar un nuevo directorio de la aplicación"
+	},
+	"app.settings.resource-management.app-directory.more-change-options": {
+		"message": "Más opciones de directorio"
+	},
+	"app.settings.resource-management.app-directory.move-now": {
+		"message": "Mover y reiniciar ahora"
+	},
+	"app.settings.resource-management.app-directory.open-folder": {
+		"message": "Abrir carpeta"
+	},
+	"app.settings.resource-management.app-directory.open-in-explorer": {
+		"message": "Abrir en el Explorador de archivos"
+	},
+	"app.settings.resource-management.app-directory.open-in-finder": {
+		"message": "Abrir en Finder"
+	},
+	"app.settings.resource-management.app-directory.path-copied-text": {
+		"message": "La ruta del directorio de la aplicación se copió al portapapeles."
+	},
+	"app.settings.resource-management.app-directory.path-copied-title": {
+		"message": "Ruta copiada"
+	},
+	"app.settings.resource-management.app-directory.path-copy-failed-title": {
+		"message": "No se pudo copiar la ruta"
+	},
+	"app.settings.resource-management.app-directory.pending": {
+		"message": "El directorio de la aplicación se moverá a {path} la próxima vez que se abra Modrinth App."
+	},
+	"app.shared-instance.lock-notice.delete-instance": {
+		"message": "Eliminar instancia"
+	},
+	"app.shared-instance.lock-notice.more-actions": {
+		"message": "Más acciones de la instancia"
+	},
+	"app.shared-instance.lock-notice.reason": {
+		"message": "Motivo"
+	},
+	"app.shared-instance.lock-notice.title": {
+		"message": "Instancia compartida bloqueada"
+	},
+	"app.splash.moving-app-directory": {
+		"message": "Moviendo el directorio de la aplicación..."
+	},
+	"button.switch-version": {
+		"message": "Cambiar versión"
+	},
+	"installation-settings.advanced.title": {
+		"message": "Avanzado"
+	},
+	"installation-settings.relink-shared-instance.button": {
+		"message": "Volver a vincular instancia compartida"
+	},
+	"installation-settings.relink-shared-instance.description": {
+		"message": "Vuelve a conectar esta instancia a una instancia compartida de la que se desvinculó, usando un enlace de invitación o un ID."
+	},
+	"installation-settings.relink-shared-instance.modal.already-linked": {
+		"message": "Tu instancia \"{name}\" ya está vinculada a esta instancia compartida."
+	},
+	"installation-settings.relink-shared-instance.modal.blocked-header": {
+		"message": "Esta instancia no se puede volver a vincular"
+	},
+	"installation-settings.relink-shared-instance.modal.confirm-body": {
+		"message": "Esta instancia volverá a ser el origen de la instancia compartida. Los miembros recibirán tus cambios cuando publiques una actualización."
+	},
+	"installation-settings.relink-shared-instance.modal.description": {
+		"message": "Vuelve a conectar esta instancia a una instancia compartida de tu propiedad."
+	},
+	"installation-settings.relink-shared-instance.modal.find-button": {
+		"message": "Buscar instancia compartida"
+	},
+	"installation-settings.relink-shared-instance.modal.header": {
+		"message": "Volver a vincular instancia compartida"
+	},
+	"installation-settings.relink-shared-instance.modal.input-label": {
+		"message": "Enlace de invitación o ID de la instancia compartida"
+	},
+	"installation-settings.relink-shared-instance.modal.input-placeholder": {
+		"message": "https://modrinth.com/share/..."
+	},
+	"installation-settings.relink-shared-instance.modal.mismatch-body": {
+		"message": "Esta instancia usa {localLoader} {localGameVersion}, pero la instancia compartida usa {loader} {gameVersion}. Tu próxima publicación cambiará la instancia compartida para que coincida con esta instancia."
+	},
+	"installation-settings.relink-shared-instance.modal.mismatch-header": {
+		"message": "Versión del juego o del cargador diferente"
+	},
+	"installation-settings.relink-shared-instance.modal.not-owner": {
+		"message": "Solo el propietario puede volver a vincular una instancia compartida. Para recibir sus actualizaciones como miembro, vuelve a instalarla desde tu biblioteca."
+	},
+	"installation-settings.relink-shared-instance.modal.relink-button": {
+		"message": "Volver a vincular"
+	},
+	"installation-settings.relink-shared-instance.modal.server-managed": {
+		"message": "Esta instancia compartida está administrada por un servidor, por lo que no se puede volver a vincular."
+	},
+	"installation-settings.relink-shared-instance.modal.version-summary": {
+		"message": "{loader} {gameVersion} · Versión {version}"
+	},
+	"installation-settings.relink-shared-instance.title": {
+		"message": "Volver a vincular instancia compartida"
+	},
+	"instance.settings.reset-setting-to-default": {
+		"message": "Restablecer {setting} al valor predeterminado"
+	},
+	"instance.settings.reset-to-default": {
+		"message": "Restablecer predeterminados"
+	},
+	"instance.settings.tabs.general.duplicate-button.tooltip.locked": {
+		"message": "Las instancias bloqueadas no se pueden duplicar."
+	},
+	"instance.settings.tabs.java.recommended-java-version": {
+		"message": "Se recomienda Java {version} para la versión de Minecraft de esta instancia."
+	},
+	"instance.settings.using-defaults": {
+		"message": "Usando valores predeterminados"
+	},
+	"instance.shared-instance.unavailable.locked-owner-text": {
+		"message": "El equipo de Moderación de Contenido bloqueó esta instancia compartida. Ya no puedes publicar actualizaciones ni volver a compartirla."
+	},
+	"instance.shared-instance.unavailable.locked-owner-title": {
+		"message": "La instancia ya no se puede compartir"
+	}
+}

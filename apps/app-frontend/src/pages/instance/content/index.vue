@@ -1723,12 +1723,17 @@ const packActions = useSyncedPackActions(instance, syncedContentModal, canMutate
 	refreshContentState('must_revalidate'),
 )
 
+const showFileLabel = computed(() => formatMessage(commonMessages.showFileButton))
+const copyLinkLabel = computed(() => formatMessage(commonMessages.copyLinkButton))
+const freezeContentLabel = computed(() => formatMessage(messages.freezeContent))
+const unfreezeContentLabel = computed(() => formatMessage(messages.unfreezeContent))
+
 function getOverflowOptions(item: ContentItem): ButtonMenuOption[] {
 	const options: ButtonMenuOption[] = packActions.overflowOptions(item)
 
 	options.push({
 		id: 'show-file',
-		label: formatMessage(commonMessages.showFileButton),
+		label: showFileLabel.value,
 		icon: FolderOpenIcon,
 		action: () => highlightModInInstance(instance.value.id, item.file_path),
 	})
@@ -1736,7 +1741,7 @@ function getOverflowOptions(item: ContentItem): ButtonMenuOption[] {
 	if (item.project?.slug) {
 		options.push({
 			id: 'copy-link',
-			label: formatMessage(commonMessages.copyLinkButton),
+			label: copyLinkLabel.value,
 			icon: ClipboardCopyIcon,
 			action: async () => {
 				await navigator.clipboard.writeText(
@@ -1751,7 +1756,7 @@ function getOverflowOptions(item: ContentItem): ButtonMenuOption[] {
 			{ type: 'divider' },
 			{
 				id: item.locked ? 'unfreeze-content' : 'freeze-content',
-				label: formatMessage(item.locked ? messages.unfreezeContent : messages.freezeContent),
+				label: item.locked ? unfreezeContentLabel.value : freezeContentLabel.value,
 				icon: item.locked ? LockOpenIcon : LockIcon,
 				action: () => handleContentFreeze(item, !item.locked),
 			},
@@ -2034,7 +2039,7 @@ const curseforgePendingQuery = useQuery(
 		queryKey: ['curseforge', 'pending', instancePage.instanceId.value],
 		queryFn: () => curseforgePendingFiles(instancePage.instanceId.value),
 		enabled: !!instancePage.instanceId.value,
-		staleTime: 0,
+		staleTime: 30_000,
 	})),
 )
 const curseforgePending = computed(() => curseforgePendingQuery.data.value ?? [])

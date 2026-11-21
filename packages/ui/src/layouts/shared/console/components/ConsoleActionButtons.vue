@@ -25,6 +25,15 @@
 			{{ formatMessage(commonMessages.deleteLabel) }}
 		</Button>
 		<Button
+			v-if="showOpenFile"
+			type="quiet"
+			class="!text-sm !font-medium"
+			@click="emit('open-file')"
+		>
+			<FolderOpenIcon aria-hidden="true" />
+			{{ openFileLabel || formatMessage(messages.openFile) }}
+		</Button>
+		<Button
 			v-if="hasLogs"
 			v-tooltip="shareDisabled ? shareDisabledTooltip : undefined"
 			type="quiet"
@@ -49,6 +58,7 @@
 import {
 	ContractIcon,
 	ExpandIcon,
+	FolderOpenIcon,
 	ShareIcon,
 	SpinnerIcon,
 	TrashIcon,
@@ -61,6 +71,10 @@ import { commonMessages } from '#ui/utils/common-messages'
 
 const { formatMessage } = useVIntl()
 const messages = defineMessages({
+	openFile: {
+		id: 'console.actions.open-file',
+		defaultMessage: 'Open file',
+	},
 	share: {
 		id: 'console.actions.share',
 		defaultMessage: 'Share',
@@ -78,6 +92,8 @@ const messages = defineMessages({
 defineProps<{
 	showClear?: boolean
 	hasLogs?: boolean
+	showOpenFile?: boolean
+	openFileLabel?: string
 	shareDisabled?: boolean
 	shareDisabledTooltip?: string
 	sharing?: boolean
@@ -91,6 +107,7 @@ defineProps<{
 
 const emit = defineEmits<{
 	clear: []
+	'open-file': []
 	share: []
 	'toggle-fullscreen': []
 	delete: []

@@ -1,0 +1,20 @@
+{
+	"app.error.copied-debug-info": {
+		"message": "Скопійовано"
+	},
+	"app.error.inspect-debug-info": {
+		"message": "Переглянути дані налагодження"
+	},
+	"app.instance.confirm-delete.bulk-admonition-body": {
+		"message": "Усі дані цих {count} примірників буде остаточно видалено, включно з їхніми світами, конфігураціями та всім встановленим вмістом."
+	},
+	"app.instance.confirm-delete.bulk-delete-button": {
+		"message": "Видалити {count} примірників"
+	},
+	"app.instance.confirm-delete.bulk-header": {
+		"message": "Видалити {count} примірників"
+	},
+	"button.switch-version": {
+		"message": "Змінити версію"
+	}
+}

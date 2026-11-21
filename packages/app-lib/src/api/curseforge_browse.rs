@@ -1112,6 +1112,53 @@ pub async fn modpack_target(
 /// The most projects one batch lookup asks CurseForge about.
 const MAX_IDS_PER_REQUEST: usize = 500;
 
+type UpdateCacheKey = (i64, String, Option<i64>, i64);
+
+const UPDATE_CACHE_TTL: Duration = Duration::from_secs(10 * 60);
+
+static UPDATE_CACHE: LazyLock<
+    Mutex<HashMap<UpdateCacheKey, (Instant, Option<i64>)>>,
+> = LazyLock::new(|| Mutex::new(HashMap::new()));
+
+/// Pure in-memory lookup of CurseForge updates already cached by a previous
+/// background refresh. Never blocks on the network.
+pub fn cached_available_updates(
+    installed: &[(String, String)],
+    game_version: &str,
+    loader: &str,
+) -> HashMap<String, String> {
+    let options = crate::api::curseforge_metadata::options();
+    if !options.check_updates || installed.is_empty() {
+        return HashMap::new();
+    }
+    let wanted_loader = loader_id(loader);
+    let now = Instant::now();
+    let Ok(cache) = UPDATE_CACHE.lock() else {
+        return HashMap::new();
+    };
+    let mut updates = HashMap::new();
+    for (project, file) in installed {
+        let (Ok(project_id), Ok(file_id)) =
+            (project.parse::<i64>(), file.parse::<i64>())
+        else {
+            continue;
+        };
+        let key = (
+            project_id,
+            game_version.to_string(),
+            wanted_loader,
+            options.update_release_type,
+        );
+        if let Some((fetched_at, Some(newest))) = cache.get(&key)
+            && now.duration_since(*fetched_at) < UPDATE_CACHE_TTL
+            && *newest > file_id
+        {
+            updates.insert(project.clone(), newest.to_string());
+        }
+    }
+    updates
+}
+
 /// Of the given installed CurseForge files, as (project id, file id) without
 /// the `cf-` prefix, the ones with a newer file for this game version and
 /// loader, mapped to that file's id.
@@ -1140,29 +1187,86 @@ pub async fn available_updates(
     }
     let state = State::get().await?;
     let wanted_loader = loader_id(loader);
-    let mut ids = installed.keys().copied().collect::<Vec<_>>();
-    ids.sort_unstable();
+    let now = Instant::now();
 
     let mut updates = HashMap::new();
-    for chunk in ids.chunks(MAX_IDS_PER_REQUEST) {
-        let mods: Data<Vec<ApiMod>> = post(
-            &format!("{API}/mods"),
-            serde_json::json!({ "modIds": chunk }),
-            &state,
-        )
-        .await?;
-        for project in mods.data {
-            if let Some(newest) = newest_file(
+    let mut missing_ids = Vec::new();
+    if let Ok(cache) = UPDATE_CACHE.lock() {
+        for (&project_id, &file_id) in &installed {
+            let key = (
+                project_id,
+                game_version.to_string(),
+                wanted_loader,
+                options.update_release_type,
+            );
+            if let Some((fetched_at, newest)) = cache.get(&key)
+                && now.duration_since(*fetched_at) < UPDATE_CACHE_TTL
+            {
+                if let Some(newest) = newest
+                    && *newest > file_id
+                {
+                    updates.insert(project_id.to_string(), newest.to_string());
+                }
+            } else {
+                missing_ids.push(project_id);
+            }
+        }
+    } else {
+        missing_ids.extend(installed.keys().copied());
+    }
+
+    if missing_ids.is_empty() {
+        return Ok(updates);
+    }
+    missing_ids.sort_unstable();
+
+    let chunk_futs = missing_ids.chunks(MAX_IDS_PER_REQUEST).map(|chunk| {
+        let chunk_vec = chunk.to_vec();
+        let state = &state;
+        async move {
+            let mods: Data<Vec<ApiMod>> = post(
+                &format!("{API}/mods"),
+                serde_json::json!({ "modIds": chunk_vec }),
+                state,
+            )
+            .await?;
+            Ok::<Vec<ApiMod>, crate::Error>(mods.data)
+        }
+    });
+    let fetched_chunks = futures::future::try_join_all(chunk_futs).await?;
+
+    let fetched_at = Instant::now();
+    let mut fetched_newest: HashMap<i64, Option<i64>> = HashMap::new();
+    for mods in fetched_chunks {
+        for project in mods {
+            let newest = newest_file(
                 &project.latest_files_indexes,
                 game_version,
                 wanted_loader,
                 options.update_release_type,
-            ) && installed
-                .get(&project.id)
-                .is_some_and(|&file| newest > file)
+            );
+            fetched_newest.insert(project.id, newest);
+            if let Some(newest) = newest
+                && installed
+                    .get(&project.id)
+                    .is_some_and(|&file| newest > file)
             {
                 updates.insert(project.id.to_string(), newest.to_string());
             }
+        }
+    }
+    if let Ok(mut cache) = UPDATE_CACHE.lock() {
+        for &id in &missing_ids {
+            let newest = fetched_newest.get(&id).copied().flatten();
+            cache.insert(
+                (
+                    id,
+                    game_version.to_string(),
+                    wanted_loader,
+                    options.update_release_type,
+                ),
+                (fetched_at, newest),
+            );
         }
     }
     Ok(updates)
@@ -1192,6 +1296,9 @@ fn newest_file(
 /// Forgets cached browse answers and pack-install metadata.
 pub async fn clear_cache() -> crate::Result<()> {
     if let Ok(mut cache) = CACHE.lock() {
+        cache.clear();
+    }
+    if let Ok(mut cache) = UPDATE_CACHE.lock() {
         cache.clear();
     }
     let state = State::get().await?;

@@ -1,11 +1,17 @@
 <script setup lang="ts">
 import { ExternalIcon } from '@modrinth/assets'
 import { getChangelog } from '@modrinth/blog'
-import { Button, Chips, defineMessages, useVIntl } from '@modrinth/ui'
+import {
+	Button,
+	defineMessages,
+	IconButton,
+	SegmentedControl,
+	useFormatDateTime,
+	useVIntl,
+} from '@modrinth/ui'
 import { useQuery } from '@tanstack/vue-query'
 import { getVersion } from '@tauri-apps/api/app'
 import { openUrl } from '@tauri-apps/plugin-opener'
-import dayjs from 'dayjs'
 import { computed, onMounted, ref } from 'vue'
 
 import { noctrinthChangelogFeedQueryOptions } from '@/features/news/noctrinth-news'
@@ -14,6 +20,7 @@ import { NOCTRINTH_CHANGELOG } from '@/helpers/noctrinth-changelog'
 import { renderChangelog } from '@/helpers/render-changelog'
 
 const { formatMessage, locale } = useVIntl()
+const formatDate = useFormatDateTime({ dateStyle: 'medium' })
 
 /** Landing page of the fork's author, linked from the changelog header. */
 const AUTHOR_URL = 'https://everelsu.github.io/RelsevLink/'
@@ -123,7 +130,7 @@ const feed = useQuery(noctrinthChangelogFeedQueryOptions())
 const noctrinthChangelog = computed<ChangelogEntry[]>(() =>
 	(feed.data.value ?? NOCTRINTH_CHANGELOG).map((entry) => ({
 		version: entry.version,
-		date: dayjs(entry.date).format('MMM D, YYYY'),
+		date: entry.date ? formatDate(new Date(entry.date)) : undefined,
 		sections: parseBody((locale.value.startsWith('ru') && entry.body_ru) || entry.body),
 	})),
 )
@@ -137,7 +144,7 @@ const modrinthChangelog = computed<ChangelogEntry[]>(() =>
 		.slice(0, 25)
 		.map((entry) => ({
 			version: entry.version,
-			date: dayjs(entry.date).format('MMM D, YYYY'),
+			date: entry.date ? formatDate(new Date(entry.date)) : undefined,
 			sections: parseBody(
 				(locale.value.startsWith('ru') &&
 					entry.version &&
@@ -171,25 +178,24 @@ const entries = computed<ChangelogEntry[]>(() =>
 
 <template>
 	<!-- Screenshots are served by the site, so one listener up here drops any that did not load. -->
-	<div class="flex flex-col gap-5" @error.capture="hideUnloadableImage">
+	<div class="flex flex-col gap-4" @error.capture="hideUnloadableImage">
 		<div class="flex flex-wrap items-center justify-between gap-3">
-			<Chips
+			<SegmentedControl
 				v-model="source"
 				:items="sourceOptions"
 				:format-label="formatSourceLabel"
-				:capitalize="false"
-				never-empty
+				:aria-label="formatMessage(messages.sourceNoctrinth)"
 			/>
 			<div class="flex items-center gap-1.5">
 				<Button size="sm" @click="openUrl(AUTHOR_URL)">
 					{{ formatMessage(messages.author) }}
 					<ExternalIcon aria-hidden="true" />
 				</Button>
-				<button
+				<IconButton
 					v-tooltip="formatMessage(messages.support)"
-					type="button"
-					class="nm-press grid size-8 cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-secondary opacity-70 transition-all hover:bg-surface-4 hover:text-contrast hover:opacity-100 focus-visible:opacity-100"
-					:aria-label="formatMessage(messages.support)"
+					type="quiet"
+					size="sm"
+					:label="formatMessage(messages.support)"
 					@click="openUrl(BOOSTY_URL)"
 				>
 					<svg viewBox="0 0 24 24" class="size-4" fill="currentColor" aria-hidden="true">
@@ -197,25 +203,27 @@ const entries = computed<ChangelogEntry[]>(() =>
 							d="M2.661 14.337 6.801 0h6.362L11.88 4.444l-.038.077-3.378 11.733h3.15c-1.321 3.289-2.35 5.867-3.086 7.733-5.816-.063-7.442-4.228-6.02-9.155M8.554 24l7.67-11.035h-3.25l2.83-7.073c4.852.508 7.137 4.33 5.791 8.952C20.16 19.81 14.344 24 8.68 24h-.127z"
 						/>
 					</svg>
-				</button>
+				</IconButton>
 			</div>
 		</div>
 
 		<section
 			v-for="(entry, entryIdx) in entries"
 			:key="`${entry.version ?? ''}-${entry.date ?? ''}-${entryIdx}`"
-			class="changelog-entry flex flex-col gap-3"
+			class="flex flex-col gap-3 rounded-2xl border border-solid border-surface-5 bg-surface-3 p-4"
 		>
-			<div class="flex flex-wrap items-center gap-2">
-				<h2 class="m-0 text-xl font-bold text-contrast">
-					{{ entry.version ? `v${entry.version}` : entry.date }}
-				</h2>
-				<span
-					v-if="isInstalled(entry.version)"
-					class="rounded-full border border-solid border-brand bg-brand-highlight px-2 py-0.5 text-xs font-semibold text-brand"
-				>
-					{{ formatMessage(messages.installed) }}
-				</span>
+			<div class="flex flex-wrap items-center justify-between gap-2">
+				<div class="flex flex-wrap items-center gap-2">
+					<h2 class="m-0 text-lg font-bold text-contrast">
+						{{ entry.version ? `v${entry.version}` : entry.date }}
+					</h2>
+					<span
+						v-if="isInstalled(entry.version)"
+						class="rounded-full border border-solid border-brand bg-brand-highlight px-2 py-0.5 text-xs font-semibold text-brand"
+					>
+						{{ formatMessage(messages.installed) }}
+					</span>
+				</div>
 				<span v-if="entry.version && entry.date" class="text-sm text-secondary">
 					{{ entry.date }}
 				</span>
@@ -225,7 +233,10 @@ const entries = computed<ChangelogEntry[]>(() =>
 				:key="sectionIdx"
 				class="flex flex-col gap-1.5"
 			>
-				<h3 v-if="section.title" class="m-0 text-base font-semibold text-brand">
+				<h3
+					v-if="section.title"
+					class="m-0 text-sm font-semibold uppercase tracking-wide text-brand"
+				>
 					{{ section.title }}
 				</h3>
 				<!-- eslint-disable-next-line vue/no-v-html -- ships with the app, sanitised in renderChangelog -->
@@ -234,7 +245,7 @@ const entries = computed<ChangelogEntry[]>(() =>
 		</section>
 
 		<!-- Link to the full changelog for the selected source -->
-		<div v-if="source === 'modrinth'" class="flex flex-col gap-2">
+		<div v-if="source === 'modrinth'" class="flex flex-col items-start gap-2 pt-1">
 			<p class="m-0 text-sm text-secondary">
 				{{ formatMessage(messages.modrinthNote) }}
 			</p>
@@ -243,7 +254,7 @@ const entries = computed<ChangelogEntry[]>(() =>
 				{{ formatMessage(messages.openModrinthChangelog) }}
 			</Button>
 		</div>
-		<div v-else class="flex flex-col gap-2">
+		<div v-else class="flex flex-col items-start gap-2 pt-1">
 			<p class="m-0 text-sm text-secondary">
 				{{ formatMessage(messages.noctrinthNote) }}
 			</p>
@@ -255,10 +266,6 @@ const entries = computed<ChangelogEntry[]>(() =>
 	</div>
 </template>
 <style scoped lang="scss">
-.changelog-entry + .changelog-entry {
-	padding-top: 1.25rem;
-	border-top: 1px solid var(--surface-5);
-}
 
 /*
  * Rendered markdown has no classes to hang utilities on, so the body is styled
@@ -313,7 +320,7 @@ const entries = computed<ChangelogEntry[]>(() =>
 	max-width: 100%;
 	height: auto;
 	margin-top: 0.5rem;
-	border: 1px solid var(--color-button-bg);
+	border: 1px solid var(--surface-5);
 	border-radius: var(--radius-md);
 }
 </style>

@@ -1,6 +1,13 @@
 <script setup lang="ts">
 /** Noctrinth's own: what the launcher does with CurseForge, and whether at all. */
-import { CheckIcon, SpinnerIcon, TrashIcon, UndoIcon, XIcon } from '@modrinth/assets'
+import {
+	CheckIcon,
+	CurseForgeIcon,
+	SpinnerIcon,
+	TrashIcon,
+	UndoIcon,
+	XIcon,
+} from '@modrinth/assets'
 import {
 	Button,
 	Combobox,
@@ -12,6 +19,8 @@ import {
 	useVIntl,
 } from '@modrinth/ui'
 import { computed, onMounted, ref } from 'vue'
+
+import ModrinthPlatformIcon from '@/assets/icons/modrinth-platform.svg'
 
 import { curseforgeLinkHandler, setCurseforgeLinkHandler } from '@/helpers/curseforge'
 import {
@@ -163,8 +172,8 @@ const messages = defineMessages({
 })
 
 const sourceOptions = computed<ComboboxOption<'modrinth' | 'curseforge'>[]>(() => [
-	{ value: 'modrinth', label: formatMessage(messages.modrinth) },
-	{ value: 'curseforge', label: formatMessage(messages.curseforge) },
+	{ value: 'modrinth', label: formatMessage(messages.modrinth), icon: ModrinthPlatformIcon },
+	{ value: 'curseforge', label: formatMessage(messages.curseforge), icon: CurseForgeIcon },
 ])
 const releaseTypeOptions = computed<ComboboxOption<CurseforgeReleaseType>[]>(() =>
 	(['release', 'beta', 'alpha'] as const).map((type) => ({
@@ -232,7 +241,7 @@ async function clearCache() {
 </script>
 
 <template>
-	<section class="border-0 border-b border-solid border-divider pb-6">
+	<section class="border-0 border-b border-solid border-surface-5 pb-6">
 		<div class="flex items-center justify-between gap-4">
 			<div>
 				<h2 id="curseforge-enabled-label" class="m-0 text-lg font-semibold text-contrast">
@@ -266,7 +275,8 @@ async function clearCache() {
 				<Combobox
 					v-model="curseforgeSettings.defaultSource"
 					:options="sourceOptions"
-					aria-labelledby="curseforge-source-label"
+					:aria-labelledby="'curseforge-source-label'"
+					show-icon-in-selected
 					class="w-56"
 				/>
 			</div>
@@ -286,7 +296,7 @@ async function clearCache() {
 			</div>
 		</section>
 
-		<section class="mt-6">
+		<section class="mt-6 border-0 border-t border-solid border-surface-5 pt-6">
 			<h2 class="m-0 text-xl font-semibold text-contrast">
 				{{ formatMessage(messages.filesSection) }}
 			</h2>
@@ -331,7 +341,7 @@ async function clearCache() {
 			</div>
 		</section>
 
-		<section class="mt-6">
+		<section class="mt-6 border-0 border-t border-solid border-surface-5 pt-6">
 			<h2 class="m-0 text-xl font-semibold text-contrast">
 				{{ formatMessage(messages.restrictedSection) }}
 			</h2>
@@ -347,7 +357,7 @@ async function clearCache() {
 		</section>
 	</div>
 
-	<section class="mt-6">
+	<section class="mt-6 border-0 border-t border-solid border-surface-5 pt-6">
 		<h2 class="m-0 text-xl font-semibold text-contrast">
 			<label for="noctrinth-curseforge-key">{{ formatMessage(messages.ownKey) }}</label>
 		</h2>
@@ -397,7 +407,12 @@ async function clearCache() {
 		</div>
 	</section>
 
-	<section :class="['mt-6', active ? '' : 'pointer-events-none opacity-50']">
+	<section
+		:class="[
+			'mt-6 border-0 border-t border-solid border-surface-5 pt-6',
+			active ? '' : 'pointer-events-none opacity-50',
+		]"
+	>
 		<h2 class="m-0 text-xl font-semibold text-contrast">
 			{{ formatMessage(messages.cacheTitle) }}
 		</h2>

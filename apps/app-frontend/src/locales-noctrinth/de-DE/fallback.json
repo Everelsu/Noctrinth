@@ -1,0 +1,11 @@
+{
+	"app.error.copied-debug-info": {
+		"message": "Kopiert"
+	},
+	"app.error.inspect-debug-info": {
+		"message": "Debug-Informationen ansehen"
+	},
+	"button.switch-version": {
+		"message": "Version wechseln"
+	}
+}

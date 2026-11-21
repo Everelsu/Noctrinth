@@ -239,7 +239,7 @@ onBeforeUnmount(() => {
 })
 </script>
 <template>
-	<section class="border-0 border-b border-solid border-divider pb-6">
+	<section class="border-0 border-b border-solid border-surface-5 pb-6">
 		<div class="flex items-center justify-between gap-4">
 			<div>
 				<h2 id="sync-behavior-across-devices-label" class="m-0 text-lg font-semibold text-contrast">
@@ -312,7 +312,7 @@ onBeforeUnmount(() => {
 		</div>
 	</section>
 
-	<section class="mt-8 border-0 border-t border-solid border-divider pt-6">
+	<section class="mt-8 border-0 border-t border-solid border-surface-5 pt-6">
 		<h2 class="m-0 text-xl font-semibold text-contrast">
 			{{ formatMessage(messages.contentTitle) }}
 		</h2>
@@ -349,7 +349,7 @@ onBeforeUnmount(() => {
 		</div>
 	</section>
 
-	<section class="mt-8 border-0 border-t border-solid border-divider pt-6">
+	<section class="mt-8 border-0 border-t border-solid border-surface-5 pt-6">
 		<h2 class="m-0 text-xl font-semibold text-contrast">
 			{{ formatMessage(messages.confirmationsTitle) }}
 		</h2>

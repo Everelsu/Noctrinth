@@ -119,7 +119,7 @@ const hasAnyActions = computed(() => {
 	return hasListeners || hasItemActions || props.showItemActions
 })
 
-const VIRTUALIZE_THRESHOLD = 150
+const VIRTUALIZE_THRESHOLD = 30
 const isVirtualized = computed(() => props.virtualized && props.items.length > VIRTUALIZE_THRESHOLD)
 
 const actionsWidth = computed(() =>
@@ -225,16 +225,17 @@ defineExpose({
 
 // Selection logic
 const selectableItems = computed(() => props.items.filter((item) => !item.disabled))
+const selectedIdSet = computed(() => new Set(selectedIds.value))
 
 const allSelected = computed(() => {
 	if (selectableItems.value.length === 0) return false
-	return selectableItems.value.every((item) => selectedIds.value.includes(item.id))
+	const selected = selectedIdSet.value
+	return selectableItems.value.every((item) => selected.has(item.id))
 })
 
 const someSelected = computed(() => {
-	return (
-		selectableItems.value.some((item) => selectedIds.value.includes(item.id)) && !allSelected.value
-	)
+	const selected = selectedIdSet.value
+	return selectableItems.value.some((item) => selected.has(item.id)) && !allSelected.value
 })
 
 function toggleSelectAll() {
@@ -276,7 +277,7 @@ function toggleItemSelection(
 }
 
 function isItemSelected(itemId: string): boolean {
-	return selectedIds.value.includes(itemId)
+	return selectedIdSet.value.has(itemId)
 }
 
 function handleSort(column: ContentCardTableSortColumn) {

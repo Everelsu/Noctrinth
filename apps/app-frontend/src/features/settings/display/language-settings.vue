@@ -1,7 +1,9 @@
 <template>
-	<div>
-		<NoctrinthTranslationSettings class="mb-6" />
+	<div class="flex flex-col">
 		<SharedLanguageSettings ref="languageSettings" product="app" :persist-locale="persistLocale" />
+		<NoctrinthTranslationSettings
+			class="mt-8 border-0 border-t border-solid border-surface-5 pt-6"
+		/>
 	</div>
 </template>
 

@@ -3,12 +3,13 @@
 import { CheckIcon, LanguagesIcon, SpinnerIcon, XIcon } from '@modrinth/assets'
 import {
 	Button,
+	Collapsible,
 	Combobox,
 	type ComboboxOption,
 	defineMessages,
 	Input,
-	RadioButtons,
-	SettingsToggleCard,
+	MultiSelect,
+	type MultiSelectOption,
 	Toggle,
 	useVIntl,
 } from '@modrinth/ui'
@@ -80,6 +81,11 @@ const name = (code: string) => {
 	return text.charAt(0).toLocaleUpperCase(locale.value) + text.slice(1)
 }
 
+const providerOptions = computed<ComboboxOption<TranslationProviderId>[]>(() => [
+	{ value: 'google', label: formatMessage(messages.google) },
+	{ value: 'deepl', label: formatMessage(messages.deepl) },
+])
+
 const targetOptions = computed<ComboboxOption<string>[]>(() => [
 	{
 		value: 'app',
@@ -88,11 +94,9 @@ const targetOptions = computed<ComboboxOption<string>[]>(() => [
 	...COMMON_LANGUAGES.map((code) => ({ value: code, label: name(code) })),
 ])
 
-function toggleSkip(code: string) {
-	const index = translationSettings.skip.indexOf(code)
-	if (index >= 0) translationSettings.skip.splice(index, 1)
-	else translationSettings.skip.push(code)
-}
+const skipOptions = computed<MultiSelectOption<string>[]>(() =>
+	COMMON_LANGUAGES.map((code) => ({ value: code, label: name(code) })),
+)
 
 const testing = ref(false)
 const testResult = ref<{ ok: boolean; text: string } | null>(null)
@@ -109,33 +113,64 @@ async function runTest() {
 		testing.value = false
 	}
 }
-
-const providers: TranslationProviderId[] = ['google', 'deepl']
 </script>
 
 <template>
-	<SettingsToggleCard
-		v-model="translationSettings.enabled"
-		:icon="LanguagesIcon"
-		:title="formatMessage(messages.title)"
-		:description="formatMessage(messages.description)"
-	>
-		<template #expanded>
-			<section class="flex flex-col gap-2">
-				<h3 class="m-0 text-base font-semibold text-contrast">
-					{{ formatMessage(messages.service) }}
-				</h3>
-				<RadioButtons
-					v-model="translationSettings.provider"
-					:items="providers"
-					@update:model-value="testResult = null"
+	<section class="flex flex-col gap-4">
+		<div class="flex items-center justify-between gap-4">
+			<div class="min-w-0">
+				<h2
+					id="noctrinth-translation-label"
+					class="m-0 flex items-center gap-2 text-xl font-semibold text-contrast"
 				>
-					<template #default="{ item }">
-						{{ formatMessage(messages[item as TranslationProviderId]) }}
-					</template>
-				</RadioButtons>
-				<div v-if="translationSettings.provider === 'deepl'" class="flex flex-col gap-1 pl-1">
-					<label for="noctrinth-deepl-key" class="font-semibold text-contrast">
+					<LanguagesIcon class="size-5 text-secondary" aria-hidden="true" />
+					{{ formatMessage(messages.title) }}
+				</h2>
+				<p class="m-0 mt-1 text-secondary">
+					{{ formatMessage(messages.description) }}
+				</p>
+			</div>
+			<Toggle
+				id="noctrinth-translation-enabled"
+				v-model="translationSettings.enabled"
+				aria-labelledby="noctrinth-translation-label"
+			/>
+		</div>
+
+		<Collapsible :collapsed="!translationSettings.enabled" overflow-visible>
+			<div
+				class="flex flex-col gap-5 rounded-2xl border border-solid border-surface-5 bg-surface-3 p-4"
+			>
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+					<div class="flex flex-col gap-2">
+						<h3 id="noctrinth-translation-service" class="m-0 text-base font-semibold text-contrast">
+							{{ formatMessage(messages.service) }}
+						</h3>
+						<Combobox
+							v-model="translationSettings.provider"
+							:options="providerOptions"
+							aria-labelledby="noctrinth-translation-service"
+							class="w-full"
+							@update:model-value="testResult = null"
+						/>
+					</div>
+
+					<div class="flex flex-col gap-2">
+						<h3 id="noctrinth-translation-target" class="m-0 text-base font-semibold text-contrast">
+							{{ formatMessage(messages.target) }}
+						</h3>
+						<Combobox
+							v-model="translationSettings.target"
+							:options="targetOptions"
+							aria-labelledby="noctrinth-translation-target"
+							searchable
+							class="w-full"
+						/>
+					</div>
+				</div>
+
+				<div v-if="translationSettings.provider === 'deepl'" class="flex flex-col gap-1.5">
+					<label for="noctrinth-deepl-key" class="text-base font-semibold text-contrast">
 						{{ formatMessage(messages.deeplKey) }}
 					</label>
 					<Input
@@ -144,6 +179,7 @@ const providers: TranslationProviderId[] = ['google', 'deepl']
 						type="password"
 						autocomplete="off"
 						placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:fx"
+						wrapper-class="w-full"
 					/>
 					<span class="text-sm text-secondary">
 						{{ formatMessage(messages.deeplKeyHint) }}
@@ -156,105 +192,62 @@ const providers: TranslationProviderId[] = ['google', 'deepl']
 						>
 					</span>
 				</div>
-			</section>
 
-			<section class="flex flex-col gap-2">
-				<h3 class="m-0 text-base font-semibold text-contrast">
-					{{ formatMessage(messages.target) }}
-				</h3>
-				<Combobox
-					v-model="translationSettings.target"
-					:options="targetOptions"
-					searchable
-					class="max-w-sm"
-				/>
-			</section>
-
-			<section class="flex flex-col gap-2">
-				<div>
-					<h3 class="m-0 text-base font-semibold text-contrast">
-						{{ formatMessage(messages.skip) }}
-					</h3>
-					<p class="m-0 text-sm text-secondary">{{ formatMessage(messages.skipHint) }}</p>
+				<div class="flex flex-col gap-2">
+					<div>
+						<h3 class="m-0 text-base font-semibold text-contrast">
+							{{ formatMessage(messages.skip) }}
+						</h3>
+						<p class="m-0 mt-0.5 text-sm text-secondary">{{ formatMessage(messages.skipHint) }}</p>
+					</div>
+					<MultiSelect
+						v-model="translationSettings.skip"
+						:options="skipOptions"
+						:placeholder="formatMessage(messages.skip)"
+						searchable
+						clearable
+						class="w-full"
+					/>
 				</div>
-				<div class="flex flex-wrap gap-1.5">
-					<button
-						v-for="code in COMMON_LANGUAGES"
-						:key="code"
-						type="button"
-						class="skip-chip"
-						:class="{ 'is-on': translationSettings.skip.includes(code) }"
-						:aria-pressed="translationSettings.skip.includes(code)"
-						@click="toggleSkip(code)"
+
+				<div class="flex flex-col gap-3 border-0 border-t border-solid border-surface-5 pt-4">
+					<div class="flex items-center justify-between gap-4">
+						<span id="noctrinth-translation-auto" class="font-medium text-primary">
+							{{ formatMessage(messages.auto) }}
+						</span>
+						<Toggle
+							v-model="translationSettings.auto"
+							aria-labelledby="noctrinth-translation-auto"
+						/>
+					</div>
+					<div class="flex items-center justify-between gap-4">
+						<span id="noctrinth-translation-precheck" class="font-medium text-primary">
+							{{ formatMessage(messages.precheck) }}
+						</span>
+						<Toggle
+							v-model="translationSettings.precheck"
+							aria-labelledby="noctrinth-translation-precheck"
+						/>
+					</div>
+				</div>
+
+				<div class="flex flex-wrap items-center gap-3">
+					<Button :disabled="testing" @click="runTest">
+						<SpinnerIcon v-if="testing" class="animate-spin" aria-hidden="true" />
+						<LanguagesIcon v-else aria-hidden="true" />
+						{{ formatMessage(messages.test) }}
+					</Button>
+					<span
+						v-if="testResult"
+						class="flex items-center gap-1.5 text-sm"
+						:class="testResult.ok ? 'text-green' : 'text-red'"
 					>
-						<CheckIcon v-if="translationSettings.skip.includes(code)" aria-hidden="true" />
-						{{ name(code) }}
-					</button>
+						<CheckIcon v-if="testResult.ok" class="size-4 shrink-0" aria-hidden="true" />
+						<XIcon v-else class="size-4 shrink-0" aria-hidden="true" />
+						{{ testResult.text }}
+					</span>
 				</div>
-			</section>
-
-			<section class="flex flex-col gap-3">
-				<label class="flex items-center justify-between gap-4">
-					<span class="text-primary">{{ formatMessage(messages.auto) }}</span>
-					<Toggle v-model="translationSettings.auto" />
-				</label>
-				<label class="flex items-center justify-between gap-4">
-					<span class="text-primary">{{ formatMessage(messages.precheck) }}</span>
-					<Toggle v-model="translationSettings.precheck" />
-				</label>
-			</section>
-
-			<section class="flex flex-wrap items-center gap-3">
-				<Button :disabled="testing" @click="runTest">
-					<SpinnerIcon v-if="testing" class="animate-spin" aria-hidden="true" />
-					<LanguagesIcon v-else aria-hidden="true" />
-					{{ formatMessage(messages.test) }}
-				</Button>
-				<span
-					v-if="testResult"
-					class="flex items-center gap-1.5 text-sm"
-					:class="testResult.ok ? 'text-green' : 'text-red'"
-				>
-					<CheckIcon v-if="testResult.ok" class="size-4 shrink-0" aria-hidden="true" />
-					<XIcon v-else class="size-4 shrink-0" aria-hidden="true" />
-					{{ testResult.text }}
-				</span>
-			</section>
-		</template>
-	</SettingsToggleCard>
+			</div>
+		</Collapsible>
+	</section>
 </template>
-
-<style scoped lang="scss">
-.skip-chip {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.3rem;
-	padding: 0.3rem 0.75rem;
-	border: 1px solid var(--surface-5);
-	border-radius: 999px;
-	background: var(--surface-3);
-	font-size: 0.875rem;
-	font-weight: 500;
-	color: var(--color-secondary);
-	cursor: pointer;
-	transition:
-		background-color 0.2s ease,
-		color 0.2s ease,
-		border-color 0.2s ease;
-
-	svg {
-		width: 0.9rem;
-		height: 0.9rem;
-	}
-
-	&:hover {
-		color: var(--color-contrast);
-	}
-
-	&.is-on {
-		border-color: color-mix(in srgb, var(--color-brand) 45%, transparent);
-		background: color-mix(in srgb, var(--color-brand) 15%, transparent);
-		color: var(--color-brand);
-	}
-}
-</style>

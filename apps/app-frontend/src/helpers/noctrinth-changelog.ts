@@ -42,6 +42,58 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.23.4+1',
+		date: '2026-11-21T00:00:00+00:00',
+		body: `### Added
+- Added Noctrinth translations for Ukrainian, German (Germany & Switzerland), Brazilian Portuguese, Simplified Chinese, and Spanish (Spain & Latin America).
+- Added a button in the Logs tab to open the selected log file or the instance logs folder.
+- Added a search match counter with up/down and Enter navigation in the Logs tab, along with error and warning counts on filter pills.
+- Added hover-to-uninstall on already installed Modrinth and CurseForge projects in Discover.
+- Added a dismiss button to the offline Skins demo banner.
+- Added loading skeletons on project pages, Discover, and Recent worlds.
+
+### Changed
+- Greatly sped up opening large instances by moving CurseForge update checks to a cached background refresh, skipping redundant Modrinth hash lookups for CurseForge mods, parallelizing metadata loading, and avoiding unnecessary reloads when files did not change.
+- Made switching tabs inside an instance instant by preserving tab state while inside the same instance and lowering the mod list virtualization threshold.
+- Redesigned crash diagnosis in the Logs tab and crash modal with a compact collapsible bar, highlighted primary cause, foldable secondary causes, and remembered dismissals.
+- Streamed custom image and video backgrounds from disk instead of buffering them in memory.
+- Replaced the Discover platform switcher with a compact pill selector and moved the description translation button into the project tabs bar.
+- Updated Translation, Changelog, CurseForge, and Appearance settings as well as Quick Search to match Modrinth's surface styling.
+- Smoothed page transitions and the running-instance top bar indicator, and kept window controls behind the splash screen during startup.
+- Updated language picker percentages to reflect actual translation coverage.
+
+### Fixed
+- Fixed crash analyzer false positives on cleanly exited or manually stopped runs and overly broad OpenGL, OptiFine, and archive rules.
+- Fixed a crash in the 3D skin preview renderer.
+- Fixed removing CurseForge mods directly from the Discover page.
+- Fixed the Logs tab collapsing in height and arrow-key scrolling in Quick Search.
+- Fixed white focus outlines on dropdown items and missing hover highlights on font tiles.`,
+		body_ru: `### Добавлено
+- Добавлены переводы Noctrinth на украинский, немецкий (Германия и Швейцария), португальский (Бразилия), китайский (упрощённый) и испанский (Испания и Лат. Америка).
+- В «Журнале» появилась кнопка открытия выбранного файла лога или папки \`logs\`.
+- В поиске по журналу добавлены счётчик совпадений с переходом стрелками и Enter/Shift+Enter, а на фильтрах «Ошибки» и «Предупреждения» — количество строк.
+- В «Исследовании» установленные проекты Modrinth и CurseForge теперь можно удалить прямо по наведению на кнопку «Установлено».
+- На странице скинов баннер демо-режима теперь можно скрыть.
+- Добавлены скелетоны загрузки на страницах проектов, в «Исследовании» и в недавних мирах.
+
+### Изменено
+- Сильно ускорено открытие сборок с большим количеством модов: проверка обновлений CurseForge вынесена в кэшируемый фон, убраны лишние запросы в Modrinth для CurseForge-модов, распараллелена загрузка метаданных и убраны повторные пересборки списка без изменений на диске.
+- Переключение вкладок внутри сборки стало мгновенным благодаря сохранению состояния вкладок и снижению порога виртуализации таблицы модов.
+- Переработан визуал диагностики крашей в «Журнале» и окне краша: компактная сворачиваемая полоса, выделенная главная причина, скрываемые второстепенные причины и запоминание закрытия.
+- Пользовательские фоны (изображения и видео) теперь подгружаются напрямую с диска без буферизации в оперативной памяти.
+- Переключатель Modrinth/CurseForge в «Исследовании» стал компактнее, а кнопка перевода описания перенесена в строку вкладок проекта.
+- Обновлено оформление настроек перевода, списка изменений, CurseForge, внешнего вида и быстрого поиска в едином стиле Modrinth.
+- Сделаны более плавные анимации переходов и индикатора запущенных сборок в шапке, а кнопки окна больше не появляются поверх сплэш-экрана.
+- Проценты в списке языков теперь отражают реальную полноту перевода.
+
+### Исправлено
+- Исправлены ложные срабатывания анализатора крашей при штатном выходе или ручной остановке игры, а также слишком широкие правила для OpenGL, OptiFine и повреждённых архивов.
+- Исправлен сбой рендерера 3D-превью скинов.
+- Исправлено удаление CurseForge-модов со страницы «Исследование».
+- Исправлено схлопывание высоты вкладки «Журнал» и прокрутка стрелками в быстром поиске (Ctrl+K).
+- Убраны белые рамки фокуса в выпадающих списках и исправлена подсветка карточек шрифтов при наведении.`,
+	},
+	{
 		version: '0.23.4',
 		date: '2026-11-19T00:00:00+00:00',
 		body: `### Security

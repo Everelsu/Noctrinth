@@ -3,6 +3,7 @@ import type { Labrinth } from '@modrinth/api-client'
 import {
 	CheckIcon,
 	CompassIcon,
+	CurseForgeIcon,
 	ExternalIcon,
 	GlobeIcon,
 	PlusIcon,
@@ -13,6 +14,7 @@ import {
 import type {
 	BrowseInstallContentType,
 	CardAction,
+	ComboboxOption,
 	ProjectType,
 	ServerContentEnvironment,
 	Tags,
@@ -20,7 +22,7 @@ import type {
 import {
 	BrowsePageLayout,
 	BrowseSidebar,
-	Chips,
+	Combobox,
 	commonMessages,
 	ContextMenu,
 	CreationFlowModal,
@@ -50,6 +52,7 @@ import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import type { LocationQuery } from 'vue-router'
 import { useRoute, useRouter } from 'vue-router'
 
+import ModrinthPlatformIcon from '@/assets/icons/modrinth-platform.svg'
 import { useAppEvent } from '@/composables/use-app-event'
 import { useAppSettings } from '@/composables/use-app-settings.ts'
 import { get_project, get_search_results_v3, get_version_many } from '@/helpers/cache.js'
@@ -723,7 +726,10 @@ const projectType = ref<ProjectType>(route.params.projectType as ProjectType)
 // Noctrinth's own: CurseForge as a second place to browse. Only offered when
 // the build has a key, only for the project types CurseForge has, and never
 // while adding to a server, whose flow is Modrinth's from end to end.
-const BROWSE_SOURCES: BrowseSource[] = ['modrinth', 'curseforge']
+const browseSourceOptions: ComboboxOption<BrowseSource>[] = [
+	{ value: 'modrinth', label: 'Modrinth', icon: ModrinthPlatformIcon },
+	{ value: 'curseforge', label: 'CurseForge', icon: CurseForgeIcon },
+]
 const browseSource = ref<BrowseSource>(
 	curseforgeEnabled() &&
 		(route.query.src === 'cf' ||
@@ -775,10 +781,6 @@ const browseTags: Ref<Tags> = computed(() =>
 			}
 		: tags.value,
 )
-
-function formatBrowseSource(source: BrowseSource) {
-	return source === 'curseforge' ? 'CurseForge' : 'Modrinth'
-}
 
 function resetInstanceContext() {
 	debugLog('instance context removed, resetting')
@@ -1900,14 +1902,17 @@ provideBrowseManager({
 	<div class="flex flex-col gap-2 p-6">
 		<BrowsePageLayout>
 			<template v-if="curseforgeOffered" #tabs-end>
-				<Chips
+				<Combobox
 					v-model="browseSource"
-					:items="BROWSE_SOURCES"
-					:format-label="formatBrowseSource"
-					:capitalize="false"
+					:options="browseSourceOptions"
 					:aria-label="formatMessage(messages.browseSourceLabel)"
-					size="small"
-					never-empty
+					show-icon-in-selected
+					trigger-size="sm"
+					trigger-type="base"
+					dropdown-align="right"
+					:dropdown-min-width="190"
+					class="!w-auto shrink-0"
+					trigger-class="!rounded-full !px-3.5"
 				/>
 			</template>
 			<template #after>

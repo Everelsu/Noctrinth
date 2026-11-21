@@ -14,6 +14,17 @@ pub async fn sync_content_files(
 }
 
 #[tracing::instrument]
+pub async fn sync_content_files_with_changed(
+    instance_id: &str,
+) -> crate::Result<bool> {
+    let state = State::get().await?;
+    let (_, changed) =
+        crate::state::sync_content_files_with_changed(instance_id, &state)
+            .await?;
+    Ok(changed)
+}
+
+#[tracing::instrument]
 pub async fn list_content_sets(
     instance_id: &str,
 ) -> crate::Result<Vec<ContentSet>> {

@@ -499,7 +499,24 @@ pub(crate) async fn resolve_embedded_content_metadata(
     files: &[(String, ContentFile)],
     state: &State,
 ) -> crate::Result<HashMap<String, EmbeddedContentMetadata>> {
+    let has_candidates = files.iter().any(|(_, file)| {
+        file.metadata.is_none()
+            && matches!(
+                file.project_type,
+                ProjectType::Mod
+                    | ProjectType::DataPack
+                    | ProjectType::ResourcePack
+            )
+    });
+    if !has_candidates {
+        return Ok(HashMap::new());
+    }
     let tracked = crate::state::instances::adapters::sqlite::content_rows::get_instance_files(&instance.id, &state.pool).await?;
+    let tracked_by_path: HashMap<&str, &crate::state::instances::InstanceFile> =
+        tracked
+            .iter()
+            .map(|file| (file.relative_path.as_str(), file))
+            .collect();
     let mut candidates = HashMap::new();
     for (relative_path, file) in files {
         if file.metadata.is_some()
@@ -512,10 +529,7 @@ pub(crate) async fn resolve_embedded_content_metadata(
         {
             continue;
         }
-        let Some(tracked) = tracked
-            .iter()
-            .find(|tracked| &tracked.relative_path == relative_path)
-        else {
+        let Some(&tracked) = tracked_by_path.get(relative_path.as_str()) else {
             continue;
         };
         if let Ok(path) =

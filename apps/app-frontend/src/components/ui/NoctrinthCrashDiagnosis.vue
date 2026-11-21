@@ -9,6 +9,7 @@
 import {
 	CheckIcon,
 	ChevronDownIcon,
+	ClipboardCopyIcon,
 	CodeIcon,
 	FolderOpenIcon,
 	InfoIcon,
@@ -39,6 +40,10 @@ const props = defineProps<{
 	onOpenSettings?: (tab?: number) => void
 	/** Hides the dismiss button, for where the diagnosis is the whole view. */
 	permanent?: boolean
+	/** Starts collapsed as a compact bar so logs stay visible; list scrolls when expanded. */
+	collapsible?: boolean
+	/** Renders cards directly without an outer summary header (used inside NoctrinthCrashModal). */
+	embedded?: boolean
 }>()
 
 const emit = defineEmits<{ dismiss: [] }>()
@@ -74,6 +79,15 @@ const messages = defineMessages({
 	openFolder: { id: 'app.crash.open-folder', defaultMessage: 'Open instance folder' },
 	dismiss: { id: 'app.crash.dismiss', defaultMessage: 'Dismiss' },
 	foundIn: { id: 'app.crash.found-in', defaultMessage: 'In {file}' },
+	severityCritical: { id: 'app.crash.severity.critical', defaultMessage: 'Critical' },
+	severityWarning: { id: 'app.crash.severity.warning', defaultMessage: 'Warning' },
+	severityNote: { id: 'app.crash.severity.note', defaultMessage: 'Note' },
+	primaryCause: { id: 'app.crash.primary-cause', defaultMessage: 'Most likely cause' },
+	otherCauses: { id: 'app.crash.other-causes', defaultMessage: 'Other possible causes ({count})' },
+	details: { id: 'app.crash.details', defaultMessage: 'Details' },
+	hideDetails: { id: 'app.crash.hide-details', defaultMessage: 'Collapse' },
+	copyLine: { id: 'app.crash.copy-line', defaultMessage: 'Copy line' },
+	copiedLine: { id: 'app.crash.copied-line', defaultMessage: 'Copied' },
 
 	// One title and one fix per rule. A rule with nothing useful to suggest has
 	// no fix line rather than a filler one.
@@ -874,9 +888,12 @@ const FOLDED_AFTER = 3
 
 const headline = computed(() => props.findings.find((finding) => HEADLINE_RULES.has(finding.rule)))
 const listed = computed(() => props.findings.filter((finding) => !HEADLINE_RULES.has(finding.rule)))
-const expanded = ref(false)
-const visible = computed(() =>
-	expanded.value ? listed.value : listed.value.slice(0, FOLDED_AFTER),
+const primaryFinding = computed(() => listed.value[0] ?? null)
+const secondaryFindings = computed(() => listed.value.slice(1))
+const isOpen = ref(!props.collapsible)
+const showSecondary = ref(false)
+const firstFindingPreview = computed(() =>
+	primaryFinding.value ? titleOf(primaryFinding.value) : headline.value?.values.description,
 )
 
 const worst = computed<CrashSeverity>(() =>
@@ -887,10 +904,34 @@ const worst = computed<CrashSeverity>(() =>
 			: 'note',
 )
 
-const TONES: Record<CrashSeverity, { icon: string; badge: string; dot: string }> = {
-	critical: { icon: 'text-red', badge: 'bg-highlight-red', dot: 'bg-red' },
-	warning: { icon: 'text-orange', badge: 'bg-highlight-orange', dot: 'bg-orange' },
-	note: { icon: 'text-blue', badge: 'bg-highlight-blue', dot: 'bg-blue' },
+const TONES: Record<
+	CrashSeverity,
+	{ icon: string; badge: string; pill: string; border: string }
+> = {
+	critical: {
+		icon: 'text-red',
+		badge: 'bg-highlight-red',
+		pill: 'bg-highlight-red text-red',
+		border: 'border-red/30',
+	},
+	warning: {
+		icon: 'text-orange',
+		badge: 'bg-highlight-orange',
+		pill: 'bg-highlight-orange text-orange',
+		border: 'border-orange/30',
+	},
+	note: {
+		icon: 'text-blue',
+		badge: 'bg-highlight-blue',
+		pill: 'bg-highlight-blue text-blue',
+		border: 'border-blue/30',
+	},
+}
+
+function severityLabel(severity: CrashSeverity): string {
+	if (severity === 'critical') return formatMessage(messages.severityCritical)
+	if (severity === 'warning') return formatMessage(messages.severityWarning)
+	return formatMessage(messages.severityNote)
 }
 
 function keyOfFinding(finding: CrashFinding, index: number): string {
@@ -898,9 +939,24 @@ function keyOfFinding(finding: CrashFinding, index: number): string {
 }
 
 const shownEvidence = ref<string | null>(null)
+const copiedEvidenceKey = ref<string | null>(null)
+let copiedResetTimer: ReturnType<typeof setTimeout> | null = null
 
 function toggleEvidence(key: string) {
 	shownEvidence.value = shownEvidence.value === key ? null : key
+}
+
+async function copyEvidence(key: string, text: string) {
+	try {
+		await navigator.clipboard.writeText(text)
+		copiedEvidenceKey.value = key
+		if (copiedResetTimer) clearTimeout(copiedResetTimer)
+		copiedResetTimer = setTimeout(() => {
+			if (copiedEvidenceKey.value === key) copiedEvidenceKey.value = null
+		}, 1800)
+	} catch (error) {
+		handleError(error as Error)
+	}
 }
 
 function runAction(finding: CrashFinding) {
@@ -917,136 +973,228 @@ function runAction(finding: CrashFinding) {
 	<Transition name="nm-rise" appear>
 		<section
 			v-if="listed.length || headline"
-			class="flex flex-col overflow-hidden rounded-2xl border border-solid border-surface-5 bg-surface-3"
+			class="flex shrink-0 flex-col"
+			:class="
+				embedded
+					? 'gap-3'
+					: 'overflow-hidden rounded-2xl border border-solid border-surface-5 bg-surface-3'
+			"
 		>
-			<header class="flex items-start gap-3 p-4">
+			<header
+				v-if="!embedded"
+				class="flex items-center gap-3"
+				:class="[
+					collapsible
+						? 'cursor-pointer select-none px-3.5 py-2.5 transition-colors hover:bg-surface-4/60'
+						: 'items-start p-4',
+				]"
+				@click="collapsible && (isOpen = !isOpen)"
+			>
 				<div
-					class="grid size-10 shrink-0 place-items-center rounded-xl"
-					:class="TONES[worst].badge"
+					class="grid shrink-0 place-items-center rounded-xl"
+					:class="[collapsible ? 'size-8' : 'size-10', TONES[worst].badge]"
 				>
-					<IssuesIcon v-if="worst !== 'note'" class="size-5" :class="TONES[worst].icon" />
-					<InfoIcon v-else class="size-5" :class="TONES[worst].icon" />
+					<IssuesIcon
+						v-if="worst !== 'note'"
+						:class="[collapsible ? 'size-4' : 'size-5', TONES[worst].icon]"
+					/>
+					<InfoIcon v-else :class="[collapsible ? 'size-4' : 'size-5', TONES[worst].icon]" />
 				</div>
 				<div class="flex min-w-0 flex-1 flex-col gap-0.5">
-					<h3 class="m-0 text-base font-semibold text-contrast">
-						{{
-							worst === 'note'
-								? formatMessage(messages.headerNote)
-								: formatMessage(messages.headerCount, { count: listed.length })
-						}}
-					</h3>
+					<div class="flex min-w-0 items-center gap-2">
+						<span
+							v-if="collapsible"
+							class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold"
+							:class="TONES[worst].pill"
+						>
+							{{ severityLabel(worst) }}
+						</span>
+						<h3
+							class="m-0 min-w-0 truncate font-semibold text-contrast"
+							:class="collapsible ? 'text-sm' : 'text-base'"
+							:title="collapsible ? firstFindingPreview : undefined"
+						>
+							{{
+								collapsible && firstFindingPreview
+									? firstFindingPreview
+									: worst === 'note'
+										? formatMessage(messages.headerNote)
+										: formatMessage(messages.headerCount, { count: listed.length })
+							}}
+						</h3>
+						<span
+							v-if="collapsible && secondaryFindings.length > 0"
+							class="shrink-0 rounded-full bg-surface-4 px-2 py-0.5 text-xs font-medium text-secondary tabular-nums"
+						>
+							+{{ secondaryFindings.length }}
+						</span>
+					</div>
 					<p
-						v-if="headline"
+						v-if="headline && !collapsible"
 						class="m-0 truncate text-sm text-secondary"
 						:title="headline.values.description"
 					>
 						{{ formatMessage(messages.gameSaid, { description: headline.values.description }) }}
 					</p>
 				</div>
-				<IconButton
-					v-if="!permanent"
-					v-tooltip="formatMessage(messages.dismiss)"
-					:label="formatMessage(messages.dismiss)"
-					type="quiet"
-					@click="emit('dismiss')"
-				>
-					<XIcon />
-				</IconButton>
+				<div class="flex shrink-0 items-center gap-1" @click.stop>
+					<Button
+						v-if="collapsible"
+						type="quiet"
+						size="sm"
+						@click="isOpen = !isOpen"
+					>
+						<span>{{ formatMessage(isOpen ? messages.hideDetails : messages.details) }}</span>
+						<ChevronDownIcon
+							class="size-4 transition-transform duration-150"
+							:class="{ 'rotate-180': isOpen }"
+						/>
+					</Button>
+					<IconButton
+						v-if="!permanent"
+						v-tooltip="formatMessage(messages.dismiss)"
+						:label="formatMessage(messages.dismiss)"
+						type="quiet"
+						@click="emit('dismiss')"
+					>
+						<XIcon />
+					</IconButton>
+				</div>
 			</header>
 
-			<TransitionGroup tag="ol" name="nm-list" appear class="m-0 flex list-none flex-col p-0">
-				<li
-					v-for="(finding, index) in visible"
-					:key="keyOfFinding(finding, index)"
-					class="flex gap-3 border-0 border-t border-solid border-surface-5 px-4 py-3"
-					:style="{ '--nm-index': index }"
+			<Collapsible :collapsed="collapsible && !isOpen">
+				<div
+					class="flex flex-col gap-3"
+					:class="[
+						embedded ? '' : 'border-0 border-t border-solid border-surface-5 p-3.5',
+						collapsible ? 'max-h-[40vh] overflow-y-auto' : '',
+					]"
 				>
-					<span
-						class="mt-[7px] size-2 shrink-0 rounded-full"
-						:class="TONES[finding.severity].dot"
-						aria-hidden="true"
-					/>
-					<div class="flex min-w-0 flex-1 flex-col gap-1">
-						<div class="flex items-start justify-between gap-3">
-							<span class="font-semibold leading-snug text-contrast">{{ titleOf(finding) }}</span>
+					<p
+						v-if="headline && (collapsible || embedded)"
+						class="m-0 rounded-xl bg-surface-2.5 px-3 py-2 text-xs text-secondary"
+						:title="headline.values.description"
+					>
+						{{ formatMessage(messages.gameSaid, { description: headline.values.description }) }}
+					</p>
+
+					<div
+						v-if="primaryFinding"
+						class="flex flex-col gap-2 rounded-xl border border-solid p-3.5"
+						:class="[
+							embedded ? 'bg-surface-3' : 'bg-surface-2.5',
+							TONES[primaryFinding.severity].border,
+						]"
+					>
+						<div class="flex flex-wrap items-center justify-between gap-2">
+							<div class="flex items-center gap-2">
+								<span
+									class="rounded-full px-2 py-0.5 text-[11px] font-semibold"
+									:class="TONES[primaryFinding.severity].pill"
+								>
+									{{ severityLabel(primaryFinding.severity) }}
+								</span>
+								<span class="text-xs font-medium text-secondary">
+									{{ formatMessage(messages.primaryCause) }}
+								</span>
+							</div>
 							<span
-								class="max-w-[40%] shrink-0 truncate rounded-full bg-surface-4 px-2 py-0.5 text-xs text-secondary"
-								:title="finding.source_name"
+								class="max-w-[45%] truncate rounded-full bg-surface-4 px-2 py-0.5 font-mono text-[11px] text-secondary"
+								:title="primaryFinding.source_name"
 							>
-								{{ finding.source_name }}
+								{{ primaryFinding.source_name }}
 							</span>
 						</div>
-						<p v-if="fixOf(finding)" class="m-0 text-sm leading-relaxed text-secondary">
-							{{ fixOf(finding) }}
+
+						<div class="text-[15px] font-semibold leading-snug text-contrast">
+							{{ titleOf(primaryFinding) }}
+						</div>
+
+						<p
+							v-if="fixOf(primaryFinding)"
+							class="m-0 text-sm leading-relaxed text-secondary"
+						>
+							{{ fixOf(primaryFinding) }}
 						</p>
-						<p v-if="memoryHintOf(finding)" class="m-0 text-sm leading-relaxed text-secondary">
-							{{ memoryHintOf(finding) }}
+						<p
+							v-if="memoryHintOf(primaryFinding)"
+							class="m-0 text-sm leading-relaxed text-secondary"
+						>
+							{{ memoryHintOf(primaryFinding) }}
 						</p>
 
-						<div class="flex flex-wrap items-center gap-2 pt-1.5">
-							<template v-if="finding.values.recommended_mb">
-								<span v-if="memorySetTo" class="flex items-center gap-1 text-sm text-brand">
-									<CheckIcon aria-hidden="true" />
-									{{ formatMessage(messages.memorySet, { gb: gigabytes(memorySetTo) }) }}
-								</span>
+						<div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+							<div class="flex flex-wrap items-center gap-2">
+								<template v-if="primaryFinding.values.recommended_mb">
+									<span v-if="memorySetTo" class="flex items-center gap-1 text-sm text-brand">
+										<CheckIcon aria-hidden="true" />
+										{{ formatMessage(messages.memorySet, { gb: gigabytes(memorySetTo) }) }}
+									</span>
+									<Button
+										v-else
+										type="colored"
+										color="brand"
+										size="sm"
+										:disabled="busy"
+										@click="giveMemory(primaryFinding)"
+									>
+										<MemoryStickIcon aria-hidden="true" />
+										{{
+											formatMessage(messages.setMemory, {
+												gb: gigabytes(primaryFinding.values.recommended_mb),
+											})
+										}}
+									</Button>
+								</template>
+								<template v-if="modToDisable(primaryFinding)">
+									<span
+										v-if="disabled.has(modToDisable(primaryFinding)!)"
+										class="flex items-center gap-1 text-sm text-brand"
+									>
+										<CheckIcon aria-hidden="true" />
+										{{ formatMessage(messages.modDisabled, { mod: modLabel(primaryFinding) }) }}
+									</span>
+									<Button
+										v-else
+										type="colored"
+										color="brand"
+										size="sm"
+										:disabled="busy"
+										@click="disableMod(primaryFinding)"
+									>
+										<PowerOffIcon aria-hidden="true" />
+										{{ formatMessage(messages.disableMod, { mod: modLabel(primaryFinding) }) }}
+									</Button>
+								</template>
 								<Button
-									v-else
-									type="colored"
-									color="brand"
-									size="sm"
-									:disabled="busy"
-									@click="giveMemory(finding)"
-								>
-									<MemoryStickIcon aria-hidden="true" />
-									{{
-										formatMessage(messages.setMemory, {
-											gb: gigabytes(finding.values.recommended_mb),
-										})
-									}}
-								</Button>
-							</template>
-							<template v-if="modToDisable(finding)">
-								<span
-									v-if="disabled.has(modToDisable(finding)!)"
-									class="flex items-center gap-1 text-sm text-brand"
-								>
-									<CheckIcon aria-hidden="true" />
-									{{ formatMessage(messages.modDisabled, { mod: modLabel(finding) }) }}
-								</span>
-								<Button
-									v-else
+									v-if="ACTIONS[primaryFinding.rule] === 'settings' && onOpenSettings"
 									type="outlined"
 									size="sm"
-									:disabled="busy"
-									@click="disableMod(finding)"
+									@click="runAction(primaryFinding)"
 								>
-									<PowerOffIcon aria-hidden="true" />
-									{{ formatMessage(messages.disableMod, { mod: modLabel(finding) }) }}
+									<SettingsIcon aria-hidden="true" />
+									{{ formatMessage(messages.openSettings) }}
 								</Button>
-							</template>
+								<Button
+									v-if="ACTIONS[primaryFinding.rule] === 'folder'"
+									type="outlined"
+									size="sm"
+									@click="runAction(primaryFinding)"
+								>
+									<FolderOpenIcon aria-hidden="true" />
+									{{ formatMessage(messages.openFolder) }}
+								</Button>
+							</div>
+
 							<Button
-								v-if="ACTIONS[finding.rule] === 'settings' && onOpenSettings"
-								type="outlined"
+								type="quiet"
 								size="sm"
-								@click="runAction(finding)"
+								@click="toggleEvidence(keyOfFinding(primaryFinding, 0))"
 							>
-								<SettingsIcon aria-hidden="true" />
-								{{ formatMessage(messages.openSettings) }}
-							</Button>
-							<Button
-								v-if="ACTIONS[finding.rule] === 'folder'"
-								type="outlined"
-								size="sm"
-								@click="runAction(finding)"
-							>
-								<FolderOpenIcon aria-hidden="true" />
-								{{ formatMessage(messages.openFolder) }}
-							</Button>
-							<Button type="quiet" size="sm" @click="toggleEvidence(keyOfFinding(finding, index))">
 								<CodeIcon aria-hidden="true" />
 								{{
 									formatMessage(
-										shownEvidence === keyOfFinding(finding, index)
+										shownEvidence === keyOfFinding(primaryFinding, 0)
 											? messages.hideEvidence
 											: messages.showEvidence,
 									)
@@ -1054,29 +1202,194 @@ function runAction(finding: CrashFinding) {
 							</Button>
 						</div>
 
-						<Collapsible :collapsed="shownEvidence !== keyOfFinding(finding, index)">
-							<pre
-								class="m-0 mt-1.5 overflow-x-auto whitespace-pre rounded-xl bg-surface-2 p-3 font-mono text-xs text-primary"
-								>{{ finding.evidence }}</pre
-							>
+						<Collapsible :collapsed="shownEvidence !== keyOfFinding(primaryFinding, 0)">
+							<div class="relative mt-1">
+								<pre
+									class="m-0 overflow-x-auto whitespace-pre rounded-xl border border-solid border-surface-5 bg-surface-2 p-3 pr-10 font-mono text-xs text-primary"
+									>{{ primaryFinding.evidence }}</pre
+								>
+								<IconButton
+									v-tooltip="
+										formatMessage(
+											copiedEvidenceKey === keyOfFinding(primaryFinding, 0)
+												? messages.copiedLine
+												: messages.copyLine,
+										)
+									"
+									:label="formatMessage(messages.copyLine)"
+									type="quiet"
+									size="sm"
+									class="!absolute right-1.5 top-1.5"
+									@click="copyEvidence(keyOfFinding(primaryFinding, 0), primaryFinding.evidence)"
+								>
+									<CheckIcon
+										v-if="copiedEvidenceKey === keyOfFinding(primaryFinding, 0)"
+										class="size-3.5 text-brand"
+									/>
+									<ClipboardCopyIcon v-else class="size-3.5" />
+								</IconButton>
+							</div>
 						</Collapsible>
 					</div>
-				</li>
-			</TransitionGroup>
 
-			<button
-				v-if="listed.length > FOLDED_AFTER"
-				type="button"
-				class="flex w-full cursor-pointer items-center justify-center gap-1 border-0 border-t border-solid border-surface-5 bg-transparent px-4 py-2.5 text-sm font-medium text-secondary transition-colors hover:bg-surface-4 hover:text-contrast"
-				@click="expanded = !expanded"
-			>
-				<ChevronDownIcon class="size-4 transition-transform" :class="{ 'rotate-180': expanded }" />
-				{{
-					expanded
-						? formatMessage(messages.showLess)
-						: formatMessage(messages.showMore, { count: listed.length - FOLDED_AFTER })
-				}}
-			</button>
+					<div v-if="secondaryFindings.length > 0" class="flex flex-col gap-2">
+						<button
+							type="button"
+							class="flex w-fit cursor-pointer items-center gap-1.5 border-0 bg-transparent px-1 py-0.5 text-xs font-semibold text-secondary transition-colors hover:text-contrast"
+							@click="showSecondary = !showSecondary"
+						>
+							<ChevronDownIcon
+								class="size-3.5 transition-transform duration-150"
+								:class="{ 'rotate-180': showSecondary }"
+							/>
+							{{ formatMessage(messages.otherCauses, { count: secondaryFindings.length }) }}
+						</button>
+
+						<Collapsible :collapsed="!showSecondary">
+							<ol class="m-0 flex list-none flex-col gap-2 p-0">
+								<li
+									v-for="(finding, idx) in secondaryFindings"
+									:key="keyOfFinding(finding, idx + 1)"
+									class="flex flex-col gap-1.5 rounded-xl border border-solid border-surface-5 bg-surface-2.5 p-3"
+								>
+									<div class="flex items-center justify-between gap-2">
+										<div class="flex min-w-0 items-center gap-2">
+											<span
+												class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold"
+												:class="TONES[finding.severity].pill"
+											>
+												{{ severityLabel(finding.severity) }}
+											</span>
+											<span class="min-w-0 truncate text-sm font-semibold text-contrast">
+												{{ titleOf(finding) }}
+											</span>
+										</div>
+										<span
+											class="max-w-[35%] shrink-0 truncate rounded-full bg-surface-4 px-2 py-0.5 font-mono text-[11px] text-secondary"
+											:title="finding.source_name"
+										>
+											{{ finding.source_name }}
+										</span>
+									</div>
+
+									<p v-if="fixOf(finding)" class="m-0 text-xs leading-relaxed text-secondary">
+										{{ fixOf(finding) }}
+									</p>
+									<p v-if="memoryHintOf(finding)" class="m-0 text-xs leading-relaxed text-secondary">
+										{{ memoryHintOf(finding) }}
+									</p>
+
+									<div class="flex flex-wrap items-center justify-between gap-2 pt-0.5">
+										<div class="flex flex-wrap items-center gap-2">
+											<template v-if="finding.values.recommended_mb">
+												<span v-if="memorySetTo" class="flex items-center gap-1 text-xs text-brand">
+													<CheckIcon aria-hidden="true" />
+													{{ formatMessage(messages.memorySet, { gb: gigabytes(memorySetTo) }) }}
+												</span>
+												<Button
+													v-else
+													type="outlined"
+													size="sm"
+													:disabled="busy"
+													@click="giveMemory(finding)"
+												>
+													<MemoryStickIcon aria-hidden="true" />
+													{{
+														formatMessage(messages.setMemory, {
+															gb: gigabytes(finding.values.recommended_mb),
+														})
+													}}
+												</Button>
+											</template>
+											<template v-if="modToDisable(finding)">
+												<span
+													v-if="disabled.has(modToDisable(finding)!)"
+													class="flex items-center gap-1 text-xs text-brand"
+												>
+													<CheckIcon aria-hidden="true" />
+													{{ formatMessage(messages.modDisabled, { mod: modLabel(finding) }) }}
+												</span>
+												<Button
+													v-else
+													type="outlined"
+													size="sm"
+													:disabled="busy"
+													@click="disableMod(finding)"
+												>
+													<PowerOffIcon aria-hidden="true" />
+													{{ formatMessage(messages.disableMod, { mod: modLabel(finding) }) }}
+												</Button>
+											</template>
+											<Button
+												v-if="ACTIONS[finding.rule] === 'settings' && onOpenSettings"
+												type="outlined"
+												size="sm"
+												@click="runAction(finding)"
+											>
+												<SettingsIcon aria-hidden="true" />
+												{{ formatMessage(messages.openSettings) }}
+											</Button>
+											<Button
+												v-if="ACTIONS[finding.rule] === 'folder'"
+												type="outlined"
+												size="sm"
+												@click="runAction(finding)"
+											>
+												<FolderOpenIcon aria-hidden="true" />
+												{{ formatMessage(messages.openFolder) }}
+											</Button>
+										</div>
+
+										<Button
+											type="quiet"
+											size="sm"
+											@click="toggleEvidence(keyOfFinding(finding, idx + 1))"
+										>
+											<CodeIcon aria-hidden="true" />
+											{{
+												formatMessage(
+													shownEvidence === keyOfFinding(finding, idx + 1)
+														? messages.hideEvidence
+														: messages.showEvidence,
+												)
+											}}
+										</Button>
+									</div>
+
+									<Collapsible :collapsed="shownEvidence !== keyOfFinding(finding, idx + 1)">
+										<div class="relative mt-1">
+											<pre
+												class="m-0 overflow-x-auto whitespace-pre rounded-xl border border-solid border-surface-5 bg-surface-2 p-2.5 pr-10 font-mono text-xs text-primary"
+												>{{ finding.evidence }}</pre
+											>
+											<IconButton
+												v-tooltip="
+													formatMessage(
+														copiedEvidenceKey === keyOfFinding(finding, idx + 1)
+															? messages.copiedLine
+															: messages.copyLine,
+													)
+												"
+												:label="formatMessage(messages.copyLine)"
+												type="quiet"
+												size="sm"
+												class="!absolute right-1.5 top-1.5"
+												@click="copyEvidence(keyOfFinding(finding, idx + 1), finding.evidence)"
+											>
+												<CheckIcon
+													v-if="copiedEvidenceKey === keyOfFinding(finding, idx + 1)"
+													class="size-3.5 text-brand"
+												/>
+												<ClipboardCopyIcon v-else class="size-3.5" />
+											</IconButton>
+										</div>
+									</Collapsible>
+								</li>
+							</ol>
+						</Collapsible>
+					</div>
+				</div>
+			</Collapsible>
 		</section>
 	</Transition>
 </template>

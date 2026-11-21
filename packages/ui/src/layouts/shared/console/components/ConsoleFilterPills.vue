@@ -39,6 +39,7 @@ const CONDITIONAL_OPTIONS: Array<{ id: ConditionalLevel; label: string }> = [
 
 const props = defineProps<{
 	presentLevels: Set<ConditionalLevel>
+	levelCounts?: Partial<Record<LogLevel, number>>
 }>()
 
 const modelValue = defineModel<Set<FilterValue>>({ required: true })
@@ -47,8 +48,17 @@ const emit = defineEmits<{
 	toggle: [value: FilterValue]
 }>()
 
+function formatOptionLabel(id: LogLevel, label: string): string {
+	if (id !== 'error' && id !== 'warn') return label
+	const count = props.levelCounts?.[id] ?? 0
+	return count > 0 ? `${label} (${count})` : label
+}
+
 const visibleOptions = computed(() => [
-	...ALWAYS_VISIBLE,
+	...ALWAYS_VISIBLE.map((opt) => ({
+		...opt,
+		label: formatOptionLabel(opt.id, opt.label),
+	})),
 	...CONDITIONAL_OPTIONS.filter((opt) => props.presentLevels.has(opt.id)),
 ])
 

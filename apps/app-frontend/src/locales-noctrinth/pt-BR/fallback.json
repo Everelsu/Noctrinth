@@ -1,0 +1,11 @@
+{
+	"app.error.copied-debug-info": {
+		"message": "Copiado"
+	},
+	"app.error.inspect-debug-info": {
+		"message": "Inspecionar informações de depuração"
+	},
+	"button.switch-version": {
+		"message": "Trocar versão"
+	}
+}

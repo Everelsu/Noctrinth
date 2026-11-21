@@ -92,7 +92,7 @@ export async function refresh_content_updates(instanceId: string): Promise<void>
 	return await invoke('plugin:instance|instance_refresh_content_updates', { instanceId })
 }
 
-export async function sync_content_files(instanceId: string): Promise<void> {
+export async function sync_content_files(instanceId: string): Promise<boolean> {
 	return await invoke('plugin:instance|instance_sync_content_files', { instanceId })
 }
 

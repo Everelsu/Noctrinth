@@ -32,7 +32,7 @@ const { getSharedInstanceOwner } = useSharedInstanceOwners(hiddenInstances)
 </script>
 
 <template>
-	<section v-if="auth.user.value" class="mt-8 border-0 border-t border-solid border-divider pt-6">
+	<section v-if="auth.user.value" class="mt-8 border-0 border-t border-solid border-surface-5 pt-6">
 		<h2 class="m-0 text-xl font-semibold text-contrast">
 			{{ formatMessage(messages.title) }}
 		</h2>

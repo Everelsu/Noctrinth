@@ -45,15 +45,53 @@ pub(crate) async fn refresh_content_updates(
     instance_id: &str,
     state: &State,
 ) -> crate::Result<()> {
-    check_content_updates_with_cache_behaviours(
-        instance_id,
-        None,
-        Some(CacheBehaviour::Bypass),
-        state,
-    )
-    .await?;
+    let (modrinth_result, _) = tokio::join!(
+        check_content_updates_with_cache_behaviours(
+            instance_id,
+            None,
+            Some(CacheBehaviour::Bypass),
+            state,
+        ),
+        refresh_curseforge_updates(instance_id, state),
+    );
+    modrinth_result?;
 
     Ok(())
+}
+
+async fn refresh_curseforge_updates(instance_id: &str, state: &State) {
+    let Ok(Some(instance)) =
+        instance_rows::get_instance_by_id(instance_id, &state.pool).await
+    else {
+        return;
+    };
+    let Ok(Some(content_set)) =
+        content_rows::get_applied_content_set(&instance.id, &state.pool).await
+    else {
+        return;
+    };
+    let Ok(entries) =
+        content_rows::get_content_entries(&content_set.id, &state.pool).await
+    else {
+        return;
+    };
+    let installed = entries
+        .into_iter()
+        .filter(|entry| entry.source_kind.has_curseforge_ids())
+        .filter_map(|entry| Some((entry.project_id?, entry.version_id?)))
+        .collect::<Vec<_>>();
+    if installed.is_empty() {
+        return;
+    }
+    if let Err(error) = crate::api::curseforge_browse::available_updates(
+        &installed,
+        &content_set.game_version,
+        content_set.loader.as_str(),
+    )
+    .await
+    {
+        tracing::warn!("Could not check CurseForge for updates: {error}");
+    }
 }
 
 async fn check_content_updates_with_cache_behaviours(
@@ -84,8 +122,16 @@ async fn check_content_updates_with_cache_behaviours(
         content_rows::get_instance_files(&instance.id, &state.pool).await?;
     let hashes = files
         .iter()
+        .filter(|file| {
+            !entries_by_file_id
+                .get(file.id.as_str())
+                .is_some_and(|entry| entry.source_kind.has_curseforge_ids())
+        })
         .map(|file| file.sha1.as_str())
         .collect::<Vec<_>>();
+    if hashes.is_empty() {
+        return Ok(Vec::new());
+    }
     let file_info = CachedEntry::get_file_many(
         &hashes,
         cache_behaviour,

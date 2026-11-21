@@ -486,18 +486,65 @@ async function install(fileId: string | null = null) {
 					</TeleportOverflowMenu>
 				</template>
 			</ProjectPageHeader>
-			<NavTabs :links="tabs" />
+			<div class="flex flex-wrap items-center justify-between gap-3">
+				<NavTabs :links="tabs" />
+				<div id="project-tabs-actions" class="flex items-center empty:hidden" />
+			</div>
 			<RouterView
+				v-slot="{ Component, route: tabRoute }"
 				:project="tabProject"
 				:instance="instance"
 				:installed="installed"
 				:installed-version="installedVersion"
 				:installing="installing"
 				:install="install"
-			/>
+			>
+				<div v-if="Component" :key="tabRoute.path" class="nm-page-enter">
+					<component
+						:is="Component"
+						:project="tabProject"
+						:instance="instance"
+						:installed="installed"
+						:installed-version="installedVersion"
+						:installing="installing"
+						:install="install"
+					/>
+				</div>
+			</RouterView>
 		</div>
-		<div v-else-if="projectQuery.isPending.value" class="flex justify-center p-12">
-			<SpinnerIcon class="size-8 animate-spin text-secondary" />
+		<div
+			v-else-if="projectQuery.isPending.value"
+			class="flex flex-col gap-5 p-6 animate-pulse"
+			aria-hidden="true"
+		>
+			<div class="flex flex-wrap items-center justify-between gap-4">
+				<div class="flex min-w-0 flex-1 items-center gap-4">
+					<div class="size-24 shrink-0 rounded-2xl bg-surface-3" />
+					<div class="flex min-w-0 flex-1 flex-col gap-2.5">
+						<div class="h-7 w-64 max-w-[70%] rounded-lg bg-surface-3" />
+						<div class="h-4 w-96 max-w-[90%] rounded-md bg-surface-3/80" />
+						<div class="flex gap-2">
+							<div class="h-5 w-24 rounded-full bg-surface-3/70" />
+							<div class="h-5 w-20 rounded-full bg-surface-3/70" />
+							<div class="h-5 w-16 rounded-full bg-surface-3/70" />
+						</div>
+					</div>
+				</div>
+				<div class="h-11 w-36 shrink-0 rounded-xl bg-surface-3" />
+			</div>
+			<div class="flex gap-2">
+				<div class="h-10 w-28 rounded-full bg-surface-3" />
+				<div class="h-10 w-24 rounded-full bg-surface-3/70" />
+			</div>
+			<div
+				class="flex flex-col gap-3 rounded-2xl border border-solid border-surface-5 bg-surface-2 p-6"
+			>
+				<div class="h-5 w-48 rounded-md bg-surface-3" />
+				<div class="h-4 w-full rounded-md bg-surface-3/80" />
+				<div class="h-4 w-11/12 rounded-md bg-surface-3/80" />
+				<div class="h-4 w-4/5 rounded-md bg-surface-3/70" />
+				<div class="mt-2 h-40 w-full rounded-xl bg-surface-3/60" />
+			</div>
 		</div>
 		<p v-else class="p-6 text-secondary">{{ formatMessage(messages.loadError) }}</p>
 	</div>

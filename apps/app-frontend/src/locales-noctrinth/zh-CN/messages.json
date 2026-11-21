@@ -1,0 +1,2381 @@
+{
+	"app.account-provider.description": {
+		"message": "你要使用哪种账号游玩？"
+	},
+	"app.account-provider.ely": {
+		"message": "Ely.by 账号"
+	},
+	"app.account-provider.ely-hint": {
+		"message": "适用于支持 Ely.by 的服务器。"
+	},
+	"app.account-provider.header": {
+		"message": "添加账号"
+	},
+	"app.account-provider.microsoft": {
+		"message": "Microsoft 账号"
+	},
+	"app.account-provider.microsoft-hint": {
+		"message": "从 Mojang 购买的正版 Minecraft 账号。"
+	},
+	"app.account-provider.offline": {
+		"message": "离线账号"
+	},
+	"app.account-provider.offline-hint": {
+		"message": "仅需用户名。适用于单人游戏和离线模式服务器。"
+	},
+	"app.account.collections": {
+		"message": "合集"
+	},
+	"app.account.notifications": {
+		"message": "通知"
+	},
+	"app.action-bar.install.inspect-details": {
+		"message": "查看详情"
+	},
+	"app.appearance-settings.accent-tint.description": {
+		"message": "为应用的灰色背景和面板增添一抹相同的色调。强调色、侧边栏和加载条无论如何都会跟随预设。"
+	},
+	"app.appearance-settings.accent-tint.title": {
+		"message": "同时为背景着色"
+	},
+	"app.appearance-settings.accent.custom": {
+		"message": "自定义"
+	},
+	"app.appearance-settings.accent.custom.brightness": {
+		"message": "亮度"
+	},
+	"app.appearance-settings.accent.custom.hex": {
+		"message": "十六进制颜色"
+	},
+	"app.appearance-settings.accent.custom.wheel": {
+		"message": "色相与饱和度"
+	},
+	"app.appearance-settings.accent.description": {
+		"message": "用于高亮界面的颜色。每种颜色在浅色主题下会更深沉，在深色主题下会更明亮。"
+	},
+	"app.appearance-settings.accent.ember": {
+		"message": "余烬"
+	},
+	"app.appearance-settings.accent.lantern": {
+		"message": "灯笼"
+	},
+	"app.appearance-settings.accent.midnight": {
+		"message": "午夜"
+	},
+	"app.appearance-settings.accent.nightshade": {
+		"message": "夜影"
+	},
+	"app.appearance-settings.accent.rose": {
+		"message": "玫瑰"
+	},
+	"app.appearance-settings.accent.theme": {
+		"message": "跟随主题"
+	},
+	"app.appearance-settings.accent.title": {
+		"message": "强调色"
+	},
+	"app.appearance-settings.accent.verdant": {
+		"message": "翠绿"
+	},
+	"app.appearance-settings.font.custom": {
+		"message": "自定义"
+	},
+	"app.appearance-settings.font.custom.none": {
+		"message": "未找到名为该名称的已安装字体"
+	},
+	"app.appearance-settings.font.custom.placeholder": {
+		"message": "选择此电脑上已安装的字体"
+	},
+	"app.appearance-settings.font.custom.search": {
+		"message": "搜索字体"
+	},
+	"app.appearance-settings.font.default": {
+		"message": "Inter"
+	},
+	"app.appearance-settings.font.default.badge": {
+		"message": "默认"
+	},
+	"app.appearance-settings.font.description": {
+		"message": "应用界面所使用的字体。所选字体缺少的字符将回退使用 Inter 显示。"
+	},
+	"app.appearance-settings.font.minecraft": {
+		"message": "Minecraft"
+	},
+	"app.appearance-settings.font.system": {
+		"message": "系统"
+	},
+	"app.appearance-settings.font.title": {
+		"message": "界面字体"
+	},
+	"app.browse.source.label": {
+		"message": "浏览来源"
+	},
+	"app.changelog.author": {
+		"message": "作者"
+	},
+	"app.changelog.installed": {
+		"message": "已安装"
+	},
+	"app.changelog.modrinth-note": {
+		"message": "仅显示近期版本。完整的 Modrinth App 更新日志可在其官网查看。"
+	},
+	"app.changelog.noctrinth-note": {
+		"message": "完整的 Noctrinth 更新日志也可在线查看。"
+	},
+	"app.changelog.open-modrinth": {
+		"message": "打开 Modrinth 更新日志"
+	},
+	"app.changelog.open-noctrinth": {
+		"message": "打开 Noctrinth 更新日志"
+	},
+	"app.changelog.source.modrinth": {
+		"message": "Modrinth"
+	},
+	"app.changelog.source.noctrinth": {
+		"message": "Noctrinth"
+	},
+	"app.changelog.support": {
+		"message": "在 Boosty 上支持我们"
+	},
+	"app.collection.create.created": {
+		"message": "合集已创建"
+	},
+	"app.collection.create.created.detail": {
+		"message": "已创建“{name}”。"
+	},
+	"app.collection.create.header": {
+		"message": "创建合集"
+	},
+	"app.collection.create.name": {
+		"message": "名称"
+	},
+	"app.collection.create.name.placeholder": {
+		"message": "输入合集名称..."
+	},
+	"app.collection.create.submit": {
+		"message": "创建合集"
+	},
+	"app.collection.create.submitting": {
+		"message": "正在创建..."
+	},
+	"app.collection.create.summary": {
+		"message": "简介"
+	},
+	"app.collection.create.summary.hint": {
+		"message": "用一两句话描述你的合集。"
+	},
+	"app.collection.create.summary.placeholder": {
+		"message": "这是一个关于……的合集"
+	},
+	"app.collection.create.visibility-note": {
+		"message": "你的新合集将作为公开合集创建，包含 {count, plural, =0 {0 个项目} other {# 个项目}}。"
+	},
+	"app.collection.delete-modal.description": {
+		"message": "这将永久删除此合集，且无法撤销。"
+	},
+	"app.collection.delete-modal.title": {
+		"message": "确定要删除此合集吗？"
+	},
+	"app.collection.edit.description": {
+		"message": "描述"
+	},
+	"app.collection.edit.header": {
+		"message": "编辑合集"
+	},
+	"app.collection.edit.saving": {
+		"message": "正在保存..."
+	},
+	"app.collection.edit.title": {
+		"message": "标题"
+	},
+	"app.collection.edit.visibility": {
+		"message": "可见性"
+	},
+	"app.collection.save-button.create": {
+		"message": "创建新合集"
+	},
+	"app.collection.save-button.empty": {
+		"message": "你还没有任何合集。"
+	},
+	"app.collection.save-button.loading": {
+		"message": "正在加载合集..."
+	},
+	"app.collection.save-button.no-matches": {
+		"message": "没有符合搜索条件的合集。"
+	},
+	"app.collection.save-button.save": {
+		"message": "保存到合集"
+	},
+	"app.collection.save-button.save-tooltip": {
+		"message": "保存"
+	},
+	"app.collection.save-button.saved": {
+		"message": "已保存到合集"
+	},
+	"app.collection.save-button.saved-tooltip": {
+		"message": "已保存"
+	},
+	"app.collection.save-button.search": {
+		"message": "搜索..."
+	},
+	"app.collection.save-button.sign-in": {
+		"message": "登录 Modrinth 以保存项目。"
+	},
+	"app.collection.visibility.listed": {
+		"message": "公开"
+	},
+	"app.collection.visibility.private": {
+		"message": "私密"
+	},
+	"app.collection.visibility.unlisted": {
+		"message": "不公开列出"
+	},
+	"app.content-install.curseforge.missing-dependencies.text": {
+		"message": "以下依赖项没有适用于此实例的版本，需要通过其他方式添加：{names}"
+	},
+	"app.content-install.curseforge.missing-dependencies.title": {
+		"message": "已安装，但缺少部分依赖项"
+	},
+	"app.crash-modal.close": {
+		"message": "关闭"
+	},
+	"app.crash-modal.header": {
+		"message": "{instance} 已崩溃"
+	},
+	"app.crash-modal.nothing-found": {
+		"message": "启动器未能识别崩溃原因。日志中包含详细信息，你可以在那里分享日志。"
+	},
+	"app.crash-modal.open-logs": {
+		"message": "打开日志"
+	},
+	"app.crash-modal.status": {
+		"message": "退出代码：{status}"
+	},
+	"app.crash.copied-line": {
+		"message": "已复制"
+	},
+	"app.crash.copy-line": {
+		"message": "复制该行"
+	},
+	"app.crash.details": {
+		"message": "详情"
+	},
+	"app.crash.disable-mod": {
+		"message": "禁用 {mod}"
+	},
+	"app.crash.dismiss": {
+		"message": "忽略"
+	},
+	"app.crash.found-in": {
+		"message": "位于 {file}"
+	},
+	"app.crash.game-said": {
+		"message": "游戏报告：{description}"
+	},
+	"app.crash.header-count": {
+		"message": "{count, plural, other {启动器找到了 # 个可能的原因}}"
+	},
+	"app.crash.header-note": {
+		"message": "本次运行值得注意的信息"
+	},
+	"app.crash.hide-details": {
+		"message": "收起"
+	},
+	"app.crash.hide-evidence": {
+		"message": "隐藏日志行"
+	},
+	"app.crash.memory-hint": {
+		"message": "当前为 {mods} 个模组分配了 {current} GB 内存。这种规模的整合包通常需要 {gb} GB，而你的电脑有足够的可用内存。"
+	},
+	"app.crash.memory-set": {
+		"message": "内存已设置为 {gb} GB"
+	},
+	"app.crash.mod-disabled": {
+		"message": "已禁用 {mod}"
+	},
+	"app.crash.open-folder": {
+		"message": "打开实例文件夹"
+	},
+	"app.crash.open-settings": {
+		"message": "打开设置"
+	},
+	"app.crash.other-causes": {
+		"message": "其他可能的原因（{count}）"
+	},
+	"app.crash.primary-cause": {
+		"message": "最可能的原因"
+	},
+	"app.crash.rule.broken-mod-file.fix": {
+		"message": "该文件不是有效的压缩包，可能是下载中途中断导致的。请先禁用并重新下载。"
+	},
+	"app.crash.rule.broken-mod-file.title": {
+		"message": "{mod_file} 已损坏"
+	},
+	"app.crash.rule.chunk-unreadable.fix": {
+		"message": "进行任何操作前请先备份世界。单个损坏的区域文件可以删除以重新生成，但该区域内的建筑将会丢失。"
+	},
+	"app.crash.rule.chunk-unreadable.title": {
+		"message": "世界的部分内容无法读取（区块 {chunk}）"
+	},
+	"app.crash.rule.config-file-empty.fix": {
+		"message": "游戏在保存此文件时异常退出。删除该文件后，模组会使用默认设置重新生成它。"
+	},
+	"app.crash.rule.config-file-empty.title": {
+		"message": "{file} 为空"
+	},
+	"app.crash.rule.config-truncated.fix": {
+		"message": "游戏在保存此文件时异常退出。删除下方日志行中提到的文件，它会自动使用默认设置重新生成。"
+	},
+	"app.crash.rule.config-truncated.title": {
+		"message": "某个配置文件为空或不完整"
+	},
+	"app.crash.rule.config-unreadable.fix": {
+		"message": "删除该文件并重新启动游戏，模组会使用默认设置重新生成一份新文件。"
+	},
+	"app.crash.rule.config-unreadable.title": {
+		"message": "某个配置文件已损坏（{file}）"
+	},
+	"app.crash.rule.connector-fabric-mod.fix": {
+		"message": "在 NeoForge 上，如果模组有官方 NeoForge 版本请优先安装——Sodium 和 Iris 都有官方版本，无需通过 Connector 运行。在 Forge 1.20.1 及更早版本上，对应的替代品是 Embeddium 和 Oculus。"
+	},
+	"app.crash.rule.connector-fabric-mod.title": {
+		"message": "Sinytra Connector 无法加载某个 Fabric 模组（{exception}）"
+	},
+	"app.crash.rule.corrupted-archive.fix": {
+		"message": "请修复实例，让启动器重新下载该文件。下载中断通常会导致此类问题。"
+	},
+	"app.crash.rule.corrupted-archive.title": {
+		"message": "游戏需要读取的某个文件已损坏或未下载完整"
+	},
+	"app.crash.rule.crash-description.title": {
+		"message": "游戏给出的崩溃描述：{description}"
+	},
+	"app.crash.rule.datapack-blocked-world.fix": {
+		"message": "某个添加了配方或世界生成的模组被移除或更改了。请将其装回，或使用“安全模式”打开世界以跳过损坏的数据包。"
+	},
+	"app.crash.rule.datapack-blocked-world.title": {
+		"message": "由于数据包出错，世界无法加载"
+	},
+	"app.crash.rule.disk-full.fix": {
+		"message": "请释放实例所在磁盘的空间，然后重新启动。"
+	},
+	"app.crash.rule.disk-full.title": {
+		"message": "磁盘空间已满"
+	},
+	"app.crash.rule.duplicate-mod-files.fix": {
+		"message": "请仅保留其中一个文件，并移除其余文件：{files}"
+	},
+	"app.crash.rule.duplicate-mod-files.title": {
+		"message": "{mod_name} 被重复安装"
+	},
+	"app.crash.rule.duplicate-mods.fix": {
+		"message": "打开 mods 文件夹，每个模组仅保留一份——通常是因为同时存在同一模组的两个版本。"
+	},
+	"app.crash.rule.duplicate-mods.title": {
+		"message": "同一个模组被重复安装"
+	},
+	"app.crash.rule.exit-access-violation.fix": {
+		"message": "最常见的原因是显卡驱动或屏幕叠加层。请更新显卡驱动，关闭光影和叠加层后再尝试启动。"
+	},
+	"app.crash.rule.exit-access-violation.title": {
+		"message": "原生代码导致游戏崩溃且未生成崩溃报告"
+	},
+	"app.crash.rule.exit-killed-by-system.fix": {
+		"message": "整个系统的内存已耗尽。请减少分配给游戏的内存，或关闭其他正在运行的程序。"
+	},
+	"app.crash.rule.exit-killed-by-system.title": {
+		"message": "系统为了释放内存终止了游戏进程"
+	},
+	"app.crash.rule.exit-missing-system-library.fix": {
+		"message": "请安装最新的 Microsoft Visual C++ Redistributable (x64)，然后让启动器为此实例重新安装 Java。"
+	},
+	"app.crash.rule.exit-missing-system-library.title": {
+		"message": "Java 无法加载系统库（{code}）"
+	},
+	"app.crash.rule.exit-not-responding.fix": {
+		"message": "大型整合包在加载世界时可能会短暂卡死，此时点击窗口会触发 Windows 提示关闭程序。加载期间请耐心等待。如果彻底卡死，很可能是内存不足导致的。"
+	},
+	"app.crash.rule.exit-not-responding.title": {
+		"message": "游戏无响应，已被 Windows 关闭"
+	},
+	"app.crash.rule.exit-stack-buffer-overrun.fix": {
+		"message": "通常由注入游戏的叠加层或录屏软件（如 MSI Afterburner、RivaTuner、OBS、Discord 叠加层）或显卡驱动引起。请关闭叠加层并更新显卡驱动。"
+	},
+	"app.crash.rule.exit-stack-buffer-overrun.title": {
+		"message": "某个注入游戏的外部程序导致其崩溃"
+	},
+	"app.crash.rule.exit-stack-overflow.fix": {
+		"message": "大多数情况下是两个模组之间发生了无限递归调用。请检查自上次正常运行以来更改过的模组。"
+	},
+	"app.crash.rule.exit-stack-overflow.title": {
+		"message": "游戏发生栈溢出"
+	},
+	"app.crash.rule.fabric-missing-dependency.fix": {
+		"message": "请安装 {dependency}，或移除 {mod_name}。"
+	},
+	"app.crash.rule.fabric-missing-dependency.title": {
+		"message": "{mod_name} 需要未安装的 {dependency}"
+	},
+	"app.crash.rule.fabric-wrong-dependency-version.fix": {
+		"message": "请将 {dependency} 更新至 {requirement}，或更换适配版本的 {mod_name}。"
+	},
+	"app.crash.rule.fabric-wrong-dependency-version.title": {
+		"message": "{mod_name} 需要其他版本的 {dependency}"
+	},
+	"app.crash.rule.feature-order-cycle.fix": {
+		"message": "两个模组互相等待对方，导致无法确定加载顺序。请移除其中一个世界生成模组，或安装用于解决顺序冲突的模组。"
+	},
+	"app.crash.rule.feature-order-cycle.title": {
+		"message": "两个世界生成模组的加载顺序发生循环冲突"
+	},
+	"app.crash.rule.ferritecore-neighbor-table.fix": {
+		"message": "在下方日志行提到的模组修复之前，请在 config/ferritecore-mixin.toml 中将 replaceNeighborLookup 设为 false。"
+	},
+	"app.crash.rule.ferritecore-neighbor-table.title": {
+		"message": "某个模组与 FerriteCore 的内存优化发生冲突"
+	},
+	"app.crash.rule.file-locked.fix": {
+		"message": "请关闭其他启动器和仍在运行的游戏进程，并检查杀毒软件是否正在扫描此文件夹。"
+	},
+	"app.crash.rule.file-locked.title": {
+		"message": "其他程序正在占用游戏的某个文件"
+	},
+	"app.crash.rule.forge-missing-dependency.fix": {
+		"message": "请安装 {dependency}，或移除 {mod_id}。"
+	},
+	"app.crash.rule.forge-missing-dependency.title": {
+		"message": "{mod_id} 缺少依赖项 {dependency}"
+	},
+	"app.crash.rule.gpu-driver-amd.title": {
+		"message": "AMD 显卡驱动崩溃（{library}）"
+	},
+	"app.crash.rule.gpu-driver-generic.title": {
+		"message": "显卡驱动崩溃"
+	},
+	"app.crash.rule.gpu-driver-intel.title": {
+		"message": "Intel 显卡驱动崩溃（{library}）"
+	},
+	"app.crash.rule.gpu-driver-nvidia.title": {
+		"message": "NVIDIA 显卡驱动崩溃（{library}）"
+	},
+	"app.crash.rule.gpu-driver.fix": {
+		"message": "请从显卡厂商官网（而非通过 Windows 更新）更新显卡驱动，并在测试时先关闭光影。"
+	},
+	"app.crash.rule.heap-too-large-to-start.fix": {
+		"message": "请降低此实例的内存分配后再重新启动。"
+	},
+	"app.crash.rule.heap-too-large-to-start.title": {
+		"message": "实例请求的内存超过了系统可预留的上限（{size}）"
+	},
+	"app.crash.rule.install-incomplete.fix": {
+		"message": "加载器找不到 Minecraft 本体。请修复实例，让启动器重新安装。"
+	},
+	"app.crash.rule.install-incomplete.title": {
+		"message": "游戏或其加载器未安装完整"
+	},
+	"app.crash.rule.integrated-gpu-in-use.fix": {
+		"message": "如果这台电脑配有独立显卡，游戏当前正在使用较慢的集成显卡。启动器可以请求 Windows 改用独立显卡。"
+	},
+	"app.crash.rule.integrated-gpu-in-use.title": {
+		"message": "游戏正在集成显卡上运行（{renderer}）"
+	},
+	"app.crash.rule.intel-cpu-instability.fix": {
+		"message": "Intel 第 13 代和第 14 代桌面处理器在高负载下可能出现退化和崩溃。请将主板 BIOS 更新至包含 Intel 微码修复的版本；如果是此原因，调整模组无法解决问题。"
+	},
+	"app.crash.rule.intel-cpu-instability.title": {
+		"message": "此处理器（{model}）已知存在稳定性问题"
+	},
+	"app.crash.rule.java-module-error.fix": {
+		"message": "当两个文件声明了相同的模块时，Java 会拒绝启动。下方详情列出了模块名称——请找出包含它的模组并只保留较新的那个。"
+	},
+	"app.crash.rule.java-module-error.title": {
+		"message": "两个模组附带了相同的库（{exception}）"
+	},
+	"app.crash.rule.java-too-new.fix": {
+		"message": "较旧版本的 Minecraft 需要更早版本的 Java。请让启动器自动安装此版本所需的 Java。"
+	},
+	"app.crash.rule.java-too-new.title": {
+		"message": "当前 Java 版本过新，游戏无法使用"
+	},
+	"app.crash.rule.java-too-old.fix": {
+		"message": "请将此实例指向 Java {needs}，或让启动器自动下载。"
+	},
+	"app.crash.rule.java-too-old.title": {
+		"message": "某些内容需要 Java {needs}，但实例使用的是 Java {has}"
+	},
+	"app.crash.rule.java-unsupported-class.fix": {
+		"message": "请在实例设置中更改所使用的 Java 版本。"
+	},
+	"app.crash.rule.java-unsupported-class.title": {
+		"message": "某个模组需要比当前运行版本更新的 Java"
+	},
+	"app.crash.rule.jna-blocked.fix": {
+		"message": "这通常是由于杀毒软件拦截或临时文件夹没有写入权限所致。请将启动器文件夹添加到杀毒软件排除项，并检查 Windows TEMP 文件夹是否可写。"
+	},
+	"app.crash.rule.jna-blocked.title": {
+		"message": "某个库无法解压到临时文件夹"
+	},
+	"app.crash.rule.jvm-itself-failed.fix": {
+		"message": "Java 自身发生崩溃通常是由硬件故障或该 Java 版本的缺陷引起的。请先检测内存；若硬件正常，请为此实例安装其他版本的 Java。"
+	},
+	"app.crash.rule.jvm-itself-failed.title": {
+		"message": "Java 本身发生了崩溃，而非游戏"
+	},
+	"app.crash.rule.jvm-problematic-frame.title": {
+		"message": "Java 本身在 {frame} 中崩溃"
+	},
+	"app.crash.rule.jvm-signal.title": {
+		"message": "进程被信号 {signal} 终止"
+	},
+	"app.crash.rule.kubejs-datapack.fix": {
+		"message": "该文件由 kubejs 文件夹中的脚本生成。请修复或移除该脚本；整合包自带的脚本通常会在某个模组更新后失效。"
+	},
+	"app.crash.rule.kubejs-datapack.title": {
+		"message": "某个 KubeJS 脚本生成了损坏的数据包文件（{file}）"
+	},
+	"app.crash.rule.language-provider-mismatch.fix": {
+		"message": "下方日志行说明了它所需的版本。请更新此实例的加载器，或下载适配当前加载器版本的该模组。"
+	},
+	"app.crash.rule.language-provider-mismatch.title": {
+		"message": "某个模组是针对不同版本的加载器构建的"
+	},
+	"app.crash.rule.loader-suggestion.fix": {
+		"message": "{suggestion}"
+	},
+	"app.crash.rule.loader-suggestion.title": {
+		"message": "模组加载器给出了修复建议"
+	},
+	"app.crash.rule.missing-class-owner.fix": {
+		"message": "它需要 {symbol}，但当前安装的 {owner_name} 中没有该内容。附属模组必须与其依赖的主模组版本匹配：请同时更新两者，或将 {owner_name} 回退至该附属模组适配的版本。"
+	},
+	"app.crash.rule.missing-class-owner.title": {
+		"message": "某个模组是针对不同版本的 {owner_name} 构建的"
+	},
+	"app.crash.rule.missing-class.fix": {
+		"message": "它需要 {symbol}，但已安装的模组中均未提供。请安装其依赖的模组，或移除需要它的模组。"
+	},
+	"app.crash.rule.missing-class.title": {
+		"message": "某个模组缺少未安装的依赖内容"
+	},
+	"app.crash.rule.missing-indium.fix": {
+		"message": "Sodium 移除了部分模组渲染所需的接口，而 Indium 可以将其补回。请安装对应 Minecraft 版本的 Indium。"
+	},
+	"app.crash.rule.missing-indium.title": {
+		"message": "某个模组需要 Indium 才能与 Sodium 一起渲染"
+	},
+	"app.crash.rule.missing-main-class.fix": {
+		"message": "实例不完整，通常是安装中途被中断导致的。请修复或重新安装实例。"
+	},
+	"app.crash.rule.missing-main-class.title": {
+		"message": "游戏完全无法启动（缺少 {class_name}）"
+	},
+	"app.crash.rule.missing-native-library.fix": {
+		"message": "请修复实例。如果问题再次出现，请检查杀毒软件是否隔离了 natives 文件夹。"
+	},
+	"app.crash.rule.missing-native-library.title": {
+		"message": "游戏无法加载磁盘上的某个原生库"
+	},
+	"app.crash.rule.mixin-failed.fix": {
+		"message": ".mixins.json 前面的名称对应的模组应优先尝试更新或移除；当两个模组修改了同一处代码时，需要调整它们之间的搭配。"
+	},
+	"app.crash.rule.mixin-failed.title": {
+		"message": "某个模组无法向游戏注入补丁（{config}）"
+	},
+	"app.crash.rule.mixin-injection-failed.fix": {
+		"message": "几乎总是该文件对应的模组与当前游戏版本或其他模组版本不匹配。请更新该模组；如果已是最新，请移除与其冲突的模组。"
+	},
+	"app.crash.rule.mixin-injection-failed.title": {
+		"message": "某个模组未能在预期位置向游戏注入补丁（{config}）"
+	},
+	"app.crash.rule.mixin-invalid-injection.fix": {
+		"message": "查看下方日志行中提到的模组并更新它们。如果其中包含优化或渲染类模组，请先尝试禁用它们——这类模组对游戏的改动最多。"
+	},
+	"app.crash.rule.mixin-invalid-injection.title": {
+		"message": "两个模组修改了游戏的同一部分"
+	},
+	"app.crash.rule.mod-for-other-version.fix": {
+		"message": "它尝试查找 {symbol}，但当前版本中不存在。请更新该模组，或使用为当前 Minecraft 版本构建的版本。"
+	},
+	"app.crash.rule.mod-for-other-version.title": {
+		"message": "某个模组是针对其他 Minecraft 版本构建的"
+	},
+	"app.crash.rule.mod-incompatible.fix": {
+		"message": "这两个模组不能同时安装。请保留你需要的那个并移除另一个。"
+	},
+	"app.crash.rule.mod-incompatible.title": {
+		"message": "{mod_name} 与 {conflict} 不兼容"
+	},
+	"app.crash.rule.mods-changed-since-working.fix": {
+		"message": "新增：{added_count}，移除：{removed_count}。如果此处没有其他信息能解释此次崩溃，请先从下方列出的这些模组开始排查。"
+	},
+	"app.crash.rule.mods-changed-since-working.title": {
+		"message": "自上次正常运行以来，模组列表发生了变化"
+	},
+	"app.crash.rule.native-allocator.fix": {
+		"message": "几乎总是内存硬件故障或内存超频不稳定所致。请运行内存检测，并尝试在 BIOS 中关闭 XMP 或 EXPO。"
+	},
+	"app.crash.rule.native-allocator.title": {
+		"message": "内存分配器导致进程崩溃（{library}）"
+	},
+	"app.crash.rule.native-audio.fix": {
+		"message": "通常是因为游戏运行时音频设备发生切换（例如拔出耳机或蓝牙音箱休眠）。请更新声卡驱动并设置固定的输出设备。"
+	},
+	"app.crash.rule.native-audio.title": {
+		"message": "音频系统导致进程崩溃"
+	},
+	"app.crash.rule.native-shader-macos.fix": {
+		"message": "macOS 无法编译某个光影包。请关闭光影——大多数光影包依赖 Apple 未提供的驱动特性。"
+	},
+	"app.crash.rule.native-shader-macos.title": {
+		"message": "macOS 图形层导致进程崩溃"
+	},
+	"app.crash.rule.native-window-linux.fix": {
+		"message": "请更新显卡驱动和 Mesa。在 Wayland 下，通过 XWayland 运行游戏可以避免大多数此类问题。"
+	},
+	"app.crash.rule.native-window-linux.title": {
+		"message": "系统图形库导致进程崩溃（{library}）"
+	},
+	"app.crash.rule.neoforge-dependency-version.fix": {
+		"message": "请将 {dependency} 更新至该范围内的版本，或将 {mod_id} 回退至兼容当前版本的构建。"
+	},
+	"app.crash.rule.neoforge-dependency-version.title": {
+		"message": "{mod_id} 需要 {dependency} {expected}，但当前为 {actual}"
+	},
+	"app.crash.rule.not-a-mod-file.fix": {
+		"message": "通常是因为下载时保存成了网页而非模组文件，或者误将资源包放入了 mods 文件夹。请移除该文件并重新下载。"
+	},
+	"app.crash.rule.not-a-mod-file.title": {
+		"message": "{file} 不是模组文件"
+	},
+	"app.crash.rule.oculus-without-embeddium.fix": {
+		"message": "Oculus 依赖 Embeddium 进行渲染，缺少它无法启动。请安装 Embeddium；在 NeoForge 上请改用官方的 Sodium 和 Iris。"
+	},
+	"app.crash.rule.oculus-without-embeddium.title": {
+		"message": "已安装 Oculus，但缺少 Embeddium"
+	},
+	"app.crash.rule.opengl-unsupported.fix": {
+		"message": "请更新显卡驱动。在双显卡笔记本电脑上，请确保游戏设置为使用性能更强的独立显卡运行。"
+	},
+	"app.crash.rule.opengl-unsupported.title": {
+		"message": "显卡驱动无法为游戏提供所需的 OpenGL 支持"
+	},
+	"app.crash.rule.optifine-present.fix": {
+		"message": "OptiFine 与大多数现代模组存在兼容性问题。Sodium 搭配 Iris，或 Embeddium 搭配 Oculus 都能实现相同功能，且专为与现代模组共存而设计。"
+	},
+	"app.crash.rule.optifine-present.title": {
+		"message": "崩溃发生时加载了 OptiFine"
+	},
+	"app.crash.rule.out-of-memory-heap.fix": {
+		"message": "请为此实例分配更多内存，或降低其负载：调低渲染距离和减少世界生成模组通常最有效。"
+	},
+	"app.crash.rule.out-of-memory-heap.title": {
+		"message": "游戏耗尽了分配给它的内存"
+	},
+	"app.crash.rule.out-of-memory-metaspace.fix": {
+		"message": "这是一个非常庞大的整合包，而分配的内存过小。请提高此实例的内存分配。"
+	},
+	"app.crash.rule.out-of-memory-metaspace.title": {
+		"message": "游戏用于加载代码的内存空间不足"
+	},
+	"app.crash.rule.out-of-memory-system.fix": {
+		"message": "请降低此实例请求的内存，或关闭其他正在运行的程序。请求超过本机可用量的内存会导致游戏根本无法启动。"
+	},
+	"app.crash.rule.out-of-memory-system.title": {
+		"message": "电脑已没有足够的剩余内存可供分配"
+	},
+	"app.crash.rule.resource-location-invalid.fix": {
+		"message": "Minecraft 在此类路径名称中仅支持小写拉丁字母、数字和少数符号。常见原因是 Windows 用户名包含非拉丁字符，导致路径中出现这些字符。请将启动器文件夹移至纯英文路径下。"
+	},
+	"app.crash.rule.resource-location-invalid.title": {
+		"message": "路径中包含了游戏无法识别的名称"
+	},
+	"app.crash.rule.server-config-broken.fix": {
+		"message": "该文件位于对应世界的 serverconfig 文件夹中，而非 config 文件夹。删除它后重新进入世界，模组会自动生成新文件。"
+	},
+	"app.crash.rule.server-config-broken.title": {
+		"message": "世界的某个配置文件已损坏（{file}）"
+	},
+	"app.crash.rule.server-thread-stuck.fix": {
+		"message": "某项操作耗时过长导致游戏放弃等待——通常是在较慢的磁盘上生成世界，或某个模组陷入了死循环。下方日志行指明了当时正在执行的操作。"
+	},
+	"app.crash.rule.server-thread-stuck.title": {
+		"message": "世界停止响应并已关闭"
+	},
+	"app.crash.rule.software-renderer.fix": {
+		"message": "Windows 正在回退到软件渲染，而 Minecraft 无法在此模式下运行。请从显卡厂商官网安装显卡驱动程序。"
+	},
+	"app.crash.rule.software-renderer.title": {
+		"message": "游戏正在无显卡驱动的状态下渲染（{renderer}）"
+	},
+	"app.crash.rule.spark-profiler-crash.fix": {
+		"message": "其原生性能分析器在较新的 Java 上无法运行。请更新 Spark，或改用 Java 21 运行此实例。"
+	},
+	"app.crash.rule.spark-profiler-crash.title": {
+		"message": "Spark 的性能分析器导致进程崩溃"
+	},
+	"app.crash.rule.suspect-mod.fix": {
+		"message": "游戏崩溃时正在执行该模组的代码。请先尝试更新它；若问题依旧，请禁用它并重新启动以确认。"
+	},
+	"app.crash.rule.suspect-mod.title": {
+		"message": "崩溃发生在 {mod_name} 内部"
+	},
+	"app.crash.rule.suspected-mods.fix": {
+		"message": "请先逐个禁用这些模组，并在每次禁用后重新启动以排查。"
+	},
+	"app.crash.rule.suspected-mods.title": {
+		"message": "模组加载器怀疑问题出在：{mods}"
+	},
+	"app.crash.rule.too-many-block-ids.fix": {
+		"message": "旧版 Minecraft 对此有硬性上限。请移除部分内容模组，或安装适用于该版本的 ID 扩容模组。"
+	},
+	"app.crash.rule.too-many-block-ids.title": {
+		"message": "整合包的方块或物品 ID 数量已耗尽"
+	},
+	"app.crash.rule.wrong-jdk-apple-silicon.fix": {
+		"message": "Apple Silicon Mac 上运行了 Intel 版 Java，或反之。请让启动器为此实例自动安装合适的 Java，而不是使用系统已有的版本。"
+	},
+	"app.crash.rule.wrong-jdk-apple-silicon.title": {
+		"message": "Java 架构与此 Mac 不匹配"
+	},
+	"app.crash.set-memory": {
+		"message": "设为 {gb} GB"
+	},
+	"app.crash.severity.critical": {
+		"message": "严重"
+	},
+	"app.crash.severity.note": {
+		"message": "提示"
+	},
+	"app.crash.severity.warning": {
+		"message": "警告"
+	},
+	"app.crash.show-evidence": {
+		"message": "显示日志行"
+	},
+	"app.crash.show-less": {
+		"message": "收起"
+	},
+	"app.crash.show-more": {
+		"message": "再显示 {count} 项"
+	},
+	"app.curseforge.pending.all-done": {
+		"message": "全部已安装"
+	},
+	"app.curseforge.pending.description": {
+		"message": "{count, plural, other {这些文件的作者不允许启动器直接下载。请从 CurseForge 手动下载它们，启动器会自动从你的“下载”文件夹中识别并安装。}}"
+	},
+	"app.curseforge.pending.done": {
+		"message": "完成"
+	},
+	"app.curseforge.pending.found": {
+		"message": "已安装"
+	},
+	"app.curseforge.pending.header": {
+		"message": "手动下载"
+	},
+	"app.curseforge.pending.open-all": {
+		"message": "打开下载页面"
+	},
+	"app.curseforge.pending.open-downloads": {
+		"message": "打开“下载”文件夹"
+	},
+	"app.curseforge.pending.open-page": {
+		"message": "下载"
+	},
+	"app.curseforge.pending.skip": {
+		"message": "跳过此文件"
+	},
+	"app.curseforge.pending.waiting": {
+		"message": "正在监视你的“下载”文件夹…"
+	},
+	"app.curseforge.project.add-favorite": {
+		"message": "添加到收藏"
+	},
+	"app.curseforge.project.load-error": {
+		"message": "无法加载此 CurseForge 项目。"
+	},
+	"app.curseforge.project.open-on-curseforge": {
+		"message": "在 CurseForge 上打开"
+	},
+	"app.curseforge.project.remove-favorite": {
+		"message": "取消收藏"
+	},
+	"app.download-manager.rate-limited": {
+		"message": "服务器请求降低下载速度，将在 {seconds, plural, other {# 秒}}后继续"
+	},
+	"app.error-modal.copy-debug-info": {
+		"message": "复制调试信息"
+	},
+	"app.error-modal.debug-information": {
+		"message": "调试信息"
+	},
+	"app.error-modal.directory.cancel": {
+		"message": "取消更改目录"
+	},
+	"app.error-modal.directory.generic.body": {
+		"message": "Noctrinth 无法迁移到你选择的新目录。请联系支持人员获取帮助，或取消更改目录。"
+	},
+	"app.error-modal.directory.no-space.body": {
+		"message": "你选择的目录所在磁盘似乎空间不足。请释放一些空间后重试，或取消更改目录。"
+	},
+	"app.error-modal.directory.no-space.heading": {
+		"message": "空间不足"
+	},
+	"app.error-modal.directory.read-only.body": {
+		"message": "Noctrinth 似乎无法写入你选择的目录。请调整该目录的权限后重试，或取消更改目录。"
+	},
+	"app.error-modal.directory.read-only.heading": {
+		"message": "更改目录权限"
+	},
+	"app.error-modal.directory.retry": {
+		"message": "重试更改目录"
+	},
+	"app.error-modal.game-pass.body": {
+		"message": "请先尝试使用<launcher-link>官方 Minecraft 启动器</launcher-link>登录。完成后再回到这里登录！"
+	},
+	"app.error-modal.game-pass.heading": {
+		"message": "正在使用 PC Game Pass、来自基岩版，或刚购买了游戏？"
+	},
+	"app.error-modal.get-support": {
+		"message": "获取支持"
+	},
+	"app.error-modal.hosts-file.body": {
+		"message": "Noctrinth 尝试连接 Microsoft / Xbox / Minecraft 服务，但远程服务器拒绝了连接。这可能表明这些服务被 hosts 文件屏蔽了。请访问<support-article>我们的支持文章</support-article>了解修复步骤。"
+	},
+	"app.error-modal.network.body": {
+		"message": "Noctrinth 连接 Microsoft 服务器时似乎遇到了问题。这通常是网络连接不佳所致，建议你重试一次。如果问题持续存在，请按照<support-article>我们的支持文章</support-article>中的步骤进行排查。"
+	},
+	"app.error-modal.network.heading": {
+		"message": "网络问题"
+	},
+	"app.error-modal.no-error-message": {
+		"message": "无错误信息。"
+	},
+	"app.error-modal.no-loader.body": {
+		"message": "Noctrinth 找不到此实例的加载器版本。"
+	},
+	"app.error-modal.no-loader.fix": {
+		"message": "要解决此问题，你需要修复实例。点击下方按钮即可开始修复。"
+	},
+	"app.error-modal.no-loader.repair": {
+		"message": "修复实例"
+	},
+	"app.error-modal.other-account.body": {
+		"message": "请仔细检查你是否登录了正确的账号。你可能是在另一个 Microsoft 账号上购买的 Minecraft。"
+	},
+	"app.error-modal.other-account.button": {
+		"message": "尝试其他账号"
+	},
+	"app.error-modal.other-account.heading": {
+		"message": "尝试其他 Microsoft 账号"
+	},
+	"app.error-modal.service-outage.body": {
+		"message": "Microsoft 的登录服务器返回了错误，Noctrinth 多次重试仍未能接通。这是对方服务器的问题，通常几分钟内就会恢复——请稍等片刻再试。"
+	},
+	"app.error-modal.service-outage.heading": {
+		"message": "Microsoft 服务暂不可用"
+	},
+	"app.error-modal.state-init.body": {
+		"message": "Noctrinth 未能正确加载。这可能是因为文件已损坏，或应用缺少关键文件。"
+	},
+	"app.error-modal.state-init.fix-internet": {
+		"message": "确保你已连接到互联网，然后尝试重启应用。"
+	},
+	"app.error-modal.state-init.fix-redownload": {
+		"message": "重新下载应用。"
+	},
+	"app.error-modal.state-init.fixes": {
+		"message": "你可以尝试以下方式之一进行修复："
+	},
+	"app.error-modal.support-prompt": {
+		"message": "如果所有方法均无效且你需要帮助，请访问<support-page>我们的支持页面</support-page>并通过右下角的小组件发起对话，我们很乐意为你提供协助！请务必向客服提供以下调试信息："
+	},
+	"app.error-modal.title.directory-move": {
+		"message": "无法更改应用目录"
+	},
+	"app.error-modal.title.minecraft-auth": {
+		"message": "无法登录 Minecraft"
+	},
+	"app.error-modal.title.no-loader": {
+		"message": "未选择加载器"
+	},
+	"app.error-modal.title.state-init": {
+		"message": "初始化 Noctrinth 时出错"
+	},
+	"app.error-modal.title.unknown": {
+		"message": "发生错误"
+	},
+	"app.error-modal.try-signing-in-again": {
+		"message": "重新尝试登录"
+	},
+	"app.export-modal.include-icon": {
+		"message": "包含实例图标"
+	},
+	"app.export-modal.include-icon-hint": {
+		"message": "将其保存为整合包图标，在 Modrinth App 和其他启动器中安装时会显示该图标。"
+	},
+	"app.hosting.title": {
+		"message": "服务器托管"
+	},
+	"app.instance.add-content.from-file": {
+		"message": "从文件添加"
+	},
+	"app.instance.add-content.install": {
+		"message": "安装内容"
+	},
+	"app.instance.content.curseforge-pending.action": {
+		"message": "下载"
+	},
+	"app.instance.content.curseforge-pending.body": {
+		"message": "这些文件的作者不允许启动器直接下载，且在这台电脑上也未能找到它们。"
+	},
+	"app.instance.content.curseforge-pending.header": {
+		"message": "{count, plural, other {有 # 个文件需要手动下载}}"
+	},
+	"app.instance.logs.live": {
+		"message": "实时日志"
+	},
+	"app.instance.logs.unknown-file": {
+		"message": "未知"
+	},
+	"app.instance.share.members.column.joined": {
+		"message": "加入时间"
+	},
+	"app.instance.share.members.column.method": {
+		"message": "方式"
+	},
+	"app.instance.share.members.never-played": {
+		"message": "从未"
+	},
+	"app.instance.share.members.search": {
+		"message": "搜索 {count, plural, other {# 位用户}}..."
+	},
+	"app.instance.share.method.direct": {
+		"message": "直接邀请"
+	},
+	"app.instance.share.method.link": {
+		"message": "分享链接"
+	},
+	"app.library.search.hint": {
+		"message": "↑↓ 选择 · Tab 插入 · 条件可组合，前加 - 表示排除"
+	},
+	"app.library.search.pending": {
+		"message": "仍在读取已安装的内容…"
+	},
+	"app.library.search.sigil.mod": {
+		"message": "按模组"
+	},
+	"app.library.search.sigil.mod.hint": {
+		"message": "包含指定模组、资源包或光影的实例"
+	},
+	"app.library.search.sigil.state": {
+		"message": "按状态"
+	},
+	"app.library.search.sigil.state.hint": {
+		"message": "存在可更新、已禁用或损坏内容的实例"
+	},
+	"app.library.search.sigil.type": {
+		"message": "按类型"
+	},
+	"app.library.search.sigil.type.hint": {
+		"message": "包含任意模组、光影、资源包或数据包的实例"
+	},
+	"app.library.search.state.broken": {
+		"message": "实例本身需要修复"
+	},
+	"app.library.search.state.disabled": {
+		"message": "存在已安装但被禁用的内容"
+	},
+	"app.library.search.state.outdated": {
+		"message": "存在可更新的内容"
+	},
+	"app.library.search.type.datapack": {
+		"message": "包含数据包"
+	},
+	"app.library.search.type.mod": {
+		"message": "包含模组"
+	},
+	"app.library.search.type.resourcepack": {
+		"message": "包含资源包"
+	},
+	"app.library.search.type.shader": {
+		"message": "包含光影包"
+	},
+	"app.migration.modrinth.action.choose": {
+		"message": "选择实例"
+	},
+	"app.migration.modrinth.action.dismiss": {
+		"message": "忽略"
+	},
+	"app.migration.modrinth.action.import-all": {
+		"message": "全部导入"
+	},
+	"app.migration.modrinth.action.importing": {
+		"message": "正在导入..."
+	},
+	"app.migration.modrinth.description": {
+		"message": "在你的 Modrinth App 中发现了 {count, plural, other {# 个实例}}。导入会将它们复制到这里——你的 Modrinth App 原有数据不会受到任何影响。"
+	},
+	"app.migration.modrinth.title": {
+		"message": "从 Modrinth App 迁移你的实例"
+	},
+	"app.minecraft-auth-error.contact-support": {
+		"message": "联系支持"
+	},
+	"app.minecraft-auth-error.copy-debug-info": {
+		"message": "复制调试信息"
+	},
+	"app.minecraft-auth-error.debug-information": {
+		"message": "调试信息"
+	},
+	"app.minecraft-auth-error.header": {
+		"message": "登录失败"
+	},
+	"app.minecraft-auth-error.how-to-fix": {
+		"message": "如何修复"
+	},
+	"app.minecraft-auth-error.korea-adult-verification-alt.step-1": {
+		"message": "访问 <link>Xbox</link> 并登录"
+	},
+	"app.minecraft-auth-error.korea-adult-verification-alt.step-2": {
+		"message": "完成身份验证流程"
+	},
+	"app.minecraft-auth-error.korea-adult-verification-alt.step-3": {
+		"message": "完成后，重新尝试登录"
+	},
+	"app.minecraft-auth-error.korea-adult-verification-alt.what": {
+		"message": "根据韩国法规，此账号需要完成成人身份验证。"
+	},
+	"app.minecraft-auth-error.korea-adult-verification.step-1": {
+		"message": "访问 <link>Xbox</link> 并登录"
+	},
+	"app.minecraft-auth-error.korea-adult-verification.step-2": {
+		"message": "完成身份验证流程"
+	},
+	"app.minecraft-auth-error.korea-adult-verification.step-3": {
+		"message": "完成后，重新尝试登录"
+	},
+	"app.minecraft-auth-error.korea-adult-verification.what": {
+		"message": "根据韩国法规，此账号需要完成成人身份验证。"
+	},
+	"app.minecraft-auth-error.minecraft-server-error.step-1": {
+		"message": "等待几分钟后重新尝试登录"
+	},
+	"app.minecraft-auth-error.minecraft-server-error.step-2": {
+		"message": "查看 <link>Xbox 状态</link> 以了解当前是否存在服务故障"
+	},
+	"app.minecraft-auth-error.minecraft-server-error.step-3": {
+		"message": "尝试使用<link>官方 Minecraft 启动器</link>登录，以确认官方登录是否也受影响"
+	},
+	"app.minecraft-auth-error.minecraft-server-error.step-4": {
+		"message": "如果服务状态正常但此问题持续发生，请附带下方的调试信息联系支持人员"
+	},
+	"app.minecraft-auth-error.minecraft-server-error.what": {
+		"message": "Minecraft 身份验证服务返回了服务器错误，因此 Noctrinth 目前无法完成登录。"
+	},
+	"app.minecraft-auth-error.network.step-1": {
+		"message": "重启 Noctrinth 并重新尝试登录"
+	},
+	"app.minecraft-auth-error.network.step-2": {
+		"message": "检查你的网络连接是否正常"
+	},
+	"app.minecraft-auth-error.network.step-3": {
+		"message": "允许 Noctrinth 通过你的防火墙、杀毒软件、代理、VPN 和 hosts 文件规则"
+	},
+	"app.minecraft-auth-error.network.step-4": {
+		"message": "尝试切换其他网络，或暂时关闭你正在使用的 VPN/代理软件"
+	},
+	"app.minecraft-auth-error.network.step-5": {
+		"message": "如果问题出在路由或 DNS 上，使用 Cloudflare WARP 等服务有时会有所帮助"
+	},
+	"app.minecraft-auth-error.network.what": {
+		"message": "Noctrinth 无法连接到登录所需的 Microsoft、Xbox 或 Minecraft 服务。这通常是由本地网络、DNS、代理、防火墙、hosts 文件、VPN 或杀毒软件引起的。"
+	},
+	"app.minecraft-auth-error.no-xbox-profile.step-1": {
+		"message": "确保此账号已购买 Minecraft"
+	},
+	"app.minecraft-auth-error.no-xbox-profile.step-2": {
+		"message": "访问 <link>Minecraft 登录页面</link> 并登录"
+	},
+	"app.minecraft-auth-error.no-xbox-profile.step-3": {
+		"message": "如果系统提示，请完成 Xbox 档案设置"
+	},
+	"app.minecraft-auth-error.no-xbox-profile.step-4": {
+		"message": "完成后，重新尝试登录"
+	},
+	"app.minecraft-auth-error.no-xbox-profile.what": {
+		"message": "此账号尚未设置 Xbox 档案，或未拥有 Minecraft。"
+	},
+	"app.minecraft-auth-error.player-profile.step-1": {
+		"message": "使用<link>官方 Minecraft 启动器</link>登录"
+	},
+	"app.minecraft-auth-error.player-profile.step-2": {
+		"message": "通过官方启动器启动一次 Minecraft: Java Edition"
+	},
+	"app.minecraft-auth-error.player-profile.step-3": {
+		"message": "如果是刚刚购买游戏或刚设置档案，请等待最多一小时"
+	},
+	"app.minecraft-auth-error.player-profile.step-4": {
+		"message": "确保你使用的是拥有 Minecraft 的 Microsoft 账号。详见<link>查找正确的 Xbox 账号</link>"
+	},
+	"app.minecraft-auth-error.player-profile.step-5": {
+		"message": "重新尝试登录 Noctrinth"
+	},
+	"app.minecraft-auth-error.player-profile.what": {
+		"message": "Minecraft 服务未能为此账号返回 Java 版档案。这通常发生在刚购买游戏、Java 版档案尚未创建完成，或使用了错误的 Microsoft 账号时。"
+	},
+	"app.minecraft-auth-error.refresh-token.step-1": {
+		"message": "在 Noctrinth 中退出受影响的 Minecraft 账号"
+	},
+	"app.minecraft-auth-error.refresh-token.step-2": {
+		"message": "重新登录该账号"
+	},
+	"app.minecraft-auth-error.refresh-token.step-3": {
+		"message": "重新登录完成后，再次尝试启动 Minecraft"
+	},
+	"app.minecraft-auth-error.refresh-token.what": {
+		"message": "你保存的 Microsoft 登录令牌已过期或已被撤销，因此 Noctrinth 无法刷新你的 Minecraft 会话。"
+	},
+	"app.minecraft-auth-error.region-unavailable.step-1": {
+		"message": "你所在的国家/地区必须支持 Xbox 服务才能登录"
+	},
+	"app.minecraft-auth-error.region-unavailable.step-2": {
+		"message": "查看 <link>Xbox 可用地区</link> 了解支持的区域"
+	},
+	"app.minecraft-auth-error.region-unavailable.what": {
+		"message": "你所在的地区不支持 Xbox Live，因此无法登录。"
+	},
+	"app.minecraft-auth-error.restricted-online-play.step-1": {
+		"message": "请监护人登录 <link>Microsoft 家庭</link>"
+	},
+	"app.minecraft-auth-error.restricted-online-play.step-2": {
+		"message": "更新在线多人游戏权限"
+	},
+	"app.minecraft-auth-error.restricted-online-play.step-3": {
+		"message": "完成后，重新尝试登录"
+	},
+	"app.minecraft-auth-error.restricted-online-play.what": {
+		"message": "此账号受到限制，没有在线游玩的权限。"
+	},
+	"app.minecraft-auth-error.sign-in-again": {
+		"message": "重新登录"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.step-1": {
+		"message": "打开系统日期和时间设置"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.step-2": {
+		"message": "如果可用，请开启自动时区和自动设置时间"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.step-3": {
+		"message": "使用系统设置中的同步选项同步系统时钟"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.step-4": {
+		"message": "重启 Noctrinth"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.step-5": {
+		"message": "重新尝试登录"
+	},
+	"app.minecraft-auth-error.sisu-authenticate.what": {
+		"message": "Xbox 服务拒绝了初次登录响应。这通常是因为你的系统时钟或时区不同步。"
+	},
+	"app.minecraft-auth-error.summary": {
+		"message": "我们无法登录你的 Microsoft 账号。这可能是由于账号限制或地区限制所致。"
+	},
+	"app.minecraft-auth-error.suspended.step-1": {
+		"message": "访问 <link>Xbox 支持</link> 并查看处罚详情"
+	},
+	"app.minecraft-auth-error.suspended.step-2": {
+		"message": "如果支持申诉，请提交申诉"
+	},
+	"app.minecraft-auth-error.suspended.what": {
+		"message": "此账号因违反 Xbox 社区准则已被暂停使用。"
+	},
+	"app.minecraft-auth-error.terms-not-accepted.step-1": {
+		"message": "访问 <link>Xbox</link> 并登录"
+	},
+	"app.minecraft-auth-error.terms-not-accepted.step-2": {
+		"message": "如果系统提示，请接受服务条款"
+	},
+	"app.minecraft-auth-error.terms-not-accepted.step-3": {
+		"message": "完成后，重新尝试登录"
+	},
+	"app.minecraft-auth-error.terms-not-accepted.what": {
+		"message": "此账号尚未接受 Xbox 的服务条款。"
+	},
+	"app.minecraft-auth-error.too-many-requests.step-1": {
+		"message": "请等待大约一小时后再重试"
+	},
+	"app.minecraft-auth-error.too-many-requests.step-2": {
+		"message": "等待结束后重启 Noctrinth"
+	},
+	"app.minecraft-auth-error.too-many-requests.step-3": {
+		"message": "再次尝试登录"
+	},
+	"app.minecraft-auth-error.too-many-requests.step-4": {
+		"message": "如果仍出现相同提示，请等待更长时间再试，以便临时限制解除"
+	},
+	"app.minecraft-auth-error.too-many-requests.what": {
+		"message": "由于近期登录尝试次数过多，Microsoft 或 Minecraft 暂时拦截了登录请求。"
+	},
+	"app.minecraft-auth-error.uk-age-verification.step-1": {
+		"message": "前往 <link>Minecraft 登录</link> 页面并登录"
+	},
+	"app.minecraft-auth-error.uk-age-verification.step-2": {
+		"message": "按照指示完成年龄验证"
+	},
+	"app.minecraft-auth-error.uk-age-verification.step-3": {
+		"message": "验证完成后，重新尝试登录"
+	},
+	"app.minecraft-auth-error.uk-age-verification.step-4": {
+		"message": "如需更多帮助，请访问<link>Xbox 英国年龄验证</link>"
+	},
+	"app.minecraft-auth-error.uk-age-verification.what": {
+		"message": "根据英国法规，你的 Minecraft/Xbox Live 账号需要完成年龄验证。你必须先完成验证才能登录。"
+	},
+	"app.minecraft-auth-error.underage-no-family.step-1": {
+		"message": "查看<link>家庭组设置指南</link>"
+	},
+	"app.minecraft-auth-error.underage-no-family.step-2": {
+		"message": "按照指引加入或创建一个家庭组"
+	},
+	"app.minecraft-auth-error.underage-no-family.step-3": {
+		"message": "完成后，重新尝试登录"
+	},
+	"app.minecraft-auth-error.underage-no-family.what": {
+		"message": "此账号为未成年人账号，且未关联至 Microsoft 家庭组。"
+	},
+	"app.minecraft-auth-error.unknown": {
+		"message": "未知错误"
+	},
+	"app.minecraft-auth-error.unknown-advice": {
+		"message": "请尝试访问 <login-link>Minecraft 登录页面</login-link> 并登录，页面可能会提示你需要完成的步骤。你也可以联系支持人员，我们会进一步协助排查。"
+	},
+	"app.minecraft-auth-error.unknown-body": {
+		"message": "我们无法识别此错误，因此无法提供具体的解决步骤。"
+	},
+	"app.minecraft-auth-error.what-happened": {
+		"message": "可能的原因"
+	},
+	"app.minecraft-auth-error.xsts-authorize.step-1": {
+		"message": "使用<link>官方 Minecraft 启动器</link>登录"
+	},
+	"app.minecraft-auth-error.xsts-authorize.step-2": {
+		"message": "完成 Microsoft、Xbox 或 Minecraft 显示的所有提示"
+	},
+	"app.minecraft-auth-error.xsts-authorize.step-3": {
+		"message": "重新尝试登录 Noctrinth"
+	},
+	"app.minecraft-auth-error.xsts-authorize.step-4": {
+		"message": "如果官方启动器同样失败，请按照那里显示的错误提示处理，或联系 Xbox 支持"
+	},
+	"app.minecraft-auth-error.xsts-authorize.what": {
+		"message": "Xbox 服务拒绝了为此账号授权 Minecraft 服务的请求，但未返回 Noctrinth 可识别的具体账号限制原因。"
+	},
+	"app.notifications.accept": {
+		"message": "接受"
+	},
+	"app.notifications.decline": {
+		"message": "拒绝"
+	},
+	"app.notifications.error.accept": {
+		"message": "接受邀请时出错"
+	},
+	"app.notifications.error.decline": {
+		"message": "拒绝邀请时出错"
+	},
+	"app.notifications.error.mark-read": {
+		"message": "将通知标记为已读时出错"
+	},
+	"app.notifications.invited-to-join": {
+		"message": "邀请你加入 <target>{name}</target>。"
+	},
+	"app.notifications.mark-as-read": {
+		"message": "标记为已读"
+	},
+	"app.notifications.moderator-message": {
+		"message": "你的项目 <project>{title}</project> 收到了来自审核员的{count, plural, other {消息}}。"
+	},
+	"app.notifications.not-signed-in": {
+		"message": "未登录"
+	},
+	"app.notifications.project-updated": {
+		"message": "你关注的项目 <project>{title}</project> 已更新："
+	},
+	"app.notifications.read-badge": {
+		"message": "已读"
+	},
+	"app.notifications.received": {
+		"message": "接收于 {time}"
+	},
+	"app.notifications.status-changed": {
+		"message": "审核员已将 <project>{title}</project> 的状态从 <strong>{oldStatus}</strong> 更改为 <strong>{newStatus}</strong>。"
+	},
+	"app.notifications.version-for": {
+		"message": "适用于"
+	},
+	"app.project.copy-link.copied": {
+		"message": "链接已复制到剪贴板"
+	},
+	"app.project.sign-in-to-follow": {
+		"message": "登录后关注"
+	},
+	"app.recover-instances.description": {
+		"message": "查找启动器中没有记录的实例文件夹——通常出现在数据库丢失但实例文件夹仍在的情况下。"
+	},
+	"app.recover-instances.found": {
+		"message": "{count, plural, other {发现 # 个未在启动器中的文件夹}}"
+	},
+	"app.recover-instances.import": {
+		"message": "导入"
+	},
+	"app.recover-instances.imported": {
+		"message": "已恢复 {name}"
+	},
+	"app.recover-instances.imported-body": {
+		"message": "其文件夹保持原样未做改动。版本文件将在下次启动时获取。"
+	},
+	"app.recover-instances.mods": {
+		"message": "{count, plural, other {# 个模组}}"
+	},
+	"app.recover-instances.none": {
+		"message": "该目录中的所有文件夹都已经是实例了。"
+	},
+	"app.recover-instances.scan": {
+		"message": "扫描文件夹"
+	},
+	"app.recover-instances.scanning": {
+		"message": "正在扫描..."
+	},
+	"app.recover-instances.title": {
+		"message": "启动器文件夹中的实例"
+	},
+	"app.recover-instances.unknown-version": {
+		"message": "找不到可用于读取版本的日志或崩溃报告——请手动导入。"
+	},
+	"app.recover-instances.worlds": {
+		"message": "{count, plural, other {# 个世界}}"
+	},
+	"app.resource-settings.proxy.description": {
+		"message": "将所有启动器网络流量（Modrinth API 和 CDN 下载）通过代理转发。支持 http://、https://、socks5:// 和 socks5h:// 地址。在你所在地区无法直接访问 Modrinth 时非常有用。留空则直接连接。（需重启应用生效）"
+	},
+	"app.resource-settings.proxy.title": {
+		"message": "代理"
+	},
+	"app.settings.default-instance-options.universal-skins.description": {
+		"message": "离线模式服务器完全不会发送皮肤，所以大家在里面都是史蒂夫。开启此项后，将改为按用户名从 Ely.by 查询皮肤——已注册 Ely.by 的玩家会显示其皮肤，其余玩家则回退至 Mojang。无需安装模组，且绝不会覆盖服务器本身发送的皮肤。"
+	},
+	"app.settings.default-instance-options.universal-skins.title": {
+		"message": "为所有玩家显示皮肤"
+	},
+	"app.settings.feature-flags.search.placeholder": {
+		"message": "搜索功能开关..."
+	},
+	"app.settings.java.gpu.choice.auto": {
+		"message": "由 Windows 决定"
+	},
+	"app.settings.java.gpu.choice.high-performance": {
+		"message": "高性能"
+	},
+	"app.settings.java.gpu.choice.power-saving": {
+		"message": "节能"
+	},
+	"app.settings.java.gpu.label": {
+		"message": "图形适配器"
+	},
+	"app.settings.java.gpu.no-preference": {
+		"message": "未设置偏好，因此由 Windows 决定——在笔记本电脑上通常为集成显卡。可用设备：{adapters}"
+	},
+	"app.settings.java.gpu.on-high-performance": {
+		"message": "Windows 将在高性能图形适配器上运行此运行时。"
+	},
+	"app.settings.java.gpu.on-named-adapter": {
+		"message": "Windows 将在 {adapter} 上运行此运行时。"
+	},
+	"app.settings.java.gpu.on-power-saving": {
+		"message": "Windows 将在节能图形适配器上运行此运行时——通常为集成显卡，对 Minecraft 来说性能较慢。"
+	},
+	"app.settings.java.runtimes.delete-label": {
+		"message": "删除运行时"
+	},
+	"app.settings.java.runtimes.delete-tooltip": {
+		"message": "删除此运行时"
+	},
+	"app.settings.java.runtimes.description": {
+		"message": "启动器为你下载的 Java，共占用 {size}。更新 Java 时旧版本会被保留下来，因此可能会随时间不断累积。"
+	},
+	"app.settings.java.runtimes.in-use": {
+		"message": "使用中"
+	},
+	"app.settings.java.runtimes.in-use-tooltip": {
+		"message": "有 Java 设置正指向此运行时——请先更改该设置"
+	},
+	"app.settings.java.runtimes.remove-unused": {
+		"message": "移除 {count} 个未使用的运行时（{size}）"
+	},
+	"app.settings.java.runtimes.removed-text": {
+		"message": "已释放 {size} 空间。"
+	},
+	"app.settings.java.runtimes.removed-title": {
+		"message": "已移除运行时"
+	},
+	"app.settings.java.runtimes.title": {
+		"message": "已下载的运行时"
+	},
+	"app.settings.tabs.changelog": {
+		"message": "更新日志"
+	},
+	"app.settings.tabs.curseforge": {
+		"message": "CurseForge"
+	},
+	"app.skins.cape-from": {
+		"message": "来自 {source} 的披风"
+	},
+	"app.skins.ely.edit.texture-locked": {
+		"message": "Ely.by 将纹理与其皮肤绑定在一起，因此无法直接替换。请将新纹理上传为新皮肤。"
+	},
+	"app.skins.ely.edit.upload-new": {
+		"message": "上传新皮肤"
+	},
+	"app.skins.ely.my-skins.empty": {
+		"message": "尚未上传任何皮肤。点击下方卡片添加皮肤，或将 PNG 文件拖放到上面。"
+	},
+	"app.skins.ely.my-skins.title": {
+		"message": "你的 Ely.by 皮肤"
+	},
+	"app.skins.ely.sign-in-needed.text": {
+		"message": "Ely.by 要求你先在其网站上登录才能执行此操作。请点击“在 Ely.by 上更换皮肤”登录，然后再试。"
+	},
+	"app.skins.ely.sign-in-needed.title": {
+		"message": "Ely.by 未接受此更改"
+	},
+	"app.update-popup.body": {
+		"message": "Noctrinth v{version} 已准备就绪！立即重新加载以更新，或在关闭 Noctrinth 时自动更新。"
+	},
+	"app.update-popup.body.downloading": {
+		"message": "Noctrinth v{version} — 已下载 {downloaded} / {size}"
+	},
+	"app.update-popup.body.downloading-unknown-size": {
+		"message": "正在下载 Noctrinth v{version}…"
+	},
+	"app.update-popup.downloading": {
+		"message": "正在下载更新"
+	},
+	"app.window-controls.close": {
+		"message": "关闭窗口"
+	},
+	"app.window-controls.minimize": {
+		"message": "最小化窗口"
+	},
+	"app.window-controls.toggle-maximize": {
+		"message": "切换最大化窗口"
+	},
+	"collection.delete": {
+		"message": "删除"
+	},
+	"collection.edit": {
+		"message": "编辑"
+	},
+	"collection.filter.all": {
+		"message": "全部"
+	},
+	"collection.following.description": {
+		"message": "自动生成的合集，包含你关注的所有项目。"
+	},
+	"collection.following.name": {
+		"message": "已关注的项目"
+	},
+	"collection.loading": {
+		"message": "正在加载..."
+	},
+	"collection.no-followed": {
+		"message": "你还没有关注任何项目"
+	},
+	"collection.no-matching": {
+		"message": "没有匹配的项目"
+	},
+	"collection.no-projects": {
+		"message": "此合集中没有项目"
+	},
+	"collection.open-on-web": {
+		"message": "在网页中打开"
+	},
+	"collection.projects-count.one": {
+		"message": "个项目"
+	},
+	"collection.projects-count.other": {
+		"message": "个项目"
+	},
+	"collection.remove-project": {
+		"message": "移除项目"
+	},
+	"collection.remove-tooltip": {
+		"message": "从合集中移除"
+	},
+	"collection.removing": {
+		"message": "正在移除..."
+	},
+	"collection.search-placeholder": {
+		"message": "搜索项目..."
+	},
+	"collection.sort-by": {
+		"message": "排序方式："
+	},
+	"collection.sort-by-name": {
+		"message": "排序方式"
+	},
+	"collection.sort.downloads": {
+		"message": "下载量"
+	},
+	"collection.sort.followers": {
+		"message": "关注数"
+	},
+	"collection.sort.name": {
+		"message": "名称（A-Z）"
+	},
+	"collection.sort.updated": {
+		"message": "最近更新"
+	},
+	"collection.status.private": {
+		"message": "私密"
+	},
+	"collection.status.public": {
+		"message": "公开"
+	},
+	"collection.status.rejected": {
+		"message": "已拒绝"
+	},
+	"collection.status.unlisted": {
+		"message": "不公开列出"
+	},
+	"collection.type.datapack": {
+		"message": "数据包"
+	},
+	"collection.type.mod": {
+		"message": "模组"
+	},
+	"collection.type.modpack": {
+		"message": "整合包"
+	},
+	"collection.type.plugin": {
+		"message": "插件"
+	},
+	"collection.type.resourcepack": {
+		"message": "资源包"
+	},
+	"collection.type.shader": {
+		"message": "光影"
+	},
+	"collection.unfollow-project": {
+		"message": "取消关注项目"
+	},
+	"collection.unfollowing": {
+		"message": "正在取消关注..."
+	},
+	"collection.updated-ago": {
+		"message": "更新于 {time}"
+	},
+	"collections.create-new": {
+		"message": "新建"
+	},
+	"collections.followed-projects": {
+		"message": "已关注的项目"
+	},
+	"collections.followed-projects-desc": {
+		"message": "自动生成的合集，包含你关注的所有项目。"
+	},
+	"collections.loading": {
+		"message": "正在加载合集..."
+	},
+	"collections.no-collections": {
+		"message": "你还没有任何合集"
+	},
+	"collections.no-collections-body": {
+		"message": "在 modrinth.com 上创建你的第一个合集来开始使用吧！"
+	},
+	"collections.no-match": {
+		"message": "没有符合搜索条件的合集"
+	},
+	"collections.no-match-body": {
+		"message": "请尝试调整筛选条件或搜索关键词。"
+	},
+	"collections.projects-count.one": {
+		"message": "个项目"
+	},
+	"collections.projects-count.other": {
+		"message": "个项目"
+	},
+	"collections.search-placeholder": {
+		"message": "搜索合集..."
+	},
+	"collections.sign-in-prompt": {
+		"message": "登录以查看你的合集"
+	},
+	"collections.sign-in-prompt-body": {
+		"message": "登录你的 Modrinth 账号即可在此查看你的合集。"
+	},
+	"collections.sort-by": {
+		"message": "排序方式："
+	},
+	"collections.sort-by-name": {
+		"message": "排序方式"
+	},
+	"collections.sort.created": {
+		"message": "最近创建"
+	},
+	"collections.sort.name": {
+		"message": "名称（A-Z）"
+	},
+	"collections.sort.updated": {
+		"message": "最近更新"
+	},
+	"collections.status.private": {
+		"message": "私密"
+	},
+	"collections.status.public": {
+		"message": "公开"
+	},
+	"collections.status.rejected": {
+		"message": "已拒绝"
+	},
+	"collections.status.unlisted": {
+		"message": "不公开列出"
+	},
+	"console.actions.collapse": {
+		"message": "收起"
+	},
+	"console.actions.expand": {
+		"message": "展开"
+	},
+	"console.crash.problems-detected": {
+		"message": "检测到 {count, plural, other {# 个问题}}"
+	},
+	"console.delete-modal.header": {
+		"message": "删除日志文件"
+	},
+	"console.delete-modal.irreversible": {
+		"message": "此操作不可撤销"
+	},
+	"console.delete-modal.warning": {
+		"message": "删除此日志文件后将无法恢复。确定要继续吗？"
+	},
+	"console.empty-state.instance": {
+		"message": "在右上角启动你的实例即可开始接收实时日志！"
+	},
+	"console.empty-state.server": {
+		"message": "欢迎使用你的 Modrinth 服务器！点击绿色的启动按钮即可开启服务器！"
+	},
+	"console.filter.all": {
+		"message": "全部"
+	},
+	"console.filter.debug": {
+		"message": "调试"
+	},
+	"console.filter.error": {
+		"message": "错误"
+	},
+	"console.filter.info": {
+		"message": "信息"
+	},
+	"console.filter.trace": {
+		"message": "追踪"
+	},
+	"console.filter.warn": {
+		"message": "警告"
+	},
+	"console.search.placeholder": {
+		"message": "搜索日志"
+	},
+	"console.share-modal.header": {
+		"message": "分享日志"
+	},
+	"console.terminal.input-disabled": {
+		"message": "已禁用命令输入"
+	},
+	"console.terminal.send-command": {
+		"message": "发送命令"
+	},
+	"console.terminal.server-not-running": {
+		"message": "服务器未在运行"
+	},
+	"ely-login.back": {
+		"message": "返回"
+	},
+	"ely-login.cancel": {
+		"message": "取消"
+	},
+	"ely-login.error.generic": {
+		"message": "登录失败。请检查你的账号信息。"
+	},
+	"ely-login.error.network": {
+		"message": "无法连接到 Ely.by 服务器。请检查你的网络连接。"
+	},
+	"ely-login.error.page": {
+		"message": "登录未完成。请重试，或改用密码登录。"
+	},
+	"ely-login.forgot-password": {
+		"message": "忘记密码？"
+	},
+	"ely-login.header": {
+		"message": "使用 Ely.by 登录"
+	},
+	"ely-login.hide-password": {
+		"message": "隐藏密码"
+	},
+	"ely-login.intro": {
+		"message": "Ely.by 账号让你无需购买 Minecraft 即可在支持 Ely.by 的服务器上畅玩。"
+	},
+	"ely-login.no-account": {
+		"message": "还没有账号？"
+	},
+	"ely-login.page-button": {
+		"message": "前往 ely.by 继续"
+	},
+	"ely-login.page-button-hint": {
+		"message": "打开 Ely.by 登录页面。"
+	},
+	"ely-login.page-description": {
+		"message": "Ely.by 将在独立窗口中打开其官方页面来验证你的身份。你的密码仅在该页面输入，绝不会经过启动器。"
+	},
+	"ely-login.page-waiting": {
+		"message": "正在等待 Ely.by 响应..."
+	},
+	"ely-login.password-label": {
+		"message": "密码"
+	},
+	"ely-login.password-placeholder": {
+		"message": "输入你的密码..."
+	},
+	"ely-login.password-warning-body": {
+		"message": "此方式同样有效，密码会直接发送至 Ely.by。但在其官方页面登录可以确保启动器完全不会接触到你的密码——除非网页无法打开，否则建议使用网页登录。"
+	},
+	"ely-login.password-warning-header": {
+		"message": "此方式需要向启动器输入你的 Ely.by 密码"
+	},
+	"ely-login.show-password": {
+		"message": "显示密码"
+	},
+	"ely-login.sign-in": {
+		"message": "登录"
+	},
+	"ely-login.sign-up-link": {
+		"message": "在 ely.by 注册"
+	},
+	"ely-login.signing-in": {
+		"message": "正在登录..."
+	},
+	"ely-login.totp-hint": {
+		"message": "此账号受双重身份验证保护。"
+	},
+	"ely-login.totp-label": {
+		"message": "双重验证码"
+	},
+	"ely-login.totp-placeholder": {
+		"message": "输入 6 位验证码..."
+	},
+	"ely-login.use-password": {
+		"message": "改用密码登录"
+	},
+	"ely-login.username-hint": {
+		"message": "你用于登录 ely.by 的用户名或邮箱。"
+	},
+	"ely-login.username-label": {
+		"message": "用户名或邮箱"
+	},
+	"ely-login.username-placeholder": {
+		"message": "输入你的 Ely.by 用户名或邮箱..."
+	},
+	"ely-skins.change-button": {
+		"message": "在 Ely.by 上更换皮肤"
+	},
+	"ely-skins.default-notice": {
+		"message": "此账号尚未上传自定义皮肤（或无法加载），因此当前显示默认皮肤。"
+	},
+	"ely-skins.description": {
+		"message": "Ely.by 账号的皮肤在 Ely.by 网站上进行管理。下方按钮会直接在应用内的窗口中打开该网站——如果你尚未登录，Ely.by 会先要求你登录。关闭窗口后，预览会自动更新。"
+	},
+	"ely-skins.page-title": {
+		"message": "皮肤"
+	},
+	"ely-skins.refresh-button": {
+		"message": "刷新预览"
+	},
+	"ely-skins.section-title": {
+		"message": "Ely.by 皮肤"
+	},
+	"friends.friend.more-options": {
+		"message": "更多选项"
+	},
+	"friends.requests.none": {
+		"message": "你没有待处理的好友请求 :C"
+	},
+	"instance.action.play-again": {
+		"message": "再启动一个副本"
+	},
+	"instance.badge.locked": {
+		"message": "已锁定"
+	},
+	"instance.badge.locked.label": {
+		"message": "已锁定实例信息"
+	},
+	"instance.badge.shared": {
+		"message": "已共享"
+	},
+	"instance.badge.shared.label": {
+		"message": "共享实例信息"
+	},
+	"instance.console.copies-running": {
+		"message": "{count, plural, other {正在运行 # 个副本}}"
+	},
+	"instance.console.copy-started-at": {
+		"message": "启动于 {time}"
+	},
+	"instance.console.copy-unknown-account": {
+		"message": "未知账号"
+	},
+	"instance.console.one-at-a-time": {
+		"message": "逐个显示"
+	},
+	"instance.console.side-by-side": {
+		"message": "并排显示"
+	},
+	"instance.metadata.loader-tooltip": {
+		"message": "模组加载器和 Minecraft 版本"
+	},
+	"instance.metadata.total-playtime": {
+		"message": "总游玩时长"
+	},
+	"instance.playtime.hours": {
+		"message": "{hours, plural, other {# 小时}}"
+	},
+	"instance.playtime.minutes": {
+		"message": "{minutes, plural, other {# 分钟}}"
+	},
+	"instance.playtime.seconds": {
+		"message": "{seconds, plural, other {# 秒}}"
+	},
+	"instance.settings.tabs.java.environment-variables": {
+		"message": "环境变量"
+	},
+	"instance.settings.tabs.java.java-arguments": {
+		"message": "Java 参数"
+	},
+	"instance.settings.tabs.java.java-installation": {
+		"message": "Java 安装位置"
+	},
+	"instance.settings.tabs.java.java-memory": {
+		"message": "内存分配"
+	},
+	"instance.settings.tabs.java.modern-java": {
+		"message": "现代 Java"
+	},
+	"instance.settings.tabs.java.modern-java-beta": {
+		"message": "测试版"
+	},
+	"instance.settings.tabs.java.modern-java-beta-note": {
+		"message": "此功能为新特性，尚未经过广泛测试。启用前请先备份实例，部分假定运行在 Java 8 上的模组可能会出现异常。"
+	},
+	"instance.settings.tabs.java.modern-java-description": {
+		"message": "Minecraft {gameVersion} 通常只能在 Java 8 上运行。{provider} 会替换 LWJGL 2 并重构 Forge，使此实例能够改用现代 Java 版本运行。"
+	},
+	"instance.settings.tabs.java.modern-java-install": {
+		"message": "启用"
+	},
+	"instance.settings.tabs.java.modern-java-installed": {
+		"message": "已安装 — {provider} {version}，运行于 Java {javaMajor}"
+	},
+	"instance.settings.tabs.java.modern-java-installing": {
+		"message": "正在启用..."
+	},
+	"instance.settings.tabs.java.modern-java-mods-note": {
+		"message": "禁用将移除启动器补丁。它安装的模组仍会保留在实例中——如果不再需要，请在“模组”标签页中手动移除。"
+	},
+	"instance.settings.tabs.java.modern-java-remove": {
+		"message": "禁用"
+	},
+	"instance.settings.tabs.java.modern-java-version": {
+		"message": "Java 版本"
+	},
+	"instance.settings.tabs.java.modern-java-version-hint": {
+		"message": "选择一个版本后将自动下载，点击“保存”即可应用于此实例。最低版本经过了最充分的测试；较新版本也受支持，但在此 Minecraft 版本的模组兼容性方面验证较少。"
+	},
+	"minecraft-account.add-ely-account": {
+		"message": "添加 Ely.by 账号"
+	},
+	"minecraft-account.add-offline-account": {
+		"message": "添加离线账号"
+	},
+	"minecraft-account.label-ely-by": {
+		"message": "Ely.by 账号"
+	},
+	"minecraft-account.label-microsoft": {
+		"message": "Microsoft 账号"
+	},
+	"minecraft-account.label-offline": {
+		"message": "离线账号"
+	},
+	"minecraft-account.label-offline-short": {
+		"message": "离线"
+	},
+	"noctrinth.auth-servers.unreachable.retry": {
+		"message": "重新检查"
+	},
+	"noctrinth.auth-servers.unreachable.scope": {
+		"message": "在此之前，使用 Microsoft 账号登录和游玩可能会失败。离线账号和 Ely.by 账号不受影响。"
+	},
+	"noctrinth.creation-flow.curseforge-code.import": {
+		"message": "导入"
+	},
+	"noctrinth.creation-flow.curseforge-code.placeholder": {
+		"message": "来自 CurseForge 应用的分享代码或链接"
+	},
+	"noctrinth.creation-flow.curseforge-code.title": {
+		"message": "CurseForge 配置代码"
+	},
+	"noctrinth.instance.logs.open-file": {
+		"message": "打开文件"
+	},
+	"noctrinth.instance.logs.open-folder": {
+		"message": "日志文件夹"
+	},
+	"noctrinth.instance.stop-all-copies": {
+		"message": "停止所有副本"
+	},
+	"noctrinth.instance.stop-copy": {
+		"message": "停止 {name} · {time}"
+	},
+	"noctrinth.news.modrinth-news": {
+		"message": "Modrinth 新闻"
+	},
+	"noctrinth.news.noctrinth-news": {
+		"message": "Noctrinth 新闻"
+	},
+	"noctrinth.quick-search.discover": {
+		"message": "尚未安装"
+	},
+	"noctrinth.quick-search.hint": {
+		"message": "↑↓ 选择 · Enter 打开 · Ctrl+Enter 游玩或更新 · Esc 关闭"
+	},
+	"noctrinth.quick-search.in-instance": {
+		"message": "位于 {instance}"
+	},
+	"noctrinth.quick-search.installed": {
+		"message": "已安装"
+	},
+	"noctrinth.quick-search.instances": {
+		"message": "实例"
+	},
+	"noctrinth.quick-search.nothing": {
+		"message": "无匹配结果"
+	},
+	"noctrinth.quick-search.placeholder": {
+		"message": "搜索实例、已安装的内容和设置"
+	},
+	"noctrinth.quick-search.play": {
+		"message": "游玩"
+	},
+	"noctrinth.quick-search.reading": {
+		"message": "仍在读取已安装的内容…"
+	},
+	"noctrinth.quick-search.recent": {
+		"message": "最近游玩"
+	},
+	"noctrinth.quick-search.search-curseforge": {
+		"message": "在 CurseForge 上搜索“{query}”"
+	},
+	"noctrinth.quick-search.search-modrinth": {
+		"message": "在 Modrinth 上搜索“{query}”"
+	},
+	"noctrinth.quick-search.settings": {
+		"message": "设置"
+	},
+	"noctrinth.quick-search.stop": {
+		"message": "停止"
+	},
+	"noctrinth.quick-search.update": {
+		"message": "更新"
+	},
+	"noctrinth.quick-search.update-available": {
+		"message": "有可用更新"
+	},
+	"noctrinth.screenshots.launcher-background-set": {
+		"message": "启动器背景已更新"
+	},
+	"noctrinth.screenshots.set-launcher-background": {
+		"message": "设为启动器背景"
+	},
+	"noctrinth.settings.appearance.show-hosting": {
+		"message": "在侧边栏显示 Modrinth 托管"
+	},
+	"noctrinth.settings.appearance.show-hosting.description": {
+		"message": "在左侧边栏显示用于打开 Modrinth 服务器托管的按钮。"
+	},
+	"noctrinth.settings.appearance.show-sidebar-news": {
+		"message": "在侧边栏显示新闻"
+	},
+	"noctrinth.settings.appearance.show-sidebar-news.description": {
+		"message": "在右侧边栏显示最新的 Noctrinth 和 Modrinth 新闻。"
+	},
+	"noctrinth.settings.background.blur.description": {
+		"message": "柔化背景，使其不喧宾夺主。"
+	},
+	"noctrinth.settings.background.blur.title": {
+		"message": "模糊背景"
+	},
+	"noctrinth.settings.background.change": {
+		"message": "更改背景"
+	},
+	"noctrinth.settings.background.choose": {
+		"message": "选择文件"
+	},
+	"noctrinth.settings.background.description": {
+		"message": "在启动器底层显示图片、动图 GIF 或循环视频，并透过窗口边框和页面卡片微微透出。图片和 GIF 最大支持 32 MB，MP4 或 WebM 视频最大支持 100 MB。"
+	},
+	"noctrinth.settings.background.dim.description": {
+		"message": "适用于较亮或较复杂的背景，确保前景内容清晰易读。"
+	},
+	"noctrinth.settings.background.dim.title": {
+		"message": "调暗背景"
+	},
+	"noctrinth.settings.background.drop-here": {
+		"message": "拖放到此处"
+	},
+	"noctrinth.settings.background.drop-hint": {
+		"message": "或者直接将图片或视频拖放到窗口中。"
+	},
+	"noctrinth.settings.background.remove": {
+		"message": "移除"
+	},
+	"noctrinth.settings.background.title": {
+		"message": "背景"
+	},
+	"noctrinth.settings.curseforge.cache.title": {
+		"message": "缓存"
+	},
+	"noctrinth.settings.curseforge.check-updates": {
+		"message": "检查 CurseForge 上模组和整合包的更新"
+	},
+	"noctrinth.settings.curseforge.check-updates.title": {
+		"message": "检查更新"
+	},
+	"noctrinth.settings.curseforge.clear-cache": {
+		"message": "清除 CurseForge 响应缓存"
+	},
+	"noctrinth.settings.curseforge.clear-cache-hint": {
+		"message": "响应默认缓存 5 分钟；点击此项会立即重新请求。"
+	},
+	"noctrinth.settings.curseforge.cleared": {
+		"message": "已清除"
+	},
+	"noctrinth.settings.curseforge.default-source": {
+		"message": "默认浏览来源"
+	},
+	"noctrinth.settings.curseforge.default-source.description": {
+		"message": "“发现”页面默认展示哪个平台的内容。你随时可以在结果上方切换。"
+	},
+	"noctrinth.settings.curseforge.description": {
+		"message": "从 CurseForge 浏览和安装内容，识别你实例中的 CurseForge 文件并保持更新。关闭后，启动器不会向 CurseForge 发送任何请求。"
+	},
+	"noctrinth.settings.curseforge.install-links.description": {
+		"message": "点击 curseforge.com 上的安装按钮时，将在此处打开项目，而非 CurseForge 客户端。如果安装了 CurseForge 客户端，下次启动时它会重新接管这些链接。"
+	},
+	"noctrinth.settings.curseforge.install-links.title": {
+		"message": "接管 CurseForge 网站的安装链接"
+	},
+	"noctrinth.settings.curseforge.no-key": {
+		"message": "此构建未内置 CurseForge API 密钥。请在下方添加你自己的密钥以使用 CurseForge。"
+	},
+	"noctrinth.settings.curseforge.own-key": {
+		"message": "自定义 API 密钥"
+	},
+	"noctrinth.settings.curseforge.own-key.check": {
+		"message": "验证"
+	},
+	"noctrinth.settings.curseforge.own-key.check-and-save": {
+		"message": "验证并保存"
+	},
+	"noctrinth.settings.curseforge.own-key.check-failed": {
+		"message": "无法连接 CurseForge 以验证密钥"
+	},
+	"noctrinth.settings.curseforge.own-key.forget": {
+		"message": "清除我的密钥"
+	},
+	"noctrinth.settings.curseforge.own-key.hint": {
+		"message": "将替代内置密钥使用，并仅保存在本机。请登录 CurseForge 控制台并从其 API 密钥页面复制一个密钥："
+	},
+	"noctrinth.settings.curseforge.own-key.invalid": {
+		"message": "CurseForge 不接受此密钥"
+	},
+	"noctrinth.settings.curseforge.own-key.ok": {
+		"message": "CurseForge 已接受此密钥"
+	},
+	"noctrinth.settings.curseforge.own-key.placeholder": {
+		"message": "你的密钥已保存"
+	},
+	"noctrinth.settings.curseforge.own-key.saved": {
+		"message": "CurseForge 已接受此密钥并已保存"
+	},
+	"noctrinth.settings.curseforge.recognize-files": {
+		"message": "通过文件指纹识别手动添加或来自其他启动器的模组"
+	},
+	"noctrinth.settings.curseforge.recognize-files.title": {
+		"message": "识别文件"
+	},
+	"noctrinth.settings.curseforge.release-type": {
+		"message": "更新通道"
+	},
+	"noctrinth.settings.curseforge.release-type.alpha": {
+		"message": "所有文件（包括 Alpha 版）"
+	},
+	"noctrinth.settings.curseforge.release-type.beta": {
+		"message": "正式版和 Beta 版"
+	},
+	"noctrinth.settings.curseforge.release-type.description": {
+		"message": "哪些版本类型的文件会被视为可用更新。"
+	},
+	"noctrinth.settings.curseforge.release-type.release": {
+		"message": "仅正式版"
+	},
+	"noctrinth.settings.curseforge.search-other-launchers": {
+		"message": "不仅在“下载”文件夹，还在其他启动器的实例中查找禁止第三方下载的文件"
+	},
+	"noctrinth.settings.curseforge.search-other-launchers.title": {
+		"message": "搜索其他启动器"
+	},
+	"noctrinth.settings.curseforge.section.discover": {
+		"message": "发现"
+	},
+	"noctrinth.settings.curseforge.section.files": {
+		"message": "文件与更新"
+	},
+	"noctrinth.settings.curseforge.section.restricted": {
+		"message": "禁止启动器直接下载的文件"
+	},
+	"noctrinth.settings.curseforge.source.curseforge": {
+		"message": "CurseForge"
+	},
+	"noctrinth.settings.curseforge.source.modrinth": {
+		"message": "Modrinth"
+	},
+	"noctrinth.settings.curseforge.title": {
+		"message": "CurseForge"
+	},
+	"noctrinth.settings.java-provider.auto": {
+		"message": "自动选择"
+	},
+	"noctrinth.settings.java-provider.auto-hint": {
+		"message": "按顺序依次尝试 Azul、Temurin、来自 GitHub 的 Temurin、Mojang，以及通过 BMCLAPI 镜像获取 Mojang，并在第一个成功响应的源处停止。当其他源被屏蔽时，GitHub 通常仍可访问。"
+	},
+	"noctrinth.settings.java-provider.azul": {
+		"message": "Azul Zulu"
+	},
+	"noctrinth.settings.java-provider.description": {
+		"message": "当实例需要尚未安装的 Java 时，启动器从何处获取它。每次下载都会与来源发布的校验和进行比对。"
+	},
+	"noctrinth.settings.java-provider.mojang": {
+		"message": "Mojang"
+	},
+	"noctrinth.settings.java-provider.mojang-mirror": {
+		"message": "通过 BMCLAPI 获取 Mojang（第三方镜像）"
+	},
+	"noctrinth.settings.java-provider.temurin": {
+		"message": "Eclipse Temurin"
+	},
+	"noctrinth.settings.java-provider.temurin-github": {
+		"message": "来自 GitHub 的 Eclipse Temurin"
+	},
+	"noctrinth.settings.java-provider.title": {
+		"message": "Java 下载源"
+	},
+	"noctrinth.settings.splash-cube.description": {
+		"message": "启动画面中显示的方块样式。下次启动时生效。"
+	},
+	"noctrinth.settings.splash-cube.inverted": {
+		"message": "反色：白底黑块、黑底白块"
+	},
+	"noctrinth.settings.splash-cube.random": {
+		"message": "每次启动随机"
+	},
+	"noctrinth.settings.splash-cube.theme": {
+		"message": "跟随主题（极少数情况下相反）"
+	},
+	"noctrinth.settings.splash-cube.title": {
+		"message": "启动画面方块"
+	},
+	"noctrinth.settings.translation.auto": {
+		"message": "打开项目介绍时自动翻译"
+	},
+	"noctrinth.settings.translation.deepl": {
+		"message": "DeepL：译文更自然，需要你自己的免费 API 密钥"
+	},
+	"noctrinth.settings.translation.deepl-key": {
+		"message": "DeepL API 密钥"
+	},
+	"noctrinth.settings.translation.deepl-key-hint": {
+		"message": "免费密钥每月可翻译 500,000 个字符。获取地址："
+	},
+	"noctrinth.settings.translation.description": {
+		"message": "提供将项目介绍翻译为你所用语言的功能，并支持随时切换回原文。"
+	},
+	"noctrinth.settings.translation.google": {
+		"message": "Google Translate：免费，无需密钥"
+	},
+	"noctrinth.settings.translation.precheck": {
+		"message": "先检测语言，若无需翻译则隐藏按钮"
+	},
+	"noctrinth.settings.translation.service": {
+		"message": "翻译服务"
+	},
+	"noctrinth.settings.translation.skip": {
+		"message": "你本就能看懂的语言"
+	},
+	"noctrinth.settings.translation.skip-hint": {
+		"message": "这些语言的介绍将保持原样，不进行翻译。"
+	},
+	"noctrinth.settings.translation.target": {
+		"message": "翻译目标语言"
+	},
+	"noctrinth.settings.translation.target-app": {
+		"message": "启动器语言（{language}）"
+	},
+	"noctrinth.settings.translation.test": {
+		"message": "测试翻译服务"
+	},
+	"noctrinth.settings.translation.test-ok": {
+		"message": "正常，耗时 {milliseconds} 毫秒：“{text}”"
+	},
+	"noctrinth.settings.translation.title": {
+		"message": "翻译项目介绍"
+	},
+	"noctrinth.translate.button": {
+		"message": "翻译为{language}"
+	},
+	"noctrinth.translate.failed": {
+		"message": "翻译失败：{reason}"
+	},
+	"noctrinth.translate.original": {
+		"message": "原文"
+	},
+	"noctrinth.translate.retry": {
+		"message": "重试"
+	},
+	"noctrinth.translate.source-language": {
+		"message": "原文语言：{language}"
+	},
+	"noctrinth.translate.translated-by": {
+		"message": "由 {service} 翻译"
+	},
+	"noctrinth.translate.translating": {
+		"message": "正在翻译..."
+	},
+	"notifications.back": {
+		"message": "返回"
+	},
+	"notifications.heading": {
+		"message": "通知"
+	},
+	"notifications.heading-history": {
+		"message": "通知历史"
+	},
+	"notifications.history-empty": {
+		"message": "历史记录中没有通知。"
+	},
+	"notifications.loading": {
+		"message": "正在加载通知..."
+	},
+	"notifications.mark-all-read": {
+		"message": "全部标为已读"
+	},
+	"notifications.sign-in-prompt": {
+		"message": "登录以查看通知"
+	},
+	"notifications.sign-in-prompt-body": {
+		"message": "登录你的 Modrinth 账号即可在此查看你的通知。"
+	},
+	"notifications.type.all": {
+		"message": "全部"
+	},
+	"notifications.type.moderator-message": {
+		"message": "审核员消息"
+	},
+	"notifications.type.organization-invite": {
+		"message": "组织邀请"
+	},
+	"notifications.type.other": {
+		"message": "其他"
+	},
+	"notifications.type.project-update": {
+		"message": "项目更新"
+	},
+	"notifications.type.status-change": {
+		"message": "状态变更"
+	},
+	"notifications.type.team-invite": {
+		"message": "团队邀请"
+	},
+	"notifications.unread-empty": {
+		"message": "你没有未读通知。"
+	},
+	"notifications.view-history": {
+		"message": "查看历史记录"
+	},
+	"offline-account.add": {
+		"message": "添加账号"
+	},
+	"offline-account.description": {
+		"message": "仅需一个用户名。在没有网络连接或无法登录时，启动器将使用该名称游玩。"
+	},
+	"offline-account.header": {
+		"message": "添加离线账号"
+	},
+	"offline-account.invalid": {
+		"message": "3 到 16 个字母、数字或下划线——服务器可接受的格式。"
+	},
+	"offline-account.limitation-body": {
+		"message": "正版验证模式的服务器会向 Mojang 验证会话是否有效，而离线账号没有有效会话。除此之外的一切——本机单人世界、局域网联机以及离线模式服务器——均可正常游玩。"
+	},
+	"offline-account.limitation-header": {
+		"message": "仅限单人游戏和离线服务器"
+	},
+	"offline-account.username-label": {
+		"message": "用户名"
+	},
+	"offline-account.username-placeholder": {
+		"message": "要使用的游戏名称..."
+	},
+	"offline-account.uuid": {
+		"message": "将以 UUID {uuid} 游玩"
+	},
+	"search.sort.date-published": {
+		"message": "发布日期"
+	},
+	"search.sort.date-updated": {
+		"message": "更新日期"
+	},
+	"search.sort.downloads": {
+		"message": "下载量"
+	},
+	"search.sort.followers": {
+		"message": "关注数"
+	},
+	"search.sort.players": {
+		"message": "玩家数"
+	},
+	"search.sort.relevance": {
+		"message": "相关度"
+	},
+	"search.sort.verified-plays": {
+		"message": "已验证游玩次数"
+	},
+	"servers.list-empty.no-servers-description": {
+		"message": "在 Noctrinth 中一站式安装模组、邀请好友并一起游玩。"
+	},
+	"servers.list-empty.play-with-friends-description": {
+		"message": "邀请好友通过 Noctrinth 一键加入并游玩你的服务器。"
+	},
+	"settings.display.theme.description": {
+		"message": "选择你在 Noctrinth 中偏好的配色主题。"
+	},
+	"settings.language.coverage.app-tooltip": {
+		"message": "约有 {percentage}% 的 Noctrinth 界面已支持此语言。"
+	}
+}

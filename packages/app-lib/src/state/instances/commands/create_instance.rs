@@ -151,6 +151,8 @@ pub(crate) async fn create_instance(
             );
         }
 
+        super::write_instance_manifest(&instance, state).await;
+
         Ok(instance)
     }
     .await;

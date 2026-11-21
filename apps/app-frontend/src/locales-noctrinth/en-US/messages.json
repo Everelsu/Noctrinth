@@ -89,6 +89,33 @@
 	"app.appearance-settings.minimize-launcher.description": {
 		"message": "Minimize Noctrinth when Minecraft starts."
 	},
+	"app.browse.filters.hide": {
+		"message": "Hide filters"
+	},
+	"app.browse.filters.show": {
+		"message": "Filters"
+	},
+	"app.icon-crop.apply": {
+		"message": "Apply"
+	},
+	"app.icon-crop.cancel": {
+		"message": "Cancel"
+	},
+	"app.icon-crop.header": {
+		"message": "Crop instance icon"
+	},
+	"app.icon-crop.hint": {
+		"message": "Drag to reposition and scroll or slide to zoom."
+	},
+	"app.icon-crop.reset": {
+		"message": "Reset"
+	},
+	"app.icon-crop.use-original": {
+		"message": "Use as-is"
+	},
+	"app.icon-crop.zoom": {
+		"message": "Zoom"
+	},
 	"app.browse.source.label": {
 		"message": "Where to browse"
 	},

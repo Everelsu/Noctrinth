@@ -84,7 +84,7 @@ const consoleHydrationQuery = useQuery({
 	refetchOnMount: 'always',
 })
 
-await consoleHydrationQuery.suspense()
+void consoleHydrationQuery.suspense()
 
 function buildLogList(rawLogs) {
 	return [

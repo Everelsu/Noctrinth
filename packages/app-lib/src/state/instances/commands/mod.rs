@@ -27,6 +27,9 @@ pub(crate) use self::list_content::{
 
 mod embedded_content_metadata;
 
+mod instance_manifest;
+pub(crate) use self::instance_manifest::write_instance_manifest;
+
 mod remove_instance;
 pub(crate) use self::remove_instance::*;
 

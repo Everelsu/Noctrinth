@@ -216,9 +216,12 @@ watch(directoryQuery.error, (queryError) => {
 	if (queryError) items.value = []
 })
 
-await instanceRootQuery.suspense()
-await directoryQuery.refetch()
-firstPaintPending.value = false
+void instanceRootQuery
+	.suspense()
+	.then(() => directoryQuery.refetch())
+	.finally(() => {
+		firstPaintPending.value = false
+	})
 
 async function refresh() {
 	debug('refresh: called, currentPath =', currentPath.value, 'instanceRoot =', instanceRoot.value)

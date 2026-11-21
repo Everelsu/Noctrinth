@@ -270,6 +270,8 @@ function getProjectCardTags(result: Labrinth.Search.v3.ResultSearchProject, disp
 			<slot name="display-mode-icon" />
 		</IconButton>
 
+		<slot name="toolbar-actions" />
+
 		<Pagination
 			:page="ctx.currentPage.value"
 			:count="ctx.pageCount.value"

@@ -25,6 +25,7 @@ import { useRouter } from 'vue-router'
 
 import IconEditorModal from '@/components/ui/instance_settings/InstanceIconEditorModal.vue'
 import ConfirmDeleteInstanceModal from '@/components/ui/modal/ConfirmDeleteInstanceModal.vue'
+import NoctrinthIconCropModal from '@/components/ui/NoctrinthIconCropModal.vue'
 import { trackEvent } from '@/helpers/analytics'
 import { install_duplicate_instance } from '@/helpers/install'
 import { edit, edit_icon, getInstanceIconUrl, remove } from '@/helpers/instance'
@@ -39,6 +40,7 @@ const queryClient = useQueryClient()
 
 const deleteConfirmModal = ref()
 const iconEditorModal = ref<InstanceType<typeof IconEditorModal> | null>(null)
+const iconCropModal = ref<InstanceType<typeof NoctrinthIconCropModal> | null>(null)
 
 const { instance } = injectInstanceSettings()
 type ReleaseChannel = GameInstance['update_channel']
@@ -144,7 +146,12 @@ async function setIcon() {
 		],
 	})
 
-	if (!value) return
+	if (!value || Array.isArray(value)) return
+
+	if (/\.(png|jpe?g|webp)$/i.test(value) && iconCropModal.value) {
+		iconCropModal.value.show(value)
+		return
+	}
 
 	try {
 		await edit_icon(instance.value.id, value)
@@ -155,6 +162,12 @@ async function setIcon() {
 		return
 	}
 
+	trackEvent('InstanceSetIcon')
+}
+
+function onCroppedIconSaved(iconPath: string) {
+	icon.value = iconPath
+	iconConfig.value = null
 	trackEvent('InstanceSetIcon')
 }
 
@@ -312,6 +325,11 @@ const messages = defineMessages({
 		:instance-id="instance.id"
 		:config="iconConfig"
 		@saved="onGeneratedIconSaved"
+	/>
+	<NoctrinthIconCropModal
+		ref="iconCropModal"
+		:instance-id="instance.id"
+		@saved="onCroppedIconSaved"
 	/>
 	<div class="block">
 		<div class="float-end ml-10 relative group w-fit">

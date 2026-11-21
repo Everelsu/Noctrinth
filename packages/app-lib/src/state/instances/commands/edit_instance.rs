@@ -220,6 +220,8 @@ pub(crate) async fn edit_instance(
         super::mark_shared_instance_stale(instance_id, pool).await?;
     }
 
+    super::write_instance_manifest(&instance, state).await;
+
     Ok(instance)
 }
 

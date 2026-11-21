@@ -95,6 +95,12 @@
 	"app.appearance-settings.minimize-launcher.description": {
 		"message": "Сворачивать окно лаунчера при запуске Minecraft."
 	},
+	"app.browse.filters.hide": {
+		"message": "Скрыть фильтры"
+	},
+	"app.browse.filters.show": {
+		"message": "Фильтры"
+	},
 	"app.browse.source.label": {
 		"message": "Где искать"
 	},
@@ -745,6 +751,27 @@
 	},
 	"app.crash.show-more": {
 		"message": "Показать ещё {count}"
+	},
+	"app.icon-crop.apply": {
+		"message": "Применить"
+	},
+	"app.icon-crop.cancel": {
+		"message": "Отмена"
+	},
+	"app.icon-crop.header": {
+		"message": "Обрезка иконки сборки"
+	},
+	"app.icon-crop.hint": {
+		"message": "Перетаскивайте изображение и приближайте колёсиком или ползунком."
+	},
+	"app.icon-crop.reset": {
+		"message": "Сбросить"
+	},
+	"app.icon-crop.use-original": {
+		"message": "Без обрезки"
+	},
+	"app.icon-crop.zoom": {
+		"message": "Масштаб"
 	},
 	"app.curseforge.pending.all-done": {
 		"message": "Всё установлено"

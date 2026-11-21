@@ -5,6 +5,7 @@ import {
 	CompassIcon,
 	CurseForgeIcon,
 	ExternalIcon,
+	FilterIcon,
 	GlobeIcon,
 	PlusIcon,
 	ServerStackIcon,
@@ -22,6 +23,7 @@ import type {
 import {
 	BrowsePageLayout,
 	BrowseSidebar,
+	Button,
 	Combobox,
 	commonMessages,
 	ContextMenu,
@@ -56,6 +58,7 @@ import ModrinthPlatformIcon from '@/assets/icons/modrinth-platform.svg'
 import { useAppEvent } from '@/composables/use-app-event'
 import { useAppSettings } from '@/composables/use-app-settings.ts'
 import { get_project, get_search_results_v3, get_version_many } from '@/helpers/cache.js'
+import { browseFiltersHidden } from '@/helpers/noctrinth-browse-ui'
 import {
 	type BrowseSource,
 	CURSEFORGE_PROJECT_TYPES,
@@ -718,6 +721,14 @@ const messages = defineMessages({
 	browseSourceLabel: {
 		id: 'app.browse.source.label',
 		defaultMessage: 'Where to browse',
+	},
+	showFiltersLabel: {
+		id: 'app.browse.filters.show',
+		defaultMessage: 'Show filters',
+	},
+	hideFiltersLabel: {
+		id: 'app.browse.filters.hide',
+		defaultMessage: 'Hide filters',
 	},
 })
 
@@ -1915,6 +1926,27 @@ provideBrowseManager({
 					trigger-class="!rounded-full !px-3.5"
 				/>
 			</template>
+			<template #toolbar-actions>
+				<Button
+					:type="browseFiltersHidden ? 'outlined' : 'base'"
+					size="md"
+					:aria-pressed="!browseFiltersHidden"
+					@click="browseFiltersHidden = !browseFiltersHidden"
+				>
+					<FilterIcon class="size-4" aria-hidden="true" />
+					<span>{{
+						formatMessage(
+							browseFiltersHidden ? messages.showFiltersLabel : messages.hideFiltersLabel,
+						)
+					}}</span>
+					<span
+						v-if="browseFiltersHidden && currentFilters.length > 0"
+						class="ml-0.5 rounded-full bg-brand-highlight px-1.5 py-0.5 text-[11px] font-semibold text-brand tabular-nums"
+					>
+						{{ currentFilters.length }}
+					</span>
+				</Button>
+			</template>
 			<template #after>
 				<ContextMenu ref="contextMenuRef" :label="formatMessage(messages.projectActionsLabel)">
 					<template #open_link="{ option }">
@@ -1936,7 +1968,7 @@ provideBrowseManager({
 			@browse-modpacks="() => {}"
 			@create="handleServerModpackFlowCreate"
 		/>
-		<Teleport v-if="browseRouteActive" to="#sidebar-teleport-target">
+		<Teleport v-if="browseRouteActive && !browseFiltersHidden" to="#sidebar-teleport-target">
 			<BrowseSidebar />
 		</Teleport>
 	</div>

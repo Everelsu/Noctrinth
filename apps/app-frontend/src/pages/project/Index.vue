@@ -552,7 +552,7 @@ const serverInstallContent = useServerInstallContent({
 })
 
 serverInstallContent.watchServerContextChanges()
-await serverInstallContent.initServerContext()
+void serverInstallContent.initServerContext()
 
 const instanceFilters = computed(() => {
 	if (!instance.value) {
@@ -792,9 +792,19 @@ function goToVersions() {
 	router.push(versionsHref.value)
 }
 
-const [allLoaders, allGameVersions] = await Promise.all([
-	get_loaders().catch(handleError).then(ref),
-	get_game_versions().catch(handleError).then(ref),
+const allLoaders = ref([])
+const allGameVersions = ref([])
+void Promise.all([
+	get_loaders()
+		.then((v) => {
+			if (v) allLoaders.value = v
+		})
+		.catch(handleError),
+	get_game_versions()
+		.then((v) => {
+			if (v) allGameVersions.value = v
+		})
+		.catch(handleError),
 ])
 
 async function handleClickPlay() {
@@ -990,8 +1000,7 @@ function fetchDeferredServerData(project) {
 	updateServerPlayState()
 }
 
-await fetchProjectData()
-refreshFollowState()
+void fetchProjectData().then(() => refreshFollowState())
 
 useAppEvent('process', (e) => {
 	if (

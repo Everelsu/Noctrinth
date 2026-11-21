@@ -10,7 +10,7 @@ import {
 } from '@modrinth/ui'
 import { useQuery, useQueryClient } from '@tanstack/vue-query'
 import dayjs from 'dayjs'
-import { computed, inject, ref, watch } from 'vue'
+import { computed, inject, nextTick, onActivated, ref, watch } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 
 import LibrarySection from '@/components/ui/library/index.vue'
@@ -43,6 +43,14 @@ const modrinthClient = injectModrinthClient()
 const queryClient = useQueryClient()
 onBeforeRouteLeave(() => {
 	libraryScrollTop.value = document.querySelector('.app-viewport')?.scrollTop ?? 0
+})
+onActivated(() => {
+	nextTick(() => {
+		const viewport = document.querySelector('.app-viewport')
+		if (viewport && libraryScrollTop.value > 0) {
+			viewport.scrollTop = libraryScrollTop.value
+		}
+	})
 })
 
 const messages = defineMessages({

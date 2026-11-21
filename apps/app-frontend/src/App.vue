@@ -140,6 +140,7 @@ import {
 	downloadCurseforgeProfile,
 } from '@/helpers/curseforge'
 import { applyCurseforgeSettings } from '@/helpers/curseforge-settings'
+import { browseFiltersHidden } from '@/helpers/noctrinth-browse-ui'
 import { gameSettingsQueryOptions } from '@/helpers/game-options'
 import {
 	install_create_modpack_instance,
@@ -275,13 +276,17 @@ watch(
 )
 const forceSidebar = computed(
 	() =>
-		route.path.startsWith('/browse') ||
+		(route.path.startsWith('/browse') && !browseFiltersHidden.value) ||
 		route.path.startsWith('/project') ||
 		// Noctrinth's own: a CurseForge project's page has the same sidebar.
 		route.path.startsWith('/curseforge') ||
 		route.path.startsWith('/user'),
 )
-const sidebarVisible = computed(() => sidebarToggled.value || forceSidebar.value)
+const sidebarVisible = computed(() =>
+	route.path.startsWith('/browse')
+		? !browseFiltersHidden.value
+		: sidebarToggled.value || forceSidebar.value,
+)
 watch(
 	() => [sidebarVisible.value, forceSidebar.value],
 	([visible, forced], [prevVisible, prevForced]) => {
@@ -922,6 +927,26 @@ async function setupApp() {
 		initAnalytics()
 		if (dev) debugAnalytics()
 		trackEvent('Launched', { version, dev })
+	}
+
+	const prefetchCoreRoutes = () => {
+		const loaders = [
+			() => import('@/platform/adapters/browse/browse-page.vue'),
+			() => import('@/pages/instance/layout.vue'),
+			() => import('@/pages/instance/content/index.vue'),
+			() => import('@/pages/project/Index.vue'),
+			() => import('@/pages/curseforge/Index.vue'),
+			() => import('@/pages/Skins.vue'),
+			() => import('@/pages/Screenshots.vue'),
+		]
+		for (const load of loaders) {
+			void load().catch(() => {})
+		}
+	}
+	if (typeof requestIdleCallback === 'function') {
+		requestIdleCallback(prefetchCoreRoutes, { timeout: 1500 })
+	} else {
+		setTimeout(prefetchCoreRoutes, 400)
 	}
 
 	const osType = await traceStartupStep('Read operating system type', async () => type())
@@ -2573,12 +2598,13 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 			<RouterView v-else v-slot="{ Component, route: currentRoute }">
 				<template v-if="Component">
 					<Suspense @pending="onSuspensePending" @resolve="onSuspenseResolve">
-						<div
-							:key="currentRoute.matched[0]?.path ?? currentRoute.path"
-							class="nm-page-enter h-full"
-						>
-							<component :is="Component"></component>
-						</div>
+						<KeepAlive :include="['LibraryPage']">
+							<component
+								:is="Component"
+								:key="currentRoute.matched[0]?.path ?? currentRoute.path"
+								class="nm-page-enter"
+							/>
+						</KeepAlive>
 					</Suspense>
 				</template>
 			</RouterView>

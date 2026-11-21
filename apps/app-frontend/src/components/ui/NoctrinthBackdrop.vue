@@ -134,6 +134,11 @@ watchEffect(() => {
 	background-color: transparent;
 }
 
+:root.noctrinth-backdrop-active:has([data-modal-root], [aria-modal='true']) .app-window-controls {
+	background-color: color-mix(in srgb, var(--noctrinth-solid-surface-3) 82%, transparent);
+	backdrop-filter: blur(24px) saturate(1.3);
+}
+
 :root.noctrinth-backdrop-active body {
 	/* The theme's solid surfaces, kept here so the page can mix from them. */
 	--noctrinth-solid-surface-2: var(--surface-2);

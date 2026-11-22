@@ -2548,5 +2548,14 @@
 	},
 	"app.plugins.quick-css.clear": {
 		"message": "Limpiar"
+	},
+	"app.plugins.safe-mode.header": {
+		"message": "Modo seguro activo"
+	},
+	"app.plugins.safe-mode.body": {
+		"message": "Todos los plugins y Quick CSS están pausados temporalmente. Pulsa Ctrl+Shift+Alt+P en cualquier momento si un tema o plugin bloquea la interfaz."
+	},
+	"app.plugins.safe-mode.exit": {
+		"message": "Salir del modo seguro"
 	}
 }

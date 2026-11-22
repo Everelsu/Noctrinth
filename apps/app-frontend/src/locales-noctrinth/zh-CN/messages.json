@@ -2545,5 +2545,14 @@
 	},
 	"app.plugins.quick-css.clear": {
 		"message": "清空"
+	},
+	"app.plugins.safe-mode.header": {
+		"message": "安全模式已启用"
+	},
+	"app.plugins.safe-mode.body": {
+		"message": "所有插件和 Quick CSS 已暂时停用。若损坏的主题或插件导致界面无法操作，可随时按 Ctrl+Shift+Alt+P。"
+	},
+	"app.plugins.safe-mode.exit": {
+		"message": "退出安全模式"
 	}
 }

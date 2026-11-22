@@ -2533,5 +2533,14 @@
 	},
 	"app.plugins.quick-css.clear": {
 		"message": "Leeren"
+	},
+	"app.plugins.safe-mode.header": {
+		"message": "Abgesicherter Modus aktiv"
+	},
+	"app.plugins.safe-mode.body": {
+		"message": "Alle Plugins und Quick CSS sind vorübergehend pausiert. Drücke jederzeit Strg+Umschalt+Alt+P, falls ein defektes Theme oder Plugin die Oberfläche blockiert."
+	},
+	"app.plugins.safe-mode.exit": {
+		"message": "Abgesicherten Modus beenden"
 	}
 }

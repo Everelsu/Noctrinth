@@ -54,7 +54,7 @@
 
 		<canvas
 			ref="previewCanvas"
-			class="block size-full touch-none transition-opacity duration-500"
+			class="block size-full touch-none transition-opacity duration-200"
 			:class="{ 'opacity-0': !isPreviewVisible, 'opacity-100': isPreviewVisible }"
 			@pointerdown="onPointerDown"
 			@pointermove="onPointerMove"
@@ -263,6 +263,7 @@ const {
 
 const {
 	hasEarsFeatures,
+	isCapeLoaded,
 	isModelLoaded,
 	isTextureLoaded,
 	modelCenter,
@@ -321,7 +322,9 @@ const {
 	isModelLoaded,
 })
 
-const isReady = computed(() => isModelLoaded.value && isTextureLoaded.value && hasResolvedFit.value)
+const isReady = computed(
+	() => isModelLoaded.value && isTextureLoaded.value && isCapeLoaded.value && hasResolvedFit.value,
+)
 const { isPreviewVisible, showLoading } = useSkinPreviewLoading(isReady)
 
 onMounted(observeSubtitleElement)

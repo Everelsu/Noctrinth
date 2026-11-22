@@ -16,5 +16,86 @@
 	},
 	"button.switch-version": {
 		"message": "Змінити версію"
+	},
+	"console.actions.open-file": {
+		"message": "Відкрити файл"
+	},
+	"console.history.load-earlier": {
+		"message": "Завантажити попередні рядки"
+	},
+	"content.confirm-deletion.delete-button": {
+		"message": "Видалити {count, number} {itemType}"
+	},
+	"content.page-layout.empty.hint": {
+		"message": "Переглядайте або завантажте {contentType}, щоб почати"
+	},
+	"content.page-layout.search-placeholder": {
+		"message": "Пошук серед {count, number} {contentType}..."
+	},
+	"content.selection-bar.bulk.deleting": {
+		"message": "Видалення {progress}/{total} {contentType}..."
+	},
+	"content.selection-bar.bulk.deleting-count": {
+		"message": "Видалення {count, number} {contentType}"
+	},
+	"content.selection-bar.bulk.deleting-waiting": {
+		"message": "Видалення {contentType}..."
+	},
+	"content.selection-bar.bulk.disabling": {
+		"message": "Вимкнення {progress}/{total} {contentType}..."
+	},
+	"content.selection-bar.bulk.disabling-count": {
+		"message": "Вимкнення {count, number} {contentType}"
+	},
+	"content.selection-bar.bulk.disabling-waiting": {
+		"message": "Вимкнення {contentType}..."
+	},
+	"content.selection-bar.bulk.enabling": {
+		"message": "Увімкнення {progress}/{total} {contentType}..."
+	},
+	"content.selection-bar.bulk.enabling-count": {
+		"message": "Увімкнення {count, number} {contentType}"
+	},
+	"content.selection-bar.bulk.enabling-waiting": {
+		"message": "Увімкнення {contentType}..."
+	},
+	"content.selection-bar.bulk.updating": {
+		"message": "Оновлення {progress}/{total} {contentType}..."
+	},
+	"content.selection-bar.bulk.updating-count": {
+		"message": "Оновлення {count, number} {contentType}"
+	},
+	"content.selection-bar.bulk.updating-waiting": {
+		"message": "Оновлення {contentType}..."
+	},
+	"content.selection-bar.selected-count": {
+		"message": "Вибрано {count, number} {contentType}"
+	},
+	"creation-flow.modal.import-instance.delete-source.description": {
+		"message": "Видаляє файли кожної імпортованої збірки з іншого лаунчера, щоб не зберігати їх двічі. Залиште вимкненим, щоб зберегти обидві копії."
+	},
+	"creation-flow.modal.import-instance.delete-source.label": {
+		"message": "Видалити з {launcher} після імпорту"
+	},
+	"project.versions.column.downloads": {
+		"message": "Завантаження"
+	},
+	"project.versions.column.environment": {
+		"message": "Середовище"
+	},
+	"project.versions.column.published": {
+		"message": "Опубліковано"
+	},
+	"servers.backups.deleted.bulk-bar.some-unrecoverable": {
+		"message": "Лише {recoverable} із {count, plural, one {# вибраної резервної копії} few {# вибраних резервних копій} many {# вибраних резервних копій} other {# вибраних резервних копій}} можна відновити"
+	},
+	"skin.preview.drag-to-rotate": {
+		"message": "Перетягніть для обертання"
+	},
+	"skin.preview.scroll-to-zoom": {
+		"message": "Прокрутіть для масштабування"
+	},
+	"version.uploaded-by": {
+		"message": "Завантажив"
 	}
 }

@@ -4378,5 +4378,8 @@
 	},
 	"version.uploaded-by": {
 		"message": "Загрузил"
+	},
+	"console.actions.open-file": {
+		"message": "Открыть файл"
 	}
 }

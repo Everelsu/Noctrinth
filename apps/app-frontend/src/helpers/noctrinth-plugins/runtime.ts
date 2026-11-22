@@ -43,6 +43,16 @@ export const pluginLogs = ref<Record<string, PluginLogEntry[]>>({})
 export const pluginActions = ref<RegisteredPluginAction[]>([])
 export const pluginContentSources = ref<RegisteredPluginContentSource[]>([])
 export const activePluginModal = ref<ActivePluginModal | null>(null)
+export const pluginsSafeMode = ref(false)
+
+const MAX_ERRORS_BEFORE_DISABLE = 3
+const RPC_WINDOW_MS = 1000
+const MAX_RPC_PER_WINDOW = 60
+const FLOOD_KILL_RPC_PER_WINDOW = 200
+const NOTIFY_WINDOW_MS = 10_000
+const MAX_NOTIFY_PER_WINDOW = 6
+const LOG_WINDOW_MS = 1000
+const MAX_LOGS_PER_WINDOW = 40
 
 export const pluginUpdates = computed<CatalogPluginEntry[]>(() => {
 	const installedById = new Map(installedPlugins.value.map((p) => [p.manifest.id, p]))
@@ -75,7 +85,7 @@ export function resolvePluginModal(actionId: string | null): void {
 function applyQuickCss(): void {
 	if (typeof document === 'undefined') return
 	const existing = document.getElementById('noctrinth-quick-css')
-	const css = quickCssEnabled.value ? quickCssContent.value.trim() : ''
+	const css = !pluginsSafeMode.value && quickCssEnabled.value ? quickCssContent.value.trim() : ''
 	if (!css) {
 		existing?.remove()
 		return
@@ -86,7 +96,7 @@ function applyQuickCss(): void {
 	if (!existing) document.head.appendChild(styleEl)
 }
 
-watch([quickCssEnabled, quickCssContent], applyQuickCss)
+watch([quickCssEnabled, quickCssContent, pluginsSafeMode], applyQuickCss)
 
 type NotifyFn = (opts: {
 	title: string
@@ -532,10 +542,32 @@ async function startPluginWorker(plugin: InstalledPlugin) {
 		}
 	}
 
+	let errorCount = 0
+	let rpcWindowStart = Date.now()
+	let rpcCount = 0
+	let logWindowStart = Date.now()
+	let logCount = 0
+	const notifyTimestamps: number[] = []
+
+	const checkRateLimit = (
+		now: number,
+		start: number,
+		count: number,
+		windowMs: number,
+	): { start: number; count: number } => {
+		if (now - start >= windowMs) return { start: now, count: 1 }
+		return { start, count: count + 1 }
+	}
+
 	worker.onmessage = async (event) => {
 		const msg = event.data
 		if (!msg) return
+		const now = Date.now()
 		if (msg.type === 'log') {
+			const next = checkRateLimit(now, logWindowStart, logCount, LOG_WINDOW_MS)
+			logWindowStart = next.start
+			logCount = next.count
+			if (logCount > MAX_LOGS_PER_WINDOW) return
 			const level: PluginLogEntry['level'] =
 				msg.level === 'warn' || msg.level === 'error' ? msg.level : 'info'
 			const message = String(msg.message ?? (Array.isArray(msg.args) ? msg.args.join(' ') : ''))
@@ -546,6 +578,10 @@ async function startPluginWorker(plugin: InstalledPlugin) {
 			const text = String(msg.error)
 			appendPluginLog(id, 'error', text)
 			pluginRuntimeErrors.value = { ...pluginRuntimeErrors.value, [id]: text }
+			errorCount++
+			if (errorCount >= MAX_ERRORS_BEFORE_DISABLE) {
+				void tripPluginCircuitBreaker(plugin, text)
+			}
 			return
 		}
 		if (msg.type === 'host:result' && pendingHostCalls.has(msg.callId)) {
@@ -556,6 +592,21 @@ async function startPluginWorker(plugin: InstalledPlugin) {
 			return
 		}
 		if (msg.type === 'rpc') {
+			const nextRpc = checkRateLimit(now, rpcWindowStart, rpcCount, RPC_WINDOW_MS)
+			rpcWindowStart = nextRpc.start
+			rpcCount = nextRpc.count
+			if (rpcCount > FLOOD_KILL_RPC_PER_WINDOW) {
+				void tripPluginCircuitBreaker(plugin, 'Stopped automatically: excessive RPC flood detected')
+				return
+			}
+			if (rpcCount > MAX_RPC_PER_WINDOW) {
+				worker.postMessage({
+					type: 'rpc:result',
+					id: msg.id,
+					error: 'Rate limit exceeded (too many RPC calls per second)',
+				})
+				return
+			}
 			try {
 				let result: unknown = null
 				switch (msg.method) {
@@ -588,14 +639,24 @@ async function startPluginWorker(plugin: InstalledPlugin) {
 					case 'settings:getAll':
 						result = getPluginSettings(plugin)
 						break
-					case 'notify':
+					case 'notify': {
 						requireUiPerm('notifications')
+						const cutoff = Date.now() - NOTIFY_WINDOW_MS
+						while (notifyTimestamps.length > 0 && notifyTimestamps[0] < cutoff) {
+							notifyTimestamps.shift()
+						}
+						if (notifyTimestamps.length >= MAX_NOTIFY_PER_WINDOW) {
+							appendPluginLog(id, 'warn', 'Notification throttled (rate limit)')
+							break
+						}
+						notifyTimestamps.push(Date.now())
 						notificationHandler?.({
 							title: String(msg.payload?.title ?? plugin.manifest.name),
 							text: msg.payload?.text ? String(msg.payload.text) : undefined,
 							type: msg.payload?.type ?? 'info',
 						})
 						break
+					}
 					case 'ui:registerAction': {
 						requireUiPerm('actions')
 						const slot = msg.payload?.slot as NoctrinthActionSlot
@@ -704,14 +765,31 @@ async function startPluginWorker(plugin: InstalledPlugin) {
 
 	worker.onerror = (err) => {
 		const message = err.message || 'Worker execution error'
-		appendPluginLog(id, 'error', message)
-		pluginRuntimeErrors.value = {
-			...pluginRuntimeErrors.value,
-			[id]: message,
-		}
+		void tripPluginCircuitBreaker(plugin, message)
 	}
 
 	activeWorkers.set(id, { worker, blobUrl, events: allowedEvents, pendingHostCalls })
+}
+
+async function tripPluginCircuitBreaker(plugin: InstalledPlugin, reason: string): Promise<void> {
+	const id = plugin.manifest.id
+	deactivatePlugin(id)
+	appendPluginLog(id, 'error', `Auto-disabled: ${reason}`)
+	pluginRuntimeErrors.value = {
+		...pluginRuntimeErrors.value,
+		[id]: `Auto-disabled after error: ${reason}`,
+	}
+	try {
+		await invoke('plugin:noctrinth-plugins|plugins_set_enabled', { id, enabled: false })
+		await listInstalledPlugins()
+	} catch {
+		// Best-effort persist
+	}
+	notificationHandler?.({
+		title: `Plugin "${plugin.manifest.name}" disabled`,
+		text: reason,
+		type: 'error',
+	})
 }
 
 function stopPluginWorker(id: string) {
@@ -732,6 +810,7 @@ function stopPluginWorker(id: string) {
 }
 
 export async function activatePlugin(plugin: InstalledPlugin): Promise<void> {
+	if (pluginsSafeMode.value) return
 	const id = plugin.manifest.id
 	const { [id]: _removed, ...rest } = pluginRuntimeErrors.value
 	pluginRuntimeErrors.value = rest
@@ -742,11 +821,7 @@ export async function activatePlugin(plugin: InstalledPlugin): Promise<void> {
 		await startPluginWorker(plugin)
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error)
-		appendPluginLog(id, 'error', message)
-		pluginRuntimeErrors.value = {
-			...pluginRuntimeErrors.value,
-			[id]: message,
-		}
+		await tripPluginCircuitBreaker(plugin, message)
 	}
 }
 
@@ -754,6 +829,32 @@ export function deactivatePlugin(id: string): void {
 	removePluginSettingVars(id)
 	removePluginStyles(id)
 	stopPluginWorker(id)
+}
+
+export function enablePluginsSafeMode(notify = true): void {
+	pluginsSafeMode.value = true
+	quickCssEnabled.value = false
+	applyQuickCss()
+	for (const plugin of installedPlugins.value) {
+		deactivatePlugin(plugin.manifest.id)
+	}
+	for (const id of [...activeWorkers.keys()]) {
+		deactivatePlugin(id)
+	}
+	if (notify) {
+		notificationHandler?.({
+			title: 'Plugins Safe Mode enabled',
+			text: 'All plugins and Quick CSS have been temporarily disabled.',
+			type: 'warning',
+		})
+	}
+}
+
+export async function exitPluginsSafeMode(): Promise<void> {
+	pluginsSafeMode.value = false
+	applyQuickCss()
+	const list = await listInstalledPlugins()
+	await Promise.all(list.filter((p) => p.enabled).map((p) => activatePlugin(p)))
 }
 
 export function emitPluginEvent(
@@ -772,9 +873,26 @@ let initialized = false
 export async function initNoctrinthPlugins(): Promise<void> {
 	if (initialized) return
 	initialized = true
-	applyQuickCss()
+
+	if (typeof window !== 'undefined') {
+		window.addEventListener('keydown', (event) => {
+			if (event.ctrlKey && event.shiftKey && event.altKey && event.code === 'KeyP') {
+				event.preventDefault()
+				enablePluginsSafeMode(true)
+			}
+		})
+	}
+
 	try {
+		const safeFlag = await invoke<boolean>('plugin:noctrinth-plugins|plugins_is_safe_mode').catch(
+			() => false,
+		)
 		const list = await listInstalledPlugins()
+		if (safeFlag) {
+			enablePluginsSafeMode(true)
+			return
+		}
+		applyQuickCss()
 		await Promise.all(list.filter((p) => p.enabled).map((p) => activatePlugin(p)))
 		if (list.length > 0) {
 			void checkPluginUpdates()

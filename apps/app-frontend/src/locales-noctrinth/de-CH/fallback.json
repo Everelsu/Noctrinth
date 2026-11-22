@@ -7,5 +7,35 @@
 	},
 	"button.switch-version": {
 		"message": "Version wechseln"
+	},
+	"console.actions.open-file": {
+		"message": "Datei öffnen"
+	},
+	"console.history.load-earlier": {
+		"message": "Ältere Zeilen laden"
+	},
+	"creation-flow.modal.import-instance.delete-source.description": {
+		"message": "Löscht die Dateien jeder importierten Instanz aus dem anderen Launcher, damit sie nicht doppelt gespeichert werden. Lasse dies deaktiviert, um beide Kopien zu behalten."
+	},
+	"creation-flow.modal.import-instance.delete-source.label": {
+		"message": "Nach dem Import aus {launcher} entfernen"
+	},
+	"project.versions.column.downloads": {
+		"message": "Downloads"
+	},
+	"project.versions.column.environment": {
+		"message": "Umgebung"
+	},
+	"project.versions.column.published": {
+		"message": "Veröffentlicht"
+	},
+	"skin.preview.drag-to-rotate": {
+		"message": "Zum Drehen ziehen"
+	},
+	"skin.preview.scroll-to-zoom": {
+		"message": "Zum Zoomen scrollen"
+	},
+	"version.uploaded-by": {
+		"message": "Hochgeladen von"
 	}
 }

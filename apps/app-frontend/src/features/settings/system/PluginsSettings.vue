@@ -39,6 +39,7 @@ import {
 	type CatalogPluginEntry,
 	clearPluginLogs,
 	DEFAULT_PLUGIN_CATALOG_URL,
+	exitPluginsSafeMode,
 	fetchPluginCatalog,
 	getPluginsDir,
 	getPluginSettings,
@@ -51,6 +52,7 @@ import {
 	pluginCatalogUrl,
 	pluginLogs,
 	pluginRuntimeErrors,
+	pluginsSafeMode,
 	pluginUpdates,
 	quickCssContent,
 	quickCssEnabled,
@@ -80,6 +82,19 @@ const messages = defineMessages({
 		id: 'app.plugins.disclaimer.body',
 		defaultMessage:
 			'Plugins are created by third-party authors. Noctrinth is not responsible for the safety, reliability, data loss, or any malicious code in installed plugins. Only install plugins from sources you trust.',
+	},
+	safeModeHeader: {
+		id: 'app.plugins.safe-mode.header',
+		defaultMessage: 'Safe Mode is active',
+	},
+	safeModeBody: {
+		id: 'app.plugins.safe-mode.body',
+		defaultMessage:
+			'All plugins and Quick CSS are temporarily paused. Press Ctrl+Shift+Alt+P anytime if a broken theme or plugin locks up the UI.',
+	},
+	safeModeExit: {
+		id: 'app.plugins.safe-mode.exit',
+		defaultMessage: 'Exit Safe Mode',
 	},
 	tabInstalled: { id: 'app.plugins.tab.installed', defaultMessage: 'Installed' },
 	tabCatalog: { id: 'app.plugins.tab.catalog', defaultMessage: 'Catalog' },
@@ -434,6 +449,19 @@ onMounted(() => {
 					class="shrink-0"
 				/>
 			</div>
+
+			<Admonition
+				v-if="pluginsSafeMode"
+				type="critical"
+				:header="formatMessage(messages.safeModeHeader)"
+				:body="formatMessage(messages.safeModeBody)"
+			>
+				<template #actions>
+					<Button type="colored" color="brand" size="sm" @click="exitPluginsSafeMode">
+						{{ formatMessage(messages.safeModeExit) }}
+					</Button>
+				</template>
+			</Admonition>
 
 			<Admonition
 				type="warning"

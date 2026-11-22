@@ -26,6 +26,72 @@
 	"button.switch-version": {
 		"message": "切换版本"
 	},
+	"console.actions.open-file": {
+		"message": "打开文件"
+	},
+	"console.history.load-earlier": {
+		"message": "加载更早的行"
+	},
+	"content.enabled-for.required-here": {
+		"message": "此内容需要在此处启用才能正常工作。"
+	},
+	"creation-flow.curseforge.file-description": {
+		"message": "你需要常规整合包文件；如果我们找不到服务端整合包，你可以稍后选择手动添加。"
+	},
+	"creation-flow.curseforge.ftb-installer": {
+		"message": "此版本附带 FTB 服务端安装程序，我们将使用它来配置服务器。"
+	},
+	"creation-flow.curseforge.invalid-link": {
+		"message": "请输入 CurseForge Minecraft 整合包或整合包版本的链接。"
+	},
+	"creation-flow.curseforge.link-description": {
+		"message": "你可以使用整合包或特定整合包版本的链接。"
+	},
+	"creation-flow.curseforge.server-pack-available": {
+		"message": "此版本提供服务端整合包。我们将在服务器上安装 {filename}。"
+	},
+	"creation-flow.curseforge.server-pack-closest": {
+		"message": "此版本没有可用的服务端整合包。最接近且包含服务端整合包的版本是 <link>{version}</link>。"
+	},
+	"creation-flow.curseforge.server-pack-description": {
+		"message": "你可以选择添加服务端整合包，以便更轻松地确定需要在服务器上安装的内容。"
+	},
+	"creation-flow.curseforge.server-pack-none": {
+		"message": "我们未能找到此项目任何版本的服务端整合包。建议选择其他整合包或手动上传服务端整合包。"
+	},
+	"creation-flow.modal.import-instance.delete-source.description": {
+		"message": "从其他启动器中删除每个已导入实例的文件，以避免重复存储。关闭此选项可保留两份副本。"
+	},
+	"creation-flow.modal.import-instance.delete-source.label": {
+		"message": "导入后从 {launcher} 中移除"
+	},
+	"hosting.content.enabled-for.client-only-on-server-warning": {
+		"message": "此仅限客户端的内容已在服务器上启用，可能会导致服务器无法启动。"
+	},
+	"hosting.content.enabled-for.compatibility-unknown-warning": {
+		"message": "我们无法确定此内容适用于服务器、玩家，还是两者兼可。"
+	},
+	"hosting.content.enabled-for.resource-pack-lock": {
+		"message": "资源包只能为玩家启用。"
+	},
+	"hosting.content.enabled-for.server-only-for-players-warning": {
+		"message": "此仅限服务端的内容已包含在玩家内容中，可能会导致玩家启动游戏时出现问题。"
+	},
+	"hosting.content.enabled-for.shader-lock": {
+		"message": "光影只能为玩家启用。"
+	},
+	"hosting.content.enabled-for.singleplayer-only-on-server-warning": {
+		"message": "此仅限单人模式的内容已在服务器上启用，可能会导致服务器无法启动。"
+	},
+	"hosting.content.failed-to-set-enabled-for": {
+		"message": "更改 {name} 的启用范围失败"
+	},
+	"hosting.content.failed-to-toggle": {
+		"message": "启用或禁用 {name} 失败"
+	},
+	"hosting.loader.reset-server-description": {
+		"message": "移除服务器上的所有数据，包括你的世界、模组和配置文件。备份将保留且可恢复。受邀玩家仍会保留访问权限。"
+	},
 	"hosting.play.not-ready": {
 		"message": "此实例暂不可启动。请在你的库中检查其安装状态。"
 	},
@@ -38,8 +104,26 @@
 	"hosting.play.world-changed": {
 		"message": "此世界已不再处于活动状态或尚未共享。请打开服务器面板并再次点击“游玩服务器”。"
 	},
+	"hosting.settings.update-channel.alpha.description": {
+		"message": "正式版、测试版和内测版都将显示为可用更新。"
+	},
+	"hosting.settings.update-channel.beta.description": {
+		"message": "正式版和测试版都将显示为可用更新。"
+	},
+	"hosting.settings.update-channel.release.description": {
+		"message": "仅正式版将显示为可用更新。"
+	},
+	"hosting.settings.warn-environment-changes.description": {
+		"message": "在不支持的一侧启用内容或在必需的一侧禁用内容前请求确认。"
+	},
+	"hosting.settings.warn-environment-changes.title": {
+		"message": "对不兼容或必需的内容发出警告"
+	},
 	"installation-settings.advanced.title": {
 		"message": "高级"
+	},
+	"installation-settings.reinstall-modpack.description": {
+		"message": "重新安装整合包会将{type}内容重置为原始状态，并移除你添加的所有模组或内容。"
 	},
 	"installation-settings.relink-shared-instance.button": {
 		"message": "重新关联共享实例"
@@ -98,6 +182,9 @@
 	"instance.settings.reset-to-default": {
 		"message": "重置为默认值"
 	},
+	"instance.settings.sharing.revoke-invite.admonition-body": {
+		"message": "邀请链接 <monospace>{code}</monospace> 将立即失效。已加入的用户仍将保留访问权限。"
+	},
 	"instance.settings.tabs.general.duplicate-button.tooltip.locked": {
 		"message": "无法复制已锁定的实例。"
 	},
@@ -116,10 +203,697 @@
 	"instance.shared-instance.owner-behind.text": {
 		"message": "另一台设备上的 Modrinth App 已推送了更新的版本。请先下载更新，然后再试。"
 	},
+	"instance.shared-instance.publish-review.changes-description": {
+		"message": "查看自上次更新以来检测到的更改。推送时将自动包含这些更改。"
+	},
+	"instance.shared-instance.publish-review.files-description": {
+		"message": "除了检测到的更改外，你还可以包含单个文件。请选择要发布的其他文件。"
+	},
+	"instance.shared-instance.publish-review.files-error": {
+		"message": "无法加载可共享的文件。"
+	},
+	"instance.shared-instance.publish-review.push-only-button": {
+		"message": "仅推送更新"
+	},
+	"instance.shared-instance.publish-review.restart-warning": {
+		"message": "这些更改需要重启服务器才能生效。"
+	},
+	"instance.shared-instance.publish-review.storage-over-limit": {
+		"message": "超出限制 {size}。请取消选择部分文件后再推送此更新。"
+	},
+	"instance.shared-instance.publish-review.storage-usage": {
+		"message": "{used} / {limit}"
+	},
 	"instance.shared-instance.unavailable.locked-owner-text": {
 		"message": "此共享实例已被内容审核团队锁定。你不能再推送更新或重新共享此实例。"
 	},
+	"label.client-only-dependency-on-server-warning": {
+		"message": "此仅限客户端的模组作为依赖项安装在了服务器上，可能会导致服务器无法启动。"
+	},
+	"label.client-only-mod-on-server-warning": {
+		"message": "此仅限客户端的模组已安装在服务器上，可能会导致服务器无法启动。"
+	},
+	"label.requires-client-only-dependency-warning": {
+		"message": "此模组需要仅限客户端的依赖项，可能会导致服务器无法启动。"
+	},
+	"modal.tabbed.collapse-sidebar": {
+		"message": "收起侧边栏"
+	},
+	"modal.tabbed.expand-sidebar": {
+		"message": "展开侧边栏"
+	},
+	"notifications.instance-quarantined-member.body": {
+		"message": "共享实例“<entity>{entity}</entity>”已被 Modrinth 审核团队锁定。"
+	},
+	"notifications.instance-quarantined.body": {
+		"message": "你的共享实例“<entity>{entity}</entity>”已被 Modrinth 审核团队锁定。"
+	},
+	"notifications.invite.review": {
+		"message": "查看"
+	},
+	"profile.restrict-user.deselect-all-button": {
+		"message": "取消全选"
+	},
+	"profile.restrict-user.reset-button": {
+		"message": "重置"
+	},
+	"profile.restrict-user.restrictions-label": {
+		"message": "限制"
+	},
+	"project.versions.column.downloads": {
+		"message": "下载量"
+	},
+	"project.versions.column.environment": {
+		"message": "运行环境"
+	},
+	"project.versions.column.published": {
+		"message": "发布时间"
+	},
 	"search.filter.locked.server-game-version.title": {
 		"message": "游戏版本由服务器提供"
+	},
+	"search.server-environment.player-and-server": {
+		"message": "玩家与服务器"
+	},
+	"search.server-environment.player-only": {
+		"message": "仅玩家"
+	},
+	"server.settings.sharing.invites-error": {
+		"message": "加载有效邀请失败"
+	},
+	"server.settings.sharing.not-shared": {
+		"message": "此世界尚未共享。请在“游玩”页面上使用“游玩服务器”或“邀请玩家”来发布其内容。"
+	},
+	"server.settings.sharing.unpublish-confirmation": {
+		"message": "此操作将删除共享实例并停用其邀请链接。玩家将不再收到共享内容更新。你的服务器及其内容仍保持可用。"
+	},
+	"server.settings.sharing.unpublish-description": {
+		"message": "从 Modrinth 移除此服务器的共享实例，并停止向玩家发送内容更新。你的服务器及其内容不会受到影响。"
+	},
+	"servers.access-page.activity-log-filter.action.addon-player-enabled": {
+		"message": "更改了玩家内容启用状态"
+	},
+	"servers.access-page.activity-log-filter.action.addon-server-enabled": {
+		"message": "更改了服务器内容启用状态"
+	},
+	"servers.access-page.activity-log-filter.action.addon-side-toggle-locked": {
+		"message": "更改了内容端侧切换锁定状态"
+	},
+	"servers.access-page.activity-log-filter.action.server-suspension-lifted": {
+		"message": "临时解除暂停"
+	},
+	"servers.access-page.activity-log-filter.action.world-data-reset": {
+		"message": "重置了世界数据"
+	},
+	"servers.admonitions.curseforge-files.body": {
+		"message": "我们无法确定你整合包中的 {count, plural, one {# 个文件} other {# 个文件}} 应安装在哪里，因此已同时为服务器和玩家启用。请检查这些文件，因为不属于服务器的文件可能会导致服务器无法启动。"
+	},
+	"servers.admonitions.curseforge-files.review": {
+		"message": "检查文件"
+	},
+	"servers.admonitions.curseforge-files.title": {
+		"message": "检查这些文件应安装的位置"
+	},
+	"servers.audit-log.event.addon-player-disabled": {
+		"message": "已为玩家禁用 <files></files>"
+	},
+	"servers.audit-log.event.addon-player-enabled": {
+		"message": "已为玩家启用 <files></files>"
+	},
+	"servers.audit-log.event.addon-server-disabled": {
+		"message": "已在服务器上禁用 <files></files>"
+	},
+	"servers.audit-log.event.addon-server-enabled": {
+		"message": "已在服务器上启用 <files></files>"
+	},
+	"servers.audit-log.event.addon-side-locked": {
+		"message": "已锁定 <files></files> 的端侧切换"
+	},
+	"servers.audit-log.event.addon-side-unlocked": {
+		"message": "已解锁 <files></files> 的端侧切换"
+	},
+	"servers.audit-log.event.server-resuspended": {
+		"message": "提前结束了暂停解除，服务器已重新暂停"
+	},
+	"servers.audit-log.event.server-resuspended-expired": {
+		"message": "临时解除暂停已到期，服务器已重新暂停"
+	},
+	"servers.audit-log.event.server-suspended": {
+		"message": "{reason, select, moderated {服务器因审核操作被暂停} paymentfailed {服务器因付款失败被暂停} cancelled {服务器因订阅已取消被暂停} other {服务器已暂停}}"
+	},
+	"servers.audit-log.event.server-suspension-lifted": {
+		"message": "临时解除暂停，有效期至 <until></until>"
+	},
+	"servers.audit-log.event.server-suspension-lifted-restricted": {
+		"message": "临时解除暂停至 <until></until>，且已阻止电源操作"
+	},
+	"servers.audit-log.event.server-unsuspended": {
+		"message": "服务器已恢复"
+	},
+	"servers.audit-log.event.world-data-reset": {
+		"message": "重置了世界数据"
+	},
+	"servers.backups.admonition.migration-backing-up.description": {
+		"message": "正在创建服务器备份以保护你的数据安全。"
+	},
+	"servers.backups.admonition.migration-backing-up.title": {
+		"message": "正在备份你的服务器"
+	},
+	"servers.backups.admonition.migration-backup-failed.description": {
+		"message": "创建 {backupName} 时发生错误，因此你的内容未被修改。请从“游玩”标签页重试。"
+	},
+	"servers.backups.admonition.migration-cancelled.description": {
+		"message": "你的服务器内容未被修改。"
+	},
+	"servers.backups.admonition.migration-cancelled.title": {
+		"message": "服务器更新已取消"
+	},
+	"servers.backups.admonition.migration-completed.description": {
+		"message": "你的服务器已准备好与好友共享。"
+	},
+	"servers.backups.admonition.migration-completed.title": {
+		"message": "服务器内容已更新"
+	},
+	"servers.backups.admonition.migration-failed.description": {
+		"message": "更新内容时发生错误。你可以从备份中恢复 {backupName} 或联系客服支持。"
+	},
+	"servers.backups.admonition.migration-failed.title": {
+		"message": "服务器更新失败"
+	},
+	"servers.backups.admonition.migration-queued.description": {
+		"message": "你的服务器即将开始备份并更新内容。"
+	},
+	"servers.backups.admonition.migration-queued.title": {
+		"message": "服务器更新已排队"
+	},
+	"servers.backups.admonition.migration-updating.description": {
+		"message": "正在重新安装你的内容，并根据需要为服务器、玩家或两者进行配置。这可能需要几分钟时间。"
+	},
+	"servers.backups.admonition.migration-updating.title": {
+		"message": "正在更新服务器内容"
+	},
+	"servers.backups.create.slots-full": {
+		"message": "所有 {limit, plural, one {# 个手动备份槽位} other {# 个手动备份槽位}}均已使用"
+	},
+	"servers.backups.deleted.bulk-bar.none-recoverable": {
+		"message": "所选备份均无法恢复"
+	},
+	"servers.backups.deleted.bulk-bar.selected-count": {
+		"message": "已选择 {count, plural, one {# 个备份} other {# 个备份}}"
+	},
+	"servers.backups.deleted.bulk-bar.some-unrecoverable": {
+		"message": "所选 {count, plural, one {# 个备份} other {# 个备份}}中仅有 {recoverable} 个可恢复"
+	},
+	"servers.backups.deleted.column.recoverable-until": {
+		"message": "可恢复截止时间"
+	},
+	"servers.backups.deleted.reason.suspension": {
+		"message": "暂停"
+	},
+	"servers.backups.deleted.search-placeholder": {
+		"message": "搜索 {count, plural, one {# 个已删除的备份} other {# 个已删除的备份}}..."
+	},
+	"servers.backups.deleted.undelete.error": {
+		"message": "恢复 {count, plural, one {备份} other {# 个备份}}失败"
+	},
+	"servers.backups.deleted.undelete.success": {
+		"message": "已恢复 {count, plural, one {1 个备份} other {# 个备份}}"
+	},
+	"servers.backups.interval.days": {
+		"message": "{days, plural, one {# 天} other {# 天}}"
+	},
+	"servers.backups.interval.every-days": {
+		"message": "每 {days, plural, one {天} other {# 天}}"
+	},
+	"servers.backups.rotation-modal.admonition-body": {
+		"message": "减少自动备份槽位意味着{count, plural, one {最早的自动备份} other {最早的 # 个自动备份}}将被永久删除。此操作无法撤销。"
+	},
+	"servers.backups.rotation-modal.backups-label": {
+		"message": "{count, plural, one {备份} other {备份 ({count})}}"
+	},
+	"servers.backups.slots.auto.duration-hours-minutes": {
+		"message": "{hours} 小时 {minutes} 分钟"
+	},
+	"servers.backups.slots.auto.duration-minutes": {
+		"message": "{minutes} 分钟"
+	},
+	"servers.backups.slots.auto.next-in": {
+		"message": "下次备份倒计时：{time}"
+	},
+	"servers.backups.slots.auto.replaces-oldest": {
+		"message": "将在 {time} 后替换最早的备份"
+	},
+	"servers.backups.slots.auto.replaces-oldest-soon": {
+		"message": "即将替换最早的备份"
+	},
+	"servers.backups.slots.limit": {
+		"message": "/ {limit, plural, one {# 个槽位} other {# 个槽位}}"
+	},
+	"servers.backups.slots.manual.kept-until-deleted": {
+		"message": "保留至你手动删除"
+	},
+	"servers.busy.migrating": {
+		"message": "正在更新服务器内容"
+	},
+	"servers.curseforge-files-review.body": {
+		"message": "此整合包中有 {count, plural, one {# 个文件} other {# 个文件}}{count, plural, one {未} other {未}}在 Modrinth 上发布，或者我们无法确定{count, plural, one {它} other {它们}}应安装在服务器上、提供给玩家，还是两者兼可。请在<bold>启用范围</bold>列中检查并完成{count, plural, one {此项} other {这些项目}}的设置。"
+	},
+	"servers.curseforge-files-review.header": {
+		"message": "检查整合包文件"
+	},
+	"servers.files.config-push.admonition-body": {
+		"message": "你编辑了 {path}。请推送更新，以便玩家在下次游玩时获取此更改。"
+	},
+	"servers.files.config-push.admonition-header": {
+		"message": "与玩家共享此配置"
+	},
+	"servers.files.config-push.header": {
+		"message": "将配置推送给玩家？"
+	},
+	"servers.files.config-push.later": {
+		"message": "稍后"
+	},
+	"servers.files.config-push.other-changes-body": {
+		"message": "你的其他未共享内容更改也将一并包含。"
+	},
+	"servers.files.config-push.restart-body": {
+		"message": "推送更新将重启你的服务器，在线玩家将会断开连接。"
+	},
+	"servers.lift-suspension.duration.days": {
+		"message": "{count, plural, one {# 天} other {# 天}}"
+	},
+	"servers.lift-suspension.duration.hours": {
+		"message": "{count, plural, one {# 小时} other {# 小时}}"
+	},
+	"servers.lift-suspension.duration.minutes": {
+		"message": "{count, plural, one {# 分钟} other {# 分钟}}"
+	},
+	"servers.lift-suspension.ends-at": {
+		"message": "服务器将在 {date} 左右重新暂停。"
+	},
+	"servers.lift-suspension.error.title": {
+		"message": "解除暂停失败"
+	},
+	"servers.lift-suspension.header": {
+		"message": "解除 {name} 的暂停状态"
+	},
+	"servers.lift-suspension.lift-button": {
+		"message": "解除暂停"
+	},
+	"servers.lift-suspension.restrict-power.description": {
+		"message": "服务器将无法启动，以便在无法游玩的情况下使用其管理面板和文件。"
+	},
+	"servers.lift-suspension.restrict-power.label": {
+		"message": "在解除暂停期间阻止电源操作"
+	},
+	"servers.lift-suspension.success.text": {
+		"message": "{name} 已解除暂停，有效期至 {date}。"
+	},
+	"servers.lift-suspension.success.text-restricted": {
+		"message": "{name} 已解除暂停，有效期至 {date}，且已阻止电源操作。"
+	},
+	"servers.lift-suspension.success.title": {
+		"message": "已解除暂停"
+	},
+	"servers.lift-suspension.temporary.body": {
+		"message": "解除期限结束后，服务器将自动重新暂停。在解除暂停期间，其子域名仍保持未分配状态。"
+	},
+	"servers.lift-suspension.temporary.header": {
+		"message": "此解除为临时操作"
+	},
+	"servers.manage.suspended.lift-suspension": {
+		"message": "解除暂停"
+	},
+	"servers.modpack-upload.file-label": {
+		"message": ".mrpack 文件"
+	},
+	"servers.play-migration.acknowledge": {
+		"message": "我了解我的服务器将被重新安装并重启。"
+	},
+	"servers.play-migration.backup.description": {
+		"message": "我们将创建一个名为“{name}”的备份，如出现问题你可以随时恢复。"
+	},
+	"servers.play-migration.backup.name": {
+		"message": "重新安装服务器内容前"
+	},
+	"servers.play-migration.backup.title": {
+		"message": "备份你的服务器"
+	},
+	"servers.play-migration.confirm": {
+		"message": "备份并重新安装"
+	},
+	"servers.play-migration.content-locked": {
+		"message": "请在“游玩”标签页共享你的服务器，以选择内容的启用范围。"
+	},
+	"servers.play-migration.curseforge.warning": {
+		"message": "你的服务器似乎是使用 CurseForge 整合包设置的。你需要再次上传<exact>完全相同</exact>的整合包，以避免损坏你的世界。"
+	},
+	"servers.play-migration.description": {
+		"message": "我们需要对你的服务器内容进行一些更改，以便你与好友共享！"
+	},
+	"servers.play-migration.mrpack.file-description": {
+		"message": "该整合包可以包含客户端内容（如模组和资源包），以便我们将其共享给你的玩家。"
+	},
+	"servers.play-migration.mrpack.file-label": {
+		"message": ".mrpack 文件"
+	},
+	"servers.play-migration.mrpack.warning": {
+		"message": "你的服务器似乎是使用外部 .mrpack 设置的。你需要上传<exact>完全相同</exact>的整合包，以避免损坏你的世界。"
+	},
+	"servers.play-migration.reinstall.custom-description": {
+		"message": "我们将重新安装你的服务器内容，并根据每个项目的运行环境为服务器、玩家或两者启用它。"
+	},
+	"servers.play-migration.reinstall.modpack-description": {
+		"message": "我们将重新安装 {modpack} 及所有附加内容，并根据每个项目的运行环境为服务器、玩家或两者启用它。"
+	},
+	"servers.play-migration.reinstall.title": {
+		"message": "重新安装你的内容"
+	},
+	"servers.play-migration.restart.description": {
+		"message": "我们将重启你的服务器，这可能需要几分钟时间。"
+	},
+	"servers.play-migration.restart.title": {
+		"message": "重启你的服务器"
+	},
+	"servers.play-migration.title": {
+		"message": "准备你的服务器"
+	},
+	"servers.play-migration.what-will-happen": {
+		"message": "接下来会发生什么"
+	},
+	"servers.play.busy": {
+		"message": "请等待当前服务器操作完成。"
+	},
+	"servers.play.card.address.copied": {
+		"message": "已复制服务器地址"
+	},
+	"servers.play.card.address.copy": {
+		"message": "复制服务器地址"
+	},
+	"servers.play.card.app.description": {
+		"message": "最简单的游玩方式是使用 Modrinth App，它会自动为你和服务器上的玩家安装所有必需的内容。"
+	},
+	"servers.play.card.app.invite-button": {
+		"message": "邀请玩家"
+	},
+	"servers.play.card.app.play-button": {
+		"message": "游玩服务器"
+	},
+	"servers.play.card.app.title": {
+		"message": "使用 Modrinth App 游玩"
+	},
+	"servers.play.card.launcher.description": {
+		"message": "使用你喜欢的启动器安装所需内容，然后在游戏中添加服务器地址即可加入。"
+	},
+	"servers.play.card.launcher.download-button": {
+		"message": "下载整合包"
+	},
+	"servers.play.card.launcher.title": {
+		"message": "正在使用其他启动器？"
+	},
+	"servers.play.invite-header": {
+		"message": "邀请玩家加入 {name}"
+	},
+	"servers.play.invites-unavailable": {
+		"message": "当前有操作正在进行或已达到玩家人数上限，暂时无法邀请。"
+	},
+	"servers.play.not-ready": {
+		"message": "共享内容尚未准备就绪，请稍后再试。"
+	},
+	"servers.play.not-shared": {
+		"message": "需要所有者或编辑者先共享此世界。"
+	},
+	"servers.play.permission": {
+		"message": "你没有权限共享此世界。"
+	},
+	"servers.play.players-error": {
+		"message": "无法加载受邀玩家"
+	},
+	"servers.play.players.actions": {
+		"message": "操作"
+	},
+	"servers.play.players.all": {
+		"message": "全部"
+	},
+	"servers.play.players.avatar-alt": {
+		"message": "{username} 的头像"
+	},
+	"servers.play.players.joined": {
+		"message": "已加入"
+	},
+	"servers.play.players.last-played": {
+		"message": "上次游玩"
+	},
+	"servers.play.players.loading": {
+		"message": "正在加载用户..."
+	},
+	"servers.play.players.method.direct": {
+		"message": "直接邀请"
+	},
+	"servers.play.players.method.link": {
+		"message": "分享链接"
+	},
+	"servers.play.players.never": {
+		"message": "从未"
+	},
+	"servers.play.players.pending": {
+		"message": "待接受"
+	},
+	"servers.play.players.revoke-access": {
+		"message": "撤销访问权限"
+	},
+	"servers.play.players.revoke-access-for": {
+		"message": "撤销 {username} 的访问权限"
+	},
+	"servers.play.players.search-users": {
+		"message": "搜索 {count} 位用户..."
+	},
+	"servers.play.players.title": {
+		"message": "受邀玩家"
+	},
+	"servers.play.players.username": {
+		"message": "用户名"
+	},
+	"servers.play.preview-error": {
+		"message": "无法刷新更改。请在发布前重试。"
+	},
+	"servers.play.push-and-play": {
+		"message": "推送更新并游玩"
+	},
+	"servers.play.push-restart-and-play": {
+		"message": "推送、重启并游玩"
+	},
+	"servers.play.refreshing-preview": {
+		"message": "正在刷新更改…"
+	},
+	"servers.play.remove-description": {
+		"message": "确定将 {username} 从此共享实例中移除吗？这不会将他们从 Minecraft 服务器封禁。"
+	},
+	"servers.play.remove-player": {
+		"message": "移除玩家"
+	},
+	"servers.play.retry": {
+		"message": "重试"
+	},
+	"servers.play.share-changes-play-body": {
+		"message": "启动服务器会将这些更改推送给所有受邀玩家。他们下次游玩时将被提示更新实例。"
+	},
+	"servers.play.start-failed": {
+		"message": "服务器在准备就绪前已停止。重试前请检查控制台。"
+	},
+	"servers.play.start-timeout": {
+		"message": "服务器启动耗时过长。重试前请检查控制台。"
+	},
+	"servers.play.unpublished-body": {
+		"message": "推送更新以将服务器的内容更改共享给玩家。"
+	},
+	"servers.power.push-and-restart": {
+		"message": "推送更新并重启"
+	},
+	"servers.power.push-and-start": {
+		"message": "推送更新并启动"
+	},
+	"servers.power.share-changes-restart-body": {
+		"message": "重启服务器会将这些更改推送给所有受邀玩家。他们下次游玩时将被提示更新实例。"
+	},
+	"servers.power.share-changes-start-body": {
+		"message": "启动服务器会将这些更改推送给所有受邀玩家。他们下次游玩时将被提示更新实例。"
+	},
+	"servers.region.australia": {
+		"message": "澳大利亚（悉尼）"
+	},
+	"servers.region.central-europe": {
+		"message": "德国（林堡）"
+	},
+	"servers.region.north-america-central": {
+		"message": "美国（达拉斯）"
+	},
+	"servers.region.north-america-east": {
+		"message": "美国（弗吉尼亚）"
+	},
+	"servers.region.north-america-west": {
+		"message": "美国（圣何塞）"
+	},
+	"servers.region.southeast-asia": {
+		"message": "新加坡"
+	},
+	"servers.region.western-europe": {
+		"message": "英国（考文垂）"
+	},
+	"servers.settings.backups.manual-slots.description": {
+		"message": "选择在你的 {limit} 个备份槽位中，分别有多少个用于手动备份和自动备份。"
+	},
+	"servers.settings.support.hide-support-features.description": {
+		"message": "隐藏已删除备份和管理员账单等支持功能，以普通用户视角查看服务器面板。此“支持”标签页仍保持可见。适用于此设备上的所有服务器。"
+	},
+	"servers.settings.support.hide-support-features.title": {
+		"message": "隐藏支持功能"
+	},
+	"servers.settings.support.resuspend.description": {
+		"message": "这将提前结束 {name} 的临时暂停解除。服务器将立即重新暂停。"
+	},
+	"servers.settings.support.resuspend.error-title": {
+		"message": "取消解除暂停失败"
+	},
+	"servers.settings.support.resuspend.success-text": {
+		"message": "{name} 已重新暂停。"
+	},
+	"servers.settings.support.resuspend.success-title": {
+		"message": "服务器已暂停"
+	},
+	"servers.settings.support.resuspend.title": {
+		"message": "立即取消解除暂停？"
+	},
+	"servers.settings.support.suspend-server": {
+		"message": "暂停服务器"
+	},
+	"servers.settings.support.suspension-lifted.power-allowed": {
+		"message": "解除暂停期间允许电源操作。"
+	},
+	"servers.settings.support.suspension-lifted.power-blocked": {
+		"message": "解除暂停期间已阻止电源操作。"
+	},
+	"servers.settings.support.suspension-lifted.suspended-again": {
+		"message": "将于 {time} 重新暂停"
+	},
+	"servers.settings.support.suspension-lifted.title": {
+		"message": "已解除暂停"
+	},
+	"servers.setup.onboarding.invite.copied": {
+		"message": "链接已复制"
+	},
+	"servers.setup.onboarding.invite.copy-failed": {
+		"message": "复制链接失败"
+	},
+	"servers.setup.onboarding.invite.description": {
+		"message": "分享此链接，好友即可创建包含所有游玩所需内容的共享实例，并直接由你的服务器管理！"
+	},
+	"servers.setup.onboarding.invite.done": {
+		"message": "完成"
+	},
+	"servers.setup.onboarding.invite.invite-later": {
+		"message": "你可以随时在服务器的“游玩”页面邀请更多玩家。"
+	},
+	"servers.setup.onboarding.invite.preparing": {
+		"message": "正在准备你的邀请链接..."
+	},
+	"servers.setup.onboarding.invite.retry": {
+		"message": "重试"
+	},
+	"servers.setup.onboarding.invite.title": {
+		"message": "邀请好友加入"
+	},
+	"servers.setup.onboarding.invite.unavailable": {
+		"message": "邀请链接不可用"
+	},
+	"servers.setup.onboarding.step.invite-friends.description": {
+		"message": "通过链接邀请好友加入你的服务器，让他们在 Modrinth App 中一键加入。"
+	},
+	"servers.sharing-update.badge": {
+		"message": "全新更新"
+	},
+	"servers.sharing-update.blog": {
+		"message": "在<link>服务器共享</link>博客中了解更多关于本次发布的内容。"
+	},
+	"servers.sharing-update.continue": {
+		"message": "继续"
+	},
+	"servers.sharing-update.description": {
+		"message": "你现在可以在应用中直接与好友共享你的服务器。当他们接受后，我们将为他们创建一个由你的服务器管理的实例。"
+	},
+	"servers.sharing-update.get-server": {
+		"message": "获取服务器"
+	},
+	"servers.sharing-update.mute": {
+		"message": "静音视频"
+	},
+	"servers.sharing-update.pause": {
+		"message": "暂停视频"
+	},
+	"servers.sharing-update.purchase-description": {
+		"message": "获取服务器并直接与好友共享。当他们在 Modrinth App 中接受邀请后，我们将为他们创建一个由你的服务器管理的实例。"
+	},
+	"servers.sharing-update.resume": {
+		"message": "继续播放"
+	},
+	"servers.sharing-update.skip": {
+		"message": "跳过"
+	},
+	"servers.sharing-update.title": {
+		"message": "与好友共享服务器"
+	},
+	"servers.sharing-update.unmute": {
+		"message": "取消视频静音"
+	},
+	"servers.sharing-update.watch": {
+		"message": "观看"
+	},
+	"servers.suspend.modal.error-title": {
+		"message": "暂停服务器失败"
+	},
+	"servers.suspend.modal.header": {
+		"message": "暂停 {name}"
+	},
+	"servers.suspend.modal.reason-label": {
+		"message": "原因"
+	},
+	"servers.suspend.modal.reason-moderated": {
+		"message": "内容审核"
+	},
+	"servers.suspend.modal.reason-other": {
+		"message": "其他"
+	},
+	"servers.suspend.modal.success-text": {
+		"message": "{name} 已暂停。"
+	},
+	"servers.suspend.modal.success-title": {
+		"message": "服务器已暂停"
+	},
+	"servers.suspend.modal.suspend-button": {
+		"message": "暂停服务器"
+	},
+	"servers.suspend.modal.warning-body": {
+		"message": "{name} 将停止运行，其子域名将被取消分配。除非解除暂停，否则其备份将在 60 天后删除。"
+	},
+	"servers.suspend.modal.warning-header": {
+		"message": "此服务器将停止运行"
+	},
+	"settings.profile.refresh": {
+		"message": "刷新个人资料"
+	},
+	"settings.profile.username.change": {
+		"message": "更改用户名"
+	},
+	"settings.social.blocked-users.restriction.hosting": {
+		"message": "邀请你管理 Modrinth Hosting 服务器"
+	},
+	"skin.preview.drag-to-rotate": {
+		"message": "拖动以旋转"
+	},
+	"skin.preview.scroll-to-zoom": {
+		"message": "滚轮以缩放"
+	},
+	"version.uploaded-by": {
+		"message": "上传者"
 	}
 }

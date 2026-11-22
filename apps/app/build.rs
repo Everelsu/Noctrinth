@@ -623,6 +623,7 @@ fn main() {
                         "plugins_http_fetch",
                         "plugins_fetch_catalog",
                         "plugins_get_dir",
+                        "plugins_is_safe_mode",
                     ])
                     .default_permission(
                         DefaultPermissionRule::AllowAllCommands,

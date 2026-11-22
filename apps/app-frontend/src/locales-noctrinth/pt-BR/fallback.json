@@ -7,5 +7,38 @@
 	},
 	"button.switch-version": {
 		"message": "Trocar versão"
+	},
+	"console.actions.open-file": {
+		"message": "Abrir arquivo"
+	},
+	"console.history.load-earlier": {
+		"message": "Carregar linhas anteriores"
+	},
+	"creation-flow.modal.import-instance.delete-source.description": {
+		"message": "Exclui os arquivos de cada instância importada do outro launcher para que não fiquem duplicados. Deixe desativado para manter ambas as cópias."
+	},
+	"creation-flow.modal.import-instance.delete-source.label": {
+		"message": "Remover do {launcher} após importar"
+	},
+	"project.versions.column.downloads": {
+		"message": "Downloads"
+	},
+	"project.versions.column.environment": {
+		"message": "Ambiente"
+	},
+	"project.versions.column.published": {
+		"message": "Publicado"
+	},
+	"servers.curseforge-files-review.body": {
+		"message": "{count, plural, one {# arquivo} other {# arquivos}} neste modpack {count, plural, one {não está publicado} other {não estão publicados}} no Modrinth, ou não conseguimos determinar se {count, plural, one {ele deve} other {eles devem}} ser instalados no servidor, disponibilizados aos jogadores ou ambos. Revise e complete {count, plural, one {esse item} other {esses itens}} na coluna <bold>Ativado para</bold>."
+	},
+	"skin.preview.drag-to-rotate": {
+		"message": "Arraste para girar"
+	},
+	"skin.preview.scroll-to-zoom": {
+		"message": "Role para dar zoom"
+	},
+	"version.uploaded-by": {
+		"message": "Enviado por"
 	}
 }

@@ -25,6 +25,7 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
             plugins_http_fetch,
             plugins_fetch_catalog,
             plugins_get_dir,
+            plugins_is_safe_mode,
         ])
         .build()
 }
@@ -646,4 +647,9 @@ pub async fn plugins_fetch_catalog(catalog_url: String) -> Result<String> {
 pub async fn plugins_get_dir() -> Result<String> {
     let dir = plugins_dir().await?;
     Ok(dir.to_string_lossy().into_owned())
+}
+
+#[tauri::command]
+pub fn plugins_is_safe_mode() -> bool {
+    std::env::args().any(|arg| arg == "--safe-mode" || arg == "--no-plugins")
 }

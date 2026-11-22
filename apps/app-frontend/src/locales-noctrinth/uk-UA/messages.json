@@ -2533,5 +2533,14 @@
 	},
 	"app.plugins.quick-css.clear": {
 		"message": "Очистити"
+	},
+	"app.plugins.safe-mode.header": {
+		"message": "Увімкнено безпечний режим"
+	},
+	"app.plugins.safe-mode.body": {
+		"message": "Усі плагіни та Quick CSS тимчасово призупинено. Натисніть Ctrl+Shift+Alt+P у будь-який момент, якщо зламана тема або плагін заблокують інтерфейс."
+	},
+	"app.plugins.safe-mode.exit": {
+		"message": "Вийти з безпечного режиму"
 	}
 }

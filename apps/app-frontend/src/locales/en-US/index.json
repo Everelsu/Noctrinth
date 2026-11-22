@@ -3014,6 +3014,15 @@
   "app.plugins.remove.title": {
     "message": "Remove plugin?"
   },
+  "app.plugins.safe-mode.body": {
+    "message": "All plugins and Quick CSS are temporarily paused. Press Ctrl+Shift+Alt+P anytime if a broken theme or plugin locks up the UI."
+  },
+  "app.plugins.safe-mode.exit": {
+    "message": "Exit Safe Mode"
+  },
+  "app.plugins.safe-mode.header": {
+    "message": "Safe Mode is active"
+  },
   "app.plugins.settings": {
     "message": "Plugin settings"
   },

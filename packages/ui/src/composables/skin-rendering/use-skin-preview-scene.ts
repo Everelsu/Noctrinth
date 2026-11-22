@@ -208,6 +208,7 @@ export function useSkinPreviewScene({
 	})
 	const isModelLoaded = ref(false)
 	const isTextureLoaded = ref(false)
+	const isCapeLoaded = ref(!capeSrc.value)
 	const hasEarsFeatures = ref(false)
 	let modelLoadVersion = 0
 	let textureLoadVersion = 0
@@ -243,9 +244,10 @@ export function useSkinPreviewScene({
 	function applyCapeTextureToLoadedModel() {
 		if (!scene.value || loadedModelSrc.value !== selectedModelSrc.value) return
 
+		const skinReady = !!texture.value && loadedTextureSrc.value === textureSrc.value
 		applyCapeTexture(
 			scene.value,
-			loadedCapeSrc.value === capeSrc.value ? capeTexture.value : null,
+			skinReady && loadedCapeSrc.value === capeSrc.value ? capeTexture.value : null,
 			transparentTexture,
 		)
 	}
@@ -332,10 +334,14 @@ export function useSkinPreviewScene({
 	}
 
 	async function loadAndApplyCapeTexture(src: string | undefined) {
-		if (src === lastCapeSrc.value) return
+		if (src === lastCapeSrc.value) {
+			isCapeLoaded.value = true
+			return
+		}
 
 		const loadVersion = ++capeLoadVersion
 		lastCapeSrc.value = src
+		isCapeLoaded.value = !src
 
 		let loadedCapeTexture: THREE.Texture | null = null
 		if (src) {
@@ -351,6 +357,7 @@ export function useSkinPreviewScene({
 		applyCapeTextureToLoadedModel()
 		disposeRetiredTextures()
 		updateModelInfo()
+		isCapeLoaded.value = true
 	}
 
 	async function loadAndApplyEars() {
@@ -438,6 +445,7 @@ export function useSkinPreviewScene({
 			replaceTexture(texture, loadedTexture)
 			loadedTextureSrc.value = newSrc
 			applyTextureToLoadedModel()
+			applyCapeTextureToLoadedModel()
 			disposeRetiredTextures()
 			updateModelInfo()
 			isTextureLoaded.value = true
@@ -461,16 +469,31 @@ export function useSkinPreviewScene({
 	onBeforeMount(async () => {
 		try {
 			isTextureLoaded.value = false
-			replaceTexture(texture, await loadAndApplyTexture(textureSrc.value))
-			loadedTextureSrc.value = textureSrc.value
-			isTextureLoaded.value = true
+			const initialTextureSrc = textureSrc.value
+			const initialModelSrc = selectedModelSrc.value
+			const initialCapeSrc = capeSrc.value
 
-			await loadAndApplyEars()
-			await loadModel(selectedModelSrc.value)
-
-			if (capeSrc.value) {
-				await loadAndApplyCapeTexture(capeSrc.value)
+			const loadInitialTexture = async () => {
+				const loaded = await loadAndApplyTexture(initialTextureSrc)
+				if (isUnmounted || initialTextureSrc !== textureSrc.value) {
+					loaded?.dispose()
+					return
+				}
+				replaceTexture(texture, loaded)
+				loadedTextureSrc.value = initialTextureSrc
+				applyTextureToLoadedModel()
+				applyCapeTextureToLoadedModel()
+				disposeRetiredTextures()
+				updateModelInfo()
+				isTextureLoaded.value = true
 			}
+
+			await Promise.all([
+				loadInitialTexture(),
+				loadModel(initialModelSrc),
+				loadAndApplyEars(),
+				initialCapeSrc ? loadAndApplyCapeTexture(initialCapeSrc) : Promise.resolve(),
+			])
 		} catch (error) {
 			console.error('Failed to initialize skin preview:', error)
 		}
@@ -495,6 +518,7 @@ export function useSkinPreviewScene({
 
 	return {
 		hasEarsFeatures,
+		isCapeLoaded,
 		isModelLoaded,
 		isTextureLoaded,
 		modelCenter,

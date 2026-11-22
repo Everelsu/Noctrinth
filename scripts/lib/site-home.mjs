@@ -4,7 +4,7 @@
 import { articleCard, NEWS_CSS } from './site-news.mjs'
 import { icon, page, REPO, t } from './site-style.mjs'
 
-const FEATURES = [
+const HERO_FEATURES = [
 	{
 		media: 'assets/accounts.png',
 		title: t('Microsoft, Ely.by or just a name', 'Microsoft, Ely.by или просто ник'),
@@ -13,6 +13,25 @@ const FEATURES = [
 			'Добавь аккаунт Microsoft, войди через Ely.by или играй в одиночку и на офлайн-серверах под любым ником. Все аккаунты в одном списке, переключение в один клик.',
 		),
 	},
+	{
+		media: 'assets/curseforge-discover.jpg',
+		title: t('CurseForge, right next to Modrinth', 'CurseForge прямо рядом с Modrinth'),
+		text: t(
+			'Switch between Modrinth and CurseForge right on the Discover page to browse and install mods, modpacks, resource packs and shaders. CurseForge files get updates and version switching just like Modrinth ones, restricted mods are automatically matched on Modrinth when available (or picked up from Downloads), and CurseForge profile codes and <code>.zip</code> packs install straight from disk.',
+			'Переключайся между Modrinth и CurseForge прямо в «Исследовании» и ставь моды, сборки, ресурспаки и шейдеры в один клик. Файлы с CurseForge обновляются и переключаются по версиям так же, как с Modrinth, ограниченные моды автоматически подхватываются с Modrinth (или из «Загрузок»), а коды профилей и <code>.zip</code>-сборки ставятся прямо с диска.',
+		),
+	},
+	{
+		media: 'assets/plugins-settings.jpg',
+		title: t('Plugins, themes & Quick CSS', 'Плагины, темы и Quick CSS'),
+		text: t(
+			'Customize the launcher with pure CSS themes, add new content sources to Discover, or install sandboxed extensions. Browse the <a href="plugins/">Plugin Catalog</a> or build your own using the <a href="docs/">Plugin Docs</a>.',
+			'Настраивай внешний вид лаунчера CSS-темами с живыми параметрами, добавляй новые источники в «Исследование» и ставь расширения. Загляни в <a href="plugins/">каталог плагинов</a> или напиши свой по <a href="docs/">документации</a>.',
+		),
+	},
+]
+
+const BENTO_FEATURES = [
 	{
 		media: 'assets/ely-by-skins.png',
 		title: t('Ely.by skins in the launcher', 'Скины Ely.by в лаунчере'),
@@ -27,14 +46,6 @@ const FEATURES = [
 		text: t(
 			'Offline servers send no skins, so everyone is Steve. Noctrinth finds each player by name on Ely.by, Mojang and LittleSkin, with capes from OptiFine, LabyMod and MinecraftCapes. No mod needed.',
 			'Офлайн-серверы не передают скины, и все ходят Стивами. Noctrinth находит каждого игрока по нику в Ely.by, Mojang и LittleSkin, а плащи берёт из OptiFine, LabyMod и MinecraftCapes. Моды не нужны.',
-		),
-	},
-	{
-		media: 'assets/curseforge-import.png',
-		title: t('CurseForge, right next to Modrinth', 'CurseForge рядом с Modrinth'),
-		text: t(
-			'Search CurseForge from the same Discover page, open a project and install its mods, resource packs, shaders or modpacks. CurseForge files in an instance get updates and a version switcher like Modrinth ones, and a file its author keeps off launchers is picked up from Downloads once you fetch it. A friend’s CurseForge profile code installs their pack, and a CurseForge <code>.zip</code> installs straight from disk.',
-			'Ищи на CurseForge с той же страницы «Обзор», открывай проект и ставь моды, ресурспаки, шейдеры или модпаки. Файлы с CurseForge в сборке обновляются и переключаются по версиям так же, как с Modrinth, а файл, который автор не даёт качать лаунчерам, подхватывается из «Загрузок», как только ты его скачаешь. Код профиля CurseForge от друга ставит его пак, а <code>.zip</code> с CurseForge ставится прямо с диска.',
 		),
 	},
 	{
@@ -55,6 +66,7 @@ const FEATURES = [
 	},
 	{
 		media: 'assets/accents.gif',
+		wide: true,
 		title: t('Made to look like yours', 'Выглядит так, как хочешь ты'),
 		text: t(
 			'Pick an accent from the presets or any colour on a colour wheel: the whole interface, its backgrounds, the splash screen and the taskbar icon follow it. Put a picture, an animated GIF or a looping video behind the launcher, blurred and darkened as you like, and set the interface in Inter, the system font, the Minecraft font or any font on your computer.',
@@ -80,6 +92,7 @@ const SMALL_FEATURES = [
 	t('Changelogs in Russian, Modrinth’s too', 'Списки изменений на русском, и Modrinth тоже'),
 	t('Collections and notifications built in', 'Коллекции и уведомления внутри'),
 	t('Animated instance icons', 'Анимированные иконки сборок'),
+	t('Quick CSS & Safe Mode (Ctrl+Shift+Alt+P)', 'Quick CSS и безопасный режим (Ctrl+Shift+Alt+P)'),
 	t('No ads', 'Без рекламы'),
 ]
 
@@ -126,8 +139,9 @@ const FAQ = [
 
 const HOME_CSS = `
 	.download__others [hidden] { display: none; }
-	.hero { border-bottom: 1px solid var(--brand-gradient-border); background: var(--brand-gradient-bg); }
-	.hero__banner { display: block; width: 100%; height: auto; max-height: 340px; object-fit: cover; }
+	.hero { border-bottom: 1px solid var(--brand-gradient-border); background: var(--brand-gradient-bg); padding-top: 1.5rem; }
+	.hero__banner-wrap { max-width: 74rem; margin: 0 auto; padding-inline: 1.5rem; }
+	.hero__banner { display: block; width: 100%; height: auto; max-height: 360px; object-fit: cover; border-radius: var(--radius-xl); border: 1px solid var(--brand-gradient-border); box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.75); }
 	.hero__body { text-align: center; padding: 2rem 1.5rem 3rem; }
 	.hero__lead { max-width: 44rem; margin: 0 auto; font-size: clamp(1.15rem, 2.4vw, 1.5rem); font-weight: 600; line-height: 1.4; color: var(--text-contrast); }
 	.hero__sub { margin: 0.75rem auto 0; max-width: 38rem; color: var(--text-secondary); }
@@ -137,26 +151,39 @@ const HOME_CSS = `
 	.download__others { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
 	.download__others .btn { min-height: 2rem; padding: 0.35rem 0.85rem; font-size: 0.875rem; }
 
-	.home-section { margin-top: 4rem; }
-	.home-section > .section-heading { font-size: 1.75rem; text-align: center; margin-bottom: 2rem; }
-	.feature { display: grid; grid-template-columns: 1.15fr 1fr; gap: 2rem; align-items: center; margin-bottom: 1.25rem; padding: 1.25rem; background: var(--surface-2); border: 1px solid var(--button-border); border-radius: var(--radius-xl); }
+	.home-section { margin-top: 4.25rem; }
+	.home-section > .section-heading { font-size: 1.85rem; text-align: center; margin-bottom: 2rem; }
+	.feature { display: grid; grid-template-columns: 1.15fr 1fr; gap: 2rem; align-items: center; margin-bottom: 1.35rem; padding: 1.35rem; background: var(--surface-2); border: 1px solid var(--button-border); border-radius: var(--radius-xl); transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease; }
+	.feature:hover { border-color: rgba(192, 132, 252, 0.3); box-shadow: 0 14px 36px -18px rgba(0, 0, 0, 0.7); }
 	.feature--flip { grid-template-columns: 1fr 1.15fr; }
 	.feature--flip .feature__media { order: 2; }
-	.feature__media { aspect-ratio: 16 / 10; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: var(--radius-lg); background: var(--bg); border: 1px solid var(--button-border); }
+	.feature__media { aspect-ratio: 16 / 10; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: var(--radius-lg); background: #0d0c13; border: 1px solid var(--button-border); }
 	.feature__media img { width: 100%; height: 100%; object-fit: contain; }
-	.feature h3 { margin: 0 0 0.5rem; font-size: 1.3rem; color: var(--text-contrast); }
-	.feature p { margin: 0; line-height: 1.6; }
+	.feature h3 { margin: 0 0 0.5rem; font-size: 1.35rem; font-weight: 700; letter-spacing: -0.015em; color: var(--text-contrast); }
+	.feature p { margin: 0; line-height: 1.65; }
+
+	.bento-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; margin-top: 1.35rem; }
+	.bento-card { display: flex; flex-direction: column; gap: 1rem; padding: 1.25rem; background: var(--surface-2); border: 1px solid var(--button-border); border-radius: var(--radius-xl); transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease; }
+	.bento-card:hover { border-color: rgba(192, 132, 252, 0.3); box-shadow: 0 14px 36px -18px rgba(0, 0, 0, 0.7); }
+	.bento-card--wide { grid-column: 1 / -1; display: grid; grid-template-columns: 1.15fr 1fr; gap: 2rem; align-items: center; }
+	.bento-card h3 { margin: 0 0 0.45rem; font-size: 1.2rem; font-weight: 700; letter-spacing: -0.015em; color: var(--text-contrast); }
+	.bento-card p { margin: 0; font-size: 0.96rem; line-height: 1.6; }
+
 	.chips { list-style: none; padding: 0; margin: 2rem 0 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
 	.chips li { padding: 0.45rem 0.95rem; border-radius: 999px; background: var(--surface-3); border: 1px solid var(--button-border); color: var(--text-contrast); font-size: 0.9rem; font-weight: 500; }
 	.section-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.5rem; }
 	.section-row .section-heading { margin: 0; font-size: 1.75rem; }
-	.faq { display: flex; flex-direction: column; gap: 0.6rem; max-width: 46rem; margin: 0 auto; }
-	.faq details { background: var(--surface-2); border: 1px solid var(--button-border); border-radius: var(--radius-lg); padding: 0.9rem 1.2rem; }
-	.faq summary { cursor: pointer; font-weight: 700; color: var(--text-contrast); }
-	.faq p { margin: 0.6rem 0 0; line-height: 1.6; }
+	.faq { display: flex; flex-direction: column; gap: 0.65rem; max-width: 52rem; margin: 0 auto; }
+	.faq details { background: var(--surface-2); border: 1px solid var(--button-border); border-radius: var(--radius-lg); padding: 0.95rem 1.25rem; }
+	.faq summary { list-style: none; cursor: pointer; font-weight: 700; color: var(--text-contrast); display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+	.faq summary::-webkit-details-marker { display: none; }
+	.faq__chevron { width: 1.1rem; height: 1.1rem; flex-shrink: 0; color: var(--text-secondary); transition: transform 0.2s ease, color 0.2s ease; transform: rotate(90deg); }
+	.faq details[open] .faq__chevron { transform: rotate(-90deg); color: var(--brand); }
+	.faq p { margin: 0.7rem 0 0; line-height: 1.65; }
 
 	@media (max-width: 760px) {
-		.feature, .feature--flip { grid-template-columns: 1fr; }
+		.hero__banner-wrap { padding-inline: 1rem; }
+		.feature, .feature--flip, .bento-grid, .bento-card--wide { grid-template-columns: 1fr; }
 		.feature--flip .feature__media { order: 0; }
 	}
 `
@@ -176,7 +203,7 @@ export function renderHome({ articles }) {
 		]),
 	)
 
-	const features = FEATURES.map(
+	const features = HERO_FEATURES.map(
 		(feature, index) => `
 		<section class="feature${index % 2 ? ' feature--flip' : ''}">
 			<div class="feature__media"><img src="${feature.media}" alt="" loading="lazy"></div>
@@ -186,6 +213,17 @@ export function renderHome({ articles }) {
 			</div>
 		</section>`,
 	).join('')
+
+	const bento = `<div class="bento-grid">${BENTO_FEATURES.map(
+		(feature) => `
+		<section class="bento-card${feature.wide ? ' bento-card--wide' : ''}">
+			<div class="feature__media"><img src="${feature.media}" alt="" loading="lazy"></div>
+			<div>
+				<h3>${feature.title}</h3>
+				<p>${feature.text}</p>
+			</div>
+		</section>`,
+	).join('')}</div>`
 
 	const news = articles.length
 		? `
@@ -203,7 +241,9 @@ export function renderHome({ articles }) {
 
 	const body = `
 	<header class="hero">
-		<img class="hero__banner" src="assets/noctrinth-banner.svg" alt="Noctrinth">
+		<div class="hero__banner-wrap">
+			<img class="hero__banner" src="assets/noctrinth-banner.svg" alt="Noctrinth">
+		</div>
 		<div class="hero__body">
 			<p class="hero__lead">${t(
 				'Ely.by, offline accounts and CurseForge, in the Modrinth App you already know.',
@@ -237,15 +277,16 @@ export function renderHome({ articles }) {
 		<section class="container container--wide home-section">
 			<h2 class="section-heading">${t('What it adds', 'Что он добавляет')}</h2>
 			${features}
+			${bento}
 			<ul class="chips">${SMALL_FEATURES.map((item) => `<li>${item}</li>`).join('')}</ul>
 		</section>
 		${news}
-		<section class="container home-section" id="faq">
+		<section class="container container--wide home-section" id="faq">
 			<h2 class="section-heading" style="text-align:center">${t('Questions', 'Вопросы')}</h2>
 			<div class="faq">${FAQ.map(
 				(item) => `
 				<details>
-					<summary>${item.q}</summary>
+					<summary><span>${item.q}</span><span class="faq__chevron">${icon('chevron')}</span></summary>
 					<p>${item.a}</p>
 				</details>`,
 			).join('')}</div>

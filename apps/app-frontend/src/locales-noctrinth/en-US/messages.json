@@ -153,7 +153,7 @@
 		"message": "Catalog index URL"
 	},
 	"app.plugins.description": {
-		"message": "Extend Noctrinth with themes, content sources, and sandboxed extensions. Catalog plugins are verified by SHA-256."
+		"message": "Extend Noctrinth with themes, content sources, and sandboxed extensions."
 	},
 	"app.plugins.empty.installed.description": {
 		"message": "Install a verified plugin from the catalog or load a local .zip archive."

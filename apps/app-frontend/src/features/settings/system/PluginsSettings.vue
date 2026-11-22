@@ -2,6 +2,7 @@
 import {
 	CheckIcon,
 	CodeIcon,
+	DiscordIcon,
 	DownloadIcon,
 	ExternalIcon,
 	FolderOpenIcon,
@@ -71,8 +72,7 @@ const messages = defineMessages({
 	title: { id: 'app.plugins.title', defaultMessage: 'Plugins' },
 	description: {
 		id: 'app.plugins.description',
-		defaultMessage:
-			'Extend Noctrinth with themes, content sources, and sandboxed extensions. Catalog plugins are verified by SHA-256.',
+		defaultMessage: 'Extend Noctrinth with themes, content sources, and sandboxed extensions.',
 	},
 	disclaimerHeader: {
 		id: 'app.plugins.disclaimer.header',
@@ -190,6 +190,19 @@ const messages = defineMessages({
 		defaultMessage: 'Removed "{name}"',
 	},
 })
+
+const DISCLAIMER_DISMISSED_KEY = 'noctrinth.plugins.disclaimerDismissed'
+const disclaimerDismissed = ref(
+	typeof localStorage !== 'undefined' && localStorage.getItem(DISCLAIMER_DISMISSED_KEY) === '1',
+)
+function dismissDisclaimer() {
+	disclaimerDismissed.value = true
+	try {
+		localStorage.setItem(DISCLAIMER_DISMISSED_KEY, '1')
+	} catch {
+		// ignore storage errors
+	}
+}
 
 const activeTab = ref<'installed' | 'catalog'>('installed')
 const tabItems: ('installed' | 'catalog')[] = ['installed', 'catalog']
@@ -464,9 +477,12 @@ onMounted(() => {
 			</Admonition>
 
 			<Admonition
+				v-if="!disclaimerDismissed"
 				type="warning"
+				dismissible
 				:header="formatMessage(messages.disclaimerHeader)"
 				:body="formatMessage(messages.disclaimerBody)"
+				@dismiss="dismissDisclaimer"
 			/>
 		</section>
 
@@ -481,6 +497,10 @@ onMounted(() => {
 						<Button @click="handleOpenPluginsFolder">
 							<FolderOpenIcon aria-hidden="true" />
 							{{ formatMessage(messages.openFolder) }}
+						</Button>
+						<Button disabled>
+							<DiscordIcon aria-hidden="true" />
+							Discord
 						</Button>
 						<Button
 							v-if="pluginUpdates.length > 0"
@@ -908,95 +928,104 @@ onMounted(() => {
 					<div
 						v-for="entry in filteredCatalog"
 						:key="entry.id"
-						class="flex items-start justify-between gap-4 rounded-2xl border border-solid border-surface-5 bg-surface-3 p-4"
+						class="overflow-hidden rounded-2xl border border-solid border-surface-5 bg-surface-3"
 					>
-						<div class="flex min-w-0 flex-1 items-start gap-3">
-							<img
-								v-if="entry.icon_url"
-								:src="entry.icon_url"
-								alt=""
-								class="size-10 shrink-0 rounded-xl object-cover"
-							/>
-							<div
-								v-else
-								class="flex size-10 shrink-0 items-center justify-center rounded-xl"
-								:class="typeBadgeClass(entry.type)"
-							>
-								<component :is="typeIcon(entry.type)" class="size-5" aria-hidden="true" />
-							</div>
-							<div class="flex min-w-0 flex-1 flex-col gap-1">
-								<div class="flex flex-wrap items-center gap-2">
-									<span class="font-semibold text-contrast">{{ entry.name }}</span>
-									<span
-										class="rounded-md bg-surface-4 px-1.5 py-0.5 font-mono text-xs text-secondary"
-									>
-										v{{ entry.version }}
-									</span>
-									<span
-										class="rounded-md px-1.5 py-0.5 text-xs font-medium"
-										:class="typeBadgeClass(entry.type)"
-									>
-										{{ typeLabel(entry.type) }}
-									</span>
+						<img
+							v-if="entry.banner_url"
+							:src="entry.banner_url"
+							alt=""
+							loading="lazy"
+							class="block aspect-video max-h-48 w-full border-0 border-b border-solid border-surface-5 object-cover"
+						/>
+						<div class="flex items-start justify-between gap-4 p-4">
+							<div class="flex min-w-0 flex-1 items-start gap-3">
+								<img
+									v-if="entry.icon_url"
+									:src="entry.icon_url"
+									alt=""
+									class="size-10 shrink-0 rounded-xl object-cover"
+								/>
+								<div
+									v-else
+									class="flex size-10 shrink-0 items-center justify-center rounded-xl"
+									:class="typeBadgeClass(entry.type)"
+								>
+									<component :is="typeIcon(entry.type)" class="size-5" aria-hidden="true" />
 								</div>
-								<p v-if="entry.description" class="m-0 text-sm text-secondary">
-									{{ entry.description }}
-								</p>
-								<div class="flex flex-wrap items-center gap-1.5">
-									<span v-if="entry.author" class="mr-1 text-xs font-medium text-primary">
-										{{ entry.author }}
-									</span>
-									<span
-										v-for="tag in entry.tags ?? []"
-										:key="tag"
-										class="rounded-md bg-surface-2 px-1.5 py-0.5 text-[11px] text-secondary"
-									>
-										#{{ tag }}
-									</span>
+								<div class="flex min-w-0 flex-1 flex-col gap-1">
+									<div class="flex flex-wrap items-center gap-2">
+										<span class="font-semibold text-contrast">{{ entry.name }}</span>
+										<span
+											class="rounded-md bg-surface-4 px-1.5 py-0.5 font-mono text-xs text-secondary"
+										>
+											v{{ entry.version }}
+										</span>
+										<span
+											class="rounded-md px-1.5 py-0.5 text-xs font-medium"
+											:class="typeBadgeClass(entry.type)"
+										>
+											{{ typeLabel(entry.type) }}
+										</span>
+									</div>
+									<p v-if="entry.description" class="m-0 text-sm text-secondary">
+										{{ entry.description }}
+									</p>
+									<div class="flex flex-wrap items-center gap-1.5">
+										<span v-if="entry.author" class="mr-1 text-xs font-medium text-primary">
+											{{ entry.author }}
+										</span>
+										<span
+											v-for="tag in entry.tags ?? []"
+											:key="tag"
+											class="rounded-md bg-surface-2 px-1.5 py-0.5 text-[11px] text-secondary"
+										>
+											#{{ tag }}
+										</span>
+									</div>
 								</div>
 							</div>
-						</div>
 
-						<div class="flex shrink-0 items-center gap-2">
-							<IconButton
-								v-if="entry.homepage || entry.repository"
-								v-tooltip="entry.homepage || entry.repository"
-								type="quiet"
-								size="sm"
-								:label="entry.homepage || entry.repository || entry.name"
-								@click="openUrl((entry.homepage || entry.repository)!)"
-							>
-								<ExternalIcon />
-							</IconButton>
-							<template v-if="installedById.has(entry.id)">
+							<div class="flex shrink-0 items-center gap-2">
+								<IconButton
+									v-if="entry.homepage || entry.repository"
+									v-tooltip="entry.homepage || entry.repository"
+									type="quiet"
+									size="sm"
+									:label="entry.homepage || entry.repository || entry.name"
+									@click="openUrl((entry.homepage || entry.repository)!)"
+								>
+									<ExternalIcon />
+								</IconButton>
+								<template v-if="installedById.has(entry.id)">
+									<Button
+										v-if="installedById.get(entry.id)?.manifest.version !== entry.version"
+										type="colored"
+										color="brand"
+										:disabled="installingId === entry.id"
+										@click="handleInstallFromCatalog(entry)"
+									>
+										<DownloadIcon aria-hidden="true" />
+										{{ formatMessage(messages.update) }}
+									</Button>
+									<span
+										v-else
+										class="flex items-center gap-1.5 rounded-xl bg-surface-4 px-3 py-2 text-sm font-medium text-brand"
+									>
+										<CheckIcon class="size-4" aria-hidden="true" />
+										{{ formatMessage(messages.installedBadge) }}
+									</span>
+								</template>
 								<Button
-									v-if="installedById.get(entry.id)?.manifest.version !== entry.version"
+									v-else
 									type="colored"
 									color="brand"
 									:disabled="installingId === entry.id"
 									@click="handleInstallFromCatalog(entry)"
 								>
 									<DownloadIcon aria-hidden="true" />
-									{{ formatMessage(messages.update) }}
+									{{ formatMessage(messages.install) }}
 								</Button>
-								<span
-									v-else
-									class="flex items-center gap-1.5 rounded-xl bg-surface-4 px-3 py-2 text-sm font-medium text-brand"
-								>
-									<CheckIcon class="size-4" aria-hidden="true" />
-									{{ formatMessage(messages.installedBadge) }}
-								</span>
-							</template>
-							<Button
-								v-else
-								type="colored"
-								color="brand"
-								:disabled="installingId === entry.id"
-								@click="handleInstallFromCatalog(entry)"
-							>
-								<DownloadIcon aria-hidden="true" />
-								{{ formatMessage(messages.install) }}
-							</Button>
+							</div>
 						</div>
 					</div>
 				</div>

@@ -1377,7 +1377,7 @@
 		"message": "目录索引 URL"
 	},
 	"app.plugins.description": {
-		"message": "使用主题、内容源和沙盒扩展来增强 Noctrinth。目录中的插件均通过 SHA-256 校验。"
+		"message": "使用主题、内容源和沙盒扩展来增强 Noctrinth。"
 	},
 	"app.plugins.empty.installed.description": {
 		"message": "从目录安装经校验的插件，或加载本地 .zip 压缩包。"

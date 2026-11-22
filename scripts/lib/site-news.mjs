@@ -102,7 +102,7 @@ export const NEWS_CSS = `
 	.featured__content p { margin: 0; font-size: 1.125rem; line-height: 1.3; }
 	.featured__content .news-card__date { margin-top: auto; color: var(--text-secondary); }
 
-	.news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; margin-top: 1rem; }
+	.news-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-top: 1rem; }
 	.news-card { display: flex; color: inherit; transition: filter 0.15s ease, transform 0.1s ease; }
 	.news-card:hover { filter: brightness(1.25); text-decoration: none; }
 	.news-card:hover h3 { text-decoration: underline; }
@@ -115,10 +115,10 @@ export const NEWS_CSS = `
 
 	.article { display: flex; flex-direction: column; gap: 1rem; margin-top: 1.5rem; }
 	.article h2.article__title { margin: 0; font-size: clamp(1.5rem, 4vw, 2.25rem); font-weight: 600; line-height: 1.15; color: var(--text-contrast); }
-	.article__summary { margin: 0; font-size: 1.125rem; line-height: 1.35; }
+	.article__summary { margin: 0; max-width: 52rem; font-size: 1.125rem; line-height: 1.35; }
 	.article__date { color: var(--text-secondary); }
-	.article__cover { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 1rem; border: 1px solid var(--button-border); }
-	.markdown { font-size: 1.05rem; line-height: 1.7; }
+	.article__cover { width: 100%; max-height: 480px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 1rem; border: 1px solid var(--button-border); }
+	.markdown { max-width: 52rem; font-size: 1.05rem; line-height: 1.7; }
 	.markdown h2, .markdown h3 { color: var(--text-contrast); margin: 2rem 0 0.5rem; line-height: 1.25; }
 	.markdown h2 { font-size: 1.5rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--divider); }
 	.markdown h3 { font-size: 1.2rem; }
@@ -141,7 +141,7 @@ export const NEWS_CSS = `
 function newsHeader(prefix, titleLink) {
 	const title = t('News', 'Новости')
 	return `
-	<div class="container news-header">
+	<div class="container container--wide news-header">
 		<h1>${titleLink ? `<a href="${prefix}news/">${title}</a>` : title}</h1>
 		<div class="icon-buttons">
 			<a class="btn" href="${prefix}news/feed/rss.xml" aria-label="RSS" title="RSS">${icon('rss')}</a>
@@ -154,14 +154,14 @@ function newsHeader(prefix, titleLink) {
 export function renderNewsIndex(articles) {
 	const prefix = '../'
 	if (articles.length === 0) {
-		return `${newsHeader(prefix, false)}<p class="container empty">${t('No news yet.', 'Новостей пока нет.')}</p>`
+		return `${newsHeader(prefix, false)}<p class="container container--wide empty">${t('No news yet.', 'Новостей пока нет.')}</p>`
 	}
 
 	const [featured, ...rest] = articles
 	return `
 	${newsHeader(prefix, false)}
 	<div class="full-width-bg featured">
-		<div class="container">
+		<div class="container container--wide">
 			<a href="${prefix}news/article/${featured.slug}/">
 				<article>
 					<img src="${thumbnailUrl(featured, prefix)}" alt="">
@@ -177,7 +177,7 @@ export function renderNewsIndex(articles) {
 	</div>
 	${
 		rest.length
-			? `<div class="container" style="margin-top:1.5rem">
+			? `<div class="container container--wide" style="margin-top:1.5rem">
 		<h2 class="section-heading">${t('More articles', 'Ещё статьи')}</h2>
 		<div class="news-grid">${rest.map((article) => articleCard(article, prefix)).join('')}</div>
 	</div>`
@@ -196,7 +196,7 @@ export function renderArticle(article) {
 
 	return `
 	${newsHeader(prefix, true)}
-	<div class="container">
+	<div class="container container--wide">
 		<article class="article">
 			<h2 class="article__title">${both(article, 'title')}</h2>
 			<p class="article__summary">${both(article, 'summary')}</p>

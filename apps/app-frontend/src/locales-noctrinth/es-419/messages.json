@@ -1377,7 +1377,7 @@
 		"message": "URL del índice del catálogo"
 	},
 	"app.plugins.description": {
-		"message": "Amplía Noctrinth con temas, fuentes de contenido y extensiones aisladas. Los plugins del catálogo se verifican mediante SHA-256."
+		"message": "Amplía Noctrinth con temas, fuentes de contenido y extensiones aisladas."
 	},
 	"app.plugins.empty.installed.description": {
 		"message": "Instala un plugin verificado del catálogo o carga un archivo .zip local."

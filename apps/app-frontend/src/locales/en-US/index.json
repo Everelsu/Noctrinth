@@ -2964,7 +2964,7 @@
     "message": "JSON index used to discover and verify community plugins."
   },
   "app.plugins.description": {
-    "message": "Extend Noctrinth with themes, content sources, and sandboxed extensions. Catalog plugins are verified by SHA-256."
+    "message": "Extend Noctrinth with themes, content sources, and sandboxed extensions."
   },
   "app.plugins.disclaimer.body": {
     "message": "Plugins are created by third-party authors. Noctrinth is not responsible for the safety, reliability, data loss, or any malicious code in installed plugins. Only install plugins from sources you trust."

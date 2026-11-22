@@ -1377,7 +1377,7 @@
 		"message": "Katalog-Index-URL"
 	},
 	"app.plugins.description": {
-		"message": "Erweitere Noctrinth mit Designs, Inhaltsquellen und isolierten Erweiterungen. Katalog-Plugins werden per SHA-256 geprüft."
+		"message": "Erweitere Noctrinth mit Designs, Inhaltsquellen und isolierten Erweiterungen."
 	},
 	"app.plugins.empty.installed.description": {
 		"message": "Installiere ein geprüftes Plugin aus dem Katalog oder lade ein lokales .zip-Archiv."

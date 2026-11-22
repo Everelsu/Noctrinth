@@ -1,1663 +1,693 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-lang="en">
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Noctrinth — Changelog</title>
+	<title>Noctrinth — Minecraft launcher</title>
+	<meta name="description" content="A Modrinth App fork with Ely.by and offline accounts, CurseForge packs, plugins, themes, and skins for everyone on offline servers.">
+	<meta property="og:title" content="Noctrinth — Minecraft launcher">
+	<meta property="og:description" content="A Modrinth App fork with Ely.by and offline accounts, CurseForge packs, plugins, themes, and skins for everyone on offline servers.">
+	<meta property="og:image" content="https://everelsu.github.io/Noctrinth/assets/social-preview.png">
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="google-site-verification" content="ayBhsFYwpg8Dii-9MgI3aKSmUTBK_eOpAa3P1ohrrds" />
 	<link rel="icon" type="image/svg+xml" href="logo.svg">
+	<link rel="alternate" type="application/json" title="Noctrinth news" href="news/feed/articles.json">
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+	<script>
+	(function () {
+		var saved = null;
+		try { saved = localStorage.getItem('noctrinth-lang'); } catch (e) {}
+		var lang = saved || ((navigator.language || '').toLowerCase().indexOf('ru') === 0 ? 'ru' : 'en');
+		document.documentElement.setAttribute('data-lang', lang);
+		document.documentElement.lang = lang;
+	})();
+</script>
 	<style>
 	:root {
-		--bg: #16101e;
-		--bg-raised: #1f1730;
-		--surface: #2a1f3d;
-		--border: #2d2240;
-		--button-bg: #2a1f3d;
-		--button-border: #3a2c54;
-		--text-contrast: #f7f3ff;
-		--text: #e4dff0;
-		--text-secondary: #ada3c9;
-		--brand: #c78aff;
-		--brand-soft: rgba(199, 138, 255, 0.18);
-		--mr-green: #1bd96a;
-		--mr-green-soft: rgba(27, 217, 106, 0.18);
-		--link: #b283f9;
-		--radius-md: 8px;
-		--radius-lg: 12px;
-		--radius-xl: 16px;
-		--font-size-sm: 0.875rem;
+		--surface-1: #111017;
+		--surface-2: #181622;
+		--surface-3: #221f30;
+		--surface-4: #2d2940;
+		--surface-5: #3d3854;
+		--bg: var(--surface-1);
+		--bg-raised: var(--surface-3);
+		--button-bg: var(--surface-3);
+		--button-border: rgba(205, 190, 240, 0.12);
+		--divider: rgba(205, 190, 240, 0.1);
+		--text: #b8b3cc;
+		--text-contrast: #f8f7fc;
+		--text-secondary: #8e88a6;
+		--brand: #c084fc;
+		--brand-strong: #a855f7;
+		--brand-highlight: rgba(192, 132, 252, 0.18);
+		--brand-gradient-bg: radial-gradient(900px 420px at 50% -10%, rgba(168, 85, 247, 0.2), transparent 70%), linear-gradient(180deg, rgba(35, 18, 58, 0.35) 0%, rgba(17, 16, 23, 0) 100%);
+		--brand-gradient-border: rgba(192, 132, 252, 0.14);
+		--link: #c792ff;
+		--radius-md: 0.75rem;
+		--radius-lg: 1rem;
+		--radius-xl: 1.25rem;
 	}
 
 	* { box-sizing: border-box; }
+	html { scroll-behavior: smooth; }
 	html, body {
 		margin: 0;
-		padding: 0;
 		background: var(--bg);
 		color: var(--text);
 		font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 		font-size: 16px;
-		line-height: 1.6;
+		line-height: 1.55;
 		-webkit-font-smoothing: antialiased;
-		-moz-osx-font-smoothing: grayscale;
-		text-rendering: optimizeLegibility;
 	}
+	html[data-lang="en"] .i18n[lang="ru"],
+	html[data-lang="ru"] .i18n[lang="en"] { display: none; }
 	a { color: var(--link); text-decoration: none; }
-	a:hover { filter: brightness(1.2); text-decoration: underline; }
-
-	.page {
-		max-width: 880px;
-		margin: 0 auto;
-		padding: 3rem 1.5rem 5rem;
+	a:hover { text-decoration: underline; }
+	img { max-width: 100%; }
+	code {
+		background: var(--surface-2);
+		border: 1px solid var(--button-border);
+		padding: 0.08rem 0.38rem;
+		border-radius: 6px;
+		font-size: 0.86em;
+		color: #e9d5ff;
+		font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
 	}
-
-	/* ── Header ─────────────────────────────────────────────────────────────── */
-	.site-header {
-		display: flex;
-		align-items: center;
-		gap: 1rem;
-		padding-bottom: 2rem;
-		margin-bottom: 2rem;
-		border-bottom: 1px solid var(--border);
+	pre {
+		margin: 1rem 0;
+		padding: 1rem 1.15rem;
+		border-radius: var(--radius-lg);
+		background: #0c0b12;
+		border: 1px solid var(--button-border);
+		overflow-x: auto;
+		line-height: 1.55;
 	}
-	.site-header__logo {
-		width: 56px;
-		height: 56px;
-		flex-shrink: 0;
-		background-color: var(--brand);
-		-webkit-mask-image: url('logo.svg');
-		mask-image: url('logo.svg');
-		-webkit-mask-repeat: no-repeat;
-		mask-repeat: no-repeat;
-		-webkit-mask-position: center;
-		mask-position: center;
-		-webkit-mask-size: contain;
-		mask-size: contain;
-	}
-	.site-header__text h1 {
-		margin: 0;
-		font-size: 1.75rem;
-		font-weight: 800;
-		color: var(--text-contrast);
-	}
-	.site-header__text p {
-		margin: 0.3rem 0 0;
-		color: var(--text-secondary);
-		font-size: 0.95rem;
-	}
-
-	/* ── Timeline (dashed vertical line, like Modrinth's Timeline.vue) ──────── */
-	.timeline {
-		position: relative;
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
-		padding-bottom: 1.5rem;
-		isolation: isolate;
-	}
-	.timeline::before {
-		content: '';
-		position: absolute;
-		left: 6px;
-		top: 1rem;
-		height: calc(100% - 1rem);
-		width: 4px;
-		background-image: linear-gradient(
-			to bottom,
-			var(--bg-raised) 66%,
-			rgba(255, 255, 255, 0) 0%
-		);
-		background-size: 100% 30px;
-		background-repeat: repeat-y;
-		mask-image: linear-gradient(to bottom, black calc(100% - 8rem), transparent 100%);
-		z-index: -1;
-	}
-
-	/* ── Entry ──────────────────────────────────────────────────────────────── */
-	.entry { display: flex; flex-direction: column; }
-	.entry__head {
-		display: flex;
-		align-items: center;
-		gap: 1rem;
-	}
-	.entry__dot {
-		width: 16px;
-		height: 16px;
-		flex-shrink: 0;
-		border-radius: 50%;
-		border: 2px solid var(--button-border);
-	}
-	.entry__dot--noctrinth { background: var(--brand); }
-	.entry__dot--modrinth { background: var(--mr-green); }
-	.entry__dot--muted { background: var(--button-bg); }
-
-	.entry__title {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 0.5rem 0.75rem;
-	}
-	.entry__title h2 {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		margin: 0;
-		font-size: 1.25rem;
-		font-weight: 800;
-		color: var(--text-contrast);
-		line-height: 1.2;
-	}
-	.entry__type {
-		color: var(--text-contrast);
-	}
-	.dot-sep {
-		width: 6px;
-		height: 6px;
-		border-radius: 50%;
-		background: var(--text-secondary);
-	}
-	.entry__version {
-		font-weight: 700;
-		color: var(--text);
-	}
-	.entry__date {
-		color: var(--text-secondary);
-		font-size: 0.9rem;
-		font-weight: 500;
-	}
-
-	/* Body card (Modrinth's "ml-8 mt-3 rounded-2xl bg-bg-raised px-4 py-3") */
-	.entry__body {
-		margin-left: 2rem;
-		margin-top: 1rem;
-		padding: 1.25rem 1.5rem;
-		border-radius: 1rem;
-		background: var(--bg-raised);
-		border: 1px solid var(--border);
-	}
-
-	/* ── Markdown body (mirrors packages/ui's .changelog-body styles) ────────── */
-	.changelog-body {
-		line-height: 1.65;
-		word-break: break-word;
-		color: var(--text);
-		font-size: 0.975rem;
-	}
-	.changelog-body h1,
-	.changelog-body h2,
-	.changelog-body h3,
-	.changelog-body h4,
-	.changelog-body h5,
-	.changelog-body h6 {
-		margin: 0 0 0.5em;
-		font-weight: 700;
-		color: var(--text-contrast);
-		letter-spacing: -0.01em;
-	}
-	.changelog-body h1:not(:first-child),
-	.changelog-body h2:not(:first-child),
-	.changelog-body h3:not(:first-child),
-	.changelog-body h4:not(:first-child),
-	.changelog-body h5:not(:first-child),
-	.changelog-body h6:not(:first-child) {
-		margin-top: 1.5em;
-	}
-	.changelog-body h2 {
-		font-size: 1.15rem;
-		padding-bottom: 0.4rem;
-		border-bottom: 1px solid var(--border);
-	}
-	.changelog-body h3 {
-		color: var(--brand);
-		text-transform: uppercase;
-		letter-spacing: 0.06em;
-		font-size: 0.78rem;
-		font-weight: 700;
-	}
-	.changelog-body ul {
-		padding-left: 1.25rem;
-		margin: 0.5rem 0 0;
-		list-style: none;
-	}
-	.changelog-body li {
-		margin: 0;
-		position: relative;
-		padding-left: 0.25rem;
-	}
-	.changelog-body li::before {
-		content: '';
-		position: absolute;
-		left: -1rem;
-		top: 0.7em;
-		width: 5px;
-		height: 5px;
-		border-radius: 50%;
-		background: var(--brand);
-		opacity: 0.7;
-	}
-	.changelog-body * + li { margin-top: 0.45rem; }
-	.changelog-body p { margin: 0; }
-	.changelog-body * + p { margin-top: 0.75rem; }
-	.changelog-body h3 + * { margin-top: 0.5rem; }
-	.changelog-body * + h3 { margin-top: 1.25rem; }
-	.changelog-body code {
-		background: var(--bg);
-		font-size: var(--font-size-sm);
-		padding: 0.125rem 0.3rem;
-		border-radius: 4px;
-		font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-	}
-	.changelog-body strong { color: var(--text-contrast); }
-	.changelog-body img {
-		max-width: 100%;
-		border-radius: var(--radius-md);
-	}
-
-	/* ── Footer ─────────────────────────────────────────────────────────────── */
-	.footer {
-		margin-top: 3rem;
-		padding-top: 1.5rem;
-		border-top: 1px solid var(--border);
-		text-align: center;
-		color: var(--text-secondary);
+	pre code {
+		background: none;
+		border: 0;
+		padding: 0;
+		color: #e4dff2;
 		font-size: 0.85rem;
 	}
+
+	.container { max-width: 58rem; margin-inline: auto; padding-inline: 1.5rem; }
+	.container--wide { max-width: 74rem; }
+
+	.nav {
+		position: sticky;
+		top: 0;
+		z-index: 30;
+		background: color-mix(in srgb, var(--surface-2) 84%, transparent);
+		backdrop-filter: blur(16px);
+		-webkit-backdrop-filter: blur(16px);
+		border-bottom: 1px solid var(--divider);
+	}
+	.nav__inner { display: flex; align-items: center; gap: 1.25rem; height: 4rem; }
+	.nav__brand {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.6rem;
+		min-height: 2.25rem;
+		padding: 0.25rem 0.35rem;
+		margin-left: -0.35rem;
+		border-radius: 0.75rem;
+		color: var(--text-contrast);
+		font-weight: 800;
+		font-size: 1.12rem;
+		letter-spacing: -0.02em;
+		flex-shrink: 0;
+		transition: background 0.15s ease;
+	}
+	.nav__brand:hover { background: var(--surface-3); text-decoration: none; }
+	.nav__logo {
+		width: 28px;
+		height: 28px;
+		flex-shrink: 0;
+		display: block;
+	}
+	.nav__links {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		margin-right: auto;
+		min-width: 0;
+		overflow-x: auto;
+		scrollbar-width: none;
+	}
+	.nav__links::-webkit-scrollbar { display: none; }
+	.nav__links a {
+		color: var(--text);
+		font-weight: 600;
+		font-size: 0.94rem;
+		padding: 0.45rem 0.85rem;
+		border-radius: 999px;
+		white-space: nowrap;
+		transition: background 0.15s ease, color 0.15s ease;
+	}
+	.nav__links a:hover { background: var(--surface-3); color: var(--text-contrast); text-decoration: none; }
+	.nav__links a[aria-current="page"] { background: var(--brand-highlight); color: var(--brand); }
+	.nav__actions { display: flex; gap: 0.5rem; align-items: center; flex-shrink: 0; }
+
+	.btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		min-height: 2.25rem;
+		padding: 0.5rem 1rem;
+		border-radius: 999px;
+		border: 1px solid var(--button-border);
+		background: var(--button-bg);
+		color: var(--text-contrast);
+		font: inherit;
+		font-size: 0.93rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background 0.15s ease, border-color 0.15s ease, filter 0.15s ease, transform 0.1s ease;
+	}
+	.btn:hover { filter: brightness(1.14); border-color: rgba(192, 132, 252, 0.35); text-decoration: none; }
+	.btn:active { transform: scale(0.97); }
+	.btn--brand {
+		background: linear-gradient(180deg, #cb97ff 0%, #b370fa 100%);
+		border-color: transparent;
+		color: #160c26;
+	}
+	.btn--brand:hover { filter: brightness(1.07); border-color: transparent; }
+	.btn--xl { min-height: 3.1rem; padding: 0.75rem 1.65rem; font-size: 1.05rem; }
+	.btn--disabled,
+	.btn[disabled] {
+		opacity: 0.55;
+		cursor: not-allowed;
+		border-style: dashed;
+	}
+	.btn--disabled:hover,
+	.btn[disabled]:hover { filter: none; border-color: var(--button-border); }
+	.btn--disabled:active,
+	.btn[disabled]:active { transform: none; }
+	.btn__tag {
+		padding: 0.08rem 0.42rem;
+		border-radius: 999px;
+		background: var(--surface-4);
+		color: var(--text-secondary);
+		font-size: 0.72rem;
+		font-weight: 700;
+		letter-spacing: 0.02em;
+	}
+	.btn svg { width: 1.1em; height: 1.1em; flex-shrink: 0; }
+
+	.page-title { margin: 2rem 0 0; font-size: 1.875rem; font-weight: 700; color: var(--text-contrast); letter-spacing: -0.02em; }
+	.section-heading { margin: 0 0 1rem; font-size: 1.35rem; font-weight: 800; color: var(--text-contrast); letter-spacing: -0.02em; }
+
+	.full-width-bg { background: var(--brand-gradient-bg); border-block: 1px solid var(--brand-gradient-border); }
+
+	.callout {
+		padding: 1rem 1.2rem;
+		border-radius: var(--radius-lg);
+		border: 1px solid var(--button-border);
+		background: var(--surface-2);
+		font-size: 0.94rem;
+		line-height: 1.6;
+	}
+	.callout strong { color: var(--text-contrast); }
+	.callout--warn {
+		border-color: rgba(251, 191, 36, 0.28);
+		background: rgba(251, 191, 36, 0.07);
+	}
+	.callout--warn strong { color: #fde68a; }
+
+	.footer {
+		margin-top: 5rem;
+		padding: 2.25rem 0 3rem;
+		border-top: 1px solid var(--divider);
+		color: var(--text-secondary);
+		font-size: 0.9rem;
+	}
+	.footer__row { display: flex; flex-wrap: wrap; gap: 0.75rem 1.5rem; align-items: center; justify-content: space-between; }
+	.footer a { color: var(--text); }
+	.footer a:hover { color: var(--text-contrast); }
+
+	@media (max-width: 700px) {
+		.container { padding-inline: 1rem; }
+		.nav__inner { gap: 0.6rem; height: 3.75rem; }
+		.nav__brand { padding: 0.35rem; margin-left: -0.25rem; }
+		.nav__brand-name { display: none; }
+		.nav__links a { padding: 0.38rem 0.65rem; font-size: 0.88rem; }
+		.nav__actions .btn { min-height: 2rem; padding: 0.35rem 0.7rem; font-size: 0.85rem; }
+	}
+
+	@keyframes nm-hero-in {
+		from { opacity: 0; transform: translateY(14px); }
+		to { opacity: 1; transform: translateY(0); }
+	}
+	.hero__body, .plugins-hero h1, .plugins-hero p, .docs-hero h1, .docs-hero p {
+		animation: nm-hero-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+	}
+	.reveal {
+		opacity: 0;
+		transform: translateY(18px);
+		transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1), transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+	}
+	.reveal.is-visible {
+		opacity: 1;
+		transform: translateY(0);
+	}
+	.feature, .bento-card, .plugin-card {
+		position: relative;
+		overflow: hidden;
+	}
+	.feature::after, .bento-card::after, .plugin-card::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		opacity: 0;
+		transition: opacity 0.25s ease;
+		background: radial-gradient(460px circle at var(--mx, 50%) var(--my, 50%), rgba(192, 132, 252, 0.11), transparent 65%);
+	}
+	.feature:hover::after, .bento-card:hover::after, .plugin-card:hover::after { opacity: 1; }
+	.feature__media img, .plugin-card__banner, .news-card img {
+		transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+	}
+	.feature:hover .feature__media img, .bento-card:hover .feature__media img, .plugin-card:hover .plugin-card__banner, .news-card:hover img {
+		transform: scale(1.03);
+	}
+	.chips li {
+		transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+	}
+	.chips li:hover {
+		transform: translateY(-2px);
+		border-color: rgba(192, 132, 252, 0.35);
+		background: var(--surface-4);
+	}
+	.faq details {
+		transition: border-color 0.2s ease, background 0.2s ease;
+	}
+	.faq details[open] {
+		border-color: rgba(192, 132, 252, 0.32);
+		background: color-mix(in srgb, var(--surface-2) 88%, var(--brand) 12%);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.hero__body, .plugins-hero h1, .plugins-hero p, .docs-hero h1, .docs-hero p { animation: none; }
+		.reveal { opacity: 1; transform: none; transition: none; }
+		.feature__media img, .plugin-card__banner, .news-card img, .chips li { transition: none; transform: none !important; }
+	}
+
+	.news-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding-top: 1.5rem; }
+	.news-header h1 { margin: 0; font-size: 1.875rem; font-weight: 600; color: var(--text-contrast); }
+	.news-header h1 a { color: inherit; }
+	.icon-buttons { display: flex; gap: 0.5rem; }
+	.icon-buttons .btn { width: 2.25rem; padding: 0; }
+
+	.featured { margin-top: 1.5rem; padding-block: 1rem; }
+	.featured a { display: block; color: inherit; transition: filter 0.15s ease, transform 0.1s ease; }
+	.featured a:hover { filter: brightness(1.25); text-decoration: none; }
+	.featured a:hover h3 { text-decoration: underline; }
+	.featured a:active { transform: scale(0.99); }
+	.featured article { display: flex; flex-wrap: wrap; gap: 1rem; }
+	.featured img { flex: 1; min-width: 0; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 1rem; border: 1px solid var(--button-border); }
+	.featured__content { flex: 1; min-width: 16rem; display: flex; flex-direction: column; gap: 0.5rem; }
+	.featured__content .eyebrow { margin: 0; font-weight: 700; color: var(--text); }
+	.featured__content h3 { margin: 0; font-size: 1.875rem; line-height: 1.2; color: var(--text-contrast); }
+	.featured__content p { margin: 0; font-size: 1.125rem; line-height: 1.3; }
+	.featured__content .news-card__date { margin-top: auto; color: var(--text-secondary); }
+
+	.news-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-top: 1rem; }
+	.news-card { display: flex; color: inherit; transition: filter 0.15s ease, transform 0.1s ease; }
+	.news-card:hover { filter: brightness(1.25); text-decoration: none; }
+	.news-card:hover h3 { text-decoration: underline; }
+	.news-card:active { transform: scale(0.99); }
+	.news-card article { display: flex; flex-direction: column; gap: 0.6rem; width: 100%; }
+	.news-card img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 0.75rem; border: 1px solid var(--button-border); }
+	.news-card h3 { margin: 0.4rem 0 0; font-size: 1rem; line-height: 1.25; color: var(--text-contrast); }
+	.news-card p { margin: 0; font-size: 0.875rem; line-height: 1.3; color: var(--text); }
+	.news-card__date { margin-top: auto; font-size: 0.875rem; color: var(--text-secondary); }
+
+	.article { display: flex; flex-direction: column; gap: 1rem; margin-top: 1.5rem; }
+	.article h2.article__title { margin: 0; font-size: clamp(1.5rem, 4vw, 2.25rem); font-weight: 600; line-height: 1.15; color: var(--text-contrast); }
+	.article__summary { margin: 0; max-width: 52rem; font-size: 1.125rem; line-height: 1.35; }
+	.article__date { color: var(--text-secondary); }
+	.article__cover { width: 100%; max-height: 480px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 1rem; border: 1px solid var(--button-border); }
+	.markdown { max-width: 52rem; font-size: 1.05rem; line-height: 1.7; }
+	.markdown h2, .markdown h3 { color: var(--text-contrast); margin: 2rem 0 0.5rem; line-height: 1.25; }
+	.markdown h2 { font-size: 1.5rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--divider); }
+	.markdown h3 { font-size: 1.2rem; }
+	.markdown p { margin: 0.75rem 0; }
+	.markdown ul { margin: 0.75rem 0; padding-left: 1.4rem; }
+	.markdown li { margin: 0.35rem 0; }
+	.markdown strong { color: var(--text-contrast); }
+	.markdown figure { margin: 1.25rem 0; }
+	.markdown figure img, .markdown p img { border-radius: 0.75rem; border: 1px solid var(--button-border); }
+	.markdown blockquote { margin: 1rem 0; padding: 0.25rem 1rem; border-left: 3px solid var(--brand); background: var(--surface-2); border-radius: 0 0.75rem 0.75rem 0; }
+	.article__back { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--divider); }
+	.empty { margin-top: 3rem; text-align: center; color: var(--text-secondary); }
+
+	@media (max-width: 640px) {
+		.featured article { flex-direction: column; }
+		.featured__content { min-width: 0; }
+	}
+
+	.download__others [hidden] { display: none; }
+	.hero { border-bottom: 1px solid var(--brand-gradient-border); background: var(--brand-gradient-bg); padding-top: 1.5rem; }
+	.hero__banner-wrap { max-width: 74rem; margin: 0 auto; padding-inline: 1.5rem; }
+	.hero__banner { display: block; width: 100%; height: auto; max-height: 360px; object-fit: cover; border-radius: var(--radius-xl); border: 1px solid var(--brand-gradient-border); box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.75); }
+	.hero__body { text-align: center; padding: 2rem 1.5rem 3rem; }
+	.hero__lead { max-width: 44rem; margin: 0 auto; font-size: clamp(1.15rem, 2.4vw, 1.5rem); font-weight: 600; line-height: 1.4; color: var(--text-contrast); }
+	.hero__sub { margin: 0.75rem auto 0; max-width: 38rem; color: var(--text-secondary); }
+	.download { margin-top: 1.75rem; display: flex; flex-direction: column; align-items: center; gap: 0.9rem; }
+	.download__main { box-shadow: 0 10px 40px -12px rgba(199, 138, 255, 0.7); }
+	.download__main small { font-weight: 600; opacity: 0.7; }
+	.download__others { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
+	.download__others .btn { min-height: 2rem; padding: 0.35rem 0.85rem; font-size: 0.875rem; }
+
+	.home-section { margin-top: 4.25rem; }
+	.home-section > .section-heading { font-size: 1.85rem; text-align: center; margin-bottom: 2rem; }
+	.feature { display: grid; grid-template-columns: 1.15fr 1fr; gap: 2rem; align-items: center; margin-bottom: 1.35rem; padding: 1.35rem; background: var(--surface-2); border: 1px solid var(--button-border); border-radius: var(--radius-xl); transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease; }
+	.feature:hover { border-color: rgba(192, 132, 252, 0.3); box-shadow: 0 14px 36px -18px rgba(0, 0, 0, 0.7); }
+	.feature--flip { grid-template-columns: 1fr 1.15fr; }
+	.feature--flip .feature__media { order: 2; }
+	.feature__media { aspect-ratio: 16 / 10; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: var(--radius-lg); background: #0d0c13; border: 1px solid var(--button-border); }
+	.feature__media img { width: 100%; height: 100%; object-fit: contain; }
+	.feature h3 { margin: 0 0 0.5rem; font-size: 1.35rem; font-weight: 700; letter-spacing: -0.015em; color: var(--text-contrast); }
+	.feature p { margin: 0; line-height: 1.65; }
+
+	.bento-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; margin-top: 1.35rem; }
+	.bento-card { display: flex; flex-direction: column; gap: 1rem; padding: 1.25rem; background: var(--surface-2); border: 1px solid var(--button-border); border-radius: var(--radius-xl); transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease; }
+	.bento-card:hover { border-color: rgba(192, 132, 252, 0.3); box-shadow: 0 14px 36px -18px rgba(0, 0, 0, 0.7); }
+	.bento-card--wide { grid-column: 1 / -1; display: grid; grid-template-columns: 1.15fr 1fr; gap: 2rem; align-items: center; }
+	.bento-card h3 { margin: 0 0 0.45rem; font-size: 1.2rem; font-weight: 700; letter-spacing: -0.015em; color: var(--text-contrast); }
+	.bento-card p { margin: 0; font-size: 0.96rem; line-height: 1.6; }
+
+	.chips { list-style: none; padding: 0; margin: 2rem 0 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
+	.chips li { padding: 0.45rem 0.95rem; border-radius: 999px; background: var(--surface-3); border: 1px solid var(--button-border); color: var(--text-contrast); font-size: 0.9rem; font-weight: 500; }
+	.section-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.5rem; }
+	.section-row .section-heading { margin: 0; font-size: 1.75rem; }
+	.faq { display: flex; flex-direction: column; gap: 0.65rem; max-width: 52rem; margin: 0 auto; }
+	.faq details { background: var(--surface-2); border: 1px solid var(--button-border); border-radius: var(--radius-lg); padding: 0.95rem 1.25rem; }
+	.faq summary { list-style: none; cursor: pointer; font-weight: 700; color: var(--text-contrast); display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+	.faq summary::-webkit-details-marker { display: none; }
+	.faq__chevron { width: 1.1rem; height: 1.1rem; flex-shrink: 0; color: var(--text-secondary); transition: transform 0.2s ease, color 0.2s ease; transform: rotate(90deg); }
+	.faq details[open] .faq__chevron { transform: rotate(-90deg); color: var(--brand); }
+	.faq p { margin: 0.7rem 0 0; line-height: 1.65; }
+
+	@media (max-width: 760px) {
+		.hero__banner-wrap { padding-inline: 1rem; }
+		.feature, .feature--flip, .bento-grid, .bento-card--wide { grid-template-columns: 1fr; }
+		.feature--flip .feature__media { order: 0; }
+	}
 </style>
+	
 </head>
 <body>
-	<div class="page">
-		<header class="site-header">
-			<div class="site-header__logo" role="img" aria-label="Noctrinth"></div>
-			<div class="site-header__text">
-				<h1>Noctrinth Changelog</h1>
-				<p>Combined release notes for Noctrinth and upstream Modrinth App.</p>
-			</div>
-		</header>
-
-		<main class="timeline">
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--noctrinth"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">Noctrinth</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.14.5</span>
-					</h2>
-					<time class="entry__date" datetime="2026-06-09T00:00:00+00:00" title="June 9, 2026 at 9:00 AM">32 minutes ago</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h3>Changed</h3>
-<ul><li>Synced with upstream Modrinth (0.14.3 → 0.14.5): new &quot;release channels&quot; instance setting that controls which content versions count as an update (defaults to release-only), reworked updater UI (the &quot;Reload to update&quot; action moved to the top-right action bar and update pop-ups now appear only after the prompt has been ignored for 24 hours), uncommon plugin loaders collapsed behind a &quot;Show more&quot; toggle, and assorted analytics and translation updates.</li><li>Update pop-up &quot;Changelog&quot; button now opens the Noctrinth GitHub page instead of the Modrinth website.</li><li>Changelog website timestamps are now recalculated live on every visit (and refreshed each minute) instead of being frozen at build time, so &quot;X days ago&quot; labels stay accurate. Hovering a timestamp shows the exact patch date and time.</li></ul>
-<h3>Fixed</h3>
-<ul><li>Fixed drag-and-drop file upload not working in the instance Files tab.</li><li>Fixed a layering issue where the expanded console view in the Logs tab could render behind other elements.</li><li>Fixed the updater restarting the app even when a restart wasn't requested.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--modrinth"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.14.5</span>
-					</h2>
-					<time class="entry__date" datetime="2026-06-08T22:54:32+00:00" title="June 9, 2026 at 7:54 AM">2 hours ago</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Added</h2>
-<ul><li>Added a new setting to the General tab of instance settings which allows you to control what content versions are considered an update. By default this will be set to release channel only.</li><li>Fixed drag and drop file upload not working in instances Files tab.</li><li>Fixed layering issue with the expanded console view in the Logs tab of instances and Modrinth Hosting panels.</li></ul>
-<h2>Changed</h2>
-<ul><li>Moved &quot;Reload to update&quot; button from the bottom left to the top right action bar.</li><li>Changed update notifications to show only after 24 hours of ignoring the &quot;Reload to update&quot; button.</li><li>Updated translations</li></ul>
-<h2>Fixed</h2>
-<ul><li>Fixed updater restarting the app even if you didn't ask it to.</li><li>Fixed user pages incorrectly opening in the app when clicking user objects in the Modrinth Hosting</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--noctrinth"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">Noctrinth</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.14.3</span>
-					</h2>
-					<time class="entry__date" datetime="2026-06-07T00:00:00+00:00" title="June 7, 2026 at 9:00 AM">2 days ago</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h3>Added</h3>
-<ul><li>Screenshots tab for instances. Browse, zoom, copy to clipboard, reveal in explorer, and delete screenshots taken in-game — all from inside the app.</li></ul>
-<h3>Changed</h3>
-<ul><li>Synced with upstream Modrinth (0.14.1 → 0.14.3): play-time toggle in instance header, Mr. Pack default skin, Pride Fundraiser banner, tooltip and card styling improvements, large <code>.mrpack</code> import crash fix, content-update modal fix, Windows path separator fix in the Files tab, and translation updates.</li><li>Update popup changelog button now links to the Noctrinth GitHub page instead of the Modrinth website.</li><li>Download notification icon colour updated to match Noctrinth's purple brand palette.</li></ul>
-<h3>Fixed</h3>
-<ul><li>Russian locale updated with all missing translation keys (skin selector strings, collections, notifications, screenshots).</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--modrinth"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.14.3</span>
-					</h2>
-					<time class="entry__date" datetime="2026-06-02T16:37:52+00:00" title="June 3, 2026 at 1:37 AM">6 days ago</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Added</h2>
-<ul><li>Added toggle to hide play time from instance header.</li></ul>
-<h2>Changed</h2>
-<ul><li>Updated translations</li></ul>
-<h2>Fixed</h2>
-<ul><li>Fixed importing large .mrpack files in Modrinth App causing OS freezing or crashing.</li><li>Fixed the content update modal in the Content tab of instances hiding available updates in some cases.</li><li>Fixed copying full paths from the Files tab using mixed path separators on Windows.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.14.2</span>
-					</h2>
-					<time class="entry__date" datetime="2026-05-31T16:45:15-07:00" title="June 1, 2026 at 8:45 AM">June 1, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Added</h2>
-<ul><li>New Australia region for Modrinth Hosting</li></ul>
-<h2>Fixed</h2>
-<ul><li>Germany Modrinth hosting region not providing latency data.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.14.1</span>
-					</h2>
-					<time class="entry__date" datetime="2026-05-31T16:45:15+00:00" title="June 1, 2026 at 1:45 AM">June 1, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Added</h2>
-<ul><li>Pride Fundraiser 2026 banner in the Modrinth App sidebar with donation progress, supporter count, days remaining, and a donation link.</li><li>Modrinth Pride Fundraiser supporters can now access exclusive Mr. Pack Pride skins in the Modrinth App Skin selector.</li><li>Mr. Pack is now available as a default skin in the Modrinth App Skin selector.</li></ul>
-<h2>Changed</h2>
-<ul><li>Updated tooltips from pure black backgrounds to a style consistent with other popovers.</li><li>Floating tooltips and pop-ups now have stronger shadows.</li><li>Updated cards across Modrinth with consistent subtle borders.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">Noctrinth</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.14.0</span>
-					</h2>
-					<time class="entry__date" datetime="2026-05-29T00:00:00+00:00" title="May 29, 2026 at 9:00 AM">May 29, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h3>Added</h3>
-<ul><li>CurseForge install detection via fingerprint API. Borrowed XMCL's approach: every <code>.jar</code>, <code>.zip</code> in <code>mods/</code>, <code>shaderpacks/</code>, <code>resourcepacks/</code>, <code>datapacks/</code> is hashed with CurseForge's Murmur2 (whitespace-stripped, seed = 1) and resolved through <code>POST /v1/fingerprints/432</code>. Catches mods you dragged into the folder manually, mods installed before this app version existed, and instances restored from backup — without any per-install bookkeeping.</li><li>Cross-platform mapping. A curated table of well-known Modrinth ↔ CurseForge ID pairs (Sodium, JEI, Iris, Create, Botania, JourneyMap, …) is consulted whenever <code>unifiedSearch</code> merges a Modrinth hit with a CurseForge hit; the table also grows automatically from successful runtime slug-matches (persisted to localStorage). Mods that exist on both platforms now show up as a single card in unified search, and installing one platform's version marks the other as installed too.</li><li>CurseForge dependency resolver with relationType propagation. The XMCL algorithm: <code>Embedded</code> / <code>Tool</code> / <code>Include</code> deps are skipped (not runtime), <code>Incompatible</code> mods are surfaced as a warning, <code>Optional</code> deps are returned for the UI to offer (not silently installed), and <code>Required</code> deps stay required ONLY if every ancestor was also required — preventing silent install of a hard requirement of something you didn't ask for.</li><li>CurseForge categories for shader / resource pack / datapack tabs. Sidebar in CF mode now has curated category lists for all four content types (mods + 3 others), each mapping a Modrinth icon-bearing slug to a real CurseForge category slug that actually returns results. The same Modrinth slug can resolve to different CF categories depending on the active project type.</li><li>Pagination &quot;…&quot; → page input. Clicking the gap in the pagination row turns it into a small number input; Enter jumps to that page (clamped to <code>[1, count]</code>), Escape or blur cancels. Works everywhere <code>Pagination</code> is rendered.</li><li>CurseForge &quot;Alpha&quot; badge on the source toggle, visible only when CurseForge is the active catalog — flags the integration as experimental until proven stable.</li><li>Russian translations for the account dropdown, Collections page (incl. sort/search), Notifications page (incl. all type chips), Collection detail page, sidebar tooltips, Ely.by login modal, Changelog tab, dashboard nav tabs.</li><li>Search and sort for the Followed-projects view (and any collection): filter by query (matches title, slug, description) + sort by Name (A-Z) / Downloads / Followers / Recently updated. Sort choice persists across reloads.</li></ul>
-<h3>Changed</h3>
-<ul><li>Synced with upstream Modrinth 0.14.0. New skin selector out of beta, skin preview improvements, project analytics performance, Daedalus manifest uploads on new game versions, allowing <code>user-images.githubusercontent.com</code> in CSP, and various smaller fixes.</li><li>Skin preview rotation. Drag up / down now tilts the model around its pitch axis (clamped to ±90°) so the crown and soles are reachable, in addition to the existing yaw drag. The spotlight shadow is now parented to the model and sits at the feet — it tilts and translates with the figure instead of staying as a static rug below.</li><li>CurseForge content sidebar redesign. Curated Modrinth-style category list (Library, Magic, Storage, Technology, Equipment, Mobs, …) instead of CurseForge's raw taxonomy.\</li><li>Compact number suffixes are now Latin (<code>k</code>, <code>m</code>, <code>b</code>) regardless of locale, while keeping the numeric formatting locale-correct (<code>1,23m</code> in Russian, <code>1.23m</code> in English). <code>355,64 млн</code> and similar long ICU labels no longer crowd the UI on Cyrillic locales.</li></ul>
-<h3>Fixed</h3>
-<ul><li>Modpack file import no longer mysteriously deletes the instance.** If the selected file isn't a recognised modpack (no <code>modrinth.index.json</code> and no <code>manifest.json</code>), or if it's a CurseForge modpack without a CurseForge API key, the user sees a clear error message BEFORE any profile is created. The dispatcher's cleanup-on-error contract guarantees that even when something fails mid-install, no orphan profiles are left behind.</li><li>Filename sanitisation at the Windows filesystem boundary.** Modpacks shipping files with names like <code>EpicSiegeMod_汉字.jar</code> (or its mangled <code>EpicSiegeMod_???? ???.jar</code> form from a lossy ANSI round-trip) no longer crash the install with <code>ERROR_INVALID_NAME (os error 123)</code>. Reserved Windows characters (<code>&lt;&gt;:&quot;|?*</code>), control bytes, and U+FFFD are replaced with <code>_</code> right before <code>write()</code> — the manifest itself is untouched.</li><li>CurseForge categories were swapped.**</li><li>Vanilla instances can now install CurseForge resource packs, shaders, and datapacks. The &quot;compatible loader&quot; check was rejecting any file whose <code>gameVersions</code> contained a non-numeric entry, but those entries also include informational tags like <code>Iris</code>, <code>OptiFine</code>, <code>Data Pack</code> that aren't actual mod loaders. The check now only treats Forge / Fabric / Quilt / NeoForge / Cauldron / LiteLoader as disqualifying.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.14.0</span>
-					</h2>
-					<time class="entry__date" datetime="2026-05-27T22:30:20+00:00" title="May 28, 2026 at 7:30 AM">May 28, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Added</h2>
-<ul><li>Skin selections can now be previewed in the Skin selector before applying or resetting them.</li><li>The Tiny Takeover default skin pack in the Skin selector.</li><li>The skin preview in the Skin selections page now feels pain.</li></ul>
-<h2>Changed</h2>
-<ul><li>Renamed the Skins page to Skin selector and removed its beta label.</li><li>Redesigned the Skin selector with a sticky preview, larger skin cards, and collapsible skin pack sections.</li><li>Moved PNG skin uploads from a separate modal to the Add skin card in Saved skins.</li><li>Changed cape selection so each saved skin controls its own cape instead of using a separate default cape.</li><li>Moved cape selection into the Edit skin modal, with a <code>None</code> option for saving skins without capes.</li><li>Updated skin previews for more consistent framing across the Skin selector, skin editor, and skin cards.</li><li>Skin and cape changes made outside Modrinth App are now reflected when the Skin selector refreshes or on app launch safely.</li><li>Images from <code>user-images.githubusercontent.com</code> are no longer proxied.</li></ul>
-<h2>Fixed</h2>
-<ul><li>Fixed duplicate saved skin cards appearing when the same texture was saved with different arm or cape settings.</li><li>Fixed skins equipped outside Modrinth App disappearing from the Skin selector after switching to another skin.</li><li>Fixed skin selection hanging when a skin texture download stopped responding.</li><li>Fixed the hide nametag setting not updating the Skin selector preview until the page refreshed.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">Noctrinth</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.13.24</span>
-					</h2>
-					<time class="entry__date" datetime="2026-05-26T00:00:00+00:00" title="May 26, 2026 at 9:00 AM">May 26, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h3>Changed</h3>
-<ul><li>Synced with upstream Modrinth (0.13.22 → 0.13.24): default Minecraft memory raised from 2 GB to 4 GB, improved Java installation UI, new &quot;Enabled&quot; sort button next to &quot;Disabled&quot; in content lists, compact log handling to prevent crashes on log spam, locale updates and various smaller fixes.</li></ul>
-<h3>Fixed</h3>
-<ul><li>Guarded against non-string values when decorating download URLs.</li><li>Page no longer fails to load when an auth cookie is invalid.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.13.24</span>
-					</h2>
-					<time class="entry__date" datetime="2026-05-24T17:46:23+00:00" title="May 25, 2026 at 2:46 AM">May 25, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Changed</h2>
-<ul><li>Updated translations.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.13.23</span>
-					</h2>
-					<time class="entry__date" datetime="2026-05-24T16:26:23+00:00" title="May 25, 2026 at 1:26 AM">May 25, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Fixed</h2>
-<ul><li>Fixed the discover page not working when the spanish language is selected.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.13.22</span>
-					</h2>
-					<time class="entry__date" datetime="2026-05-24T05:00:37+00:00" title="May 24, 2026 at 2:00 PM">May 24, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Added</h2>
-<ul><li>Added log spam detection and line compacting logic to prevent Modrinth App from crashing when viewing large log files.</li></ul>
-<h2>Changed</h2>
-<ul><li>Increased the default memory for instances from 2GB to 4GB (depending on your system memory).</li><li>Improved &quot;Java installation&quot; settings page design. Thanks <a href="https://github.com/creeperkatze" rel="noopener">@creeperkatze</a></li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">Noctrinth</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.13.21</span>
-					</h2>
-					<time class="entry__date" datetime="2026-05-22T00:00:00+00:00" title="May 22, 2026 at 9:00 AM">May 22, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h3>Added</h3>
-<ul><li>CurseForge integration in Discover. Search now spans both Modrinth and CurseForge. When you type a query, results from both catalogs are merged and de-duplicated; small Modrinth and CurseForge logos on each card show where a mod is hosted.</li><li>Catalog source toggle. When browsing without a query, an animated toggle in the controls bar picks a single catalog (Modrinth or CurseForge). The active option expands to show its name in its brand colour; the inactive one collapses to just its icon. The choice persists across navigation and app restarts.</li><li>Smart default ordering.</li><li>CurseForge mod page. Opening a CurseForge mod from search now shows a full project page that reuses Modrinth's layout — header, sidebar (compatibility, links, tags, details), Description, <strong>Versions</strong> tab (full versions table with filters, channels and pagination — identical to Modrinth's), and <strong>Gallery</strong> tab (with the same lightbox, zoom and keyboard navigation).</li><li>Install CurseForge mods. Pick a CurseForge mod and install it straight into an existing instance, or open the same instance-picker modal as Modrinth mods to choose where it goes (or create a new instance). Downloads are routed through the CurseForge file API.</li><li>Install CurseForge modpacks. CurseForge modpacks are now installable from Discover. The pack zip is downloaded, its <code>manifest.json</code> parsed, every mod resolved through the CurseForge API, and the whole pack installed as a new instance — reusing the existing modpack progress UI.</li><li>CurseForge modpack import. The &quot;Import modpack&quot; file picker now accepts <code>.zip</code> files in addition to <code>.mrpack</code>. The backend auto-detects CurseForge format and routes to the right installer.</li><li>Catalog colour accent. An optional setting in Settings → Appearance recolors the Discover page accent (Install buttons, highlights) to match the active catalog — green for Modrinth, orange for CurseForge, blended for unified search. Off by default; scoped to the Discover page only, so the rest of the app stays on the Noctrinth purple theme.</li></ul>
-<h3>Changed</h3>
-<ul><li>Synced with upstream Modrinth (0.13.21): Kyros upload sessions for hosting, project analytics events, moderation queue tooling improvements, and various fixes.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.13.21</span>
-					</h2>
-					<time class="entry__date" datetime="2026-05-21T22:13:35+00:00" title="May 22, 2026 at 7:13 AM">May 22, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Fixed</h2>
-<ul><li>Fixed issue with content items visually duplicating over other content items in the Content tab table.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">Noctrinth</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.13.20</span>
-					</h2>
-					<time class="entry__date" datetime="2026-05-21T00:00:00+00:00" title="May 21, 2026 at 9:00 AM">May 21, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h3>Changed</h3>
-<ul><li>Synced with upstream Modrinth (0.13.20): content management improvements, new date picker, improved Intercom bubble positioning, macOS window occlusion checks, and various routing fixes.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.13.20</span>
-					</h2>
-					<time class="entry__date" datetime="2026-05-20T19:48:04+00:00" title="May 21, 2026 at 4:48 AM">May 21, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Changed</h2>
-<ul><li>Updated linked modpack version switching to show every available version and ask for confirmation before risky changes:</li><li>Versions for a different game version.</li><li>Downgrades.</li></ul>
-<h2>Fixed</h2>
-<ul><li>Fixed instance pages sometimes opening with an empty Content tab.</li><li>Fixed Content tab performance problems.</li><li>Fixed linked modpack content appearing as user-added after switching a bundled project to another version.</li><li>Fixed linked modpack content staying stale after updating, removing, enabling, disabling, or switching bundled content.</li><li>Fixed content installation problems from the Browse content page.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">Noctrinth</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.13.19</span>
-					</h2>
-					<time class="entry__date" datetime="2026-05-20T00:00:00+00:00" title="May 20, 2026 at 9:00 AM">May 20, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h3>Fixed</h3>
-<ul><li>Fixed sidebar show/hide animation: the right sidebar now slides in and out with a smooth <code>transform</code> transition instead of animating the grid column width. This eliminates content reflow — skin model previews, modpack cards and content grids no longer jump or temporarily show extra items while the sidebar is animating.</li></ul>
-<h3>Changed</h3>
-<ul><li>Synced with upstream Modrinth (0.13.19)</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.13.19</span>
-					</h2>
-					<time class="entry__date" datetime="2026-05-19T18:50:27+00:00" title="May 20, 2026 at 3:50 AM">May 20, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Changed</h2>
-<ul><li>Updated translations.</li></ul>
-<h2>Fixed</h2>
-<ul><li>Fixed bug with table headers being misaligned if using the app in a non-english language.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">Noctrinth</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.13.18</span>
-					</h2>
-					<time class="entry__date" datetime="2026-05-18T00:00:00+00:00" title="May 18, 2026 at 9:00 AM">May 18, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h3>Changed</h3>
-<ul><li>Updated to the latest Modrinth App release (0.13.18) — synced with upstream to bring in its newest features and fixes.</li><li>Discord Rich Presence now runs on Noctrinth's own Discord application with its own presence artwork, instead of Modrinth's.</li></ul>
-<h3>Fixed</h3>
-<ul><li>Fixed Ely.by account sign-in and launching so authenticating and starting the game with an Ely.by account work reliably.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.13.18</span>
-					</h2>
-					<time class="entry__date" datetime="2026-05-17T20:46:06+00:00" title="May 18, 2026 at 5:46 AM">May 18, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Fixed</h2>
-<ul><li>Fixed how the app handles ad webview visibility</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">Noctrinth</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.13.17</span>
-					</h2>
-					<time class="entry__date" datetime="2026-05-17T00:00:00+00:00" title="May 17, 2026 at 9:00 AM">May 17, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h3>Added</h3>
-<ul><li>Added Ely.by as a second account provider, authenticating against the Ely.by Yggdrasil server.</li><li>Added support for launching Minecraft with Ely.by accounts by injecting the authlib-injector Java agent at launch.</li><li>Added a Collections section for browsing, creating, editing and deleting Modrinth collections.</li><li>Added a &quot;Followed projects&quot; view that lists every project the signed-in user follows.</li><li>Added a &quot;Save to collection&quot; button to project pages.</li><li>Added an in-app Notifications page backed by the Modrinth notifications API.</li><li>Added native desktop notifications for downloads and updates.</li><li>Added a Changelog tab in settings showing both the Noctrinth and Modrinth App changelogs.</li><li>Added signed application updates delivered through GitHub Releases.</li></ul>
-<h3>Changed</h3>
-<ul><li>Rebranded the application to Noctrinth, including a new logo, generated app icons and the <code>com.noctrinth.app</code> bundle identifier.</li><li>Replaced the embedded sign-in WebView with a loopback HTTP redirect for the Modrinth OAuth flow.</li><li>Unified account selection so exactly one account is active across the Microsoft and Ely.by providers.</li><li>Recolored the interface to a purple brand scheme — modal overlays, the server status indicator, the skin selector and download notifications no longer use green.</li><li>Reworked the Feature Flags settings to show readable names and descriptions instead of raw flag keys.</li><li>Animated the sidebar so it slides in and out when toggled.</li><li>Extended the requested Modrinth OAuth scopes.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.13.17</span>
-					</h2>
-					<time class="entry__date" datetime="2026-05-12T20:06:07+00:00" title="May 13, 2026 at 5:06 AM">May 13, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Fixed</h2>
-<ul><li>Fixed the app automatically re-opening after installing a pending update when the user closes the app.</li><li>Fixed &quot;Open in browser&quot; not working.</li><li>Fixed the lack of margin above the pagination links at the bottom of Discover pages.</li><li>Fixed longstanding issue &quot;Unable to read category tags from any source&quot; that occurs sometimes when the app has cached invalid tags.</li><li>Fixed Windows app control buttons not being clickable at the exact top right corner.</li><li>Fixed Modrinth project links opening inside a broken in-app web browser rather than going to the project's page in the app.</li><li>Fixed not being able to hover over project card tooltip items.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.13.15</span>
-					</h2>
-					<time class="entry__date" datetime="2026-05-11T20:16:06+00:00" title="May 12, 2026 at 5:16 AM">May 12, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Changed</h2>
-<ul><li>Updated translations.</li></ul>
-<h2>Fixed</h2>
-<ul><li>Fixed app launch speed being dramatically slowed by having lots of instances.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.13.14</span>
-					</h2>
-					<time class="entry__date" datetime="2026-05-09T21:42:48+00:00" title="May 10, 2026 at 6:42 AM">May 10, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Fixed</h2>
-<ul><li>Fixed hidden files showing up in the Content tab on instances.</li><li>Fixed 'Advanced rendering' option not being applied to most of the interface.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.13.13</span>
-					</h2>
-					<time class="entry__date" datetime="2026-05-09T19:06:18+00:00" title="May 10, 2026 at 4:06 AM">May 10, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Changed</h2>
-<ul><li>Improved the Browse page header so the back button no longer shifts the layout.</li></ul>
-<h2>Fixed</h2>
-<ul><li>Fixed instance redirects opening a broken page state.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.13.12</span>
-					</h2>
-					<time class="entry__date" datetime="2026-05-08T02:24:09+00:00" title="May 8, 2026 at 11:24 AM">May 8, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Changed</h2>
-<ul><li>Updated the modpack exporting experience, fixing issues with it and excluding /mods/.connector from the exports.</li></ul>
-<h2>Fixed</h2>
-<ul><li>Fixed page width changing based on if there is scrollable content or not, causing things to move when you switch tabs between scrollable and non-scrollable content.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.13.11</span>
-					</h2>
-					<time class="entry__date" datetime="2026-05-06T22:11:04+00:00" title="May 7, 2026 at 7:11 AM">May 7, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Fixed</h2>
-<ul><li>Fixed modpack export including duplicated files as overrides.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.13.10</span>
-					</h2>
-					<time class="entry__date" datetime="2026-05-04T19:57:12+00:00" title="May 5, 2026 at 4:57 AM">May 5, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Fixed</h2>
-<ul><li>Fixed some project pages failing to load due to invalid iframe links in their descriptions.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.13.9</span>
-					</h2>
-					<time class="entry__date" datetime="2026-05-03T18:07:44+00:00" title="May 4, 2026 at 3:07 AM">May 4, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Fixed</h2>
-<ul><li>Fixed update notification closing when pressing the Changelog button.</li><li>Fixed latest snapshot sometimes appearing a second time outside of a version range.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.13.8</span>
-					</h2>
-					<time class="entry__date" datetime="2026-05-02T22:09:01+00:00" title="May 3, 2026 at 7:09 AM">May 3, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Fixed</h2>
-<ul><li>Fixed exclude open source filter not working.</li><li>Fixed Central Europe server region not displaying ping in the Modrinth Hosting region selector.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.13.7</span>
-					</h2>
-					<time class="entry__date" datetime="2026-04-29T17:19:44+00:00" title="April 30, 2026 at 2:19 AM">April 30, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Added</h2>
-<ul><li>Added a warning when installing unknown modpack files to help prevent users from getting tricked into installing malware.</li></ul>
-<h2>Changed</h2>
-<ul><li>Updated the content downloading and installation notifications to be consistent with other types of notifications.</li><li>Updated the design of the running instances widget in the action bar to be more consistent with our current designs.</li><li>Increased the click target area of the window control buttons on Windows and Linux.</li><li>Changed the name of the button for creating an instance with a modpack to make it clearer what it's for.</li></ul>
-<h2>Fixed</h2>
-<ul><li>Fixed Java auto-installation not working on macOS.</li><li>Fix a skin naming error.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.13.6</span>
-					</h2>
-					<time class="entry__date" datetime="2026-04-27T19:59:24+00:00" title="April 28, 2026 at 4:59 AM">April 28, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><p>*Note: Modrinth App v0.13.5's release has been skipped - it's changes have been bundled into 0.13.6.*</p>
-<h2>Changed</h2>
-<ul><li>Renamed the Browse page filter from &quot;Hide installed content/added servers&quot; to &quot;Hide already installed content/added servers&quot;.</li><li>Content installed and servers added from an instance now stay visible on the Browse page until the search query or filters change.</li></ul>
-<h2>Fixed</h2>
-<ul><li>Fixed the instance creation modal incorrectly showing mod loaders as compatible with unsupported game versions.</li><li>Fixed the game version and loader version dropdowns appearing empty for a few seconds in the instance creation modal.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.13.4</span>
-					</h2>
-					<time class="entry__date" datetime="2026-04-20T20:48:51+00:00" title="April 21, 2026 at 5:48 AM">April 21, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Fixed</h2>
-<ul><li>Browse page not using relevanced as default search type.</li><li>Fixed problem with the sticky header on scroll in the Files tab of instance pages.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.13.3</span>
-					</h2>
-					<time class="entry__date" datetime="2026-04-19T00:07:46+00:00" title="April 19, 2026 at 9:07 AM">April 19, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Fixed</h2>
-<ul><li>Fixed overlap of window controls with the instance status card in the top bar of the app.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.13.2</span>
-					</h2>
-					<time class="entry__date" datetime="2026-04-18T19:00:59+00:00" title="April 19, 2026 at 4:00 AM">April 19, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Added</h2>
-<ul><li>Instances on the Library page are now grouped into collapsible accordions if they have an associated group. Thanks to <a href="https://github.com/kirushkinx" rel="noopener">@kirushkinx</a>!</li></ul>
-<h2>Changed</h2>
-<ul><li>Redesigned the &quot;Find and Replace&quot; tool in the instance Files tab editor to match the rest of the platform. Thanks to <a href="https://github.com/Creeperkatze" rel="noopener">@Creeperkatze</a>!</li></ul>
-<h2>Fixed</h2>
-<ul><li>Worlds and servers in the instance Worlds tab now load almost instantly instead of taking one to two seconds.</li><li>Fixed the Modrinth+ upgrade button and ad banner not staying pinned to the bottom right.</li><li>Fixed servers in the &quot;Jump back in&quot; section of the home page loading slowly. Thanks to <a href="https://github.com/Creeperkatze" rel="noopener">@Creeperkatze</a>!</li><li>Fixed several issues with the splash screen.</li><li>Fixed the cancel button when changing the install directory.</li><li>Fixed symlinks breaking directory moves.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.13.1</span>
-					</h2>
-					<time class="entry__date" datetime="2026-04-15T19:39:48+00:00" title="April 16, 2026 at 4:39 AM">April 16, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Fixed</h2>
-<ul><li>Fixed the sidebar gutter margin on macOS when the scrollbar is set to auto-hide.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.13.0</span>
-					</h2>
-					<time class="entry__date" datetime="2026-04-12T22:12:15+00:00" title="April 13, 2026 at 7:12 AM">April 13, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Changed</h2>
-<ul><li>The Logs page has been redesigned, and brought into the same style as the new overview page from Modrinth Hosting.</li><li>Refactored the Logs page to share its console, filtering, and share-to-mclo.gs functionality with the Modrinth Hosting server panel.</li><li>Aligned the instance header with the Modrinth Hosting server panel header for a consistent look across the app and web.</li><li>Historical log files are now fetched in the background (and stored much more efficiently) when opening the Logs page, so switching between them is instant.</li><li>Moved live log capture from the frontend to the Rust backend, significantly reducing overhead when an instance produces large volumes of output.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.12.6</span>
-					</h2>
-					<time class="entry__date" datetime="2026-04-03T16:45:00-07:00" title="April 4, 2026 at 8:45 AM">April 4, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Fixed</h2>
-<ul><li>Fixed dependencies of dependencies not being automatically installed.</li><li>Improved error modal if the app errors on initialization.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.12.5</span>
-					</h2>
-					<time class="entry__date" datetime="2026-03-26T18:45:00-07:00" title="March 27, 2026 at 10:45 AM">March 27, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Added</h2>
-<ul><li>Added a Files tab for instances, matching the Modrinth Hosting experience — browse, edit, and manage all files in your instance folder without leaving the app, ideal for editing config files, viewing crash reports, and more.</li><li>Added new filters to the Worlds tab: Online, Offline, Singleplayer, Modded, and Vanilla, replacing the previous set.</li><li>Added a &quot;Browse servers&quot; option to the Worlds tab, allowing you to search for compatible servers and quickly play or save them for later.</li><li>Added an empty state to the Worlds tab aligned with the Content tabs, with options to add or browse for servers.</li><li>Added icons alongside labels on instance tabs (Content, Files, Worlds, Logs) for easier visual scanning.</li></ul>
-<h2>Changed</h2>
-<ul><li>Redesigned the Worlds tab to align with the Content tab - searching and filtering for worlds and servers is now cleaner and more consistent.</li><li>The modpack &quot;Already installed&quot; pop-up has been redesigned.</li><li>The &quot;Add server&quot; and &quot;Edit server&quot; pop-ups in the worlds tab have been polished.</li><li>Moved the &quot;switch version&quot; button outside of the overflow menu on the instance Content tab.</li></ul>
-<h2>Fixed</h2>
-<ul><li>Navigating back from the browse page within an instance now returns you to the tab you came from (e.g. Worlds) instead of always defaulting to Content.</li><li>Content cards no longer sometimes display inconsistent column widths.</li><li>Deleting content that isn't linked to a project no longer causes a crash.</li><li>Fixed mod updates not being detected correctly in some cases.</li><li>Deleting servers from the Worlds tab no longer causes an &quot;out of index&quot; error to occur.</li><li>Server game version filter now correctly includes modded servers on the Browse page.</li><li>Breadcrumbs in the app header now fade at the edges when overflowing instead of clipping abruptly.</li><li>Fixed instance getting stuck at &quot;Installing&quot; after a failed version change.</li><li>Fixed &quot;Invalid game version&quot; error when updating to newly-released Minecraft versions.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.12.2</span>
-					</h2>
-					<time class="entry__date" datetime="2026-03-13T00:15:00-00:00" title="March 13, 2026 at 9:15 AM">March 13, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Hotfixes</h2>
-<ul><li>Fixed search pages not showing beyond the first page.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.12.1</span>
-					</h2>
-					<time class="entry__date" datetime="2026-03-12T16:30:00-00:00" title="March 13, 2026 at 1:30 AM">March 13, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Improvements</h2>
-<ul><li>Added shift + click multiselect to the content tab.</li><li>Fixed overflow problem with the content sort button in the content tab.</li><li>Bulk enable, bulk disable and bulk delete actions are now done immediately all in one go, rather one by one.</li><li>Improved installing visual and state management for content on the content tab.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.12.0</span>
-					</h2>
-					<time class="entry__date" datetime="2026-03-12T14:05:00-00:00" title="March 12, 2026 at 11:05 PM">March 12, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Major changes</h2>
-<ul><li>Overhauled the &quot;Content&quot; tab on instances</li><li>Installed modpacks now display under the content tab</li><li>Content that came bundled with a modpack is now separated from content you have installed on top of it. To view a modpack's content, click the &quot;Content&quot; button in the modpack's card.</li><li>Added the ability to sort content by date added.</li><li>Overhauled the pop-out screen for updating a modpack. It will now make it clearer when a version is likely incompatible, and will show you the changelogs of each version.</li><li>Various bugs and inconsistencies with the content list has now been fixed.</li></ul>
-<h2>Improvements</h2>
-<ul><li>Fixed the &quot;add server to instance&quot; pop-out opening slowly.</li><li>Fixed project pages not showing organizations under &quot;Creators&quot; in the sidebar.</li><li>In the library, split &quot;Downloaded&quot; tab into &quot;Modpacks&quot; and &quot;Servers&quot; depending on instance type.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.11.4</span>
-					</h2>
-					<time class="entry__date" datetime="2026-03-10T16:40:00-00:00" title="March 11, 2026 at 1:40 AM">March 11, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Improvements</h2>
-<ul><li>Fix PostHog analytics</li><li>Improve language selector</li><li>Improve server play analytics tracking</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.11.3</span>
-					</h2>
-					<time class="entry__date" datetime="2026-03-06T19:10:00-08:00" title="March 7, 2026 at 12:10 PM">March 7, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Improvements</h2>
-<ul><li>Added warning banner for installing content to server instance.</li><li>Fixed server instance pinging to be less jumpy and only ping once in instance.</li><li>Fixed unlinking instance not giving sufficient feedback.</li><li>Improved the identification of server project worlds for tracking.</li><li>Fixed many other visual issues with server projects.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.11.2</span>
-					</h2>
-					<time class="entry__date" datetime="2026-03-03T17:30:00-08:00" title="March 4, 2026 at 10:30 AM">March 4, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>[Introducing Server Projects](/news/article/introducing-server-projects)</h2>
-<ul><li>Added new Server Project type</li><li>Three compatibility types: vanilla, modded (published pack), or modded (uploaded pack)</li><li>Added new linked server instance type that receives updates from the server</li><li>Joining a server from the app downloads the required content and launches you directly into the server.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.10.29</span>
-					</h2>
-					<time class="entry__date" datetime="2026-02-09T16:45:00-08:00" title="February 10, 2026 at 9:45 AM">February 10, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><p>v0.10.28 failed to release due to a technical issue; its changes are included in this changelog.</p>
-<h2>Improvements</h2>
-<ul><li>Revamped project lists to use a more modern design with new functionality:</li><li>Tags are now shown more intelligently, relegating themselves to the overflow menu when selected.</li><li>Loaders will be relegated to overflow when a loader is selected or is of another project type.</li><li>Non-featured tags now show in the tag overflow menu, rather than not at all.</li><li>Hover download count, follower count, or date to view a more precise number.</li><li>The entire card is now clickable to navigate to the project.</li><li>Project banners now display at a consistent 2:1 aspect ratio, rather than being variable.</li><li>Added app update notification for Linux users.</li><li>Fixed security policy issue updating capes.</li><li>Adjusted pop-up design to include a border.</li><li>Categories are now sorted alphabetically based on language, not just the English names.</li><li>Fixed iframes in descriptions removing all query parameters, even ones that it's supposed to allow.</li><li>Updated translations.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.10.27</span>
-					</h2>
-					<time class="entry__date" datetime="2026-01-23T13:00:00-08:00" title="January 24, 2026 at 6:00 AM">January 24, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Improvements</h2>
-<ul><li>Fixed installing content from Discover refusing to create NeoForge instances.</li><li>Added circuit-breaker logic to prevent Modrinth App from spamming API requests during downtime.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.10.26</span>
-					</h2>
-					<time class="entry__date" datetime="2026-01-15T13:30:00-08:00" title="January 16, 2026 at 6:30 AM">January 16, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Improvements</h2>
-<ul><li>Fixed many checkboxes not having labels for screen readers.</li><li>Fixed 'Jump back in' setting not working sometimes.</li><li>Fixed crash issues when opening folders.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.10.25</span>
-					</h2>
-					<time class="entry__date" datetime="2026-01-08T12:30:00-08:00" title="January 9, 2026 at 5:30 AM">January 9, 2026</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Added</h2>
-<ul><li>Added language selection settings, now available in beta.</li></ul>
-<h2>Improvements</h2>
-<ul><li>Fixed issue launching 26.1 Snapshot 2.</li><li>Throttled server pinging to fix a server ping spam issue on certain systems.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.10.24</span>
-					</h2>
-					<time class="entry__date" datetime="2025-12-22T12:55:00-08:00" title="December 23, 2025 at 5:55 AM">December 23, 2025</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Improvements</h2>
-<ul><li>Fixed issue with modpack export not working with certain projects.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.10.23</span>
-					</h2>
-					<time class="entry__date" datetime="2025-12-16T13:15:00-08:00" title="December 17, 2025 at 6:15 AM">December 17, 2025</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Improvements</h2>
-<ul><li>Fixed installation of newer NeoForge versions.</li><li>Added Java 25 support to settings for Minecraft 26.1.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.10.22</span>
-					</h2>
-					<time class="entry__date" datetime="2025-12-11T17:00:00-08:00" title="December 12, 2025 at 10:00 AM">December 12, 2025</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Improvements</h2>
-<ul><li>Updated Modrinth Servers branding to new Modrinth Hosting branding.</li><li>Fixed server pinging blocking the app from loading.</li><li>Fixed instance overrides for window and Java settings not being able to be disabled.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.10.21</span>
-					</h2>
-					<time class="entry__date" datetime="2025-11-28T11:45:00-08:00" title="November 29, 2025 at 4:45 AM">November 29, 2025</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Improvements</h2>
-<ul><li>Install dependencies added in an update automatically.</li><li>Fixed auth server check.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.10.20</span>
-					</h2>
-					<time class="entry__date" datetime="2025-11-19T15:15:00-08:00" title="November 20, 2025 at 8:15 AM">November 20, 2025</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Improvements</h2>
-<ul><li>Improved contrast, visibility, and consistency of UI elements, especially in light mode.</li><li>Fixed ads showing up in the loading screen, even when you have Modrinth+.</li><li>Added a warning banner when Minecraft's authentication servers are detected to be down.</li><li>Fixed icon when creating an instance not being saved.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.10.19</span>
-					</h2>
-					<time class="entry__date" datetime="2025-11-11T12:50:00-08:00" title="November 12, 2025 at 5:50 AM">November 12, 2025</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Improvements</h2>
-<ul><li>Fixed automatic dependency resolution ignoring the selected mod loader.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.10.18</span>
-					</h2>
-					<time class="entry__date" datetime="2025-11-10T11:20:00-08:00" title="November 11, 2025 at 4:20 AM">November 11, 2025</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><p>No changes.</p></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.10.17</span>
-					</h2>
-					<time class="entry__date" datetime="2025-11-07T09:30:00-08:00" title="November 8, 2025 at 2:30 AM">November 8, 2025</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Improvements</h2>
-<ul><li>Sorting and grouping options in the Library page are now persistent.</li><li>Instance content filters are now remembered until you close the app.</li><li>Improved performance when 'Advanced rendering' is disabled, especially on Linux.</li><li>Fixed account list not being scrollable.</li><li>Fixed glitchy text selection in Logs page.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.10.16</span>
-					</h2>
-					<time class="entry__date" datetime="2025-10-30T16:30:00-07:00" title="October 31, 2025 at 8:30 AM">October 31, 2025</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Security fixes</h2>
-<ul><li>Fixed a security vulnerability with .mrpack import zip parsing.</li></ul>
-<h2>Improvements</h2>
-<ul><li>Fixed stacking multiple instance wrapper commands.</li><li>Fixed instance-provided filters still showing as locked in the filters bar even when the filter is unlocked.</li><li>Fixed &quot;Friends&quot; title showing up in the sidebar twice when you have no friends.</li><li>Fixed the &quot;Add friends&quot; button not working properly.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.10.15</span>
-					</h2>
-					<time class="entry__date" datetime="2025-10-26T18:30:00-07:00" title="October 27, 2025 at 10:30 AM">October 27, 2025</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Improvements</h2>
-<ul><li>Fixed skins page uploading modified 'normalized' versions of the skin texture instead of the original.</li><li>Improved skins page lighting to have the player model be lit more from the front.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.10.14</span>
-					</h2>
-					<time class="entry__date" datetime="2025-10-24T21:05:00-07:00" title="October 25, 2025 at 1:05 PM">October 25, 2025</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Improvements</h2>
-<ul><li>Fixed window maximized state not being saved properly.</li><li>Fixed padding issue when Friends are loading.</li><li>Fixed the colors of OLED mode being brighter than intended.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.10.13</span>
-					</h2>
-					<time class="entry__date" datetime="2025-10-19T17:45:00-07:00" title="October 20, 2025 at 9:45 AM">October 20, 2025</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Improvements</h2>
-<ul><li>Revamped the app sidebar and friends UI to be more straightforward and easier to use.</li><li>Improved the UI of the Modrinth account button in the bottom left corner. It's now more visually consistent with the other navigation buttons and it has a link to your profile.</li><li>Updated the ad fallback to be green again instead of blue.</li><li>Fixed 'Open folder' in the instance page context menu having the wrong icon.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.10.12</span>
-					</h2>
-					<time class="entry__date" datetime="2025-10-15T12:15:00-07:00" title="October 16, 2025 at 4:15 AM">October 16, 2025</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Improvements</h2>
-<ul><li>Fixed cache sticking around for way too long (30 hours instead of 30 minutes).</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.10.11</span>
-					</h2>
-					<time class="entry__date" datetime="2025-10-15T04:11:00-07:00" title="October 15, 2025 at 8:11 PM">October 15, 2025</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Improvements</h2>
-<ul><li>Fixed ads being able to play audio.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.10.10</span>
-					</h2>
-					<time class="entry__date" datetime="2025-10-04T17:20:00-07:00" title="October 5, 2025 at 9:20 AM">October 5, 2025</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h2>Improvements</h2>
-<ul><li>Fixed Minecraft versions 1.12.2 and earlier failing to install.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.10.9</span>
-					</h2>
-					<time class="entry__date" datetime="2025-10-04T09:45:00-07:00" title="October 5, 2025 at 1:45 AM">October 5, 2025</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h3>Security fixes</h3>
-<ul><li>Fixed a couple Modrinth Pack (<code>.mrpack</code>) importing security vulnerabilities.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.10.8</span>
-					</h2>
-					<time class="entry__date" datetime="2025-09-29T12:50:00-07:00" title="September 30, 2025 at 4:50 AM">September 30, 2025</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h3>Improvements</h3>
-<ul><li>Overhauled Modrinth App updater to make it easier to stay up-to-date.</li><li>Updates will now be downloaded in the background to make a seamless updating experience.</li><li>When an update is downloaded, it will prompt you to reload the app.</li><li>If a metered internet connection is detected, it will ask you before downloading the update.</li><li>Fixed how transparency is handled on the skins page. (Contributed by <a href="https://github.com/modrinth/code/pull/4373" rel="noopener">Jerozgen</a>)</li><li>Removed the 'Advanced' toggle in the Instance creation interface.</li><li>Improved version selection when installing content.</li><li>Installing versions from the Discover content page will now install a version according to your filters, rather than simply the latest.</li><li>Dependencies will now download with the same logic as the content being installed.</li><li>Non-mod projects and dependencies will now be installed properly.</li><li>Fixed window dragging issues with the top bar. (Contributed by <a href="https://github.com/modrinth/code/pull/4218" rel="noopener">aervxa</a>)</li><li>Fixed an empty servers.dat file being created when one doesn't already exist, preventing certain mods from providing defaults.</li><li>Fixed long creator names overflowing on project pages.</li><li>Strings in Markdown descriptions that look like domain names or IP addresses will no longer automatically be converted to links, such as <code>README.md</code>.</li><li>When adding friends, unknown users will now show an error.</li><li>Pressing 'Enter' after typing in a friend's username will now send the friend request.</li><li>Improved error handling from Modrinth API.</li><li>Fixed the white flash when the app is opened on certain systems. (Contributed by <a href="https://github.com/modrinth/code/pull/4177" rel="noopener">aervxa</a>)</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.10.7</span>
-					</h2>
-					<time class="entry__date" datetime="2025-08-20T13:30:00-07:00" title="August 21, 2025 at 5:30 AM">August 21, 2025</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h3>Improvements</h3>
-<ul><li>Fixed Quick Play not working with Singleplayer worlds.</li><li>Updated ad fallback to Medal promo.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.10.6</span>
-					</h2>
-					<time class="entry__date" datetime="2025-08-15T13:15:00-07:00" title="August 16, 2025 at 5:15 AM">August 16, 2025</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h3>Improvements</h3>
-<ul><li>Fixed Forge versions between 1.17.1 and 1.20.3 failing to launch.</li><li>Fixed search page constantly resetting back to page 1.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.10.5</span>
-					</h2>
-					<time class="entry__date" datetime="2025-08-15T11:45:00-07:00" title="August 16, 2025 at 3:45 AM">August 16, 2025</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h3>Improvements</h3>
-<ul><li>On Windows, the app will now install per-user rather than system-wide.</li><li>This allows future versions of Modrinth App to update seamlessly if the user is not an administrator.</li><li>When updating to this version, the app will prompt you for Admin elevation in order to remove the old system-wide installation.</li><li>Desktop shortcuts should be migrated automatically to the new installation location.</li><li>Improvements to the Skins page.</li><li>Fixed skins being mirrored.</li><li>Added automatic detection of arm style from skin file.</li><li>Improved performance of skin renderer.</li><li>Added anti-aliasing to the skin renderer to make it appear smoother.</li><li>Tweaked the rendering of the spotlight below the player model.</li><li>Allow offline servers to still be joined from Worlds tab.</li><li>Some servers display as offline as a privacy measure, or only start up once a player attempts to join.</li><li>Improved Modrinth user account login to use your default web browser.</li><li>Updated the appearance and functionality of error notifications to match the Modrinth website.</li><li>Fixed search not returning to first page when filters are changed.</li><li>Fixed modpacks showing up with the &quot;Optimization&quot; tag on Home page even when it's not a featured category on the project.</li><li>Improved pinging Minecraft servers for older versions in the Worlds tab to more closely match how the client would ping them.</li><li>Added Quick Play functionality for Minecraft servers on versions before 1.20.</li><li>Fixed the tracking of last played time for Minecraft servers on versions before 1.7.2.</li><li>Fixed the order when sorting Library page by game version.</li><li>Fixed the incompatibility warning not remembering the version you clicked on.</li><li>Added common snapping points to memory allocation sliders.</li><li>Increased the size of the 'Logs' page on instances.</li><li>Fixed failure when clicking 'Test' on Java versions.</li><li>Fixed the back/forward buttons appearing with white icons in light mode.</li><li>Fixed 'Party Alex' skin not using slim character model.</li><li>Improved resilience of Minecraft launching on Java 8 under certain circumstances.</li><li>Added system for showing users surveys to provide feedback on their experience with Modrinth App.</li></ul>
-<p><strong>This update was originally launched as 0.10.4, but was pulled due to issues with many functions of the app.</strong></p></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.10.3</span>
-					</h2>
-					<time class="entry__date" datetime="2025-07-07T01:10:00-07:00" title="July 7, 2025 at 5:10 PM">July 7, 2025</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h3>Improvements</h3>
-<ul><li>Added a workaround for Java 8 instances failing to load.</li></ul>
-<h3>Known issues</h3>
-<ul><li>Java installations will show as 'Failed' when you test them. This is a visual bug, and does not mean the Java installation is not working.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.10.2</span>
-					</h2>
-					<time class="entry__date" datetime="2025-07-06T16:30:00-07:00" title="July 7, 2025 at 8:30 AM">July 7, 2025</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h3>Improvements</h3>
-<ul><li>Added additional default skins from free official Minecraft skin packs.</li><li>Fixed some parts of the player model on Skins page rendering incorrectly.</li><li>Fixed a number of issues with skin images not loading on macOS.</li><li>Fixed old Forge versions not loading properly.</li><li>Fixed a typo in Appearance settings for hiding Skins page nametag.</li></ul>
-<h3>Known issues</h3>
-<ul><li>Java installations will show as 'Failed' when you test them. This is a visual bug, and does not mean the Java installation is not working.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.10.1</span>
-					</h2>
-					<time class="entry__date" datetime="2025-07-05T12:00:00-07:00" title="July 6, 2025 at 4:00 AM">July 6, 2025</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h3>Improvements</h3>
-<ul><li>News section will now only show up to 4 articles.</li><li>Fixed critical issue with updating on Windows.</li><li>Fixed search being broken after a query that yields no results.</li><li>Fixed 'Jump back in' section on Home page not working.</li><li>Fixed too many Quick Instance items on the sidebar causing the UI to overflow.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.10.0</span>
-					</h2>
-					<time class="entry__date" datetime="2025-07-04T12:00:00-07:00" title="July 5, 2025 at 4:00 AM">July 5, 2025</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><p><strong>Note: This update is no longer available to download due to issues, you should use v0.10.1</strong></p>
-<h3>Added</h3>
-<ul><li>Added Skins page as a beta feature. There may be some minor bugs with it, but we'd love to get user feedback on this feature as it's been one of our most highly requested features.</li><li>Save as many of your own skins as you'd like to swap between them at any moment.</li><li>Pick a default cape, or override the cape on any of your saved skin profiles to tailor each look perfectly.</li><li>Choose between any of the default Minecraft skins.</li></ul>
-<h3>Improvements</h3>
-<ul><li>Updated News section to pull data from our new custom news feed.</li><li>Fixed videos from GitHub not working in project descriptions.</li><li>Fixed data related to a world not being deleted from the database when the world was deleted.</li><li>Standardized relative date timestamps across the app.</li><li>Fixed 'Reset icon' button for Singleplayer worlds state not being reset when opening the Edit interface.</li><li>Fixed 'Repair' button showing while an instance is installing.</li><li>Fixed instances with non-UTF8 text files failing to launch or import.</li><li>Fixed launch hooks being unable to be cleared on an instance.</li><li>Fixed search results breaking if page number goes out of bounds.</li><li>Fixed servers running old Minecraft versions not showing last played time.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.9.5</span>
-					</h2>
-					<time class="entry__date" datetime="2025-05-01T18:10:00-07:00" title="May 2, 2025 at 10:10 AM">May 2, 2025</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h3>Improvements</h3>
-<ul><li>Fixed certain mods with a large number of versions not being able to be installed or load their versions.</li><li>Fixed server descriptions not being rendered with the Minecraft font.</li><li>When installing a modpack, the page will now change to the instance once it's created.</li><li>Last played time for existing servers will now be loaded from log files instead of displaying &quot;Never played&quot;.</li><li>Home page's &quot;Jump back in&quot; section will now display in multiple columns when the screen is very large.</li><li>Added the ability to launch the instance from a World entry on the Home page.</li><li>Added the ability to hide a world from the Home page.</li><li>Added an appearance setting to only show instances instead of worlds on the Home page.</li><li>Fixed Home page rendering being blocked by server pings.</li><li>Fixed Home page sometimes not sending the correct protocol version when fetching server data.</li><li>Fixed server data not being loaded immediately after adding it.</li><li>Fixed Worlds tab filters showing up in the wrong situations.</li><li>Fixed new Singleplayer worlds not being added to the Worlds tab without a refresh.</li><li>Fixed an excessive number of items showing up in &quot;Jump back in&quot; sometimes.</li><li>Fixed critical error modal cutting off long single-line error messages.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.9.4</span>
-					</h2>
-					<time class="entry__date" datetime="2025-04-26T19:15:00-07:00" title="April 27, 2025 at 11:15 AM">April 27, 2025</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h3>Added</h3>
-<ul><li>Added a Worlds tab to instances that allow you to manage your worlds and servers directly from the app</li><li>Server ping, play count, and descriptions will all show before having to open the game.</li><li>Add, edit, and remove servers</li><li>Edit and delete singleplayer worlds</li><li>Added 'Quick Play' functionality, allowing you to jump straight into worlds and servers from the app</li><li>Added new launcher-log.txt file to log stdout to a file, similar to the Minecraft Launcher which can be helpful for debugging.</li></ul>
-<h3>Improvements</h3>
-<ul><li>Overhauled the 'Jump back in' section of the Home page, showing recently played worlds instead of just instances.</li><li>This supports the new 'Quick Play' functionality, allowing you to jump back into your recent worlds (on supported Minecraft versions 1.20+)</li><li>Improved the fatal error dialog to show debug information more prominently, and allow you to copy it to share with support.</li><li>Fixed the display of critical announcements that has been broken since 0.9.0.</li><li>Fixed content authors not displaying properly on Content page if the content was owned by an organization.</li><li>Fixed random errors on the Library page, causing no instances to load.</li><li>Fixed .mrpack file association on Linux.</li><li>Fixed occasional failures when moving app directory between disks.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.9.3</span>
-					</h2>
-					<time class="entry__date" datetime="2025-02-06T10:00:00-08:00" title="February 7, 2025 at 3:00 AM">February 7, 2025</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h3>Improvements</h3>
-<ul><li>Prevent ads from being able to open additional windows.</li><li>Fixed update checking only checking for mod updates.</li><li>Fixed issue importing newer Prism instances.</li><li>Fixed issue where instances get stuck &quot;Installing&quot; forever when the app is closed during an install.</li><li>Minecraft profile is now updated every time the user's token is refreshed.</li><li>Improved ability for package managers to update Modrinth App by skipping the updater at runtime with an environment variable.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.9.2</span>
-					</h2>
-					<time class="entry__date" datetime="2024-12-25T14:00:00-08:00" title="December 26, 2024 at 7:00 AM">December 26, 2024</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h3>Improvements</h3>
-<ul><li>Prevent ads from being able to play audio.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.9.1</span>
-					</h2>
-					<time class="entry__date" datetime="2024-12-24T22:00:00-08:00" title="December 25, 2024 at 3:00 PM">December 25, 2024</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h3>Added</h3>
-<ul><li>Added filter to filter projects by disabled.</li><li>Re-added back/forward navigation buttons.</li></ul>
-<h3>Improvements</h3>
-<ul><li>Fixed environment tags missing from search.</li><li>Fixed an issue where ads could play audio.</li><li>Changed content enable/disable buttons to toggle switches.</li><li>Show &quot;install&quot; button at all time on project cards.</li><li>Fixed issue where cards would shrink when clicking button inside them causing click not to register.</li><li>Made sidebar hide instantly.</li></ul></div>
-		</div>
-
-		<div class="entry">
-			<div class="entry__head">
-				<div class="entry__dot entry__dot--muted"></div>
-				<div class="entry__title">
-					<h2>
-						<span class="entry__type">App</span>
-						<span class="dot-sep"></span>
-						<span class="entry__version">0.9.0</span>
-					</h2>
-					<time class="entry__date" datetime="2024-12-23T22:16:00-08:00" title="December 24, 2024 at 3:16 PM">December 24, 2024</time>
-				</div>
-			</div>
-			<div class="entry__body changelog-body"><h3>Improvements</h3>
-<ul><li>New, updated design that brings the app in-line with the website.</li><li>A dynamic sidebar that adjusts to the most relevant content for each page, and keeps the ad in a consistent place instead of moving all around your screen.</li><li>More organized settings interfaces that makes each option clearer and easier to find.</li><li>Managing your content is much easier with enhanced filters for content types or checking for updates.</li><li>Content discovery has been overhauled and now has fully-featured project pages that match the website.</li><li>Instances now show your total play time, and will show the last time you played on the Home screen.</li><li>The library page now gives responsive feedback as instances are installing.</li><li>The beginnings of a Friends system. In the future, you will be able to share the instances you’re playing and invite them to servers.</li><li>Access your most recent instances with ease with Quick Instances.</li><li>Fixed “Database is locked” errors on devices with slow disks.</li><li>Fixed a few edge cases where API downtime could lead to an invalid state.</li></ul></div>
-		</div></main>
-
-		<footer class="footer">
-			Generated from the in-app changelog ·
-			<a href="https://github.com/Everelsu/noctrinth" rel="noopener">Source on GitHub</a>
-		</footer>
-	</div>
+	<nav class="nav">
+		<div class="container container--wide nav__inner">
+			<a class="nav__brand" href="./" aria-label="Noctrinth Home">
+				<svg class="nav__logo" viewBox="0 0 552 552" fill="none" aria-hidden="true"><path transform="rotate(45 276 276)" fill-rule="evenodd" clip-rule="evenodd" fill="var(--brand)" d="M81 81H231V171H201V111H111V171H81ZM261 81H471V171H441V111H291V171H261ZM141 141H171V201H291V261H321V141H411V411H381V351H261V231H171V291H141ZM381 171H351V291H291V321H381ZM81 201H111V441H261V381H291V471H81ZM441 201H471V471H321V381H351V441H441ZM201 261H231V411H141V321H171V381H201Z"/></svg>
+				<span class="nav__brand-name">Noctrinth</span>
+			</a>
+			<div class="nav__links">
+				<a href="plugins/"><span class="i18n" lang="en">Plugins</span><span class="i18n" lang="ru">Плагины</span></a>
+				<a href="docs/"><span class="i18n" lang="en">Docs</span><span class="i18n" lang="ru">Документация</span></a>
+				<a href="news/"><span class="i18n" lang="en">News</span><span class="i18n" lang="ru">Новости</span></a>
+				<a href="changelog/"><span class="i18n" lang="en">Changelog</span><span class="i18n" lang="ru">Изменения</span></a>
+			</div>
+			<div class="nav__actions">
+				<button class="btn" type="button" data-lang-toggle aria-label="Language">
+					<span class="i18n" lang="en">RU</span><span class="i18n" lang="ru">EN</span>
+				</button>
+				<a class="btn" href="https://github.com/Everelsu/Noctrinth" rel="noopener" aria-label="GitHub"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.38-3.88-1.38-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.8 1.19 1.83 1.19 3.09 0 4.42-2.7 5.39-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></svg></a>
+			</div>
+		</div>
+	</nav>
+	
+	<header class="hero">
+		<div class="hero__banner-wrap">
+			<img class="hero__banner" src="assets/noctrinth-banner.svg" alt="Noctrinth">
+		</div>
+		<div class="hero__body">
+			<p class="hero__lead"><span class="i18n" lang="en">Ely.by, offline accounts and CurseForge, in the Modrinth App you already know.</span><span class="i18n" lang="ru">Ely.by, офлайн-аккаунты и CurseForge — в том же Modrinth App, к которому ты привык.</span></p>
+			<p class="hero__sub"><span class="i18n" lang="en">Free and open source. Follows every Modrinth App release.</span><span class="i18n" lang="ru">Бесплатный и с открытым кодом. Повторяет каждый релиз Modrinth App.</span></p>
+			<div class="download">
+				<a class="btn btn--brand btn--xl download__main" id="download-main" href="https://github.com/Everelsu/Noctrinth/releases/latest">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
+					<span><span class="i18n" lang="en">Download</span><span class="i18n" lang="ru">Скачать</span></span>
+					<small id="download-label">Windows</small>
+				</a>
+				<div class="download__others">
+					<a class="btn" href="https://github.com/Everelsu/Noctrinth/releases/latest" data-os="windows">Windows x64</a>
+					<a class="btn" href="https://github.com/Everelsu/Noctrinth/releases/latest" data-os="windowsArm" hidden>Windows ARM64</a>
+					<a class="btn" href="https://github.com/Everelsu/Noctrinth/releases/latest" data-os="macos">macOS</a>
+					<a class="btn" href="https://github.com/Everelsu/Noctrinth/releases/latest" data-os="appimage">Linux x64 AppImage</a>
+					<a class="btn" href="https://github.com/Everelsu/Noctrinth/releases/latest" data-os="appimageArm" hidden>Linux ARM64 AppImage</a>
+					<a class="btn" href="https://github.com/Everelsu/Noctrinth/releases/latest" data-os="deb">Linux x64 .deb</a>
+					<a class="btn" href="https://github.com/Everelsu/Noctrinth/releases/latest" data-os="debArm" hidden>Linux ARM64 .deb</a>
+					<a class="btn" href="https://github.com/Everelsu/Noctrinth/releases" rel="noopener"><span class="i18n" lang="en">All releases</span><span class="i18n" lang="ru">Все релизы</span></a>
+				</div>
+			</div>
+		</div>
+	</header>
+
+	<main>
+		<section class="container container--wide home-section">
+			<h2 class="section-heading"><span class="i18n" lang="en">What it adds</span><span class="i18n" lang="ru">Что он добавляет</span></h2>
+			
+		<section class="feature">
+			<div class="feature__media"><img src="assets/accounts.png" alt="" loading="lazy"></div>
+			<div>
+				<h3><span class="i18n" lang="en">Microsoft, Ely.by or just a name</span><span class="i18n" lang="ru">Microsoft, Ely.by или просто ник</span></h3>
+				<p><span class="i18n" lang="en">Add a Microsoft account, sign in with Ely.by, or play singleplayer and offline servers under any name. All of them sit in one list and you switch with a click.</span><span class="i18n" lang="ru">Добавь аккаунт Microsoft, войди через Ely.by или играй в одиночку и на офлайн-серверах под любым ником. Все аккаунты в одном списке, переключение в один клик.</span></p>
+			</div>
+		</section>
+		<section class="feature feature--flip">
+			<div class="feature__media"><img src="assets/curseforge-discover.jpg" alt="" loading="lazy"></div>
+			<div>
+				<h3><span class="i18n" lang="en">CurseForge, right next to Modrinth</span><span class="i18n" lang="ru">CurseForge прямо рядом с Modrinth</span></h3>
+				<p><span class="i18n" lang="en">Switch between Modrinth and CurseForge right on the Discover page to browse and install mods, modpacks, resource packs and shaders. CurseForge files get updates and version switching just like Modrinth ones, restricted mods are automatically matched on Modrinth when available (or picked up from Downloads), and CurseForge profile codes and <code>.zip</code> packs install straight from disk.</span><span class="i18n" lang="ru">Переключайся между Modrinth и CurseForge прямо в «Исследовании» и ставь моды, сборки, ресурспаки и шейдеры в один клик. Файлы с CurseForge обновляются и переключаются по версиям так же, как с Modrinth, ограниченные моды автоматически подхватываются с Modrinth (или из «Загрузок»), а коды профилей и <code>.zip</code>-сборки ставятся прямо с диска.</span></p>
+			</div>
+		</section>
+		<section class="feature">
+			<div class="feature__media"><img src="assets/plugins-settings.jpg" alt="" loading="lazy"></div>
+			<div>
+				<h3><span class="i18n" lang="en">Plugins, themes & Quick CSS</span><span class="i18n" lang="ru">Плагины, темы и Quick CSS</span></h3>
+				<p><span class="i18n" lang="en">Customize the launcher with pure CSS themes, add new content sources to Discover, or install sandboxed extensions. Browse the <a href="plugins/">Plugin Catalog</a> or build your own using the <a href="docs/">Plugin Docs</a>.</span><span class="i18n" lang="ru">Настраивай внешний вид лаунчера CSS-темами с живыми параметрами, добавляй новые источники в «Исследование» и ставь расширения. Загляни в <a href="plugins/">каталог плагинов</a> или напиши свой по <a href="docs/">документации</a>.</span></p>
+			</div>
+		</section>
+			<div class="bento-grid">
+		<section class="bento-card">
+			<div class="feature__media"><img src="assets/ely-by-skins.png" alt="" loading="lazy"></div>
+			<div>
+				<h3><span class="i18n" lang="en">Ely.by skins in the launcher</span><span class="i18n" lang="ru">Скины Ely.by в лаунчере</span></h3>
+				<p><span class="i18n" lang="en">Browse, wear, upload and delete your Ely.by skins in the same grid the Microsoft account uses, without opening the website.</span><span class="i18n" lang="ru">Смотри, надевай, загружай и удаляй скины Ely.by в той же сетке, что и у аккаунта Microsoft, не открывая сайт.</span></p>
+			</div>
+		</section>
+		<section class="bento-card">
+			<div class="feature__media"><img src="assets/skin-preview.gif" alt="" loading="lazy"></div>
+			<div>
+				<h3><span class="i18n" lang="en">Everyone sees everyone</span><span class="i18n" lang="ru">Все видят всех</span></h3>
+				<p><span class="i18n" lang="en">Offline servers send no skins, so everyone is Steve. Noctrinth finds each player by name on Ely.by, Mojang and LittleSkin, with capes from OptiFine, LabyMod and MinecraftCapes. No mod needed.</span><span class="i18n" lang="ru">Офлайн-серверы не передают скины, и все ходят Стивами. Noctrinth находит каждого игрока по нику в Ely.by, Mojang и LittleSkin, а плащи берёт из OptiFine, LabyMod и MinecraftCapes. Моды не нужны.</span></p>
+			</div>
+		</section>
+		<section class="bento-card">
+			<div class="feature__media"><img src="assets/library-search.gif" alt="" loading="lazy"></div>
+			<div>
+				<h3><span class="i18n" lang="en">A library that understands mods</span><span class="i18n" lang="ru">Библиотека, которая понимает моды</span></h3>
+				<p><span class="i18n" lang="en"><code>@sodium</code> finds every instance with a mod, <code>#shader</code> filters by type, <code>!outdated</code> by state.</span><span class="i18n" lang="ru"><code>@sodium</code> находит все сборки с модом, <code>#shader</code> фильтрует по типу, <code>!outdated</code> по состоянию.</span></p>
+			</div>
+		</section>
+		<section class="bento-card">
+			<div class="feature__media"><img src="assets/translate.gif" alt="" loading="lazy"></div>
+			<div>
+				<h3><span class="i18n" lang="en">Descriptions in your language</span><span class="i18n" lang="ru">Описания на твоём языке</span></h3>
+				<p><span class="i18n" lang="en">One button translates a project description with Google Translate or DeepL, and one more brings the original back.</span><span class="i18n" lang="ru">Одна кнопка переводит описание проекта через Google Translate или DeepL, ещё одна возвращает оригинал.</span></p>
+			</div>
+		</section>
+		<section class="bento-card bento-card--wide">
+			<div class="feature__media"><img src="assets/accents.gif" alt="" loading="lazy"></div>
+			<div>
+				<h3><span class="i18n" lang="en">Made to look like yours</span><span class="i18n" lang="ru">Выглядит так, как хочешь ты</span></h3>
+				<p><span class="i18n" lang="en">Pick an accent from the presets or any colour on a colour wheel: the whole interface, its backgrounds, the splash screen and the taskbar icon follow it. Put a picture, an animated GIF or a looping video behind the launcher, blurred and darkened as you like, and set the interface in Inter, the system font, the Minecraft font or any font on your computer.</span><span class="i18n" lang="ru">Выбери акцент из готовых или любой цвет на цветовом круге: за ним следует весь интерфейс, его фоны, заставка и иконка на панели задач. Поставь за лаунчером картинку, анимированную GIF или зацикленное видео с размытием и затемнением на вкус и выбери шрифт: Inter, системный, шрифт Minecraft или любой установленный.</span></p>
+			</div>
+		</section></div>
+			<ul class="chips"><li><span class="i18n" lang="en">Instances from Prism, MultiMC, ATLauncher, GDLauncher and CurseForge</span><span class="i18n" lang="ru">Сборки из Prism, MultiMC, ATLauncher, GDLauncher и CurseForge</span></li><li><span class="i18n" lang="en">Two copies of one instance on two accounts</span><span class="i18n" lang="ru">Две копии одной сборки на двух аккаунтах</span></li><li><span class="i18n" lang="en">Modern Java for 1.7.10 in one click</span><span class="i18n" lang="ru">Современная Java для 1.7.10 в один клик</span></li><li><span class="i18n" lang="en">A graphics adapter per Java runtime</span><span class="i18n" lang="ru">Своя видеокарта для каждой Java</span></li><li><span class="i18n" lang="en">Touchpad swipes back and forward</span><span class="i18n" lang="ru">Жесты тачпада: назад и вперёд</span></li><li><span class="i18n" lang="en">A proxy for blocked regions</span><span class="i18n" lang="ru">Прокси для заблокированных регионов</span></li><li><span class="i18n" lang="en">Java from Azul, Temurin, Mojang or a mirror, whichever answers</span><span class="i18n" lang="ru">Java из Azul, Temurin, Mojang или зеркала — откуда скачается</span></li><li><span class="i18n" lang="en">Changelogs in Russian, Modrinth’s too</span><span class="i18n" lang="ru">Списки изменений на русском, и Modrinth тоже</span></li><li><span class="i18n" lang="en">Collections and notifications built in</span><span class="i18n" lang="ru">Коллекции и уведомления внутри</span></li><li><span class="i18n" lang="en">Animated instance icons</span><span class="i18n" lang="ru">Анимированные иконки сборок</span></li><li><span class="i18n" lang="en">Quick CSS & Safe Mode (Ctrl+Shift+Alt+P)</span><span class="i18n" lang="ru">Quick CSS и безопасный режим (Ctrl+Shift+Alt+P)</span></li><li><span class="i18n" lang="en">No ads</span><span class="i18n" lang="ru">Без рекламы</span></li></ul>
+		</section>
+		
+	<section class="container container--wide home-section">
+		<div class="section-row">
+			<h2 class="section-heading"><span class="i18n" lang="en">News</span><span class="i18n" lang="ru">Новости</span></h2>
+			<a class="btn" href="news/"><span class="i18n" lang="en">All news</span><span class="i18n" lang="ru">Все новости</span> <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
+		</div>
+		<div class="news-grid">
+		<a class="news-card" href="news/article/plugins/">
+			<article>
+				<img src="news/article/plugins/thumbnail.svg" alt="" loading="lazy">
+				<h3><span class="i18n" lang="en">Plugins, themes, and Quick CSS</span><span class="i18n" lang="ru">Плагины, темы и Quick CSS</span></h3>
+				<p><span class="i18n" lang="en">Noctrinth now has its own plugin system — pure CSS themes with live settings, custom Discover sources, and isolated extensions.</span><span class="i18n" lang="ru">В Noctrinth появилась своя система плагинов — CSS-темы с живыми настройками, сторонние источники в «Исследовании» и изолированные расширения.</span></p>
+				<span class="news-card__date"><time datetime="2026-11-22T12:00:00+09:00" data-date>November 22, 2026</time></span>
+			</article>
+		</a>
+		<a class="news-card" href="news/article/curseforge-is-back/">
+			<article>
+				<img src="news/article/curseforge-is-back/thumbnail.svg" alt="" loading="lazy">
+				<h3><span class="i18n" lang="en">CurseForge is back</span><span class="i18n" lang="ru">CurseForge вернулся</span></h3>
+				<p><span class="i18n" lang="en">Removed in 0.17.3, it is back in the launcher, rewritten from scratch and probably calmer and steadier than it was.</span><span class="i18n" lang="ru">Его убрали в 0.17.3 — теперь он снова в лаунчере, переписанный с нуля, потенциально спокойнее и надёжнее, чем был.</span></p>
+				<span class="news-card__date"><time datetime="2026-10-21T12:00:00+09:00" data-date>October 21, 2026</time></span>
+			</article>
+		</a>
+		<a class="news-card" href="news/article/new-site/">
+			<article>
+				<img src="news/article/new-site/thumbnail.svg" alt="" loading="lazy">
+				<h3><span class="i18n" lang="en">A new home for Noctrinth</span><span class="i18n" lang="ru">Новый дом для Noctrinth</span></h3>
+				<p><span class="i18n" lang="en">The site has a front page, news of its own and the changelog on a page of its own.</span><span class="i18n" lang="ru">У сайта появились главная страница, свои новости и отдельная страница со списком изменений.</span></p>
+				<span class="news-card__date"><time datetime="2026-10-15T12:00:00+09:00" data-date>October 15, 2026</time></span>
+			</article>
+		</a></div>
+	</section>
+		<section class="container container--wide home-section" id="faq">
+			<h2 class="section-heading" style="text-align:center"><span class="i18n" lang="en">Questions</span><span class="i18n" lang="ru">Вопросы</span></h2>
+			<div class="faq">
+				<details>
+					<summary><span><span class="i18n" lang="en">Is this the Modrinth App?</span><span class="i18n" lang="ru">Это Modrinth App?</span></span><span class="faq__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span></summary>
+					<p><span class="i18n" lang="en">It is a fork of it. Noctrinth follows every Modrinth App release and keeps its version number, and adds what is listed above. It is not affiliated with Modrinth.</span><span class="i18n" lang="ru">Это его форк. Noctrinth повторяет каждый релиз Modrinth App с тем же номером версии и добавляет то, что перечислено выше. С Modrinth он не связан.</span></p>
+				</details>
+				<details>
+					<summary><span><span class="i18n" lang="en">Do I need a licensed Minecraft account?</span><span class="i18n" lang="ru">Нужен ли лицензионный аккаунт?</span></span><span class="faq__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span></summary>
+					<p><span class="i18n" lang="en">No. A Microsoft account, an Ely.by account or just a name for singleplayer and offline-mode servers all work.</span><span class="i18n" lang="ru">Нет. Подойдёт аккаунт Microsoft, аккаунт Ely.by или просто ник для одиночной игры и офлайн-серверов.</span></p>
+				</details>
+				<details>
+					<summary><span><span class="i18n" lang="en">Will my instances from the Modrinth App come over?</span><span class="i18n" lang="ru">Переедут ли сборки из Modrinth App?</span></span><span class="faq__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span></summary>
+					<p><span class="i18n" lang="en">Yes. Open Noctrinth and a banner offers to import them. Prism, MultiMC, ATLauncher, GDLauncher and CurseForge are under Create instance → Import.</span><span class="i18n" lang="ru">Да. Открой Noctrinth, и баннер предложит их импортировать. Prism, MultiMC, ATLauncher, GDLauncher и CurseForge — в «Создать сборку → Импорт».</span></p>
+				</details>
+				<details>
+					<summary><span><span class="i18n" lang="en">How does it update?</span><span class="i18n" lang="ru">Как он обновляется?</span></span><span class="faq__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span></summary>
+					<p><span class="i18n" lang="en">By itself. Updates are signed and delivered through GitHub Releases; there is nothing to reinstall.</span><span class="i18n" lang="ru">Сам. Обновления подписаны и приходят через GitHub Releases, переустанавливать ничего не нужно.</span></p>
+				</details>
+				<details>
+					<summary><span><span class="i18n" lang="en">Something broke. Where do I report it?</span><span class="i18n" lang="ru">Что-то сломалось. Куда писать?</span></span><span class="faq__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span></summary>
+					<p><span class="i18n" lang="en">Open an issue on <a href="https://github.com/Everelsu/Noctrinth/issues" rel="noopener">GitHub</a>. Settings → Resource management → Export debug info gathers what is needed to look into it.</span><span class="i18n" lang="ru">Открой issue на <a href="https://github.com/Everelsu/Noctrinth/issues" rel="noopener">GitHub</a>. «Настройки → Управление ресурсами → Экспорт отладочной информации» соберёт всё, что нужно для разбора.</span></p>
+				</details></div>
+		</section>
+	</main>
+	<footer class="footer">
+		<div class="container container--wide footer__row">
+			<span><span class="i18n" lang="en">Noctrinth is an independent fork of the Modrinth App, not affiliated with or endorsed by Rinth, Inc.</span><span class="i18n" lang="ru">Noctrinth — независимый форк Modrinth App, не связанный с Rinth, Inc. и не одобренный ею.</span></span>
+			<span>
+				<a href="plugins/"><span class="i18n" lang="en">Plugins</span><span class="i18n" lang="ru">Плагины</span></a> ·
+				<a href="docs/"><span class="i18n" lang="en">Docs</span><span class="i18n" lang="ru">Документация</span></a> ·
+				<a href="https://github.com/Everelsu/Noctrinth" rel="noopener">GitHub</a> ·
+				<a href="https://github.com/Everelsu/Noctrinth/issues" rel="noopener">Issues</a> ·
+				<a href="news/feed/rss.xml">RSS</a> ·
+				GPL-3.0
+			</span>
+		</div>
+	</footer>
 	<script>
 	(function () {
-		var rtf = new Intl.RelativeTimeFormat('en-US', { numeric: 'auto' });
-		var longFmt = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-		var absFmt = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-
-		function relative(date) {
-			var sec = (date.getTime() - Date.now()) / 1000;
-			if (Math.abs(sec) < 60) return rtf.format(Math.round(sec), 'second');
-			var min = sec / 60;
-			if (Math.abs(min) < 60) return rtf.format(Math.round(min), 'minute');
-			var hr = min / 60;
-			if (Math.abs(hr) < 24) return rtf.format(Math.round(hr), 'hour');
-			var day = hr / 24;
-			if (Math.abs(day) < 30) return rtf.format(Math.round(day), 'day');
-			return longFmt.format(date);
+		var buttons = document.querySelectorAll('[data-lang-toggle]');
+		for (var i = 0; i < buttons.length; i++) {
+			buttons[i].addEventListener('click', function () {
+				var next = document.documentElement.getAttribute('data-lang') === 'ru' ? 'en' : 'ru';
+				document.documentElement.setAttribute('data-lang', next);
+				document.documentElement.lang = next;
+				try { localStorage.setItem('noctrinth-lang', next); } catch (e) {}
+			});
 		}
-
-		function update() {
-			var nodes = document.querySelectorAll('time[datetime]');
-			for (var i = 0; i < nodes.length; i++) {
-				var el = nodes[i];
-				var date = new Date(el.getAttribute('datetime'));
-				if (isNaN(date.getTime())) continue;
-				el.textContent = relative(date);
-				el.title = absFmt.format(date);
-			}
-		}
-
-		update();
-		setInterval(update, 60000);
 	})();
 </script>
+	<script>
+	(function () {
+		var lang = document.documentElement.getAttribute('data-lang') === 'ru' ? 'ru-RU' : 'en-US';
+		var fmt = new Intl.DateTimeFormat(lang, { year: 'numeric', month: 'long', day: 'numeric' });
+		function update() {
+			lang = document.documentElement.getAttribute('data-lang') === 'ru' ? 'ru-RU' : 'en-US';
+			fmt = new Intl.DateTimeFormat(lang, { year: 'numeric', month: 'long', day: 'numeric' });
+			var nodes = document.querySelectorAll('time[datetime][data-date]');
+			for (var i = 0; i < nodes.length; i++) {
+				var d = new Date(nodes[i].getAttribute('datetime'));
+				if (!isNaN(d.getTime())) nodes[i].textContent = fmt.format(d);
+			}
+		}
+		update();
+		new MutationObserver(update).observe(document.documentElement, { attributes: true, attributeFilter: ['data-lang'] });
+	})();
+</script>
+	<script>
+	(function () {
+		if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+		var items = document.querySelectorAll('.feature, .bento-card, .news-card, .faq details, .docs-section, .entry');
+		if ('IntersectionObserver' in window) {
+			var io = new IntersectionObserver(function (entries) {
+				for (var i = 0; i < entries.length; i++) {
+					if (entries[i].isIntersecting) {
+						entries[i].target.classList.add('is-visible');
+						io.unobserve(entries[i].target);
+					}
+				}
+			}, { rootMargin: '0px 0px -40px 0px', threshold: 0.05 });
+			for (var i = 0; i < items.length; i++) {
+				items[i].classList.add('reveal');
+				io.observe(items[i]);
+			}
+		}
+		document.addEventListener('pointermove', function (e) {
+			var card = e.target && e.target.closest ? e.target.closest('.feature, .bento-card, .plugin-card') : null;
+			if (!card) return;
+			var rect = card.getBoundingClientRect();
+			card.style.setProperty('--mx', (e.clientX - rect.left) + 'px');
+			card.style.setProperty('--my', (e.clientY - rect.top) + 'px');
+		}, { passive: true });
+	})();
+</script>
+	<script>
+	(function () {
+		var ua = (navigator.userAgent || '').toLowerCase();
+		var os = ua.indexOf('mac') !== -1 ? 'macos' : ua.indexOf('linux') !== -1 && ua.indexOf('android') === -1 ? 'appimage' : 'windows';
+		var arch = /aarch64|arm64/.test(ua) ? 'arm' : os !== 'windows' && /x86_64|amd64|x64/.test(ua) ? 'x86' : null;
+		var names = { windows: 'Windows x64', windowsArm: 'Windows ARM64', macos: 'macOS Universal', appimage: 'Linux x64', appimageArm: 'Linux ARM64' };
+		var main = document.getElementById('download-main');
+		var label = document.getElementById('download-label');
+		var available = {};
+		var version = null;
+		var releasePage = "https://github.com/Everelsu/Noctrinth/releases/latest";
+
+		function apply() {
+			var key = os === 'macos' ? os : arch === 'arm' ? os + 'Arm' : arch === 'x86' ? os : null;
+			main.href = key && available[key] ? available[key] : releasePage;
+			label.textContent = (key ? names[key] : os === 'windows' ? 'Windows' : 'Linux') + (key && available[key] && version ? ' · v' + version : '');
+		}
+		apply();
+
+		if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+			navigator.userAgentData.getHighEntropyValues(['architecture', 'bitness'])
+				.then(function (data) {
+					if (data.architecture === 'arm' || data.architecture === 'x86') {
+						arch = data.bitness === '64' ? data.architecture : null;
+						apply();
+					}
+				})
+				.catch(function () {});
+		}
+
+		fetch('https://api.github.com/repos/Everelsu/Noctrinth/releases/latest')
+			.then(function (r) { return r.ok ? r.json() : null; })
+			.then(function (release) {
+				if (!release || !Array.isArray(release.assets)) return;
+				releasePage = release.html_url || releasePage;
+				version = String(release.tag_name || '').replace(/^(?:noctrinth-)?v/, '');
+				var patterns = { windowsArm: /_arm64-setup\.exe$/, windows: /_x64-setup\.exe$/, macos: /_universal\.dmg$/, appimage: /_amd64\.AppImage$/, appimageArm: /_aarch64\.AppImage$/, deb: /_amd64\.deb$/, debArm: /_arm64\.deb$/ };
+				for (var key in patterns) {
+					var asset = release.assets.find(function (a) { return patterns[key].test(a.name); });
+					var link = document.querySelector('[data-os="' + key + '"]');
+					if (asset) available[key] = asset.browser_download_url;
+					if (link) {
+						link.hidden = !asset;
+						link.href = asset ? asset.browser_download_url : releasePage;
+					}
+				}
+				apply();
+			})
+			.catch(function () {});
+	})();</script>
 </body>
 </html>

@@ -18,6 +18,7 @@ import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, writeFileSyn
 import { join } from 'node:path'
 
 import { NOCTRINTH_CHANGELOG_SRC, parseEntries } from './lib/changelog-entries.mjs'
+import { renderDocsPage } from './lib/site-docs.mjs'
 import { renderHome } from './lib/site-home.mjs'
 import { escapeHtml, renderMarkdown } from './lib/site-markdown.mjs'
 import {
@@ -29,6 +30,7 @@ import {
 	renderNewsIndex,
 	rssFeed,
 } from './lib/site-news.mjs'
+import { renderPluginsPage } from './lib/site-plugins.mjs'
 import { page, t } from './lib/site-style.mjs'
 
 const OUT_DIR = process.argv[2] ?? 'site'
@@ -46,9 +48,11 @@ const SITE_ASSETS = [
 	'.github/assets/social-preview.png',
 	'.github/assets/screenshots/accents.gif',
 	'.github/assets/screenshots/accounts.png',
+	'.github/assets/screenshots/curseforge-discover.jpg',
 	'.github/assets/screenshots/curseforge-import.png',
 	'.github/assets/screenshots/ely-by-skins.png',
 	'.github/assets/screenshots/library-search.gif',
+	'.github/assets/screenshots/plugins-settings.jpg',
 	'.github/assets/screenshots/skin-preview.gif',
 	'.github/assets/screenshots/translate.gif',
 ]
@@ -255,7 +259,7 @@ const changelogHtml = page({
 	current: 'changelog',
 	css: NEWS_CSS + CHANGELOG_CSS,
 	body: `
-	<main class="container">
+	<main class="container container--wide">
 		<header class="changelog-header">
 			<h1>${t('Changelog', 'Список изменений')}</h1>
 			<p>${t(
@@ -284,10 +288,14 @@ const newsIndexHtml = page({
 })
 
 mkdirSync(join(OUT_DIR, 'changelog'), { recursive: true })
+mkdirSync(join(OUT_DIR, 'plugins'), { recursive: true })
+mkdirSync(join(OUT_DIR, 'docs'), { recursive: true })
 mkdirSync(join(OUT_DIR, 'news', 'feed'), { recursive: true })
 mkdirSync(join(OUT_DIR, 'assets'), { recursive: true })
 
 writeFileSync(join(OUT_DIR, 'index.html'), renderHome({ version: VERSION, articles }))
+writeFileSync(join(OUT_DIR, 'plugins', 'index.html'), renderPluginsPage())
+writeFileSync(join(OUT_DIR, 'docs', 'index.html'), renderDocsPage())
 writeFileSync(join(OUT_DIR, 'changelog', 'index.html'), changelogHtml)
 writeFileSync(join(OUT_DIR, 'news', 'index.html'), newsIndexHtml)
 for (const article of articles) {

@@ -42,6 +42,44 @@ export interface NoctrinthVersionEntry {
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
+		version: '0.23.4+2',
+		date: '2026-11-23T00:00:00+00:00',
+		body: `### Added
+- Added the Noctrinth plugin system in Settings → Plugins with support for CSS themes, Discover content sources, and sandboxed extensions, installable from the built-in catalog, \`.zip\` archives, or \`noctrinth://\` links.
+- Added live plugin settings, hot-reload, automatic update checks with one-click Update All, per-plugin logs, and preview banners in the plugin catalog.
+- Added Quick CSS in Settings → Plugins to apply custom CSS live on top of the current theme.
+- Added plugin Safe Mode (\`Ctrl+Shift+Alt+P\` or \`--safe-mode\` / \`--no-plugins\`) and automatic protection that disables crashing plugins.
+- Added an interactive crop modal when picking a custom instance icon.
+- Added a button to show or hide the filter sidebar in Discover.
+- Completed 100% translation coverage for Russian, Ukrainian, German (Germany & Switzerland), Brazilian Portuguese, and Simplified Chinese.
+
+### Changed
+- Preserved scroll position in the Library and removed staggered pop-in animations on home instance cards and Recent worlds by caching thumbnails.
+- Improved 3D skin preview loading so the skin and cape appear together instead of separately.
+
+### Fixed
+- Fixed the icon crop modal failing to export cropped images from local files.
+- Fixed overlapping content when switching between tabs inside an instance.
+- Fixed the top navigation breadcrumb getting stuck on the previous page when returning to the Library.`,
+		body_ru: `### Добавлено
+- В «Настройки → Плагины» появилась система плагинов Noctrinth: CSS-темы, сторонние источники для «Исследования» и изолированные расширения с установкой из встроенного каталога, из \`.zip\` или по ссылкам \`noctrinth://\`.
+- Добавлены живые настройки плагинов, перезагрузка на лету, автопроверка обновлений с кнопкой «Обновить все», просмотр логов и баннеры превью в каталоге плагинов.
+- В «Настройки → Плагины» добавлен Quick CSS для применения собственных стилей поверх текущей темы.
+- Добавлен безопасный режим плагинов (\`Ctrl+Shift+Alt+P\` или флаги \`--safe-mode\` / \`--no-plugins\`) и автоматическое отключение падающих плагинов.
+- Добавлено интерактивное окно обрезки при выборе пользовательской иконки сборки.
+- В «Исследовании» добавлена кнопка сворачивания и разворачивания боковой панели фильтров.
+- Переводы на русский, украинский, немецкий (Германия и Швейцария), португальский (Бразилия) и упрощённый китайский доведены до 100%.
+
+### Изменено
+- Сохраняется позиция прокрутки в «Библиотеке», а карточки сборок на главной и «Недавние миры» открываются сразу за счёт кэширования превью без ступенчатого появления.
+- Улучшена загрузка 3D-превью скинов: модель и плащ теперь появляются одновременно.
+
+### Исправлено
+- Исправлена ошибка сохранения обрезанной иконки сборки из локального файла.
+- Исправлено наложение содержимого при переключении вкладок внутри сборки.
+- Исправлено залипание заголовка навигации в шапке при возврате в «Библиотеку».`,
+	},
+	{
 		version: '0.23.4+1',
 		date: '2026-11-21T00:00:00+00:00',
 		body: `### Added

@@ -1,7 +1,7 @@
 import { convertFileSrc, invoke } from '@tauri-apps/api/core'
 import { type MaybeRefOrGetter, ref, toValue, watch } from 'vue'
 
-let queue: Promise<void> = Promise.resolve()
+const thumbnailCache = new Map<string, string>()
 
 export function useImageThumbnail(
 	path: MaybeRefOrGetter<string | null | undefined>,
@@ -11,26 +11,38 @@ export function useImageThumbnail(
 	const thumbnail = ref<string>()
 	watch(
 		[() => toValue(path), () => toValue(size), () => toValue(revision)],
-		([source, pixels], [previousSource, previousPixels], onCleanup) => {
-			if (source !== previousSource || pixels !== previousPixels) thumbnail.value = undefined
-			if (!source) return
+		([source, pixels, rev], [previousSource, previousPixels], onCleanup) => {
+			if (!source) {
+				thumbnail.value = undefined
+				return
+			}
+			const cacheKey = `${source}::${pixels}::${rev ?? ''}`
+			const cached = thumbnailCache.get(cacheKey)
+			if (cached) {
+				thumbnail.value = cached
+				return
+			}
+			if (source !== previousSource || pixels !== previousPixels) {
+				thumbnail.value = undefined
+			}
 			let active = true
 			onCleanup(() => {
 				active = false
 			})
-			queue = queue.then(async () => {
-				if (!active) return
-				try {
-					const url = await invoke<string>('plugin:utils|get_image_thumbnail', {
-						path: source,
-						size: pixels,
-					})
-					if (active) thumbnail.value = url
-				} catch (error) {
-					console.warn('Could not create image thumbnail', error)
-					if (active) thumbnail.value = convertFileSrc(source)
-				}
+			void invoke<string>('plugin:utils|get_image_thumbnail', {
+				path: source,
+				size: pixels,
 			})
+				.then((url) => {
+					thumbnailCache.set(cacheKey, url)
+					if (active) thumbnail.value = url
+				})
+				.catch((error) => {
+					console.warn('Could not create image thumbnail', error)
+					const fallback = convertFileSrc(source)
+					thumbnailCache.set(cacheKey, fallback)
+					if (active) thumbnail.value = fallback
+				})
 		},
 		{ immediate: true },
 	)

@@ -1565,9 +1565,6 @@
   "app.news.title": {
     "message": "Novinky"
   },
-  "app.news.view-all": {
-    "message": "Zobrazit všechny novinky"
-  },
   "app.notification.warning": {
     "message": "Varování"
   },

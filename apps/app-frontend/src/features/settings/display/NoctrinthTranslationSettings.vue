@@ -143,7 +143,10 @@ async function runTest() {
 			>
 				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 					<div class="flex flex-col gap-2">
-						<h3 id="noctrinth-translation-service" class="m-0 text-base font-semibold text-contrast">
+						<h3
+							id="noctrinth-translation-service"
+							class="m-0 text-base font-semibold text-contrast"
+						>
 							{{ formatMessage(messages.service) }}
 						</h3>
 						<Combobox

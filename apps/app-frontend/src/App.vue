@@ -9,6 +9,7 @@ import {
 	LogInIcon,
 	LogOutIcon,
 	PlayIcon,
+	PlugIcon,
 	PlusIcon,
 	RefreshCwIcon,
 	ServerStackIcon,
@@ -92,6 +93,7 @@ import UpdateToPlayModal from '@/components/ui/modal/UpdateToPlayModal.vue'
 import NavButton from '@/components/ui/NavButton.vue'
 import NoctrinthBackdrop from '@/components/ui/NoctrinthBackdrop.vue'
 import NoctrinthCrashModal from '@/components/ui/NoctrinthCrashModal.vue'
+import NoctrinthPluginModal from '@/components/ui/NoctrinthPluginModal.vue'
 import NoctrinthSwipeNavigation from '@/components/ui/NoctrinthSwipeNavigation.vue'
 import QuickSearchPalette from '@/components/ui/quick-search/QuickSearchPalette.vue'
 import QuickInstanceSwitcher from '@/components/ui/QuickInstanceSwitcher.vue'
@@ -140,7 +142,6 @@ import {
 	downloadCurseforgeProfile,
 } from '@/helpers/curseforge'
 import { applyCurseforgeSettings } from '@/helpers/curseforge-settings'
-import { browseFiltersHidden } from '@/helpers/noctrinth-browse-ui'
 import { gameSettingsQueryOptions } from '@/helpers/game-options'
 import {
 	install_create_modpack_instance,
@@ -162,6 +163,15 @@ import {
 	setActive,
 } from '@/helpers/mr_auth.ts'
 import { loadBackground } from '@/helpers/noctrinth-background'
+import { browseFiltersHidden } from '@/helpers/noctrinth-browse-ui'
+import {
+	emitPluginEvent,
+	initNoctrinthPlugins,
+	installPluginById,
+	invokePluginAction,
+	pluginActions,
+	setPluginNotificationHandler,
+} from '@/helpers/noctrinth-plugins'
 import { prefetchRouteChunks, startProjectHoverPrefetch } from '@/helpers/noctrinth-prefetch'
 import { markSidebarMoving } from '@/helpers/noctrinth-sidebar-motion'
 import { cacheSplashCubeChoice } from '@/helpers/noctrinth-splash-cube'
@@ -274,19 +284,31 @@ watch(
 		sidebarToggled.value = !toggleSidebar
 	},
 )
+const isBrowseRoute = computed(() => route.path.startsWith('/browse'))
+const sidebarPluginActions = computed(() => pluginActions.value.filter((a) => a.slot === 'sidebar'))
 const forceSidebar = computed(
 	() =>
-		(route.path.startsWith('/browse') && !browseFiltersHidden.value) ||
 		route.path.startsWith('/project') ||
 		// Noctrinth's own: a CurseForge project's page has the same sidebar.
 		route.path.startsWith('/curseforge') ||
 		route.path.startsWith('/user'),
 )
 const sidebarVisible = computed(() =>
-	route.path.startsWith('/browse')
-		? !browseFiltersHidden.value
-		: sidebarToggled.value || forceSidebar.value,
+	isBrowseRoute.value ? !browseFiltersHidden.value : sidebarToggled.value || forceSidebar.value,
 )
+const showSidebarToggle = computed(
+	() => isBrowseRoute.value || (!forceSidebar.value && appSettings.toggleSidebar),
+)
+const effectiveSidebarToggled = computed(() =>
+	isBrowseRoute.value ? !browseFiltersHidden.value : sidebarToggled.value,
+)
+function handleToggleSidebar() {
+	if (isBrowseRoute.value) {
+		browseFiltersHidden.value = !browseFiltersHidden.value
+	} else {
+		sidebarToggled.value = !sidebarToggled.value
+	}
+}
 watch(
 	() => [sidebarVisible.value, forceSidebar.value],
 	([visible, forced], [prevVisible, prevForced]) => {
@@ -930,6 +952,8 @@ async function setupApp() {
 	}
 
 	const prefetchCoreRoutes = () => {
+		setPluginNotificationHandler(addNotification)
+		void initNoctrinthPlugins()
 		const loaders = [
 			() => import('@/platform/adapters/browse/browse-page.vue'),
 			() => import('@/pages/instance/layout.vue'),
@@ -1589,6 +1613,30 @@ provideMinecraftAccounts(minecraftAccounts)
 
 useAppEvent('command', handleCommand, appEvents)
 useAppEvent('notification', handleLiveNotification, appEvents)
+useAppEvent(
+	'process',
+	(e) => {
+		if (e.event === 'launched') {
+			emitPluginEvent('instance:launch', { instanceId: e.instance_id, uuid: e.uuid })
+		} else if (e.event === 'finished') {
+			emitPluginEvent('instance:exit', { instanceId: e.instance_id, uuid: e.uuid })
+		}
+	},
+	appEvents,
+)
+useAppEvent(
+	'loading',
+	(e) => {
+		if (e.fraction == null) {
+			emitPluginEvent('download:complete', {
+				loaderUuid: e.loader_uuid,
+				event: e.event,
+				message: e.message,
+			})
+		}
+	},
+	appEvents,
+)
 
 async function markLiveNotificationRead(notification) {
 	try {
@@ -1732,6 +1780,17 @@ async function handleCommand(e) {
 		// The Install button on CurseForge's site: the project, at the file it was for.
 		const project = `/curseforge/${CURSEFORGE_ID_PREFIX}${e.project_id}`
 		await router.push(e.file_id ? `${project}/version/${e.file_id}` : project)
+	} else if (e.event === 'InstallPlugin') {
+		try {
+			const installed = await installPluginById(e.id)
+			addNotification({
+				title: installed.manifest.name,
+				text: `v${installed.manifest.version}`,
+				type: 'success',
+			})
+		} catch (error) {
+			handleError(error)
+		}
 	} else if (e.event === 'InstallVersion') {
 		const version = await get_version(e.id, 'must_revalidate').catch(handleError)
 		if (version) {
@@ -2452,6 +2511,14 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 				</QuickInstanceSwitcher>
 			</suspense>
 			<NavButton
+				v-for="action in sidebarPluginActions"
+				:key="`${action.pluginId}:${action.actionId}`"
+				v-tooltip.right="action.tooltip || action.label"
+				:to="() => invokePluginAction(action.pluginId, action.actionId)"
+			>
+				<PlugIcon />
+			</NavButton>
+			<NavButton
 				v-tooltip.right="formatMessage(commonMessages.settingsLabel)"
 				:to="settingsActions.openSettings"
 			>
@@ -2525,9 +2592,9 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 		<AppTitleBar
 			:can-navigate-back="canNavigateBack"
 			:can-navigate-forward="canNavigateForward"
-			:show-sidebar-toggle="!forceSidebar && appSettings.toggleSidebar"
-			:sidebar-toggled="sidebarToggled"
-			@toggle-sidebar="sidebarToggled = !sidebarToggled"
+			:show-sidebar-toggle="showSidebarToggle"
+			:sidebar-toggled="effectiveSidebarToggled"
+			@toggle-sidebar="handleToggleSidebar"
 		/>
 	</div>
 	<div
@@ -2597,15 +2664,15 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 			<HostingUpdateRequired v-if="hostingUpdateRequired" />
 			<RouterView v-else v-slot="{ Component, route: currentRoute }">
 				<template v-if="Component">
-					<Suspense @pending="onSuspensePending" @resolve="onSuspenseResolve">
-						<KeepAlive :include="['LibraryPage']">
+					<KeepAlive :include="['LibraryPage']">
+						<Suspense @pending="onSuspensePending" @resolve="onSuspenseResolve">
 							<component
 								:is="Component"
 								:key="currentRoute.matched[0]?.path ?? currentRoute.path"
 								class="nm-page-enter"
 							/>
-						</KeepAlive>
-					</Suspense>
+						</Suspense>
+					</KeepAlive>
 				</template>
 			</RouterView>
 		</div>
@@ -2626,6 +2693,7 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 	<PopupNotificationPanel :has-sidebar="sidebarVisible" />
 	<ErrorModal ref="errorModal" />
 	<NoctrinthCrashModal />
+	<NoctrinthPluginModal />
 	<NoctrinthSwipeNavigation />
 	<MinecraftAuthErrorModal ref="minecraftAuthErrorModal" />
 	<MinecraftRequiredModal ref="minecraftRequiredModal" />

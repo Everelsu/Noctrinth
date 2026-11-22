@@ -371,6 +371,12 @@
   "app.browse.discover-servers": {
     "message": "Discover servers"
   },
+  "app.browse.filters.hide": {
+    "message": "Hide filters"
+  },
+  "app.browse.filters.show": {
+    "message": "Show filters"
+  },
   "app.browse.hide-added-servers": {
     "message": "Hide servers already added"
   },
@@ -602,21 +608,6 @@
   "app.crash.hide-evidence": {
     "message": "Hide the line"
   },
-  "app.crash.other-causes": {
-    "message": "Other possible causes ({count})"
-  },
-  "app.crash.primary-cause": {
-    "message": "Most likely cause"
-  },
-  "app.crash.severity.critical": {
-    "message": "Critical"
-  },
-  "app.crash.severity.note": {
-    "message": "Note"
-  },
-  "app.crash.severity.warning": {
-    "message": "Warning"
-  },
   "app.crash.memory-hint": {
     "message": "It had {current} GB for {mods} mods. {gb} GB is what a pack this size usually needs, and this computer has it to spare."
   },
@@ -631,6 +622,12 @@
   },
   "app.crash.open-settings": {
     "message": "Open settings"
+  },
+  "app.crash.other-causes": {
+    "message": "Other possible causes ({count})"
+  },
+  "app.crash.primary-cause": {
+    "message": "Most likely cause"
   },
   "app.crash.rule.broken-mod-file.fix": {
     "message": "It is not a readable archive — a download that was cut off. Disable it and download it again."
@@ -1067,6 +1064,15 @@
   "app.crash.set-memory": {
     "message": "Give it {gb} GB"
   },
+  "app.crash.severity.critical": {
+    "message": "Critical"
+  },
+  "app.crash.severity.note": {
+    "message": "Note"
+  },
+  "app.crash.severity.warning": {
+    "message": "Warning"
+  },
   "app.crash.show-evidence": {
     "message": "Show the line"
   },
@@ -1459,6 +1465,27 @@
   },
   "app.hosting.update-required.title": {
     "message": "Modrinth App update required"
+  },
+  "app.icon-crop.apply": {
+    "message": "Apply"
+  },
+  "app.icon-crop.cancel": {
+    "message": "Cancel"
+  },
+  "app.icon-crop.header": {
+    "message": "Crop instance icon"
+  },
+  "app.icon-crop.hint": {
+    "message": "Drag to reposition and scroll or slide to zoom."
+  },
+  "app.icon-crop.reset": {
+    "message": "Reset"
+  },
+  "app.icon-crop.use-original": {
+    "message": "Use as-is"
+  },
+  "app.icon-crop.zoom": {
+    "message": "Zoom"
   },
   "app.install.phase.downloading_content": {
     "message": "Downloading content"
@@ -2884,6 +2911,144 @@
   },
   "app.notifications.version-for": {
     "message": "for"
+  },
+  "app.plugins.action.browse-catalog": {
+    "message": "Browse catalog"
+  },
+  "app.plugins.action.install": {
+    "message": "Install"
+  },
+  "app.plugins.action.install-zip": {
+    "message": "Install from .zip"
+  },
+  "app.plugins.action.logs": {
+    "message": "Plugin logs"
+  },
+  "app.plugins.action.open-folder": {
+    "message": "Open folder"
+  },
+  "app.plugins.action.refresh": {
+    "message": "Refresh"
+  },
+  "app.plugins.action.reload": {
+    "message": "Reload plugin"
+  },
+  "app.plugins.action.update": {
+    "message": "Update"
+  },
+  "app.plugins.action.update-all": {
+    "message": "Update all ({count})"
+  },
+  "app.plugins.badge.installed": {
+    "message": "Installed"
+  },
+  "app.plugins.badge.local": {
+    "message": "Local"
+  },
+  "app.plugins.catalog.empty": {
+    "message": "No plugins match your search."
+  },
+  "app.plugins.catalog.error": {
+    "message": "Could not load the plugin catalog."
+  },
+  "app.plugins.catalog.reset": {
+    "message": "Reset"
+  },
+  "app.plugins.catalog.search": {
+    "message": "Search plugins..."
+  },
+  "app.plugins.catalog.url": {
+    "message": "Catalog index URL"
+  },
+  "app.plugins.catalog.url.description": {
+    "message": "JSON index used to discover and verify community plugins."
+  },
+  "app.plugins.description": {
+    "message": "Extend Noctrinth with themes, content sources, and sandboxed extensions. Catalog plugins are verified by SHA-256."
+  },
+  "app.plugins.disclaimer.body": {
+    "message": "Plugins are created by third-party authors. Noctrinth is not responsible for the safety, reliability, data loss, or any malicious code in installed plugins. Only install plugins from sources you trust."
+  },
+  "app.plugins.disclaimer.header": {
+    "message": "Third-party plugins"
+  },
+  "app.plugins.empty.installed.description": {
+    "message": "Install a verified plugin from the catalog or load a local .zip archive."
+  },
+  "app.plugins.empty.installed.heading": {
+    "message": "No plugins installed"
+  },
+  "app.plugins.logs.clear": {
+    "message": "Clear"
+  },
+  "app.plugins.logs.empty": {
+    "message": "No log output yet."
+  },
+  "app.plugins.permissions.domains": {
+    "message": "Network: {domains}"
+  },
+  "app.plugins.permissions.events": {
+    "message": "Events: {events}"
+  },
+  "app.plugins.permissions.instances": {
+    "message": "Instances: {perms}"
+  },
+  "app.plugins.permissions.ui": {
+    "message": "UI: {perms}"
+  },
+  "app.plugins.quick-css.clear": {
+    "message": "Clear"
+  },
+  "app.plugins.quick-css.description": {
+    "message": "Custom CSS applied live on top of the current theme."
+  },
+  "app.plugins.quick-css.title": {
+    "message": "Quick CSS"
+  },
+  "app.plugins.remove.confirm": {
+    "message": "Remove"
+  },
+  "app.plugins.remove.description": {
+    "message": "Remove \"{name}\" from Noctrinth? Its files will be deleted."
+  },
+  "app.plugins.remove.title": {
+    "message": "Remove plugin?"
+  },
+  "app.plugins.settings": {
+    "message": "Plugin settings"
+  },
+  "app.plugins.tab.catalog": {
+    "message": "Catalog"
+  },
+  "app.plugins.tab.installed": {
+    "message": "Installed"
+  },
+  "app.plugins.title": {
+    "message": "Plugins"
+  },
+  "app.plugins.toast.installed": {
+    "message": "Installed \"{name}\""
+  },
+  "app.plugins.toast.reloaded": {
+    "message": "Reloaded \"{name}\""
+  },
+  "app.plugins.toast.removed": {
+    "message": "Removed \"{name}\""
+  },
+  "app.plugins.toast.updated-all": {
+    "message": "Updated {count} plugin(s)"
+  },
+  "app.plugins.type.all": {
+    "message": "All"
+  },
+  "app.plugins.type.content-source": {
+    "message": "Content source"
+  },
+  "app.plugins.type.extension": {
+    "message": "Extension"
+  },
+  "app.plugins.type.theme": {
+    "message": "Theme"
   },
   "app.project.actions.label": {
     "message": "Project actions"
@@ -4757,6 +4922,9 @@
   "app.settings.tabs.launch-hooks": {
     "message": "Launch hooks"
   },
+  "app.settings.tabs.plugins": {
+    "message": "Plugins"
+  },
   "app.settings.tabs.privacy": {
     "message": "Privacy"
   },
@@ -6434,6 +6602,12 @@
   "noctrinth.auth-servers.unreachable.scope": {
     "message": "Signing in and playing with a Microsoft account may fail until then. Offline and Ely.by accounts are not affected."
   },
+  "noctrinth.instance.logs.open-file": {
+    "message": "Open file"
+  },
+  "noctrinth.instance.logs.open-folder": {
+    "message": "Logs folder"
+  },
   "noctrinth.instance.stop-all-copies": {
     "message": "Stop every copy"
   },
@@ -6445,12 +6619,6 @@
   },
   "noctrinth.news.noctrinth-news": {
     "message": "Noctrinth News"
-  },
-  "noctrinth.instance.logs.open-file": {
-    "message": "Open file"
-  },
-  "noctrinth.instance.logs.open-folder": {
-    "message": "Logs folder"
   },
   "noctrinth.quick-search.discover": {
     "message": "Not installed yet"

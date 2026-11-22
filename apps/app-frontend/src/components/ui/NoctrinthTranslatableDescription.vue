@@ -137,10 +137,7 @@ onMounted(() => {
 						'is-working': translating,
 					}"
 				>
-					<span
-						v-if="error || (showTranslated && translation) || detected"
-						class="nt-bar__info"
-					>
+					<span v-if="error || (showTranslated && translation) || detected" class="nt-bar__info">
 						<LanguagesIcon class="nt-bar__icon" aria-hidden="true" />
 						<Transition name="nt-fade" mode="out-in">
 							<span v-if="error" key="error" class="text-red">
@@ -207,7 +204,9 @@ onMounted(() => {
 										? formatMessage(messages.translating)
 										: error
 											? formatMessage(messages.retry)
-											: formatMessage(messages.translate, { language: languageName(target, locale) })
+											: formatMessage(messages.translate, {
+													language: languageName(target, locale),
+												})
 								}}
 							</span>
 						</button>

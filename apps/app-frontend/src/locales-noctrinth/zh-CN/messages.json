@@ -107,6 +107,12 @@
 	"app.appearance-settings.font.title": {
 		"message": "界面字体"
 	},
+	"app.browse.filters.hide": {
+		"message": "隐藏筛选"
+	},
+	"app.browse.filters.show": {
+		"message": "筛选"
+	},
 	"app.browse.source.label": {
 		"message": "浏览来源"
 	},
@@ -917,6 +923,27 @@
 	"app.hosting.title": {
 		"message": "服务器托管"
 	},
+	"app.icon-crop.apply": {
+		"message": "应用"
+	},
+	"app.icon-crop.cancel": {
+		"message": "取消"
+	},
+	"app.icon-crop.header": {
+		"message": "裁剪实例图标"
+	},
+	"app.icon-crop.hint": {
+		"message": "拖动以调整位置，使用滚轮或滑块缩放。"
+	},
+	"app.icon-crop.reset": {
+		"message": "重置"
+	},
+	"app.icon-crop.use-original": {
+		"message": "原样使用"
+	},
+	"app.icon-crop.zoom": {
+		"message": "缩放"
+	},
 	"app.instance.add-content.from-file": {
 		"message": "从文件添加"
 	},
@@ -1313,6 +1340,102 @@
 	"app.notifications.version-for": {
 		"message": "适用于"
 	},
+	"app.plugins.action.install": {
+		"message": "安装"
+	},
+	"app.plugins.action.install-zip": {
+		"message": "从 .zip 安装"
+	},
+	"app.plugins.action.open-folder": {
+		"message": "打开文件夹"
+	},
+	"app.plugins.action.refresh": {
+		"message": "刷新"
+	},
+	"app.plugins.action.update": {
+		"message": "更新"
+	},
+	"app.plugins.badge.installed": {
+		"message": "已安装"
+	},
+	"app.plugins.badge.local": {
+		"message": "本地"
+	},
+	"app.plugins.catalog.empty": {
+		"message": "没有匹配的插件。"
+	},
+	"app.plugins.catalog.error": {
+		"message": "无法加载插件目录。"
+	},
+	"app.plugins.catalog.reset": {
+		"message": "重置"
+	},
+	"app.plugins.catalog.search": {
+		"message": "搜索插件..."
+	},
+	"app.plugins.catalog.url": {
+		"message": "目录索引 URL"
+	},
+	"app.plugins.description": {
+		"message": "使用主题、内容源和沙盒扩展来增强 Noctrinth。目录中的插件均通过 SHA-256 校验。"
+	},
+	"app.plugins.empty.installed.description": {
+		"message": "从目录安装经校验的插件，或加载本地 .zip 压缩包。"
+	},
+	"app.plugins.empty.installed.heading": {
+		"message": "未安装插件"
+	},
+	"app.plugins.permissions.domains": {
+		"message": "网络：{domains}"
+	},
+	"app.plugins.permissions.events": {
+		"message": "事件：{events}"
+	},
+	"app.plugins.permissions.instances": {
+		"message": "实例：{perms}"
+	},
+	"app.plugins.permissions.ui": {
+		"message": "界面：{perms}"
+	},
+	"app.plugins.remove.confirm": {
+		"message": "移除"
+	},
+	"app.plugins.remove.description": {
+		"message": "要从 Noctrinth 移除“{name}”吗？其文件将被删除。"
+	},
+	"app.plugins.remove.title": {
+		"message": "移除插件？"
+	},
+	"app.plugins.settings": {
+		"message": "插件设置"
+	},
+	"app.plugins.tab.catalog": {
+		"message": "目录"
+	},
+	"app.plugins.tab.installed": {
+		"message": "已安装"
+	},
+	"app.plugins.title": {
+		"message": "插件"
+	},
+	"app.plugins.toast.installed": {
+		"message": "已安装“{name}”"
+	},
+	"app.plugins.toast.removed": {
+		"message": "已移除“{name}”"
+	},
+	"app.plugins.type.all": {
+		"message": "全部"
+	},
+	"app.plugins.type.content-source": {
+		"message": "内容源"
+	},
+	"app.plugins.type.extension": {
+		"message": "扩展"
+	},
+	"app.plugins.type.theme": {
+		"message": "主题"
+	},
 	"app.project.copy-link.copied": {
 		"message": "链接已复制到剪贴板"
 	},
@@ -1426,6 +1549,9 @@
 	},
 	"app.settings.tabs.curseforge": {
 		"message": "CurseForge"
+	},
+	"app.settings.tabs.plugins": {
+		"message": "插件"
 	},
 	"app.skins.cape-from": {
 		"message": "来自 {source} 的披风"
@@ -2377,5 +2503,47 @@
 	},
 	"settings.language.coverage.app-tooltip": {
 		"message": "约有 {percentage}% 的 Noctrinth 界面已支持此语言。"
+	},
+	"app.plugins.disclaimer.header": {
+		"message": "第三方插件"
+	},
+	"app.plugins.disclaimer.body": {
+		"message": "插件由第三方作者开发。Noctrinth 不对已安装插件的安全性、可靠性、数据丢失或任何恶意代码承担责任。请仅从您信任的来源安装插件。"
+	},
+	"app.plugins.action.browse-catalog": {
+		"message": "浏览目录"
+	},
+	"app.plugins.catalog.url.description": {
+		"message": "用于发现和验证社区插件的 JSON 索引地址。"
+	},
+	"app.plugins.action.reload": {
+		"message": "重载插件"
+	},
+	"app.plugins.toast.reloaded": {
+		"message": "已重载“{name}”"
+	},
+	"app.plugins.action.update-all": {
+		"message": "全部更新 ({count})"
+	},
+	"app.plugins.toast.updated-all": {
+		"message": "已更新 {count} 个插件"
+	},
+	"app.plugins.action.logs": {
+		"message": "插件日志"
+	},
+	"app.plugins.logs.empty": {
+		"message": "暂无日志输出。"
+	},
+	"app.plugins.logs.clear": {
+		"message": "清空"
+	},
+	"app.plugins.quick-css.title": {
+		"message": "自定义 CSS (Quick CSS)"
+	},
+	"app.plugins.quick-css.description": {
+		"message": "实时应用在当前主题之上的自定义 CSS。"
+	},
+	"app.plugins.quick-css.clear": {
+		"message": "清空"
 	}
 }

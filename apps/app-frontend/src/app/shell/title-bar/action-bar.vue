@@ -18,8 +18,8 @@
 		</div>
 		<AppUpdateButton />
 		<Motion
-			as="div"
 			v-tooltip="!selectedProcess ? formatMessage(messages.noInstancesRunning) : undefined"
+			as="div"
 			class="relative flex h-[34px] shrink-0 origin-right items-center overflow-hidden border border-solid text-sm font-medium transition-colors duration-200"
 			:class="selectedProcess ? 'border-surface-5 bg-surface-2/60' : 'border-surface-5'"
 			:initial="false"

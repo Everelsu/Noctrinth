@@ -21,7 +21,6 @@ import {
 import { computed, onMounted, ref } from 'vue'
 
 import ModrinthPlatformIcon from '@/assets/icons/modrinth-platform.svg'
-
 import { curseforgeLinkHandler, setCurseforgeLinkHandler } from '@/helpers/curseforge'
 import {
 	checkCurseforgeKey,

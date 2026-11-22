@@ -107,6 +107,12 @@
 	"app.appearance-settings.font.title": {
 		"message": "Fuente de la interfaz"
 	},
+	"app.browse.filters.hide": {
+		"message": "Ocultar filtros"
+	},
+	"app.browse.filters.show": {
+		"message": "Filtros"
+	},
 	"app.browse.source.label": {
 		"message": "Dónde explorar"
 	},
@@ -917,6 +923,27 @@
 	"app.hosting.title": {
 		"message": "Alojamiento"
 	},
+	"app.icon-crop.apply": {
+		"message": "Aplicar"
+	},
+	"app.icon-crop.cancel": {
+		"message": "Cancelar"
+	},
+	"app.icon-crop.header": {
+		"message": "Recortar icono de instancia"
+	},
+	"app.icon-crop.hint": {
+		"message": "Arrastra para reposicionar y usa la rueda o el deslizador para hacer zoom."
+	},
+	"app.icon-crop.reset": {
+		"message": "Restablecer"
+	},
+	"app.icon-crop.use-original": {
+		"message": "Usar tal cual"
+	},
+	"app.icon-crop.zoom": {
+		"message": "Zoom"
+	},
 	"app.instance.add-content.from-file": {
 		"message": "Añadir desde archivo"
 	},
@@ -1313,6 +1340,102 @@
 	"app.notifications.version-for": {
 		"message": "para"
 	},
+	"app.plugins.action.install": {
+		"message": "Instalar"
+	},
+	"app.plugins.action.install-zip": {
+		"message": "Instalar desde .zip"
+	},
+	"app.plugins.action.open-folder": {
+		"message": "Abrir carpeta"
+	},
+	"app.plugins.action.refresh": {
+		"message": "Actualizar"
+	},
+	"app.plugins.action.update": {
+		"message": "Actualizar"
+	},
+	"app.plugins.badge.installed": {
+		"message": "Instalado"
+	},
+	"app.plugins.badge.local": {
+		"message": "Local"
+	},
+	"app.plugins.catalog.empty": {
+		"message": "No hay plugins que coincidan con tu búsqueda."
+	},
+	"app.plugins.catalog.error": {
+		"message": "No se pudo cargar el catálogo de plugins."
+	},
+	"app.plugins.catalog.reset": {
+		"message": "Restablecer"
+	},
+	"app.plugins.catalog.search": {
+		"message": "Buscar plugins..."
+	},
+	"app.plugins.catalog.url": {
+		"message": "URL del índice del catálogo"
+	},
+	"app.plugins.description": {
+		"message": "Amplía Noctrinth con temas, fuentes de contenido y extensiones aisladas. Los plugins del catálogo se verifican mediante SHA-256."
+	},
+	"app.plugins.empty.installed.description": {
+		"message": "Instala un plugin verificado del catálogo o carga un archivo .zip local."
+	},
+	"app.plugins.empty.installed.heading": {
+		"message": "No hay plugins instalados"
+	},
+	"app.plugins.permissions.domains": {
+		"message": "Red: {domains}"
+	},
+	"app.plugins.permissions.events": {
+		"message": "Eventos: {events}"
+	},
+	"app.plugins.permissions.instances": {
+		"message": "Instancias: {perms}"
+	},
+	"app.plugins.permissions.ui": {
+		"message": "Interfaz: {perms}"
+	},
+	"app.plugins.remove.confirm": {
+		"message": "Eliminar"
+	},
+	"app.plugins.remove.description": {
+		"message": "¿Eliminar \"{name}\" de Noctrinth? Sus archivos se borrarán."
+	},
+	"app.plugins.remove.title": {
+		"message": "¿Eliminar plugin?"
+	},
+	"app.plugins.settings": {
+		"message": "Ajustes del plugin"
+	},
+	"app.plugins.tab.catalog": {
+		"message": "Catálogo"
+	},
+	"app.plugins.tab.installed": {
+		"message": "Instalados"
+	},
+	"app.plugins.title": {
+		"message": "Plugins"
+	},
+	"app.plugins.toast.installed": {
+		"message": "\"{name}\" instalado"
+	},
+	"app.plugins.toast.removed": {
+		"message": "\"{name}\" eliminado"
+	},
+	"app.plugins.type.all": {
+		"message": "Todos"
+	},
+	"app.plugins.type.content-source": {
+		"message": "Fuente de contenido"
+	},
+	"app.plugins.type.extension": {
+		"message": "Extensión"
+	},
+	"app.plugins.type.theme": {
+		"message": "Tema"
+	},
 	"app.project.copy-link.copied": {
 		"message": "Enlace copiado al portapapeles"
 	},
@@ -1429,6 +1552,9 @@
 	},
 	"app.settings.tabs.curseforge": {
 		"message": "CurseForge"
+	},
+	"app.settings.tabs.plugins": {
+		"message": "Plugins"
 	},
 	"app.skins.cape-from": {
 		"message": "Capa de {source}"
@@ -2380,5 +2506,47 @@
 	},
 	"settings.language.coverage.app-tooltip": {
 		"message": "Aproximadamente el {percentage}% de Noctrinth está disponible en este idioma."
+	},
+	"app.plugins.disclaimer.header": {
+		"message": "Plugins de terceros"
+	},
+	"app.plugins.disclaimer.body": {
+		"message": "Los plugins son creados por autores externos. Noctrinth no se hace responsable de la seguridad, fiabilidad, pérdida de datos ni de código malicioso en los plugins instalados. Instala plugins solo de fuentes en las que confíes."
+	},
+	"app.plugins.action.browse-catalog": {
+		"message": "Explorar catálogo"
+	},
+	"app.plugins.catalog.url.description": {
+		"message": "Índice JSON utilizado para descubrir y verificar plugins de la comunidad."
+	},
+	"app.plugins.action.reload": {
+		"message": "Recargar plugin"
+	},
+	"app.plugins.toast.reloaded": {
+		"message": "«{name}» recargado"
+	},
+	"app.plugins.action.update-all": {
+		"message": "Actualizar todo ({count})"
+	},
+	"app.plugins.toast.updated-all": {
+		"message": "{count} plugin(s) actualizado(s)"
+	},
+	"app.plugins.action.logs": {
+		"message": "Registros del plugin"
+	},
+	"app.plugins.logs.empty": {
+		"message": "Aún no hay registros."
+	},
+	"app.plugins.logs.clear": {
+		"message": "Limpiar"
+	},
+	"app.plugins.quick-css.title": {
+		"message": "CSS rápido"
+	},
+	"app.plugins.quick-css.description": {
+		"message": "CSS personalizado aplicado en vivo sobre el tema actual."
+	},
+	"app.plugins.quick-css.clear": {
+		"message": "Limpiar"
 	}
 }

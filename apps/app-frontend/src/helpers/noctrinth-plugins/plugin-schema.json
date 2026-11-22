@@ -1,0 +1,85 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://everelsu.github.io/Noctrinth-Plugins/plugin-schema.json",
+	"title": "Noctrinth Plugin Manifest",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["id", "name", "version", "apiVersion", "type"],
+	"properties": {
+		"$schema": { "type": "string" },
+		"id": {
+			"type": "string",
+			"pattern": "^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$"
+		},
+		"name": { "type": "string", "minLength": 1, "maxLength": 80 },
+		"version": {
+			"type": "string",
+			"pattern": "^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+		},
+		"apiVersion": { "type": "integer", "const": 1 },
+		"type": { "type": "string", "enum": ["theme", "content-source", "extension"] },
+		"author": { "type": "string", "maxLength": 80 },
+		"description": { "type": "string", "maxLength": 300 },
+		"homepage": { "type": "string", "format": "uri" },
+		"icon": { "type": "string" },
+		"styles": { "type": "array", "items": { "type": "string" } },
+		"entry": { "type": "string" },
+		"permissions": {
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"domains": { "type": "array", "items": { "type": "string" } },
+				"events": {
+					"type": "array",
+					"items": {
+						"type": "string",
+						"enum": ["instance:launch", "instance:exit", "instance:crash", "download:complete"]
+					}
+				},
+				"instances": {
+					"type": "array",
+					"items": {
+						"type": "string",
+						"enum": ["read", "write", "launch"]
+					}
+				},
+				"ui": {
+					"type": "array",
+					"items": {
+						"type": "string",
+						"enum": ["notifications", "actions", "settings", "modal"]
+					}
+				}
+			}
+		},
+		"settings": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"required": ["key", "type", "label"],
+				"properties": {
+					"key": { "type": "string", "minLength": 1 },
+					"type": { "type": "string", "enum": ["string", "boolean", "number", "select", "color"] },
+					"label": { "type": "string", "minLength": 1 },
+					"description": { "type": "string" },
+					"placeholder": { "type": "string" },
+					"default": {},
+					"min": { "type": "number" },
+					"max": { "type": "number" },
+					"cssVar": { "type": "string", "pattern": "^--[a-zA-Z0-9-]+$" },
+					"options": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"required": ["value", "label"],
+							"properties": {
+								"value": { "type": "string" },
+								"label": { "type": "string" }
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

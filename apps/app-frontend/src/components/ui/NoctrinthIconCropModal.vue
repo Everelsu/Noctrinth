@@ -10,7 +10,7 @@ import {
 	useVIntl,
 } from '@modrinth/ui'
 import { convertFileSrc } from '@tauri-apps/api/core'
-import { computed, ref, useTemplateRef } from 'vue'
+import { computed, onBeforeUnmount, ref, useTemplateRef } from 'vue'
 
 import { cache_icon, edit_icon } from '@/helpers/instance'
 
@@ -38,7 +38,7 @@ const messages = defineMessages({
 	apply: { id: 'app.icon-crop.apply', defaultMessage: 'Apply' },
 })
 
-const STAGE_SIZE = 240
+const STAGE_SIZE = 280
 const OUTPUT_SIZE = 256
 
 const modal = useTemplateRef<InstanceType<typeof NewModal>>('modal')
@@ -51,12 +51,22 @@ const zoom = ref(1)
 const offsetX = ref(0)
 const offsetY = ref(0)
 const saving = ref(false)
+const isDragging = ref(false)
 
-let dragging = false
+let activeObjectUrl: string | null = null
 let dragStartX = 0
 let dragStartY = 0
 let startOffsetX = 0
 let startOffsetY = 0
+
+function revokeObjectUrl() {
+	if (activeObjectUrl) {
+		URL.revokeObjectURL(activeObjectUrl)
+		activeObjectUrl = null
+	}
+}
+
+onBeforeUnmount(revokeObjectUrl)
 
 const baseScale = computed(() => {
 	if (!naturalWidth.value || !naturalHeight.value) return 1
@@ -98,7 +108,7 @@ function onImageLoad(event: Event) {
 
 function onPointerDown(event: PointerEvent) {
 	if (saving.value) return
-	dragging = true
+	isDragging.value = true
 	dragStartX = event.clientX
 	dragStartY = event.clientY
 	startOffsetX = offsetX.value
@@ -107,7 +117,7 @@ function onPointerDown(event: PointerEvent) {
 }
 
 function onPointerMove(event: PointerEvent) {
-	if (!dragging) return
+	if (!isDragging.value) return
 	const clamped = clampOffsets(
 		startOffsetX + (event.clientX - dragStartX),
 		startOffsetY + (event.clientY - dragStartY),
@@ -117,8 +127,8 @@ function onPointerMove(event: PointerEvent) {
 }
 
 function onPointerUp(event: PointerEvent) {
-	if (!dragging) return
-	dragging = false
+	if (!isDragging.value) return
+	isDragging.value = false
 	;(event.currentTarget as HTMLElement)?.releasePointerCapture?.(event.pointerId)
 }
 
@@ -134,13 +144,28 @@ const imageStyle = computed(() => ({
 	transform: `translate(-50%, -50%) translate(${offsetX.value}px, ${offsetY.value}px)`,
 }))
 
-function show(filePath: string) {
+async function show(filePath: string) {
+	revokeObjectUrl()
 	sourcePath.value = filePath
-	imageSrc.value = convertFileSrc(filePath)
+	imageSrc.value = ''
 	naturalWidth.value = 0
 	naturalHeight.value = 0
 	resetTransform()
 	modal.value?.show()
+
+	const assetUrl = convertFileSrc(filePath)
+	try {
+		const response = await fetch(assetUrl)
+		if (!response.ok) throw new Error(`HTTP ${response.status}`)
+		const blob = await response.blob()
+		if (sourcePath.value !== filePath) return
+		activeObjectUrl = URL.createObjectURL(blob)
+		imageSrc.value = activeObjectUrl
+	} catch {
+		if (sourcePath.value === filePath) {
+			imageSrc.value = assetUrl
+		}
+	}
 }
 
 async function applyOriginal() {
@@ -196,15 +221,22 @@ defineExpose({ show })
 </script>
 
 <template>
-	<NewModal ref="modal" :header="formatMessage(messages.header)" max-width="460px">
-		<div class="flex flex-col gap-4">
+	<NewModal
+		ref="modal"
+		:header="formatMessage(messages.header)"
+		max-width="540px"
+		:on-hide="revokeObjectUrl"
+	>
+		<div class="flex flex-col gap-5">
 			<p class="m-0 text-sm text-secondary">
 				{{ formatMessage(messages.hint) }}
 			</p>
 
-			<div class="flex flex-col items-center gap-3">
+			<div
+				class="flex flex-col items-center gap-4 rounded-2xl border border-solid border-surface-5 bg-surface-2 p-5"
+			>
 				<div
-					class="relative overflow-hidden rounded-2xl border border-solid border-surface-5 bg-surface-2 select-none touch-none cursor-grab active:cursor-grabbing"
+					class="crop-stage relative overflow-hidden rounded-2xl border border-solid border-surface-5 select-none touch-none cursor-grab active:cursor-grabbing shadow-md"
 					:style="{ width: `${STAGE_SIZE}px`, height: `${STAGE_SIZE}px` }"
 					@pointerdown="onPointerDown"
 					@pointermove="onPointerMove"
@@ -215,6 +247,7 @@ defineExpose({ show })
 					<img
 						v-if="imageSrc"
 						:src="imageSrc"
+						crossorigin="anonymous"
 						alt=""
 						draggable="false"
 						class="pointer-events-none absolute left-1/2 top-1/2 max-w-none select-none"
@@ -222,12 +255,26 @@ defineExpose({ show })
 						@load="onImageLoad"
 					/>
 					<div
-						class="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/15"
+						class="pointer-events-none absolute inset-0 grid grid-cols-3 grid-rows-3 transition-opacity duration-150"
+						:class="isDragging ? 'opacity-50' : 'opacity-0'"
+					>
+						<div class="border-0 border-b border-r border-solid border-white/40" />
+						<div class="border-0 border-b border-r border-solid border-white/40" />
+						<div class="border-0 border-b border-solid border-white/40" />
+						<div class="border-0 border-b border-r border-solid border-white/40" />
+						<div class="border-0 border-b border-r border-solid border-white/40" />
+						<div class="border-0 border-b border-solid border-white/40" />
+						<div class="border-0 border-r border-solid border-white/40" />
+						<div class="border-0 border-r border-solid border-white/40" />
+						<div />
+					</div>
+					<div
+						class="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/20"
 					/>
 				</div>
 
-				<div class="flex w-full items-center gap-3 rounded-xl bg-surface-2.5 px-3 py-2">
-					<span class="shrink-0 text-xs font-medium text-secondary">
+				<div class="flex w-full items-center gap-3 pt-1">
+					<span class="shrink-0 text-sm font-medium text-secondary">
 						{{ formatMessage(messages.zoom) }}
 					</span>
 					<Slider
@@ -238,7 +285,7 @@ defineExpose({ show })
 						class="flex-1"
 						@update:model-value="(v) => updateZoom(Number(v))"
 					/>
-					<span class="w-10 shrink-0 text-right font-mono text-xs text-secondary tabular-nums">
+					<span class="w-11 shrink-0 text-right font-mono text-xs text-secondary tabular-nums">
 						{{ zoom.toFixed(1) }}×
 					</span>
 					<IconButton
@@ -248,17 +295,19 @@ defineExpose({ show })
 						size="sm"
 						@click="resetTransform"
 					>
-						<RotateCounterClockwiseIcon class="size-4" />
+						<RotateCounterClockwiseIcon />
 					</IconButton>
 				</div>
 			</div>
 
-			<div class="flex items-center justify-between gap-2 pt-1">
+			<div
+				class="flex flex-wrap items-center justify-between gap-3 border-0 border-t border-solid border-surface-5 pt-4"
+			>
 				<Button type="quiet" :disabled="saving" @click="applyOriginal">
 					{{ formatMessage(messages.useOriginal) }}
 				</Button>
-				<div class="flex items-center gap-2">
-					<Button type="outlined" :disabled="saving" @click="modal?.hide()">
+				<div class="flex items-center gap-2.5">
+					<Button :disabled="saving" @click="modal?.hide()">
 						<XIcon aria-hidden="true" />
 						{{ formatMessage(messages.cancel) }}
 					</Button>
@@ -276,3 +325,20 @@ defineExpose({ show })
 		</div>
 	</NewModal>
 </template>
+
+<style scoped>
+.crop-stage {
+	background-color: var(--surface-3);
+	background-image:
+		linear-gradient(45deg, var(--surface-4) 25%, transparent 25%),
+		linear-gradient(-45deg, var(--surface-4) 25%, transparent 25%),
+		linear-gradient(45deg, transparent 75%, var(--surface-4) 75%),
+		linear-gradient(-45deg, transparent 75%, var(--surface-4) 75%);
+	background-size: 16px 16px;
+	background-position:
+		0 0,
+		0 8px,
+		8px -8px,
+		-8px 0;
+}
+</style>

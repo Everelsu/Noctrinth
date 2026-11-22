@@ -266,7 +266,6 @@ const entries = computed<ChangelogEntry[]>(() =>
 	</div>
 </template>
 <style scoped lang="scss">
-
 /*
  * Rendered markdown has no classes to hang utilities on, so the body is styled
  * here: links in the brand colour so they read as links, code as code, and

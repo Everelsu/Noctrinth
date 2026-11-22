@@ -483,10 +483,9 @@ onUnmounted(() => {
 		<div v-else ref="itemsGrid" class="grid-when-huge relative flex w-full flex-col gap-3">
 			<TransitionGroup name="jump-back-in-item">
 				<div
-					v-for="(item, index) in visibleJumpBackInItems"
+					v-for="item in visibleJumpBackInItems"
 					:key="`${item.instance.id}-${item.type === 'world' ? getWorldIdentifier(item.world) : 'instance'}`"
-					class="jump-back-in-item recent-item-enter min-w-0"
-					:style="{ '--item-index': Math.min(index, 6) }"
+					class="jump-back-in-item min-w-0"
 				>
 					<WorldItem
 						v-if="item.type === 'world'"
@@ -595,22 +594,6 @@ onUnmounted(() => {
 .jump-back-in-item {
 	height: 5rem;
 	overflow: hidden;
-}
-
-.recent-item-enter {
-	animation: recent-item-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
-	animation-delay: calc(var(--item-index, 0) * 28ms);
-}
-
-@keyframes recent-item-in {
-	from {
-		opacity: 0;
-		transform: translateY(8px);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
 }
 
 .jump-back-in-item-enter-active,

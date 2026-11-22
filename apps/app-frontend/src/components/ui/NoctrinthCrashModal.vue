@@ -20,6 +20,7 @@ import {
 	type CrashFinding,
 	sortFindings,
 } from '@/helpers/noctrinth-crash'
+import { emitPluginEvent } from '@/helpers/noctrinth-plugins'
 import { showInstanceInFolder } from '@/helpers/utils.js'
 
 const { formatMessage } = useVIntl()
@@ -62,6 +63,12 @@ useAppEvent('process', async (event) => {
 		: ''
 	status.value = diagnosis.exit?.status ?? ''
 	findings.value = sortFindings(diagnosis.findings)
+	emitPluginEvent('instance:crash', {
+		instanceId: instanceId.value,
+		instanceName: instanceName.value,
+		status: status.value,
+		findings: findings.value.map((f) => ({ rule: f.rule, severity: f.severity })),
+	})
 	modal.value?.show()
 })
 

@@ -883,9 +883,6 @@ function memoryHintOf(finding: CrashFinding): string | undefined {
 /** Rules that only describe the crash, shown under the heading instead of as a finding. */
 const HEADLINE_RULES = new Set(['crash_description'])
 
-/** How many findings are shown before the rest are folded away. */
-const FOLDED_AFTER = 3
-
 const headline = computed(() => props.findings.find((finding) => HEADLINE_RULES.has(finding.rule)))
 const listed = computed(() => props.findings.filter((finding) => !HEADLINE_RULES.has(finding.rule)))
 const primaryFinding = computed(() => listed.value[0] ?? null)
@@ -904,29 +901,27 @@ const worst = computed<CrashSeverity>(() =>
 			: 'note',
 )
 
-const TONES: Record<
-	CrashSeverity,
-	{ icon: string; badge: string; pill: string; border: string }
-> = {
-	critical: {
-		icon: 'text-red',
-		badge: 'bg-highlight-red',
-		pill: 'bg-highlight-red text-red',
-		border: 'border-red/30',
-	},
-	warning: {
-		icon: 'text-orange',
-		badge: 'bg-highlight-orange',
-		pill: 'bg-highlight-orange text-orange',
-		border: 'border-orange/30',
-	},
-	note: {
-		icon: 'text-blue',
-		badge: 'bg-highlight-blue',
-		pill: 'bg-highlight-blue text-blue',
-		border: 'border-blue/30',
-	},
-}
+const TONES: Record<CrashSeverity, { icon: string; badge: string; pill: string; border: string }> =
+	{
+		critical: {
+			icon: 'text-red',
+			badge: 'bg-highlight-red',
+			pill: 'bg-highlight-red text-red',
+			border: 'border-red/30',
+		},
+		warning: {
+			icon: 'text-orange',
+			badge: 'bg-highlight-orange',
+			pill: 'bg-highlight-orange text-orange',
+			border: 'border-orange/30',
+		},
+		note: {
+			icon: 'text-blue',
+			badge: 'bg-highlight-blue',
+			pill: 'bg-highlight-blue text-blue',
+			border: 'border-blue/30',
+		},
+	}
 
 function severityLabel(severity: CrashSeverity): string {
 	if (severity === 'critical') return formatMessage(messages.severityCritical)
@@ -1038,12 +1033,7 @@ function runAction(finding: CrashFinding) {
 					</p>
 				</div>
 				<div class="flex shrink-0 items-center gap-1" @click.stop>
-					<Button
-						v-if="collapsible"
-						type="quiet"
-						size="sm"
-						@click="isOpen = !isOpen"
-					>
+					<Button v-if="collapsible" type="quiet" size="sm" @click="isOpen = !isOpen">
 						<span>{{ formatMessage(isOpen ? messages.hideDetails : messages.details) }}</span>
 						<ChevronDownIcon
 							class="size-4 transition-transform duration-150"
@@ -1110,10 +1100,7 @@ function runAction(finding: CrashFinding) {
 							{{ titleOf(primaryFinding) }}
 						</div>
 
-						<p
-							v-if="fixOf(primaryFinding)"
-							class="m-0 text-sm leading-relaxed text-secondary"
-						>
+						<p v-if="fixOf(primaryFinding)" class="m-0 text-sm leading-relaxed text-secondary">
 							{{ fixOf(primaryFinding) }}
 						</p>
 						<p
@@ -1275,7 +1262,10 @@ function runAction(finding: CrashFinding) {
 									<p v-if="fixOf(finding)" class="m-0 text-xs leading-relaxed text-secondary">
 										{{ fixOf(finding) }}
 									</p>
-									<p v-if="memoryHintOf(finding)" class="m-0 text-xs leading-relaxed text-secondary">
+									<p
+										v-if="memoryHintOf(finding)"
+										class="m-0 text-xs leading-relaxed text-secondary"
+									>
 										{{ memoryHintOf(finding) }}
 									</p>
 

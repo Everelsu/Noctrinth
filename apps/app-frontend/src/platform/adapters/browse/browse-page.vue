@@ -7,6 +7,7 @@ import {
 	ExternalIcon,
 	FilterIcon,
 	GlobeIcon,
+	PlugIcon,
 	PlusIcon,
 	ServerStackIcon,
 	SpinnerIcon,
@@ -58,7 +59,6 @@ import ModrinthPlatformIcon from '@/assets/icons/modrinth-platform.svg'
 import { useAppEvent } from '@/composables/use-app-event'
 import { useAppSettings } from '@/composables/use-app-settings.ts'
 import { get_project, get_search_results_v3, get_version_many } from '@/helpers/cache.js'
-import { browseFiltersHidden } from '@/helpers/noctrinth-browse-ui'
 import {
 	type BrowseSource,
 	CURSEFORGE_PROJECT_TYPES,
@@ -83,6 +83,8 @@ import {
 	remove_project,
 } from '@/helpers/instance'
 import { get_loader_versions as getLoaderManifest } from '@/helpers/metadata'
+import { browseFiltersHidden } from '@/helpers/noctrinth-browse-ui'
+import { pluginContentSources, searchPluginContentSource } from '@/helpers/noctrinth-plugins'
 import { get as getSettings, set as setSettings } from '@/helpers/settings.ts'
 import { get_categories, get_game_versions, get_loaders } from '@/helpers/tags'
 import { get_instance_worlds } from '@/helpers/worlds'
@@ -737,11 +739,31 @@ const projectType = ref<ProjectType>(route.params.projectType as ProjectType)
 // Noctrinth's own: CurseForge as a second place to browse. Only offered when
 // the build has a key, only for the project types CurseForge has, and never
 // while adding to a server, whose flow is Modrinth's from end to end.
-const browseSourceOptions: ComboboxOption<BrowseSource>[] = [
-	{ value: 'modrinth', label: 'Modrinth', icon: ModrinthPlatformIcon },
-	{ value: 'curseforge', label: 'CurseForge', icon: CurseForgeIcon },
-]
-const browseSource = ref<BrowseSource>(
+type EffectiveBrowseSource = BrowseSource | `plugin:${string}`
+
+const availablePluginSources = computed(() =>
+	isServerContext.value
+		? []
+		: pluginContentSources.value.filter((s) => s.projectTypes.includes(projectType.value)),
+)
+
+const browseSourceOptions = computed<ComboboxOption<EffectiveBrowseSource>[]>(() => {
+	const opts: ComboboxOption<EffectiveBrowseSource>[] = [
+		{ value: 'modrinth', label: 'Modrinth', icon: ModrinthPlatformIcon },
+	]
+	if (curseforgeOffered.value) {
+		opts.push({ value: 'curseforge', label: 'CurseForge', icon: CurseForgeIcon })
+	}
+	for (const source of availablePluginSources.value) {
+		opts.push({
+			value: `plugin:${source.pluginId}`,
+			label: source.label,
+			icon: PlugIcon,
+		})
+	}
+	return opts
+})
+const browseSource = ref<EffectiveBrowseSource>(
 	curseforgeEnabled() &&
 		(route.query.src === 'cf' ||
 			(route.query.src === undefined && curseforgeSettings.defaultSource === 'curseforge'))
@@ -749,7 +771,8 @@ const browseSource = ref<BrowseSource>(
 		: 'modrinth',
 )
 /** The source in the URL; only the one that is not the default is written. */
-function sourceQuery(source: BrowseSource) {
+function sourceQuery(source: EffectiveBrowseSource) {
+	if (source.startsWith('plugin:')) return source
 	if (source === curseforgeSettings.defaultSource) return undefined
 	return source === 'curseforge' ? 'cf' : 'mr'
 }
@@ -758,6 +781,9 @@ const curseforgeOffered = computed(
 		curseforgeEnabled() &&
 		!isServerContext.value &&
 		(CURSEFORGE_PROJECT_TYPES as readonly string[]).includes(projectType.value),
+)
+const activePluginSourceId = computed(() =>
+	browseSource.value.startsWith('plugin:') ? browseSource.value.slice('plugin:'.length) : null,
 )
 const isCurseforge = computed(() => curseforgeOffered.value && browseSource.value === 'curseforge')
 // The filters CurseForge can search by; every other one is hidden while
@@ -1253,8 +1279,7 @@ function getCardActions(
 			),
 			icon: isInstalling || isRemoving ? SpinnerIcon : showAsInstalled ? CheckIcon : PlusIcon,
 			iconClass: isInstalling || isRemoving ? 'animate-spin' : undefined,
-			hoverLabel:
-				canRemove && !isRemoving ? formatMessage(commonMessages.removeButton) : undefined,
+			hoverLabel: canRemove && !isRemoving ? formatMessage(commonMessages.removeButton) : undefined,
 			hoverIcon: canRemove && !isRemoving ? TrashIcon : undefined,
 			hoverColor: canRemove && !isRemoving ? 'red' : undefined,
 			disabled: (showAsInstalled && !canRemove) || isInstalling || isRemoving,
@@ -1346,8 +1371,7 @@ function getCurseforgeCardActions(
 			),
 			icon: isInstalling || isRemoving ? SpinnerIcon : isInstalled ? CheckIcon : PlusIcon,
 			iconClass: isInstalling || isRemoving ? 'animate-spin' : undefined,
-			hoverLabel:
-				canRemove && !isRemoving ? formatMessage(commonMessages.removeButton) : undefined,
+			hoverLabel: canRemove && !isRemoving ? formatMessage(commonMessages.removeButton) : undefined,
 			hoverIcon: canRemove && !isRemoving ? TrashIcon : undefined,
 			hoverColor: canRemove && !isRemoving ? 'red' : undefined,
 			disabled: (isInstalled && !canRemove) || isInstalling || isRemoving,
@@ -1423,10 +1447,7 @@ function onSearchResultsInstalled(ids: string[], targetInstanceId?: string) {
 		return
 	}
 	const expandedIds = Array.from(
-		new Set([
-			...ids,
-			...ids.filter((id) => /^\d+$/.test(id)).map(curseforgeIdOf),
-		]),
+		new Set([...ids, ...ids.filter((id) => /^\d+$/.test(id)).map(curseforgeIdOf)]),
 	)
 	newlyInstalled.value = Array.from(new Set([...newlyInstalled.value, ...expandedIds]))
 	if (targetInstanceId) {
@@ -1577,7 +1598,46 @@ async function searchCurseforge(requestParams: string) {
 	}
 }
 
+async function searchPluginSource(pluginId: string, requestParams: string) {
+	const sp = new URLSearchParams(requestParams.replace(/^\?/, ''))
+	const result = await searchPluginContentSource(pluginId, {
+		query: sp.get('query') ?? '',
+		projectType: projectType.value,
+		offset: Number(sp.get('offset') ?? 0) || 0,
+		limit: Number(sp.get('limit') ?? 20) || 20,
+		sort: sp.get('index') ?? undefined,
+	})
+	const hits = (result.hits ?? []).map((hit) => ({
+		project_id: hit.id,
+		slug: hit.slug ?? hit.id,
+		project_type: hit.project_type ?? projectType.value,
+		name: hit.title,
+		summary: hit.description ?? '',
+		icon_url: hit.icon_url ?? null,
+		author: hit.author ?? '',
+		downloads: hit.downloads ?? 0,
+		follows: hit.follows ?? 0,
+		categories: hit.categories ?? [],
+		display_categories: hit.categories ?? [],
+		loaders: hit.loaders ?? [],
+		versions: [],
+		date_created: new Date().toISOString(),
+		date_modified: new Date().toISOString(),
+		client_side: 'unknown',
+		server_side: 'unknown',
+	})) as unknown as (Labrinth.Search.v3.ResultSearchProject & { installed?: boolean })[]
+	return {
+		projectHits: hits,
+		serverHits: [],
+		total_hits: result.total_hits ?? hits.length,
+		per_page: result.limit ?? 20,
+	}
+}
+
 async function search(requestParams: string) {
+	if (activePluginSourceId.value) {
+		return await searchPluginSource(activePluginSourceId.value, requestParams)
+	}
 	if (isCurseforge.value) {
 		return await searchCurseforge(requestParams)
 	}
@@ -1912,7 +1972,7 @@ provideBrowseManager({
 <template>
 	<div class="flex flex-col gap-2 p-6">
 		<BrowsePageLayout>
-			<template v-if="curseforgeOffered" #tabs-end>
+			<template v-if="curseforgeOffered || availablePluginSources.length > 0" #tabs-end>
 				<Combobox
 					v-model="browseSource"
 					:options="browseSourceOptions"
@@ -1940,10 +2000,10 @@ provideBrowseManager({
 						)
 					}}</span>
 					<span
-						v-if="browseFiltersHidden && currentFilters.length > 0"
+						v-if="browseFiltersHidden && searchState.currentFilters.value.length > 0"
 						class="ml-0.5 rounded-full bg-brand-highlight px-1.5 py-0.5 text-[11px] font-semibold text-brand tabular-nums"
 					>
-						{{ currentFilters.length }}
+						{{ searchState.currentFilters.value.length }}
 					</span>
 				</Button>
 			</template>
@@ -1968,7 +2028,7 @@ provideBrowseManager({
 			@browse-modpacks="() => {}"
 			@create="handleServerModpackFlowCreate"
 		/>
-		<Teleport v-if="browseRouteActive && !browseFiltersHidden" to="#sidebar-teleport-target">
+		<Teleport v-if="browseRouteActive" to="#sidebar-teleport-target">
 			<BrowseSidebar />
 		</Teleport>
 	</div>

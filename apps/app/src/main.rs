@@ -490,6 +490,7 @@ fn main() {
         .plugin(api::instance::init())
         .plugin(api::logs::init())
         .plugin(api::noctrinth_background::init())
+        .plugin(api::noctrinth_plugins::init())
         .plugin(api::noctrinth_clipboard::init())
         .plugin(api::noctrinth_crash::init())
         .plugin(api::noctrinth_curseforge::init())

@@ -10,6 +10,7 @@ import {
 	LightBulbIcon,
 	NewspaperIcon,
 	PaintbrushIcon,
+	PlugIcon,
 	RefreshCwIcon,
 	Settings2Icon,
 	ToggleRightIcon,
@@ -51,6 +52,7 @@ import type { InstanceDefaultsTab } from '@/features/settings/settings-actions'
 import type { SettingsTabEntry } from '@/features/settings/settings-search'
 import SyncingSettings from '@/features/settings/syncing/syncing-settings.vue'
 import CurseforgeSettings from '@/features/settings/system/CurseforgeSettings.vue'
+import PluginsSettings from '@/features/settings/system/PluginsSettings.vue'
 import ResourceManagementSettings from '@/features/settings/system/resource-management-settings/index.vue'
 import TroubleshootingSettings from '@/features/settings/system/troubleshooting-settings.vue'
 import { appSettingsKeys, appSettingsQueryOptions, set } from '@/helpers/settings.ts'
@@ -229,6 +231,15 @@ const tabs = [
 		category: tabCategories.system,
 		icon: CurseForgeIcon,
 		content: CurseforgeSettings,
+	},
+	{
+		name: defineMessage({
+			id: 'app.settings.tabs.plugins',
+			defaultMessage: 'Plugins',
+		}),
+		category: tabCategories.system,
+		icon: PlugIcon,
+		content: PluginsSettings,
 	},
 ]
 

@@ -1,0 +1,785 @@
+import { invoke } from '@tauri-apps/api/core'
+import { useStorage } from '@vueuse/core'
+import { computed, ref, watch } from 'vue'
+
+import {
+	get as getInstance,
+	get_content_items,
+	list as listInstances,
+	remove_project,
+	run as runInstance,
+	toggle_disable_project,
+} from '@/helpers/instance'
+import { get_logs } from '@/helpers/logs.js'
+
+import type {
+	ActivePluginModal,
+	CatalogPluginEntry,
+	InstalledPlugin,
+	NoctrinthActionSlot,
+	NoctrinthContentSourceSearchResult,
+	NoctrinthPluginEvent,
+	NoctrinthPluginModalRequest,
+	PluginCatalog,
+	PluginLogEntry,
+	RegisteredPluginAction,
+	RegisteredPluginContentSource,
+} from './types'
+
+export const DEFAULT_PLUGIN_CATALOG_URL = 'https://everelsu.github.io/Noctrinth-Plugins/index.json'
+
+export const pluginCatalogUrl = useStorage(
+	'noctrinth:plugin-catalog-url',
+	DEFAULT_PLUGIN_CATALOG_URL,
+)
+
+export const quickCssEnabled = useStorage('noctrinth:quick-css-enabled', false)
+export const quickCssContent = useStorage('noctrinth:quick-css-content', '')
+
+export const installedPlugins = ref<InstalledPlugin[]>([])
+export const catalogPlugins = ref<CatalogPluginEntry[]>([])
+export const pluginRuntimeErrors = ref<Record<string, string>>({})
+export const pluginLogs = ref<Record<string, PluginLogEntry[]>>({})
+export const pluginActions = ref<RegisteredPluginAction[]>([])
+export const pluginContentSources = ref<RegisteredPluginContentSource[]>([])
+export const activePluginModal = ref<ActivePluginModal | null>(null)
+
+export const pluginUpdates = computed<CatalogPluginEntry[]>(() => {
+	const installedById = new Map(installedPlugins.value.map((p) => [p.manifest.id, p]))
+	return catalogPlugins.value.filter((entry) => {
+		const inst = installedById.get(entry.id)
+		return inst && inst.manifest.version !== entry.version
+	})
+})
+
+const MAX_PLUGIN_LOGS = 100
+
+function appendPluginLog(pluginId: string, level: PluginLogEntry['level'], message: string) {
+	const current = pluginLogs.value[pluginId] ?? []
+	const next = [...current, { timestamp: Date.now(), level, message }].slice(-MAX_PLUGIN_LOGS)
+	pluginLogs.value = { ...pluginLogs.value, [pluginId]: next }
+}
+
+export function clearPluginLogs(pluginId: string): void {
+	const { [pluginId]: _removed, ...rest } = pluginLogs.value
+	pluginLogs.value = rest
+}
+
+export function resolvePluginModal(actionId: string | null): void {
+	const current = activePluginModal.value
+	if (!current) return
+	activePluginModal.value = null
+	current.resolve(actionId)
+}
+
+function applyQuickCss(): void {
+	if (typeof document === 'undefined') return
+	const existing = document.getElementById('noctrinth-quick-css')
+	const css = quickCssEnabled.value ? quickCssContent.value.trim() : ''
+	if (!css) {
+		existing?.remove()
+		return
+	}
+	const styleEl = existing ?? document.createElement('style')
+	styleEl.id = 'noctrinth-quick-css'
+	styleEl.textContent = css
+	if (!existing) document.head.appendChild(styleEl)
+}
+
+watch([quickCssEnabled, quickCssContent], applyQuickCss)
+
+type NotifyFn = (opts: {
+	title: string
+	text?: string
+	type?: 'info' | 'success' | 'warning' | 'error'
+}) => void
+
+let notificationHandler: NotifyFn | null = null
+
+export function setPluginNotificationHandler(handler: NotifyFn) {
+	notificationHandler = handler
+}
+
+interface WorkerEntry {
+	worker: Worker
+	blobUrl: string
+	events: Set<string>
+	pendingHostCalls: Map<number, { resolve: (v: unknown) => void; reject: (e: Error) => void }>
+}
+
+const activeWorkers = new Map<string, WorkerEntry>()
+const appliedSettingAttrs = new Map<string, { attrs: string[]; vars: string[] }>()
+let nextHostCallId = 1
+
+function settingsStorageKey(pluginId: string): string {
+	return `noctrinth:plugin-settings:${pluginId}`
+}
+
+function sanitizeToken(raw: string): string {
+	return raw.toLowerCase().replace(/[^a-z0-9-]/g, '-')
+}
+
+export function getPluginSettings(plugin: InstalledPlugin): Record<string, unknown> {
+	const result: Record<string, unknown> = {}
+	for (const field of plugin.manifest.settings ?? []) {
+		if (field.default !== undefined) result[field.key] = field.default
+	}
+	try {
+		const raw = localStorage.getItem(settingsStorageKey(plugin.manifest.id))
+		if (raw) {
+			const parsed = JSON.parse(raw) as Record<string, unknown>
+			Object.assign(result, parsed)
+		}
+	} catch {
+		// Ignore malformed local storage
+	}
+	return result
+}
+
+function removePluginSettingVars(pluginId: string): void {
+	if (typeof document === 'undefined') return
+	const tracked = appliedSettingAttrs.get(pluginId)
+	if (!tracked) return
+	const root = document.documentElement
+	for (const attr of tracked.attrs) root.removeAttribute(attr)
+	for (const cssVar of tracked.vars) root.style.removeProperty(cssVar)
+	appliedSettingAttrs.delete(pluginId)
+}
+
+function applyPluginSettingVars(plugin: InstalledPlugin): void {
+	if (typeof document === 'undefined') return
+	const id = plugin.manifest.id
+	removePluginSettingVars(id)
+	const fields = plugin.manifest.settings ?? []
+	if (fields.length === 0) return
+
+	const values = getPluginSettings(plugin)
+	const root = document.documentElement
+	const attrs: string[] = []
+	const vars: string[] = []
+	const safeId = sanitizeToken(id)
+
+	for (const field of fields) {
+		const val = values[field.key]
+		if (val === undefined || val === null || val === '') continue
+		const strVal = String(val)
+		const safeKey = sanitizeToken(field.key)
+
+		const attrName = `data-plugin-${safeId}-${safeKey}`
+		root.setAttribute(attrName, strVal)
+		attrs.push(attrName)
+
+		const autoVar = `--noctrinth-plugin-${safeId}-${safeKey}`
+		root.style.setProperty(autoVar, strVal)
+		vars.push(autoVar)
+
+		if (field.cssVar && /^--[a-zA-Z0-9-]+$/.test(field.cssVar)) {
+			root.style.setProperty(field.cssVar, strVal)
+			vars.push(field.cssVar)
+		}
+	}
+
+	appliedSettingAttrs.set(id, { attrs, vars })
+}
+
+export function setPluginSetting(pluginId: string, key: string, value: unknown): void {
+	let current: Record<string, unknown> = {}
+	try {
+		const raw = localStorage.getItem(settingsStorageKey(pluginId))
+		if (raw) current = JSON.parse(raw) as Record<string, unknown>
+	} catch {
+		current = {}
+	}
+	current[key] = value
+	localStorage.setItem(settingsStorageKey(pluginId), JSON.stringify(current))
+
+	const plugin = installedPlugins.value.find((p) => p.manifest.id === pluginId)
+	if (plugin?.enabled) {
+		applyPluginSettingVars(plugin)
+	}
+
+	const entry = activeWorkers.get(pluginId)
+	if (entry) {
+		entry.worker.postMessage({
+			type: 'event',
+			event: 'settings:change',
+			payload: { key, value, settings: current },
+		})
+	}
+}
+
+export async function listInstalledPlugins(): Promise<InstalledPlugin[]> {
+	const list = await invoke<InstalledPlugin[]>('plugin:noctrinth-plugins|plugins_list')
+	installedPlugins.value = list
+	return list
+}
+
+export async function installPluginZip(zipPath: string): Promise<InstalledPlugin> {
+	const plugin = await invoke<InstalledPlugin>('plugin:noctrinth-plugins|plugins_install_zip', {
+		zipPath,
+	})
+	await listInstalledPlugins()
+	await activatePlugin(plugin)
+	return plugin
+}
+
+export async function installPluginRemote(
+	url: string,
+	expectedSha256: string,
+): Promise<InstalledPlugin> {
+	const plugin = await invoke<InstalledPlugin>('plugin:noctrinth-plugins|plugins_install_remote', {
+		url,
+		expectedSha256,
+	})
+	await listInstalledPlugins()
+	await activatePlugin(plugin)
+	return plugin
+}
+
+export async function installPluginById(id: string): Promise<InstalledPlugin> {
+	let entry = catalogPlugins.value.find((p) => p.id === id)
+	if (!entry) {
+		const catalog = await fetchPluginCatalog()
+		entry = catalog.plugins.find((p) => p.id === id)
+	}
+	if (!entry) {
+		throw new Error(`Plugin "${id}" was not found in the catalog`)
+	}
+	return await installPluginRemote(entry.download_url, entry.sha256)
+}
+
+export async function setPluginEnabled(id: string, enabled: boolean): Promise<void> {
+	await invoke('plugin:noctrinth-plugins|plugins_set_enabled', { id, enabled })
+	const list = await listInstalledPlugins()
+	const plugin = list.find((p) => p.manifest.id === id)
+	if (!plugin) return
+	if (enabled) {
+		await activatePlugin(plugin)
+	} else {
+		deactivatePlugin(id)
+	}
+}
+
+export async function reloadPlugin(id: string): Promise<void> {
+	const list = await listInstalledPlugins()
+	const plugin = list.find((p) => p.manifest.id === id)
+	deactivatePlugin(id)
+	if (plugin?.enabled) {
+		await activatePlugin(plugin)
+	}
+}
+
+export async function removePlugin(id: string): Promise<void> {
+	deactivatePlugin(id)
+	await invoke('plugin:noctrinth-plugins|plugins_remove', { id })
+	const { [id]: _removed, ...rest } = pluginRuntimeErrors.value
+	pluginRuntimeErrors.value = rest
+	clearPluginLogs(id)
+	await listInstalledPlugins()
+}
+
+export async function getPluginsDir(): Promise<string> {
+	return await invoke<string>('plugin:noctrinth-plugins|plugins_get_dir')
+}
+
+export async function fetchPluginCatalog(url = pluginCatalogUrl.value): Promise<PluginCatalog> {
+	const raw = await invoke<string>('plugin:noctrinth-plugins|plugins_fetch_catalog', {
+		catalogUrl: url.trim() || DEFAULT_PLUGIN_CATALOG_URL,
+	})
+	const parsed = JSON.parse(raw) as PluginCatalog
+	if (!parsed || !Array.isArray(parsed.plugins)) {
+		throw new Error('Invalid plugin catalog format')
+	}
+	catalogPlugins.value = parsed.plugins
+	return parsed
+}
+
+export async function checkPluginUpdates(): Promise<CatalogPluginEntry[]> {
+	try {
+		await fetchPluginCatalog()
+		return pluginUpdates.value
+	} catch {
+		return []
+	}
+}
+
+export async function updateAllPlugins(): Promise<InstalledPlugin[]> {
+	const targets = [...pluginUpdates.value]
+	const updated: InstalledPlugin[] = []
+	for (const entry of targets) {
+		updated.push(await installPluginRemote(entry.download_url, entry.sha256))
+	}
+	return updated
+}
+
+export function invokePluginAction(
+	pluginId: string,
+	actionId: string,
+	context: Record<string, unknown> = {},
+): void {
+	const entry = activeWorkers.get(pluginId)
+	if (!entry) return
+	entry.worker.postMessage({ type: 'action:invoke', actionId, context })
+}
+
+export async function searchPluginContentSource(
+	pluginId: string,
+	params: { query: string; projectType: string; offset: number; limit: number; sort?: string },
+): Promise<NoctrinthContentSourceSearchResult> {
+	const entry = activeWorkers.get(pluginId)
+	if (!entry) {
+		throw new Error(`Plugin "${pluginId}" is not running`)
+	}
+	return await new Promise<NoctrinthContentSourceSearchResult>((resolve, reject) => {
+		const callId = nextHostCallId++
+		const timer = setTimeout(() => {
+			if (entry.pendingHostCalls.delete(callId)) {
+				reject(new Error(`Content source "${pluginId}" timed out`))
+			}
+		}, 15_000)
+		entry.pendingHostCalls.set(callId, {
+			resolve: (v) => {
+				clearTimeout(timer)
+				resolve(v as NoctrinthContentSourceSearchResult)
+			},
+			reject: (e) => {
+				clearTimeout(timer)
+				reject(e)
+			},
+		})
+		entry.worker.postMessage({ type: 'contentSource:search', callId, params })
+	})
+}
+
+function removePluginStyles(id: string) {
+	document.querySelectorAll(`style[data-noctrinth-plugin="${CSS.escape(id)}"]`).forEach((el) => {
+		el.remove()
+	})
+}
+
+async function applyPluginStyles(plugin: InstalledPlugin) {
+	const id = plugin.manifest.id
+	removePluginStyles(id)
+	const styles = plugin.manifest.styles ?? []
+	for (const relPath of styles) {
+		const css = await invoke<string>('plugin:noctrinth-plugins|plugins_read_asset', {
+			id,
+			relPath,
+		})
+		const styleEl = document.createElement('style')
+		styleEl.setAttribute('data-noctrinth-plugin', id)
+		styleEl.setAttribute('data-noctrinth-plugin-file', relPath)
+		styleEl.textContent = css
+		document.head.appendChild(styleEl)
+	}
+}
+
+function buildWorkerBootstrap(plugin: InstalledPlugin, userCode: string): string {
+	const meta = JSON.stringify({
+		id: plugin.manifest.id,
+		version: plugin.manifest.version,
+	})
+	return `
+const __meta = ${meta};
+const __pending = new Map();
+const __listeners = new Map();
+const __actions = new Map();
+let __contentSourceSearch = null;
+let __reqId = 1;
+
+function __formatArgs(args) {
+	return args.map((a) => {
+		if (typeof a === 'string') return a;
+		try { return JSON.stringify(a); } catch { return String(a); }
+	}).join(' ');
+}
+
+for (const [fnName, level] of [['log', 'info'], ['info', 'info'], ['warn', 'warn'], ['error', 'error']]) {
+	const orig = console[fnName];
+	console[fnName] = (...args) => {
+		self.postMessage({ type: 'log', level, message: __formatArgs(args) });
+		if (orig) orig.apply(console, args);
+	};
+}
+
+function __rpc(method, payload) {
+	return new Promise((resolve, reject) => {
+		const id = __reqId++;
+		__pending.set(id, { resolve, reject });
+		self.postMessage({ type: 'rpc', id, method, payload });
+	});
+}
+
+self.addEventListener('message', async (event) => {
+	const msg = event.data;
+	if (!msg) return;
+	if (msg.type === 'rpc:result' && __pending.has(msg.id)) {
+		const p = __pending.get(msg.id);
+		__pending.delete(msg.id);
+		if (msg.error) p.reject(new Error(msg.error));
+		else p.resolve(msg.result);
+	} else if (msg.type === 'event') {
+		const handlers = __listeners.get(msg.event);
+		if (handlers) {
+			for (const fn of handlers) {
+				try { await fn(msg.payload); } catch (e) { console.error('[Noctrinth Plugin]', __meta.id, e); }
+			}
+		}
+	} else if (msg.type === 'action:invoke') {
+		const fn = __actions.get(msg.actionId);
+		if (fn) {
+			try { await fn(msg.context || {}); } catch (e) {
+				self.postMessage({ type: 'error', error: String(e && e.message ? e.message : e) });
+			}
+		}
+	} else if (msg.type === 'contentSource:search') {
+		try {
+			if (!__contentSourceSearch) throw new Error('No content source registered');
+			const result = await __contentSourceSearch(msg.params || {});
+			self.postMessage({ type: 'host:result', callId: msg.callId, result });
+		} catch (e) {
+			self.postMessage({ type: 'host:result', callId: msg.callId, error: String(e && e.message ? e.message : e) });
+		}
+	}
+});
+
+self.noctrinth = Object.freeze({
+	id: __meta.id,
+	version: __meta.version,
+	fetch: (url, init) => __rpc('fetch', { url, init }),
+	storage: Object.freeze({
+		get: (key) => __rpc('storage:get', { key }),
+		set: (key, value) => __rpc('storage:set', { key, value }),
+		remove: (key) => __rpc('storage:remove', { key }),
+	}),
+	settings: Object.freeze({
+		get: (key) => __rpc('settings:get', { key }),
+		getAll: () => __rpc('settings:getAll', {}),
+	}),
+	notify: (opts) => __rpc('notify', opts),
+	ui: Object.freeze({
+		registerAction: async (action, handler) => {
+			__actions.set(action.id, handler);
+			await __rpc('ui:registerAction', action);
+		},
+		showModal: (opts) => __rpc('ui:showModal', opts),
+	}),
+	instances: Object.freeze({
+		list: () => __rpc('instances:list', {}),
+		get: (instanceId) => __rpc('instances:get', { instanceId }),
+		getContent: (instanceId) => __rpc('instances:getContent', { instanceId }),
+		launch: (instanceId) => __rpc('instances:launch', { instanceId }),
+		removeContent: (instanceId, filePath) => __rpc('instances:removeContent', { instanceId, filePath }),
+		toggleContent: (instanceId, filePath, enabled) => __rpc('instances:toggleContent', { instanceId, filePath, enabled }),
+		getLogs: (instanceId) => __rpc('instances:getLogs', { instanceId }),
+	}),
+	contentSource: Object.freeze({
+		register: async (def) => {
+			__contentSourceSearch = def.search;
+			await __rpc('contentSource:register', {
+				label: def.label,
+				projectTypes: def.projectTypes || ['mod', 'modpack', 'resourcepack', 'shader', 'datapack'],
+			});
+		},
+	}),
+	on: (event, handler) => {
+		if (!__listeners.has(event)) __listeners.set(event, []);
+		__listeners.get(event).push(handler);
+	},
+	log: (...args) => self.postMessage({ type: 'log', level: 'info', message: __formatArgs(args) }),
+});
+
+(async () => {
+${userCode}
+})().catch((err) => {
+	self.postMessage({ type: 'error', error: String(err && err.message ? err.message : err) });
+});
+`
+}
+
+async function startPluginWorker(plugin: InstalledPlugin) {
+	const id = plugin.manifest.id
+	stopPluginWorker(id)
+	const entry = plugin.manifest.entry
+	if (!entry) return
+
+	const userCode = await invoke<string>('plugin:noctrinth-plugins|plugins_read_asset', {
+		id,
+		relPath: entry,
+	})
+	const blob = new Blob([buildWorkerBootstrap(plugin, userCode)], {
+		type: 'application/javascript',
+	})
+	const blobUrl = URL.createObjectURL(blob)
+	const worker = new Worker(blobUrl)
+	const storagePrefix = `noctrinth:plugin-storage:${id}:`
+	const allowedEvents = new Set<string>(plugin.manifest.permissions?.events ?? [])
+	const allowedInstances = new Set<string>(plugin.manifest.permissions?.instances ?? [])
+	const allowedUi = new Set<string>(plugin.manifest.permissions?.ui ?? [])
+	const pendingHostCalls = new Map<
+		number,
+		{ resolve: (v: unknown) => void; reject: (e: Error) => void }
+	>()
+
+	const requireInstancePerm = (perm: 'read' | 'write' | 'launch') => {
+		if (!allowedInstances.has(perm)) {
+			throw new Error(`Plugin "${id}" lacks permissions.instances.${perm}`)
+		}
+	}
+	const requireUiPerm = (perm: 'notifications' | 'actions' | 'modal') => {
+		if (!allowedUi.has(perm)) {
+			throw new Error(`Plugin "${id}" lacks permissions.ui.${perm}`)
+		}
+	}
+
+	worker.onmessage = async (event) => {
+		const msg = event.data
+		if (!msg) return
+		if (msg.type === 'log') {
+			const level: PluginLogEntry['level'] =
+				msg.level === 'warn' || msg.level === 'error' ? msg.level : 'info'
+			const message = String(msg.message ?? (Array.isArray(msg.args) ? msg.args.join(' ') : ''))
+			appendPluginLog(id, level, message)
+			return
+		}
+		if (msg.type === 'error') {
+			const text = String(msg.error)
+			appendPluginLog(id, 'error', text)
+			pluginRuntimeErrors.value = { ...pluginRuntimeErrors.value, [id]: text }
+			return
+		}
+		if (msg.type === 'host:result' && pendingHostCalls.has(msg.callId)) {
+			const p = pendingHostCalls.get(msg.callId)!
+			pendingHostCalls.delete(msg.callId)
+			if (msg.error) p.reject(new Error(String(msg.error)))
+			else p.resolve(msg.result)
+			return
+		}
+		if (msg.type === 'rpc') {
+			try {
+				let result: unknown = null
+				switch (msg.method) {
+					case 'fetch':
+						result = await invoke('plugin:noctrinth-plugins|plugins_http_fetch', {
+							id,
+							url: msg.payload?.url,
+							method: msg.payload?.init?.method ?? null,
+							headers: msg.payload?.init?.headers ?? null,
+							body: msg.payload?.init?.body ?? null,
+						})
+						break
+					case 'storage:get':
+						result = localStorage.getItem(storagePrefix + String(msg.payload?.key ?? ''))
+						break
+					case 'storage:set':
+						localStorage.setItem(
+							storagePrefix + String(msg.payload?.key ?? ''),
+							String(msg.payload?.value ?? ''),
+						)
+						break
+					case 'storage:remove':
+						localStorage.removeItem(storagePrefix + String(msg.payload?.key ?? ''))
+						break
+					case 'settings:get': {
+						const all = getPluginSettings(plugin)
+						result = all[String(msg.payload?.key ?? '')] ?? null
+						break
+					}
+					case 'settings:getAll':
+						result = getPluginSettings(plugin)
+						break
+					case 'notify':
+						requireUiPerm('notifications')
+						notificationHandler?.({
+							title: String(msg.payload?.title ?? plugin.manifest.name),
+							text: msg.payload?.text ? String(msg.payload.text) : undefined,
+							type: msg.payload?.type ?? 'info',
+						})
+						break
+					case 'ui:registerAction': {
+						requireUiPerm('actions')
+						const slot = msg.payload?.slot as NoctrinthActionSlot
+						if (!['instance-header', 'sidebar', 'mod-menu'].includes(slot)) {
+							throw new Error(`Invalid UI slot "${slot}"`)
+						}
+						const actionId = String(msg.payload?.id ?? '')
+						const next = pluginActions.value.filter(
+							(a) => !(a.pluginId === id && a.actionId === actionId),
+						)
+						next.push({
+							pluginId: id,
+							pluginName: plugin.manifest.name,
+							actionId,
+							slot,
+							label: String(msg.payload?.label ?? actionId),
+							tooltip: msg.payload?.tooltip ? String(msg.payload.tooltip) : undefined,
+						})
+						pluginActions.value = next
+						break
+					}
+					case 'ui:showModal': {
+						requireUiPerm('modal')
+						const payload = (msg.payload ?? {}) as NoctrinthPluginModalRequest
+						if (activePluginModal.value) {
+							resolvePluginModal(null)
+						}
+						result = await new Promise<string | null>((resolve) => {
+							activePluginModal.value = {
+								pluginId: id,
+								pluginName: plugin.manifest.name,
+								request: {
+									title: String(payload.title ?? plugin.manifest.name),
+									description: payload.description ? String(payload.description) : undefined,
+									blocks: Array.isArray(payload.blocks) ? payload.blocks : [],
+									actions: Array.isArray(payload.actions) ? payload.actions : [],
+								},
+								resolve,
+							}
+						})
+						break
+					}
+					case 'contentSource:register': {
+						if (plugin.manifest.type !== 'content-source') {
+							throw new Error('Only content-source plugins can register a content source')
+						}
+						const next = pluginContentSources.value.filter((s) => s.pluginId !== id)
+						next.push({
+							pluginId: id,
+							label: String(msg.payload?.label ?? plugin.manifest.name),
+							projectTypes: Array.isArray(msg.payload?.projectTypes)
+								? msg.payload.projectTypes.map(String)
+								: ['mod', 'modpack', 'resourcepack', 'shader', 'datapack'],
+						})
+						pluginContentSources.value = next
+						break
+					}
+					case 'instances:list':
+						requireInstancePerm('read')
+						result = await listInstances()
+						break
+					case 'instances:get':
+						requireInstancePerm('read')
+						result = await getInstance(String(msg.payload?.instanceId ?? ''))
+						break
+					case 'instances:getContent':
+						requireInstancePerm('read')
+						result = await get_content_items(String(msg.payload?.instanceId ?? ''))
+						break
+					case 'instances:getLogs':
+						requireInstancePerm('read')
+						result = await get_logs(String(msg.payload?.instanceId ?? ''), false)
+						break
+					case 'instances:launch':
+						requireInstancePerm('launch')
+						await runInstance(String(msg.payload?.instanceId ?? ''))
+						break
+					case 'instances:removeContent':
+						requireInstancePerm('write')
+						await remove_project(
+							String(msg.payload?.instanceId ?? ''),
+							String(msg.payload?.filePath ?? ''),
+						)
+						break
+					case 'instances:toggleContent':
+						requireInstancePerm('write')
+						await toggle_disable_project(
+							String(msg.payload?.instanceId ?? ''),
+							String(msg.payload?.filePath ?? ''),
+							typeof msg.payload?.enabled === 'boolean' ? msg.payload.enabled : undefined,
+						)
+						break
+					default:
+						throw new Error(`Unknown RPC method: ${msg.method}`)
+				}
+				worker.postMessage({ type: 'rpc:result', id: msg.id, result })
+			} catch (err) {
+				worker.postMessage({
+					type: 'rpc:result',
+					id: msg.id,
+					error: err instanceof Error ? err.message : String(err),
+				})
+			}
+		}
+	}
+
+	worker.onerror = (err) => {
+		const message = err.message || 'Worker execution error'
+		appendPluginLog(id, 'error', message)
+		pluginRuntimeErrors.value = {
+			...pluginRuntimeErrors.value,
+			[id]: message,
+		}
+	}
+
+	activeWorkers.set(id, { worker, blobUrl, events: allowedEvents, pendingHostCalls })
+}
+
+function stopPluginWorker(id: string) {
+	const entry = activeWorkers.get(id)
+	if (entry) {
+		for (const p of entry.pendingHostCalls.values()) {
+			p.reject(new Error(`Plugin "${id}" stopped`))
+		}
+		entry.worker.terminate()
+		URL.revokeObjectURL(entry.blobUrl)
+		activeWorkers.delete(id)
+	}
+	if (activePluginModal.value?.pluginId === id) {
+		resolvePluginModal(null)
+	}
+	pluginActions.value = pluginActions.value.filter((a) => a.pluginId !== id)
+	pluginContentSources.value = pluginContentSources.value.filter((s) => s.pluginId !== id)
+}
+
+export async function activatePlugin(plugin: InstalledPlugin): Promise<void> {
+	const id = plugin.manifest.id
+	const { [id]: _removed, ...rest } = pluginRuntimeErrors.value
+	pluginRuntimeErrors.value = rest
+
+	try {
+		applyPluginSettingVars(plugin)
+		await applyPluginStyles(plugin)
+		await startPluginWorker(plugin)
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error)
+		appendPluginLog(id, 'error', message)
+		pluginRuntimeErrors.value = {
+			...pluginRuntimeErrors.value,
+			[id]: message,
+		}
+	}
+}
+
+export function deactivatePlugin(id: string): void {
+	removePluginSettingVars(id)
+	removePluginStyles(id)
+	stopPluginWorker(id)
+}
+
+export function emitPluginEvent(
+	event: NoctrinthPluginEvent,
+	payload: Record<string, unknown>,
+): void {
+	for (const entry of activeWorkers.values()) {
+		if (entry.events.has(event)) {
+			entry.worker.postMessage({ type: 'event', event, payload })
+		}
+	}
+}
+
+let initialized = false
+
+export async function initNoctrinthPlugins(): Promise<void> {
+	if (initialized) return
+	initialized = true
+	applyQuickCss()
+	try {
+		const list = await listInstalledPlugins()
+		await Promise.all(list.filter((p) => p.enabled).map((p) => activatePlugin(p)))
+		if (list.length > 0) {
+			void checkPluginUpdates()
+		}
+	} catch (error) {
+		console.warn('Could not initialize Noctrinth plugins:', error)
+	}
+}

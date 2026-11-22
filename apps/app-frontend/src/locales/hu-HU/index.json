@@ -1427,9 +1427,6 @@
   "app.news.title": {
     "message": "Hírek"
   },
-  "app.news.view-all": {
-    "message": "Összes hír"
-  },
   "app.notification.warning": {
     "message": "Figyelmeztetés"
   },

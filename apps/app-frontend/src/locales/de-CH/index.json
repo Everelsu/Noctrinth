@@ -1598,9 +1598,6 @@
   "app.news.title": {
     "message": "Neuigkeiten"
   },
-  "app.news.view-all": {
-    "message": "Alle Neuigkeiten anzeigen"
-  },
   "app.notification.warning": {
     "message": "Warnung"
   },

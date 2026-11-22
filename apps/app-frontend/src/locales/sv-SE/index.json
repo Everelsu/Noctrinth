@@ -1544,9 +1544,6 @@
   "app.news.title": {
     "message": "Nyheter"
   },
-  "app.news.view-all": {
-    "message": "Se alla nyheter"
-  },
   "app.notification.warning": {
     "message": "Varning"
   },

@@ -13,6 +13,7 @@ pub mod metadata;
 pub mod minecraft_skins;
 pub mod mr_auth;
 pub mod noctrinth_background;
+pub mod noctrinth_plugins;
 pub mod noctrinth_clipboard;
 pub mod noctrinth_crash;
 pub mod noctrinth_curseforge;

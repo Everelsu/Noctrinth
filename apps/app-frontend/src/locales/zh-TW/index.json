@@ -1565,9 +1565,6 @@
   "app.news.title": {
     "message": "新聞"
   },
-  "app.news.view-all": {
-    "message": "查看所有新聞"
-  },
   "app.notification.warning": {
     "message": "警告"
   },

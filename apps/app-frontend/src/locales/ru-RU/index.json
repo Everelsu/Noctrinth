@@ -1559,9 +1559,6 @@
   "app.news.title": {
     "message": "Новости"
   },
-  "app.news.view-all": {
-    "message": "Посмотреть все новости"
-  },
   "app.notification.warning": {
     "message": "Внимание"
   },

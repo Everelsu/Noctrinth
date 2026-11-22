@@ -78,6 +78,16 @@ pub async fn handle_url(sublink: &str) -> crate::Result<CommandPayload> {
         Some(("server", id)) => {
             CommandPayload::InstallServer { id: id.to_string() }
         }
+        // /plugin/install/{id} or /plugin/{id}
+        Some(("plugin", rest)) => {
+            let id = rest.strip_prefix("install/").unwrap_or(rest);
+            let (id, _) = id.split_once('?').unwrap_or((id, ""));
+            let id = id.trim_matches('/');
+            if id.is_empty() {
+                return Err(ErrorKind::InputError("missing plugin ID".to_string()).into());
+            }
+            CommandPayload::InstallPlugin { id: id.to_string() }
+        }
         Some(("hosting", path)) => {
             let (server_id, world_id) = path.split_once('/').ok_or(
                 ErrorKind::InputError("missing hosting world ID".to_string()),

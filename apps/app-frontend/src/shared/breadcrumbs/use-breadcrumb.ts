@@ -1,4 +1,4 @@
-import { computed, type ComputedRef, toValue, watch } from 'vue'
+import { computed, type ComputedRef, onActivated, toValue, watch } from 'vue'
 
 import {
 	type BreadcrumbDefinition,
@@ -13,6 +13,7 @@ function watchBreadcrumbIdentity(definition: BreadcrumbDefinition, handle: Bread
 		() => handle.activate(),
 		{ flush: 'sync' },
 	)
+	onActivated(() => handle.activate())
 }
 
 export function useRootBreadcrumb(definition: BreadcrumbDefinition): BreadcrumbHandle {

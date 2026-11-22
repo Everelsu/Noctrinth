@@ -1589,9 +1589,6 @@
   "app.news.title": {
     "message": "Новини"
   },
-  "app.news.view-all": {
-    "message": "Переглянути всі новини"
-  },
   "app.notification.warning": {
     "message": "Попередження"
   },

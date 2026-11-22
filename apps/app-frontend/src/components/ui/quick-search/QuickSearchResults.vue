@@ -18,7 +18,6 @@ import { computed, nextTick, ref, toRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import ModrinthPlatformIcon from '@/assets/icons/modrinth-platform.svg'
-
 import { handleSevereError } from '@/composables/use-error.js'
 import { type QuickSearchResult, useQuickSearch } from '@/composables/use-quick-search'
 import { curseforgeIdOf, isCurseforgeContent } from '@/helpers/curseforge'

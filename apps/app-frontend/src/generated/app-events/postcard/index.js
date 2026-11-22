@@ -275,6 +275,13 @@ function deserialize_COMMAND_PAYLOAD(d) {
                 world_id: d.deserialize_string()
             }
         };
+    case 9:
+        return {
+            tag: "InstallPlugin",
+            value: {
+                id: d.deserialize_string()
+            }
+        };
     default:
         throw "variant not implemented"
     }

@@ -95,12 +95,10 @@
 						@pending="subpagePending = true"
 						@resolve="subpagePending = false"
 					>
-						<KeepAlive>
-							<component
-								:is="Component"
-								:key="`${instance.id}:${String(tabRoute.name ?? tabRoute.path)}`"
-							/>
-						</KeepAlive>
+						<component
+							:is="Component"
+							:key="`${instance.id}:${String(tabRoute.name ?? tabRoute.path)}`"
+						/>
 					</Suspense>
 				</template>
 			</RouterView>
@@ -571,6 +569,12 @@ const renderMode = computed<'scroll' | 'fixed'>(() =>
 	route.meta.renderMode === 'fixed' ? 'fixed' : 'scroll',
 )
 const isFixedRender = computed(() => renderMode.value === 'fixed')
+watch(isFixedRender, (fixed) => {
+	if (fixed) {
+		const viewport = document.querySelector('.app-viewport')
+		if (viewport) viewport.scrollTop = 0
+	}
+})
 const currentUserCanUseSharedInstances = sharedInstanceState.currentUserCanUseSharedInstances
 const showShareTab = computed(() => {
 	const linkType = instance.value?.link?.type

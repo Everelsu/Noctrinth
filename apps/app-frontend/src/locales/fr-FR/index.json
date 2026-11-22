@@ -1565,9 +1565,6 @@
   "app.news.title": {
     "message": "Nouveautés"
   },
-  "app.news.view-all": {
-    "message": "Voir toutes les nouveautés"
-  },
   "app.notification.warning": {
     "message": "Avertissement"
   },

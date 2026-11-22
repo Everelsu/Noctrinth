@@ -773,6 +773,105 @@
 	"app.icon-crop.zoom": {
 		"message": "Масштаб"
 	},
+	"app.plugins.action.install": {
+		"message": "Установить"
+	},
+	"app.plugins.action.install-zip": {
+		"message": "Установить из .zip"
+	},
+	"app.plugins.action.open-folder": {
+		"message": "Папка плагинов"
+	},
+	"app.plugins.action.refresh": {
+		"message": "Обновить"
+	},
+	"app.plugins.action.update": {
+		"message": "Обновить"
+	},
+	"app.plugins.badge.installed": {
+		"message": "Установлен"
+	},
+	"app.plugins.badge.local": {
+		"message": "Локальный"
+	},
+	"app.plugins.catalog.empty": {
+		"message": "Ничего не найдено."
+	},
+	"app.plugins.catalog.error": {
+		"message": "Не удалось загрузить каталог плагинов."
+	},
+	"app.plugins.catalog.reset": {
+		"message": "Сбросить"
+	},
+	"app.plugins.catalog.search": {
+		"message": "Поиск плагинов..."
+	},
+	"app.plugins.catalog.url": {
+		"message": "URL индекса каталога"
+	},
+	"app.plugins.description": {
+		"message": "Расширяйте Noctrinth темами, источниками контента и изолированными расширениями. Плагины из каталога проверяются по SHA-256."
+	},
+	"app.plugins.empty.installed.description": {
+		"message": "Установите проверенный плагин из каталога или загрузите локальный .zip-архив."
+	},
+	"app.plugins.empty.installed.heading": {
+		"message": "Плагины не установлены"
+	},
+	"app.plugins.permissions.domains": {
+		"message": "Сеть: {domains}"
+	},
+	"app.plugins.permissions.events": {
+		"message": "События: {events}"
+	},
+	"app.plugins.permissions.instances": {
+		"message": "Сборки: {perms}"
+	},
+	"app.plugins.permissions.ui": {
+		"message": "Интерфейс: {perms}"
+	},
+	"app.plugins.settings": {
+		"message": "Настройки плагина"
+	},
+	"app.plugins.remove.confirm": {
+		"message": "Удалить"
+	},
+	"app.plugins.remove.description": {
+		"message": "Удалить «{name}» из Noctrinth? Файлы плагина будут удалены."
+	},
+	"app.plugins.remove.title": {
+		"message": "Удалить плагин?"
+	},
+	"app.plugins.tab.catalog": {
+		"message": "Каталог"
+	},
+	"app.plugins.tab.installed": {
+		"message": "Установленные"
+	},
+	"app.plugins.title": {
+		"message": "Плагины"
+	},
+	"app.plugins.toast.installed": {
+		"message": "Установлен плагин «{name}»"
+	},
+	"app.plugins.toast.removed": {
+		"message": "Удалён плагин «{name}»"
+	},
+	"app.plugins.type.all": {
+		"message": "Все"
+	},
+	"app.plugins.type.content-source": {
+		"message": "Источник"
+	},
+	"app.plugins.type.extension": {
+		"message": "Расширение"
+	},
+	"app.plugins.type.theme": {
+		"message": "Тема"
+	},
+	"app.settings.tabs.plugins": {
+		"message": "Плагины"
+	},
 	"app.curseforge.pending.all-done": {
 		"message": "Всё установлено"
 	},
@@ -2488,5 +2587,47 @@
 	},
 	"noctrinth.instance.logs.open-folder": {
 		"message": "Папка логов"
+	},
+	"app.plugins.disclaimer.header": {
+		"message": "Сторонние плагины"
+	},
+	"app.plugins.disclaimer.body": {
+		"message": "Плагины создаются сторонними авторами. Noctrinth не несёт ответственности за безопасность, стабильность, потерю данных или вредоносный код в установленных плагинах. Устанавливайте плагины только из источников, которым доверяете."
+	},
+	"app.plugins.action.browse-catalog": {
+		"message": "Открыть каталог"
+	},
+	"app.plugins.catalog.url.description": {
+		"message": "JSON-индекс, используемый для поиска и проверки плагинов сообщества."
+	},
+	"app.plugins.action.reload": {
+		"message": "Перезагрузить плагин"
+	},
+	"app.plugins.toast.reloaded": {
+		"message": "Плагин «{name}» перезагружен"
+	},
+	"app.plugins.action.update-all": {
+		"message": "Обновить все ({count})"
+	},
+	"app.plugins.toast.updated-all": {
+		"message": "Обновлено плагинов: {count}"
+	},
+	"app.plugins.action.logs": {
+		"message": "Логи плагина"
+	},
+	"app.plugins.logs.empty": {
+		"message": "Логов пока нет."
+	},
+	"app.plugins.logs.clear": {
+		"message": "Очистить"
+	},
+	"app.plugins.quick-css.title": {
+		"message": "Свой CSS (Quick CSS)"
+	},
+	"app.plugins.quick-css.description": {
+		"message": "Пользовательский CSS, применяемый мгновенно поверх текущей темы."
+	},
+	"app.plugins.quick-css.clear": {
+		"message": "Очистить"
 	}
 }

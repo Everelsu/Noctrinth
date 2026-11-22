@@ -133,6 +133,7 @@
 		"window-icon:default",
 		"noctrinth-offline-auth:default",
 		"noctrinth-background:default",
+		"noctrinth-plugins:default",
 		"noctrinth-clipboard:default",
 		"noctrinth-fonts:default",
 		"noctrinth-crash:default",

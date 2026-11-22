@@ -132,6 +132,24 @@
 					</SplitButton>
 				</Transition>
 
+				<Button
+					v-for="action in headerPluginActions"
+					:key="`${action.pluginId}:${action.actionId}`"
+					v-tooltip="action.tooltip"
+					type="outlined"
+					size="lg"
+					native-type="button"
+					@click="
+						invokePluginAction(action.pluginId, action.actionId, {
+							instanceId: instance.id,
+							instanceName: instance.name,
+							gameVersion: instance.game_version,
+							loader: instance.loader,
+						})
+					"
+				>
+					{{ action.label }}
+				</Button>
 				<IconButton
 					v-tooltip="formatMessage(messages.instanceSettings)"
 					size="xl"
@@ -194,9 +212,14 @@ import { computed } from 'vue'
 
 import NoctrinthLaunchButton, { type LaunchState } from '@/components/ui/NoctrinthLaunchButton.vue'
 import { libraryInstanceMessages } from '@/features/library/messages'
+import { invokePluginAction, pluginActions } from '@/helpers/noctrinth-plugins'
 import type { GameInstance } from '@/helpers/types'
 
 import InstanceHeaderServerMetadata from './instance-page-header-server-metadata.vue'
+
+const headerPluginActions = computed(() =>
+	pluginActions.value.filter((a) => a.slot === 'instance-header'),
+)
 
 const messages = defineMessages({
 	createShortcut: {

@@ -1598,9 +1598,6 @@
   "app.news.title": {
     "message": "뉴스"
   },
-  "app.news.view-all": {
-    "message": "모든 뉴스 보기"
-  },
   "app.notification.warning": {
     "message": "경고"
   },

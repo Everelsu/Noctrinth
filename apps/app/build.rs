@@ -611,6 +611,24 @@ fn main() {
                     ),
             )
             .plugin(
+                "noctrinth-plugins",
+                InlinedPlugin::new()
+                    .commands(&[
+                        "plugins_list",
+                        "plugins_install_zip",
+                        "plugins_install_remote",
+                        "plugins_set_enabled",
+                        "plugins_remove",
+                        "plugins_read_asset",
+                        "plugins_http_fetch",
+                        "plugins_fetch_catalog",
+                        "plugins_get_dir",
+                    ])
+                    .default_permission(
+                        DefaultPermissionRule::AllowAllCommands,
+                    ),
+            )
+            .plugin(
                 "noctrinth-fonts",
                 InlinedPlugin::new()
                     .commands(&["fonts_installed_families"])

@@ -434,6 +434,9 @@ pub enum CommandPayload {
         server_id: String,
         world_id: String,
     },
+    InstallPlugin {
+        id: String,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone)]

@@ -222,7 +222,9 @@ const messages = defineMessages({
 					{{ formatMessage(messages.modernJavaBeta) }}
 				</span>
 			</h2>
-			<div class="flex gap-3 items-start p-4 rounded-2xl border border-solid border-surface-5 bg-surface-3">
+			<div
+				class="flex gap-3 items-start p-4 rounded-2xl border border-solid border-surface-5 bg-surface-3"
+			>
 				<div
 					class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-4 border border-solid border-surface-5 p-2 mt-1 shrink-0 [&_svg]:h-full [&_svg]:w-full"
 				>

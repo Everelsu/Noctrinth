@@ -107,6 +107,12 @@
 	"app.appearance-settings.font.title": {
 		"message": "Шрифт інтерфейсу"
 	},
+	"app.browse.filters.hide": {
+		"message": "Сховати фільтри"
+	},
+	"app.browse.filters.show": {
+		"message": "Фільтри"
+	},
 	"app.browse.source.label": {
 		"message": "Де шукати"
 	},
@@ -917,6 +923,27 @@
 	"app.hosting.title": {
 		"message": "Хостинг"
 	},
+	"app.icon-crop.apply": {
+		"message": "Застосувати"
+	},
+	"app.icon-crop.cancel": {
+		"message": "Скасувати"
+	},
+	"app.icon-crop.header": {
+		"message": "Обрізати іконку збірки"
+	},
+	"app.icon-crop.hint": {
+		"message": "Перетягуйте зображення та масштабуйте коліщатком або повзунком."
+	},
+	"app.icon-crop.reset": {
+		"message": "Скинути"
+	},
+	"app.icon-crop.use-original": {
+		"message": "Без обрізки"
+	},
+	"app.icon-crop.zoom": {
+		"message": "Масштаб"
+	},
 	"app.instance.add-content.from-file": {
 		"message": "Додати з файлу"
 	},
@@ -1313,6 +1340,102 @@
 	"app.notifications.version-for": {
 		"message": "для"
 	},
+	"app.plugins.action.install": {
+		"message": "Встановити"
+	},
+	"app.plugins.action.install-zip": {
+		"message": "Встановити з .zip"
+	},
+	"app.plugins.action.open-folder": {
+		"message": "Папка плагінів"
+	},
+	"app.plugins.action.refresh": {
+		"message": "Оновити"
+	},
+	"app.plugins.action.update": {
+		"message": "Оновити"
+	},
+	"app.plugins.badge.installed": {
+		"message": "Встановлено"
+	},
+	"app.plugins.badge.local": {
+		"message": "Локальний"
+	},
+	"app.plugins.catalog.empty": {
+		"message": "Нічого не знайдено."
+	},
+	"app.plugins.catalog.error": {
+		"message": "Не вдалося завантажити каталог плагінів."
+	},
+	"app.plugins.catalog.reset": {
+		"message": "Скинути"
+	},
+	"app.plugins.catalog.search": {
+		"message": "Пошук плагінів..."
+	},
+	"app.plugins.catalog.url": {
+		"message": "URL індексу каталогу"
+	},
+	"app.plugins.description": {
+		"message": "Розширюйте Noctrinth темами, джерелами контенту та ізольованими розширеннями. Плагіни з каталогу перевіряються за SHA-256."
+	},
+	"app.plugins.empty.installed.description": {
+		"message": "Встановіть перевірений плагін із каталогу або завантажте локальний .zip-архів."
+	},
+	"app.plugins.empty.installed.heading": {
+		"message": "Плагіни не встановлено"
+	},
+	"app.plugins.permissions.domains": {
+		"message": "Мережа: {domains}"
+	},
+	"app.plugins.permissions.events": {
+		"message": "Події: {events}"
+	},
+	"app.plugins.permissions.instances": {
+		"message": "Збірки: {perms}"
+	},
+	"app.plugins.permissions.ui": {
+		"message": "Інтерфейс: {perms}"
+	},
+	"app.plugins.remove.confirm": {
+		"message": "Видалити"
+	},
+	"app.plugins.remove.description": {
+		"message": "Видалити «{name}» з Noctrinth? Файли плагіна будуть видалені."
+	},
+	"app.plugins.remove.title": {
+		"message": "Видалити плагін?"
+	},
+	"app.plugins.settings": {
+		"message": "Налаштування плагіна"
+	},
+	"app.plugins.tab.catalog": {
+		"message": "Каталог"
+	},
+	"app.plugins.tab.installed": {
+		"message": "Встановлені"
+	},
+	"app.plugins.title": {
+		"message": "Плагіни"
+	},
+	"app.plugins.toast.installed": {
+		"message": "Встановлено плагін «{name}»"
+	},
+	"app.plugins.toast.removed": {
+		"message": "Видалено плагін «{name}»"
+	},
+	"app.plugins.type.all": {
+		"message": "Усі"
+	},
+	"app.plugins.type.content-source": {
+		"message": "Джерело"
+	},
+	"app.plugins.type.extension": {
+		"message": "Розширення"
+	},
+	"app.plugins.type.theme": {
+		"message": "Тема"
+	},
 	"app.project.copy-link.copied": {
 		"message": "Посилання скопійовано до буфера обміну"
 	},
@@ -1426,6 +1549,9 @@
 	},
 	"app.settings.tabs.curseforge": {
 		"message": "CurseForge"
+	},
+	"app.settings.tabs.plugins": {
+		"message": "Плагіни"
 	},
 	"app.skins.cape-from": {
 		"message": "Плащ від {source}"
@@ -2365,5 +2491,47 @@
 	},
 	"settings.language.coverage.app-tooltip": {
 		"message": "Близько {percentage}% інтерфейсу Noctrinth доступно цією мовою."
+	},
+	"app.plugins.disclaimer.header": {
+		"message": "Сторонні плагіни"
+	},
+	"app.plugins.disclaimer.body": {
+		"message": "Плагіни створюються сторонніми авторами. Noctrinth не несе відповідальності за безпеку, стабільність, втрату даних або шкідливий код у встановлених плагінах. Встановлюйте плагіни лише з надійних джерел."
+	},
+	"app.plugins.action.browse-catalog": {
+		"message": "Відкрити каталог"
+	},
+	"app.plugins.catalog.url.description": {
+		"message": "JSON-індекс для пошуку та перевірки плагінів спільноти."
+	},
+	"app.plugins.action.reload": {
+		"message": "Перезавантажити плагін"
+	},
+	"app.plugins.toast.reloaded": {
+		"message": "Плагін «{name}» перезавантажено"
+	},
+	"app.plugins.action.update-all": {
+		"message": "Оновити всі ({count})"
+	},
+	"app.plugins.toast.updated-all": {
+		"message": "Оновлено плагінів: {count}"
+	},
+	"app.plugins.action.logs": {
+		"message": "Логи плагіна"
+	},
+	"app.plugins.logs.empty": {
+		"message": "Логів поки немає."
+	},
+	"app.plugins.logs.clear": {
+		"message": "Очистити"
+	},
+	"app.plugins.quick-css.title": {
+		"message": "Власний CSS (Quick CSS)"
+	},
+	"app.plugins.quick-css.description": {
+		"message": "Користувацький CSS, що застосовується миттєво поверх поточної теми."
+	},
+	"app.plugins.quick-css.clear": {
+		"message": "Очистити"
 	}
 }

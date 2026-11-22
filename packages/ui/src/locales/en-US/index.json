@@ -395,6 +395,9 @@
   "console.actions.expand": {
     "defaultMessage": "Expand"
   },
+  "console.actions.open-file": {
+    "defaultMessage": "Open file"
+  },
   "console.actions.share": {
     "defaultMessage": "Share"
   },

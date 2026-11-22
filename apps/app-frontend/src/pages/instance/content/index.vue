@@ -194,6 +194,7 @@ import {
 } from '@/helpers/instance'
 import { type InstanceContentData, loadInstanceContentData } from '@/helpers/instance-content'
 import { listenNativeDragDrop } from '@/helpers/native-drag-drop'
+import { invokePluginAction, pluginActions } from '@/helpers/noctrinth-plugins'
 import { get as getSettings, set as setSettings } from '@/helpers/settings'
 import { set_synced_pack_enabled, syncedPackKeys } from '@/helpers/synced-packs'
 import type { CacheBehaviour } from '@/helpers/types'
@@ -1761,6 +1762,25 @@ function getOverflowOptions(item: ContentItem): ButtonMenuOption[] {
 				action: () => handleContentFreeze(item, !item.locked),
 			},
 		)
+	}
+
+	const modMenuPluginActions = pluginActions.value.filter((a) => a.slot === 'mod-menu')
+	if (modMenuPluginActions.length > 0) {
+		options.push({ type: 'divider' })
+		for (const action of modMenuPluginActions) {
+			options.push({
+				id: `plugin:${action.pluginId}:${action.actionId}`,
+				label: action.label,
+				action: () =>
+					invokePluginAction(action.pluginId, action.actionId, {
+						instanceId: instance.value.id,
+						filePath: item.file_path,
+						fileName: item.file_name,
+						projectId: item.project?.id ?? null,
+						projectTitle: item.project?.title ?? null,
+					}),
+			})
+		}
 	}
 
 	return options

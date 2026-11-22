@@ -1583,9 +1583,6 @@
   "app.news.title": {
     "message": "新闻"
   },
-  "app.news.view-all": {
-    "message": "查看所有新闻"
-  },
   "app.notification.warning": {
     "message": "警告"
   },

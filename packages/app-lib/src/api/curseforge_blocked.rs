@@ -130,6 +130,7 @@ pub async fn settle(
     let found = find_on_disk(&files, roots).await;
 
     let mut pending = Vec::new();
+    let mut still_missing = Vec::new();
     for file in files {
         let installed = match found.get(&file.file_id) {
             Some(path) => install_from_path(instance_id, &file, path, state)
@@ -144,7 +145,33 @@ pub async fn settle(
                 .is_ok(),
             None => false,
         };
-        if installed {
+        if !installed {
+            still_missing.push(file);
+        }
+    }
+
+    // Many mods that opt out of CurseForge 3rd-party distribution are officially
+    // published on Modrinth with the exact same JAR (matching SHA-1). Look them
+    // up in one batch and install directly from Modrinth before asking the user.
+    let modrinth_urls = find_on_modrinth_by_sha1(&still_missing, state).await;
+    for file in still_missing {
+        let installed_from_modrinth = match file
+            .sha1
+            .as_deref()
+            .and_then(|sha1| modrinth_urls.get(&sha1.to_ascii_lowercase()))
+        {
+            Some(url) => install_from_modrinth_url(instance_id, &file, url, state)
+                .await
+                .inspect_err(|error| {
+                    tracing::warn!(
+                        "Found {} on Modrinth by SHA-1 but could not install it: {error}",
+                        file.file_name
+                    );
+                })
+                .is_ok(),
+            None => false,
+        };
+        if installed_from_modrinth {
             continue;
         }
         if let Err(error) = write_pending(instance_id, &file, state).await {
@@ -156,6 +183,94 @@ pub async fn settle(
         pending.push(PendingFile::from(&file));
     }
     pending
+}
+
+async fn find_on_modrinth_by_sha1(
+    files: &[BlockedFile],
+    state: &State,
+) -> HashMap<String, String> {
+    let hashes: Vec<String> = files
+        .iter()
+        .filter_map(|f| f.sha1.as_deref().map(str::to_ascii_lowercase))
+        .collect::<HashSet<_>>()
+        .into_iter()
+        .collect();
+    if hashes.is_empty() {
+        return HashMap::new();
+    }
+    let hash_refs: Vec<&str> = hashes.iter().map(String::as_str).collect();
+    let Ok(cached_files) = crate::state::CachedEntry::get_file_many(
+        &hash_refs,
+        None,
+        &state.pool,
+        &state.api_semaphore,
+    )
+    .await
+    else {
+        return HashMap::new();
+    };
+    if cached_files.is_empty() {
+        return HashMap::new();
+    }
+    let version_ids: Vec<&str> = cached_files
+        .iter()
+        .map(|f| f.version_id.as_str())
+        .collect::<HashSet<_>>()
+        .into_iter()
+        .collect();
+    let Ok(versions) = crate::state::CachedEntry::get_version_many(
+        &version_ids,
+        None,
+        &state.pool,
+        &state.api_semaphore,
+    )
+    .await
+    else {
+        return HashMap::new();
+    };
+
+    let mut urls = HashMap::new();
+    for version in versions {
+        for vfile in version.files {
+            if let Some(sha1) = vfile.hashes.get("sha1") {
+                urls.insert(sha1.to_ascii_lowercase(), vfile.url);
+            }
+        }
+    }
+    urls
+}
+
+async fn install_from_modrinth_url(
+    instance_id: &str,
+    file: &BlockedFile,
+    url: &str,
+    state: &State,
+) -> crate::Result<()> {
+    let bytes = crate::util::fetch::fetch(
+        url,
+        file.sha1.as_deref(),
+        None,
+        None,
+        &state.fetch_semaphore,
+        &state.pool,
+    )
+    .await?;
+    let temp_dir = state.directories.caches_dir().join("cf-modrinth-fallback");
+    tokio::fs::create_dir_all(&temp_dir).await?;
+    let temp_path = temp_dir.join(format!(
+        "{}-{}",
+        file.file_id,
+        sanitize_filename(&file.file_name)
+    ));
+    tokio::fs::write(&temp_path, &bytes).await?;
+    let result = install_from_path(instance_id, file, &temp_path, state).await;
+    let _ = tokio::fs::remove_file(&temp_path).await;
+    result?;
+    tracing::info!(
+        "Installed CurseForge-restricted {} automatically via official Modrinth SHA-1 match",
+        file.file_name
+    );
+    Ok(())
 }
 
 /// What the instance is still waiting on.

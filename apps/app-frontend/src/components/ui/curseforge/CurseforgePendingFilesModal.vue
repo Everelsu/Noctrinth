@@ -123,14 +123,20 @@ defineExpose({
 	},
 })
 
+function onWindowFocus() {
+	void check()
+}
+
 function startPolling() {
 	stopPolling()
 	pollTimer = setInterval(() => void check(), POLL_INTERVAL_MS)
+	window.addEventListener('focus', onWindowFocus)
 }
 
 function stopPolling() {
 	if (pollTimer) clearInterval(pollTimer)
 	pollTimer = null
+	window.removeEventListener('focus', onWindowFocus)
 }
 
 async function check() {
@@ -142,7 +148,12 @@ async function check() {
 		const arrived = [...pendingIds.value].some((id) => !stillPending.has(id))
 		pendingIds.value = stillPending
 		if (arrived) emit('installed')
-		if (allDone.value) stopPolling()
+		if (allDone.value) {
+			stopPolling()
+			setTimeout(() => {
+				if (allDone.value) modal.value?.hide()
+			}, 1200)
+		}
 	} catch (err) {
 		stopPolling()
 		handleError(err)

@@ -114,6 +114,7 @@
 			<Transition name="floating-expand" :css="animateDropdown">
 				<div
 					v-if="shouldRenderDropdown"
+					:id="listbox ? listboxId : undefined"
 					ref="dropdownRef"
 					class="fixed z-[100005] flex flex-col overflow-hidden rounded-[14px] bg-surface-4 border border-solid border-surface-5"
 					:class="[
@@ -121,7 +122,6 @@
 						openDirection === 'up' ? 'shadow-[0_-25px_50px_-12px_rgb(0,0,0,0.25)]' : 'shadow-2xl',
 					]"
 					:style="[dropdownStyle, { transformOrigin: dropdownTransformOrigin }]"
-					:id="listbox ? listboxId : undefined"
 					:role="listbox ? 'listbox' : 'menu'"
 					@pointerdown.stop
 					@mousedown.stop
@@ -146,10 +146,10 @@
 									<component
 										:is="item.type === 'link' ? 'a' : 'span'"
 										v-else
+										:id="listbox ? `${listboxId}-${index}` : undefined"
 										:ref="(el: HTMLElement) => setOptionRef(el as HTMLElement, index)"
 										:href="item.type === 'link' && !item.disabled ? item.href : undefined"
 										:target="item.type === 'link' && !item.disabled ? item.target : undefined"
-										:id="listbox ? `${listboxId}-${index}` : undefined"
 										:role="listbox ? 'option' : 'menuitem'"
 										:aria-selected="listbox && item.value === modelValue"
 										:aria-disabled="item.disabled || undefined"

@@ -1568,9 +1568,6 @@
   "app.news.title": {
     "message": "Haberler"
   },
-  "app.news.view-all": {
-    "message": "Tüm haberleri göster"
-  },
   "app.notification.warning": {
     "message": "Uyarı"
   },

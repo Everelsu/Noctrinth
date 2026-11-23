@@ -1,27 +1,48 @@
 <script setup lang="ts">
 import { PlugIcon } from '@modrinth/assets'
-import { Button, NewModal, ProgressBar } from '@modrinth/ui'
+import { Button, Input, NewModal, ProgressBar } from '@modrinth/ui'
 import { ref, watch } from 'vue'
 
 import { activePluginModal, resolvePluginModal } from '@/helpers/noctrinth-plugins'
 
 const modalRef = ref<InstanceType<typeof NewModal> | null>(null)
+const formValues = ref<Record<string, string>>({})
 
 watch(
 	activePluginModal,
-	(next) => {
-		if (next) modalRef.value?.show()
-		else modalRef.value?.hide()
+	(next, prev) => {
+		if (next) {
+			if (!prev || prev.pluginId !== next.pluginId || prev.mode !== next.mode) {
+				const initial: Record<string, string> = {}
+				for (const block of next.request.blocks ?? []) {
+					if (block.type === 'input') {
+						initial[block.id] = block.value ?? ''
+					}
+				}
+				formValues.value = initial
+			} else {
+				const merged = { ...formValues.value }
+				for (const block of next.request.blocks ?? []) {
+					if (block.type === 'input' && !(block.id in merged)) {
+						merged[block.id] = block.value ?? ''
+					}
+				}
+				formValues.value = merged
+			}
+			modalRef.value?.show()
+		} else {
+			modalRef.value?.hide()
+		}
 	},
 	{ flush: 'post' },
 )
 
 function handleAction(actionId: string) {
-	resolvePluginModal(actionId)
+	resolvePluginModal(actionId, { ...formValues.value })
 }
 
 function handleHide() {
-	resolvePluginModal(null)
+	resolvePluginModal(null, { ...formValues.value })
 }
 </script>
 
@@ -44,7 +65,7 @@ function handleHide() {
 
 			<div
 				v-if="activePluginModal.request.blocks?.length"
-				class="flex max-h-[50vh] flex-col gap-3 overflow-y-auto"
+				class="flex max-h-[55vh] flex-col gap-3 overflow-y-auto"
 			>
 				<template v-for="(block, idx) in activePluginModal.request.blocks" :key="idx">
 					<p v-if="block.type === 'text'" class="m-0 text-sm text-primary whitespace-pre-wrap">
@@ -73,6 +94,28 @@ function handleHide() {
 							<span v-if="item.subtitle" class="text-xs text-secondary">{{ item.subtitle }}</span>
 						</div>
 					</div>
+					<div v-else-if="block.type === 'input'" class="flex flex-col gap-1.5">
+						<label v-if="block.label" class="text-xs font-medium text-contrast">
+							{{ block.label }}
+						</label>
+						<textarea
+							v-if="block.multiline"
+							v-model="formValues[block.id]"
+							rows="4"
+							:placeholder="block.placeholder"
+							class="w-full resize-y rounded-xl border border-solid border-surface-5 bg-surface-2 p-3 text-sm text-contrast outline-none focus:border-brand"
+						/>
+						<Input
+							v-else
+							v-model="formValues[block.id]"
+							:type="block.secret ? 'password' : 'text'"
+							:placeholder="block.placeholder"
+						/>
+					</div>
+					<hr
+						v-else-if="block.type === 'divider'"
+						class="my-1 border-0 border-t border-solid border-surface-5"
+					/>
 				</template>
 			</div>
 

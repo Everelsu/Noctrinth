@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/core'
+import { listen } from '@tauri-apps/api/event'
 import { useStorage } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 
@@ -14,16 +15,20 @@ import { get_logs } from '@/helpers/logs.js'
 
 import type {
 	ActivePluginModal,
+	ActivePluginPanel,
 	CatalogPluginEntry,
 	InstalledPlugin,
 	NoctrinthActionSlot,
 	NoctrinthContentSourceSearchResult,
 	NoctrinthPluginEvent,
 	NoctrinthPluginModalRequest,
+	NoctrinthPluginPageDeclaration,
+	NoctrinthPluginPanelRequest,
 	PluginCatalog,
 	PluginLogEntry,
 	RegisteredPluginAction,
 	RegisteredPluginContentSource,
+	RegisteredPluginPage,
 } from './types'
 
 export const DEFAULT_PLUGIN_CATALOG_URL = 'https://everelsu.github.io/Noctrinth-Plugins/index.json'
@@ -42,7 +47,9 @@ export const pluginRuntimeErrors = ref<Record<string, string>>({})
 export const pluginLogs = ref<Record<string, PluginLogEntry[]>>({})
 export const pluginActions = ref<RegisteredPluginAction[]>([])
 export const pluginContentSources = ref<RegisteredPluginContentSource[]>([])
+export const pluginPages = ref<RegisteredPluginPage[]>([])
 export const activePluginModal = ref<ActivePluginModal | null>(null)
+export const activePluginPanel = ref<ActivePluginPanel | null>(null)
 export const pluginsSafeMode = ref(false)
 
 const MAX_ERRORS_BEFORE_DISABLE = 3
@@ -75,11 +82,117 @@ export function clearPluginLogs(pluginId: string): void {
 	pluginLogs.value = rest
 }
 
-export function resolvePluginModal(actionId: string | null): void {
+export function resolvePluginModal(
+	actionId: string | null,
+	values: Record<string, string> = {},
+): void {
 	const current = activePluginModal.value
 	if (!current) return
 	activePluginModal.value = null
-	current.resolve(actionId)
+	if (current.mode === 'form') {
+		current.resolve({ action: actionId, values })
+	} else {
+		current.resolve(actionId)
+	}
+}
+
+const panelMessageSinks = new Map<string, (data: unknown) => void>()
+
+export function registerPluginPanelSink(
+	pluginId: string,
+	panelId: string,
+	sink: (data: unknown) => void,
+): void {
+	panelMessageSinks.set(`${pluginId}:${panelId}`, sink)
+}
+
+export function unregisterPluginPanelSink(pluginId: string, panelId: string): void {
+	panelMessageSinks.delete(`${pluginId}:${panelId}`)
+}
+
+export function closePluginPanel(): void {
+	activePluginPanel.value = null
+}
+
+export function sendMessageFromPluginPanel(pluginId: string, panelId: string, data: unknown): void {
+	const entry = activeWorkers.get(pluginId)
+	if (!entry) return
+	entry.worker.postMessage({ type: 'panel:message', panelId, data })
+}
+
+export function buildSandboxedPanelSrcdoc(html: string, pluginId: string, panelId: string): string {
+	const themeVars = [
+		'--color-bg',
+		'--color-raised-bg',
+		'--color-super-raised-bg',
+		'--color-brand',
+		'--color-brand-highlight',
+		'--color-contrast',
+		'--color-base',
+		'--color-secondary',
+		'--color-button-bg',
+		'--color-button-border',
+		'--color-divider',
+		'--surface-1',
+		'--surface-2',
+		'--surface-3',
+		'--surface-4',
+		'--surface-5',
+	]
+	let rootVarCss = ''
+	if (typeof document !== 'undefined' && typeof getComputedStyle === 'function') {
+		const cs = getComputedStyle(document.documentElement)
+		const pairs: string[] = []
+		for (const name of themeVars) {
+			const val = cs.getPropertyValue(name).trim()
+			if (val) pairs.push(`${name}: ${val};`)
+		}
+		if (pairs.length > 0) {
+			rootVarCss = `:root { ${pairs.join(' ')} }\n`
+		}
+	}
+
+	const bridge = `<style>
+${rootVarCss}html, body {
+	margin: 0;
+	padding: 0;
+	background: var(--color-bg, #111017);
+	color: var(--color-contrast, #f8f7fc);
+	font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+	color-scheme: dark;
+}
+* { box-sizing: border-box; }
+</style>
+<script>
+(function () {
+	const listeners = [];
+	const meta = ${JSON.stringify({ pluginId, panelId })};
+	window.addEventListener('message', function (ev) {
+		if (!ev.data || ev.data.__noctrinthHost !== true) return;
+		for (let i = 0; i < listeners.length; i++) {
+			try { listeners[i](ev.data.data); } catch (e) { console.error(e); }
+		}
+	});
+	window.noctrinthPanel = Object.freeze({
+		pluginId: meta.pluginId,
+		panelId: meta.panelId,
+		send: function (data) {
+			window.parent.postMessage({ __noctrinthPanel: true, pluginId: meta.pluginId, panelId: meta.panelId, type: 'message', data: data }, '*');
+		},
+		onMessage: function (fn) {
+			if (typeof fn === 'function') listeners.push(fn);
+		},
+		close: function () {
+			window.parent.postMessage({ __noctrinthPanel: true, pluginId: meta.pluginId, panelId: meta.panelId, type: 'close' }, '*');
+		}
+	});
+})();
+</script>`
+
+	if (/<head[\s>]/i.test(html)) {
+		return html.replace(/<head([^>]*)>/i, `<head$1>${bridge}`)
+	}
+	return `<!doctype html><html><head><meta charset="utf-8">${bridge}</head><body>${html}</body></html>`
 }
 
 function applyQuickCss(): void {
@@ -214,6 +327,35 @@ export function setPluginSetting(pluginId: string, key: string, value: unknown):
 			type: 'event',
 			event: 'settings:change',
 			payload: { key, value, settings: current },
+		})
+	}
+}
+
+export function applyPluginPreset(
+	pluginId: string,
+	values: Record<string, string | boolean | number>,
+): void {
+	let current: Record<string, unknown> = {}
+	try {
+		const raw = localStorage.getItem(settingsStorageKey(pluginId))
+		if (raw) current = JSON.parse(raw) as Record<string, unknown>
+	} catch {
+		current = {}
+	}
+	Object.assign(current, values)
+	localStorage.setItem(settingsStorageKey(pluginId), JSON.stringify(current))
+
+	const plugin = installedPlugins.value.find((p) => p.manifest.id === pluginId)
+	if (plugin?.enabled) {
+		applyPluginSettingVars(plugin)
+	}
+
+	const entry = activeWorkers.get(pluginId)
+	if (entry) {
+		entry.worker.postMessage({
+			type: 'event',
+			event: 'settings:change',
+			payload: { key: '*', value: values, settings: current },
 		})
 	}
 }
@@ -367,15 +509,86 @@ function removePluginStyles(id: string) {
 	})
 }
 
+function resolveRelativeAssetPath(baseFile: string, rawRef: string): string | null {
+	const cleaned = rawRef.split('#')[0].split('?')[0].trim()
+	if (!cleaned) return null
+	const baseParts = baseFile.replace(/\\/g, '/').split('/')
+	baseParts.pop()
+	const refParts = cleaned.replace(/\\/g, '/').split('/')
+	const combined = cleaned.startsWith('/') ? refParts.slice(1) : [...baseParts, ...refParts]
+	const out: string[] = []
+	for (const part of combined) {
+		if (!part || part === '.') continue
+		if (part === '..') {
+			if (out.length === 0) return null
+			out.pop()
+		} else {
+			out.push(part)
+		}
+	}
+	return out.length > 0 ? out.join('/') : null
+}
+
+async function inlineCssLocalAssets(
+	pluginId: string,
+	cssFile: string,
+	css: string,
+	cache: Map<string, string>,
+): Promise<string> {
+	const urlRegex = /url\(\s*(['"]?)([^)'"]+)\1\s*\)/gi
+	const matches = [...css.matchAll(urlRegex)]
+	if (matches.length === 0) return css
+
+	const replacements = new Map<string, string>()
+	for (const match of matches) {
+		const rawUrl = match[2].trim()
+		if (
+			!rawUrl ||
+			rawUrl.startsWith('data:') ||
+			rawUrl.startsWith('http://') ||
+			rawUrl.startsWith('https://') ||
+			rawUrl.startsWith('blob:') ||
+			rawUrl.startsWith('#')
+		) {
+			continue
+		}
+		const resolved = resolveRelativeAssetPath(cssFile, rawUrl)
+		if (!resolved) continue
+		let dataUri = cache.get(resolved)
+		if (!dataUri) {
+			try {
+				const asset = await invoke<{ mime: string; base64: string }>(
+					'plugin:noctrinth-plugins|plugins_read_asset_base64',
+					{ id: pluginId, relPath: resolved },
+				)
+				dataUri = `data:${asset.mime};base64,${asset.base64}`
+				cache.set(resolved, dataUri)
+			} catch {
+				continue
+			}
+		}
+		replacements.set(match[0], `url("${dataUri}")`)
+	}
+
+	if (replacements.size === 0) return css
+	let result = css
+	for (const [original, next] of replacements) {
+		result = result.split(original).join(next)
+	}
+	return result
+}
+
 async function applyPluginStyles(plugin: InstalledPlugin) {
 	const id = plugin.manifest.id
 	removePluginStyles(id)
 	const styles = plugin.manifest.styles ?? []
+	const assetCache = new Map<string, string>()
 	for (const relPath of styles) {
-		const css = await invoke<string>('plugin:noctrinth-plugins|plugins_read_asset', {
+		const rawCss = await invoke<string>('plugin:noctrinth-plugins|plugins_read_asset', {
 			id,
 			relPath,
 		})
+		const css = await inlineCssLocalAssets(id, relPath, rawCss, assetCache)
 		const styleEl = document.createElement('style')
 		styleEl.setAttribute('data-noctrinth-plugin', id)
 		styleEl.setAttribute('data-noctrinth-plugin-file', relPath)
@@ -394,6 +607,8 @@ const __meta = ${meta};
 const __pending = new Map();
 const __listeners = new Map();
 const __actions = new Map();
+const __panelListeners = [];
+const __streams = new Map();
 let __contentSourceSearch = null;
 let __reqId = 1;
 
@@ -442,6 +657,28 @@ self.addEventListener('message', async (event) => {
 				self.postMessage({ type: 'error', error: String(e && e.message ? e.message : e) });
 			}
 		}
+	} else if (msg.type === 'stream:event') {
+		const s = __streams.get(msg.streamId);
+		if (s) {
+			if (typeof msg.chunk === 'string' && msg.chunk.length > 0 && s.onChunk) {
+				try { await s.onChunk(msg.chunk); } catch (e) { console.error('[Noctrinth Plugin]', __meta.id, e); }
+			}
+			if (msg.done) {
+				s.done = true;
+				s.error = msg.error || null;
+				if (s.headReady) {
+					__streams.delete(msg.streamId);
+					if (s.error) s.reject(new Error(s.error));
+					else s.resolve(s.head);
+				}
+			}
+		}
+	} else if (msg.type === 'panel:message') {
+		for (const fn of __panelListeners) {
+			try { await fn(msg.data, msg.panelId); } catch (e) {
+				self.postMessage({ type: 'error', error: String(e && e.message ? e.message : e) });
+			}
+		}
 	} else if (msg.type === 'contentSource:search') {
 		try {
 			if (!__contentSourceSearch) throw new Error('No content source registered');
@@ -457,6 +694,27 @@ self.noctrinth = Object.freeze({
 	id: __meta.id,
 	version: __meta.version,
 	fetch: (url, init) => __rpc('fetch', { url, init }),
+	fetchStream: (url, init, onChunk) => {
+		const streamId = 'stream_' + (__reqId++);
+		return new Promise((resolve, reject) => {
+			const entry = { onChunk, resolve, reject, head: null, headReady: false, done: false, error: null };
+			__streams.set(streamId, entry);
+			__rpc('fetchStream', { streamId, url, init })
+				.then((head) => {
+					entry.head = head;
+					entry.headReady = true;
+					if (entry.done) {
+						__streams.delete(streamId);
+						if (entry.error) reject(new Error(entry.error));
+						else resolve(head);
+					}
+				})
+				.catch((err) => {
+					__streams.delete(streamId);
+					reject(err);
+				});
+		});
+	},
 	storage: Object.freeze({
 		get: (key) => __rpc('storage:get', { key }),
 		set: (key, value) => __rpc('storage:set', { key, value }),
@@ -467,12 +725,27 @@ self.noctrinth = Object.freeze({
 		getAll: () => __rpc('settings:getAll', {}),
 	}),
 	notify: (opts) => __rpc('notify', opts),
+	clipboard: Object.freeze({
+		writeText: (text) => __rpc('clipboard:writeText', { text }),
+	}),
+	app: Object.freeze({
+		getInfo: () => __rpc('app:getInfo', {}),
+	}),
 	ui: Object.freeze({
 		registerAction: async (action, handler) => {
 			__actions.set(action.id, handler);
 			await __rpc('ui:registerAction', action);
 		},
 		showModal: (opts) => __rpc('ui:showModal', opts),
+		showForm: (opts) => __rpc('ui:showForm', opts),
+		updateModal: (opts) => __rpc('ui:updateModal', opts),
+		openPanel: (opts) => __rpc('ui:openPanel', opts),
+		closePanel: () => __rpc('ui:closePanel', {}),
+		postPanelMessage: (data, targetId) => __rpc('ui:postPanelMessage', { data, targetId }),
+		onPanelMessage: (handler) => {
+			if (typeof handler === 'function') __panelListeners.push(handler);
+		},
+		registerPage: (page) => __rpc('ui:registerPage', page),
 	}),
 	instances: Object.freeze({
 		list: () => __rpc('instances:list', {}),
@@ -482,6 +755,9 @@ self.noctrinth = Object.freeze({
 		removeContent: (instanceId, filePath) => __rpc('instances:removeContent', { instanceId, filePath }),
 		toggleContent: (instanceId, filePath, enabled) => __rpc('instances:toggleContent', { instanceId, filePath, enabled }),
 		getLogs: (instanceId) => __rpc('instances:getLogs', { instanceId }),
+		listFiles: (instanceId, relDir) => __rpc('instances:listFiles', { instanceId, relDir }),
+		readFile: (instanceId, relPath) => __rpc('instances:readFile', { instanceId, relPath }),
+		writeFile: (instanceId, relPath, content) => __rpc('instances:writeFile', { instanceId, relPath, content }),
 	}),
 	contentSource: Object.freeze({
 		register: async (def) => {
@@ -536,10 +812,25 @@ async function startPluginWorker(plugin: InstalledPlugin) {
 			throw new Error(`Plugin "${id}" lacks permissions.instances.${perm}`)
 		}
 	}
-	const requireUiPerm = (perm: 'notifications' | 'actions' | 'modal') => {
+	const requireUiPerm = (
+		perm: 'notifications' | 'actions' | 'modal' | 'panel' | 'page' | 'clipboard',
+	) => {
 		if (!allowedUi.has(perm)) {
 			throw new Error(`Plugin "${id}" lacks permissions.ui.${perm}`)
 		}
+	}
+
+	const resolvePanelHtml = async (opts: { entry?: string; html?: string }): Promise<string> => {
+		if (opts.entry) {
+			return await invoke<string>('plugin:noctrinth-plugins|plugins_read_asset', {
+				id,
+				relPath: String(opts.entry),
+			})
+		}
+		if (typeof opts.html === 'string') {
+			return opts.html
+		}
+		throw new Error('Panel or page must specify either "entry" or "html"')
 	}
 
 	let errorCount = 0
@@ -619,6 +910,16 @@ async function startPluginWorker(plugin: InstalledPlugin) {
 							body: msg.payload?.init?.body ?? null,
 						})
 						break
+					case 'fetchStream':
+						result = await invoke('plugin:noctrinth-plugins|plugins_http_fetch_stream', {
+							id,
+							streamId: String(msg.payload?.streamId ?? ''),
+							url: msg.payload?.url,
+							method: msg.payload?.init?.method ?? null,
+							headers: msg.payload?.init?.headers ?? null,
+							body: msg.payload?.init?.body ?? null,
+						})
+						break
 					case 'storage:get':
 						result = localStorage.getItem(storagePrefix + String(msg.payload?.key ?? ''))
 						break
@@ -678,16 +979,38 @@ async function startPluginWorker(plugin: InstalledPlugin) {
 						pluginActions.value = next
 						break
 					}
-					case 'ui:showModal': {
+					case 'clipboard:writeText': {
+						requireUiPerm('clipboard')
+						const text = String(msg.payload?.text ?? '')
+						if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+							await navigator.clipboard.writeText(text)
+						}
+						break
+					}
+					case 'app:getInfo': {
+						const docEl = typeof document !== 'undefined' ? document.documentElement : null
+						const themeClass =
+							docEl?.className.split(/\s+/).find((c) => c.endsWith('-mode')) ?? 'dark-mode'
+						result = {
+							locale: docEl?.lang || (typeof navigator !== 'undefined' ? navigator.language : 'en'),
+							theme: themeClass,
+							safeMode: pluginsSafeMode.value,
+						}
+						break
+					}
+					case 'ui:showModal':
+					case 'ui:showForm': {
 						requireUiPerm('modal')
 						const payload = (msg.payload ?? {}) as NoctrinthPluginModalRequest
+						const mode = msg.method === 'ui:showForm' ? 'form' : 'modal'
 						if (activePluginModal.value) {
 							resolvePluginModal(null)
 						}
-						result = await new Promise<string | null>((resolve) => {
+						result = await new Promise((resolve) => {
 							activePluginModal.value = {
 								pluginId: id,
 								pluginName: plugin.manifest.name,
+								mode,
 								request: {
 									title: String(payload.title ?? plugin.manifest.name),
 									description: payload.description ? String(payload.description) : undefined,
@@ -697,6 +1020,85 @@ async function startPluginWorker(plugin: InstalledPlugin) {
 								resolve,
 							}
 						})
+						break
+					}
+					case 'ui:updateModal': {
+						requireUiPerm('modal')
+						const current = activePluginModal.value
+						if (current && current.pluginId === id) {
+							const patch = (msg.payload ?? {}) as Partial<NoctrinthPluginModalRequest>
+							activePluginModal.value = {
+								...current,
+								request: {
+									title: patch.title !== undefined ? String(patch.title) : current.request.title,
+									description:
+										patch.description !== undefined
+											? String(patch.description)
+											: current.request.description,
+									blocks: Array.isArray(patch.blocks) ? patch.blocks : current.request.blocks,
+									actions: Array.isArray(patch.actions) ? patch.actions : current.request.actions,
+								},
+							}
+						}
+						break
+					}
+					case 'ui:openPanel': {
+						requireUiPerm('panel')
+						const payload = (msg.payload ?? {}) as NoctrinthPluginPanelRequest
+						const html = await resolvePanelHtml(payload)
+						const panelId = String(payload.id || 'default')
+						const rawWidth = Number(payload.width ?? 460)
+						const width = Number.isFinite(rawWidth) ? Math.min(Math.max(rawWidth, 320), 900) : 460
+						activePluginPanel.value = {
+							pluginId: id,
+							pluginName: plugin.manifest.name,
+							panelId,
+							title: String(payload.title ?? plugin.manifest.name),
+							html,
+							width,
+						}
+						break
+					}
+					case 'ui:closePanel': {
+						requireUiPerm('panel')
+						if (activePluginPanel.value?.pluginId === id) {
+							activePluginPanel.value = null
+						}
+						break
+					}
+					case 'ui:postPanelMessage': {
+						const targetId = String(
+							msg.payload?.targetId ?? activePluginPanel.value?.panelId ?? 'default',
+						)
+						const exact = panelMessageSinks.get(`${id}:${targetId}`)
+						if (exact) {
+							exact(msg.payload?.data)
+						} else {
+							for (const [key, sink] of panelMessageSinks.entries()) {
+								if (key.startsWith(`${id}:`)) {
+									sink(msg.payload?.data)
+								}
+							}
+						}
+						break
+					}
+					case 'ui:registerPage': {
+						requireUiPerm('page')
+						const payload = (msg.payload ?? {}) as NoctrinthPluginPageDeclaration
+						const pageId = sanitizeToken(String(payload.id || 'main'))
+						const html = await resolvePanelHtml(payload)
+						const next = pluginPages.value.filter(
+							(p) => !(p.pluginId === id && p.pageId === pageId),
+						)
+						next.push({
+							pluginId: id,
+							pluginName: plugin.manifest.name,
+							pageId,
+							title: String(payload.title ?? plugin.manifest.name),
+							tooltip: payload.tooltip ? String(payload.tooltip) : undefined,
+							html,
+						})
+						pluginPages.value = next
 						break
 					}
 					case 'contentSource:register': {
@@ -748,6 +1150,31 @@ async function startPluginWorker(plugin: InstalledPlugin) {
 							String(msg.payload?.filePath ?? ''),
 							typeof msg.payload?.enabled === 'boolean' ? msg.payload.enabled : undefined,
 						)
+						break
+					case 'instances:listFiles':
+						requireInstancePerm('read')
+						result = await invoke('plugin:noctrinth-plugins|plugins_instance_list_files', {
+							id,
+							instanceId: String(msg.payload?.instanceId ?? ''),
+							relDir: msg.payload?.relDir ? String(msg.payload.relDir) : null,
+						})
+						break
+					case 'instances:readFile':
+						requireInstancePerm('read')
+						result = await invoke('plugin:noctrinth-plugins|plugins_instance_read_file', {
+							id,
+							instanceId: String(msg.payload?.instanceId ?? ''),
+							relPath: String(msg.payload?.relPath ?? ''),
+						})
+						break
+					case 'instances:writeFile':
+						requireInstancePerm('write')
+						await invoke('plugin:noctrinth-plugins|plugins_instance_write_file', {
+							id,
+							instanceId: String(msg.payload?.instanceId ?? ''),
+							relPath: String(msg.payload?.relPath ?? ''),
+							content: String(msg.payload?.content ?? ''),
+						})
 						break
 					default:
 						throw new Error(`Unknown RPC method: ${msg.method}`)
@@ -805,8 +1232,43 @@ function stopPluginWorker(id: string) {
 	if (activePluginModal.value?.pluginId === id) {
 		resolvePluginModal(null)
 	}
+	if (activePluginPanel.value?.pluginId === id) {
+		activePluginPanel.value = null
+	}
 	pluginActions.value = pluginActions.value.filter((a) => a.pluginId !== id)
 	pluginContentSources.value = pluginContentSources.value.filter((s) => s.pluginId !== id)
+	pluginPages.value = pluginPages.value.filter((p) => p.pluginId !== id)
+}
+
+async function registerManifestPages(plugin: InstalledPlugin): Promise<void> {
+	const pages = plugin.manifest.pages ?? []
+	if (pages.length === 0) return
+	if (!(plugin.manifest.permissions?.ui ?? []).includes('page')) return
+	const id = plugin.manifest.id
+	for (const decl of pages) {
+		const pageId = sanitizeToken(String(decl.id || 'main'))
+		let html = ''
+		if (decl.entry) {
+			html = await invoke<string>('plugin:noctrinth-plugins|plugins_read_asset', {
+				id,
+				relPath: String(decl.entry),
+			})
+		} else if (typeof decl.html === 'string') {
+			html = decl.html
+		} else {
+			continue
+		}
+		const next = pluginPages.value.filter((p) => !(p.pluginId === id && p.pageId === pageId))
+		next.push({
+			pluginId: id,
+			pluginName: plugin.manifest.name,
+			pageId,
+			title: String(decl.title || plugin.manifest.name),
+			tooltip: decl.tooltip ? String(decl.tooltip) : undefined,
+			html,
+		})
+		pluginPages.value = next
+	}
 }
 
 export async function activatePlugin(plugin: InstalledPlugin): Promise<void> {
@@ -818,6 +1280,7 @@ export async function activatePlugin(plugin: InstalledPlugin): Promise<void> {
 	try {
 		applyPluginSettingVars(plugin)
 		await applyPluginStyles(plugin)
+		await registerManifestPages(plugin)
 		await startPluginWorker(plugin)
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error)
@@ -880,6 +1343,25 @@ export async function initNoctrinthPlugins(): Promise<void> {
 				event.preventDefault()
 				enablePluginsSafeMode(true)
 			}
+		})
+		void listen<{
+			pluginId: string
+			streamId: string
+			chunk?: string | null
+			done: boolean
+			error?: string | null
+		}>('noctrinth-plugin-stream', (event) => {
+			const payload = event.payload
+			if (!payload) return
+			const entry = activeWorkers.get(payload.pluginId)
+			if (!entry) return
+			entry.worker.postMessage({
+				type: 'stream:event',
+				streamId: payload.streamId,
+				chunk: payload.chunk ?? null,
+				done: Boolean(payload.done),
+				error: payload.error ?? null,
+			})
 		})
 	}
 

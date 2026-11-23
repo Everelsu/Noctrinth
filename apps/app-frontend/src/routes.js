@@ -100,6 +100,11 @@ export default new createRouter({
 			component: () => import('@/pages/Screenshots.vue'),
 		},
 		{
+			path: '/plugin-page/:pluginId/:pageId',
+			name: 'Plugin page',
+			component: () => import('@/pages/PluginPage.vue'),
+		},
+		{
 			path: '/user/:user/:projectType?',
 			name: 'User',
 			component: () => import('@/pages/User.vue'),

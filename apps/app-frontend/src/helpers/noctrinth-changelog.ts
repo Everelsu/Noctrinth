@@ -41,6 +41,14 @@ export interface NoctrinthVersionEntry {
 }
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
+  {
+		version: '0.23.4+3',
+		date: '2026-11-23T00:00:00+00:00',
+		body: `### Added
+- Added sandboxed plugin UI panels (slide-over drawers and dedicated sidebar pages), interactive form modals, streaming HTTP (\`fetchStream\`), theme presets with conditional/grouped settings, local CSS assets (fonts/images), and safe per-instance config file APIs.`,
+		body_ru: `### Добавлено
+- Добавлены изолированные UI-панели и отдельные страницы плагинов в сайдбаре (для чатов, виджетов и инструментов), потоковый HTTP (\`fetchStream\`), интерактивные формы в модалках, пресеты и группы/условия в настройках тем, локальные шрифты/картинки в CSS и безопасное чтение/запись конфигов внутри сборок.`,
+	},
 	{
 		version: '0.23.4+2',
 		date: '2026-11-23T00:00:00+00:00',

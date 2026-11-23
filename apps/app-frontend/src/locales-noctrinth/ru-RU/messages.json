@@ -29,11 +29,26 @@
 	"app.account.notifications": {
 		"message": "Уведомления"
 	},
+	"app.action-bar.install.inspect-details": {
+		"message": "Подробнее"
+	},
 	"app.appearance-settings.accent-tint.description": {
 		"message": "Слегка подкрашивает серые фоны и панели тем же оттенком. Акцент, боковая панель и полоска загрузки следуют за пресетом в любом случае."
 	},
 	"app.appearance-settings.accent-tint.title": {
 		"message": "Красить и фон"
+	},
+	"app.appearance-settings.accent.custom": {
+		"message": "Свой"
+	},
+	"app.appearance-settings.accent.custom.brightness": {
+		"message": "Яркость"
+	},
+	"app.appearance-settings.accent.custom.hex": {
+		"message": "Цвет в HEX"
+	},
+	"app.appearance-settings.accent.custom.wheel": {
+		"message": "Оттенок и насыщенность"
 	},
 	"app.appearance-settings.accent.description": {
 		"message": "Цвет, которым подсвечен интерфейс. На светлых темах каждый рисуется глубже, на тёмных — ярче."
@@ -94,6 +109,9 @@
 	},
 	"app.appearance-settings.minimize-launcher.description": {
 		"message": "Сворачивать окно лаунчера при запуске Minecraft."
+	},
+	"app.behavior-settings.refocus-on-game-close.description": {
+		"message": "Выводить Noctrinth на передний план при закрытии игры."
 	},
 	"app.browse.filters.hide": {
 		"message": "Скрыть фильтры"
@@ -278,21 +296,6 @@
 	"app.crash.hide-evidence": {
 		"message": "Скрыть строку"
 	},
-	"app.crash.other-causes": {
-		"message": "Другие возможные причины ({count})"
-	},
-	"app.crash.primary-cause": {
-		"message": "Вероятная причина"
-	},
-	"app.crash.severity.critical": {
-		"message": "Критично"
-	},
-	"app.crash.severity.note": {
-		"message": "Заметка"
-	},
-	"app.crash.severity.warning": {
-		"message": "Предупреждение"
-	},
 	"app.crash.memory-hint": {
 		"message": "У игры было {current} ГБ на {mods} модов. Сборке такого размера обычно нужно {gb} ГБ, и у этого компьютера они есть."
 	},
@@ -307,6 +310,12 @@
 	},
 	"app.crash.open-settings": {
 		"message": "Открыть настройки"
+	},
+	"app.crash.other-causes": {
+		"message": "Другие возможные причины ({count})"
+	},
+	"app.crash.primary-cause": {
+		"message": "Вероятная причина"
 	},
 	"app.crash.rule.broken-mod-file.fix": {
 		"message": "Это не читаемый архив — загрузка оборвалась. Отключите его и скачайте заново."
@@ -743,6 +752,15 @@
 	"app.crash.set-memory": {
 		"message": "Выделить {gb} ГБ"
 	},
+	"app.crash.severity.critical": {
+		"message": "Критично"
+	},
+	"app.crash.severity.note": {
+		"message": "Заметка"
+	},
+	"app.crash.severity.warning": {
+		"message": "Предупреждение"
+	},
 	"app.crash.show-evidence": {
 		"message": "Показать строку"
 	},
@@ -751,126 +769,6 @@
 	},
 	"app.crash.show-more": {
 		"message": "Показать ещё {count}"
-	},
-	"app.icon-crop.apply": {
-		"message": "Применить"
-	},
-	"app.icon-crop.cancel": {
-		"message": "Отмена"
-	},
-	"app.icon-crop.header": {
-		"message": "Обрезка иконки сборки"
-	},
-	"app.icon-crop.hint": {
-		"message": "Перетаскивайте изображение и приближайте колёсиком или ползунком."
-	},
-	"app.icon-crop.reset": {
-		"message": "Сбросить"
-	},
-	"app.icon-crop.use-original": {
-		"message": "Без обрезки"
-	},
-	"app.icon-crop.zoom": {
-		"message": "Масштаб"
-	},
-	"app.plugins.action.install": {
-		"message": "Установить"
-	},
-	"app.plugins.action.install-zip": {
-		"message": "Установить из .zip"
-	},
-	"app.plugins.action.open-folder": {
-		"message": "Папка плагинов"
-	},
-	"app.plugins.action.refresh": {
-		"message": "Обновить"
-	},
-	"app.plugins.action.update": {
-		"message": "Обновить"
-	},
-	"app.plugins.badge.installed": {
-		"message": "Установлен"
-	},
-	"app.plugins.badge.local": {
-		"message": "Локальный"
-	},
-	"app.plugins.catalog.empty": {
-		"message": "Ничего не найдено."
-	},
-	"app.plugins.catalog.error": {
-		"message": "Не удалось загрузить каталог плагинов."
-	},
-	"app.plugins.catalog.reset": {
-		"message": "Сбросить"
-	},
-	"app.plugins.catalog.search": {
-		"message": "Поиск плагинов..."
-	},
-	"app.plugins.catalog.url": {
-		"message": "URL индекса каталога"
-	},
-	"app.plugins.description": {
-		"message": "Расширяйте Noctrinth темами, источниками контента и изолированными расширениями."
-	},
-	"app.plugins.empty.installed.description": {
-		"message": "Установите проверенный плагин из каталога или загрузите локальный .zip-архив."
-	},
-	"app.plugins.empty.installed.heading": {
-		"message": "Плагины не установлены"
-	},
-	"app.plugins.permissions.domains": {
-		"message": "Сеть: {domains}"
-	},
-	"app.plugins.permissions.events": {
-		"message": "События: {events}"
-	},
-	"app.plugins.permissions.instances": {
-		"message": "Сборки: {perms}"
-	},
-	"app.plugins.permissions.ui": {
-		"message": "Интерфейс: {perms}"
-	},
-	"app.plugins.settings": {
-		"message": "Настройки плагина"
-	},
-	"app.plugins.remove.confirm": {
-		"message": "Удалить"
-	},
-	"app.plugins.remove.description": {
-		"message": "Удалить «{name}» из Noctrinth? Файлы плагина будут удалены."
-	},
-	"app.plugins.remove.title": {
-		"message": "Удалить плагин?"
-	},
-	"app.plugins.tab.catalog": {
-		"message": "Каталог"
-	},
-	"app.plugins.tab.installed": {
-		"message": "Установленные"
-	},
-	"app.plugins.title": {
-		"message": "Плагины"
-	},
-	"app.plugins.toast.installed": {
-		"message": "Установлен плагин «{name}»"
-	},
-	"app.plugins.toast.removed": {
-		"message": "Удалён плагин «{name}»"
-	},
-	"app.plugins.type.all": {
-		"message": "Все"
-	},
-	"app.plugins.type.content-source": {
-		"message": "Источник"
-	},
-	"app.plugins.type.extension": {
-		"message": "Расширение"
-	},
-	"app.plugins.type.theme": {
-		"message": "Тема"
-	},
-	"app.settings.tabs.plugins": {
-		"message": "Плагины"
 	},
 	"app.curseforge.pending.all-done": {
 		"message": "Всё установлено"
@@ -1036,6 +934,27 @@
 	},
 	"app.hosting.update-required.title": {
 		"message": "Нужно обновить Noctrinth"
+	},
+	"app.icon-crop.apply": {
+		"message": "Применить"
+	},
+	"app.icon-crop.cancel": {
+		"message": "Отмена"
+	},
+	"app.icon-crop.header": {
+		"message": "Обрезка иконки сборки"
+	},
+	"app.icon-crop.hint": {
+		"message": "Перетаскивайте изображение и приближайте колёсиком или ползунком."
+	},
+	"app.icon-crop.reset": {
+		"message": "Сбросить"
+	},
+	"app.icon-crop.use-original": {
+		"message": "Без обрезки"
+	},
+	"app.icon-crop.zoom": {
+		"message": "Масштаб"
 	},
 	"app.instance.add-content.from-file": {
 		"message": "Добавить из файла"
@@ -1439,6 +1358,156 @@
 	"app.notifications.version-for": {
 		"message": "для"
 	},
+	"app.plugins.action.browse-catalog": {
+		"message": "Открыть каталог"
+	},
+	"app.plugins.action.docs": {
+		"message": "Документация"
+	},
+	"app.plugins.action.install": {
+		"message": "Установить"
+	},
+	"app.plugins.action.install-zip": {
+		"message": "Установить из .zip"
+	},
+	"app.plugins.action.logs": {
+		"message": "Логи плагина"
+	},
+	"app.plugins.action.open-folder": {
+		"message": "Папка плагинов"
+	},
+	"app.plugins.action.refresh": {
+		"message": "Обновить"
+	},
+	"app.plugins.action.reload": {
+		"message": "Перезагрузить плагин"
+	},
+	"app.plugins.action.update": {
+		"message": "Обновить"
+	},
+	"app.plugins.action.update-all": {
+		"message": "Обновить все ({count})"
+	},
+	"app.plugins.badge.installed": {
+		"message": "Установлен"
+	},
+	"app.plugins.badge.local": {
+		"message": "Локальный"
+	},
+	"app.plugins.catalog.empty": {
+		"message": "Ничего не найдено."
+	},
+	"app.plugins.catalog.error": {
+		"message": "Не удалось загрузить каталог плагинов."
+	},
+	"app.plugins.catalog.reset": {
+		"message": "Сбросить"
+	},
+	"app.plugins.catalog.search": {
+		"message": "Поиск плагинов..."
+	},
+	"app.plugins.catalog.url": {
+		"message": "URL индекса каталога"
+	},
+	"app.plugins.catalog.url.description": {
+		"message": "JSON-индекс, используемый для поиска и проверки плагинов сообщества."
+	},
+	"app.plugins.description": {
+		"message": "Расширяйте Noctrinth темами, источниками контента и изолированными расширениями."
+	},
+	"app.plugins.disclaimer.body": {
+		"message": "Плагины создаются сторонними авторами. Noctrinth не несёт ответственности за безопасность, стабильность, потерю данных или вредоносный код в установленных плагинах. Устанавливайте плагины только из источников, которым доверяете."
+	},
+	"app.plugins.disclaimer.header": {
+		"message": "Сторонние плагины"
+	},
+	"app.plugins.empty.installed.description": {
+		"message": "Установите проверенный плагин из каталога или загрузите локальный .zip-архив."
+	},
+	"app.plugins.empty.installed.heading": {
+		"message": "Плагины не установлены"
+	},
+	"app.plugins.logs.clear": {
+		"message": "Очистить"
+	},
+	"app.plugins.logs.empty": {
+		"message": "Логов пока нет."
+	},
+	"app.plugins.permissions.domains": {
+		"message": "Сеть: {domains}"
+	},
+	"app.plugins.permissions.events": {
+		"message": "События: {events}"
+	},
+	"app.plugins.permissions.instances": {
+		"message": "Сборки: {perms}"
+	},
+	"app.plugins.permissions.ui": {
+		"message": "Интерфейс: {perms}"
+	},
+	"app.plugins.quick-css.clear": {
+		"message": "Очистить"
+	},
+	"app.plugins.quick-css.description": {
+		"message": "Пользовательский CSS, применяемый мгновенно поверх текущей темы."
+	},
+	"app.plugins.quick-css.title": {
+		"message": "Свой CSS (Quick CSS)"
+	},
+	"app.plugins.remove.confirm": {
+		"message": "Удалить"
+	},
+	"app.plugins.remove.description": {
+		"message": "Удалить «{name}» из Noctrinth? Файлы плагина будут удалены."
+	},
+	"app.plugins.remove.title": {
+		"message": "Удалить плагин?"
+	},
+	"app.plugins.safe-mode.body": {
+		"message": "Все плагины и Quick CSS временно приостановлены. Нажмите Ctrl+Shift+Alt+P в любой момент, если сломанная тема или плагин сломают интерфейс."
+	},
+	"app.plugins.safe-mode.exit": {
+		"message": "Выйти из безопасного режима"
+	},
+	"app.plugins.safe-mode.header": {
+		"message": "Включён безопасный режим"
+	},
+	"app.plugins.settings": {
+		"message": "Настройки плагина"
+	},
+	"app.plugins.tab.catalog": {
+		"message": "Каталог"
+	},
+	"app.plugins.tab.installed": {
+		"message": "Установленные"
+	},
+	"app.plugins.title": {
+		"message": "Плагины"
+	},
+	"app.plugins.toast.installed": {
+		"message": "Установлен плагин «{name}»"
+	},
+	"app.plugins.toast.reloaded": {
+		"message": "Плагин «{name}» перезагружен"
+	},
+	"app.plugins.toast.removed": {
+		"message": "Удалён плагин «{name}»"
+	},
+	"app.plugins.toast.updated-all": {
+		"message": "Обновлено плагинов: {count}"
+	},
+	"app.plugins.type.all": {
+		"message": "Все"
+	},
+	"app.plugins.type.content-source": {
+		"message": "Источник"
+	},
+	"app.plugins.type.extension": {
+		"message": "Расширение"
+	},
+	"app.plugins.type.theme": {
+		"message": "Тема"
+	},
 	"app.project.copy-link.copied": {
 		"message": "Ссылка скопирована"
 	},
@@ -1487,6 +1556,9 @@
 	"app.resource-settings.proxy.title": {
 		"message": "Прокси"
 	},
+	"app.screenshots.selection.global-export-filename": {
+		"message": "Скриншоты Noctrinth.zip"
+	},
 	"app.settings.app-version": {
 		"message": "Noctrinth {version}"
 	},
@@ -1498,6 +1570,12 @@
 	},
 	"app.settings.feature-flags.search.placeholder": {
 		"message": "Поиск флагов..."
+	},
+	"app.settings.game-options.compatibility.reason.launcher-controlled": {
+		"message": "Этим параметром управляют настройки запуска Noctrinth."
+	},
+	"app.settings.java-installations.location.title": {
+		"message": "Java {version, number}"
 	},
 	"app.settings.java.gpu.choice.auto": {
 		"message": "На усмотрение Windows"
@@ -1553,14 +1631,26 @@
 	"app.settings.privacy.discord-rich-presence.description": {
 		"message": "Показывать Noctrinth в текущей активности Discord. Не влияет на Rich Presence, который добавляют моды. Требуется перезапуск."
 	},
+	"app.settings.privacy.telemetry.description": {
+		"message": "Noctrinth не отправляет ни аналитику, ни данные об использовании, как бы ни стоял этот переключатель. Он оставлен, чтобы настройка переносилась из Modrinth App и обратно."
+	},
 	"app.settings.resource-management.app-directory.description": {
 		"message": "Где Noctrinth хранит сборки и другие файлы."
+	},
+	"app.settings.resource-management.debug-info.description": {
+		"message": "Экспортировать журналы приложения и диагностические данные в ZIP-файл, чтобы приложить его к сообщению о проблеме."
+	},
+	"app.settings.synced-options.game-settings.custom-empty": {
+		"message": "Настройки, добавленные модами, появятся здесь после того, как Noctrinth найдёт их в одной из сборок."
 	},
 	"app.settings.tabs.changelog": {
 		"message": "Список изменений"
 	},
 	"app.settings.tabs.curseforge": {
 		"message": "CurseForge"
+	},
+	"app.settings.tabs.plugins": {
+		"message": "Плагины"
 	},
 	"app.skins.cape-from": {
 		"message": "Плащ из {source}"
@@ -2021,6 +2111,18 @@
 	"instance.playtime.seconds": {
 		"message": "{seconds, plural, one {# секунда} few {# секунды} many {# секунд} other {# секунды}}"
 	},
+	"instance.settings.tabs.java.environment-variables": {
+		"message": "Переменные окружения"
+	},
+	"instance.settings.tabs.java.java-arguments": {
+		"message": "Аргументы Java"
+	},
+	"instance.settings.tabs.java.java-installation": {
+		"message": "Установка Java"
+	},
+	"instance.settings.tabs.java.java-memory": {
+		"message": "Выделение памяти"
+	},
 	"instance.settings.tabs.java.modern-java": {
 		"message": "Современная Java"
 	},
@@ -2072,134 +2174,137 @@
 	"minecraft-account.label-offline-short": {
 		"message": "Оффлайн"
 	},
-	"notifications.back": {
-		"message": "Назад"
+	"noctrinth.auth-servers.unreachable.retry": {
+		"message": "Проверить снова"
 	},
-	"notifications.heading": {
-		"message": "Уведомления"
+	"noctrinth.auth-servers.unreachable.scope": {
+		"message": "Пока они не ответят, вход и игра с аккаунтом Microsoft могут не работать. Оффлайн-аккаунтов и Ely.by это не касается."
 	},
-	"notifications.heading-history": {
-		"message": "История уведомлений"
+	"noctrinth.creation-flow.curseforge-code.import": {
+		"message": "Импорт"
 	},
-	"notifications.history-empty": {
-		"message": "В истории нет уведомлений."
+	"noctrinth.creation-flow.curseforge-code.placeholder": {
+		"message": "Код или ссылка из приложения CurseForge"
 	},
-	"notifications.loading": {
-		"message": "Загрузка уведомлений…"
+	"noctrinth.creation-flow.curseforge-code.title": {
+		"message": "Код профиля CurseForge"
 	},
-	"notifications.mark-all-read": {
-		"message": "Прочитать все"
+	"noctrinth.instance.logs.open-file": {
+		"message": "Открыть файл"
 	},
-	"notifications.sign-in-prompt": {
-		"message": "Войдите, чтобы увидеть уведомления"
+	"noctrinth.instance.logs.open-folder": {
+		"message": "Папка логов"
 	},
-	"notifications.sign-in-prompt-body": {
-		"message": "Войдите в аккаунт Modrinth, чтобы увидеть здесь свои уведомления."
+	"noctrinth.instance.stop-all-copies": {
+		"message": "Остановить все копии"
 	},
-	"notifications.type.all": {
-		"message": "Все"
+	"noctrinth.instance.stop-copy": {
+		"message": "Остановить {name} · {time}"
 	},
-	"notifications.type.moderator-message": {
-		"message": "Сообщения от модераторов"
+	"noctrinth.news.modrinth-news": {
+		"message": "Новости Modrinth"
 	},
-	"notifications.type.organization-invite": {
-		"message": "Приглашения в организации"
+	"noctrinth.news.noctrinth-news": {
+		"message": "Новости Noctrinth"
 	},
-	"notifications.type.other": {
-		"message": "Прочее"
+	"noctrinth.quick-search.discover": {
+		"message": "Ещё не установлено"
 	},
-	"notifications.type.project-update": {
-		"message": "Обновления"
+	"noctrinth.quick-search.hint": {
+		"message": "↑↓ — выбрать · Enter — открыть · Ctrl+Enter — играть или обновить · Esc — закрыть"
 	},
-	"notifications.type.status-change": {
-		"message": "Изменения статуса"
+	"noctrinth.quick-search.in-instance": {
+		"message": "В «{instance}»"
 	},
-	"notifications.type.team-invite": {
-		"message": "Приглашения в команды"
+	"noctrinth.quick-search.installed": {
+		"message": "Установлено"
 	},
-	"notifications.unread-empty": {
-		"message": "У вас нет непрочитанных уведомлений."
+	"noctrinth.quick-search.instances": {
+		"message": "Сборки"
 	},
-	"notifications.view-history": {
-		"message": "Посмотреть историю"
+	"noctrinth.quick-search.nothing": {
+		"message": "Ничего не нашлось"
 	},
-	"offline-account.add": {
-		"message": "Добавить аккаунт"
+	"noctrinth.quick-search.placeholder": {
+		"message": "Поиск по сборкам, тому, что в них установлено, и настройкам"
 	},
-	"offline-account.description": {
-		"message": "Только ник и ничего больше. С ним лаунчер запускает игру, когда войти некуда."
+	"noctrinth.quick-search.play": {
+		"message": "Играть"
 	},
-	"offline-account.header": {
-		"message": "Добавить оффлайн-аккаунт"
+	"noctrinth.quick-search.reading": {
+		"message": "Читаю, что установлено…"
 	},
-	"offline-account.invalid": {
-		"message": "От 3 до 16 латинских букв, цифр или подчёркиваний — как принимает сервер."
+	"noctrinth.quick-search.recent": {
+		"message": "Недавно запускались"
 	},
-	"offline-account.limitation-body": {
-		"message": "Серверы с лицензией спрашивают у Mojang, настоящая ли сессия, а её здесь нет. Всё остальное — миры на этом компьютере, локальная сеть и серверы с online-mode=false — работает как работало."
+	"noctrinth.quick-search.search-curseforge": {
+		"message": "Искать «{query}» на CurseForge"
 	},
-	"offline-account.limitation-header": {
-		"message": "Только одиночная игра и серверы без лицензии"
+	"noctrinth.quick-search.search-modrinth": {
+		"message": "Искать «{query}» на Modrinth"
 	},
-	"offline-account.username-label": {
-		"message": "Ник"
+	"noctrinth.quick-search.settings": {
+		"message": "Настройки"
 	},
-	"offline-account.username-placeholder": {
-		"message": "Ник, под которым играть…"
+	"noctrinth.quick-search.stop": {
+		"message": "Остановить"
 	},
-	"offline-account.uuid": {
-		"message": "Будет играть как {uuid}"
+	"noctrinth.quick-search.update": {
+		"message": "Обновить"
 	},
-	"search.sort.date-published": {
-		"message": "Дата публикации"
+	"noctrinth.quick-search.update-available": {
+		"message": "Есть обновление"
 	},
-	"search.sort.date-updated": {
-		"message": "Дата обновления"
+	"noctrinth.screenshots.launcher-background-set": {
+		"message": "Фон лаунчера обновлён"
 	},
-	"search.sort.downloads": {
-		"message": "Загрузки"
+	"noctrinth.screenshots.set-launcher-background": {
+		"message": "Сделать фоном лаунчера"
 	},
-	"search.sort.followers": {
-		"message": "Подписчики"
+	"noctrinth.settings.appearance.show-hosting": {
+		"message": "Показывать Modrinth Hosting в боковой панели"
 	},
-	"search.sort.players": {
-		"message": "Игроки"
+	"noctrinth.settings.appearance.show-hosting.description": {
+		"message": "Показывать кнопку в левой боковой панели для перехода к Modrinth Hosting."
 	},
-	"search.sort.relevance": {
-		"message": "Релевантность"
+	"noctrinth.settings.appearance.show-sidebar-news": {
+		"message": "Показывать новости в боковой панели"
 	},
-	"search.sort.verified-plays": {
-		"message": "Подтверждённые запуски"
+	"noctrinth.settings.appearance.show-sidebar-news.description": {
+		"message": "Показывать последние новости Noctrinth и Modrinth в правой боковой панели."
 	},
-	"servers.list-empty.no-servers-description": {
-		"message": "Устанавливайте моды, зовите друзей и играйте вместе прямо в Noctrinth."
+	"noctrinth.settings.background.blur.description": {
+		"message": "Смягчает её, чтобы она не спорила с тем, что поверх."
 	},
-	"servers.list-empty.play-with-friends-description": {
-		"message": "Пригласите друзей на свой сервер — из Noctrinth они зайдут в один клик."
+	"noctrinth.settings.background.blur.title": {
+		"message": "Размыть фон"
 	},
-	"settings.display.theme.description": {
-		"message": "Выберите тему для Noctrinth на этом устройстве."
+	"noctrinth.settings.background.change": {
+		"message": "Сменить фон"
 	},
-	"settings.language.coverage.app-tooltip": {
-		"message": "Примерно {percentage}% Noctrinth доступно на этом языке."
+	"noctrinth.settings.background.choose": {
+		"message": "Выбрать файл"
 	},
-	"skin.preview.drag-to-rotate": {
-		"message": "Тяните, чтобы вращать"
+	"noctrinth.settings.background.description": {
+		"message": "Картинка, анимированная GIF или зацикленное видео за лаунчером: видно сквозь его рамку и, немного, сквозь карточки на страницах. Картинки и GIF — до 32 МБ, видео MP4 или WebM — до 100 МБ."
 	},
-	"noctrinth.translate.button": {
-		"message": "Перевести на {language}"
+	"noctrinth.settings.background.dim.description": {
+		"message": "Для яркого или пёстрого фона, чтобы то, что поверх, легко читалось."
 	},
-	"noctrinth.translate.original": {
-		"message": "Оригинал"
+	"noctrinth.settings.background.dim.title": {
+		"message": "Затемнение фона"
 	},
-	"noctrinth.translate.translating": {
-		"message": "Перевожу..."
+	"noctrinth.settings.background.drop-here": {
+		"message": "Бросайте сюда"
 	},
-	"noctrinth.translate.failed": {
-		"message": "Не получилось перевести: {reason}"
+	"noctrinth.settings.background.drop-hint": {
+		"message": "Или перетащите картинку или видео на окно."
 	},
-	"noctrinth.settings.splash-cube.title": {
-		"message": "Куб на заставке"
+	"noctrinth.settings.background.remove": {
+		"message": "Убрать"
+	},
+	"noctrinth.settings.background.title": {
+		"message": "Фон"
 	},
 	"noctrinth.settings.curseforge.cache.title": {
 		"message": "Кэш"
@@ -2342,44 +2447,20 @@
 	"noctrinth.settings.splash-cube.description": {
 		"message": "Какой куб показывает заставка при запуске. Применится со следующего запуска."
 	},
-	"noctrinth.settings.splash-cube.theme": {
-		"message": "По теме (изредка наоборот)"
-	},
 	"noctrinth.settings.splash-cube.inverted": {
 		"message": "Наоборот: чёрный на белом, белый на чёрном"
 	},
 	"noctrinth.settings.splash-cube.random": {
 		"message": "Случайно при каждом запуске"
 	},
-	"noctrinth.auth-servers.unreachable.retry": {
-		"message": "Проверить снова"
+	"noctrinth.settings.splash-cube.theme": {
+		"message": "По теме (изредка наоборот)"
 	},
-	"noctrinth.auth-servers.unreachable.scope": {
-		"message": "Пока они не ответят, вход и игра с аккаунтом Microsoft могут не работать. Оффлайн-аккаунтов и Ely.by это не касается."
+	"noctrinth.settings.splash-cube.title": {
+		"message": "Куб на заставке"
 	},
-	"skin.preview.scroll-to-zoom": {
-		"message": "Колёсико — масштаб"
-	},
-	"noctrinth.translate.source-language": {
-		"message": "Язык описания: {language}"
-	},
-	"noctrinth.translate.translated-by": {
-		"message": "Перевёл {service}"
-	},
-	"noctrinth.translate.retry": {
-		"message": "Попробовать снова"
-	},
-	"noctrinth.settings.translation.title": {
-		"message": "Перевод описаний"
-	},
-	"noctrinth.settings.translation.description": {
-		"message": "Предлагает перевести описание проекта на ваш язык, с переключателем обратно на оригинал."
-	},
-	"noctrinth.settings.translation.service": {
-		"message": "Сервис"
-	},
-	"noctrinth.settings.translation.google": {
-		"message": "Google Переводчик: бесплатно, без ключа"
+	"noctrinth.settings.translation.auto": {
+		"message": "Переводить сразу при открытии описания"
 	},
 	"noctrinth.settings.translation.deepl": {
 		"message": "DeepL: естественнее, нужен свой бесплатный API-ключ"
@@ -2390,11 +2471,17 @@
 	"noctrinth.settings.translation.deepl-key-hint": {
 		"message": "Бесплатный ключ переводит 500 000 символов в месяц. Получить можно на"
 	},
-	"noctrinth.settings.translation.target": {
-		"message": "Переводить на"
+	"noctrinth.settings.translation.description": {
+		"message": "Предлагает перевести описание проекта на ваш язык, с переключателем обратно на оригинал."
 	},
-	"noctrinth.settings.translation.target-app": {
-		"message": "Язык лаунчера ({language})"
+	"noctrinth.settings.translation.google": {
+		"message": "Google Переводчик: бесплатно, без ключа"
+	},
+	"noctrinth.settings.translation.precheck": {
+		"message": "Сначала определять язык и прятать кнопку, когда переводить нечего"
+	},
+	"noctrinth.settings.translation.service": {
+		"message": "Сервис"
 	},
 	"noctrinth.settings.translation.skip": {
 		"message": "Языки, которые вы и так читаете"
@@ -2402,11 +2489,11 @@
 	"noctrinth.settings.translation.skip-hint": {
 		"message": "Описания на них останутся как есть."
 	},
-	"noctrinth.settings.translation.auto": {
-		"message": "Переводить сразу при открытии описания"
+	"noctrinth.settings.translation.target": {
+		"message": "Переводить на"
 	},
-	"noctrinth.settings.translation.precheck": {
-		"message": "Сначала определять язык и прятать кнопку, когда переводить нечего"
+	"noctrinth.settings.translation.target-app": {
+		"message": "Язык лаунчера ({language})"
 	},
 	"noctrinth.settings.translation.test": {
 		"message": "Проверить сервис"
@@ -2414,229 +2501,145 @@
 	"noctrinth.settings.translation.test-ok": {
 		"message": "Работает, {milliseconds} мс: «{text}»"
 	},
-	"noctrinth.instance.stop-copy": {
-		"message": "Остановить {name} · {time}"
+	"noctrinth.settings.translation.title": {
+		"message": "Перевод описаний"
 	},
-	"noctrinth.creation-flow.curseforge-code.import": {
-		"message": "Импорт"
+	"noctrinth.translate.button": {
+		"message": "Перевести на {language}"
 	},
-	"noctrinth.creation-flow.curseforge-code.placeholder": {
-		"message": "Код или ссылка из приложения CurseForge"
+	"noctrinth.translate.failed": {
+		"message": "Не получилось перевести: {reason}"
 	},
-	"noctrinth.creation-flow.curseforge-code.title": {
-		"message": "Код профиля CurseForge"
+	"noctrinth.translate.original": {
+		"message": "Оригинал"
 	},
-	"noctrinth.instance.stop-all-copies": {
-		"message": "Остановить все копии"
+	"noctrinth.translate.retry": {
+		"message": "Попробовать снова"
 	},
-	"noctrinth.settings.background.title": {
-		"message": "Фон"
+	"noctrinth.translate.source-language": {
+		"message": "Язык описания: {language}"
 	},
-	"noctrinth.settings.background.description": {
-		"message": "Картинка, анимированная GIF или зацикленное видео за лаунчером: видно сквозь его рамку и, немного, сквозь карточки на страницах. Картинки и GIF — до 32 МБ, видео MP4 или WebM — до 100 МБ."
+	"noctrinth.translate.translated-by": {
+		"message": "Перевёл {service}"
 	},
-	"noctrinth.settings.background.choose": {
-		"message": "Выбрать файл"
+	"noctrinth.translate.translating": {
+		"message": "Перевожу..."
 	},
-	"noctrinth.settings.background.change": {
-		"message": "Сменить фон"
+	"notifications.back": {
+		"message": "Назад"
 	},
-	"noctrinth.settings.background.remove": {
-		"message": "Убрать"
+	"notifications.heading": {
+		"message": "Уведомления"
 	},
-	"noctrinth.settings.background.blur.title": {
-		"message": "Размыть фон"
+	"notifications.heading-history": {
+		"message": "История уведомлений"
 	},
-	"noctrinth.quick-search.discover": {
-		"message": "Ещё не установлено"
+	"notifications.history-empty": {
+		"message": "В истории нет уведомлений."
 	},
-	"noctrinth.quick-search.hint": {
-		"message": "↑↓ — выбрать · Enter — открыть · Ctrl+Enter — играть или обновить · Esc — закрыть"
+	"notifications.loading": {
+		"message": "Загрузка уведомлений…"
 	},
-	"noctrinth.quick-search.in-instance": {
-		"message": "В «{instance}»"
+	"notifications.mark-all-read": {
+		"message": "Прочитать все"
 	},
-	"noctrinth.quick-search.installed": {
-		"message": "Установлено"
+	"notifications.sign-in-prompt": {
+		"message": "Войдите, чтобы увидеть уведомления"
 	},
-	"noctrinth.quick-search.instances": {
-		"message": "Сборки"
+	"notifications.sign-in-prompt-body": {
+		"message": "Войдите в аккаунт Modrinth, чтобы увидеть здесь свои уведомления."
 	},
-	"noctrinth.quick-search.nothing": {
-		"message": "Ничего не нашлось"
+	"notifications.type.all": {
+		"message": "Все"
 	},
-	"noctrinth.quick-search.placeholder": {
-		"message": "Поиск по сборкам, тому, что в них установлено, и настройкам"
+	"notifications.type.moderator-message": {
+		"message": "Сообщения от модераторов"
 	},
-	"noctrinth.quick-search.play": {
-		"message": "Играть"
+	"notifications.type.organization-invite": {
+		"message": "Приглашения в организации"
 	},
-	"noctrinth.quick-search.reading": {
-		"message": "Читаю, что установлено…"
+	"notifications.type.other": {
+		"message": "Прочее"
 	},
-	"noctrinth.quick-search.recent": {
-		"message": "Недавно запускались"
+	"notifications.type.project-update": {
+		"message": "Обновления"
 	},
-	"noctrinth.quick-search.search-curseforge": {
-		"message": "Искать «{query}» на CurseForge"
+	"notifications.type.status-change": {
+		"message": "Изменения статуса"
 	},
-	"noctrinth.quick-search.search-modrinth": {
-		"message": "Искать «{query}» на Modrinth"
+	"notifications.type.team-invite": {
+		"message": "Приглашения в команды"
 	},
-	"noctrinth.quick-search.settings": {
-		"message": "Настройки"
+	"notifications.unread-empty": {
+		"message": "У вас нет непрочитанных уведомлений."
 	},
-	"noctrinth.quick-search.stop": {
-		"message": "Остановить"
+	"notifications.view-history": {
+		"message": "Посмотреть историю"
 	},
-	"noctrinth.quick-search.update": {
-		"message": "Обновить"
+	"offline-account.add": {
+		"message": "Добавить аккаунт"
 	},
-	"noctrinth.quick-search.update-available": {
-		"message": "Есть обновление"
+	"offline-account.description": {
+		"message": "Только ник и ничего больше. С ним лаунчер запускает игру, когда войти некуда."
 	},
-	"noctrinth.settings.background.blur.description": {
-		"message": "Смягчает её, чтобы она не спорила с тем, что поверх."
+	"offline-account.header": {
+		"message": "Добавить оффлайн-аккаунт"
 	},
-	"app.behavior-settings.refocus-on-game-close.description": {
-		"message": "Выводить Noctrinth на передний план при закрытии игры."
+	"offline-account.invalid": {
+		"message": "От 3 до 16 латинских букв, цифр или подчёркиваний — как принимает сервер."
 	},
-	"app.screenshots.selection.global-export-filename": {
-		"message": "Скриншоты Noctrinth.zip"
+	"offline-account.limitation-body": {
+		"message": "Серверы с лицензией спрашивают у Mojang, настоящая ли сессия, а её здесь нет. Всё остальное — миры на этом компьютере, локальная сеть и серверы с online-mode=false — работает как работало."
 	},
-	"app.settings.game-options.compatibility.reason.launcher-controlled": {
-		"message": "Этим параметром управляют настройки запуска Noctrinth."
+	"offline-account.limitation-header": {
+		"message": "Только одиночная игра и серверы без лицензии"
 	},
-	"app.settings.resource-management.debug-info.description": {
-		"message": "Экспортировать журналы приложения и диагностические данные в ZIP-файл, чтобы приложить его к сообщению о проблеме."
+	"offline-account.username-label": {
+		"message": "Ник"
 	},
-	"app.settings.synced-options.game-settings.custom-empty": {
-		"message": "Настройки, добавленные модами, появятся здесь после того, как Noctrinth найдёт их в одной из сборок."
+	"offline-account.username-placeholder": {
+		"message": "Ник, под которым играть…"
 	},
-	"app.settings.privacy.telemetry.description": {
-		"message": "Noctrinth не отправляет ни аналитику, ни данные об использовании, как бы ни стоял этот переключатель. Он оставлен, чтобы настройка переносилась из Modrinth App и обратно."
+	"offline-account.uuid": {
+		"message": "Будет играть как {uuid}"
 	},
-	"noctrinth.settings.background.drop-hint": {
-		"message": "Или перетащите картинку или видео на окно."
+	"search.sort.date-published": {
+		"message": "Дата публикации"
 	},
-	"noctrinth.settings.background.drop-here": {
-		"message": "Бросайте сюда"
+	"search.sort.date-updated": {
+		"message": "Дата обновления"
 	},
-	"noctrinth.settings.background.dim.title": {
-		"message": "Затемнение фона"
+	"search.sort.downloads": {
+		"message": "Загрузки"
 	},
-	"noctrinth.settings.background.dim.description": {
-		"message": "Для яркого или пёстрого фона, чтобы то, что поверх, легко читалось."
+	"search.sort.followers": {
+		"message": "Подписчики"
 	},
-	"app.appearance-settings.accent.custom": {
-		"message": "Свой"
+	"search.sort.players": {
+		"message": "Игроки"
 	},
-	"app.appearance-settings.accent.custom.wheel": {
-		"message": "Оттенок и насыщенность"
+	"search.sort.relevance": {
+		"message": "Релевантность"
 	},
-	"app.appearance-settings.accent.custom.brightness": {
-		"message": "Яркость"
+	"search.sort.verified-plays": {
+		"message": "Подтверждённые запуски"
 	},
-	"app.appearance-settings.accent.custom.hex": {
-		"message": "Цвет в HEX"
+	"servers.list-empty.no-servers-description": {
+		"message": "Устанавливайте моды, зовите друзей и играйте вместе прямо в Noctrinth."
 	},
-	"instance.settings.tabs.java.environment-variables": {
-		"message": "Переменные окружения"
+	"servers.list-empty.play-with-friends-description": {
+		"message": "Пригласите друзей на свой сервер — из Noctrinth они зайдут в один клик."
 	},
-	"instance.settings.tabs.java.java-arguments": {
-		"message": "Аргументы Java"
+	"settings.display.theme.description": {
+		"message": "Выберите тему для Noctrinth на этом устройстве."
 	},
-	"instance.settings.tabs.java.java-installation": {
-		"message": "Установка Java"
+	"settings.language.coverage.app-tooltip": {
+		"message": "Примерно {percentage}% Noctrinth доступно на этом языке."
 	},
-	"instance.settings.tabs.java.java-memory": {
-		"message": "Выделение памяти"
+	"skin.preview.drag-to-rotate": {
+		"message": "Тяните, чтобы вращать"
 	},
-	"app.settings.java-installations.location.title": {
-		"message": "Java {version, number}"
-	},
-	"noctrinth.screenshots.launcher-background-set": {
-		"message": "Фон лаунчера обновлён"
-	},
-	"noctrinth.screenshots.set-launcher-background": {
-		"message": "Сделать фоном лаунчера"
-	},
-	"noctrinth.settings.appearance.show-hosting": {
-		"message": "Показывать Modrinth Hosting в боковой панели"
-	},
-	"noctrinth.settings.appearance.show-hosting.description": {
-		"message": "Показывать кнопку в левой боковой панели для перехода к Modrinth Hosting."
-	},
-	"noctrinth.settings.appearance.show-sidebar-news": {
-		"message": "Показывать новости в боковой панели"
-	},
-	"noctrinth.settings.appearance.show-sidebar-news.description": {
-		"message": "Показывать последние новости Noctrinth и Modrinth в правой боковой панели."
-	},
-	"noctrinth.news.noctrinth-news": {
-		"message": "Новости Noctrinth"
-	},
-	"noctrinth.news.modrinth-news": {
-		"message": "Новости Modrinth"
-	},
-	"app.action-bar.install.inspect-details": {
-		"message": "Подробнее"
-	},
-	"noctrinth.instance.logs.open-file": {
-		"message": "Открыть файл"
-	},
-	"noctrinth.instance.logs.open-folder": {
-		"message": "Папка логов"
-	},
-	"app.plugins.disclaimer.header": {
-		"message": "Сторонние плагины"
-	},
-	"app.plugins.disclaimer.body": {
-		"message": "Плагины создаются сторонними авторами. Noctrinth не несёт ответственности за безопасность, стабильность, потерю данных или вредоносный код в установленных плагинах. Устанавливайте плагины только из источников, которым доверяете."
-	},
-	"app.plugins.action.browse-catalog": {
-		"message": "Открыть каталог"
-	},
-	"app.plugins.catalog.url.description": {
-		"message": "JSON-индекс, используемый для поиска и проверки плагинов сообщества."
-	},
-	"app.plugins.action.reload": {
-		"message": "Перезагрузить плагин"
-	},
-	"app.plugins.toast.reloaded": {
-		"message": "Плагин «{name}» перезагружен"
-	},
-	"app.plugins.action.update-all": {
-		"message": "Обновить все ({count})"
-	},
-	"app.plugins.toast.updated-all": {
-		"message": "Обновлено плагинов: {count}"
-	},
-	"app.plugins.action.logs": {
-		"message": "Логи плагина"
-	},
-	"app.plugins.logs.empty": {
-		"message": "Логов пока нет."
-	},
-	"app.plugins.logs.clear": {
-		"message": "Очистить"
-	},
-	"app.plugins.quick-css.title": {
-		"message": "Свой CSS (Quick CSS)"
-	},
-	"app.plugins.quick-css.description": {
-		"message": "Пользовательский CSS, применяемый мгновенно поверх текущей темы."
-	},
-	"app.plugins.quick-css.clear": {
-		"message": "Очистить"
-	},
-	"app.plugins.safe-mode.header": {
-		"message": "Включён безопасный режим"
-	},
-	"app.plugins.safe-mode.body": {
-		"message": "Все плагины и Quick CSS временно приостановлены. Нажмите Ctrl+Shift+Alt+P в любой момент, если сломанная тема или плагин сломают интерфейс."
-	},
-	"app.plugins.safe-mode.exit": {
-		"message": "Выйти из безопасного режима"
+	"skin.preview.scroll-to-zoom": {
+		"message": "Колёсико — масштаб"
 	}
 }

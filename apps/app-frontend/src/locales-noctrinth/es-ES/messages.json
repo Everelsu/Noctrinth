@@ -1340,11 +1340,20 @@
 	"app.notifications.version-for": {
 		"message": "para"
 	},
+	"app.plugins.action.browse-catalog": {
+		"message": "Explorar catálogo"
+	},
+	"app.plugins.action.docs": {
+		"message": "Documentación"
+	},
 	"app.plugins.action.install": {
 		"message": "Instalar"
 	},
 	"app.plugins.action.install-zip": {
 		"message": "Instalar desde .zip"
+	},
+	"app.plugins.action.logs": {
+		"message": "Registros del plugin"
 	},
 	"app.plugins.action.open-folder": {
 		"message": "Abrir carpeta"
@@ -1352,8 +1361,14 @@
 	"app.plugins.action.refresh": {
 		"message": "Actualizar"
 	},
+	"app.plugins.action.reload": {
+		"message": "Recargar plugin"
+	},
 	"app.plugins.action.update": {
 		"message": "Actualizar"
+	},
+	"app.plugins.action.update-all": {
+		"message": "Actualizar todo ({count})"
 	},
 	"app.plugins.badge.installed": {
 		"message": "Instalado"
@@ -1376,14 +1391,29 @@
 	"app.plugins.catalog.url": {
 		"message": "URL del índice del catálogo"
 	},
+	"app.plugins.catalog.url.description": {
+		"message": "Índice JSON utilizado para descubrir y verificar plugins de la comunidad."
+	},
 	"app.plugins.description": {
 		"message": "Amplía Noctrinth con temas, fuentes de contenido y extensiones aisladas."
+	},
+	"app.plugins.disclaimer.body": {
+		"message": "Los plugins son creados por autores externos. Noctrinth no se hace responsable de la seguridad, fiabilidad, pérdida de datos ni de código malicioso en los plugins instalados. Instala plugins solo de fuentes en las que confíes."
+	},
+	"app.plugins.disclaimer.header": {
+		"message": "Plugins de terceros"
 	},
 	"app.plugins.empty.installed.description": {
 		"message": "Instala un plugin verificado del catálogo o carga un archivo .zip local."
 	},
 	"app.plugins.empty.installed.heading": {
 		"message": "No hay plugins instalados"
+	},
+	"app.plugins.logs.clear": {
+		"message": "Limpiar"
+	},
+	"app.plugins.logs.empty": {
+		"message": "Aún no hay registros."
 	},
 	"app.plugins.permissions.domains": {
 		"message": "Red: {domains}"
@@ -1397,6 +1427,15 @@
 	"app.plugins.permissions.ui": {
 		"message": "Interfaz: {perms}"
 	},
+	"app.plugins.quick-css.clear": {
+		"message": "Limpiar"
+	},
+	"app.plugins.quick-css.description": {
+		"message": "CSS personalizado aplicado en vivo sobre el tema actual."
+	},
+	"app.plugins.quick-css.title": {
+		"message": "CSS rápido"
+	},
 	"app.plugins.remove.confirm": {
 		"message": "Eliminar"
 	},
@@ -1405,6 +1444,15 @@
 	},
 	"app.plugins.remove.title": {
 		"message": "¿Eliminar plugin?"
+	},
+	"app.plugins.safe-mode.body": {
+		"message": "Todos los plugins y Quick CSS están pausados temporalmente. Pulsa Ctrl+Shift+Alt+P en cualquier momento si un tema o plugin bloquea la interfaz."
+	},
+	"app.plugins.safe-mode.exit": {
+		"message": "Salir del modo seguro"
+	},
+	"app.plugins.safe-mode.header": {
+		"message": "Modo seguro activo"
 	},
 	"app.plugins.settings": {
 		"message": "Ajustes del plugin"
@@ -1421,8 +1469,14 @@
 	"app.plugins.toast.installed": {
 		"message": "\"{name}\" instalado"
 	},
+	"app.plugins.toast.reloaded": {
+		"message": "«{name}» recargado"
+	},
 	"app.plugins.toast.removed": {
 		"message": "\"{name}\" eliminado"
+	},
+	"app.plugins.toast.updated-all": {
+		"message": "{count} plugin(s) actualizado(s)"
 	},
 	"app.plugins.type.all": {
 		"message": "Todos"
@@ -2506,56 +2560,5 @@
 	},
 	"settings.language.coverage.app-tooltip": {
 		"message": "Aproximadamente el {percentage}% de Noctrinth está disponible en este idioma."
-	},
-	"app.plugins.disclaimer.header": {
-		"message": "Plugins de terceros"
-	},
-	"app.plugins.disclaimer.body": {
-		"message": "Los plugins son creados por autores externos. Noctrinth no se hace responsable de la seguridad, fiabilidad, pérdida de datos ni de código malicioso en los plugins instalados. Instala plugins solo de fuentes en las que confíes."
-	},
-	"app.plugins.action.browse-catalog": {
-		"message": "Explorar catálogo"
-	},
-	"app.plugins.catalog.url.description": {
-		"message": "Índice JSON utilizado para descubrir y verificar plugins de la comunidad."
-	},
-	"app.plugins.action.reload": {
-		"message": "Recargar plugin"
-	},
-	"app.plugins.toast.reloaded": {
-		"message": "«{name}» recargado"
-	},
-	"app.plugins.action.update-all": {
-		"message": "Actualizar todo ({count})"
-	},
-	"app.plugins.toast.updated-all": {
-		"message": "{count} plugin(s) actualizado(s)"
-	},
-	"app.plugins.action.logs": {
-		"message": "Registros del plugin"
-	},
-	"app.plugins.logs.empty": {
-		"message": "Aún no hay registros."
-	},
-	"app.plugins.logs.clear": {
-		"message": "Limpiar"
-	},
-	"app.plugins.quick-css.title": {
-		"message": "CSS rápido"
-	},
-	"app.plugins.quick-css.description": {
-		"message": "CSS personalizado aplicado en vivo sobre el tema actual."
-	},
-	"app.plugins.quick-css.clear": {
-		"message": "Limpiar"
-	},
-	"app.plugins.safe-mode.header": {
-		"message": "Modo seguro activo"
-	},
-	"app.plugins.safe-mode.body": {
-		"message": "Todos los plugins y Quick CSS están pausados temporalmente. Pulsa Ctrl+Shift+Alt+P en cualquier momento si un tema o plugin bloquea la interfaz."
-	},
-	"app.plugins.safe-mode.exit": {
-		"message": "Salir del modo seguro"
 	}
 }

@@ -232,6 +232,9 @@ export function renderDocsPage() {
 						<li><code>data-plugin-&lt;id&gt;-&lt;key&gt;="&lt;value&gt;"</code> — ${t('great for toggling CSS rules with <code>boolean</code> or <code>select</code>.', 'идеально для переключения блоков CSS через <code>boolean</code> или <code>select</code>.')}</li>
 						<li><code>--noctrinth-plugin-&lt;id&gt;-&lt;key&gt;</code> — ${t('automatic CSS custom property.', 'автоматическая CSS-переменная.')}</li>
 						<li><code>cssVar</code> — ${t('optional custom CSS variable name (e.g. <code>--fb-radius</code> or <code>--color-brand</code>).', 'необязательное своё имя CSS-переменной (например, <code>--fb-radius</code> или <code>--color-brand</code>).')}</li>
+						<li><code>group</code> &amp; <code>when</code> — ${t('organize settings into titled groups and conditionally show fields with <code>when: { "key": "...", "equals": true }</code>.', 'группируйте настройки по разделам и скрывайте зависимые поля через <code>when: { "key": "...", "equals": true }</code>.')}</li>
+						<li><code>presets</code> — ${t('one-click preset buttons in plugin settings that apply a bundle of setting values at once.', 'готовые пресеты в один клик, применяющие сразу набор настроек темы.')}</li>
+						<li>${t('<strong>Local assets in CSS:</strong> relative <code>url("./fonts/my.woff2")</code> or <code>url("./bg.png")</code> references in your stylesheets are automatically inlined from your plugin folder (up to 4 MB per file).', '<strong>Локальные ассеты в CSS:</strong> относительные ссылки <code>url("./fonts/my.woff2")</code> или <code>url("./bg.png")</code> в стилях автоматически подгружаются из папки плагина (до 4 МБ на файл).')}</li>
 					</ul>
 <pre><code>"settings": [
   {
@@ -292,10 +295,10 @@ export function renderDocsPage() {
 						'Скрипты работают в изолированном Web Worker без прямого доступа к DOM, Node или файловой системе. Любая возможность требует явного права в <code>plugin.json</code>:',
 					)}</p>
 					<ul>
-						<li><code>permissions.domains</code> — ${t('HTTPS host allowlist enforced in Rust for <code>noctrinth.fetch()</code> (e.g. <code>["api.github.com"]</code>).', 'белый список HTTPS-доменов для <code>noctrinth.fetch()</code>, проверяется в Rust (например, <code>["api.github.com"]</code>).')}</li>
+						<li><code>permissions.domains</code> — ${t('HTTPS host allowlist enforced in Rust for <code>noctrinth.fetch()</code> (e.g. <code>["api.github.com"]</code>). Local HTTP is also allowed for <code>"localhost"</code> / <code>"127.0.0.1"</code> (e.g. Ollama or LM Studio).', 'белый список HTTPS-доменов для <code>noctrinth.fetch()</code>, проверяется в Rust (например, <code>["api.github.com"]</code>). Для <code>"localhost"</code> / <code>"127.0.0.1"</code> разрешён и локальный HTTP (например, Ollama или LM Studio).')}</li>
 						<li><code>permissions.events</code> — <code>instance:launch</code>, <code>instance:exit</code>, <code>instance:crash</code>, <code>download:complete</code>.</li>
-						<li><code>permissions.instances</code> — <code>read</code>, <code>write</code>, <code>launch</code>.</li>
-						<li><code>permissions.ui</code> — <code>notifications</code>, <code>actions</code>, <code>modal</code>, <code>settings</code>.</li>
+						<li><code>permissions.instances</code> — <code>read</code> (${t('list, inspect, logs, list/read instance files', 'список, свойства, логи, чтение файлов сборки')}), <code>write</code> (${t('toggle/remove mods, write text/config files inside an instance', 'вкл/выкл/удаление модов, запись текстовых конфигов в папке сборки')}), <code>launch</code>.</li>
+						<li><code>permissions.ui</code> — <code>notifications</code>, <code>actions</code>, <code>settings</code>, <code>modal</code>, <code>panel</code> (${t('sandboxed slide-over HTML drawer', 'изолированная выдвижная HTML-панель')}), <code>page</code> (${t('dedicated full-page sidebar view', 'отдельная страница в левом сайдбаре')}), <code>clipboard</code>.</li>
 					</ul>
 					<div class="callout">
 						<strong>${t('Built-in safeguards:', 'Встроенная защита:')}</strong>
@@ -359,6 +362,70 @@ noctrinth.on('settings:change', ({ key, value }) => {
 noctrinth.on('instance:crash', ({ instanceId, summary }) => {
   console.warn('Crash detected in', instanceId, summary)
 })</code></pre>
+					<h3>${t('Sandboxed Custom UI: Panels & Dedicated Pages', 'Свой изолированный UI: выдвижные панели и страницы')}</h3>
+					<p>${t(
+						'Need a full custom interface such as an AI chat, server monitor, or config editor? Plugins can open a slide-over drawer (<code>noctrinth.ui.openPanel</code>) or add a dedicated page to the left navigation rail (<code>noctrinth.ui.registerPage</code> or <code>pages</code> in <code>plugin.json</code>). Your HTML runs inside a sandboxed <code>iframe</code> with Noctrinth’s live theme CSS variables and communicates with your worker via <code>window.noctrinthPanel</code>.',
+						'Нужен свой полноценный интерфейс — например, ИИ-чат, монитор серверов или редактор конфигов? Плагин может открыть выдвижную панель (<code>noctrinth.ui.openPanel</code>) или добавить отдельную страницу в левый сайдбар (<code>noctrinth.ui.registerPage</code> или поле <code>pages</code> в <code>plugin.json</code>). HTML работает в изолированном <code>iframe</code> с живыми CSS-переменными темы Noctrinth и общается с воркером через <code>window.noctrinthPanel</code>.',
+					)}</p>
+<pre><code>// main.js (Worker) — requires permissions.ui: ["actions", "panel"]
+await noctrinth.ui.registerAction(
+  { id: 'ai-chat', slot: 'sidebar', label: 'AI Chat', tooltip: 'Open AI assistant' },
+  async () => {
+    await noctrinth.ui.openPanel({
+      id: 'chat',
+      title: 'AI Assistant',
+      entry: 'panel.html', // loaded from your plugin folder
+      width: 440
+    })
+  }
+)
+
+noctrinth.ui.onPanelMessage(async (msg, panelId) => {
+  if (msg.type === 'ask') {
+    await noctrinth.fetchStream(
+      'http://localhost:11434/api/generate',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: 'llama3', prompt: msg.text, stream: true })
+      },
+      async (chunk) => {
+        for (const line of chunk.split('\n').filter(Boolean)) {
+          const token = JSON.parse(line).response
+          if (token) await noctrinth.ui.postPanelMessage({ type: 'token', text: token }, panelId)
+        }
+      }
+    )
+  }
+})</code></pre>
+<pre><code>&lt;!-- panel.html (runs inside sandboxed iframe) --&gt;
+&lt;input id="q" placeholder="Ask something..." /&gt;
+&lt;button onclick="out.textContent=''; noctrinthPanel.send({ type: 'ask', text: q.value })"&gt;Send&lt;/button&gt;
+&lt;pre id="out"&gt;&lt;/pre&gt;
+&lt;script&gt;
+  noctrinthPanel.onMessage((msg) =&gt; {
+    if (msg.type === 'token') document.getElementById('out').textContent += msg.text
+  })
+&lt;/script&gt;</code></pre>
+					<h3>${t('Interactive Forms, Instance Configs & App Info', 'Интерактивные формы, файлы сборок и данные приложения')}</h3>
+<pre><code>// Interactive form modal with input fields + live updates
+const form = await noctrinth.ui.showForm({
+  title: 'Configure endpoint',
+  blocks: [
+    { type: 'input', id: 'url', label: 'Server URL', placeholder: 'https://...' },
+    { type: 'input', id: 'notes', label: 'Notes', multiline: true }
+  ],
+  actions: [{ id: 'save', label: 'Save', color: 'brand' }]
+})
+
+// Read & write config files safely inside an instance folder
+const files = await noctrinth.instances.listFiles(instanceId, 'config')
+const cfg = await noctrinth.instances.readFile(instanceId, 'options.txt')
+await noctrinth.instances.writeFile(instanceId, 'config/my-plugin.json', JSON.stringify({ ok: true }))
+
+// Clipboard & read-only app info (locale, theme)
+await noctrinth.clipboard.writeText('Copied from plugin')
+const info = await noctrinth.app.getInfo()</code></pre>
 					<h3>${t('Custom Discover Content Source', 'Свой источник контента в «Исследовании»')}</h3>
 <pre><code>await noctrinth.contentSource.register({
   label: 'Hangar',

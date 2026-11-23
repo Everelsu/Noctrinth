@@ -1340,11 +1340,20 @@
 	"app.notifications.version-for": {
 		"message": "для"
 	},
+	"app.plugins.action.browse-catalog": {
+		"message": "Відкрити каталог"
+	},
+	"app.plugins.action.docs": {
+		"message": "Документація"
+	},
 	"app.plugins.action.install": {
 		"message": "Встановити"
 	},
 	"app.plugins.action.install-zip": {
 		"message": "Встановити з .zip"
+	},
+	"app.plugins.action.logs": {
+		"message": "Логи плагіна"
 	},
 	"app.plugins.action.open-folder": {
 		"message": "Папка плагінів"
@@ -1352,8 +1361,14 @@
 	"app.plugins.action.refresh": {
 		"message": "Оновити"
 	},
+	"app.plugins.action.reload": {
+		"message": "Перезавантажити плагін"
+	},
 	"app.plugins.action.update": {
 		"message": "Оновити"
+	},
+	"app.plugins.action.update-all": {
+		"message": "Оновити всі ({count})"
 	},
 	"app.plugins.badge.installed": {
 		"message": "Встановлено"
@@ -1376,14 +1391,29 @@
 	"app.plugins.catalog.url": {
 		"message": "URL індексу каталогу"
 	},
+	"app.plugins.catalog.url.description": {
+		"message": "JSON-індекс для пошуку та перевірки плагінів спільноти."
+	},
 	"app.plugins.description": {
 		"message": "Розширюйте Noctrinth темами, джерелами контенту та ізольованими розширеннями."
+	},
+	"app.plugins.disclaimer.body": {
+		"message": "Плагіни створюються сторонніми авторами. Noctrinth не несе відповідальності за безпеку, стабільність, втрату даних або шкідливий код у встановлених плагінах. Встановлюйте плагіни лише з надійних джерел."
+	},
+	"app.plugins.disclaimer.header": {
+		"message": "Сторонні плагіни"
 	},
 	"app.plugins.empty.installed.description": {
 		"message": "Встановіть перевірений плагін із каталогу або завантажте локальний .zip-архів."
 	},
 	"app.plugins.empty.installed.heading": {
 		"message": "Плагіни не встановлено"
+	},
+	"app.plugins.logs.clear": {
+		"message": "Очистити"
+	},
+	"app.plugins.logs.empty": {
+		"message": "Логів поки немає."
 	},
 	"app.plugins.permissions.domains": {
 		"message": "Мережа: {domains}"
@@ -1397,6 +1427,15 @@
 	"app.plugins.permissions.ui": {
 		"message": "Інтерфейс: {perms}"
 	},
+	"app.plugins.quick-css.clear": {
+		"message": "Очистити"
+	},
+	"app.plugins.quick-css.description": {
+		"message": "Користувацький CSS, що застосовується миттєво поверх поточної теми."
+	},
+	"app.plugins.quick-css.title": {
+		"message": "Власний CSS (Quick CSS)"
+	},
 	"app.plugins.remove.confirm": {
 		"message": "Видалити"
 	},
@@ -1405,6 +1444,15 @@
 	},
 	"app.plugins.remove.title": {
 		"message": "Видалити плагін?"
+	},
+	"app.plugins.safe-mode.body": {
+		"message": "Усі плагіни та Quick CSS тимчасово призупинено. Натисніть Ctrl+Shift+Alt+P у будь-який момент, якщо зламана тема або плагін заблокують інтерфейс."
+	},
+	"app.plugins.safe-mode.exit": {
+		"message": "Вийти з безпечного режиму"
+	},
+	"app.plugins.safe-mode.header": {
+		"message": "Увімкнено безпечний режим"
 	},
 	"app.plugins.settings": {
 		"message": "Налаштування плагіна"
@@ -1421,8 +1469,14 @@
 	"app.plugins.toast.installed": {
 		"message": "Встановлено плагін «{name}»"
 	},
+	"app.plugins.toast.reloaded": {
+		"message": "Плагін «{name}» перезавантажено"
+	},
 	"app.plugins.toast.removed": {
 		"message": "Видалено плагін «{name}»"
+	},
+	"app.plugins.toast.updated-all": {
+		"message": "Оновлено плагінів: {count}"
 	},
 	"app.plugins.type.all": {
 		"message": "Усі"
@@ -2491,56 +2545,5 @@
 	},
 	"settings.language.coverage.app-tooltip": {
 		"message": "Близько {percentage}% інтерфейсу Noctrinth доступно цією мовою."
-	},
-	"app.plugins.disclaimer.header": {
-		"message": "Сторонні плагіни"
-	},
-	"app.plugins.disclaimer.body": {
-		"message": "Плагіни створюються сторонніми авторами. Noctrinth не несе відповідальності за безпеку, стабільність, втрату даних або шкідливий код у встановлених плагінах. Встановлюйте плагіни лише з надійних джерел."
-	},
-	"app.plugins.action.browse-catalog": {
-		"message": "Відкрити каталог"
-	},
-	"app.plugins.catalog.url.description": {
-		"message": "JSON-індекс для пошуку та перевірки плагінів спільноти."
-	},
-	"app.plugins.action.reload": {
-		"message": "Перезавантажити плагін"
-	},
-	"app.plugins.toast.reloaded": {
-		"message": "Плагін «{name}» перезавантажено"
-	},
-	"app.plugins.action.update-all": {
-		"message": "Оновити всі ({count})"
-	},
-	"app.plugins.toast.updated-all": {
-		"message": "Оновлено плагінів: {count}"
-	},
-	"app.plugins.action.logs": {
-		"message": "Логи плагіна"
-	},
-	"app.plugins.logs.empty": {
-		"message": "Логів поки немає."
-	},
-	"app.plugins.logs.clear": {
-		"message": "Очистити"
-	},
-	"app.plugins.quick-css.title": {
-		"message": "Власний CSS (Quick CSS)"
-	},
-	"app.plugins.quick-css.description": {
-		"message": "Користувацький CSS, що застосовується миттєво поверх поточної теми."
-	},
-	"app.plugins.quick-css.clear": {
-		"message": "Очистити"
-	},
-	"app.plugins.safe-mode.header": {
-		"message": "Увімкнено безпечний режим"
-	},
-	"app.plugins.safe-mode.body": {
-		"message": "Усі плагіни та Quick CSS тимчасово призупинено. Натисніть Ctrl+Shift+Alt+P у будь-який момент, якщо зламана тема або плагін заблокують інтерфейс."
-	},
-	"app.plugins.safe-mode.exit": {
-		"message": "Вийти з безпечного режиму"
 	}
 }

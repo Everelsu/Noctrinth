@@ -1,7 +1,11 @@
 import type {
 	NoctrinthActionSlot,
+	NoctrinthPluginFormResult,
 	NoctrinthPluginManifest,
 	NoctrinthPluginModalRequest,
+	NoctrinthPluginPageDeclaration,
+	NoctrinthPluginPanelRequest,
+	NoctrinthPluginPreset,
 	NoctrinthPluginType,
 } from './sdk'
 
@@ -9,11 +13,18 @@ export type {
 	NoctrinthActionSlot,
 	NoctrinthContentSourceHit,
 	NoctrinthContentSourceSearchResult,
+	NoctrinthPluginAppInfo,
 	NoctrinthPluginEvent,
+	NoctrinthPluginFormResult,
+	NoctrinthPluginInstanceFileEntry,
 	NoctrinthPluginManifest,
 	NoctrinthPluginModalAction,
 	NoctrinthPluginModalBlock,
 	NoctrinthPluginModalRequest,
+	NoctrinthPluginPageDeclaration,
+	NoctrinthPluginPanelRequest,
+	NoctrinthPluginPreset,
+	NoctrinthPluginSettingCondition,
 	NoctrinthPluginSettingField,
 	NoctrinthPluginType,
 } from './sdk'
@@ -41,6 +52,24 @@ export interface RegisteredPluginContentSource {
 	projectTypes: string[]
 }
 
+export interface RegisteredPluginPage {
+	pluginId: string
+	pluginName: string
+	pageId: string
+	title: string
+	tooltip?: string
+	html: string
+}
+
+export interface ActivePluginPanel {
+	pluginId: string
+	pluginName: string
+	panelId: string
+	title: string
+	html: string
+	width: number
+}
+
 export interface PluginLogEntry {
 	timestamp: number
 	level: 'info' | 'warn' | 'error'
@@ -50,8 +79,9 @@ export interface PluginLogEntry {
 export interface ActivePluginModal {
 	pluginId: string
 	pluginName: string
+	mode: 'modal' | 'form'
 	request: NoctrinthPluginModalRequest
-	resolve: (actionId: string | null) => void
+	resolve: (result: string | null | NoctrinthPluginFormResult) => void
 }
 
 export interface CatalogPluginEntry {
@@ -83,3 +113,5 @@ export interface PluginCatalog {
 	updated_at?: string
 	plugins: CatalogPluginEntry[]
 }
+
+export type { NoctrinthPluginPageDeclaration, NoctrinthPluginPanelRequest, NoctrinthPluginPreset }

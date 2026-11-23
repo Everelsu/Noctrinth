@@ -94,6 +94,7 @@ import NavButton from '@/components/ui/NavButton.vue'
 import NoctrinthBackdrop from '@/components/ui/NoctrinthBackdrop.vue'
 import NoctrinthCrashModal from '@/components/ui/NoctrinthCrashModal.vue'
 import NoctrinthPluginModal from '@/components/ui/NoctrinthPluginModal.vue'
+import NoctrinthPluginPanel from '@/components/ui/NoctrinthPluginPanel.vue'
 import NoctrinthSwipeNavigation from '@/components/ui/NoctrinthSwipeNavigation.vue'
 import QuickSearchPalette from '@/components/ui/quick-search/QuickSearchPalette.vue'
 import QuickInstanceSwitcher from '@/components/ui/QuickInstanceSwitcher.vue'
@@ -170,6 +171,7 @@ import {
 	installPluginById,
 	invokePluginAction,
 	pluginActions,
+	pluginPages,
 	setPluginNotificationHandler,
 } from '@/helpers/noctrinth-plugins'
 import { prefetchRouteChunks, startProjectHoverPrefetch } from '@/helpers/noctrinth-prefetch'
@@ -2443,6 +2445,7 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 		<InstanceActionModals ref="instanceActionModals" />
 		<SharedInstanceModals ref="sharedInstanceModals" />
 		<div
+			data-noctrinth-nav
 			class="app-grid-navbar bg-bg-raised flex flex-col p-[0.5rem] pt-0 gap-[0.25rem] w-[--left-bar-width]"
 		>
 			<NavButton
@@ -2510,6 +2513,14 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 					</NavButton>
 				</QuickInstanceSwitcher>
 			</suspense>
+			<NavButton
+				v-for="page in pluginPages"
+				:key="`page:${page.pluginId}:${page.pageId}`"
+				v-tooltip.right="page.tooltip || page.title"
+				:to="`/plugin-page/${encodeURIComponent(page.pluginId)}/${encodeURIComponent(page.pageId)}`"
+			>
+				<PlugIcon />
+			</NavButton>
 			<NavButton
 				v-for="action in sidebarPluginActions"
 				:key="`${action.pluginId}:${action.actionId}`"
@@ -2599,13 +2610,14 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 	</div>
 	<div
 		v-if="stateInitialized"
+		data-noctrinth-contents
 		class="app-contents"
 		:class="{
 			'sidebar-enabled': sidebarVisible,
 			'disable-advanced-rendering': !appTheme.advancedRendering,
 		}"
 	>
-		<div class="app-viewport flex-grow router-view">
+		<div data-noctrinth-main class="app-viewport flex-grow router-view">
 			<SurveyPopup />
 			<div
 				class="loading-indicator-container h-8 fixed z-50 pointer-events-none"
@@ -2694,6 +2706,7 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 	<ErrorModal ref="errorModal" />
 	<NoctrinthCrashModal />
 	<NoctrinthPluginModal />
+	<NoctrinthPluginPanel />
 	<NoctrinthSwipeNavigation />
 	<MinecraftAuthErrorModal ref="minecraftAuthErrorModal" />
 	<MinecraftRequiredModal ref="minecraftRequiredModal" />

@@ -37,6 +37,7 @@ import { openUrl } from '@tauri-apps/plugin-opener'
 import { computed, onMounted, ref } from 'vue'
 
 import {
+	applyPluginPreset,
 	type CatalogPluginEntry,
 	clearPluginLogs,
 	DEFAULT_PLUGIN_CATALOG_URL,
@@ -100,6 +101,7 @@ const messages = defineMessages({
 	tabCatalog: { id: 'app.plugins.tab.catalog', defaultMessage: 'Catalog' },
 	installZip: { id: 'app.plugins.action.install-zip', defaultMessage: 'Install from .zip' },
 	openFolder: { id: 'app.plugins.action.open-folder', defaultMessage: 'Open folder' },
+	openDocs: { id: 'app.plugins.action.docs', defaultMessage: 'Docs' },
 	browseCatalog: { id: 'app.plugins.action.browse-catalog', defaultMessage: 'Browse catalog' },
 	refresh: { id: 'app.plugins.action.refresh', defaultMessage: 'Refresh' },
 	reload: { id: 'app.plugins.action.reload', defaultMessage: 'Reload plugin' },
@@ -191,6 +193,7 @@ const messages = defineMessages({
 	},
 })
 
+const PLUGIN_DOCS_URL = 'https://everelsu.github.io/Noctrinth/docs/'
 const DISCLAIMER_DISMISSED_KEY = 'noctrinth.plugins.disclaimerDismissed'
 const disclaimerDismissed = ref(
 	typeof localStorage !== 'undefined' && localStorage.getItem(DISCLAIMER_DISMISSED_KEY) === '1',
@@ -230,6 +233,33 @@ function readSettingValue(plugin: InstalledPlugin, key: string) {
 function updateSettingValue(pluginId: string, key: string, value: unknown) {
 	setPluginSetting(pluginId, key, value)
 	settingsRevision.value++
+}
+
+function handleApplyPreset(pluginId: string, values: Record<string, string | boolean | number>) {
+	applyPluginPreset(pluginId, values)
+	settingsRevision.value++
+}
+
+function groupedVisibleSettings(plugin: InstalledPlugin) {
+	void settingsRevision.value
+	const values = getPluginSettings(plugin)
+	const visible = (plugin.manifest.settings ?? []).filter((field) => {
+		if (!field.when) return true
+		return values[field.when.key] === field.when.equals
+	})
+	const groups: Array<{ name: string | null; fields: typeof visible }> = []
+	const byName = new Map<string, (typeof groups)[number]>()
+	for (const field of visible) {
+		const groupName = field.group?.trim() || ''
+		let bucket = byName.get(groupName)
+		if (!bucket) {
+			bucket = { name: groupName || null, fields: [] }
+			byName.set(groupName, bucket)
+			groups.push(bucket)
+		}
+		bucket.fields.push(field)
+	}
+	return groups
 }
 
 function formatLogTime(ts: number): string {
@@ -498,6 +528,10 @@ onMounted(() => {
 							<FolderOpenIcon aria-hidden="true" />
 							{{ formatMessage(messages.openFolder) }}
 						</Button>
+						<Button @click="openUrl(PLUGIN_DOCS_URL)">
+							<ExternalIcon aria-hidden="true" />
+							{{ formatMessage(messages.openDocs) }}
+						</Button>
 						<Button disabled>
 							<DiscordIcon aria-hidden="true" />
 							Discord
@@ -657,7 +691,7 @@ onMounted(() => {
 									<CodeIcon />
 								</IconButton>
 								<IconButton
-									v-if="plugin.manifest.settings?.length"
+									v-if="plugin.manifest.settings?.length || plugin.manifest.presets?.length"
 									v-tooltip="formatMessage(messages.pluginSettings)"
 									:type="openSettingsPluginId === plugin.manifest.id ? 'base' : 'quiet'"
 									size="sm"
@@ -697,83 +731,109 @@ onMounted(() => {
 						</div>
 
 						<Collapsible
-							v-if="plugin.manifest.settings?.length"
+							v-if="plugin.manifest.settings?.length || plugin.manifest.presets?.length"
 							:collapsed="openSettingsPluginId !== plugin.manifest.id"
 						>
 							<div class="flex flex-col gap-3 border-0 border-t border-solid border-surface-5 pt-3">
 								<div
-									v-for="field in plugin.manifest.settings"
-									:key="field.key"
-									class="flex flex-wrap items-center justify-between gap-3"
+									v-if="plugin.manifest.presets?.length"
+									class="flex flex-wrap items-center gap-2 border-0 border-b border-solid border-surface-5 pb-3"
 								>
-									<div class="flex min-w-0 flex-1 flex-col gap-0.5">
-										<span class="text-sm font-medium text-contrast">{{ field.label }}</span>
-										<span v-if="field.description" class="text-xs text-secondary">
-											{{ field.description }}
-										</span>
-									</div>
-									<Toggle
-										v-if="field.type === 'boolean'"
-										:model-value="Boolean(readSettingValue(plugin, field.key))"
-										@update:model-value="
-											(val) => updateSettingValue(plugin.manifest.id, field.key, Boolean(val))
-										"
-									/>
-									<Combobox
-										v-else-if="field.type === 'select' && field.options?.length"
-										:model-value="String(readSettingValue(plugin, field.key) ?? '')"
-										:options="field.options"
-										trigger-size="sm"
-										class="!w-48"
-										@update:model-value="
-											(val) => updateSettingValue(plugin.manifest.id, field.key, String(val))
-										"
-									/>
-									<div v-else-if="field.type === 'color'" class="flex items-center gap-2">
-										<input
-											type="color"
-											class="size-8 cursor-pointer rounded-lg border border-solid border-surface-5 bg-transparent p-0.5"
-											:value="String(readSettingValue(plugin, field.key) ?? '#a855f7')"
-											@input="
-												(e) =>
-													updateSettingValue(
-														plugin.manifest.id,
-														field.key,
-														(e.target as HTMLInputElement).value,
-													)
+									<Button
+										v-for="preset in plugin.manifest.presets"
+										:key="preset.id"
+										v-tooltip="preset.description"
+										size="sm"
+										@click="handleApplyPreset(plugin.manifest.id, preset.values)"
+									>
+										{{ preset.name }}
+									</Button>
+								</div>
+								<div
+									v-for="(group, groupIdx) in groupedVisibleSettings(plugin)"
+									:key="group.name ?? `group-${groupIdx}`"
+									class="flex flex-col gap-3"
+								>
+									<span
+										v-if="group.name"
+										class="text-xs font-semibold uppercase tracking-wider text-secondary"
+									>
+										{{ group.name }}
+									</span>
+									<div
+										v-for="field in group.fields"
+										:key="field.key"
+										class="flex flex-wrap items-center justify-between gap-3"
+									>
+										<div class="flex min-w-0 flex-1 flex-col gap-0.5">
+											<span class="text-sm font-medium text-contrast">{{ field.label }}</span>
+											<span v-if="field.description" class="text-xs text-secondary">
+												{{ field.description }}
+											</span>
+										</div>
+										<Toggle
+											v-if="field.type === 'boolean'"
+											:model-value="Boolean(readSettingValue(plugin, field.key))"
+											@update:model-value="
+												(val) => updateSettingValue(plugin.manifest.id, field.key, Boolean(val))
+											"
+										/>
+										<Combobox
+											v-else-if="field.type === 'select' && field.options?.length"
+											:model-value="String(readSettingValue(plugin, field.key) ?? '')"
+											:options="field.options"
+											trigger-size="sm"
+											class="!w-48"
+											@update:model-value="
+												(val) => updateSettingValue(plugin.manifest.id, field.key, String(val))
+											"
+										/>
+										<div v-else-if="field.type === 'color'" class="flex items-center gap-2">
+											<input
+												type="color"
+												class="size-8 cursor-pointer rounded-lg border border-solid border-surface-5 bg-transparent p-0.5"
+												:value="String(readSettingValue(plugin, field.key) ?? '#a855f7')"
+												@input="
+													(e) =>
+														updateSettingValue(
+															plugin.manifest.id,
+															field.key,
+															(e.target as HTMLInputElement).value,
+														)
+												"
+											/>
+											<Input
+												size="small"
+												wrapper-class="w-28"
+												:model-value="String(readSettingValue(plugin, field.key) ?? '')"
+												:placeholder="field.placeholder ?? '#a855f7'"
+												@update:model-value="
+													(val) => updateSettingValue(plugin.manifest.id, field.key, String(val))
+												"
+											/>
+										</div>
+										<Input
+											v-else-if="field.type === 'number'"
+											type="number"
+											size="small"
+											wrapper-class="w-32"
+											:model-value="String(readSettingValue(plugin, field.key) ?? '')"
+											:placeholder="field.placeholder"
+											@update:model-value="
+												(val) => updateSettingValue(plugin.manifest.id, field.key, Number(val))
 											"
 										/>
 										<Input
+											v-else
 											size="small"
-											wrapper-class="w-28"
+											wrapper-class="w-64 max-w-full"
 											:model-value="String(readSettingValue(plugin, field.key) ?? '')"
-											:placeholder="field.placeholder ?? '#a855f7'"
+											:placeholder="field.placeholder"
 											@update:model-value="
 												(val) => updateSettingValue(plugin.manifest.id, field.key, String(val))
 											"
 										/>
 									</div>
-									<Input
-										v-else-if="field.type === 'number'"
-										type="number"
-										size="small"
-										wrapper-class="w-32"
-										:model-value="String(readSettingValue(plugin, field.key) ?? '')"
-										:placeholder="field.placeholder"
-										@update:model-value="
-											(val) => updateSettingValue(plugin.manifest.id, field.key, Number(val))
-										"
-									/>
-									<Input
-										v-else
-										size="small"
-										wrapper-class="w-64 max-w-full"
-										:model-value="String(readSettingValue(plugin, field.key) ?? '')"
-										:placeholder="field.placeholder"
-										@update:model-value="
-											(val) => updateSettingValue(plugin.manifest.id, field.key, String(val))
-										"
-									/>
 								</div>
 							</div>
 						</Collapsible>

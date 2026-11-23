@@ -8,8 +8,20 @@ export type NoctrinthPluginEvent =
 	| 'settings:change'
 
 export type NoctrinthInstancePermission = 'read' | 'write' | 'launch'
-export type NoctrinthUiPermission = 'notifications' | 'actions' | 'settings' | 'modal'
+export type NoctrinthUiPermission =
+	| 'notifications'
+	| 'actions'
+	| 'settings'
+	| 'modal'
+	| 'panel'
+	| 'page'
+	| 'clipboard'
 export type NoctrinthActionSlot = 'instance-header' | 'sidebar' | 'mod-menu'
+
+export interface NoctrinthPluginSettingCondition {
+	key: string
+	equals: string | boolean | number
+}
 
 export interface NoctrinthPluginSettingField {
 	key: string
@@ -21,7 +33,24 @@ export interface NoctrinthPluginSettingField {
 	min?: number
 	max?: number
 	cssVar?: string
+	group?: string
+	when?: NoctrinthPluginSettingCondition
 	options?: Array<{ value: string; label: string }>
+}
+
+export interface NoctrinthPluginPreset {
+	id: string
+	name: string
+	description?: string
+	values: Record<string, string | boolean | number>
+}
+
+export interface NoctrinthPluginPageDeclaration {
+	id: string
+	title: string
+	entry?: string
+	html?: string
+	tooltip?: string
 }
 
 export type NoctrinthPluginModalBlock =
@@ -29,6 +58,16 @@ export type NoctrinthPluginModalBlock =
 	| { type: 'code'; text: string }
 	| { type: 'progress'; value: number; max?: number; label?: string }
 	| { type: 'list'; items: Array<{ title: string; subtitle?: string }> }
+	| {
+			type: 'input'
+			id: string
+			label?: string
+			placeholder?: string
+			value?: string
+			multiline?: boolean
+			secret?: boolean
+	  }
+	| { type: 'divider' }
 
 export interface NoctrinthPluginModalAction {
 	id: string
@@ -41,6 +80,26 @@ export interface NoctrinthPluginModalRequest {
 	description?: string
 	blocks?: NoctrinthPluginModalBlock[]
 	actions?: NoctrinthPluginModalAction[]
+}
+
+export interface NoctrinthPluginFormResult {
+	action: string | null
+	values: Record<string, string>
+}
+
+export interface NoctrinthPluginPanelRequest {
+	id?: string
+	title: string
+	entry?: string
+	html?: string
+	width?: number
+}
+
+export interface NoctrinthPluginInstanceFileEntry {
+	name: string
+	path: string
+	is_dir: boolean
+	size: number
 }
 
 export interface NoctrinthPluginPermissions {
@@ -61,10 +120,13 @@ export interface NoctrinthPluginManifest {
 	description?: string
 	homepage?: string
 	icon?: string
+	banner?: string
 	styles?: string[]
 	entry?: string
 	permissions?: NoctrinthPluginPermissions
 	settings?: NoctrinthPluginSettingField[]
+	presets?: NoctrinthPluginPreset[]
+	pages?: NoctrinthPluginPageDeclaration[]
 }
 
 export interface NoctrinthPluginFetchResponse {
@@ -72,6 +134,12 @@ export interface NoctrinthPluginFetchResponse {
 	ok: boolean
 	headers: Record<string, string>
 	body: string
+}
+
+export interface NoctrinthPluginStreamHead {
+	status: number
+	ok: boolean
+	headers: Record<string, string>
 }
 
 export interface NoctrinthContentSourceHit {
@@ -96,6 +164,12 @@ export interface NoctrinthContentSourceSearchResult {
 	limit: number
 }
 
+export interface NoctrinthPluginAppInfo {
+	locale: string
+	theme: string
+	safeMode: boolean
+}
+
 export interface NoctrinthPluginSdk {
 	readonly id: string
 	readonly version: string
@@ -103,6 +177,11 @@ export interface NoctrinthPluginSdk {
 		url: string,
 		init?: { method?: string; headers?: Record<string, string>; body?: string },
 	): Promise<NoctrinthPluginFetchResponse>
+	fetchStream(
+		url: string,
+		init: { method?: string; headers?: Record<string, string>; body?: string } | undefined,
+		onChunk: (chunk: string) => void | Promise<void>,
+	): Promise<NoctrinthPluginStreamHead>
 	storage: {
 		get(key: string): Promise<string | null>
 		set(key: string, value: string): Promise<void>
@@ -117,12 +196,25 @@ export interface NoctrinthPluginSdk {
 		text?: string
 		type?: 'info' | 'success' | 'warning' | 'error'
 	}): Promise<void>
+	clipboard: {
+		writeText(text: string): Promise<void>
+	}
+	app: {
+		getInfo(): Promise<NoctrinthPluginAppInfo>
+	}
 	ui: {
 		registerAction(
 			action: { id: string; slot: NoctrinthActionSlot; label: string; tooltip?: string },
 			handler: (context: Record<string, unknown>) => void | Promise<void>,
 		): Promise<void>
 		showModal(opts: NoctrinthPluginModalRequest): Promise<string | null>
+		showForm(opts: NoctrinthPluginModalRequest): Promise<NoctrinthPluginFormResult>
+		updateModal(opts: Partial<NoctrinthPluginModalRequest>): Promise<void>
+		openPanel(opts: NoctrinthPluginPanelRequest): Promise<void>
+		closePanel(): Promise<void>
+		postPanelMessage(data: unknown, targetId?: string): Promise<void>
+		onPanelMessage(handler: (data: unknown, panelId: string) => void | Promise<void>): void
+		registerPage(page: NoctrinthPluginPageDeclaration): Promise<void>
 	}
 	instances: {
 		list(): Promise<Array<Record<string, unknown>>>
@@ -132,6 +224,9 @@ export interface NoctrinthPluginSdk {
 		removeContent(instanceId: string, filePath: string): Promise<void>
 		toggleContent(instanceId: string, filePath: string, enabled?: boolean): Promise<void>
 		getLogs(instanceId: string): Promise<Array<Record<string, unknown>>>
+		listFiles(instanceId: string, relDir?: string): Promise<NoctrinthPluginInstanceFileEntry[]>
+		readFile(instanceId: string, relPath: string): Promise<string>
+		writeFile(instanceId: string, relPath: string, content: string): Promise<void>
 	}
 	contentSource: {
 		register(def: {

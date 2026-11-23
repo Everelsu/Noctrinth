@@ -1340,11 +1340,20 @@
 	"app.notifications.version-for": {
 		"message": "适用于"
 	},
+	"app.plugins.action.browse-catalog": {
+		"message": "浏览目录"
+	},
+	"app.plugins.action.docs": {
+		"message": "文档"
+	},
 	"app.plugins.action.install": {
 		"message": "安装"
 	},
 	"app.plugins.action.install-zip": {
 		"message": "从 .zip 安装"
+	},
+	"app.plugins.action.logs": {
+		"message": "插件日志"
 	},
 	"app.plugins.action.open-folder": {
 		"message": "打开文件夹"
@@ -1352,8 +1361,14 @@
 	"app.plugins.action.refresh": {
 		"message": "刷新"
 	},
+	"app.plugins.action.reload": {
+		"message": "重载插件"
+	},
 	"app.plugins.action.update": {
 		"message": "更新"
+	},
+	"app.plugins.action.update-all": {
+		"message": "全部更新 ({count})"
 	},
 	"app.plugins.badge.installed": {
 		"message": "已安装"
@@ -1376,14 +1391,29 @@
 	"app.plugins.catalog.url": {
 		"message": "目录索引 URL"
 	},
+	"app.plugins.catalog.url.description": {
+		"message": "用于发现和验证社区插件的 JSON 索引地址。"
+	},
 	"app.plugins.description": {
 		"message": "使用主题、内容源和沙盒扩展来增强 Noctrinth。"
+	},
+	"app.plugins.disclaimer.body": {
+		"message": "插件由第三方作者开发。Noctrinth 不对已安装插件的安全性、可靠性、数据丢失或任何恶意代码承担责任。请仅从您信任的来源安装插件。"
+	},
+	"app.plugins.disclaimer.header": {
+		"message": "第三方插件"
 	},
 	"app.plugins.empty.installed.description": {
 		"message": "从目录安装经校验的插件，或加载本地 .zip 压缩包。"
 	},
 	"app.plugins.empty.installed.heading": {
 		"message": "未安装插件"
+	},
+	"app.plugins.logs.clear": {
+		"message": "清空"
+	},
+	"app.plugins.logs.empty": {
+		"message": "暂无日志输出。"
 	},
 	"app.plugins.permissions.domains": {
 		"message": "网络：{domains}"
@@ -1397,6 +1427,15 @@
 	"app.plugins.permissions.ui": {
 		"message": "界面：{perms}"
 	},
+	"app.plugins.quick-css.clear": {
+		"message": "清空"
+	},
+	"app.plugins.quick-css.description": {
+		"message": "实时应用在当前主题之上的自定义 CSS。"
+	},
+	"app.plugins.quick-css.title": {
+		"message": "自定义 CSS (Quick CSS)"
+	},
 	"app.plugins.remove.confirm": {
 		"message": "移除"
 	},
@@ -1405,6 +1444,15 @@
 	},
 	"app.plugins.remove.title": {
 		"message": "移除插件？"
+	},
+	"app.plugins.safe-mode.body": {
+		"message": "所有插件和 Quick CSS 已暂时停用。若损坏的主题或插件导致界面无法操作，可随时按 Ctrl+Shift+Alt+P。"
+	},
+	"app.plugins.safe-mode.exit": {
+		"message": "退出安全模式"
+	},
+	"app.plugins.safe-mode.header": {
+		"message": "安全模式已启用"
 	},
 	"app.plugins.settings": {
 		"message": "插件设置"
@@ -1421,8 +1469,14 @@
 	"app.plugins.toast.installed": {
 		"message": "已安装“{name}”"
 	},
+	"app.plugins.toast.reloaded": {
+		"message": "已重载“{name}”"
+	},
 	"app.plugins.toast.removed": {
 		"message": "已移除“{name}”"
+	},
+	"app.plugins.toast.updated-all": {
+		"message": "已更新 {count} 个插件"
 	},
 	"app.plugins.type.all": {
 		"message": "全部"
@@ -2503,56 +2557,5 @@
 	},
 	"settings.language.coverage.app-tooltip": {
 		"message": "约有 {percentage}% 的 Noctrinth 界面已支持此语言。"
-	},
-	"app.plugins.disclaimer.header": {
-		"message": "第三方插件"
-	},
-	"app.plugins.disclaimer.body": {
-		"message": "插件由第三方作者开发。Noctrinth 不对已安装插件的安全性、可靠性、数据丢失或任何恶意代码承担责任。请仅从您信任的来源安装插件。"
-	},
-	"app.plugins.action.browse-catalog": {
-		"message": "浏览目录"
-	},
-	"app.plugins.catalog.url.description": {
-		"message": "用于发现和验证社区插件的 JSON 索引地址。"
-	},
-	"app.plugins.action.reload": {
-		"message": "重载插件"
-	},
-	"app.plugins.toast.reloaded": {
-		"message": "已重载“{name}”"
-	},
-	"app.plugins.action.update-all": {
-		"message": "全部更新 ({count})"
-	},
-	"app.plugins.toast.updated-all": {
-		"message": "已更新 {count} 个插件"
-	},
-	"app.plugins.action.logs": {
-		"message": "插件日志"
-	},
-	"app.plugins.logs.empty": {
-		"message": "暂无日志输出。"
-	},
-	"app.plugins.logs.clear": {
-		"message": "清空"
-	},
-	"app.plugins.quick-css.title": {
-		"message": "自定义 CSS (Quick CSS)"
-	},
-	"app.plugins.quick-css.description": {
-		"message": "实时应用在当前主题之上的自定义 CSS。"
-	},
-	"app.plugins.quick-css.clear": {
-		"message": "清空"
-	},
-	"app.plugins.safe-mode.header": {
-		"message": "安全模式已启用"
-	},
-	"app.plugins.safe-mode.body": {
-		"message": "所有插件和 Quick CSS 已暂时停用。若损坏的主题或插件导致界面无法操作，可随时按 Ctrl+Shift+Alt+P。"
-	},
-	"app.plugins.safe-mode.exit": {
-		"message": "退出安全模式"
 	}
 }

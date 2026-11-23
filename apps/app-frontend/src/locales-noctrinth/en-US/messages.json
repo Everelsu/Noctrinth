@@ -29,6 +29,18 @@
 	"app.appearance-settings.accent-tint.title": {
 		"message": "Tint the background too"
 	},
+	"app.appearance-settings.accent.custom": {
+		"message": "Custom"
+	},
+	"app.appearance-settings.accent.custom.brightness": {
+		"message": "Brightness"
+	},
+	"app.appearance-settings.accent.custom.hex": {
+		"message": "Hex colour"
+	},
+	"app.appearance-settings.accent.custom.wheel": {
+		"message": "Hue and saturation"
+	},
 	"app.appearance-settings.accent.description": {
 		"message": "The colour the interface is picked out in. Each one is drawn deeper on light themes and brighter on dark ones."
 	},
@@ -89,131 +101,14 @@
 	"app.appearance-settings.minimize-launcher.description": {
 		"message": "Minimize Noctrinth when Minecraft starts."
 	},
+	"app.behavior-settings.refocus-on-game-close.description": {
+		"message": "Bring Noctrinth to the foreground when Minecraft exits."
+	},
 	"app.browse.filters.hide": {
 		"message": "Hide filters"
 	},
 	"app.browse.filters.show": {
 		"message": "Filters"
-	},
-	"app.icon-crop.apply": {
-		"message": "Apply"
-	},
-	"app.icon-crop.cancel": {
-		"message": "Cancel"
-	},
-	"app.icon-crop.header": {
-		"message": "Crop instance icon"
-	},
-	"app.icon-crop.hint": {
-		"message": "Drag to reposition and scroll or slide to zoom."
-	},
-	"app.icon-crop.reset": {
-		"message": "Reset"
-	},
-	"app.icon-crop.use-original": {
-		"message": "Use as-is"
-	},
-	"app.icon-crop.zoom": {
-		"message": "Zoom"
-	},
-	"app.plugins.action.install": {
-		"message": "Install"
-	},
-	"app.plugins.action.install-zip": {
-		"message": "Install from .zip"
-	},
-	"app.plugins.action.open-folder": {
-		"message": "Open folder"
-	},
-	"app.plugins.action.refresh": {
-		"message": "Refresh"
-	},
-	"app.plugins.action.update": {
-		"message": "Update"
-	},
-	"app.plugins.badge.installed": {
-		"message": "Installed"
-	},
-	"app.plugins.badge.local": {
-		"message": "Local"
-	},
-	"app.plugins.catalog.empty": {
-		"message": "No plugins match your search."
-	},
-	"app.plugins.catalog.error": {
-		"message": "Could not load the plugin catalog."
-	},
-	"app.plugins.catalog.reset": {
-		"message": "Reset"
-	},
-	"app.plugins.catalog.search": {
-		"message": "Search plugins..."
-	},
-	"app.plugins.catalog.url": {
-		"message": "Catalog index URL"
-	},
-	"app.plugins.description": {
-		"message": "Extend Noctrinth with themes, content sources, and sandboxed extensions."
-	},
-	"app.plugins.empty.installed.description": {
-		"message": "Install a verified plugin from the catalog or load a local .zip archive."
-	},
-	"app.plugins.empty.installed.heading": {
-		"message": "No plugins installed"
-	},
-	"app.plugins.permissions.domains": {
-		"message": "Network: {domains}"
-	},
-	"app.plugins.permissions.events": {
-		"message": "Events: {events}"
-	},
-	"app.plugins.permissions.instances": {
-		"message": "Instances: {perms}"
-	},
-	"app.plugins.permissions.ui": {
-		"message": "UI: {perms}"
-	},
-	"app.plugins.settings": {
-		"message": "Plugin settings"
-	},
-	"app.plugins.remove.confirm": {
-		"message": "Remove"
-	},
-	"app.plugins.remove.description": {
-		"message": "Remove \"{name}\" from Noctrinth? Its files will be deleted."
-	},
-	"app.plugins.remove.title": {
-		"message": "Remove plugin?"
-	},
-	"app.plugins.tab.catalog": {
-		"message": "Catalog"
-	},
-	"app.plugins.tab.installed": {
-		"message": "Installed"
-	},
-	"app.plugins.title": {
-		"message": "Plugins"
-	},
-	"app.plugins.toast.installed": {
-		"message": "Installed \"{name}\""
-	},
-	"app.plugins.toast.removed": {
-		"message": "Removed \"{name}\""
-	},
-	"app.plugins.type.all": {
-		"message": "All"
-	},
-	"app.plugins.type.content-source": {
-		"message": "Content source"
-	},
-	"app.plugins.type.extension": {
-		"message": "Extension"
-	},
-	"app.plugins.type.theme": {
-		"message": "Theme"
-	},
-	"app.settings.tabs.plugins": {
-		"message": "Plugins"
 	},
 	"app.browse.source.label": {
 		"message": "Where to browse"
@@ -490,6 +385,27 @@
 	},
 	"app.hosting.update-required.title": {
 		"message": "Noctrinth update required"
+	},
+	"app.icon-crop.apply": {
+		"message": "Apply"
+	},
+	"app.icon-crop.cancel": {
+		"message": "Cancel"
+	},
+	"app.icon-crop.header": {
+		"message": "Crop instance icon"
+	},
+	"app.icon-crop.hint": {
+		"message": "Drag to reposition and scroll or slide to zoom."
+	},
+	"app.icon-crop.reset": {
+		"message": "Reset"
+	},
+	"app.icon-crop.use-original": {
+		"message": "Use as-is"
+	},
+	"app.icon-crop.zoom": {
+		"message": "Zoom"
 	},
 	"app.instance.add-content.from-file": {
 		"message": "Add from file"
@@ -890,6 +806,156 @@
 	"app.notifications.version-for": {
 		"message": "for"
 	},
+	"app.plugins.action.browse-catalog": {
+		"message": "Browse catalog"
+	},
+	"app.plugins.action.docs": {
+		"message": "Docs"
+	},
+	"app.plugins.action.install": {
+		"message": "Install"
+	},
+	"app.plugins.action.install-zip": {
+		"message": "Install from .zip"
+	},
+	"app.plugins.action.logs": {
+		"message": "Plugin logs"
+	},
+	"app.plugins.action.open-folder": {
+		"message": "Open folder"
+	},
+	"app.plugins.action.refresh": {
+		"message": "Refresh"
+	},
+	"app.plugins.action.reload": {
+		"message": "Reload plugin"
+	},
+	"app.plugins.action.update": {
+		"message": "Update"
+	},
+	"app.plugins.action.update-all": {
+		"message": "Update all ({count})"
+	},
+	"app.plugins.badge.installed": {
+		"message": "Installed"
+	},
+	"app.plugins.badge.local": {
+		"message": "Local"
+	},
+	"app.plugins.catalog.empty": {
+		"message": "No plugins match your search."
+	},
+	"app.plugins.catalog.error": {
+		"message": "Could not load the plugin catalog."
+	},
+	"app.plugins.catalog.reset": {
+		"message": "Reset"
+	},
+	"app.plugins.catalog.search": {
+		"message": "Search plugins..."
+	},
+	"app.plugins.catalog.url": {
+		"message": "Catalog index URL"
+	},
+	"app.plugins.catalog.url.description": {
+		"message": "JSON index used to discover and verify community plugins."
+	},
+	"app.plugins.description": {
+		"message": "Extend Noctrinth with themes, content sources, and sandboxed extensions."
+	},
+	"app.plugins.disclaimer.body": {
+		"message": "Plugins are created by third-party authors. Noctrinth is not responsible for the safety, reliability, data loss, or any malicious code in installed plugins. Only install plugins from sources you trust."
+	},
+	"app.plugins.disclaimer.header": {
+		"message": "Third-party plugins"
+	},
+	"app.plugins.empty.installed.description": {
+		"message": "Install a verified plugin from the catalog or load a local .zip archive."
+	},
+	"app.plugins.empty.installed.heading": {
+		"message": "No plugins installed"
+	},
+	"app.plugins.logs.clear": {
+		"message": "Clear"
+	},
+	"app.plugins.logs.empty": {
+		"message": "No log output yet."
+	},
+	"app.plugins.permissions.domains": {
+		"message": "Network: {domains}"
+	},
+	"app.plugins.permissions.events": {
+		"message": "Events: {events}"
+	},
+	"app.plugins.permissions.instances": {
+		"message": "Instances: {perms}"
+	},
+	"app.plugins.permissions.ui": {
+		"message": "UI: {perms}"
+	},
+	"app.plugins.quick-css.clear": {
+		"message": "Clear"
+	},
+	"app.plugins.quick-css.description": {
+		"message": "Custom CSS applied live on top of the current theme."
+	},
+	"app.plugins.quick-css.title": {
+		"message": "Quick CSS"
+	},
+	"app.plugins.remove.confirm": {
+		"message": "Remove"
+	},
+	"app.plugins.remove.description": {
+		"message": "Remove \"{name}\" from Noctrinth? Its files will be deleted."
+	},
+	"app.plugins.remove.title": {
+		"message": "Remove plugin?"
+	},
+	"app.plugins.safe-mode.body": {
+		"message": "All plugins and Quick CSS are temporarily paused. Press Ctrl+Shift+Alt+P anytime if a broken theme or plugin locks up the UI."
+	},
+	"app.plugins.safe-mode.exit": {
+		"message": "Exit Safe Mode"
+	},
+	"app.plugins.safe-mode.header": {
+		"message": "Safe Mode is active"
+	},
+	"app.plugins.settings": {
+		"message": "Plugin settings"
+	},
+	"app.plugins.tab.catalog": {
+		"message": "Catalog"
+	},
+	"app.plugins.tab.installed": {
+		"message": "Installed"
+	},
+	"app.plugins.title": {
+		"message": "Plugins"
+	},
+	"app.plugins.toast.installed": {
+		"message": "Installed \"{name}\""
+	},
+	"app.plugins.toast.reloaded": {
+		"message": "Reloaded \"{name}\""
+	},
+	"app.plugins.toast.removed": {
+		"message": "Removed \"{name}\""
+	},
+	"app.plugins.toast.updated-all": {
+		"message": "Updated {count} plugin(s)"
+	},
+	"app.plugins.type.all": {
+		"message": "All"
+	},
+	"app.plugins.type.content-source": {
+		"message": "Content source"
+	},
+	"app.plugins.type.extension": {
+		"message": "Extension"
+	},
+	"app.plugins.type.theme": {
+		"message": "Theme"
+	},
 	"app.project.copy-link.copied": {
 		"message": "Link copied to clipboard"
 	},
@@ -902,6 +968,9 @@
 	"app.resource-settings.proxy.title": {
 		"message": "Proxy"
 	},
+	"app.screenshots.selection.global-export-filename": {
+		"message": "Noctrinth screenshots.zip"
+	},
 	"app.settings.app-version": {
 		"message": "Noctrinth {version}"
 	},
@@ -913,6 +982,9 @@
 	},
 	"app.settings.feature-flags.search.placeholder": {
 		"message": "Search flags..."
+	},
+	"app.settings.game-options.compatibility.reason.launcher-controlled": {
+		"message": "This setting is managed by Noctrinth's launch settings."
 	},
 	"app.settings.java.gpu.choice.auto": {
 		"message": "Let Windows decide"
@@ -968,14 +1040,26 @@
 	"app.settings.privacy.discord-rich-presence.description": {
 		"message": "Show Noctrinth as your current activity on Discord. This does not affect Rich Presence added to instances by mods. Requires an app restart."
 	},
+	"app.settings.privacy.telemetry.description": {
+		"message": "Noctrinth sends no analytics or usage data, whichever way this is set. The switch is kept so the setting carries over to and from Modrinth App."
+	},
 	"app.settings.resource-management.app-directory.description": {
 		"message": "Where Noctrinth stores instances and other files."
+	},
+	"app.settings.resource-management.debug-info.description": {
+		"message": "Export app logs and diagnostic data to a ZIP file to attach to a bug report."
+	},
+	"app.settings.synced-options.game-settings.custom-empty": {
+		"message": "Settings added by mods will appear here after Noctrinth finds them in one of your instances."
 	},
 	"app.settings.tabs.changelog": {
 		"message": "Changelog"
 	},
 	"app.settings.tabs.curseforge": {
 		"message": "CurseForge"
+	},
+	"app.settings.tabs.plugins": {
+		"message": "Plugins"
 	},
 	"app.skins.ely.edit.texture-locked": {
 		"message": "Ely.by keeps a texture and its skin together, so this one cannot be swapped out. Upload the new texture as another skin instead."
@@ -1418,6 +1502,96 @@
 	"minecraft-account.label-microsoft": {
 		"message": "Microsoft account"
 	},
+	"noctrinth.creation-flow.curseforge-code.import": {
+		"message": "Import"
+	},
+	"noctrinth.creation-flow.curseforge-code.placeholder": {
+		"message": "A code or share link from the CurseForge app"
+	},
+	"noctrinth.creation-flow.curseforge-code.title": {
+		"message": "CurseForge profile code"
+	},
+	"noctrinth.quick-search.discover": {
+		"message": "Not installed yet"
+	},
+	"noctrinth.quick-search.hint": {
+		"message": "↑↓ to pick · Enter to open · Ctrl+Enter to play or update · Esc to close"
+	},
+	"noctrinth.quick-search.in-instance": {
+		"message": "In {instance}"
+	},
+	"noctrinth.quick-search.installed": {
+		"message": "Installed"
+	},
+	"noctrinth.quick-search.instances": {
+		"message": "Instances"
+	},
+	"noctrinth.quick-search.nothing": {
+		"message": "Nothing matches"
+	},
+	"noctrinth.quick-search.placeholder": {
+		"message": "Search instances, what is installed in them, and settings"
+	},
+	"noctrinth.quick-search.play": {
+		"message": "Play"
+	},
+	"noctrinth.quick-search.reading": {
+		"message": "Still reading what is installed…"
+	},
+	"noctrinth.quick-search.recent": {
+		"message": "Played recently"
+	},
+	"noctrinth.quick-search.search-curseforge": {
+		"message": "Search “{query}” on CurseForge"
+	},
+	"noctrinth.quick-search.search-modrinth": {
+		"message": "Search “{query}” on Modrinth"
+	},
+	"noctrinth.quick-search.settings": {
+		"message": "Settings"
+	},
+	"noctrinth.quick-search.stop": {
+		"message": "Stop"
+	},
+	"noctrinth.quick-search.update": {
+		"message": "Update"
+	},
+	"noctrinth.quick-search.update-available": {
+		"message": "Update available"
+	},
+	"noctrinth.settings.background.blur.description": {
+		"message": "Softens it, so it stays behind what is in front of it."
+	},
+	"noctrinth.settings.background.blur.title": {
+		"message": "Blur the background"
+	},
+	"noctrinth.settings.background.change": {
+		"message": "Change background"
+	},
+	"noctrinth.settings.background.choose": {
+		"message": "Choose a file"
+	},
+	"noctrinth.settings.background.description": {
+		"message": "A picture, an animated GIF or a looping video behind the launcher, showing through its frame and, a little, through the cards on a page. Pictures and GIFs up to 32 MB, MP4 or WebM videos up to 100 MB."
+	},
+	"noctrinth.settings.background.dim.description": {
+		"message": "For a bright or busy background, so what is over it stays easy to read."
+	},
+	"noctrinth.settings.background.dim.title": {
+		"message": "Darken the background"
+	},
+	"noctrinth.settings.background.drop-here": {
+		"message": "Drop it here"
+	},
+	"noctrinth.settings.background.drop-hint": {
+		"message": "Or drop a picture or a video onto the window."
+	},
+	"noctrinth.settings.background.remove": {
+		"message": "Remove"
+	},
+	"noctrinth.settings.background.title": {
+		"message": "Background"
+	},
 	"noctrinth.settings.curseforge.cache.title": {
 		"message": "Cache"
 	},
@@ -1639,176 +1813,5 @@
 	},
 	"settings.language.coverage.app-tooltip": {
 		"message": "About {percentage}% of Noctrinth is available in this language."
-	},
-	"noctrinth.settings.background.title": {
-		"message": "Background"
-	},
-	"noctrinth.settings.background.description": {
-		"message": "A picture, an animated GIF or a looping video behind the launcher, showing through its frame and, a little, through the cards on a page. Pictures and GIFs up to 32 MB, MP4 or WebM videos up to 100 MB."
-	},
-	"noctrinth.settings.background.choose": {
-		"message": "Choose a file"
-	},
-	"noctrinth.settings.background.change": {
-		"message": "Change background"
-	},
-	"noctrinth.settings.background.remove": {
-		"message": "Remove"
-	},
-	"noctrinth.settings.background.blur.title": {
-		"message": "Blur the background"
-	},
-	"noctrinth.creation-flow.curseforge-code.import": {
-		"message": "Import"
-	},
-	"noctrinth.creation-flow.curseforge-code.placeholder": {
-		"message": "A code or share link from the CurseForge app"
-	},
-	"noctrinth.creation-flow.curseforge-code.title": {
-		"message": "CurseForge profile code"
-	},
-	"noctrinth.quick-search.discover": {
-		"message": "Not installed yet"
-	},
-	"noctrinth.quick-search.hint": {
-		"message": "↑↓ to pick · Enter to open · Ctrl+Enter to play or update · Esc to close"
-	},
-	"noctrinth.quick-search.in-instance": {
-		"message": "In {instance}"
-	},
-	"noctrinth.quick-search.installed": {
-		"message": "Installed"
-	},
-	"noctrinth.quick-search.instances": {
-		"message": "Instances"
-	},
-	"noctrinth.quick-search.nothing": {
-		"message": "Nothing matches"
-	},
-	"noctrinth.quick-search.placeholder": {
-		"message": "Search instances, what is installed in them, and settings"
-	},
-	"noctrinth.quick-search.play": {
-		"message": "Play"
-	},
-	"noctrinth.quick-search.reading": {
-		"message": "Still reading what is installed…"
-	},
-	"noctrinth.quick-search.recent": {
-		"message": "Played recently"
-	},
-	"noctrinth.quick-search.search-curseforge": {
-		"message": "Search “{query}” on CurseForge"
-	},
-	"noctrinth.quick-search.search-modrinth": {
-		"message": "Search “{query}” on Modrinth"
-	},
-	"noctrinth.quick-search.settings": {
-		"message": "Settings"
-	},
-	"noctrinth.quick-search.stop": {
-		"message": "Stop"
-	},
-	"noctrinth.quick-search.update": {
-		"message": "Update"
-	},
-	"noctrinth.quick-search.update-available": {
-		"message": "Update available"
-	},
-	"noctrinth.settings.background.blur.description": {
-		"message": "Softens it, so it stays behind what is in front of it."
-	},
-	"app.behavior-settings.refocus-on-game-close.description": {
-		"message": "Bring Noctrinth to the foreground when Minecraft exits."
-	},
-	"app.screenshots.selection.global-export-filename": {
-		"message": "Noctrinth screenshots.zip"
-	},
-	"app.settings.game-options.compatibility.reason.launcher-controlled": {
-		"message": "This setting is managed by Noctrinth's launch settings."
-	},
-	"app.settings.resource-management.debug-info.description": {
-		"message": "Export app logs and diagnostic data to a ZIP file to attach to a bug report."
-	},
-	"app.settings.synced-options.game-settings.custom-empty": {
-		"message": "Settings added by mods will appear here after Noctrinth finds them in one of your instances."
-	},
-	"app.settings.privacy.telemetry.description": {
-		"message": "Noctrinth sends no analytics or usage data, whichever way this is set. The switch is kept so the setting carries over to and from Modrinth App."
-	},
-	"noctrinth.settings.background.drop-hint": {
-		"message": "Or drop a picture or a video onto the window."
-	},
-	"noctrinth.settings.background.drop-here": {
-		"message": "Drop it here"
-	},
-	"noctrinth.settings.background.dim.title": {
-		"message": "Darken the background"
-	},
-	"noctrinth.settings.background.dim.description": {
-		"message": "For a bright or busy background, so what is over it stays easy to read."
-	},
-	"app.appearance-settings.accent.custom": {
-		"message": "Custom"
-	},
-	"app.appearance-settings.accent.custom.wheel": {
-		"message": "Hue and saturation"
-	},
-	"app.appearance-settings.accent.custom.brightness": {
-		"message": "Brightness"
-	},
-	"app.appearance-settings.accent.custom.hex": {
-		"message": "Hex colour"
-	},
-	"app.plugins.disclaimer.header": {
-		"message": "Third-party plugins"
-	},
-	"app.plugins.disclaimer.body": {
-		"message": "Plugins are created by third-party authors. Noctrinth is not responsible for the safety, reliability, data loss, or any malicious code in installed plugins. Only install plugins from sources you trust."
-	},
-	"app.plugins.action.browse-catalog": {
-		"message": "Browse catalog"
-	},
-	"app.plugins.catalog.url.description": {
-		"message": "JSON index used to discover and verify community plugins."
-	},
-	"app.plugins.action.reload": {
-		"message": "Reload plugin"
-	},
-	"app.plugins.toast.reloaded": {
-		"message": "Reloaded \"{name}\""
-	},
-	"app.plugins.action.update-all": {
-		"message": "Update all ({count})"
-	},
-	"app.plugins.toast.updated-all": {
-		"message": "Updated {count} plugin(s)"
-	},
-	"app.plugins.action.logs": {
-		"message": "Plugin logs"
-	},
-	"app.plugins.logs.empty": {
-		"message": "No log output yet."
-	},
-	"app.plugins.logs.clear": {
-		"message": "Clear"
-	},
-	"app.plugins.quick-css.title": {
-		"message": "Quick CSS"
-	},
-	"app.plugins.quick-css.description": {
-		"message": "Custom CSS applied live on top of the current theme."
-	},
-	"app.plugins.quick-css.clear": {
-		"message": "Clear"
-	},
-	"app.plugins.safe-mode.header": {
-		"message": "Safe Mode is active"
-	},
-	"app.plugins.safe-mode.body": {
-		"message": "All plugins and Quick CSS are temporarily paused. Press Ctrl+Shift+Alt+P anytime if a broken theme or plugin locks up the UI."
-	},
-	"app.plugins.safe-mode.exit": {
-		"message": "Exit Safe Mode"
 	}
 }

@@ -620,10 +620,15 @@ fn main() {
                         "plugins_set_enabled",
                         "plugins_remove",
                         "plugins_read_asset",
+                        "plugins_read_asset_base64",
                         "plugins_http_fetch",
+                        "plugins_http_fetch_stream",
                         "plugins_fetch_catalog",
                         "plugins_get_dir",
                         "plugins_is_safe_mode",
+                        "plugins_instance_list_files",
+                        "plugins_instance_read_file",
+                        "plugins_instance_write_file",
                     ])
                     .default_permission(
                         DefaultPermissionRule::AllowAllCommands,

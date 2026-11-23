@@ -10,10 +10,9 @@ import {
 	sendMessageFromPluginPanel,
 	unregisterPluginPanelSink,
 } from '@/helpers/noctrinth-plugins'
-import { useBreadcrumbs } from '@/store/breadcrumbs'
+import { useRootBreadcrumb } from '@/shared/breadcrumbs'
 
 const route = useRoute()
-const breadcrumbs = useBreadcrumbs()
 const iframeRef = ref<HTMLIFrameElement | null>(null)
 
 const currentPage = computed(() => {
@@ -21,6 +20,16 @@ const currentPage = computed(() => {
 	const pageId = String(route.params.pageId ?? '')
 	return pluginPages.value.find((p) => p.pluginId === pluginId && p.pageId === pageId) ?? null
 })
+
+useRootBreadcrumb(
+	computed(() => ({
+		slot: 'root' as const,
+		id: `plugin-page-${currentPage.value?.pluginId ?? 'unknown'}-${currentPage.value?.pageId ?? 'unknown'}`,
+		label: currentPage.value?.title ?? 'Plugin',
+		to: route.path,
+		visual: { type: 'icon' as const, component: PlugIcon },
+	})),
+)
 
 const srcdoc = computed(() => {
 	const page = currentPage.value
@@ -46,7 +55,6 @@ watch(
 			unregisterPluginPanelSink(prev.pluginId, prev.pageId)
 		}
 		if (next) {
-			breadcrumbs.setRootContext({ name: next.title, link: route.path })
 			registerPluginPanelSink(next.pluginId, next.pageId, (data) => {
 				iframeRef.value?.contentWindow?.postMessage({ __noctrinthHost: true, data }, '*')
 			})

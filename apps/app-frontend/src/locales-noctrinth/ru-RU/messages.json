@@ -1472,6 +1472,9 @@
 	"app.plugins.safe-mode.header": {
 		"message": "Включён безопасный режим"
 	},
+	"app.plugins.safe-mode.hint": {
+		"message": "Безопасный режим: нажмите Ctrl+Shift+Alt+P в любой момент (или запустите с флагом --safe-mode), чтобы отключить все плагины и Quick CSS, если что-то сломает интерфейс."
+	},
 	"app.plugins.settings": {
 		"message": "Настройки плагина"
 	},

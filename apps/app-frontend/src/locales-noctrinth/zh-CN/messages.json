@@ -1454,6 +1454,9 @@
 	"app.plugins.safe-mode.header": {
 		"message": "安全模式已启用"
 	},
+	"app.plugins.safe-mode.hint": {
+		"message": "安全模式：如果某个主题或插件导致界面异常，可随时按 Ctrl+Shift+Alt+P（或使用 --safe-mode 启动）停用所有插件和 Quick CSS。"
+	},
 	"app.plugins.settings": {
 		"message": "插件设置"
 	},

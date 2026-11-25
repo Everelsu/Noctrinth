@@ -1454,6 +1454,9 @@
 	"app.plugins.safe-mode.header": {
 		"message": "Abgesicherter Modus aktiv"
 	},
+	"app.plugins.safe-mode.hint": {
+		"message": "Abgesicherter Modus: Drücke jederzeit Strg+Umschalt+Alt+P (oder starte mit --safe-mode), um alle Plugins und Quick CSS zu deaktivieren, falls etwas die Oberfläche beschädigt."
+	},
 	"app.plugins.settings": {
 		"message": "Plugin-Einstellungen"
 	},

@@ -97,6 +97,11 @@ const messages = defineMessages({
 		id: 'app.plugins.safe-mode.exit',
 		defaultMessage: 'Exit Safe Mode',
 	},
+	safeModeHint: {
+		id: 'app.plugins.safe-mode.hint',
+		defaultMessage:
+			'Safe Mode: press Ctrl+Shift+Alt+P anytime (or launch with --safe-mode) to disable all plugins and Quick CSS if something breaks the UI.',
+	},
 	tabInstalled: { id: 'app.plugins.tab.installed', defaultMessage: 'Installed' },
 	tabCatalog: { id: 'app.plugins.tab.catalog', defaultMessage: 'Catalog' },
 	installZip: { id: 'app.plugins.action.install-zip', defaultMessage: 'Install from .zip' },
@@ -505,6 +510,7 @@ onMounted(() => {
 					</Button>
 				</template>
 			</Admonition>
+			<Admonition v-else type="info" :body="formatMessage(messages.safeModeHint)" />
 
 			<Admonition
 				v-if="!disclaimerDismissed"

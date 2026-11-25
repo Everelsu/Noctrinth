@@ -1454,6 +1454,9 @@
 	"app.plugins.safe-mode.header": {
 		"message": "Modo seguro activo"
 	},
+	"app.plugins.safe-mode.hint": {
+		"message": "Modo seguro: pulsa Ctrl+Shift+Alt+P en cualquier momento (o inicia con --safe-mode) para desactivar todos los plugins y Quick CSS si algo rompe la interfaz."
+	},
 	"app.plugins.settings": {
 		"message": "Ajustes del plugin"
 	},

@@ -41,7 +41,21 @@ export interface NoctrinthVersionEntry {
 }
 
 export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
-  {
+	{
+		version: '0.23.5',
+		date: '2026-11-25T00:00:00+00:00',
+		body: `### Security
+- Synced with Modrinth App 0.23.5: refreshed cached version metadata and replaced mismatched Minecraft libraries on instance launch.
+
+### Fixed
+- Made plugin state persistence atomic and resolved manually unpacked plugin folders whose directory name differs from \`plugin.json\` \`id\`, while preserving disabled state across updates.`,
+		body_ru: `### Безопасность
+- Синхронизация с Modrinth App 0.23.5: обновление метаданных установленных версий и замена библиотек Minecraft при запуске сборки, если они не совпадают с метаданными.
+
+### Исправлено
+- Сохранение состояния плагинов сделано атомарным, исправлена работа распакованных вручную папок плагинов с именем, отличным от \`id\` в \`plugin.json\`, а отключённое состояние сохраняется при обновлении.`,
+	},
+	{
 		version: '0.23.4+3',
 		date: '2026-11-23T00:00:00+00:00',
 		body: `### Added

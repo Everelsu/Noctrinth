@@ -9,8 +9,8 @@ use std::io::{Cursor, Read};
 use std::path::{Component, Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use base64::Engine as _;
 use crate::api::Result;
+use base64::Engine as _;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use tauri::Emitter;
@@ -236,6 +236,9 @@ fn sanitize_relative_path(raw: &str) -> Option<PathBuf> {
     }
 }
 
+static STATE_LOCK: std::sync::LazyLock<tokio::sync::Mutex<()>> =
+    std::sync::LazyLock::new(|| tokio::sync::Mutex::new(()));
+
 async fn load_state(dir: &Path) -> PluginsStateFile {
     let path = dir.join("state.json");
     let Ok(raw) = tokio::fs::read_to_string(&path).await else {
@@ -246,9 +249,66 @@ async fn load_state(dir: &Path) -> PluginsStateFile {
 
 async fn save_state(dir: &Path, state: &PluginsStateFile) -> Result<()> {
     let path = dir.join("state.json");
+    let tmp_path = dir.join("state.json.tmp");
     let json = serde_json::to_string_pretty(state)?;
-    tokio::fs::write(&path, json).await?;
+    tokio::fs::write(&tmp_path, json).await?;
+    tokio::fs::rename(&tmp_path, &path).await?;
     Ok(())
+}
+
+async fn resolve_plugin_dir(root: &Path, id: &str) -> Result<PathBuf> {
+    let direct = root.join(id);
+    if let Ok(raw) = tokio::fs::read_to_string(direct.join("plugin.json")).await
+        && let Ok(manifest) = serde_json::from_str::<PluginManifest>(&raw)
+        && manifest.id == id
+    {
+        return Ok(direct);
+    }
+
+    let mut entries = tokio::fs::read_dir(root).await?;
+    while let Some(entry) = entries.next_entry().await? {
+        let path = entry.path();
+        if !path.is_dir() {
+            continue;
+        }
+        let Ok(raw) = tokio::fs::read_to_string(path.join("plugin.json")).await
+        else {
+            continue;
+        };
+        let Ok(manifest) = serde_json::from_str::<PluginManifest>(&raw) else {
+            continue;
+        };
+        if manifest.id == id {
+            return Ok(path);
+        }
+    }
+
+    Err(theseus::ErrorKind::InputError(format!(
+        "Plugin '{id}' is not installed"
+    ))
+    .into())
+}
+
+async fn find_all_plugin_dirs(root: &Path, id: &str) -> Result<Vec<PathBuf>> {
+    let mut dirs = Vec::new();
+    let mut entries = tokio::fs::read_dir(root).await?;
+    while let Some(entry) = entries.next_entry().await? {
+        let path = entry.path();
+        if !path.is_dir() {
+            continue;
+        }
+        let is_named = path.file_name().and_then(|n| n.to_str()) == Some(id);
+        let matches_manifest =
+            match tokio::fs::read_to_string(path.join("plugin.json")).await {
+                Ok(raw) => serde_json::from_str::<PluginManifest>(&raw)
+                    .is_ok_and(|manifest| manifest.id == id),
+                Err(_) => false,
+            };
+        if is_named || matches_manifest {
+            dirs.push(path);
+        }
+    }
+    Ok(dirs)
 }
 
 fn extract_plugin_archive(
@@ -277,7 +337,9 @@ fn extract_plugin_archive(
         })?;
         let name = entry
             .name()
-            .map_err(|e| theseus::ErrorKind::InputError(format!("Zip name error: {e}")))?
+            .map_err(|e| {
+                theseus::ErrorKind::InputError(format!("Zip name error: {e}"))
+            })?
             .replace('\\', "/");
         if name == "plugin.json" {
             let mut buf = String::new();
@@ -302,8 +364,8 @@ fn extract_plugin_archive(
             "Archive does not contain plugin.json".to_string(),
         )
     })?;
-    let manifest: PluginManifest =
-        serde_json::from_str(&manifest_text).map_err(|e| {
+    let manifest: PluginManifest = serde_json::from_str(&manifest_text)
+        .map_err(|e| {
             theseus::ErrorKind::InputError(format!("Invalid plugin.json: {e}"))
         })?;
     validate_manifest(&manifest)?;
@@ -321,7 +383,9 @@ fn extract_plugin_archive(
         })?;
         let raw_name = entry
             .name()
-            .map_err(|e| theseus::ErrorKind::InputError(format!("Zip name error: {e}")))?
+            .map_err(|e| {
+                theseus::ErrorKind::InputError(format!("Zip name error: {e}"))
+            })?
             .replace('\\', "/");
         let stripped = if !manifest_prefix.is_empty() {
             match raw_name.strip_prefix(&manifest_prefix) {
@@ -386,10 +450,22 @@ async fn install_archive_bytes(
         theseus::ErrorKind::InputError(format!("Extract task failed: {e}"))
     })??;
 
+    let _guard = STATE_LOCK.lock().await;
+    let canonical_dir = root.join(&manifest.id);
+    for dir in find_all_plugin_dirs(&root, &manifest.id).await? {
+        if dir != canonical_dir {
+            let _ = tokio::fs::remove_dir_all(&dir).await;
+        }
+    }
+
     let mut state = load_state(&root).await;
+    let enabled = state
+        .plugins
+        .get(&manifest.id)
+        .is_none_or(|prev| prev.enabled);
     let installed_at = now_secs();
     let entry = PluginStateEntry {
-        enabled: true,
+        enabled,
         source: source.to_string(),
         sha256: actual_sha.clone(),
         installed_at,
@@ -399,7 +475,7 @@ async fn install_archive_bytes(
 
     Ok(InstalledPlugin {
         manifest,
-        enabled: true,
+        enabled,
         source: source.to_string(),
         sha256: actual_sha,
         installed_at,
@@ -409,10 +485,12 @@ async fn install_archive_bytes(
 #[tauri::command]
 pub async fn plugins_list() -> Result<Vec<InstalledPlugin>> {
     let root = plugins_dir().await?;
+    let _guard = STATE_LOCK.lock().await;
     let state = load_state(&root).await;
+    drop(_guard);
 
     let mut entries = tokio::fs::read_dir(&root).await?;
-    let mut installed = Vec::new();
+    let mut by_id: HashMap<String, (bool, InstalledPlugin)> = HashMap::new();
     while let Some(entry) = entries.next_entry().await? {
         let path = entry.path();
         if !path.is_dir() {
@@ -428,15 +506,34 @@ pub async fn plugins_list() -> Result<Vec<InstalledPlugin>> {
         if validate_manifest(&manifest).is_err() {
             continue;
         }
+        let is_canonical = path.file_name().and_then(|n| n.to_str())
+            == Some(manifest.id.as_str());
+        if let Some((existing_canonical, _)) = by_id.get(&manifest.id)
+            && (*existing_canonical || !is_canonical)
+        {
+            continue;
+        }
         let meta = state.plugins.get(&manifest.id);
-        installed.push(InstalledPlugin {
-            enabled: meta.map_or(false, |m| m.enabled),
-            source: meta.map_or_else(|| "local".to_string(), |m| m.source.clone()),
-            sha256: meta.map_or_else(String::new, |m| m.sha256.clone()),
-            installed_at: meta.map_or(0, |m| m.installed_at),
-            manifest,
-        });
+        let id = manifest.id.clone();
+        by_id.insert(
+            id,
+            (
+                is_canonical,
+                InstalledPlugin {
+                    enabled: meta.is_some_and(|m| m.enabled),
+                    source: meta.map_or_else(
+                        || "local".to_string(),
+                        |m| m.source.clone(),
+                    ),
+                    sha256: meta.map_or_else(String::new, |m| m.sha256.clone()),
+                    installed_at: meta.map_or(0, |m| m.installed_at),
+                    manifest,
+                },
+            ),
+        );
     }
+    let mut installed: Vec<InstalledPlugin> =
+        by_id.into_values().map(|(_, plugin)| plugin).collect();
     installed.sort_by(|a, b| a.manifest.name.cmp(&b.manifest.name));
     Ok(installed)
 }
@@ -490,9 +587,12 @@ pub async fn plugins_install_remote(
 #[tauri::command]
 pub async fn plugins_set_enabled(id: String, enabled: bool) -> Result<()> {
     if !is_valid_plugin_id(&id) {
-        return Err(theseus::ErrorKind::InputError("Invalid plugin id".into()).into());
+        return Err(
+            theseus::ErrorKind::InputError("Invalid plugin id".into()).into()
+        );
     }
     let root = plugins_dir().await?;
+    let _guard = STATE_LOCK.lock().await;
     let mut state = load_state(&root).await;
     if let Some(entry) = state.plugins.get_mut(&id) {
         entry.enabled = enabled;
@@ -513,12 +613,14 @@ pub async fn plugins_set_enabled(id: String, enabled: bool) -> Result<()> {
 #[tauri::command]
 pub async fn plugins_remove(id: String) -> Result<()> {
     if !is_valid_plugin_id(&id) {
-        return Err(theseus::ErrorKind::InputError("Invalid plugin id".into()).into());
+        return Err(
+            theseus::ErrorKind::InputError("Invalid plugin id".into()).into()
+        );
     }
     let root = plugins_dir().await?;
-    let target = root.join(&id);
-    if target.is_dir() {
-        tokio::fs::remove_dir_all(&target).await?;
+    let _guard = STATE_LOCK.lock().await;
+    for dir in find_all_plugin_dirs(&root, &id).await? {
+        tokio::fs::remove_dir_all(&dir).await?;
     }
     let mut state = load_state(&root).await;
     state.plugins.remove(&id);
@@ -526,25 +628,38 @@ pub async fn plugins_remove(id: String) -> Result<()> {
 }
 
 #[tauri::command]
-pub async fn plugins_read_asset(id: String, rel_path: String) -> Result<String> {
+pub async fn plugins_read_asset(
+    id: String,
+    rel_path: String,
+) -> Result<String> {
     if !is_valid_plugin_id(&id) {
-        return Err(theseus::ErrorKind::InputError("Invalid plugin id".into()).into());
+        return Err(
+            theseus::ErrorKind::InputError("Invalid plugin id".into()).into()
+        );
     }
     let Some(clean_rel) = sanitize_relative_path(&rel_path) else {
-        return Err(theseus::ErrorKind::InputError("Unsafe asset path".into()).into());
+        return Err(
+            theseus::ErrorKind::InputError("Unsafe asset path".into()).into()
+        );
     };
     let root = plugins_dir().await?;
-    let plugin_root = root.join(&id);
+    let plugin_root = resolve_plugin_dir(&root, &id).await?;
     let target = plugin_root.join(&clean_rel);
 
     let canon_root = tokio::fs::canonicalize(&plugin_root).await?;
     let canon_target = tokio::fs::canonicalize(&target).await?;
     if !canon_target.starts_with(&canon_root) {
-        return Err(theseus::ErrorKind::InputError("Asset outside plugin dir".into()).into());
+        return Err(theseus::ErrorKind::InputError(
+            "Asset outside plugin dir".into(),
+        )
+        .into());
     }
     let meta = tokio::fs::metadata(&canon_target).await?;
     if meta.len() as usize > MAX_ASSET_BYTES {
-        return Err(theseus::ErrorKind::InputError("Asset exceeds size limit".into()).into());
+        return Err(theseus::ErrorKind::InputError(
+            "Asset exceeds size limit".into(),
+        )
+        .into());
     }
     Ok(tokio::fs::read_to_string(&canon_target).await?)
 }
@@ -570,14 +685,21 @@ pub async fn plugins_http_fetch(
     body: Option<String>,
 ) -> Result<PluginHttpResponse> {
     if !is_valid_plugin_id(&id) {
-        return Err(theseus::ErrorKind::InputError("Invalid plugin id".into()).into());
+        return Err(
+            theseus::ErrorKind::InputError("Invalid plugin id".into()).into()
+        );
     }
     let root = plugins_dir().await?;
     let state = load_state(&root).await;
     if !state.plugins.get(&id).is_some_and(|e| e.enabled) {
-        return Err(theseus::ErrorKind::InputError("Plugin is not enabled".into()).into());
+        return Err(theseus::ErrorKind::InputError(
+            "Plugin is not enabled".into(),
+        )
+        .into());
     }
-    let manifest_raw = tokio::fs::read_to_string(root.join(&id).join("plugin.json")).await?;
+    let plugin_root = resolve_plugin_dir(&root, &id).await?;
+    let manifest_raw =
+        tokio::fs::read_to_string(plugin_root.join("plugin.json")).await?;
     let manifest: PluginManifest = serde_json::from_str(&manifest_raw)?;
 
     let parsed = url::Url::parse(&url).map_err(|e| {
@@ -588,9 +710,11 @@ pub async fn plugins_http_fetch(
         host.to_ascii_lowercase().as_str(),
         "localhost" | "127.0.0.1" | "::1" | "[::1]"
     );
-    if parsed.scheme() != "https" && !(parsed.scheme() == "http" && is_loopback) {
+    if parsed.scheme() != "https" && !(parsed.scheme() == "http" && is_loopback)
+    {
         return Err(theseus::ErrorKind::InputError(
-            "Plugin fetch only supports HTTPS URLs (or HTTP on localhost)".into(),
+            "Plugin fetch only supports HTTPS URLs (or HTTP on localhost)"
+                .into(),
         )
         .into());
     }
@@ -601,7 +725,12 @@ pub async fn plugins_http_fetch(
         .into());
     }
 
-    let method = match method.as_deref().unwrap_or("GET").to_ascii_uppercase().as_str() {
+    let method = match method
+        .as_deref()
+        .unwrap_or("GET")
+        .to_ascii_uppercase()
+        .as_str()
+    {
         "GET" => tauri_plugin_http::reqwest::Method::GET,
         "POST" => tauri_plugin_http::reqwest::Method::POST,
         "PUT" => tauri_plugin_http::reqwest::Method::PUT,
@@ -669,14 +798,21 @@ pub async fn plugins_http_fetch_stream<R: tauri::Runtime>(
     body: Option<String>,
 ) -> Result<PluginStreamHead> {
     if !is_valid_plugin_id(&id) {
-        return Err(theseus::ErrorKind::InputError("Invalid plugin id".into()).into());
+        return Err(
+            theseus::ErrorKind::InputError("Invalid plugin id".into()).into()
+        );
     }
     let root = plugins_dir().await?;
     let state = load_state(&root).await;
     if !state.plugins.get(&id).is_some_and(|e| e.enabled) {
-        return Err(theseus::ErrorKind::InputError("Plugin is not enabled".into()).into());
+        return Err(theseus::ErrorKind::InputError(
+            "Plugin is not enabled".into(),
+        )
+        .into());
     }
-    let manifest_raw = tokio::fs::read_to_string(root.join(&id).join("plugin.json")).await?;
+    let plugin_root = resolve_plugin_dir(&root, &id).await?;
+    let manifest_raw =
+        tokio::fs::read_to_string(plugin_root.join("plugin.json")).await?;
     let manifest: PluginManifest = serde_json::from_str(&manifest_raw)?;
 
     let parsed = url::Url::parse(&url).map_err(|e| {
@@ -687,9 +823,11 @@ pub async fn plugins_http_fetch_stream<R: tauri::Runtime>(
         host.to_ascii_lowercase().as_str(),
         "localhost" | "127.0.0.1" | "::1" | "[::1]"
     );
-    if parsed.scheme() != "https" && !(parsed.scheme() == "http" && is_loopback) {
+    if parsed.scheme() != "https" && !(parsed.scheme() == "http" && is_loopback)
+    {
         return Err(theseus::ErrorKind::InputError(
-            "Plugin fetch only supports HTTPS URLs (or HTTP on localhost)".into(),
+            "Plugin fetch only supports HTTPS URLs (or HTTP on localhost)"
+                .into(),
         )
         .into());
     }
@@ -700,7 +838,12 @@ pub async fn plugins_http_fetch_stream<R: tauri::Runtime>(
         .into());
     }
 
-    let method = match method.as_deref().unwrap_or("GET").to_ascii_uppercase().as_str() {
+    let method = match method
+        .as_deref()
+        .unwrap_or("GET")
+        .to_ascii_uppercase()
+        .as_str()
+    {
         "GET" => tauri_plugin_http::reqwest::Method::GET,
         "POST" => tauri_plugin_http::reqwest::Method::POST,
         "PUT" => tauri_plugin_http::reqwest::Method::PUT,
@@ -756,7 +899,10 @@ pub async fn plugins_http_fetch_stream<R: tauri::Runtime>(
                                 stream_id: stream_id.clone(),
                                 chunk: None,
                                 done: true,
-                                error: Some("Plugin HTTP stream exceeds 8 MB limit".into()),
+                                error: Some(
+                                    "Plugin HTTP stream exceeds 8 MB limit"
+                                        .into(),
+                                ),
                             },
                         );
                         break;
@@ -878,28 +1024,39 @@ pub async fn plugins_read_asset_base64(
     rel_path: String,
 ) -> Result<PluginBinaryAsset> {
     if !is_valid_plugin_id(&id) {
-        return Err(theseus::ErrorKind::InputError("Invalid plugin id".into()).into());
+        return Err(
+            theseus::ErrorKind::InputError("Invalid plugin id".into()).into()
+        );
     }
     let Some(clean_rel) = sanitize_relative_path(&rel_path) else {
-        return Err(theseus::ErrorKind::InputError("Unsafe asset path".into()).into());
+        return Err(
+            theseus::ErrorKind::InputError("Unsafe asset path".into()).into()
+        );
     };
     let Some(mime) = asset_mime_for_path(&clean_rel) else {
-        return Err(theseus::ErrorKind::InputError("Unsupported binary asset type".into()).into());
+        return Err(theseus::ErrorKind::InputError(
+            "Unsupported binary asset type".into(),
+        )
+        .into());
     };
     let root = plugins_dir().await?;
-    let plugin_root = root.join(&id);
+    let plugin_root = resolve_plugin_dir(&root, &id).await?;
     let target = plugin_root.join(&clean_rel);
 
     let canon_root = tokio::fs::canonicalize(&plugin_root).await?;
     let canon_target = tokio::fs::canonicalize(&target).await?;
     if !canon_target.starts_with(&canon_root) {
-        return Err(theseus::ErrorKind::InputError("Asset outside plugin dir".into()).into());
+        return Err(theseus::ErrorKind::InputError(
+            "Asset outside plugin dir".into(),
+        )
+        .into());
     }
     let meta = tokio::fs::metadata(&canon_target).await?;
     if meta.len() as usize > MAX_BINARY_ASSET_BYTES {
-        return Err(
-            theseus::ErrorKind::InputError("Binary asset exceeds 4 MB limit".into()).into(),
-        );
+        return Err(theseus::ErrorKind::InputError(
+            "Binary asset exceeds 4 MB limit".into(),
+        )
+        .into());
     }
     let bytes = tokio::fs::read(&canon_target).await?;
     Ok(PluginBinaryAsset {
@@ -913,14 +1070,21 @@ async fn require_enabled_plugin_instance_perm(
     required_perm: &str,
 ) -> Result<()> {
     if !is_valid_plugin_id(id) {
-        return Err(theseus::ErrorKind::InputError("Invalid plugin id".into()).into());
+        return Err(
+            theseus::ErrorKind::InputError("Invalid plugin id".into()).into()
+        );
     }
     let root = plugins_dir().await?;
     let state = load_state(&root).await;
     if !state.plugins.get(id).is_some_and(|e| e.enabled) {
-        return Err(theseus::ErrorKind::InputError("Plugin is not enabled".into()).into());
+        return Err(theseus::ErrorKind::InputError(
+            "Plugin is not enabled".into(),
+        )
+        .into());
     }
-    let manifest_raw = tokio::fs::read_to_string(root.join(id).join("plugin.json")).await?;
+    let plugin_root = resolve_plugin_dir(&root, id).await?;
+    let manifest_raw =
+        tokio::fs::read_to_string(plugin_root.join("plugin.json")).await?;
     let manifest: PluginManifest = serde_json::from_str(&manifest_raw)?;
     if !manifest
         .permissions
@@ -974,17 +1138,18 @@ pub async fn plugins_instance_list_files(
         None | Some("") | Some(".") => (canon_root.clone(), String::new()),
         Some(raw) => {
             let Some(clean) = sanitize_relative_path(raw) else {
-                return Err(
-                    theseus::ErrorKind::InputError("Unsafe instance directory path".into()).into(),
-                );
+                return Err(theseus::ErrorKind::InputError(
+                    "Unsafe instance directory path".into(),
+                )
+                .into());
             };
             let candidate = canon_root.join(&clean);
             let canon_target = tokio::fs::canonicalize(&candidate).await?;
             if !canon_target.starts_with(&canon_root) {
-                return Err(
-                    theseus::ErrorKind::InputError("Directory outside instance folder".into())
-                        .into(),
-                );
+                return Err(theseus::ErrorKind::InputError(
+                    "Directory outside instance folder".into(),
+                )
+                .into());
             }
             (
                 canon_target,
@@ -1005,7 +1170,9 @@ pub async fn plugins_instance_list_files(
             size: if meta.is_dir() { 0 } else { meta.len() },
         });
     }
-    out.sort_by(|a, b| b.is_dir.cmp(&a.is_dir).then_with(|| a.name.cmp(&b.name)));
+    out.sort_by(|a, b| {
+        b.is_dir.cmp(&a.is_dir).then_with(|| a.name.cmp(&b.name))
+    });
     Ok(out)
 }
 
@@ -1017,19 +1184,26 @@ pub async fn plugins_instance_read_file(
 ) -> Result<String> {
     require_enabled_plugin_instance_perm(&id, "read").await?;
     let Some(clean) = sanitize_relative_path(&rel_path) else {
-        return Err(theseus::ErrorKind::InputError("Unsafe instance file path".into()).into());
+        return Err(theseus::ErrorKind::InputError(
+            "Unsafe instance file path".into(),
+        )
+        .into());
     };
     let instance_root = theseus::instance::get_full_path(&instance_id).await?;
     let canon_root = tokio::fs::canonicalize(&instance_root).await?;
     let canon_target = tokio::fs::canonicalize(canon_root.join(&clean)).await?;
     if !canon_target.starts_with(&canon_root) {
-        return Err(theseus::ErrorKind::InputError("File outside instance folder".into()).into());
+        return Err(theseus::ErrorKind::InputError(
+            "File outside instance folder".into(),
+        )
+        .into());
     }
     let meta = tokio::fs::metadata(&canon_target).await?;
     if meta.len() as usize > MAX_INSTANCE_FILE_BYTES {
-        return Err(
-            theseus::ErrorKind::InputError("Instance file exceeds 1 MB read limit".into()).into(),
-        );
+        return Err(theseus::ErrorKind::InputError(
+            "Instance file exceeds 1 MB read limit".into(),
+        )
+        .into());
     }
     Ok(tokio::fs::read_to_string(&canon_target).await?)
 }
@@ -1043,16 +1217,21 @@ pub async fn plugins_instance_write_file(
 ) -> Result<()> {
     require_enabled_plugin_instance_perm(&id, "write").await?;
     if content.len() > MAX_INSTANCE_FILE_BYTES {
-        return Err(
-            theseus::ErrorKind::InputError("Instance file exceeds 1 MB write limit".into()).into(),
-        );
+        return Err(theseus::ErrorKind::InputError(
+            "Instance file exceeds 1 MB write limit".into(),
+        )
+        .into());
     }
     let Some(clean) = sanitize_relative_path(&rel_path) else {
-        return Err(theseus::ErrorKind::InputError("Unsafe instance file path".into()).into());
+        return Err(theseus::ErrorKind::InputError(
+            "Unsafe instance file path".into(),
+        )
+        .into());
     };
     if is_forbidden_write_extension(&clean) {
         return Err(theseus::ErrorKind::InputError(
-            "Writing executable or archive files is not allowed for plugins".into(),
+            "Writing executable or archive files is not allowed for plugins"
+                .into(),
         )
         .into());
     }
@@ -1063,9 +1242,10 @@ pub async fn plugins_instance_write_file(
         tokio::fs::create_dir_all(parent).await?;
         let canon_parent = tokio::fs::canonicalize(parent).await?;
         if !canon_parent.starts_with(&canon_root) {
-            return Err(
-                theseus::ErrorKind::InputError("Target outside instance folder".into()).into(),
-            );
+            return Err(theseus::ErrorKind::InputError(
+                "Target outside instance folder".into(),
+            )
+            .into());
         }
     }
     tokio::fs::write(&target, content).await?;

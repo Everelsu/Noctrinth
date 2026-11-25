@@ -371,7 +371,10 @@ export async function installPluginZip(zipPath: string): Promise<InstalledPlugin
 		zipPath,
 	})
 	await listInstalledPlugins()
-	await activatePlugin(plugin)
+	deactivatePlugin(plugin.manifest.id)
+	if (plugin.enabled) {
+		await activatePlugin(plugin)
+	}
 	return plugin
 }
 
@@ -384,7 +387,10 @@ export async function installPluginRemote(
 		expectedSha256,
 	})
 	await listInstalledPlugins()
-	await activatePlugin(plugin)
+	deactivatePlugin(plugin.manifest.id)
+	if (plugin.enabled) {
+		await activatePlugin(plugin)
+	}
 	return plugin
 }
 

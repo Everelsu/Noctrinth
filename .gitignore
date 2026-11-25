@@ -72,6 +72,11 @@ generated
 .env
 .env.local
 
+# Nix development environment
+/.devenv/
+/.direnv/
+/result
+
 # app testing dir
 app-playground-data/*
 

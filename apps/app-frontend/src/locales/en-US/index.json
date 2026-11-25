@@ -2916,7 +2916,6 @@
     "message": "Browse catalog"
   },
   "app.plugins.action.docs": {
-    "defaultMessage": "Docs",
     "message": "Docs"
   },
   "app.plugins.action.install": {
@@ -6453,9 +6452,6 @@
   "instance.worlds.create_shortcut": {
     "message": "Create shortcut"
   },
-  "instance.worlds.desync_server": {
-    "message": "Desync"
-  },
   "instance.worlds.desync-server.description": {
     "message": "Do you want to keep this server in other synced instances, or remove it from them?"
   },
@@ -6467,6 +6463,9 @@
   },
   "instance.worlds.desync-server.title": {
     "message": "Desync server"
+  },
+  "instance.worlds.desync_server": {
+    "message": "Desync"
   },
   "instance.worlds.dont_show_on_home": {
     "message": "Don't show on Home"

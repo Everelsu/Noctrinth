@@ -134,9 +134,29 @@ watchEffect(() => {
 	background-color: transparent;
 }
 
-:root.noctrinth-backdrop-active:has([data-modal-root], [aria-modal='true']) .app-window-controls {
-	background-color: color-mix(in srgb, var(--noctrinth-solid-surface-3) 82%, transparent);
-	backdrop-filter: blur(24px) saturate(1.3);
+:root.noctrinth-backdrop-active:has(.app-window-controls) .modal-overlay.standard {
+	--cutout-radius: 1rem;
+	--cutout-height: 3rem;
+	--cutout-width: max(var(--cutout-radius), var(--window-controls-width, 0px));
+	/* NewModal's overlay extends 5rem beyond each edge of the window. */
+	--overlay-overflow: 5rem;
+	mask:
+		linear-gradient(#000 0 0),
+		linear-gradient(#000 0 0) right var(--overlay-overflow) top var(--overlay-overflow) /
+			calc(var(--cutout-width) - var(--cutout-radius)) var(--cutout-height) no-repeat,
+		linear-gradient(#000 0 0) right
+			calc(var(--overlay-overflow) + var(--cutout-width) - var(--cutout-radius)) top
+			var(--overlay-overflow) / var(--cutout-radius)
+			calc(var(--cutout-height) - var(--cutout-radius)) no-repeat,
+		radial-gradient(
+				circle at top right,
+				#000 calc(var(--cutout-radius) - 0.5px),
+				transparent var(--cutout-radius)
+			)
+			right calc(var(--overlay-overflow) + var(--cutout-width) - var(--cutout-radius)) top
+			calc(var(--overlay-overflow) + var(--cutout-height) - var(--cutout-radius)) /
+			var(--cutout-radius) var(--cutout-radius) no-repeat;
+	mask-composite: subtract, add, add;
 }
 
 :root.noctrinth-backdrop-active body {

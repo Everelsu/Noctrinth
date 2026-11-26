@@ -35,6 +35,12 @@
 					"url": "https://*.tail029726.ts.net/*"
 				},
 				{
+					"url": "https://api.feed-the-beast.com/v1/modpacks/public/modpack/**"
+				},
+				{
+					"url": "https://cdn.feed-the-beast.com/blob/**"
+				},
+				{
 					"url": "https://api.mclo.gs/*"
 				},
 				{

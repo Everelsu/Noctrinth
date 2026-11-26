@@ -809,7 +809,7 @@ fn display_from_request(
             crate::api::pack::install_from::CreatePackLocation::FromFile {
                 ..
             } => None,
-            crate::api::pack::install_from::CreatePackLocation::FromCurseforge {
+            crate::api::pack::install_from::CreatePackLocation::FromFtb { title, icon_url, .. } | crate::api::pack::install_from::CreatePackLocation::FromCurseforge {
                 title,
                 icon_url,
                 ..

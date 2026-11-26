@@ -10,11 +10,13 @@ import {
 	useVIntl,
 } from '@modrinth/ui'
 import { openUrl } from '@tauri-apps/plugin-opener'
+import { useQueryClient } from '@tanstack/vue-query'
 import dayjs from 'dayjs'
 import { nextTick, type Ref, ref } from 'vue'
 import type { Router } from 'vue-router'
 
 import { useAppSettings } from '@/composables/use-app-settings.ts'
+import { ftbId, ftbMessages, ftbPackQuery, ftbVersions } from '@/features/ftb/queries'
 import { trackEvent } from '@/helpers/analytics'
 import {
 	get_organization,
@@ -235,6 +237,7 @@ export function createContentInstall(opts: {
 	warn?: (title: string, text: string) => void
 }): ContentInstallContext {
 	const { formatMessage } = useVIntl()
+	const queryClient = useQueryClient()
 	const appSettings = useAppSettings()
 	const instances = ref<ContentInstallInstance[]>([])
 	const compatibleLoaders = ref<string[]>([])
@@ -1019,6 +1022,29 @@ export function createContentInstall(opts: {
 		createInstanceCallback: (instanceId: string) => void = () => {},
 		hints?: { preferredLoader?: string; preferredGameVersion?: string; showProjectInfo?: boolean },
 	) {
+		const packId = ftbId(projectId)
+		if (packId !== null) {
+			const pack = await queryClient.fetchQuery(ftbPackQuery(packId))
+			const versions = pack.private ? [] : ftbVersions(pack)
+			const version = versionId
+				? versions.find(({ id }) => String(id) === versionId)
+				: (versions.find(({ type }) => type === 'release') ?? versions[0])
+			if (!version) {
+				throw new Error(formatMessage(ftbMessages.noVersion))
+			}
+			const job = await install_create_modpack_instance({
+				type: 'fromFtb',
+				pack_id: packId,
+				version_id: version.id,
+				title: pack.name,
+				icon_url: pack.art.find(({ type }) => type === 'square')?.url ?? null,
+			})
+			const createdId = installJobInstanceId(job)
+			if (createdId) createInstanceCallback(createdId)
+			callback(String(version.id))
+			return
+		}
+
 		if (isCurseforgeId(projectId)) {
 			await installCurseforge(
 				projectId,

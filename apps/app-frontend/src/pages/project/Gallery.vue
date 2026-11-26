@@ -2,7 +2,13 @@
 	<div class="gallery">
 		<Card v-for="(image, index) in filteredGallery" :key="image.url" class="gallery-item">
 			<a @click="expandImage(image, index)">
-				<img :src="image.url" :alt="image.title" class="gallery-image" />
+				<img
+					:src="image.url"
+					:alt="image.title"
+					class="gallery-image"
+					loading="lazy"
+					decoding="async"
+				/>
 			</a>
 			<div class="gallery-body">
 				<h3>{{ image.title }}</h3>

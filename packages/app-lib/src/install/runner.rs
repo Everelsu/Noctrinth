@@ -2003,6 +2003,20 @@ async fn install_pack_inner(
             )
             .await?
         }
+        CreatePackLocation::FromFtb {
+            pack_id,
+            version_id,
+            title,
+            ..
+        } => {
+            crate::pack::ftb::create_pack(
+                pack_id,
+                version_id,
+                title,
+                instance_id.clone(),
+            )
+            .await?
+        }
         CreatePackLocation::FromCurseforge {
             project_id,
             file_id,
@@ -2275,7 +2289,8 @@ async fn update_backup_scope(
                 ))
                 .await?
             }
-            CreatePackLocation::FromCurseforge { .. } => return Ok(None),
+            CreatePackLocation::FromCurseforge { .. }
+            | CreatePackLocation::FromFtb { .. } => return Ok(None),
             CreatePackLocation::FromFile { path, .. } => {
                 // A CurseForge zip is not an mrpack and lists its overrides
                 // differently; backing up the whole instance is the safe answer.
@@ -2506,6 +2521,9 @@ fn set_initial_display(
                 CreatePackLocation::FromVersionId {
                     title, icon_url, ..
                 }
+                | CreatePackLocation::FromFtb {
+                    title, icon_url, ..
+                }
                 | CreatePackLocation::FromCurseforge {
                     title, icon_url, ..
                 } => Some((title.clone(), icon_url.clone())),
@@ -2595,7 +2613,8 @@ pub(super) fn modpack_details(
             version_id: Some(version_id.clone()),
             title: Some(title.clone()),
         },
-        CreatePackLocation::FromCurseforge { title, .. } => {
+        CreatePackLocation::FromCurseforge { title, .. }
+        | CreatePackLocation::FromFtb { title, .. } => {
             InstallPhaseDetails::Modpack {
                 project_id: None,
                 version_id: None,

@@ -111,6 +111,12 @@ pub enum CreatePackLocation {
     // job so it is in the task list, with its name and picture, from the
     // moment it is asked for. `file_id` picks a file; without one the newest
     // client file is used.
+    FromFtb {
+        pack_id: u64,
+        version_id: u64,
+        title: String,
+        icon_url: Option<String>,
+    },
     FromCurseforge {
         project_id: String,
         #[serde(default)]
@@ -212,6 +218,9 @@ pub async fn get_instance_from_pack(
             ..Default::default()
         }),
         // The pack's manifest sets the rest once it is downloaded.
+        CreatePackLocation::FromFtb {
+            title, icon_url, ..
+        } => Ok(super::ftb::preview(title, icon_url)),
         CreatePackLocation::FromCurseforge {
             project_id,
             file_id,

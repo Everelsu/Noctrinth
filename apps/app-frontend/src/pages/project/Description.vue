@@ -1,6 +1,9 @@
 <template>
 	<Card>
-		<NoctrinthTranslatableDescription :description="project.body" />
+		<NoctrinthTranslatableDescription
+			:description="project.body"
+			:fallback-description="fallbackDescription"
+		/>
 	</Card>
 </template>
 
@@ -14,6 +17,7 @@ defineProps({
 		type: Object,
 		default: () => {},
 	},
+	fallbackDescription: String,
 })
 </script>
 

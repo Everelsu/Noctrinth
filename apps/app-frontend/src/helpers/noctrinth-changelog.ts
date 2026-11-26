@@ -44,16 +44,38 @@ export const NOCTRINTH_CHANGELOG: NoctrinthVersionEntry[] = [
 	{
 		version: '0.23.5',
 		date: '2026-11-25T00:00:00+00:00',
-		body: `### Security
-- Synced with Modrinth App 0.23.5: refreshed cached version metadata and replaced mismatched Minecraft libraries on instance launch.
+		body: `### Added
+- Added Feed The Beast to the Discover source picker. Browse and install FTB modpacks directly in Noctrinth.
+- FTB project pages include translatable descriptions, installation of specific versions, and a screenshot gallery. The project menu opens or copies the link to the Feed The Beast website. Image-only descriptions include a translatable summary.
+- The Create Aeronautics project sidebar now shows the banner from Modrinth about its nomination for Best User Creation at The Game Awards.
+
+### Changed
+- The Plugins settings page now explains how to start the launcher in Safe Mode.
+- FTB search reuses cached modpack details and shows the available results if individual packs fail to load.
 
 ### Fixed
-- Made plugin state persistence atomic and resolved manually unpacked plugin folders whose directory name differs from \`plugin.json\` \`id\`, while preserving disabled state across updates.`,
-		body_ru: `### Безопасность
-- Синхронизация с Modrinth App 0.23.5: обновление метаданных установленных версий и замена библиотек Minecraft при запуске сборки, если они не совпадают с метаданными.
+- Fixed the title and breadcrumb on dedicated plugin pages.
+- Fixed modal dimming behind the window controls when a custom background is active.
+- Fixed manually unpacked plugins whose folder name differs from their manifest ID. Plugin settings are saved reliably, and disabled plugins stay disabled after an update.
+
+### Security
+- Synced with Modrinth App 0.23.5 to refresh cached version metadata and replace mismatched Minecraft libraries on instance launch.`,
+		body_ru: `### Добавлено
+- В списке источников «Исследования» появился Feed The Beast со своим значком. Сборки FTB можно находить и устанавливать прямо в Noctrinth.
+- На страницах FTB доступны перевод описания, установка выбранной версии и галерея скриншотов. В меню проекта можно открыть или скопировать ссылку на сайт Feed The Beast. Если описание состоит из картинок, можно перевести текстовую аннотацию.
+- В боковой панели проекта Create Aeronautics появился баннер Modrinth о номинации мода на The Game Awards в категории «Лучшая пользовательская работа».
+
+### Изменено
+- В настройках «Плагины» теперь указано, как запустить лаунчер в безопасном режиме.
+- Поиск FTB использует кэш данных сборок и показывает доступные результаты, если отдельные сборки не удалось загрузить.
 
 ### Исправлено
-- Сохранение состояния плагинов сделано атомарным, исправлена работа распакованных вручную папок плагинов с именем, отличным от \`id\` в \`plugin.json\`, а отключённое состояние сохраняется при обновлении.`,
+- Исправлены название и путь в шапке на отдельных страницах плагинов.
+- При открытии диалога с пользовательским фоном область под кнопками окна больше не затемняется.
+- Исправлена работа распакованных вручную плагинов, у которых имя папки отличается от ID в манифесте. Настройки плагинов сохраняются надёжнее, а отключённые плагины остаются отключёнными после обновления.
+
+### Безопасность
+- Перенесли исправление из Modrinth App 0.23.5. При запуске сборки обновляются метаданные версии и заменяются библиотеки Minecraft, которые им не соответствуют.`,
 	},
 	{
 		version: '0.23.4+3',

@@ -55,9 +55,11 @@ import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import type { LocationQuery } from 'vue-router'
 import { useRoute, useRouter } from 'vue-router'
 
+import FtbPlatformIcon from '@/assets/icons/ftb-platform.svg'
 import ModrinthPlatformIcon from '@/assets/icons/modrinth-platform.svg'
 import { useAppEvent } from '@/composables/use-app-event'
 import { useAppSettings } from '@/composables/use-app-settings.ts'
+import { ftbHit, ftbId, ftbProjectPath, ftbSearchPage, ftbVersions } from '@/features/ftb/queries'
 import { get_project, get_search_results_v3, get_version_many } from '@/helpers/cache.js'
 import {
 	type BrowseSource,
@@ -739,12 +741,16 @@ const projectType = ref<ProjectType>(route.params.projectType as ProjectType)
 // Noctrinth's own: CurseForge as a second place to browse. Only offered when
 // the build has a key, only for the project types CurseForge has, and never
 // while adding to a server, whose flow is Modrinth's from end to end.
-type EffectiveBrowseSource = BrowseSource | `plugin:${string}`
+type EffectiveBrowseSource = BrowseSource | 'ftb' | `plugin:${string}`
 
 const availablePluginSources = computed(() =>
 	isServerContext.value
 		? []
 		: pluginContentSources.value.filter((s) => s.projectTypes.includes(projectType.value)),
+)
+
+const ftbOffered = computed(
+	() => projectType.value === 'modpack' && !isServerContext.value && !route.query.i,
 )
 
 const browseSourceOptions = computed<ComboboxOption<EffectiveBrowseSource>[]>(() => {
@@ -754,6 +760,7 @@ const browseSourceOptions = computed<ComboboxOption<EffectiveBrowseSource>[]>(()
 	if (curseforgeOffered.value) {
 		opts.push({ value: 'curseforge', label: 'CurseForge', icon: CurseForgeIcon })
 	}
+	if (ftbOffered.value) opts.push({ value: 'ftb', label: 'Feed The Beast', icon: FtbPlatformIcon })
 	for (const source of availablePluginSources.value) {
 		opts.push({
 			value: `plugin:${source.pluginId}`,
@@ -764,15 +771,17 @@ const browseSourceOptions = computed<ComboboxOption<EffectiveBrowseSource>[]>(()
 	return opts
 })
 const browseSource = ref<EffectiveBrowseSource>(
-	curseforgeEnabled() &&
-		(route.query.src === 'cf' ||
-			(route.query.src === undefined && curseforgeSettings.defaultSource === 'curseforge'))
-		? 'curseforge'
-		: 'modrinth',
+	route.query.src === 'ftb' && ftbOffered.value
+		? 'ftb'
+		: curseforgeEnabled() &&
+			  (route.query.src === 'cf' ||
+					(route.query.src === undefined && curseforgeSettings.defaultSource === 'curseforge'))
+			? 'curseforge'
+			: 'modrinth',
 )
 /** The source in the URL; only the one that is not the default is written. */
 function sourceQuery(source: EffectiveBrowseSource) {
-	if (source.startsWith('plugin:')) return source
+	if (source === 'ftb' || source.startsWith('plugin:')) return source
 	if (source === curseforgeSettings.defaultSource) return undefined
 	return source === 'curseforge' ? 'cf' : 'mr'
 }
@@ -785,6 +794,10 @@ const curseforgeOffered = computed(
 const activePluginSourceId = computed(() =>
 	browseSource.value.startsWith('plugin:') ? browseSource.value.slice('plugin:'.length) : null,
 )
+const isFtb = computed(() => ftbOffered.value && browseSource.value === 'ftb')
+watch(ftbOffered, (available) => {
+	if (!available && browseSource.value === 'ftb') browseSource.value = 'modrinth'
+})
 const isCurseforge = computed(() => curseforgeOffered.value && browseSource.value === 'curseforge')
 // The filters CurseForge can search by; every other one is hidden while
 // browsing it rather than silently ignored. Categories are CurseForge's own,
@@ -1147,8 +1160,8 @@ function getCardActions(
 		return getServerCardActions(result)
 	}
 
-	if (isCurseforgeId(result.project_id)) {
-		return getCurseforgeCardActions(result, currentProjectType)
+	if (ftbId(result.project_id) !== null || isCurseforgeId(result.project_id)) {
+		return getExternalSourceCardActions(result, currentProjectType)
 	}
 
 	const projectResult = result as Labrinth.Search.v3.ResultSearchProject & {
@@ -1342,7 +1355,7 @@ function getCardActions(
  * installed" checks, the same incompatible-version warning, and a modpack
  * becomes a new instance through the CurseForge pack installer.
  */
-function getCurseforgeCardActions(
+function getExternalSourceCardActions(
 	result: Labrinth.Search.v3.ResultSearchProject,
 	currentProjectType: string,
 ): CardAction[] {
@@ -1400,7 +1413,7 @@ function getCurseforgeCardActions(
 							}
 						},
 						(profile) => {
-							router.push(`/instance/${profile}`)
+							router.push(`/instance/${encodeURIComponent(profile)}`)
 						},
 						{
 							preferredLoader: instance.value?.loader ?? selectedPreferences.loaders?.[0],
@@ -1634,7 +1647,33 @@ async function searchPluginSource(pluginId: string, requestParams: string) {
 	}
 }
 
+let ftbSearchController: AbortController | undefined
+onBeforeUnmount(() => ftbSearchController?.abort())
+
+async function searchFtb(requestParams: string) {
+	ftbSearchController?.abort()
+	ftbSearchController = new AbortController()
+	const params = new URLSearchParams(requestParams.replace(/^\?/, ''))
+	const offset = Number(params.get('offset') ?? 0)
+	const limit = Math.min(20, Number(params.get('limit') || 20))
+	const query = params.get('query')?.trim() ?? ''
+	const { packs, total } = await ftbSearchPage(queryClient, {
+		query,
+		updated: params.get('index') === 'updated',
+		offset,
+		limit,
+		signal: ftbSearchController.signal,
+	})
+	return {
+		projectHits: packs.filter((pack) => !pack.private && ftbVersions(pack).length > 0).map(ftbHit),
+		serverHits: [],
+		total_hits: total,
+		per_page: limit,
+	}
+}
+
 async function search(requestParams: string) {
+	if (isFtb.value) return searchFtb(requestParams)
 	if (activePluginSourceId.value) {
 		return await searchPluginSource(activePluginSourceId.value, requestParams)
 	}
@@ -1728,7 +1767,15 @@ const lockedFilterMessages = computed(() => ({
 	),
 }))
 
+const sourcePageSizes = computed(() =>
+	isFtb.value
+		? [5, 10, 15, 20]
+		: isCurseforge.value
+			? [5, 10, 15, 20, 50]
+			: [5, 10, 15, 20, 50, 100],
+)
 const searchState = useBrowseSearch({
+	maxResultsOptions: sourcePageSizes,
 	projectType,
 	tags: browseTags,
 	active: browseRouteActive,
@@ -1766,6 +1813,14 @@ watch(
 )
 
 watch(browseSource, async (source) => {
+	if (source !== 'ftb') ftbSearchController?.abort()
+	if (
+		source === 'ftb' &&
+		!['relevance', 'updated'].includes(searchState.effectiveCurrentSortType.value.name)
+	) {
+		const relevance = searchState.effectiveSortTypes.value.find(({ name }) => name === 'relevance')
+		if (relevance) searchState.effectiveCurrentSortType.value = relevance
+	}
 	// The two have different categories, so none carries over; and pages do
 	// not line up between them, so a switch starts from the top.
 	searchState.currentFilters.value = searchState.currentFilters.value.filter(
@@ -1877,32 +1932,26 @@ provideBrowseManager({
 	...searchState,
 	advancedFiltersCollapsed,
 	dismissedPhotosensitivityFilterWarning,
-	getProjectLink: (result: Labrinth.Search.v3.ResultSearchProject) => ({
-		path: isCurseforgeId(result.project_id)
-			? `/curseforge/${result.project_id}`
-			: `/project/${result.project_id ?? result.slug}`,
-		query: {
-			...getProjectBrowseQuery(),
-			...getProjectVersionFilterQuery({
-				contentType: projectType.value,
-				selectedFilters: searchState.currentFilters.value,
-				providedFilters: combinedProvidedFilters.value,
-				overriddenProvidedFilterTypes: searchState.overriddenProvidedFilterTypes.value,
-			}),
-		},
-	}),
-	hiddenFilterTypes: computed(() =>
-		isCurseforge.value
-			? searchState.filters.value
-					.map((filter) => filter.id)
-					.filter((id) => !isCurseforgeFilterType(id))
-			: [],
-	),
+	getProjectLink: (result: Labrinth.Search.v3.ResultSearchProject) => {
+		const packId = ftbId(result.project_id)
+		if (packId !== null) return { path: ftbProjectPath(packId), query: getProjectBrowseQuery() }
+		return {
+			path: isCurseforgeId(result.project_id)
+				? `/curseforge/${result.project_id}`
+				: `/project/${result.project_id ?? result.slug}`,
+			query: {
+				...getProjectBrowseQuery(),
+				...getProjectVersionFilterQuery({
+					contentType: projectType.value,
+					selectedFilters: searchState.currentFilters.value,
+					providedFilters: combinedProvidedFilters.value,
+					overriddenProvidedFilterTypes: searchState.overriddenProvidedFilterTypes.value,
+				}),
+			},
+		}
+	},
 	onProjectHover: prefetchCurseforgeProject,
-	// CurseForge hands out at most 50 results a page.
-	maxResultsOptions: computed(() =>
-		isCurseforge.value ? [5, 10, 15, 20, 50] : [5, 10, 15, 20, 50, 100],
-	),
+	maxResultsOptions: sourcePageSizes,
 	getServerProjectLink: (result: Labrinth.Search.v3.ResultSearchProject) => ({
 		path: `/project/${result.slug ?? result.project_id}`,
 		query: getProjectBrowseQuery(),
@@ -1915,7 +1964,21 @@ provideBrowseManager({
 	providedFilters: combinedProvidedFilters,
 	serverEnvironment,
 	showServerEnvironment,
-	hiddenFilterTypes: computed(() => (showServerEnvironment.value ? ['environment'] : [])),
+	hiddenFilterTypes: computed(() => {
+		if (isFtb.value) return searchState.filters.value.map(({ id }) => id)
+		if (isCurseforge.value)
+			return searchState.filters.value
+				.map(({ id }) => id)
+				.filter((id) => !isCurseforgeFilterType(id))
+		return showServerEnvironment.value ? ['environment'] : []
+	}),
+	effectiveSortTypes: computed(() =>
+		isFtb.value
+			? searchState.effectiveSortTypes.value.filter(({ name }) =>
+					['relevance', 'updated'].includes(name),
+				)
+			: searchState.effectiveSortTypes.value,
+	),
 	hideInstalled: computed({
 		get: () => {
 			if (projectType.value === 'modpack') return hideInstalledModpacks.value
@@ -1939,9 +2002,10 @@ provideBrowseManager({
 	}),
 	showHideInstalled: computed(
 		() =>
-			projectType.value === 'modpack' ||
-			(isServerContext.value && projectType.value !== 'modpack') ||
-			!!instance.value,
+			!isFtb.value &&
+			(projectType.value === 'modpack' ||
+				(isServerContext.value && projectType.value !== 'modpack') ||
+				!!instance.value),
 	),
 	hideInstalledLabel: computed(() =>
 		formatMessage(
@@ -1963,7 +2027,9 @@ provideBrowseManager({
 	onInstalled: onSearchResultInstalled,
 	serverPings,
 	getServerModpackContent,
-	onContextMenu: handleRightClick,
+	onContextMenu: (event, result) => {
+		if (ftbId(result.project_id) === null) handleRightClick(event, result)
+	},
 	offline,
 	lockedFilterMessages,
 })
@@ -1972,7 +2038,10 @@ provideBrowseManager({
 <template>
 	<div class="flex flex-col gap-2 p-6">
 		<BrowsePageLayout>
-			<template v-if="curseforgeOffered || availablePluginSources.length > 0" #tabs-end>
+			<template
+				v-if="curseforgeOffered || ftbOffered || availablePluginSources.length > 0"
+				#tabs-end
+			>
 				<Combobox
 					v-model="browseSource"
 					:options="browseSourceOptions"
@@ -1986,7 +2055,7 @@ provideBrowseManager({
 					trigger-class="!rounded-full !px-3.5"
 				/>
 			</template>
-			<template #toolbar-actions>
+			<template v-if="!isFtb" #toolbar-actions>
 				<Button
 					:type="browseFiltersHidden ? 'outlined' : 'base'"
 					size="md"
@@ -2029,7 +2098,7 @@ provideBrowseManager({
 			@create="handleServerModpackFlowCreate"
 		/>
 		<Teleport v-if="browseRouteActive" to="#sidebar-teleport-target">
-			<BrowseSidebar />
+			<BrowseSidebar v-if="!isFtb" />
 		</Teleport>
 	</div>
 </template>

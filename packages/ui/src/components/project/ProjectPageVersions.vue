@@ -420,7 +420,7 @@
 								<CalendarIcon />
 								{{ formatRelativeTime(new Date(version.date_published)) }}
 							</div>
-							<div class="flex items-center gap-1 font-medium">
+							<div v-if="showDownloads" class="flex items-center gap-1 font-medium">
 								<DownloadIcon />
 								{{ formatCompactNumber(version.downloads) }}
 							</div>
@@ -536,6 +536,7 @@ const props = withDefaults(
 		}
 		versions: VersionWithDisplayUrlEnding[]
 		showFiles?: boolean
+		showDownloads?: boolean
 		showEnvironmentColumn?: boolean
 		currentMember?: boolean
 		loaders: Labrinth.Tags.v2.Loader[]
@@ -547,6 +548,7 @@ const props = withDefaults(
 	{
 		baseId: undefined,
 		showFiles: false,
+		showDownloads: true,
 		showEnvironmentColumn: false,
 		currentMember: false,
 		versionLink: undefined,
@@ -588,27 +590,27 @@ const versionColumns = computed<TableColumn<VersionTableColumn>[]>(() => {
 		})
 	}
 
-	columns.push(
-		{
-			key: 'published',
-			label: formatMessage(messages.publishedColumn),
-			cellClass: '!overflow-visible align-middle pr-2.5 w-max',
-			width: '12%',
-		},
-		{
+	columns.push({
+		key: 'published',
+		label: formatMessage(messages.publishedColumn),
+		cellClass: '!overflow-visible align-middle pr-2.5 w-max',
+		width: '12%',
+	})
+	if (props.showDownloads) {
+		columns.push({
 			key: 'downloads',
 			label: formatMessage(messages.downloadsColumn),
 			cellClass: '!overflow-visible align-middle',
 			width: '12%',
-		},
-		{
-			key: 'actions',
-			align: 'right',
-			headerClass: 'text-secondary',
-			width: '1%',
-			cellClass: '!overflow-visible align-middle',
-		},
-	)
+		})
+	}
+	columns.push({
+		key: 'actions',
+		align: 'right',
+		headerClass: 'text-secondary',
+		width: '1%',
+		cellClass: '!overflow-visible align-middle',
+	})
 
 	return columns
 })

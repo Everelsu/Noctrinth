@@ -6617,6 +6617,12 @@
   "noctrinth.auth-servers.unreachable.scope": {
     "message": "Signing in and playing with a Microsoft account may fail until then. Offline and Ely.by accounts are not affected."
   },
+  "noctrinth.ftb.load-error": {
+    "message": "This modpack could not be loaded."
+  },
+  "noctrinth.ftb.no-versions": {
+    "message": "This modpack has no public versions."
+  },
   "noctrinth.instance.logs.open-file": {
     "message": "Open file"
   },

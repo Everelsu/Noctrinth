@@ -145,6 +145,12 @@ export default new createRouter({
 				},
 			],
 		},
+		{
+			path: '/project/ftb/:id(\\d+)/:tab(versions|gallery)?',
+			name: 'FtbProject',
+			component: () => import('@/features/ftb/pages/ftb-project-page.vue'),
+			props: true,
+		},
 		// Noctrinth's own: a CurseForge project, drawn with the same pieces as a
 		// Modrinth one. Description and gallery are the very same tabs.
 		{

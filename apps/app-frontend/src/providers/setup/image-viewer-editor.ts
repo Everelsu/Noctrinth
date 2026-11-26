@@ -13,7 +13,9 @@ import { proxiedFetch } from '@/helpers/proxy-fetch'
  * read its screenshots; the app's own HTTP client can.
  */
 async function fetchImage(src: string): Promise<Blob> {
-	const response = await fetch(src).catch(() => proxiedFetch(src))
+	const response = src.startsWith('https://cdn.feed-the-beast.com/blob/')
+		? await proxiedFetch(src)
+		: await fetch(src).catch(() => proxiedFetch(src))
 	if (!response.ok) throw new Error(`Could not load image: ${response.statusText}`)
 	return await response.blob()
 }

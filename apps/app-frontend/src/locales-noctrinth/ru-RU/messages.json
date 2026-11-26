@@ -1463,6 +1463,12 @@
 	"app.plugins.remove.title": {
 		"message": "Удалить плагин?"
 	},
+	"noctrinth.ftb.load-error": {
+		"message": "Не удалось загрузить сборку."
+	},
+	"noctrinth.ftb.no-versions": {
+		"message": "У этой сборки нет общедоступных версий."
+	},
 	"app.plugins.safe-mode.body": {
 		"message": "Все плагины и Quick CSS временно приостановлены. Нажмите Ctrl+Shift+Alt+P в любой момент, если сломанная тема или плагин сломают интерфейс."
 	},

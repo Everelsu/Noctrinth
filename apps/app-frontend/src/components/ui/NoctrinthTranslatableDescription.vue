@@ -25,7 +25,7 @@ import {
 } from '@/helpers/noctrinth-translate'
 import i18n from '@/i18n.config'
 
-const props = defineProps<{ description: string }>()
+const props = defineProps<{ description: string; fallbackDescription?: string }>()
 
 const { formatMessage } = useVIntl()
 
@@ -53,7 +53,16 @@ const target = computed(() => resolveTarget(locale.value))
 // thread: a CurseForge description can carry dozens of large GIFs and videos.
 const lazyMedia = (html: string) =>
 	html.replace(/<(img|iframe)\b(?![^>]*\bloading=)/gi, '<$1 loading="lazy" decoding="async"')
-const originalHtml = computed(() => lazyMedia(renderHighlightedString(props.description ?? '')))
+const originalHtml = computed(() => {
+	const html = renderHighlightedString(props.description ?? '')
+	if (!props.fallbackDescription) return lazyMedia(html)
+
+	const body = new DOMParser().parseFromString(html, 'text/html').body
+	const fallback = body.textContent?.trim()
+		? ''
+		: renderHighlightedString(props.fallbackDescription)
+	return lazyMedia(fallback + html)
+})
 
 const translation = ref<TranslatedHtml | null>(null)
 const showTranslated = ref(false)
@@ -67,7 +76,7 @@ const error = ref('')
 const capitalised = (text: string) => text.charAt(0).toLocaleUpperCase(locale.value) + text.slice(1)
 const targetName = computed(() => capitalised(languageName(target.value, locale.value)))
 const offered = computed(
-	() => translationSettings.enabled && !settled.value && !!props.description?.trim(),
+	() => translationSettings.enabled && !settled.value && !!originalHtml.value.trim(),
 )
 
 async function translate() {
@@ -103,7 +112,7 @@ watch(
 		settled.value = false
 		detected.value = null
 		error.value = ''
-		if (!translationSettings.enabled || !props.description?.trim()) return
+		if (!translationSettings.enabled || !originalHtml.value.trim()) return
 
 		if (translationSettings.precheck) {
 			const language = await detectLanguage(originalHtml.value)

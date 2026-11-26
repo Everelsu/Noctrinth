@@ -49,7 +49,19 @@ export interface PackLocationCurseforge {
 	icon_url?: string | null
 }
 
-export type CreatePackLocation = PackLocationVersionId | PackLocationFile | PackLocationCurseforge
+export interface PackLocationFtb {
+	type: 'fromFtb'
+	pack_id: number
+	version_id: number
+	title: string
+	icon_url?: string | null
+}
+
+export type CreatePackLocation =
+	| PackLocationVersionId
+	| PackLocationFile
+	| PackLocationCurseforge
+	| PackLocationFtb
 
 /**
  * Build a `fromFile` pack location. Always stamps the CurseForge API key so a
